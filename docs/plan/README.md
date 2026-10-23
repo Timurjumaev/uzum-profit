@@ -10,7 +10,7 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | Joriy bosqich | **B1. Domen yadrosi** |
 | Keyingi vazifa | B1.5 Lot dvigateli F21–F22 |
 | Temurdan kutilmoqda | Q8 (tannarx usuli) — B1 oxirigacha; Q2 (server) — B2.10 gacha |
-| Oxirgi yangilanish | 2026-10-23 (B1.4 tayyor) |
+| Oxirgi yangilanish | 2026-10-23 (M9 matni F20 ga moslandi) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 
