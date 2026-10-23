@@ -45,6 +45,10 @@ ignore = ["E501"]
 # Formulalarda ko'paytirish va minus belgilari ataylab ishlatiladi.
 allowed-confusables = ["×", "−", "–"]
 
+[tool.ruff.lint.per-file-ignores]
+# Testlarda kirill kodlar (С000003, У000120) ataylab yoziladi.
+"**/tests/**" = ["RUF001", "RUF003"]
+
 [tool.mypy]
 python_version = "3.13"
 files = ["packages/core/src", "apps/api/src", "apps/bot/src"]
