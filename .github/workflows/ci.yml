@@ -1,0 +1,71 @@
+# CI (03-arxitektura.md §13): har PR va main'ga push.
+name: CI
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python (core, api, bot)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run ruff check
+      - run: uv run ruff format --check
+      - run: uv run mypy
+      - run: uv run pytest
+
+  legacy:
+    name: Legacy (Python ${{ matrix.python }})
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        python: ["3.8", "3.13"]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+      - run: uv python install ${{ matrix.python }}
+      # Legacy faqat stdlib ishlatadi; uv workspace'ga kirmaydi.
+      - run: $(uv python find ${{ matrix.python }} --no-project) -m unittest tests.test_all
+
+  web:
+    name: Web (lint, typecheck, test, build)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter web lint
+      - run: pnpm --filter web typecheck
+      - run: pnpm --filter web test
+      - run: pnpm --filter web build
+
+  compose:
+    name: Dev muhit (docker compose)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - run: docker compose -f infra/compose/dev.yml up --build --detach --wait --wait-timeout 300
+      - run: curl --fail --silent http://localhost:8000/health
+      - run: curl --fail --silent http://localhost:5173/ | grep -q '<div id="root">'
+      - if: failure()
+        run: docker compose -f infra/compose/dev.yml logs
+      - if: always()
+        run: docker compose -f infra/compose/dev.yml down --volumes

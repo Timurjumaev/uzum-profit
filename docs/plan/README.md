@@ -7,10 +7,10 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 
 | | |
 |---|---|
-| Joriy bosqich | **B0. Poydevor** |
-| Keyingi vazifa | B0.2 Monorepo skeleti |
+| Joriy bosqich | **B1. Domen yadrosi** (B0 tugadi: CI yashil, `make dev` ishlaydi) |
+| Keyingi vazifa | B1.1 `money`, `fx` |
 | Temurdan kutilmoqda | Q8 (tannarx usuli) — B1 oxirigacha; Q2 (server) — B2.10 gacha |
-| Oxirgi yangilanish | 2026-10-23 |
+| Oxirgi yangilanish | 2026-10-23 (B0 tayyor) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

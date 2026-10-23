@@ -1,7 +1,16 @@
 # Uzum foyda: sotuvchi uchun foyda va buxgalteriya dasturi
 
-> **Production rejasi:** [docs/plan/README.md](docs/plan/README.md). Bu README hozirgi (legacy) lokal ilova haqida;
-> u B4 bosqichi oxirigacha ishlaydi va faqat kritik xatolar tuzatiladi.
+> **Production rejasi:** [docs/plan/README.md](docs/plan/README.md). Bu README hozirgi (legacy) lokal ilova haqida.
+> Yangi tizim (`packages/`, `apps/`, `infra/`) uchun: [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Legacy siyosati (ADR-014)
+
+- Legacy ilova (`uzum_profit/`, `tests/`) **B4 bosqichi oxirigacha** shu yerda ishlaydi, keyin `legacy/` ga ko'chadi.
+- Faqat **kritik tuzatishlar**: noto'g'ri pul hisobi, ma'lumot yo'qolishi, sinxron to'xtashi, xavfsizlik.
+  Yangi funksiyalar faqat yangi tizimga qo'shiladi.
+- Python 3.8 bilan mosligi saqlanadi (Temurning Mac'i: macOS Monterey); faqat standart kutubxona.
+- Har tuzatish testi bilan; CI legacy testlarini Python 3.8 va 3.13 da ishlatadi.
+- Partiyalar `uzum.db` dan yangi tizimga ko'chirish vositasi bilan o'tkaziladi (B4.9).
 
 Uzum seller kabinetidan (OpenAPI) sotuv, xarajat va mahsulotlarni oladi, sening partiya
 tannarxing bilan birlashtirib, **haqiqiy foyda**ni ko'rsatadi. Faqat Python standart kutubxonasi:
@@ -66,7 +75,7 @@ bazadagi eng birinchi sotuv sanasidan boshlanadi. `uzum_history.json` dan yuklan
 yangilashda butun tarix bilan to'ldiriladi. Majburan qayta olish: `python3 -m uzum_profit sync --all`.
 
 Har kuni yangilash: veb-sahifadagi **"API'dan yangilash"** tugmasi yoki
-`python3 -m uzum_profit sync`. 
+`python3 -m uzum_profit sync`.
 ## 4. Partiyalar: tannarxni bosqichma-bosqich kiritish
 
 **Partiyalar → "+ Yangi partiya"**. Partiya sening haqiqiy tartibingda to'ldiriladi: hamma

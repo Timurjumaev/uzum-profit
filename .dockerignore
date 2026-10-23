@@ -1,0 +1,12 @@
+.git
+.venv
+**/node_modules
+**/dist
+**/__pycache__
+.env
+*.db
+uzum_history.json
+uzum_samples*.json
+uzum_profit
+tests
+docs
