@@ -103,7 +103,7 @@ Bloklar (joylashuvi 04-dizayn.md §7.2 desktop, §7.3 mobil):
 4. **Diqqat talab qiladi** (ustuvorlik bo'yicha): tannarxsiz sotuvlar, tugayotgan tovar, zarar bilan sotilayotgan
    SKU, yangi jarimalar, kechikayotgan kargo, sinxron xatosi, Uzum to'lovi kutilmoqda.
 5. **Eng foydali 5 / zarar 5 SKU.**
-6. **Qo'shimcha ko'rsatkichlar:** marja, ROI, bekor %, qaytish %, reklama ulushi (DRR), muzlagan pul, yo'ldagi
+6. **Qo'shimcha ko'rsatkichlar:** marja (yonida tannarxsiz qism ulushi, F13), ROI, bekor %, qaytish %, reklama ulushi (DRR), muzlagan pul, yo'ldagi
    tovar qiymati, kutilayotgan foyda (F16).
 
 Qabul mezonlari: 1 yillik, 50 000 sotuv qatori bilan javob p95 < 700 ms; davr va do'kon tanlovi URL'da
@@ -343,7 +343,9 @@ bazaviy 4% / 15% — 08-tadqiqot.md, buxgalter bilan tasdiqlanadi).
 
 **F12. Sof foyda** = F8 − F9 − F10 − F11.
 
-**F13. Marja** = F12 / F3. **F14. ROI** = F12 / F7.
+**F13. Marja** = F12 / (tannarxi ma'lum qatorlar tushumi) — F15 bilan bir asosda (ADR-024); qamrov 100% bo'lsa
+F12 / F3. Marja yonida doim **tannarxsiz qism ulushi** = 1 − F15 alohida ko'rsatiladi (0% bo'lsa yashiriladi).
+**F14. ROI** = F12 / F7.
 
 **F15. Tannarx qamrovi** = (tannarxi ma'lum qatorlar tushumi) / F3. Qamrov < 100% bo'lsa sof foyda faqat ma'lum
 qatorlar bo'yicha hisoblanadi; F9, F10, F11 qamrov ulushiga mutanosib qismi ayriladi; qolgani "tannarxsiz qism"
