@@ -42,7 +42,7 @@ def _keys(row):
 def _shape(v, depth=0):
     """Qiymat tuzilishi: turlar va (son/mantiqiy bo'lsa) qiymat; matnlar yozilmaydi."""
     if isinstance(v, dict):
-        if depth >= 2:
+        if depth >= 4:
             return "{...}"
         return "{" + ", ".join("%s=%s" % (k, _shape(x, depth + 1)) for k, x in sorted(v.items())) + "}"
     if isinstance(v, list):
@@ -95,6 +95,7 @@ def run(key, days=7, out=print, api_factory=Uzum):
     date_from = int((datetime.now(timezone.utc).timestamp() - days * 86400) * 1000)
     for s in shops:
         sid = s["id"]
+        inv_rows = []
         out("")
         out("-- %s (%s) --" % (s.get("name"), sid))
         for label, fetch, name in (("sotuvlar", lambda: api.orders(sid, date_from), "orders"),
@@ -119,11 +120,23 @@ def run(key, days=7, out=print, api_factory=Uzum):
                 miss = missing_keys(rows, exp)
                 out("  %-12s %d ta qator. Yo'q maydonlar: %s" % (label, len(rows), miss or "yo'q"))
                 problems += bool(miss and rows)
+                if name == "invoices":
+                    inv_rows = rows
+                    cnt = {}
+                    for r in rows:
+                        st = r.get("invoiceStatus")
+                        st = st.get("value") if isinstance(st, dict) else st
+                        cnt[st] = cnt.get(st, 0) + 1
+                    out("    holatlar: %s" % cnt)
         out("  qo'shimcha so'rovlar (hisobotga hali kirmagan):")
         _probe(api, "/v1/shop/%s/return" % sid, {"page": 0, "size": 5}, out, True)
-        inv = _probe(api, "/v1/shop/%s/invoice" % sid, {"page": 0, "size": 1}, out)
-        if inv and isinstance(inv[0], dict) and inv[0].get("id") is not None:
-            _probe(api, "/v1/shop/%s/invoice/products" % sid, {"invoiceId": inv[0]["id"], "page": 0, "size": 5}, out, True)
+        def _st(r):
+            st = r.get("invoiceStatus")
+            return st.get("value") if isinstance(st, dict) else st
+        cand = [r for r in inv_rows if _st(r) not in ("ACCEPTED", "CANCELED")] + inv_rows
+        if cand and cand[0].get("id") is not None:
+            out("  faktura holati: %s" % _st(cand[0]))
+            _probe(api, "/v1/shop/%s/invoice/products" % sid, {"invoiceId": cand[0]["id"], "page": 0, "size": 5}, out, True)
 
     out("")
     out("-- To'liq yangilash sinovi (vaqtinchalik baza, oxirgi %d kun) --" % days)
