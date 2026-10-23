@@ -203,7 +203,7 @@ def test_profit_summary_full_coverage() -> None:
         [line(amount=2, comm=40_000, log=10_000)], uzs(20_000), uzs(10_000), uzs(2_000)
     )
     assert s.revenue == uzs(200_000) and s.payout == uzs(150_000) and s.cogs == uzs(80_000)
-    assert s.coverage == D(1)
+    assert s.coverage == D(1) and s.uncovered_share == D(0)
     assert s.net_profit == uzs(150_000 - 80_000 - 32_000)
     assert s.uncovered_lines == 0 and s.uncovered_expenses == uzs(0)
     assert s.margin == D("0.19")  # 38 000 / 200 000
@@ -222,14 +222,22 @@ def test_profit_summary_partial_coverage() -> None:
     assert s.net_profit == uzs(300_000 - 100_000 - 30_000)
     assert s.uncovered_revenue == uzs(100_000) and s.uncovered_payout == uzs(100_000)
     assert s.uncovered_lines == 1
-    assert s.margin == ratio(170_000, 400_000)  # F13 = F12 / F3
+    assert s.margin == ratio(170_000, 300_000)  # F13: maxraj — ma'lum qism tushumi (ADR-024)
+    assert s.uncovered_share == D("0.25")
 
 
 def test_profit_summary_no_sales() -> None:
     s = profit_summary([line("CANCELED")], uzs(5_000), uzs(1_000), uzs(0))
     assert s.coverage == D(1)
     assert s.net_profit == uzs(-6_000)
-    assert s.margin is None and s.roi is None
+    assert s.margin is None and s.roi is None and s.uncovered_share == D(0)
+
+
+def test_profit_summary_nothing_covered() -> None:
+    s = profit_summary([line(cost=None)], uzs(1_000), uzs(0), uzs(0))
+    assert s.coverage == D(0) and s.uncovered_share == D(1)
+    assert s.margin is None  # tannarxi ma'lum tushum yo'q
+    assert s.net_profit == uzs(0) and s.uncovered_expenses == uzs(1_000)
 
 
 @given(

@@ -36,6 +36,7 @@ tegishli fayllar yangilanadi. Eski qaror o'chirilmaydi, "almashtirildi: ADR-0XX"
 | ADR-021 | 2026-10-23 | AI yordamchi va MCP — B10 da, faqat o'z ma'lumotiga asoslangan javob | asosiy hisob birinchi; AI noaniqlikka yo'l qo'ymasligi kerak | erta AI |
 | ADR-022 | 2026-10-23 | Grafik va rang qoidalari — dataviz usuli: bitta o'q, qat'iy kategoriya tartibi, validator bilan tekshiruv | izchil va rangni ajrata olmaydiganlar uchun ham tushunarli | ko'z bilan tanlash |
 | ADR-023 | 2026-10-23 | Landing va yordam markazi — alohida statik sayt (Astro), ilova bilan bitta domenda | qidiruv tizimlari va tezlik; yordam maqolalari Markdown'da (ilova ichidan ham ochiladi) | SPA ichida landing (SEO yomon), Next.js |
+| ADR-024 | 2026-10-23 | F13 marja maxraji — tannarxi ma'lum qatorlar tushumi (F15 bilan bir asos); marja yonida tannarxsiz qism ulushi (1 − F15) alohida ko'rsatiladi. Ta'sir: 02 (F13, M4), `upcore.metrics` (B1.2) | F15 bo'yicha sof foyda faqat tannarxi ma'lum qism uchun; umumiy tushumga bo'linsa marja sun'iy kamayadi (25% tannarxsiz → 42% o'rniga 32%). Temur tasdiqladi | F12 / F3 (dastlabki reja) |
 
 ## Ochiq qarorlar (Temur hal qiladi)
 
