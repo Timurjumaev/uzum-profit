@@ -20,6 +20,8 @@ upbot = { workspace = true }
 [dependency-groups]
 dev = [
     "pytest>=8",
+    "pytest-cov>=6",
+    "hypothesis>=6",
     "httpx>=0.28",
     "ruff>=0.14",
     "mypy>=1.18",
@@ -38,6 +40,10 @@ extend-exclude = ["./uzum_profit", "./tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+# Kod qatorlarini formatter o'raydi; o'zbekcha docstring/izohlarni sun'iy bo'lmaslik uchun E501 o'chirilgan.
+ignore = ["E501"]
+# Formulalarda ko'paytirish va minus belgilari ataylab ishlatiladi.
+allowed-confusables = ["×", "−"]
 
 [tool.mypy]
 python_version = "3.13"

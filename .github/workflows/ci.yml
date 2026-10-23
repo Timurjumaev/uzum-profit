@@ -26,7 +26,8 @@ jobs:
       - run: uv run ruff check
       - run: uv run ruff format --check
       - run: uv run mypy
-      - run: uv run pytest
+      # Domen yadrosi qamrovi ≥ 95% (03-arxitektura.md §12).
+      - run: uv run pytest --cov=upcore --cov-report=term-missing --cov-fail-under=95
 
   legacy:
     name: Legacy (Python ${{ matrix.python }})
