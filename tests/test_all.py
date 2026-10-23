@@ -124,6 +124,35 @@ class FakeUzum:
         return []
 
 
+class SyncRedirectTests(unittest.TestCase):
+    def test_sync_returns_to_same_page_and_rejects_open_redirect(self):
+        os.environ.pop("UZUM_API_KEY", None)
+        fresh_conn()
+        srv = web.make_server(0)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        base = "http://127.0.0.1:%d" % srv.server_address[1]
+
+        class NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, *a, **k):
+                return None
+        opener = urllib.request.build_opener(NoRedirect)
+
+        def where(nxt):
+            req = urllib.request.Request(base + "/sync", data=urllib.parse.urlencode({"next": nxt}).encode())
+            try:
+                opener.open(req)
+            except urllib.error.HTTPError as e:
+                return e.headers["Location"]
+        try:
+            self.assertTrue(where("/stock?shop=1").startswith("/stock?shop=1&msg="))
+            self.assertTrue(where("/skus?x=1&msg=eski").startswith("/skus?x=1&msg="))
+            self.assertTrue(where("//evil.example").startswith("/?msg="))
+            self.assertTrue(where("http://evil.example").startswith("/?msg="))
+        finally:
+            srv.shutdown()
+            srv.server_close()
+
+
 class SelfcheckTests(unittest.TestCase):
     def test_report_has_no_key_and_flags_missing_fields(self):
         from unittest import mock

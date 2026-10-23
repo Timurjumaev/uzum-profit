@@ -86,7 +86,7 @@ def layout(title, body, active="/", flash=""):
             f'<title>{esc(title)} · Uzum foyda</title><style>{CSS}</style></head><body>'
             f'<header><b>Uzum foyda</b><nav>{links}</nav>'
             f'<form method="post" action="/sync"><button class="ghost">API\'dan yangilash</button></form>'
-            f'</header><main>{fl}{body}</main></body></html>')
+            f'</header><main>{fl}{body}</main><script src="/static/app.js"></script></body></html>')
 
 
 def valid_date(s, default):
@@ -97,6 +97,18 @@ def valid_date(s, default):
         return default
 
 
+def first_date():
+    """Bazadagi eng birinchi sotuv/xarajat sanasi ("Hammasi" tugmasi uchun)."""
+    from .db import connect
+    from .util import ms_to_date
+    try:
+        row = connect().execute("SELECT MIN(m) FROM (SELECT MIN(created_ms) AS m FROM order_items "
+                                "UNION ALL SELECT MIN(created_ms) FROM expenses)").fetchone()
+        return ms_to_date(row[0]) if row and row[0] else days_ago(365)
+    except Exception:
+        return days_ago(365)
+
+
 def filters_form(action, shops, sel, d_from, d_to, with_all=True):
     opts = ('<option value="all">Hamma do\'konlar</option>' if with_all else "") + "".join(
         f'<option value="{s["id"]}"{" selected" if str(s["id"]) == sel else ""}>{esc(s["name"])}</option>'
@@ -104,7 +116,7 @@ def filters_form(action, shops, sel, d_from, d_to, with_all=True):
     month = today()[:8] + "01"
     presets = (f'<a href="{action}?shop={sel}&from={days_ago(29)}&to={today()}">Oxirgi 30 kun</a>'
                f'<a href="{action}?shop={sel}&from={month}&to={today()}">Bu oy</a>'
-               f'<a href="{action}?shop={sel}&from=2026-01-01&to={today()}">Hammasi</a>')
+               f'<a href="{action}?shop={sel}&from={first_date()}&to={today()}">Hammasi</a>')
     return (f'<form class="filters" method="get" action="{action}">'
             f'<label>Do\'kon<select name="shop">{opts}</select></label>'
             f'<label>Dan<input type="date" name="from" value="{d_from}"></label>'

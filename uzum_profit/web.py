@@ -6,7 +6,9 @@ Ishga tushirish:  python3 -m uzum_profit serve   ->   http://127.0.0.1:8000
 import json
 import os
 import re
+import threading
 import traceback
+from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, quote, urlparse
 
@@ -19,7 +21,7 @@ from .rates import RateError, get_rate
 from .stock import page_stock
 from .sync import sync_api
 from .ui import (EMPTY, card, esc, filters_form, layout, money, pct, signed, tr, valid_date)
-from .util import cfg, days_ago, today
+from .util import TZ, cfg, days_ago, today
 
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 MIME = {".js": "application/javascript; charset=utf-8", ".css": "text/css; charset=utf-8"}
@@ -35,6 +37,8 @@ def page_dashboard(q):
     sel = q.get("shop", ["all"])[0]
     d_from = valid_date(q.get("from", [""])[0], days_ago(29))
     d_to = valid_date(q.get("to", [""])[0], today())
+    if d_from > d_to:
+        d_from, d_to = d_to, d_from
     ids = [s["id"] for s in shops if sel in ("all", str(s["id"]))] or [shops[0]["id"]]
     R = rpt.build_report(conn, ids, d_from, d_to)
     done, pend, ex, canc = R["done"], R["pending"], R["ex"], R["canceled"]
@@ -93,8 +97,7 @@ def page_dashboard(q):
         body.append(f'<h2>Bepul logistika davri ({f1} — {f2})</h2><div class="wrap"><table>' + tr(
             "Tejalgan logistika (taxminiy)", money(R["free_saving_total"]),
             "bu davr tugagach foyda shuncha kamayadi") + "</table></div>")
-    last = get_meta(conn, "last_sync") or get_meta(conn, "last_import") or "—"
-    body.append(f'<p class="mut">Oxirgi yangilanish: {esc(last[:19].replace("T", " "))} UTC</p>')
+    body.append(f'<p class="mut">Oxirgi yangilanish: {esc(last_update(conn))}</p>')
     return layout("Bosh sahifa", "".join(body), "/", flash)
 
 
@@ -108,6 +111,8 @@ def page_skus(q):
         sel = str(shops[0]["id"])
     d_from = valid_date(q.get("from", [""])[0], days_ago(29))
     d_to = valid_date(q.get("to", [""])[0], today())
+    if d_from > d_to:
+        d_from, d_to = d_to, d_from
     rows = rpt.sku_rows(conn, int(sel), d_from, d_to)
     head = ["SKU", "Dona", "Tushim", "O'rtacha tannarx", "Foyda", "Foyda/dona", "Standart tarifda /dona",
             "Marja", "Qaytgan %", "Qoldiq (FBO)"]
@@ -137,7 +142,30 @@ def page_skus(q):
     return layout("SKU foyda", body, "/skus")
 
 
+def last_update(conn):
+    """Oxirgi yangilanish vaqti Toshkent vaqtida."""
+    raw = get_meta(conn, "last_sync") or get_meta(conn, "last_import")
+    if not raw:
+        return "—"
+    try:
+        return datetime.fromisoformat(raw).astimezone(TZ).strftime("%Y-%m-%d %H:%M") + " (Toshkent)"
+    except ValueError:
+        return raw[:19].replace("T", " ")
+
+
+_sync_lock = threading.Lock()
+
+
 def run_sync():
+    if not _sync_lock.acquire(False):
+        return "Yangilash allaqachon davom etmoqda, tugashini kuting."
+    try:
+        return _run_sync()
+    finally:
+        _sync_lock.release()
+
+
+def _run_sync():
     key = cfg("UZUM_API_KEY")
     if not key:
         return "UZUM_API_KEY topilmadi: loyiha papkasidagi .env fayliga yozing (README'ga qarang)."
@@ -200,8 +228,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(data)))
-        if cache:
-            self.send_header("Cache-Control", cache)
+        if cache or ctype.startswith("text/html"):       # sahifalar keshlanmaydi: orqaga qaytganda yangi ma'lumot
+            self.send_header("Cache-Control", cache or "no-store")
         self.end_headers()
         self.wfile.write(data)
 
@@ -283,7 +311,11 @@ class Handler(BaseHTTPRequestHandler):
             m_edit = re.fullmatch(r"/batches/(\d+)/edit", path)
             m_del = re.fullmatch(r"/batches/(\d+)/delete", path)
             if path == "/sync":
-                self._redirect("/?msg=" + quote(run_sync()))
+                back = (form.get("next") or ["/"])[0]
+                if not re.fullmatch(r"/[A-Za-z0-9_/?&=.%+:,-]*", back) or back.startswith("//"):
+                    back = "/"
+                back = re.sub(r"([?&])msg=[^&]*&?", r"\1", back).rstrip("?&")
+                self._redirect(back + ("&" if "?" in back else "?") + "msg=" + quote(run_sync()))
             elif path == "/batches/new":
                 conn = connect()
                 state, errors, data = parse_form(form, conn)
