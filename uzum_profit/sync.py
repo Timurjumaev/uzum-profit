@@ -5,7 +5,8 @@ import re
 from datetime import datetime, timezone
 
 from .api import Uzum, UzumError
-from .db import set_meta
+from .util import cfg
+from .db import get_meta, set_meta
 
 AD_RE = re.compile(r"olganida ([\d.]+) so")
 ORDER_RE = re.compile(r"№\s*(\d+)")
@@ -137,18 +138,69 @@ def import_history(conn, path):
     return counts
 
 
-def sync_api(conn, key, days=30, log=print):
-    """Uzum API'dan oxirgi `days` kunlik sotuv va xarajatlarni, hamma mahsulot va fakturalarni oladi."""
+HISTORY_FROM = "2020-01-01"          # Uzum Market'dan oldingi sana: "butun tarix" shu sanadan so'raladi
+HISTORY_PAGES = 5000                 # butun tarix uchun sahifalar chegarasi (1 sahifa = 1000 qator)
+FALLBACK_DAYS = (1825, 1095, 730, 365, 180, 100)   # Uzum butun tarixni bermasa, kamaytirib sinaymiz
+
+
+def _ms(date_str):
+    return int(datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp() * 1000)
+
+
+def _pull_range(api, sid, start_ms, log, max_pages):
+    return api.orders(sid, start_ms, max_pages=max_pages), api.expenses(sid, start_ms, max_pages=max_pages)
+
+
+def _full_history(conn, api, sid, log):
+    """Do'konning butun tarixi: avval eng eski sanadan, Uzum rad etsa qisqaroq davrlar bilan.
+    Qaytaradi (orders, expenses, 'full' | 'limited:<kun>')."""
+    now = datetime.now(timezone.utc).timestamp()
+    tries = [(_ms(HISTORY_FROM), "full")] + [(int((now - d * 86400) * 1000), "limited:%d" % d) for d in FALLBACK_DAYS]
+    last = None
+    for start, tag in tries:
+        try:
+            log("  butun tarix so'ralmoqda" if tag == "full" else "  Uzum butun tarixni bermadi, %s kun sinab ko'riladi" % tag.split(":")[1])
+            o, e = _pull_range(api, sid, start, log, HISTORY_PAGES)
+            return o, e, tag
+        except UzumError as ex:
+            last = ex
+            log("  rad etildi: %s" % str(ex)[:120])
+    raise last
+
+
+def sync_api(conn, key, days=None, log=print, full=False):
+    """Uzum API'dan sotuv va xarajatlarni, hamma mahsulot va fakturalarni oladi.
+
+    days=None (avtomatik, tavsiya): har bir do'kon uchun BIRINCHI marta butun tarix olinadi (do'kon qachon
+    ochilgan bo'lsa ham: eng birinchi sotuvdan boshlab), keyingilarida faqat oxirgi SYNC_DAYS kun
+    (oxirgi yangilanishdan beri uzoq vaqt o'tgan bo'lsa, o'sha oraliq ham).
+    days=N: faqat oxirgi N kun. full=True: butun tarixni qayta oladi."""
     api = Uzum(key, log=log)
     shops = api.shops()
     upsert_shops(conn, shops)
-    date_from = int((datetime.now(timezone.utc).timestamp() - days * 86400) * 1000)
+    now = datetime.now(timezone.utc)
     counts = {"orders": 0, "expenses": 0}
     for s in shops:
         sid = s["id"]
-        log(f"Do'kon: {s.get('name')} ({sid}), oxirgi {days} kun")
-        counts["orders"] += upsert_orders(conn, sid, api.orders(sid, date_from))
-        counts["expenses"] += upsert_expenses(conn, sid, api.expenses(sid, date_from))
+        done_flag, new_tag = "history_%s" % sid, None
+        if days is None and (full or not get_meta(conn, done_flag)):
+            log(f"Do'kon: {s.get('name')} ({sid}), butun tarix")
+            orders, expenses, new_tag = _full_history(conn, api, sid, log)
+        else:
+            if days is None:
+                window = int(cfg("SYNC_DAYS", "30"))
+                try:       # yangilanmay uzoq turilgan bo'lsa, oraliq ham qamrab olinadi
+                    gap = (now - datetime.fromisoformat(get_meta(conn, "last_sync"))).days + 7
+                    window = max(window, gap)
+                except (TypeError, ValueError):
+                    pass
+            else:
+                window = days
+            log(f"Do'kon: {s.get('name')} ({sid}), oxirgi {window} kun")
+            start = int((now.timestamp() - window * 86400) * 1000)
+            orders, expenses = _pull_range(api, sid, start, log, 60)
+        counts["orders"] += upsert_orders(conn, sid, orders)
+        counts["expenses"] += upsert_expenses(conn, sid, expenses)
         for label, fetch, save in (("mahsulotlar", api.products, upsert_products),
                                    ("fakturalar", api.invoices, upsert_invoices)):
             try:  # bular muhim emas: xato bo'lsa sinxron to'xtamaydi
@@ -156,5 +208,7 @@ def sync_api(conn, key, days=30, log=print):
             except UzumError as e:
                 log(f"  {label}: o'tkazib yuborildi ({e})")
         conn.commit()
+        if new_tag:
+            set_meta(conn, done_flag, new_tag)
     set_meta(conn, "last_sync", datetime.now(timezone.utc).isoformat())
     return counts

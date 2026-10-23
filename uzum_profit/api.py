@@ -138,20 +138,21 @@ class Uzum:
         data = self.get("/v1/shops")
         return data if isinstance(data, list) else (data.get("payload") or [])
 
-    def orders(self, shop_id, date_from_ms):
+    def orders(self, shop_id, date_from_ms, max_pages=60):
         return self.pull(
             "sotuvlar", "/v1/finance/orders",
             lambda p, s: {"shopIds": shop_id, "group": "false", "page": p, "size": s,
                           "dateFrom": date_from_ms},
             lambda d: d.get("orderItems", []) if isinstance(d, dict) else [],
-            [1000, 200, 50], lambda d: d.get("totalElements") if isinstance(d, dict) else None)
+            [1000, 200, 50], lambda d: d.get("totalElements") if isinstance(d, dict) else None,
+            max_pages=max_pages)
 
-    def expenses(self, shop_id, date_from_ms):
+    def expenses(self, shop_id, date_from_ms, max_pages=60):
         return self.pull(
             "xarajatlar", "/v1/finance/expenses",
             lambda p, s: {"shopIds": shop_id, "page": p, "size": s, "dateFrom": date_from_ms},
             lambda d: ((d.get("payload") or {}).get("payments") or []) if isinstance(d, dict) else [],
-            [1000, 200, 50])
+            [1000, 200, 50], max_pages=max_pages)
 
     def products(self, shop_id):
         return self.pull(

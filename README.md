@@ -22,7 +22,7 @@ Terminalda shu papkada:
 # 1) Ma'lumotni yuklash. Ikki yo'ldan biri:
 python3 -m uzum_profit import-json uzum_history.json     # tayyor fayldan (API kerak emas)
 #   yoki .env ga kalit yozib (3-bo'limga qarang):
-python3 -m uzum_profit sync --days 120                   # to'g'ridan-to'g'ri API'dan
+python3 -m uzum_profit sync                              # to'g'ridan-to'g'ri API'dan (butun tarix)
 
 # 2) Veb-interfeysni ochish
 python3 -m uzum_profit serve                              # keyin brauzerda http://127.0.0.1:8000
@@ -55,15 +55,15 @@ faylda turadi, kodga yozilmaydi. Dastur faqat O'QISH (GET) so'rovlarini yuboradi
 narx/qoldiqni o'zgartira oladi, shuning uchun uni parol kabi saqla. Boshqa sozlamalar
 (bepul logistika davri, `LEAD_DAYS` va hokazo) ham `.env.example` ichida izohlangan.
 
-**Eski tarixni yuklash.** `uzum_history.json` faqat oxirgi 100 kunni olgan edi, shuning uchun bazada sotuvlar
-shu sanadan boshlanadi (do'kon ochilgan paytdan emas). To'liq tarix uchun bir marta
-`python3 -m uzum_profit sync --days 400` ni yurgiz. Uzum API eski sanalarni qancha berishi tekshirilmagan:
-natijani `python3 -m uzum_profit report --from 2026-01-01` boshida "bazadagi sotuvlar" qatoridan ko'rasan.
-"Hammasi" tugmasi bazadagi eng birinchi sanadan boshlanadi.
+**Butun tarix avtomatik.** Har bir do'kon uchun birinchi yangilashda dastur eng birinchi sotuvdan boshlab hamma
+tarixni oladi (do'kon qachon ochilgan bo'lsa ham). Uzum eski sanalarni rad etsa, dastur avtomatik qisqaroq
+davrlarni sinaydi va nima olinganini yozadi. Keyingi yangilashlarda statuslar o'zgargani uchun oxirgi
+`SYNC_DAYS` kun (yangilanmay uzoq turilgan bo'lsa, o'sha oraliq ham) qayta olinadi. "Hammasi" tugmasi
+bazadagi eng birinchi sotuv sanasidan boshlanadi. `uzum_history.json` dan yuklangan baza ham birinchi
+yangilashda butun tarix bilan to'ldiriladi. Majburan qayta olish: `python3 -m uzum_profit sync --all`.
 
 Har kuni yangilash: veb-sahifadagi **"API'dan yangilash"** tugmasi yoki
-`python3 -m uzum_profit sync`. Oxirgi 30 kun qayta olinadi (statuslar yangilanadi).
-
+`python3 -m uzum_profit sync`. 
 ## 4. Partiyalar: tannarxni bosqichma-bosqich kiritish
 
 **Partiyalar → "+ Yangi partiya"**. Partiya sening haqiqiy tartibingda to'ldiriladi: hamma

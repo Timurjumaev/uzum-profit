@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Buyruqlar:
   python3 -m uzum_profit import-json uzum_history.json   # birinchi yuklash (API'siz)
-  python3 -m uzum_profit sync [--days 30]                # API'dan yangilash (eski tarix uchun: --days 400)
+  python3 -m uzum_profit sync [--days 30]                # API'dan yangilash (birinchi marta butun tarix o'zi olinadi)
   python3 -m uzum_profit serve [--port 8000]             # veb-interfeys
   python3 -m uzum_profit report [--shop ID] [--from ...] # terminalda qisqa hisobot
   python3 -m uzum_profit selfcheck                       # haqiqiy API bilan tekshiruv (kalitsiz hisobot)
@@ -50,7 +50,9 @@ def main():
     s = sub.add_parser("import-json", help="uzum_history.json'ni bazaga yuklash")
     s.add_argument("path")
     s = sub.add_parser("sync", help="Uzum API'dan yangilash")
-    s.add_argument("--days", type=int, default=int(cfg("SYNC_DAYS", "30")))
+    s.add_argument("--days", type=int, default=None,
+                   help="faqat oxirgi N kun (bo'sh qoldirsangiz: birinchi marta butun tarix, keyin yangi kunlar)")
+    s.add_argument("--all", action="store_true", help="butun tarixni qaytadan olish")
     s = sub.add_parser("serve", help="veb-interfeys")
     s.add_argument("--port", type=int, default=8000)
     s = sub.add_parser("report", help="terminalda qisqa hisobot")
@@ -66,7 +68,7 @@ def main():
     elif args.cmd == "sync":
         from .sync import sync_api
         key = cfg("UZUM_API_KEY") or getpass.getpass("Uzum API kaliti (ekranda ko'rinmaydi): ")
-        print("Yangilandi:", sync_api(connect(), key, args.days))
+        print("Yangilandi:", sync_api(connect(), key, args.days, full=args.all))
     elif args.cmd == "serve":
         from .web import serve
         serve(args.port)

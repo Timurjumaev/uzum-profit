@@ -109,10 +109,13 @@ class FakeUzum:
     def shops(self):
         return [{"id": 1, "name": "TestShop"}]
 
-    def orders(self, sid, date_from):
+    calls = []
+
+    def orders(self, sid, date_from, max_pages=60):
+        FakeUzum.calls.append(("orders", sid, date_from, max_pages))
         return sample_rows()[0]
 
-    def expenses(self, sid, date_from):
+    def expenses(self, sid, date_from, max_pages=60):
         return sample_rows()[1]
 
     def products(self, sid):
@@ -151,6 +154,55 @@ class SyncRedirectTests(unittest.TestCase):
         finally:
             srv.shutdown()
             srv.server_close()
+
+
+class HistorySyncTests(unittest.TestCase):
+    def setUp(self):
+        FakeUzum.calls = []
+        self.conn = fresh_conn()
+
+    def run_sync(self, fake=FakeUzum, **kw):
+        from unittest import mock
+        with mock.patch.object(sync, "Uzum", fake):
+            return sync.sync_api(self.conn, "k", log=lambda s: None, **kw)
+
+    def test_first_sync_takes_whole_history_then_only_recent_days(self):
+        self.run_sync()
+        name, sid, start, pages = FakeUzum.calls[-1]
+        self.assertEqual(start, sync._ms(sync.HISTORY_FROM))                # eng eski sanadan
+        self.assertEqual(pages, sync.HISTORY_PAGES)
+        self.assertEqual(sync.get_meta(self.conn, "history_1"), "full")
+        self.run_sync()                                                      # ikkinchi marta: faqat yaqin kunlar
+        name, sid, start, pages = FakeUzum.calls[-1]
+        self.assertGreater(start, sync._ms("2026-01-01"))
+        self.assertEqual(pages, 60)
+        self.run_sync(full=True)                                             # majburan qayta
+        self.assertEqual(FakeUzum.calls[-1][2], sync._ms(sync.HISTORY_FROM))
+
+    def test_history_even_if_database_already_has_data_from_json(self):
+        sync.upsert_shops(self.conn, [{"id": 1, "name": "TestShop"}])
+        sync.upsert_orders(self.conn, 1, sample_rows()[0])
+        self.conn.commit()
+        self.run_sync()
+        self.assertEqual(FakeUzum.calls[-1][2], sync._ms(sync.HISTORY_FROM))   # eski import tarixni to'ldirmaydi
+
+    def test_falls_back_when_uzum_refuses_old_dates(self):
+        class Limited(FakeUzum):
+            def orders(self, sid, date_from, max_pages=60):
+                FakeUzum.calls.append(("orders", sid, date_from, max_pages))
+                if date_from < (datetime.now().timestamp() - 400 * 86400) * 1000:
+                    raise sync.UzumError("HTTP 400 dateFrom juda eski")
+                return sample_rows()[0]
+        self.run_sync(Limited)
+        self.assertEqual(sync.get_meta(self.conn, "history_1"), "limited:365")
+        before = len(FakeUzum.calls)
+        self.run_sync(Limited)                                               # qayta butun tarix so'ralmaydi
+        self.assertEqual(len(FakeUzum.calls), before + 1)
+
+    def test_explicit_days_window(self):
+        self.run_sync(days=10)
+        self.assertGreater(FakeUzum.calls[-1][2], (datetime.now().timestamp() - 11 * 86400) * 1000)
+        self.assertIsNone(sync.get_meta(self.conn, "history_1"))
 
 
 class SelfcheckTests(unittest.TestCase):

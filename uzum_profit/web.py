@@ -170,11 +170,9 @@ def _run_sync():
     if not key:
         return "UZUM_API_KEY topilmadi: loyiha papkasidagi .env fayliga yozing (README'ga qarang)."
     conn = connect()
-    has = conn.execute("SELECT COUNT(*) FROM order_items").fetchone()[0]
-    days = int(cfg("SYNC_DAYS", "30")) if has else int(cfg("FIRST_SYNC_DAYS", "120"))
     try:
-        c = sync_api(conn, key, days, log=lambda s: None)
-        return f"Yangilandi: {c['orders']} sotuv va {c['expenses']} xarajat qatori ({days} kun)."
+        c = sync_api(conn, key, log=lambda s: None)
+        return f"Yangilandi: {c['orders']} sotuv va {c['expenses']} xarajat qatori."
     except Exception as e:  # foydalanuvchiga xato matnini ko'rsatamiz
         return f"Yangilashda xato: {e}"
 

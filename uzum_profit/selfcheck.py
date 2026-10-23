@@ -139,10 +139,19 @@ def run(key, days=7, out=print, api_factory=Uzum):
             _probe(api, "/v1/shop/%s/invoice/products" % sid, {"invoiceId": cand[0]["id"], "page": 0, "size": 5}, out, True)
 
     out("")
-    out("-- To'liq yangilash sinovi (vaqtinchalik baza, oxirgi %d kun) --" % days)
+    out("-- To'liq yangilash sinovi: BUTUN TARIX (vaqtinchalik baza, uzum.db ga tegilmaydi) --")
     try:
-        counts = sync_api(connect(":memory:"), key, days, log=lambda s: None)
+        mem = connect(":memory:")
+        counts = sync_api(mem, key, log=lambda m: out("  " + m.strip()))
         out("  OK: %s" % counts)
+        from .util import ms_to_date
+        for srow in mem.execute("SELECT id, name FROM shops"):
+            lo, hi, n = mem.execute("SELECT MIN(created_ms), MAX(created_ms), COUNT(*) FROM order_items "
+                                    "WHERE shop_id=?", (srow["id"],)).fetchone()
+            tag = mem.execute("SELECT value FROM meta WHERE key=?", ("history_%s" % srow["id"],)).fetchone()
+            out("  %s: %d ta sotuv, %s; tarix: %s" % (
+                srow["name"], n, "%s dan %s gacha" % (ms_to_date(lo), ms_to_date(hi)) if lo else "yo'q",
+                tag[0] if tag else "?"))
     except Exception as e:  # tekshiruv hisobotda ko'rinsin
         out("  XATO: %s" % str(e)[:300])
         problems += 1
