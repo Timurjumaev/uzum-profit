@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B1. Domen yadrosi** |
-| Keyingi vazifa | B1.2 Metrikalar F3–F19, F35–F36 |
+| Keyingi vazifa | B1.3 Xarajat klassifikatori |
 | Temurdan kutilmoqda | Q8 (tannarx usuli) — B1 oxirigacha; Q2 (server) — B2.10 gacha |
-| Oxirgi yangilanish | 2026-10-23 (B1.1 tayyor) |
+| Oxirgi yangilanish | 2026-10-23 (B1.2 tayyor) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

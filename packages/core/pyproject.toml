@@ -3,7 +3,10 @@ name = "upcore"
 version = "0.0.0"
 description = "Domen yadrosi: formulalar, tannarx, P&L, ombor (sof funksiyalar, IO yo'q)"
 requires-python = ">=3.13,<3.14"
-dependencies = []
+dependencies = [
+    # Asia/Tashkent (F1): tizimda tz bazasi bo'lmasa ham ishlashi uchun (slim Docker, Windows).
+    "tzdata>=2025.2",
+]
 
 [build-system]
 requires = ["hatchling"]
