@@ -37,6 +37,7 @@ tegishli fayllar yangilanadi. Eski qaror o'chirilmaydi, "almashtirildi: ADR-0XX"
 | ADR-022 | 2026-10-23 | Grafik va rang qoidalari — dataviz usuli: bitta o'q, qat'iy kategoriya tartibi, validator bilan tekshiruv | izchil va rangni ajrata olmaydiganlar uchun ham tushunarli | ko'z bilan tanlash |
 | ADR-023 | 2026-10-23 | Landing va yordam markazi — alohida statik sayt (Astro), ilova bilan bitta domenda | qidiruv tizimlari va tezlik; yordam maqolalari Markdown'da (ilova ichidan ham ochiladi) | SPA ichida landing (SEO yomon), Next.js |
 | ADR-024 | 2026-10-23 | F13 marja maxraji — tannarxi ma'lum qatorlar tushumi (F15 bilan bir asos); marja yonida tannarxsiz qism ulushi (1 − F15) alohida ko'rsatiladi. Ta'sir: 02 (F13, M4), `upcore.metrics` (B1.2) | F15 bo'yicha sof foyda faqat tannarxi ma'lum qism uchun; umumiy tushumga bo'linsa marja sun'iy kamayadi (25% tannarxsiz → 42% o'rniga 32%). Temur tasdiqladi | F12 / F3 (dastlabki reja) |
+| ADR-025 | 2026-10-23 | Q8 javobi: Temurning tashkiloti uchun tannarx usuli — **FIFO** (ADR-008 dagi standart bilan bir xil; o'rtacha sozlamada bir tugma bilan yoqiladi) | Temur tanladi; sotuvchi partiya bilan o'ylaydi, kurs va kargo partiyadan partiyaga o'zgaradi. Ta'sir: B1.5 lot dvigateli, B1.9 legacy farqlari (legacy kumulyativ o'rtacha → FIFO) | harakatlanuvchi o'rtacha |
 
 ## Ochiq qarorlar (Temur hal qiladi)
 
@@ -49,7 +50,7 @@ tegishli fayllar yangilanadi. Eski qaror o'chirilmaydi, "almashtirildi: ADR-0XX"
 | Q5 | To'lov provayderi | B8.2 | takroriy to'lov va fiskal chekni eng sodda bergan provayder |
 | Q6 | Tarif narxlari | B8.1 | 01-mahsulot.md §7 dagi taklif |
 | Q7 | Domen (.uz / .com) | B8.8 | Q1 nomi bo'yicha bo'sh domen |
-| Q8 | Temurning tashkiloti uchun tannarx usuli: FIFO yoki o'rtacha (hozirgi daftar usuli o'rtachaga yaqin) | B1 oxiri | FIFO (ikkalasi bir tugma bilan almashadi) |
+| Q8 | ~~Temurning tashkiloti uchun tannarx usuli: FIFO yoki o'rtacha~~ — **hal qilindi: FIFO (ADR-025)** | B1 oxiri | FIFO (ikkalasi bir tugma bilan almashadi) |
 | Q9 | Beta ishtirokchilari | B9 boshi | Temurning tanishlari va guruhlardan 5–10 sotuvchi |
 
 ## Rad etilgan g'oyalar (qayta ko'tarilmasligi uchun)
