@@ -33,7 +33,7 @@ Legacy ilova (`uzum_profit/`, Python 3.8 stdlib, SQLite, lokal veb-server) Temur
 
 ## B1. Domen yadrosi (`packages/core`) — 5–8 kun
 
-- [ ] B1.1 `money`, `fx`: Decimal, valyutalar, yaxlitlash, CBU kursi (dam olish kuni → oxirgi ish kuni).
+- [x] B1.1 `money`, `fx`: Decimal, valyutalar, yaxlitlash, CBU kursi (dam olish kuni → oxirgi ish kuni).
 - [ ] B1.2 Metrikalar F3–F19, F35–F36 (02-funksiyalar.md) + misol testlari.
 - [ ] B1.3 Xarajat klassifikatori: kod normallashtirish (С/C, У/U/Y variantlari), lug'at (08-tadqiqot.md §4 kodlari), statuslar,
   `BALANCE_CORRECTION`, dublikatlar, reklama matnidan aniq summa.
