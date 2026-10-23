@@ -180,8 +180,10 @@ Safari'siz ko'rilgan):
 - **Kargoni og'irlik/hajm bo'yicha taqsimlash.** Hozir kargo dona bo'yicha teng bo'linadi (sening daftar
   usulingdek). Uzum kartochkalaridagi og'irliklar ishonchsiz, shuning uchun bu qadam qoldirildi; kerak bo'lsa,
   partiya qatoriga og'irlikni qo'lda yozish usuli qo'shiladi.
-- **Faktura ichidagi SKU ro'yxati.** Uzum fakturasi ichidagi tovarlarni beradigan so'rov hali tekshirilmagan,
-  shuning uchun yuborilgan-u qabul qilinmagan tovar "Omborda"ga qo'shilmaydi (faqat faktura ro'yxati ko'rinadi).
+- **Faktura ichidagi SKU ro'yxati.** Uzum bu ma'lumotni beradi (`/invoice/products`, haqiqiy API bilan
+  tekshirilgan), lekin hozircha qabul qilinmagan faktura bo'lmagani uchun "yo'lda" holatdagi maydonlar
+  nomi ko'rilmadi. Keyingi safar Uzum omboriga tovar yuborganingda, faktura qabul qilinishidan oldin
+  `selfcheck` ni yurgiz: shundan keyin yuborilgan tovar "Omborda" hisobiga qo'shiladi.
 - **Qaytgan tovarning jismoniy hisobi.** Uzum "qaytarishlar" ro'yxatini (brak, pullik saqlash) beradi, lekin
   dastur uni hozircha saqlamaydi: qaytgan tovar omborga qaytib sotuvga chiqdimi yoki yo'qolganmi, hisoblanmaydi.
   Hozir faqat qaytgan % va "Brak" soni ko'rsatiladi.
