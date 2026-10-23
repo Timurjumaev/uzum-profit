@@ -109,10 +109,13 @@
              dd: row.querySelector('.dd'), hint: row.querySelector('.hint') };
   }
 
+  // yangi tovar qatori (kartochka yo'q): ro'yxat o'zi ochilmaydi, nom ixtiyoriy
+  function isNew(row) { return row.getAttribute('data-new') === '1'; }
+
   function refresh(row) {
-    var p = parts(row), linked = !!p.hid.value, free = !linked && p.inp.value.trim() !== '';
+    var p = parts(row), linked = !!p.hid.value, free = !linked && (p.inp.value.trim() !== '' || isNew(row));
     row.className = 'row line' + (linked ? ' linked' : '') + (free ? ' free' : '');
-    p.hint.textContent = free ? "SKU biriktirilmagan: yangi nom sifatida saqlanadi (SKU chiqqach biriktirasiz)" : '';
+    p.hint.textContent = free ? "SKU biriktirilmagan: yangi tovar sifatida saqlanadi (SKU chiqqach biriktirasiz)" : '';
   }
 
   function closeDd(row) {
@@ -140,13 +143,14 @@
   // fromFocus: SKU biriktirilmagan qatorga kirganda butun ro'yxat ko'rsatiladi (nom qidiruv uchun yaroqsiz)
   function openDd(row, fromFocus) {
     var p = parts(row), q = fromFocus ? '' : p.inp.value, res = search(items(), q, 40), html = '', i, t = p.inp.value.trim();
+    if (isNew(row) && (fromFocus || !res.length)) { closeDd(row); return; }
     for (i = 0; i < res.length; i++) {
       html += '<div class="opt" data-i="' + i + '"><b>' + esc(res[i].sku) + '</b>' +
         (res[i].title || res[i].stock != null
           ? '<small>' + esc(res[i].title) + (res[i].stock != null ? ' · omborda: ' + esc(res[i].stock) : '') + '</small>'
           : '') + '</div>';
     }
-    if (t && !fromFocus && !findExact(t)) {
+    if (t && !fromFocus && !findExact(t) && !isNew(row)) {
       html += '<div class="opt new" data-new="1">+ «' + esc(t) + '» yangi nom sifatida (SKU keyin biriktiriladi)</div>';
     }
     if (!html) {
@@ -168,11 +172,13 @@
     row.querySelector('input[name=line_qty]').focus();
   }
 
-  function addLine(v) {
+  function addLine(v, isNewTovar) {
     v = v || {};
     var row = el(LINE_HTML), p;
+    if (isNewTovar || (v.text && !v.sku)) { row.setAttribute('data-new', '1'); }
     linesBox.appendChild(row);
     p = parts(row);
+    if (isNew(row)) { p.inp.setAttribute('placeholder', 'Yangi tovar nomi (ixtiyoriy, masalan: Qizil kurtka M)'); }
     p.inp.value = v.text || '';
     p.hid.value = v.sku || '';
     row.querySelector('input[name=line_qty]').value = v.qty || '';
@@ -274,6 +280,10 @@
 
   document.getElementById('add-line').addEventListener('click', function () {
     addLine().querySelector('.cb-input').focus();
+  });
+
+  document.getElementById('add-new').addEventListener('click', function () {
+    addLine(null, true).querySelector('.cb-input').focus();
   });
 
   perPrice.addEventListener('change', function () {

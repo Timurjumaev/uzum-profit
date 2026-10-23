@@ -75,13 +75,14 @@ def render_form(conn, state, errors=None, batch_id=None):
 
         '<fieldset class="sec" id="lines-sec"><legend>2. Mahsulotlar (SKU)</legend>'
         '<p class="hintp">Do\'kondagi SKU\'ni qidirib tanlang (masalan «spo» deb yozing), soni yoniga yoziladi. '
-        'Mahsulot kartochkasi hali yo\'q bo\'lsa, nomini yozing (masalan «Qizil kurtka M»): SKU chiqqach, '
-        'shu qatorni tahrirlab SKU biriktirasiz. Hozircha bilmasangiz, bo\'sh qoldiring. '
+        'Kartochkasi hali yo\'q yangi tovar bo\'lsa, «Yangi tovar» tugmasini bosing: nom (ixtiyoriy), soni va narxini '
+        'yozasiz, SKU chiqqach shu qatorni tahrirlab biriktirasiz. '
         'Yangi SKU ko\'rinmasa, avval yuqoridagi «API\'dan yangilash»ni bosing.</p>'
         '<label class="inline"><input type="checkbox" id="per-price"> '
         'Mahsulotlar narxi har xil (har qatorga CNY narx yozaman)</label>'
         '<div id="lines" class="lines"></div>'
-        '<button type="button" class="add" id="add-line">+ Mahsulot qo\'shish</button></fieldset>'
+        '<div class="btns"><button type="button" class="add" id="add-line">+ Mahsulot qo\'shish (SKU tanlash)</button>'
+        '<button type="button" class="add" id="add-new">+ Yangi tovar (kartochkasi hali yo\'q)</button></div></fieldset>'
 
         '<fieldset class="sec" id="cargo"><legend>3. Kargo (narxi chiqqanda)</legend>'
         '<p class="hintp">Kargo narxi odatda tovar O\'zbekistonga kelib, qo\'lingizga olganingizda ma\'lum bo\'ladi. '
@@ -191,9 +192,9 @@ def parse_form(form, conn):
         state["lines"].append({"text": canonical or text or sku_h, "sku": canonical or "",
                                "qty": qty_raw, "cny": cny_raw})
         name = canonical or text or sku_h
-        if not name:
-            errors.append("%s: mahsulot tanlanmagan (SKU tanlang yoki nom yozing)." % tag)
-            continue
+        if not name:                       # nomi yo'q yangi tovar: soni va narxi baribir kiritiladi
+            name = "Nomsiz tovar (%s)" % tag
+            state["lines"][-1]["text"] = name
         line_ok = True
         qty, e = _num(qty_raw, tag + ": soni", required=True, positive=True)
         if e:

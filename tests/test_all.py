@@ -434,7 +434,10 @@ class FormParseTests(unittest.TestCase):
         self.assertTrue(any("butun" in e for e in one("A-1", "2.5")))
         self.assertTrue(any("soni" in e for e in one("A-1", "0")))
         self.assertTrue(any("CNY narxi" in e for e in one("A-1", "3", "x")))
-        self.assertTrue(any("mahsulot tanlanmagan" in e for e in one("", "3")))
+        self.assertEqual(one("", "3"), [])                            # nomsiz yangi tovar ham saqlanadi
+        _, _, d = self.parse(line_text=["", ""], line_sku=["", ""], line_qty=["3", "4"], line_cny=["", ""])
+        self.assertEqual([(l["label"], l["qty"]) for l in d["lines"]],
+                         [("Nomsiz tovar (1-qator)", 3), ("Nomsiz tovar (2-qator)", 4)])
         dup = self.parse(line_text=["A-1", "a-1"], line_sku=["", ""], line_qty=["3", "4"], line_cny=["", ""])[1]
         self.assertTrue(any("takrorlangan" in e for e in dup))
         dup = self.parse(line_text=["Kurtka", "kurtka"], line_sku=["", ""], line_qty=["3", "4"], line_cny=["", ""])[1]

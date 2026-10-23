@@ -73,9 +73,10 @@ ma'lumot birdaniga kerak emas.
 
 - **SKU qidirish**: «spo» deb yozsang «SPONJ» chiqadi. Lotin harfda yozsang kirill harfli kod va
   nomlar ham topiladi. Yangi SKU ro'yxatda ko'rinmasa, avval **"API'dan yangilash"**ni bos.
-- **Kartochka hali yo'q bo'lsa**, qatorga nom yoz (masalan «Qizil kurtka M») va sonini kirit. Bu qator
-  dona sifatida hisoblanadi (kargo va chiqimlar unga ham bo'linadi), lekin SKU biriktirilmaguncha
-  tannarxga kirmaydi. Kartochka chiqqach partiyani tahrirlab, qatorga SKU yozasan.
+- **Kartochkasi hali yo'q yangi tovar**: **«+ Yangi tovar»** tugmasini bos. Nom ixtiyoriy (yozmasang
+  «Nomsiz tovar» deb saqlanadi), soni va kerak bo'lsa CNY narxi yoziladi. Bu qator dona sifatida hisoblanadi
+  (kargo va chiqimlar unga ham bo'linadi), lekin SKU biriktirilmaguncha tannarxga kirmaydi. Kartochka chiqqach
+  partiyani tahrirlab, qator nomini o'chirib SKU qidirasan va tanlaysan.
 - **Qo'shimcha chiqimlar**: dastlab bo'sh. «+ Qo'shimcha chiqim qo'shish»ni bossang ikkita maydon ochiladi:
   avval summa, keyin nima uchun ekani (shtrix kod rulon, paket, skotch, Uzum omboriga logistika...).
 - **Narxlar har xil bo'lsa**: «Mahsulotlar narxi har xil» belgisini qo'yib, har qatorga CNY narx yoz.
