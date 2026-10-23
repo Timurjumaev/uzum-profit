@@ -1,0 +1,160 @@
+# -*- coding: utf-8 -*-
+"""API'dan (yoki uzum_history.json faylidan) ma'lumotlarni bazaga yuklash."""
+import json
+import re
+from datetime import datetime, timezone
+
+from .api import Uzum, UzumError
+from .db import set_meta
+
+AD_RE = re.compile(r"olganida ([\d.]+) so")
+ORDER_RE = re.compile(r"№\s*(\d+)")
+AD_ID_RE = re.compile(r"^AD#(\d+)-")
+
+
+def norm_code(code):
+    """Uzum kodlarida kirill va lotin harflar aralash uchraydi: hammasini lotinga o'tkazamiz."""
+    return (code or "").replace("С", "C").replace("У", "U")
+
+
+def classify(code, source, name, typ):
+    """Xarajat qatorini turiga ajratadi: ad, storage, fine, logistics, compensation..."""
+    c, low = norm_code(code), (name or "").lower()
+    if "kompensatsiya" in low:
+        return "compensation"
+    if c == "U000120" or source == "Marketing":
+        return "ad"
+    if c == "logistics-volume":
+        return "logistics"
+    if c == "return-logistics-volume":
+        return "logistics_refund"
+    if c in ("C000003", "C000004"):
+        return "storage"
+    if c == "C000007" or "jarima" in low:
+        return "fine"
+    if c.startswith("return-C") and typ == "INCOME":
+        return "compensation"
+    if source == "Ombor":
+        return "storage"
+    if source == "Logistika":
+        return "logistics"
+    return "other"
+
+
+def _int(x, default=0):
+    try:
+        return int(x)
+    except (TypeError, ValueError):
+        return default
+
+
+def upsert_shops(conn, shops):
+    conn.executemany("INSERT OR REPLACE INTO shops (id, name) VALUES (?, ?)",
+                     [(s["id"], s.get("name")) for s in shops])
+
+
+def upsert_orders(conn, shop_id, rows):
+    data = [(r["id"], shop_id, r.get("orderId"), r.get("skuTitle"), r.get("productId"),
+             r.get("productTitle"), r.get("status"), r.get("date"), r.get("dateIssued"),
+             _int(r.get("sellPrice")), _int(r.get("amount"), 1), _int(r.get("commission")),
+             _int(r.get("sellerProfit")), _int(r.get("logisticDeliveryFee")),
+             _int(r.get("amountReturns")), r.get("returnCause")) for r in rows]
+    conn.executemany("INSERT OR REPLACE INTO order_items VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", data)
+    return len(data)
+
+
+def upsert_expenses(conn, shop_id, rows):
+    data = []
+    for r in rows:
+        name, ext, typ = r.get("name") or "", str(r.get("externalId") or ""), r.get("type")
+        kind = classify(r.get("code"), r.get("source"), name, typ)
+        price = float(r.get("paymentPrice") or 0)
+        if kind == "ad":  # paymentPrice butun songa qirqilgan, aniq summa matnda
+            m = AD_RE.search(name)
+            if m:
+                price = float(m.group(1))
+        m = ORDER_RE.search(name)
+        order_id = int(m.group(1)) if m else None
+        item_id, m = None, AD_ID_RE.match(ext)
+        if m:
+            item_id = int(m.group(1))
+        elif kind in ("logistics", "logistics_refund") and ext.isdigit():
+            item_id = int(ext)
+        data.append((r["id"], shop_id, r.get("dateCreated"), kind, typ, r.get("code"),
+                     name, price, order_id, item_id))
+    conn.executemany("INSERT OR REPLACE INTO expenses VALUES (?,?,?,?,?,?,?,?,?,?)", data)
+    return len(data)
+
+
+def upsert_products(conn, shop_id, rows):
+    data = []
+    for p in rows:
+        for s in p.get("skuList") or []:
+            if not s.get("skuFullTitle"):
+                continue
+            stock = s.get("quantityAvailableByStockType") or {}
+            dim = s.get("skuDimension") or {}
+            st = s.get("status")
+            data.append((shop_id, s["skuFullTitle"], s.get("skuId"), p.get("productId"), p.get("title"),
+                         str(s.get("barcode") or ""), s.get("commission"), _int(s.get("price")),
+                         _int(stock.get("fbo")), _int(s.get("quantitySold")),
+                         _int(s.get("quantityReturned")), _int(dim.get("weight")),
+                         s.get("sellerItemCode"), st.get("value") if isinstance(st, dict) else st,
+                         _int(s.get("quantityDefected"))))
+    conn.executemany("INSERT OR REPLACE INTO skus VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", data)
+    return len(data)
+
+
+def upsert_invoices(conn, shop_id, rows):
+    data = []
+    for r in rows:
+        st = r.get("invoiceStatus")
+        data.append((r["id"], shop_id, r.get("invoiceNumber"), r.get("dateCreated"),
+                     st.get("value") if isinstance(st, dict) else r.get("status"),
+                     _int(r.get("fullPrice")), _int(r.get("totalAccepted")),
+                     _int(r.get("totalToStock")), 1 if r.get("hasIssue") else 0))
+    conn.executemany("INSERT OR REPLACE INTO invoices VALUES (?,?,?,?,?,?,?,?,?)", data)
+    return len(data)
+
+
+def import_history(conn, path):
+    """uzum_history.json faylini bazaga yuklaydi (API'ga murojaat qilmasdan)."""
+    with open(path, encoding="utf-8") as f:
+        d = json.load(f)
+    shops = d.get("shops") or []
+    if isinstance(shops, dict):
+        shops = shops.get("payload") or []
+    upsert_shops(conn, shops)
+    counts = {"orders": 0, "expenses": 0, "products": 0, "invoices": 0}
+    for sid, blk in (d.get("per_shop") or {}).items():
+        sid = int(sid)
+        counts["orders"] += upsert_orders(conn, sid, blk.get("orders", {}).get("rows", []))
+        counts["expenses"] += upsert_expenses(conn, sid, blk.get("expenses", {}).get("rows", []))
+        counts["products"] += upsert_products(conn, sid, blk.get("products", {}).get("rows", []))
+        counts["invoices"] += upsert_invoices(conn, sid, blk.get("invoices", {}).get("rows", []))
+    conn.commit()
+    set_meta(conn, "last_import", datetime.now(timezone.utc).isoformat())
+    return counts
+
+
+def sync_api(conn, key, days=30, log=print):
+    """Uzum API'dan oxirgi `days` kunlik sotuv va xarajatlarni, hamma mahsulot va fakturalarni oladi."""
+    api = Uzum(key, log=log)
+    shops = api.shops()
+    upsert_shops(conn, shops)
+    date_from = int((datetime.now(timezone.utc).timestamp() - days * 86400) * 1000)
+    counts = {"orders": 0, "expenses": 0}
+    for s in shops:
+        sid = s["id"]
+        log(f"Do'kon: {s.get('name')} ({sid}), oxirgi {days} kun")
+        counts["orders"] += upsert_orders(conn, sid, api.orders(sid, date_from))
+        counts["expenses"] += upsert_expenses(conn, sid, api.expenses(sid, date_from))
+        for label, fetch, save in (("mahsulotlar", api.products, upsert_products),
+                                   ("fakturalar", api.invoices, upsert_invoices)):
+            try:  # bular muhim emas: xato bo'lsa sinxron to'xtamaydi
+                save(conn, sid, fetch(sid))
+            except UzumError as e:
+                log(f"  {label}: o'tkazib yuborildi ({e})")
+        conn.commit()
+    set_meta(conn, "last_sync", datetime.now(timezone.utc).isoformat())
+    return counts

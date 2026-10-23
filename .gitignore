@@ -1,0 +1,5 @@
+.env
+*.db
+__pycache__/
+uzum_history.json
+uzum_samples*.json
