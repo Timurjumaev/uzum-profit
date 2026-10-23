@@ -1,5 +1,8 @@
 # Uzum foyda: sotuvchi uchun foyda va buxgalteriya dasturi
 
+> **Production rejasi:** [docs/plan/README.md](docs/plan/README.md). Bu README hozirgi (legacy) lokal ilova haqida;
+> u B4 bosqichi oxirigacha ishlaydi va faqat kritik xatolar tuzatiladi.
+
 Uzum seller kabinetidan (OpenAPI) sotuv, xarajat va mahsulotlarni oladi, sening partiya
 tannarxing bilan birlashtirib, **haqiqiy foyda**ni ko'rsatadi. Faqat Python standart kutubxonasi:
 **hech narsa o'rnatish shart emas** (Python 3.8 yoki yangisi; Mac'dagi `python3` yetadi,
