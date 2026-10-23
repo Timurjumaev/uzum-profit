@@ -33,3 +33,12 @@ Timurjumaev). Avval o'z do'konlari (byDurii 106121, EL-ONE 135204), keyin boshqa
 - UI matnlarida oʻ/gʻ uchun U+02BB, tutuq uchun U+02BC; ranglar va shrift `docs/plan/04-dizayn.md` dan.
 - Sandbox Uzum API'ga chiqa olmaydi (WAF va tarmoq) — real ma'lumot faqat Temur yoki staging orqali.
 - Commit: Conventional Commits; har vazifadan keyin `docs/plan/README.md` holat jadvali va `05` belgisi yangilanadi.
+
+## Ish oqimi (Temur tasdiqlagan)
+
+1. Har vazifa `main` dan yangi branch'da (`claude/<vazifa>-...`), oldingi PR merge bo'lgandan keyingina.
+2. Vazifa tugagach: holat jadvali, `05` belgisi, `CHANGELOG.md` → commit → push → **PR'ni o'zim ochaman**
+   (`.github/pull_request_template.md` bo'yicha) va PR faoliyatiga obuna bo'laman.
+3. CI yashil bo'lguncha kuzataman: qizarsa o'zim tuzataman, izohlarga javob beraman.
+4. **Merge faqat Temur qiladi.** U "merge bo'ldi" deganidan keyin keyingi vazifa yangi branch'da boshlanadi.
+5. Har qadamdan keyin Temurga o'zbekcha qisqa xabar.
