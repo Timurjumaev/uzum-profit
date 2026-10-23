@@ -4,6 +4,7 @@
   python3 -m uzum_profit sync [--days 30]                # API'dan yangilash
   python3 -m uzum_profit serve [--port 8000]             # veb-interfeys
   python3 -m uzum_profit report [--shop ID] [--from ...] # terminalda qisqa hisobot
+  python3 -m uzum_profit selfcheck                       # haqiqiy API bilan tekshiruv (kalitsiz hisobot)
 """
 import argparse
 import getpass
@@ -51,6 +52,7 @@ def main():
     s.add_argument("--shop", type=int)
     s.add_argument("--from", dest="date_from", default=days_ago(29))
     s.add_argument("--to", dest="date_to", default=today())
+    sub.add_parser("selfcheck", help="Uzum API va bank kursini tekshirish (natijani Claude'ga yuborish mumkin)")
     args = p.parse_args()
 
     if args.cmd == "import-json":
@@ -63,6 +65,9 @@ def main():
     elif args.cmd == "serve":
         from .web import serve
         serve(args.port)
+    elif args.cmd == "selfcheck":
+        from .selfcheck import main as selfcheck_main
+        selfcheck_main(cfg("UZUM_API_KEY") or getpass.getpass("Uzum API kaliti (ekranda ko'rinmaydi): "))
     elif args.cmd == "report":
         cmd_report(args)
     else:

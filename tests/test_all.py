@@ -20,7 +20,7 @@ os.environ["FREE_LOGISTICS_FROM"] = "2026-10-10"
 os.environ["FREE_LOGISTICS_TO"] = "2026-10-31"
 os.environ["LEAD_DAYS"] = "30"
 
-from uzum_profit import batches_form, costs, rates, report as rpt, stock, sync, web  # noqa: E402
+from uzum_profit import batches_form, costs, rates, report as rpt, selfcheck, stock, sync, web  # noqa: E402
 from uzum_profit.db import connect  # noqa: E402
 from uzum_profit.util import day_start_ms  # noqa: E402
 
@@ -94,6 +94,50 @@ class CostMethodTests(unittest.TestCase):
         code, sugg = costs.match_sku("ABC-3", ["ABC-1", "ABC-2"])
         self.assertIsNone(code)
         self.assertTrue(sugg)
+
+
+class FakeUzum:
+    """Haqiqiy API o'rniga: sample_rows() ma'lumotlarini qaytaradi."""
+    def __init__(self, key, log=None, **kw):
+        self.key = key
+
+    def get(self, path, params=None):
+        if path.endswith("/return"):
+            raise sync.UzumError("%s: HTTP 404" % path)
+        return []
+
+    def shops(self):
+        return [{"id": 1, "name": "TestShop"}]
+
+    def orders(self, sid, date_from):
+        return sample_rows()[0]
+
+    def expenses(self, sid, date_from):
+        return sample_rows()[1]
+
+    def products(self, sid):
+        return [{"productId": 1, "title": "T", "skuList": [{"skuFullTitle": "A-1", "skuId": 1, "price": 1,
+                 "commission": 1, "barcode": "1", "status": {"value": "IN_STOCK"}, "quantitySold": 1,
+                 "quantityReturned": 0, "quantityDefected": 0, "quantityAvailableByStockType": {"fbo": 2}}]}]
+
+    def invoices(self, sid):
+        return []
+
+
+class SelfcheckTests(unittest.TestCase):
+    def test_report_has_no_key_and_flags_missing_fields(self):
+        from unittest import mock
+        lines = []
+        with mock.patch.object(sync, "Uzum", FakeUzum), \
+                mock.patch.object(rates, "get_rate", return_value={"rate": 1800.0, "date": "2026-10-22", "warn": ""}):
+            code = selfcheck.run("SECRET-KEY-123", days=7, out=lines.append, api_factory=FakeUzum)
+        text = "\n".join(lines)
+        self.assertNotIn("SECRET-KEY-123", text)
+        self.assertIn("TestShop (1)", text)
+        self.assertIn("OK: {'orders': 4", text)
+        self.assertIn("/v1/shop/1/return", text)          # sinov yo'li xatosi hisobotda ko'rinadi
+        self.assertEqual(code, 0)                          # kutilgan maydonlar bor; qo'shimcha so'rov xatosi muammo emas
+        self.assertEqual(selfcheck.missing_keys([{"a": 1, "b": None}], ["a", "b", "c"]), ["b", "c"])
 
 
 class ClassifyTests(unittest.TestCase):

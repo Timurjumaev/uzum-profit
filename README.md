@@ -156,6 +156,11 @@ kuni), forma qaysi sanadagi kurs olinganini yozib ogohlantiradi.
 
 ## 8. Sinov
 
+**Haqiqiy Uzum API bilan tekshiruv:** `python3 -m uzum_profit selfcheck` (kalit `.env` dan olinadi). U oxirgi
+7 kunni vaqtinchalik bazaga yuklaydi (`uzum.db` ga tegmaydi), kutilgan maydonlar borligini va bank kursini
+tekshiradi. Hisobotda kalit yo'q: uni Claude'ga bemalol yuborish mumkin.
+
+
 ```bash
 python3 -m unittest tests.test_all -v
 ```
