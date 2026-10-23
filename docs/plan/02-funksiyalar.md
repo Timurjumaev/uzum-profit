@@ -188,7 +188,7 @@ xarajatni to'g'ri yig'ish va tovarlarga to'g'ri bo'lish.
 
 Qabul mezonlari: legacy'dagi har partiya ko'chirilgach birlik tannarx legacy bilan bir xil (o'rtacha usulda);
 kargo vazn bo'yicha taqsimlanganda qatorlar yig'indisi kargo summasiga tiyinigacha teng (yaxlitlash qoldig'i
-oxirgi qatorga); kurs o'zgarsa tannarx darhol yangilanadi.
+eng katta qatorga, F20); kurs o'zgarsa tannarx darhol yangilanadi.
 
 ## M10. Ombor va zaxira rejasi [B4 asos, B5 to'liq]
 
