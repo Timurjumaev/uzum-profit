@@ -14,3 +14,6 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   lint/typecheck/test/build.
 - B0.4 Kod tartibi: pre-commit (ruff, taqiqlangan fayllar, Conventional Commits), PR shabloni, Dependabot,
   `CONTRIBUTING.md`, `.python-version`, `.nvmrc`.
+- B0.5 Dev muhit: `infra/compose/dev.yml` (PostgreSQL 18, api, web), `make dev`, API Dockerfile; CI'da
+  compose smoke testi.
+- B0.6 Legacy siyosati README'da.
