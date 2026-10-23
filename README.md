@@ -66,7 +66,7 @@ bazadagi eng birinchi sotuv sanasidan boshlanadi. `uzum_history.json` dan yuklan
 yangilashda butun tarix bilan to'ldiriladi. Majburan qayta olish: `python3 -m uzum_profit sync --all`.
 
 Har kuni yangilash: veb-sahifadagi **"API'dan yangilash"** tugmasi yoki
-`python3 -m uzum_profit sync`. 
+`python3 -m uzum_profit sync`.
 ## 4. Partiyalar: tannarxni bosqichma-bosqich kiritish
 
 **Partiyalar → "+ Yangi partiya"**. Partiya sening haqiqiy tartibingda to'ldiriladi: hamma

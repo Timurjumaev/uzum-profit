@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B0. Poydevor** |
-| Keyingi vazifa | B0.4 Kod tartibi (pre-commit, CHANGELOG, PR shabloni) |
+| Keyingi vazifa | B0.5 `infra/compose/dev.yml`, `make dev` |
 | Temurdan kutilmoqda | Q8 (tannarx usuli) — B1 oxirigacha; Q2 (server) — B2.10 gacha |
-| Oxirgi yangilanish | 2026-10-23 (B0.3 tayyor) |
+| Oxirgi yangilanish | 2026-10-23 (B0.4 tayyor) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

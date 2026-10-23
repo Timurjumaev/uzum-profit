@@ -23,6 +23,7 @@ dev = [
     "httpx>=0.28",
     "ruff>=0.14",
     "mypy>=1.18",
+    "pre-commit>=4",
 ]
 
 [tool.pytest.ini_options]
