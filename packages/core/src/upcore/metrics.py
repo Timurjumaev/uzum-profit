@@ -270,8 +270,16 @@ class ProfitSummary:
 
     @property
     def margin(self) -> Decimal | None:
-        """F13. Marja = F12 / F3."""
-        return ratio(self.net_profit.amount, self.revenue.amount)
+        """F13. Marja = F12 / tannarxi ma'lum qatorlar tushumi (ADR-024; qamrov 100% bo'lsa F12 / F3).
+
+        Doim ``uncovered_share`` bilan birga ko'rsatiladi.
+        """
+        return ratio(self.net_profit.amount, (self.revenue - self.uncovered_revenue).amount)
+
+    @property
+    def uncovered_share(self) -> Decimal:
+        """F13 yonidagi tannarxsiz qism ulushi = 1 − F15 (tushum bo'yicha)."""
+        return 1 - self.coverage
 
     @property
     def roi(self) -> Decimal | None:
