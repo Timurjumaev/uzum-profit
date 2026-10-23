@@ -39,7 +39,20 @@ def _keys(row):
     return sorted(row.keys()) if isinstance(row, dict) else []
 
 
-def _probe(api, path, params, out):
+def _shape(v, depth=0):
+    """Qiymat tuzilishi: turlar va (son/mantiqiy bo'lsa) qiymat; matnlar yozilmaydi."""
+    if isinstance(v, dict):
+        if depth >= 2:
+            return "{...}"
+        return "{" + ", ".join("%s=%s" % (k, _shape(x, depth + 1)) for k, x in sorted(v.items())) + "}"
+    if isinstance(v, list):
+        return "[%d x %s]" % (len(v), _shape(v[0], depth + 1) if v else "-")
+    if isinstance(v, (bool, int, float)):
+        return repr(v)
+    return "null" if v is None else "str"
+
+
+def _probe(api, path, params, out, show_shape=False):
     """Noma'lum yo'lni sinab, holat va maydon nomlarini yozadi (qiymatlar yozilmaydi)."""
     try:
         data = api.get(path, params)
@@ -59,6 +72,8 @@ def _probe(api, path, params, out):
                         break
     out("  %-34s OK, qatorlar: %s; maydonlar: %s" % (
         path, "?" if rows is None else len(rows), ", ".join(_keys(rows[0])) if rows else "-"))
+    if show_shape and rows and isinstance(rows[0], dict):
+        out("    tuzilishi: %s" % _shape(rows[0]))
     return rows
 
 
@@ -105,10 +120,10 @@ def run(key, days=7, out=print, api_factory=Uzum):
                 out("  %-12s %d ta qator. Yo'q maydonlar: %s" % (label, len(rows), miss or "yo'q"))
                 problems += bool(miss and rows)
         out("  qo'shimcha so'rovlar (hisobotga hali kirmagan):")
-        _probe(api, "/v1/shop/%s/return" % sid, {"page": 0, "size": 5}, out)
+        _probe(api, "/v1/shop/%s/return" % sid, {"page": 0, "size": 5}, out, True)
         inv = _probe(api, "/v1/shop/%s/invoice" % sid, {"page": 0, "size": 1}, out)
         if inv and isinstance(inv[0], dict) and inv[0].get("id") is not None:
-            _probe(api, "/v1/shop/%s/invoice/products" % sid, {"invoiceId": inv[0]["id"], "page": 0, "size": 5}, out)
+            _probe(api, "/v1/shop/%s/invoice/products" % sid, {"invoiceId": inv[0]["id"], "page": 0, "size": 5}, out, True)
 
     out("")
     out("-- To'liq yangilash sinovi (vaqtinchalik baza, oxirgi %d kun) --" % days)
@@ -122,9 +137,10 @@ def run(key, days=7, out=print, api_factory=Uzum):
     out("")
     try:
         from .rates import get_rate
-        for ccy in ("CNY", "USD"):
-            r = get_rate(ccy)
-            out("Bank kursi %s: %s so'm (%s)%s" % (ccy, r["rate"], r["date"], " " + r["warn"] if r["warn"] else ""))
+        for ccy, day in (("CNY", None), ("USD", None), ("CNY", "2026-10-15"), ("USD", "2026-10-18")):
+            r = get_rate(ccy, day)
+            out("Bank kursi %s%s: %s so'm (%s)%s" % (ccy, " [so'raldi %s]" % day if day else "", r["rate"], r["date"],
+                                                      " " + r["warn"] if r["warn"] else ""))
     except Exception as e:
         out("Bank kursi: XATO: %s" % str(e)[:200])
         problems += 1
