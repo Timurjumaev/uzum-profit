@@ -3,3 +3,12 @@
 __pycache__/
 uzum_history.json
 uzum_samples*.json
+
+# Yangi tizim
+.venv/
+node_modules/
+dist/
+*.tsbuildinfo
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/

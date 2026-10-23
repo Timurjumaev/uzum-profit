@@ -1,0 +1,28 @@
+# uv workspace: yangi tizimning Python paketlari (03-arxitektura.md §3).
+# Legacy ilova (uzum_profit/, tests/) bu workspace'ga kirmaydi — Python 3.8 stdlib, alohida ishlaydi.
+[project]
+name = "uzum-profit-workspace"
+version = "0.0.0"
+requires-python = ">=3.13,<3.14"
+dependencies = ["upcore", "upapi", "upbot"]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["packages/core", "apps/api", "apps/bot"]
+
+[tool.uv.sources]
+upcore = { workspace = true }
+upapi = { workspace = true }
+upbot = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "httpx>=0.28",
+]
+
+[tool.pytest.ini_options]
+addopts = ["--import-mode=importlib"]
+testpaths = ["packages/core/tests", "apps/api/tests", "apps/bot/tests"]
