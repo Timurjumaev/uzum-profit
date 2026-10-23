@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B1. Domen yadrosi** |
-| Keyingi vazifa | B1.6 P&L F12–F16 (hisobot qatorlari, kesimlar) |
+| Keyingi vazifa | B1.7 Ombor F23–F34 |
 | Temurdan kutilmoqda | Q2 (server) — B2.10 gacha (Q8 hal qilindi: FIFO, ADR-025) |
-| Oxirgi yangilanish | 2026-10-23 (B1.5 tayyor, Q8 = FIFO, M9 matni F20 ga moslandi) |
+| Oxirgi yangilanish | 2026-10-23 (B1.6 tayyor, ADR-026) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

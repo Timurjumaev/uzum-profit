@@ -116,6 +116,7 @@ class SaleLine:
     seller_profit: Decimal | None = None
     amount_returns: int = 0
     unit_cost: Decimal | None = None
+    shop: str = ""
 
     @property
     def group(self) -> StatusGroup:

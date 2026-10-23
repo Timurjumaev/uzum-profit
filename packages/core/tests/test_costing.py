@@ -245,6 +245,7 @@ def test_single_lot_fifo_equals_average(qty: int, unit: int, sales: list[int]) -
     assert {k: v.cost for k, v in fifo.sales.items()} == {k: v.cost for k, v in avg.sales.items()}
 
 
+@pytest.mark.benchmark
 def test_benchmark_10k_sales_under_1s() -> None:
     lots = [Lot(f"L{i}", d(i * 3), 500, uzs(1000 * 500 + i)) for i in range(25)]
     events = [Sale(f"s{i:05d}", d(i % 90), 1) for i in range(10_000)]
