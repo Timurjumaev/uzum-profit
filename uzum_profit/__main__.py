@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Buyruqlar:
   python3 -m uzum_profit import-json uzum_history.json   # birinchi yuklash (API'siz)
-  python3 -m uzum_profit sync [--days 30]                # API'dan yangilash
+  python3 -m uzum_profit sync [--days 30]                # API'dan yangilash (eski tarix uchun: --days 400)
   python3 -m uzum_profit serve [--port 8000]             # veb-interfeys
   python3 -m uzum_profit report [--shop ID] [--from ...] # terminalda qisqa hisobot
   python3 -m uzum_profit selfcheck                       # haqiqiy API bilan tekshiruv (kalitsiz hisobot)
@@ -12,7 +12,7 @@ import sys
 
 from . import report as rpt
 from .db import connect
-from .util import cfg, days_ago, fmt, load_env, today
+from .util import cfg, days_ago, fmt, load_env, ms_to_date, today
 
 
 def cmd_report(args):
@@ -24,6 +24,11 @@ def cmd_report(args):
     R = rpt.build_report(conn, ids, args.date_from, args.date_to)
     d, e = R["done"], R["ex"]
     print(f"{R['name']}: {args.date_from} — {args.date_to}")
+    for s in shops:
+        if s["id"] in ids:
+            lo, hi = conn.execute("SELECT MIN(created_ms), MAX(created_ms) FROM order_items WHERE shop_id=?",
+                                  (s["id"],)).fetchone()
+            print(f"  bazadagi sotuvlar ({s['name']}): " + (f"{ms_to_date(lo)} dan {ms_to_date(hi)} gacha" if lo else "yo'q"))
     print(f"  yakunlangan: {d['n']} qator, tushim {fmt(d['revenue'])}, Uzum sof tushimi {fmt(d['seller_profit'])}")
     print(f"  tannarxi ma'lum: {d['k_n']} qator, tannarx {fmt(d['cogs'])}; tannarxsiz: {R['miss_n']} qator")
     print(f"  reklama {fmt(e['ad'])}, saqlash {fmt(e['storage'])}, jarima {fmt(e['fine'])}, kompensatsiya {fmt(e['compensation'])}")

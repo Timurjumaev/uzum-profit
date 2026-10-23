@@ -55,6 +55,12 @@ faylda turadi, kodga yozilmaydi. Dastur faqat O'QISH (GET) so'rovlarini yuboradi
 narx/qoldiqni o'zgartira oladi, shuning uchun uni parol kabi saqla. Boshqa sozlamalar
 (bepul logistika davri, `LEAD_DAYS` va hokazo) ham `.env.example` ichida izohlangan.
 
+**Eski tarixni yuklash.** `uzum_history.json` faqat oxirgi 100 kunni olgan edi, shuning uchun bazada sotuvlar
+shu sanadan boshlanadi (do'kon ochilgan paytdan emas). To'liq tarix uchun bir marta
+`python3 -m uzum_profit sync --days 400` ni yurgiz. Uzum API eski sanalarni qancha berishi tekshirilmagan:
+natijani `python3 -m uzum_profit report --from 2026-01-01` boshida "bazadagi sotuvlar" qatoridan ko'rasan.
+"Hammasi" tugmasi bazadagi eng birinchi sanadan boshlanadi.
+
 Har kuni yangilash: veb-sahifadagi **"API'dan yangilash"** tugmasi yoki
 `python3 -m uzum_profit sync`. Oxirgi 30 kun qayta olinadi (statuslar yangilanadi).
 
