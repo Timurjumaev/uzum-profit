@@ -13,7 +13,7 @@ Belgilar: **[B4]** = shu bosqichda quriladi (05-bosqichlar.md). **[Keyin]** = om
 **Vazifasi.** Sotuvchi o'z tashkilotini (biznesini) ochadi, xodimlarni taklif qiladi, har kim faqat o'ziga ruxsat
 etilganini ko'radi.
 
-- Kirish: telefon raqam + bir martalik kod (OTP). Kod yetkazish kanali: Q3 qarori (07-qarorlar.md).
+- Kirish: telefon raqam + bir martalik kod (OTP). Kod Telegram orqali yuboriladi (ADR-027); SMS — keyinroq zaxira kanal.
   Parol yo'q. Sessiya 30 kun, "qurilmalarim" ro'yxati, "hamma qurilmalardan chiqish".
 - Tashkilot (tenant): nomi, ixtiyoriy STIR, til, vaqt mintaqasi (standart Asia/Tashkent).
 - Bitta foydalanuvchi bir nechta tashkilotda bo'lishi mumkin (masalan, buxgalter bir nechta mijozda).
