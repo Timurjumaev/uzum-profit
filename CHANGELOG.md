@@ -69,3 +69,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   (JSON / dev'da konsol, so'rov id konteksti, maxfiy maydonlar filtri — token, kod, kalit, Authorization),
   RFC 9457 `application/problem+json` xatolar `code` bilan (404, 405, 422, `AppError`, 500 — prod'da tafsilotsiz),
   `X-Request-ID`, kirish logi, `/health` va `/api/v1/health`, OpenAPI `/api/v1/openapi.json`. CI: API qamrovi ≥ 80%.
+- B2.2 DB sxemasi (03 §5): 50 jadval (SQLAlchemy Core), Alembic `0001_initial_schema`, PostgreSQL RLS —
+  `up_app` roli (superuser/BYPASSRLS/ega emas), `FORCE`, kompozit FK'lar, `org_id` li unikal kalitlar, global
+  jadvallar faqat o'qish, kirish jadvallari yopiq, `audit_log`/`events` faqat qo'shish. Har jadvalda boshqa
+  tashkilot qatorini o'qish, o'zgartirish, boshqa tashkilotga ko'chirish, o'chirish, qo'shish va unga havola
+  qilish testlari; `org_transaction` (`SET LOCAL`), migratsiya upgrade ↔ downgrade va model ↔ migratsiya
+  mosligi testlari. Sintetik seed `python -m upapi.db.seed` (`make seed`). CI'da PostgreSQL 18 servisi; CI'da DB
+  bo'lmasa DB testlari o'tkazib yuborilmaydi, xato beradi.

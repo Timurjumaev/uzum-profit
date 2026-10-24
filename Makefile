@@ -1,6 +1,6 @@
 COMPOSE_DEV = docker compose -f infra/compose/dev.yml
 
-.PHONY: dev down logs check
+.PHONY: dev down logs migrate seed check
 
 ## Lokal muhit: postgres + api (http://localhost:8000/health) + web (http://localhost:5173)
 dev:
@@ -11,6 +11,13 @@ down:
 
 logs:
 	$(COMPOSE_DEV) logs -f
+
+## Migratsiyalar va sintetik demo ma'lumot (`make dev` ishlab turganda)
+migrate:
+	$(COMPOSE_DEV) exec -T api alembic -c apps/api/alembic.ini upgrade head
+
+seed: migrate
+	$(COMPOSE_DEV) exec -T api python -m upapi.db.seed
 
 ## CI bilan bir xil tekshiruvlar
 check:

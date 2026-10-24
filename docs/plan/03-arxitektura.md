@@ -102,6 +102,14 @@ Har tashkilot jadvalida `org_id uuid not null` + RLS siyosati. Pul `numeric(18,2
 (valyuta), kurs `numeric(18,6)`. Vaqt `timestamptz`. Sotuvchi kiritgan yozuvlar o'chirilmaydi, `deleted_at` bilan
 yashiriladi. Uzum'dan kelgan yozuvlarda `raw jsonb`.
 
+RLS qoidalari (B2.2, `apps/api/src/upapi/db`): ilova `up_app` roli bilan ulanadi — superuser emas, `BYPASSRLS`
+yo'q, jadvallar egasi emas (egasi — migratsiya roli); jadvallarda `FORCE ROW LEVEL SECURITY`. Tashkilot ichidagi
+bog'lanishlar kompozit FK `(org_id, x_id) → x (org_id, id)` (FK tekshiruvi RLS'ni chetlab o'tadi), unikal kalitlar
+`org_id` bilan boshlanadi, `TRUNCATE`/`REFERENCES`/`TRIGGER` berilmaydi, `app.org_id` bo'sh bo'lsa hech narsa
+ko'rinmaydi. Global ma'lumotnomalar — faqat o'qish; kirish jadvallari (sessiyalar, kodlar) ilova roliga
+berilmaydi; `audit_log`, `events` — faqat qo'shish. Har jadval uchun o'qish/o'zgartirish/o'chirish/qo'shish
+testlari `apps/api/tests/test_rls.py` da (CI'da PostgreSQL 18). Ilova `asyncpg`, migratsiya va testlar `psycopg`.
+
 **Tashkilot va kirish:** `orgs` (nomi, STIR, til, vaqt mintaqasi, tannarx usuli), `users` (telefon E.164 unikal),
 `memberships` (org, user, rol), `invites`, `sessions` (token xeshi, qurilma, muddat), `otp_codes`
 (kod xeshi, urinishlar), `audit_log` (oldin/keyin jsonb).
