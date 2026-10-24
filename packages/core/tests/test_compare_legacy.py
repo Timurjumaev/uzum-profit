@@ -134,6 +134,27 @@ EXPENSES = [
         "code": "Y000002",
         "type": "OUTCOME",
     },
+    {
+        "id": 104,
+        "dateCreated": ms("2026-10-08"),
+        "name": "Reklama qaytarildi",
+        "source": "Marketing",
+        "paymentPrice": 500,
+        "externalId": "AD#11-2",
+        "code": "Y000120",
+        "type": "INCOME",
+    },
+    {
+        "id": 105,
+        "dateCreated": ms("2026-10-09"),
+        "name": "Reklama",
+        "source": "Marketing",
+        "paymentPrice": 900,
+        "externalId": "AD#11-3",
+        "code": "Y000120",
+        "type": "OUTCOME",
+        "status": "CANCELED",
+    },
 ]
 
 
@@ -210,6 +231,12 @@ def test_compare_with_history(
     assert "xom qatorlar (uzum_history.json)" in text
     assert "`PARTIALLY_CANCELLED`: **1** qator" in text
     assert "photo_studio (legacy'da yo'q)" in text
+    assert "Xarajat farqlari qatorlar bo'yicha" in text
+    assert (
+        "| hisobga kirmaydi (ad, INCOME) | ad | Y000120 | INCOME | — | 1 | 0 | -500 | -500 |"
+        in text
+    )
+    assert "| ad | chiqarildi: status | Y000120 | OUTCOME | CANCELED | 1 | 900 | 0 | -900 |" in text
     assert "| 2026-09 |" in text and "| 2026-10 |" in text
     assert "Hisobot saqlandi" in capsys.readouterr().err
 
@@ -222,6 +249,16 @@ def test_compare_db_only_and_period(legacy_db: tuple[Path, Path], tmp_path: Path
     )
     text = out.read_text(encoding="utf-8")
     assert "uzum.db dan tiklangan" in text and "2026-10-01 — 2026-10-31" in text
+
+
+def test_missing_history_falls_back_to_db(
+    legacy_db: tuple[Path, Path], tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    db, _ = legacy_db
+    out = tmp_path / "farq.md"
+    assert run("--db", str(db), "--history", str(tmp_path / "yoq.json"), "--out", str(out)) == 0
+    assert "uzum.db dan tiklangan" in out.read_text(encoding="utf-8")
+    assert "topilmadi" in capsys.readouterr().err
 
 
 def test_missing_db(tmp_path: Path) -> None:

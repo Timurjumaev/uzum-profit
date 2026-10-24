@@ -48,6 +48,7 @@ from upcore.purchasing import (  # noqa: E402
 
 from uzum_profit import costs as legacy_costs  # noqa: E402
 from uzum_profit import report as legacy_report  # noqa: E402
+from uzum_profit import sync as legacy_sync  # noqa: E402
 from uzum_profit.db import connect  # noqa: E402
 from uzum_profit.util import load_env  # noqa: E402
 
@@ -251,6 +252,65 @@ def new_expenses(conn, shop_id: int, history: dict | None) -> tuple[list[Expense
     ), "uzum.db dan tiklangan (status, source yo'q)"
 
 
+def expense_diff(raw: list[dict], period: Period) -> list[str]:
+    """Xarajat qatorlari bo'yicha legacy va yangi toifalash farqi (sabablari bilan, guruhlangan).
+
+    Legacy: ``sync.classify`` + reklama matnidan summa; hisobga faqat ad/storage/fine (OUTCOME) va
+    compensation (INCOME) kiradi. Yangi: B1.3 klassifikatori (status, BALANCE_CORRECTION, INCOME ishorasi)."""
+    legacy_rows: dict[str, dict] = {
+        str(r["id"]): r for r in raw
+    }  # INSERT OR REPLACE — oxirgisi qoladi
+    new_rows = {r.id: r for r in classify_expenses(raw)}
+    groups: dict[tuple, list[Decimal]] = defaultdict(lambda: [D(0), D(0), D(0)])
+    for rid, r in legacy_rows.items():
+        new = new_rows[rid]
+        if new.day not in period:
+            continue
+        typ = str(r.get("type") or "")
+        kind = legacy_sync.classify(r.get("code"), r.get("source"), r.get("name") or "", typ)
+        price = d(r.get("paymentPrice") or 0)
+        if kind == "ad":
+            m = legacy_sync.AD_RE.search(r.get("name") or "")
+            if m:
+                price = d(m.group(1))
+        if kind in ("ad", "storage", "fine") and typ == "OUTCOME":
+            old_bucket, old_val = kind, price
+        elif kind == "compensation" and typ == "INCOME":
+            old_bucket, old_val = kind, -price
+        else:
+            old_bucket, old_val = f"hisobga kirmaydi ({kind}, {typ})", D(0)
+        if not new.counted:
+            new_bucket, new_val = f"chiqarildi: {new.excluded.value if new.excluded else '?'}", D(0)
+        else:
+            mapped = next((k for k, cats in LEGACY_KIND.items() if new.category in cats), None)
+            new_bucket, new_val = mapped or f"yangi: {new.category.value}", new.signed.amount
+        if old_bucket == new_bucket and abs(old_val - new_val) < D("0.01"):
+            continue
+        if old_val == 0 and new_val == 0:
+            continue
+        key = (old_bucket, new_bucket, new.code or "—", typ, new.status or "—")
+        g = groups[key]
+        g[0] += 1
+        g[1] += old_val
+        g[2] += new_val
+    if not groups:
+        return ["", "Xarajat qatorlari bo'yicha legacy va yangi toifalash farqi yo'q."]
+    out = [
+        "",
+        "Xarajat farqlari qatorlar bo'yicha (guruhlangan):",
+        "",
+        "| Legacy | Yangi | Kod | Tur | Status | Qatorlar | Legacy summa | Yangi summa | Farq |",
+        "|---|---|---|---|---|---|---|---|---|",
+    ]
+    for (ob, nb, code, typ, status), (n, ov, nv) in sorted(
+        groups.items(), key=lambda kv: -abs(kv[1][2] - kv[1][1])
+    ):
+        out.append(
+            f"| {ob} | {nb} | {code} | {typ} | {status} | {int(n)} | {fmt(ov)} | {fmt(nv)} | {fmt(nv - ov)} |"
+        )
+    return out
+
+
 # --- Hisobot ----------------------------------------------------------------------------------
 
 
@@ -351,6 +411,14 @@ def shop_section(
         "C000004 qaytim saqlash), CANCELED/REFUNDED va `BALANCE_CORRECTION` ni chiqaradi, dublikatlarni "
         "olib tashlaydi (B1.3). Xom qatorlarsiz (`--history` yo'q) `source` ma'lumoti yo'qoladi.",
     ]
+    raw = (
+        ((history or {}).get("per_shop") or {})
+        .get(str(shop_id), {})
+        .get("expenses", {})
+        .get("rows")
+    )
+    if raw:
+        out += expense_diff(raw, period)
 
     # Tannarx va foyda: avval legacy bilan bir xil qatorlar (TO_WITHDRAW), keyin to'liq yangi hisob.
     def only_strict(items: list[SaleLine]) -> list[SaleLine]:
@@ -422,7 +490,12 @@ def main(argv: list[str] | None = None) -> int:
 
 def _run(conn, args: argparse.Namespace) -> int:
     history = None
-    if args.history:
+    if args.history and not Path(args.history).exists():
+        print(
+            f"Diqqat: {args.history} topilmadi — xarajatlar uzum.db dan tiklanadi (hisobotda aytiladi).",
+            file=sys.stderr,
+        )
+    elif args.history:
         with open(args.history, encoding="utf-8") as fh:
             history = json.load(fh)
 
