@@ -9,7 +9,7 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 |---|---|
 | Joriy bosqich | **B2. Backend poydevori va staging** (B1 tugadi, 2026-10-24) |
 | Keyingi vazifa | B2.4 Marketplace ulanishi: kalitni AES-GCM bilan saqlash, tekshirish, do'konlarni tanlash |
-| Temurdan kutilmoqda | ADR-028 (Telegram Gateway) tasdig'i; Q2 (server provayderi) — B2.10 gacha; ixtiyoriy: partiya qatorlariga SKU biriktirish |
+| Temurdan kutilmoqda | Q2 (server provayderi) — B2.10 gacha; ixtiyoriy: partiya qatorlariga SKU biriktirish |
 | Oxirgi yangilanish | 2026-10-24 (B2.3 tayyor: kirish, sessiyalar, rollar, takliflar, audit; DB roli tekshiruvi) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)

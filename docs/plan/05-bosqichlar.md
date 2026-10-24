@@ -68,6 +68,8 @@ Ochiq: F21 real ma'lumotda — partiyalarga SKU biriktirilgach (yoki B2.11).
 - [ ] B2.8 Hisob ishlari: lotlar, `sale_costs`, `daily_sku_metrics` qayta qurish.
 - [ ] B2.9 O'qish API'lari: dashboard, pnl, skus, sales, expenses, inventory (core ustida) + OpenAPI tiplari.
 - [ ] B2.10 Staging server: O'zbekistondagi VPS (Q2), Docker Compose, Caddy (HTTPS), deploy workflow, tungi zaxira.
+  **Ochiq:** kirish kodi yuborishga IP bo'yicha cheklov (hozir faqat raqam bo'yicha 5 ta/soat — har xil raqam bilan
+  ko'p so'rov har biri ≈ $0.01 turadi, ADR-028): Caddy `rate_limit` va/yoki API'da IP bo'yicha hisoblagich, testi bilan.
 - [ ] B2.11 Real sinov: Temur staging'da o'z kalitini kiritadi → to'liq sinxron → legacy raqamlari bilan solishtirish;
   `PARTIALLY_CANCELLED`, `amountReturns`, qaytishlar semantikasi tasdiqlanadi va testga yoziladi.
 - T: Q2 — provayder tanlash, akkaunt ochish va staging VPS uchun to'lash (taxminan 210–260 ming so'm/oy).
