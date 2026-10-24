@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B1. Domen yadrosi** |
-| Keyingi vazifa | B1.9 Legacy bilan solishtirish testi (Temur ma'lumoti, lokal) |
-| Temurdan kutilmoqda | Q2 (server) — B2.10 gacha (Q8 hal qilindi: FIFO, ADR-025) |
-| Oxirgi yangilanish | 2026-10-24 (B1.8 tayyor) |
+| Keyingi vazifa | B1.9 natijasi (Temurdan), keyin B1 chiqish mezoni → B2.1 |
+| Temurdan kutilmoqda | B1.9: Mac'da `python3 scripts/compare_legacy.py --db uzum.db --history uzum_history.json` natijasini yuborish; Q2 (server) — B2.10 gacha |
+| Oxirgi yangilanish | 2026-10-24 (B1.9 vositasi tayyor) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 
