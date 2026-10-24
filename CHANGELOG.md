@@ -64,3 +64,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   (faqat bazada, faqat JSON'da, summasi boshqa) legacy toifalari bo'yicha.
 - B1.9 yakunlandi: Temurning real ma'lumotida majburiy tekshiruvlar ✓, reklama farqi manba farqi ekani
   tasdiqlandi (`uzum.db` JSON'dan keyin sinxronlangan). **B1 bosqichi tugadi.**
+- ADR-027: kirish kodi Telegram orqali (Q3), SMS — keyinroq zaxira.
+- B2.1 FastAPI skeleti (`apps/api`): `create_app` fabrikasi, sozlamalar (`UP_*`, pydantic-settings), structlog
+  (JSON / dev'da konsol, so'rov id konteksti, maxfiy maydonlar filtri — token, kod, kalit, Authorization),
+  RFC 9457 `application/problem+json` xatolar `code` bilan (404, 405, 422, `AppError`, 500 — prod'da tafsilotsiz),
+  `X-Request-ID`, kirish logi, `/health` va `/api/v1/health`, OpenAPI `/api/v1/openapi.json`. CI: API qamrovi ≥ 80%.

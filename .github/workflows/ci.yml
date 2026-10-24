@@ -28,6 +28,8 @@ jobs:
       - run: uv run mypy
       # Domen yadrosi qamrovi ≥ 95% (03-arxitektura.md §12).
       - run: uv run pytest --cov=upcore --cov-report=term-missing --cov-fail-under=95
+      # API qamrovi ≥ 80% (03-arxitektura.md §12).
+      - run: uv run pytest apps/api/tests --cov=upapi --cov-report=term-missing --cov-fail-under=80
       # Tezlik testlari (03 §7, §11) — coverage'siz, aks holda vaqt o'lchovi buziladi.
       - run: uv run pytest -m benchmark
 
