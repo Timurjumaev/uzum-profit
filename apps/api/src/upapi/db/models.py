@@ -214,19 +214,31 @@ audit_log = tenant(
     Column("after", JSONB),
     append_only=True,
 )
+# Cheklovlar (masalan, kalit urinishlari soni) va jurnal filtri.
+Index(None, audit_log.c.org_id, audit_log.c.action, audit_log.c.created_at)
 
 # --- Marketplace ------------------------------------------------------------------------------
+
+MP_ACCOUNT_STATUSES = ("active", "invalid", "quota_exhausted", "waf_blocked", "disconnected")
+TOKEN_STATE = (
+    "(token_encrypted IS NULL) = (status = 'disconnected') "
+    "AND (key_version IS NULL) = (token_encrypted IS NULL) "
+    "AND (token_last4 IS NULL) = (token_encrypted IS NULL)"
+)
 
 mp_accounts = tenant(
     "mp_accounts",
     Column("provider", Text, nullable=False, server_default="uzum"),
-    Column("token_encrypted", LargeBinary, nullable=False),
-    Column("key_version", Integer, nullable=False),
-    Column("token_last4", Text, nullable=False),
+    # AES-256-GCM (upapi.crypto): nonce || shifrmatn || teg; ochiq kalit hech qachon saqlanmaydi.
+    # Uzilgan akkauntda (B2.4) kalit o'chiriladi — uchala ustun NULL.
+    Column("token_encrypted", LargeBinary),
+    Column("key_version", Integer),
+    Column("token_last4", Text),
     Column("status", Text, nullable=False, server_default="active"),
     Column("quota_remaining", Integer),
     Column("checked_at", TS),
-    check_in("status", ("active", "invalid", "quota_exhausted", "waf_blocked")),
+    check_in("status", MP_ACCOUNT_STATUSES),
+    CheckConstraint(TOKEN_STATE, name="token_state"),
 )
 shops = tenant(
     "shops",

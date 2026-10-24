@@ -87,3 +87,16 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 - DB roli himoyasi: staging/prod'da API superuser, `BYPASSRLS`, jadval egasi yoki boshqa rol a'zosi bo'lgan rol
   bilan yoki xavfli sozlama bilan ishga tushmaydi; dev'da ogohlantirish. Dev compose API'si `up_app` bilan
   ulanadi (migratsiya — `UP_MIGRATION_DATABASE_URL`), `make db-check` / `python -m upapi.db.guard`, CI'da tekshiriladi.
+- B2.4 Marketplace ulanishi (M2 1–2-qadam): `POST /orgs/{id}/accounts` — kalit Uzum'da tekshiriladi
+  (`/v1/shops`), AES-256-GCM bilan shifrlanadi (kalit versiyasi, AAD = tashkilot + akkaunt id; `upapi.crypto`,
+  `python -m upapi.crypto keygen`), do'konlar faol holda qo'shiladi; tekshirish (holat: faol / yaroqsiz / kvota /
+  WAF, yangi do'konlar, eski versiyali shifrni joriy kalitga o'tkazish), kalitni almashtirish (faqat shu sotuvchi
+  kaliti), uzish (shifrlangan kalit bazadan o'chadi, do'konlar va ma'lumot qoladi), do'konlarni tanlash (faollik,
+  taxallus, rang). Faqat egasi; do'konlar ro'yxati — har a'zo. Yaroqsiz kalit urinishlari tashkilot bo'yicha
+  soatiga 10 ta. Uzum mijozi boshlang'ichi (`upapi.uzum.client`): `Authorization` "Bearer"siz, xato turlari
+  (03 §6), xato matnida kalit va javob tanasi yo'q. Migratsiya `0003`: uzilgan akkaunt (`token_state` cheklovi),
+  `audit_log` indeksi. Staging/prod dev shifrlash kaliti bilan ishga tushmaydi. `test_token_secrecy.py` — kalit
+  log, javob, sarlavha, xato matni va bazaning hech qayerida yo'qligi (ataylab kiritilgan sizishlarni ushlashi
+  tekshirilgan).
+- `CLAUDE.md`: real Uzum API, Temurning kompyuteridagi ma'lumot yoki `.env` kerak bo'lsa — ish to'xtatiladi va
+  Temurga aniq buyruq + natijani qayerga yuborish yoziladi (kalit so'ralmaydi).

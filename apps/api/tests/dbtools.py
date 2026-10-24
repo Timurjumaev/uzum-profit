@@ -173,6 +173,8 @@ def _value(table: Table, col: Any, allowed: dict[str, str]) -> Any:
 
 
 SKIP = {"id", "org_id", "created_at", "updated_at"}
+# NULL bo'lishi mumkin, lekin CHECK bilan holatga bog'langan ustunlar (``token_state``: faol akkauntda kalit bor).
+FILLED = {"mp_accounts": {"token_encrypted", "key_version", "token_last4"}}
 
 
 def row_values(
@@ -190,7 +192,9 @@ def row_values(
             values[col.name] = globals_["user"][org]
         elif col.name == "plan_id":
             values[col.name] = globals_["plan"]
-        elif not col.nullable and col.server_default is None:
+        elif (not col.nullable and col.server_default is None) or col.name in FILLED.get(
+            table.name, ()
+        ):
             values[col.name] = _value(table, col, allowed)
     return values
 

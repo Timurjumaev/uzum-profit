@@ -16,10 +16,11 @@ from psycopg import errors
 from upapi.auth import tokens
 from upapi.auth.permissions import MATRIX, Permission, Role, allowed
 from upapi.auth.senders import DeliveryError, MemorySender, TelegramGatewaySender, build_sender
+from upapi.crypto import keygen
 from upapi.db.guard import role_problems
 from upapi.db.session import make_engine
 from upapi.main import UnsafeConfiguration, create_app
-from upapi.settings import Environment, OtpSender, Settings
+from upapi.settings import DEV_TOKEN_KEY, Environment, OtpSender, Settings
 
 FUNCTIONS = [
     "auth_otp_issue",
@@ -217,6 +218,7 @@ def _strict(url: str, **extra: Any) -> Settings:
         "otp_secret": "x" * 40,
         "telegram_gateway_token": "t",
         "allowed_origins": ["https://staging.example.uz"],
+        "token_keys": {1: keygen()},
     }
     return Settings(**{**values, **extra})
 
@@ -248,6 +250,9 @@ def test_staging_refuses_unreachable_db() -> None:
         ({"telegram_gateway_token": None}, "UP_TELEGRAM_GATEWAY_TOKEN"),
         ({"cookie_secure": False}, "UP_COOKIE_SECURE"),
         ({"allowed_origins": ["http://staging.example.uz"]}, "https://"),
+        ({"token_keys": {1: DEV_TOKEN_KEY}}, "UP_TOKEN_KEYS"),
+        ({"token_key_version": 2}, "UP_TOKEN_KEY_VERSION"),
+        ({"uzum_base_url": "http://uzum.test"}, "UP_UZUM_BASE_URL"),
     ],
 )
 def test_staging_refuses_unsafe_settings(extra: dict[str, Any], message: str) -> None:

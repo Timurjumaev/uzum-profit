@@ -3,16 +3,18 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
+import httpx
 from fastapi import FastAPI
 
 from upapi import __version__
 from upapi.auth.senders import CodeSender, build_sender
+from upapi.crypto import CipherError, TokenCipher
 from upapi.db.guard import role_problems
 from upapi.db.session import make_engine
 from upapi.errors import Problem, install_error_handlers
 from upapi.logs import configure_logging, get_logger
 from upapi.middleware import csrf_guard, request_context
-from upapi.routes import auth, health, orgs
+from upapi.routes import accounts, auth, health, orgs
 from upapi.settings import Settings, get_settings
 
 API_PREFIX = "/api/v1"
@@ -44,7 +46,12 @@ async def check_startup(app: FastAPI, settings: Settings) -> None:
         )
 
 
-def create_app(settings: Settings | None = None, sender: CodeSender | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    sender: CodeSender | None = None,
+    uzum_transport: httpx.AsyncBaseTransport | None = None,
+) -> FastAPI:
+    """``uzum_transport`` — testlarda Uzum javoblari (``httpx.MockTransport``); production'da ``None``."""
     settings = settings or get_settings()
     configure_logging(settings.log_level, settings.json_logs)
 
@@ -52,6 +59,12 @@ def create_app(settings: Settings | None = None, sender: CodeSender | None = Non
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         if settings.strict and (problems := settings.problems()):
             raise UnsafeConfiguration("; ".join(problems))
+        try:
+            app.state.cipher = TokenCipher.from_settings(
+                settings.token_keys, settings.token_key_version
+            )
+        except CipherError as exc:
+            raise UnsafeConfiguration(str(exc)) from None
         app.state.engine = make_engine(settings.database_url)
         app.state.sender = sender or build_sender(settings)
         try:
@@ -74,6 +87,7 @@ def create_app(settings: Settings | None = None, sender: CodeSender | None = Non
         },
     )
     app.state.settings = settings
+    app.state.uzum_transport = uzum_transport
     app.middleware("http")(csrf_guard(API_PREFIX, settings.allowed_origins))
     # Oxirgi qo'shilgan — tashqi qatlam: so'rov id CSRF xatosida ham bo'ladi.
     app.middleware("http")(request_context)
@@ -82,6 +96,7 @@ def create_app(settings: Settings | None = None, sender: CodeSender | None = Non
     app.include_router(health.router, prefix=API_PREFIX)
     app.include_router(auth.router, prefix=API_PREFIX)
     app.include_router(orgs.router, prefix=API_PREFIX)
+    app.include_router(accounts.router, prefix=API_PREFIX)
     return app
 
 

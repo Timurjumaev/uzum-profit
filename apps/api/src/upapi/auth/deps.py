@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable, Coroutine
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any
@@ -125,15 +126,13 @@ class OrgContext:
         )
 
 
-async def org_context(
-    org_id: UUID,
-    user: Annotated[CurrentUser, Depends(current_user)],
-    engine: Annotated[AsyncEngine, Depends(get_engine)],
+@asynccontextmanager
+async def open_org(
+    engine: AsyncEngine, org_id: UUID, user: CurrentUser, permission: Permission | None = None
 ) -> AsyncIterator[OrgContext]:
-    """A'zo bo'lmagan (yoki o'chirilgan) tashkilot — 404: borligi ham bilinmaydi.
-
-    Har doim ``Depends(org_context, scope="function")`` bilan: tranzaksiya javob yuborilishidan **oldin** commit
-    bo'ladi (standart "request" doirasida commit javobdan keyin — xato mijozga bilinmay qolardi)."""
+    """Tashkilot tranzaksiyasi + a'zolik (va ruxsat) tekshiruvi. A'zo bo'lmagan (yoki o'chirilgan) tashkilot —
+    404: borligi ham bilinmaydi. Marshrut ichida bir necha qisqa tranzaksiya kerak bo'lganda (masalan, orada tashqi
+    so'rov — tranzaksiya ochiq turmasin) to'g'ridan-to'g'ri ishlatiladi."""
     async with org_transaction(engine, org_id, user.user_id) as conn:
         role = await conn.scalar(
             text(
@@ -144,7 +143,20 @@ async def org_context(
         )
         if role is None:
             raise AppError("org_not_found", 404)
+        if permission is not None and not allowed(Role(role), permission):
+            raise AppError("forbidden", 403, detail=permission.value)
         yield OrgContext(org_id, user, Role(role), conn)
+
+
+async def org_context(
+    org_id: UUID,
+    user: Annotated[CurrentUser, Depends(current_user)],
+    engine: Annotated[AsyncEngine, Depends(get_engine)],
+) -> AsyncIterator[OrgContext]:
+    """Har doim ``Depends(org_context, scope="function")`` bilan: tranzaksiya javob yuborilishidan **oldin** commit
+    bo'ladi (standart "request" doirasida commit javobdan keyin — xato mijozga bilinmay qolardi)."""
+    async with open_org(engine, org_id, user) as ctx:
+        yield ctx
 
 
 def require(permission: Permission) -> Callable[..., Coroutine[Any, Any, OrgContext]]:
