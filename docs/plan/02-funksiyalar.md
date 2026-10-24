@@ -115,6 +115,8 @@ Qabul mezonlari: 1 yillik, 50 000 sotuv qatori bilan javob p95 < 700 ms; davr va
   jarimalar, fotostudiya, pul yechish xizmati, kompensatsiya) → F10 (toifalar bo'yicha) → F11 → **F12**.
 - Ustunlar: tanlangan davr, tushumga nisbatan %, oldingi davr, farq. Ko'rinishlar: oylar bo'yicha (ustun = oy),
   do'konlar bo'yicha, SKU / toifa bo'yicha.
+- Do'kon va SKU kesimlarida F9/F10 xarajatlari ikki qismda: **to'g'ridan-to'g'ri** (SKU'ga bog'langan) va
+  **taqsimlangan** (do'kon / tashkilot xarajatining tushum ulushi); sotuvsiz kun xarajati — "Taqsimlanmagan" (ADR-026).
 - Grafik: sharshara (waterfall) — tushumdan sof foydagacha.
 - **Kutilayotgan** (Jarayondagi) sotuvlar alohida blok (F16), realizatsiya darajasi ko'rsatiladi.
 - **Tannarx qamrovi** (F15) < 100% bo'lsa, qizil emas, sariq banner: "N ta sotuv (X so'm) tannarxsiz — foydaga
