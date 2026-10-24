@@ -34,3 +34,39 @@ async def request_context(
         duration_ms=round((time.perf_counter() - start) * 1000, 1),
     )
     return response
+
+
+SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+CSRF_HEADER = "X-Requested-With"
+
+
+def csrf_guard(
+    prefix: str, allowed_origins: list[str]
+) -> Callable[[Request, Callable[[Request], Awaitable[Response]]], Awaitable[Response]]:
+    """CSRF (03 §10): o'zgartiruvchi API so'rovlarida ``X-Requested-With`` majburiy (boshqa saytdan CORS
+    ruxsatisiz yuborib bo'lmaydi) va ``Origin`` bo'lsa — ruxsat etilgan ro'yxatda."""
+    origins = frozenset(o.rstrip("/") for o in allowed_origins)
+
+    async def middleware(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        if request.method not in SAFE_METHODS and request.url.path.startswith(prefix + "/"):
+            origin = request.headers.get("origin")
+            code = None
+            if origin is not None and origin.rstrip("/") not in origins:
+                code = "csrf_origin"
+            elif not request.headers.get(CSRF_HEADER):
+                code = "csrf_header"
+            if code:
+                from upapi.errors import Problem, problem_response
+
+                problem = Problem(
+                    type=f"https://uzum-profit.uz/problems/{code}",
+                    title="Forbidden",
+                    status=403,
+                    code=code,
+                )
+                return problem_response(request, problem)
+        return await call_next(request)
+
+    return middleware

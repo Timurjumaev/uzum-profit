@@ -9,7 +9,8 @@ Tashkilotlarni ajratish (ADR-012) ikki qavatli: ilova ``org_id`` bo'yicha filtrl
 - Unikal tabiiy kalitlar ``org_id`` bilan boshlanadi — boshqa tashkilot yozuvi borligi "dublikat" xatosi
   orqali ham bilinmaydi.
 - **Global** ma'lumotnomalar (``GLOBAL``) — RLS'siz, ilova roli faqat o'qiydi.
-- **Kirish** jadvallari (``AUTH``: sessiyalar, kodlar) — ilova roliga umuman berilmaydi (B2.3 alohida yo'l).
+- **Kirish** jadvallari (``AUTH``: sessiyalar, kodlar) — ilova roliga berilmaydi; faqat ``auth_*`` funksiyalari
+  (``SECURITY DEFINER``, ``up_auth`` roli, 0002 migratsiyasi) orqali, OTP kodi yoki sessiya tokeni bilan.
 
 Pul ``numeric(18,2)`` (so'm), valyuta ``numeric(18,4)``, kurs ``numeric(18,6)``; vaqt ``timestamptz``.
 """
@@ -26,6 +27,7 @@ from sqlalchemy import (
     Date,
     ForeignKey,
     ForeignKeyConstraint,
+    Index,
     Integer,
     LargeBinary,
     MetaData,
@@ -160,10 +162,14 @@ sessions = Table(
         "user_id", UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     ),
     Column("token_hash", LargeBinary, nullable=False, unique=True),
+    # Yangilangandan keyin eski token qisqa muddat ishlaydi (parallel so'rovlar chiqib ketmasin).
+    Column("prev_token_hash", LargeBinary, index=True),
+    Column("prev_valid_until", TS),
     Column("device", Text),
     Column("expires_at", TS, nullable=False),
     Column("revoked_at", TS),
     *_times(),
+    Index(None, "user_id"),
 )
 otp_codes = Table(
     "otp_codes",
@@ -175,6 +181,7 @@ otp_codes = Table(
     Column("expires_at", TS, nullable=False),
     Column("consumed_at", TS),
     *_times(),
+    Index(None, "phone", "created_at"),
 )
 AUTH += ["sessions", "otp_codes"]
 

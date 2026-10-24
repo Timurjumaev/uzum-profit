@@ -1,5 +1,4 @@
 import sys
-import uuid
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -25,14 +24,8 @@ def client(settings: Settings) -> TestClient:
 @pytest.fixture(scope="session")
 def db() -> Iterator[dict[str, str]]:
     """Vaqtinchalik baza: up_owner egasi sifatida migratsiya qiladi, ilova up_app bilan ulanadi."""
-    dbtools.require_admin()
-    name = f"up_test_{uuid.uuid4().hex[:10]}"
-    urls = dbtools.create_database(name)
-    try:
-        dbtools.alembic(urls["owner"], "upgrade", "head")
+    with dbtools.migrated_database() as urls:
         yield urls
-    finally:
-        dbtools.drop_database(name)
 
 
 @pytest.fixture(scope="session")

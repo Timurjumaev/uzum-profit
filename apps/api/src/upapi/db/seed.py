@@ -1,7 +1,8 @@
 """Sintetik seed (B2.2): ma'lumotnomalar (core seed'laridan) va bitta demo tashkilot.
 
 Faqat dev/test uchun, real ma'lumot yo'q. Ishga tushirish (superuser URL — ``users`` ga yozish ilova roliga
-berilmagan): ``uv run python -m upapi.db.seed postgresql://uzum:uzum@localhost:5432/uzum``.
+berilmagan): ``uv run python -m upapi.db.seed postgresql://uzum:uzum@localhost:5432/uzum`` yoki
+``UP_MIGRATION_DATABASE_URL`` bilan argumentsiz.
 Takror ishga tushirish xavfsiz: ma'lumotnomalar ``ON CONFLICT DO NOTHING``, demo tashkilot bor bo'lsa o'tkaziladi.
 """
 
@@ -190,7 +191,7 @@ async def run(url: str, seed: int = 1, today: date | None = None) -> bool:
 
 
 def main(argv: list[str]) -> int:
-    url = argv[1] if len(argv) > 1 else os.environ.get("UP_DATABASE_URL", "")
+    url = argv[1] if len(argv) > 1 else os.environ.get("UP_MIGRATION_DATABASE_URL", "")
     if not url:
         print("URL bering: python -m upapi.db.seed postgresql://...", file=sys.stderr)
         return 2

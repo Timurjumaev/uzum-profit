@@ -135,6 +135,19 @@ keyin Chromium'da o'zbekcha matn skrinshoti. Natija: Inter.
 
 - Uzum Seller API'ni uchinchi tomon servisi ishlatishi bo'yicha rasmiy shartlar (B8.6).
 - Payme/Click takroriy to'lov va fiskal maydonlarining aniq talablari — rasmiy hujjatdan (B8.2).
-- Telegram orqali kirish kodi (Telegram Gateway) O'zbekistonda mavjudligi va narxi (Q3).
+- Telegram Gateway: O'zbekiston raqamlariga yetkazish va xato kodlari — staging'da (B2.11, §10).
 - Uzum seller kabinetidagi "Analitika" bo'limi imkoniyatlari (bepul rasmiy raqobat).
 - Yandex Market O'zbekiston sotuvchi API'si (B10.3 oldidan).
+
+## 10. Kirish kodi: Telegram Gateway (2026-10-24, ADR-028)
+
+- Usul: `POST https://gatewayapi.telegram.org/sendVerificationMessage`, `Authorization: Bearer <token>`,
+  `phone_number` (E.164), ixtiyoriy `code` (4–8 raqam — biz beramiz), `ttl`, `callback_url`; javob `{ok, result}` yoki
+  `{ok: false, error}`. `checkVerificationStatus` ishlatilmaydi — kodni o'zimiz tekshiramiz.
+- Narx: ≈ $0.01 / yetkazilgan kod; `ttl` ichida yetkazilmasa qaytariladi; **o'z raqamiga yuborish bepul**; narx
+  oldindan ogohlantirmasdan o'zgarishi mumkin ([Gateway](https://core.telegram.org/gateway),
+  [shartlar](https://telegram.org/tos/gateway)).
+- To'lov: oldindan balans, Fragment orqali TON (≈ $100 minimal — [uchinchi tomon
+  tajribasi](https://github.com/maximosovsky/telegram-gateway-auth), rasmiy emas).
+- Sandbox Telegram'ga chiqa olmaydi: O'zbekiston raqamlariga yetkazish staging'da Temurning raqami bilan
+  tekshiriladi (B2.11). Xato kodlari (raqam Telegram'da yo'q) ham o'shanda aniqlanadi.

@@ -240,9 +240,13 @@ def test_every_table_is_classified_and_protected(db: dict[str, str]) -> None:
         )
         for table in [*m.TENANT, *m.AUTH, *m.SPECIAL]:
             assert rls[table] == (True, True), table
-        policies = {r[0] for r in conn.execute("SELECT tablename FROM pg_policies").fetchall()}
+        rows = conn.execute("SELECT tablename, policyname, roles FROM pg_policies").fetchall()
+        policies = {r[0] for r in rows}
         assert set(m.TENANT) | set(m.SPECIAL) <= policies
-        assert not policies & set(m.AUTH)
+        # Kirish jadvallarida faqat auth_* funksiyalari egasi uchun siyosat (0002).
+        for table, name, roles in rows:
+            if table in m.AUTH:
+                assert (name, list(roles)) == ("auth_definer", [dbtools.AUTH_ROLE]), table
 
         def priv(table: str, p: str) -> bool:
             return conn.execute(
