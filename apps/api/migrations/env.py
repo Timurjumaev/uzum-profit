@@ -27,8 +27,18 @@ def _url() -> str:
     return normalize_url(raw)  # drayver ko'rsatilmagan bo'lsa asyncpg
 
 
+def _include_name(name: str | None, type_: str, _parents: object) -> bool:
+    """Procrastinate jadvallari (0004) modelda yo'q — o'z sxemasi bilan boshqariladi."""
+    return not (type_ == "table" and (name or "").startswith("procrastinate_"))
+
+
 def _run(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata, compare_type=True)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        compare_type=True,
+        include_name=_include_name,
+    )
     with context.begin_transaction():
         context.run_migrations()
 

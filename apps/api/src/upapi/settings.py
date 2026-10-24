@@ -5,6 +5,7 @@ Qiymatlar muhit o'zgaruvchilaridan (``UP_`` prefiksi) yoki ``.env`` dan; sirlar 
 
 import base64
 import hashlib
+from datetime import date, time
 from enum import StrEnum
 from functools import lru_cache
 
@@ -70,6 +71,37 @@ class Settings(BaseSettings):
     uzum_quota_reserve: int = 10_000
     # Kalit tekshiruvi rad etilsa (yaroqsiz kalit) — tashkilot bo'yicha soatiga shuncha urinish.
     mp_verify_failures_per_hour: int = 10
+
+    # Sinxron (B2.6, 02 M3). Chastota — ma'lumot turi bo'yicha daqiqa; kunlik snapshot — Toshkent vaqti bilan.
+    sync_intervals: dict[str, int] = {
+        "shops": 1440,
+        "orders": 15,
+        "expenses": 60,
+        "products": 60,
+        "invoices": 60,
+        "returns": 60,
+    }
+    sync_snapshot_at: time = time(23, 50)
+    # Birinchi ulanish — butun tarix shu sanadan (Uzum qancha bersa; rad etsa qisqaroq oynalar, legacy kabi).
+    sync_history_from: date = date(2020, 1, 1)
+    sync_history_fallback_days: list[int] = [1825, 1095, 730, 365, 180, 100]
+    # Inkremental oyna (kun) va kuniga bir marta chuqur sinxron (sotuv holatlari, kechikkan xarajatlar).
+    sync_recent_days: int = 3
+    sync_deep_days: int = 45
+    sync_deep_every_hours: int = 24
+    # Uzilish rejimi (03 §6): shu oynada shuncha do'konda tarmoq/5xx xatosi → umumiy pauza, keyin bitta sinov.
+    sync_outage_shops: int = 2
+    sync_outage_window_minutes: int = 5
+    sync_outage_pause_minutes: int = 15
+    # Kvota tugagan yoki WAF to'sgan akkaunt — shuncha daqiqada bitta sinov (02 M3); ketma-ket JSON 401/403 soni,
+    # undan keyin kalit "yaroqsiz".
+    sync_probe_minutes: int = 30
+    sync_auth_failures: int = 3
+    # "Hozir yangilash" (02 M3): tashkilot bo'yicha shuncha soniyada bir marta, ustuvor navbat.
+    sync_refresh_cooldown_seconds: int = 60
+    # Bitta ishda ko'pi bilan shuncha postavka tarkibi so'raladi (qolgani keyingi ishda) — kvota tejaladi.
+    sync_invoice_items_per_run: int = 100
+    worker_concurrency: int = 4
 
     @property
     def json_logs(self) -> bool:

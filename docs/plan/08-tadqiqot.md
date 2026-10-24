@@ -76,8 +76,9 @@ spetsifikatsiyasi, 2026-aprel asosida).
   (2). `/v1/return` — **butun akkaunt** (`shopId` parametri e'tiborsiz), qatorda `shopId` va `returnItems` (SKU,
   dona, `purchasePrice`); `/v1/shop/{id}/return` — `{"payload": [...]}`, tarkibsiz. Postavka tarkibi — mahsulot
   qatorlari, ichida `skuForInvoiceDtoList`. Sotuv qatorida `shopId`, `purchasePrice`, `withdrawnProfit`, `cancelled`.
-  Ochiq (B2.6): faktura `dateCreated` matn ko'rinishida (format yozuvda almashtirilgan — skript tuzatildi), xarajat
-  kodlari kichik harfli ham (`logistics-volume`).
+  Faktura `dateCreated` matn ko'rinishida (format yozuvda almashtirilgan — skript tuzatildi), xarajat
+  kodlari kichik harfli ham (`logistics-volume`). B2.6 da: vaqt millisekund, ISO yoki `dd.MM.yyyy[ HH:mm]` (Toshkent)
+  sifatida o'qiladi, tushunarsizi `NULL` (xom JSON'da qoladi); kodlar `normalize_code` bilan. Haqiqiy format — B2.11.
 - Endpointlar: shops; product (SKU: qoldiqlar `quantityActive`, `quantityFbs`, `quantityDefected`,
   `quantityPending`, sotilgan/qaytgan, `avgdsales`, `rankInfo.rank`, `paidStoragePriceItem`, IKPU, `purchasePrice`);
   `sendPriceData` (narx o'zgartirish); finance orders/expenses; FBS buyurtmalar, qoldiq, jo'natmalar; FBO postavkalar

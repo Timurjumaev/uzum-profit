@@ -26,8 +26,21 @@ def fresh() -> Iterator[dict[str, str]]:
 
 def _tables(url: str) -> set[str]:
     with psycopg.connect(url) as conn:
-        rows = conn.execute("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
+        rows = conn.execute(
+            "SELECT tablename FROM pg_tables WHERE schemaname = 'public' "
+            "AND tablename NOT LIKE 'procrastinate\\_%'"
+        )
         return {r[0] for r in rows} - {"alembic_version"}
+
+
+def _procrastinate(url: str) -> int:
+    """Navbat obyektlari (0004): jadvallar, funksiyalar, turlar."""
+    with psycopg.connect(url) as conn:
+        return conn.execute(
+            "SELECT (SELECT count(*) FROM pg_tables WHERE tablename LIKE 'procrastinate\\_%') "
+            "+ (SELECT count(*) FROM pg_proc WHERE proname LIKE 'procrastinate\\_%') "
+            "+ (SELECT count(*) FROM pg_type WHERE typname LIKE 'procrastinate\\_%')"
+        ).fetchone()[0]
 
 
 def test_normalize_url() -> None:
@@ -40,8 +53,10 @@ def test_migration_roundtrip(fresh: dict[str, str]) -> None:
     from upapi.db import models as m
 
     assert _tables(fresh["owner"]) == set(m.metadata.tables)
+    assert _procrastinate(fresh["owner"]) > 0
     dbtools.alembic(fresh["owner"], "downgrade", "base")
     assert _tables(fresh["owner"]) == set()
+    assert _procrastinate(fresh["owner"]) == 0
     with psycopg.connect(fresh["owner"]) as conn:
         assert conn.execute(
             "SELECT count(*) FROM pg_proc WHERE proname LIKE 'app_current_%'"

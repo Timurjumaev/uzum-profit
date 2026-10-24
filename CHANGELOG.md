@@ -112,3 +112,22 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   ro'yxati — `shop_returns()`; kontrakt maydonlari (postavka tarkibi, qaytarishlar) va "haqiqiy Uzum faktlari"
   testi. `record_uzum.py`: sizish tekshiruvi faqat saqlangan qiymatlarda (kalit nomlarida yolg'on xato yo'q),
   kichik harfli xarajat kodlari, nuqtali sanalar va so'rov parametrlari saqlanadi.
+- B2.6 Sinxron ishlari (M3, `upapi.sync`): Procrastinate navbati (`sync.tick` har daqiqa, `sync.account` —
+  `lock = account:<id>`, navbat qulfi, ustuvorlik), ishchi `python -m upapi.worker` (dev compose'da `worker`,
+  migratsiyagacha kutadi, xavfli sozlama/DB rolida ishga tushmaydi). Turlar: do'konlar, sotuvlar, xarajatlar
+  (lug'at — `expense_codes` + `upcore` boshlang'ichi), mahsulot/SKU/qoldiq, kunlik snapshot (Toshkent 23:50,
+  `sku_daily`), postavkalar va tarkibi (yangi yoki holati o'zgarganda bir marta), qaytarishlar (butun akkaunt,
+  `shopId` bo'yicha). Sotuv/xarajat usullari: tarix (2020-01-01 dan, rad etilsa qisqaroq oyna, "full"/"limited:N",
+  kursordan davom), inkremental, kuniga bir marta 45 kunlik chuqur, uzilish davrini to'ldirish. Upsert: tabiiy kalit,
+  partiyadagi dublikatlar birlashadi, `NULL` bilan ustidan yozilmaydi, o'zgarmagan qator yozilmaydi, sotuvchi
+  kiritgani tegilmaydi; bog'lanishlar (sotuv → SKU `skuTitle`, logistika xarajati → sotuv, tarkiblar → SKU).
+  `sync_runs` (progress, so'rovlar, kim boshlagan, usul) va `sync_state` (oxirgi urinish/muvaffaqiyat, kursor);
+  0 ta obyekt — ogohlantirish. Xatolar: 3 ta ketma-ket kalit xatosi → "yaroqsiz" (audit), WAF/kvota → holat va
+  30 daqiqada sinov, kvota zaxirasi → fon to'xtaydi, tarmoq/5xx → uzilish signali. Uzilish rejimi
+  (`provider_health`): 2 do'kon / 5 daqiqa → 15 daqiqa pauza, bitta sinov, tiklangach to'ldirish.
+  "Ma'lumotlar holati" `GET /orgs/{id}/sync`, "Hozir yangilash" `POST /orgs/{id}/sync/refresh` (60 s da bir marta);
+  kalit ulanganda (va almashtirilganda) tarix navbatga qo'yiladi; kalit tekshiruvi sinxron xatolar hisobini
+  tozalaydi. Uzum mijozi: `start_page`/`size` (davom ettirish). Migratsiya `0004`: Procrastinate sxemasi, sinxron
+  ustunlari va indekslar, `provider_health`, `sync_accounts()` (`up_sync` roli). Testlar: soxta sotuvchi
+  (`tests/sellerfake.py`), xaritalash (haqiqiy kasseta), engine, navbat, API, kalit maxfiyligi (sinxron yo'li).
+  `psycopg[binary,pool]` — API'ning asosiy bog'liqligi (image'da `--no-dev` bilan ham libpq kerak emas).
