@@ -134,6 +134,27 @@ EXPENSES = [
         "code": "Y000002",
         "type": "OUTCOME",
     },
+    {
+        "id": 104,
+        "dateCreated": ms("2026-10-08"),
+        "name": "Reklama qaytarildi",
+        "source": "Marketing",
+        "paymentPrice": 500,
+        "externalId": "AD#11-2",
+        "code": "Y000120",
+        "type": "INCOME",
+    },
+    {
+        "id": 105,
+        "dateCreated": ms("2026-10-09"),
+        "name": "Reklama",
+        "source": "Marketing",
+        "paymentPrice": 900,
+        "externalId": "AD#11-3",
+        "code": "Y000120",
+        "type": "OUTCOME",
+        "status": "CANCELED",
+    },
 ]
 
 
@@ -210,6 +231,12 @@ def test_compare_with_history(
     assert "xom qatorlar (uzum_history.json)" in text
     assert "`PARTIALLY_CANCELLED`: **1** qator" in text
     assert "photo_studio (legacy'da yo'q)" in text
+    assert "Xarajat farqlari qatorlar bo'yicha" in text
+    assert (
+        "| hisobga kirmaydi (ad, INCOME) | ad | Y000120 | INCOME | — | 1 | 0 | -500 | -500 |"
+        in text
+    )
+    assert "| ad | chiqarildi: status | Y000120 | OUTCOME | CANCELED | 1 | 900 | 0 | -900 |" in text
     assert "| 2026-09 |" in text and "| 2026-10 |" in text
     assert "Hisobot saqlandi" in capsys.readouterr().err
 

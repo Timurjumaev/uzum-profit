@@ -58,3 +58,5 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   foyda farqlari sababi bilan. `docs/legacy-farqlari.md` — farqlar ro'yxati. CI: legacy 3.15 da, yangi
   "Core (Python 3.15)" job. QQS 12% (2026) manba bilan tasdiqlandi.
 - B1.9 skripti: `--history` fayli topilmasa yiqilmaydi — ogohlantirish beradi va `uzum.db` bilan davom etadi.
+- B1.9 skripti: xarajatlar qatorlar bo'yicha legacy ↔ yangi toifalash farqi jadvali (sabab, kod, tur, status).
+  Real natija `docs/legacy-farqlari.md` ga yozildi: majburiy tekshiruvlar ✓.
