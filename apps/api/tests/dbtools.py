@@ -9,6 +9,8 @@ from __future__ import annotations
 import os
 import re
 import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -36,7 +38,7 @@ from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
 from upapi.db import models as m
 
 ADMIN_URL = os.environ.get("UP_TEST_ADMIN_URL")
-APP_ROLE, OWNER_ROLE = "up_app", "up_owner"
+APP_ROLE, OWNER_ROLE, AUTH_ROLE = "up_app", "up_owner", "up_auth"
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -71,6 +73,10 @@ def ensure_roles(admin: psycopg.Connection) -> None:
             admin.execute(
                 f"CREATE ROLE {role} LOGIN PASSWORD '{role}' NOSUPERUSER NOBYPASSRLS {extra}"
             )
+    # auth_* funksiyalari egasi (0002): migratsiya roli uning a'zosi bo'lishi kerak.
+    if not admin.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", [AUTH_ROLE]).fetchone():
+        admin.execute(f"CREATE ROLE {AUTH_ROLE} NOLOGIN NOSUPERUSER NOBYPASSRLS")
+    admin.execute(f"GRANT {AUTH_ROLE} TO {OWNER_ROLE}")
 
 
 def create_database(name: str) -> dict[str, str]:
@@ -84,6 +90,19 @@ def create_database(name: str) -> dict[str, str]:
         "app": with_db(plain(ADMIN_URL), name, APP_ROLE, APP_ROLE),
     }
     return urls
+
+
+@contextmanager
+def migrated_database() -> Iterator[dict[str, str]]:
+    """Alohida vaqtinchalik baza (head'gacha migratsiya); test moduli boshqalarning ma'lumotiga tegmaydi."""
+    require_admin()
+    name = f"up_test_{uuid.uuid4().hex[:10]}"
+    urls = create_database(name)
+    try:
+        alembic(urls["owner"], "upgrade", "head")
+        yield urls
+    finally:
+        drop_database(name)
 
 
 def drop_database(name: str) -> None:

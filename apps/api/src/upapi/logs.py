@@ -6,7 +6,6 @@ bilan almashtiriladi, ``Authorization`` qiymatiga o'xshash matnlar ham.
 
 import logging
 import re
-import sys
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
@@ -65,7 +64,8 @@ def configure_logging(level: str = "INFO", json: bool = True) -> None:
     structlog.configure(
         processors=processors,
         wrapper_class=structlog.make_filtering_bound_logger(logging.getLevelName(level.upper())),
-        logger_factory=structlog.PrintLoggerFactory(file=sys.stdout),
+        # Fayl har logger yaratilganda olinadi (joriy sys.stdout) — testlarda ushlab olish ham ishlaydi.
+        logger_factory=structlog.PrintLoggerFactory(),
         cache_logger_on_first_use=False,
     )
 

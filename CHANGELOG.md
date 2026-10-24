@@ -76,3 +76,14 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   qilish testlari; `org_transaction` (`SET LOCAL`), migratsiya upgrade ↔ downgrade va model ↔ migratsiya
   mosligi testlari. Sintetik seed `python -m upapi.db.seed` (`make seed`). CI'da PostgreSQL 18 servisi; CI'da DB
   bo'lmasa DB testlari o'tkazib yuborilmaydi, xato beradi.
+- B2.3 Kirish (M1): telefon + 6 xonali kod (Telegram Gateway, ADR-028; dev'da terminalga), HMAC xesh, 5 daqiqa,
+  raqam bo'yicha 5 ta/soat, 5 xato → 15 daqiqa blok; sessiya cookie (`HttpOnly`, `SameSite=Lax`, prod'da `Secure`,
+  30 kun, har 24 soatda yangi token, eskisi 60 s), "qurilmalarim", qurilmadan va hamma qurilmalardan chiqish; profil.
+  Tashkilot yaratish, xodimlar (rol o'zgartirish, o'chirish, oxirgi egasi himoyasi), telefon raqamga bog'langan
+  taklif havolasi (7 kun, bir marta), audit jurnali; rollar matritsasi (03 §10) va `require(Permission)` —
+  omborchi foyda endpoint'iga kira olmaydi (test). CSRF: `X-Requested-With` + `Origin`. Migratsiya `0002`:
+  `auth_*` `SECURITY DEFINER` funksiyalari (`up_auth` roli; kod yoki sessiya tokenisiz hech narsa qilmaydi),
+  ilova roli foydalanuvchi telefonini o'zgartira olmaydi.
+- DB roli himoyasi: staging/prod'da API superuser, `BYPASSRLS`, jadval egasi yoki boshqa rol a'zosi bo'lgan rol
+  bilan yoki xavfli sozlama bilan ishga tushmaydi; dev'da ogohlantirish. Dev compose API'si `up_app` bilan
+  ulanadi (migratsiya — `UP_MIGRATION_DATABASE_URL`), `make db-check` / `python -m upapi.db.guard`, CI'da tekshiriladi.

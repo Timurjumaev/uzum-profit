@@ -57,8 +57,9 @@ Ochiq: F21 real ma'lumotda — partiyalarga SKU biriktirilgach (yoki B2.11).
 
 - [x] B2.1 FastAPI skeleti: sozlamalar, structlog, problem+json xatolar, sog'liq endpoint'i.
 - [x] B2.2 DB sxemasi (03 §5) + Alembic + RLS + sintetik seed.
-- [ ] B2.3 Kirish: telefon + OTP — kod Telegram orqali (ADR-027: Telegram Gateway yoki o'z bot, narx va
-  ishlashi tekshirilib tanlanadi; SMS zaxira keyin), sessiyalar, rollar, taklif, audit.
+- [x] B2.3 Kirish: telefon + OTP — kod Telegram orqali (ADR-027: Telegram Gateway yoki o'z bot, narx va
+  ishlashi tekshirilib tanlanadi; SMS zaxira keyin), sessiyalar, rollar, taklif, audit. Tanlandi: Telegram Gateway
+  (ADR-028).
 - [ ] B2.4 Marketplace ulanishi: kalitni AES-GCM bilan saqlash, tekshirish, do'konlarni tanlash.
 - [ ] B2.5 Uzum mijozi: xato turlari, tezlik navbati, kvota, xom JSON, yozib olingan javoblar bilan testlar.
 - [ ] B2.6 Sinxron ishlari (Procrastinate): to'liq tarix, inkremental, kunlik snapshot, postavka tarkibi, qaytarishlar,
@@ -71,11 +72,16 @@ Ochiq: F21 real ma'lumotda — partiyalarga SKU biriktirilgach (yoki B2.11).
   `PARTIALLY_CANCELLED`, `amountReturns`, qaytishlar semantikasi tasdiqlanadi va testga yoziladi.
 - T: Q2 — provayder tanlash, akkaunt ochish va staging VPS uchun to'lash (taxminan 210–260 ming so'm/oy).
 - T: GitHub Actions uchun SSH kirishini qo'shish (men qadam-baqadam yo'riqnoma beraman).
-- T: @BotFather'da bot yaratish (kirish kodlari, admin ogohlantirishlari, keyin B6 xulosalari uchun) va tokenni
-  staging sozlamasiga kiritish (yo'riqnoma beraman).
+- T: @BotFather'da bot yaratish (admin ogohlantirishlari, keyin B6 xulosalari uchun) va tokenni staging sozlamasiga
+  kiritish (yo'riqnoma beraman).
+- T: gateway.telegram.org'da o'z raqami bilan akkaunt ochish va API tokenini staging sozlamasiga kiritish (o'z
+  raqamiga kodlar bepul; balans production oldidan, ADR-028).
 - T: staging'da Uzum kalitini o'zi kiritadi (kalit menga berilmaydi).
 
-**Chiqish:** Temurning 2 do'koni staging'da to'liq sinxronlangan; 24 soat xatosiz; tushum, komissiya, logistika,
+**Chiqish:** staging API `up_app` roli bilan ulanadi (migratsiya — alohida ega roli); superuser, `BYPASSRLS`, jadval
+egasi yoki boshqa rol a'zosi bo'lgan rol bilan, yoki xavfli sozlama bilan (dev OTP siri/yuboruvchisi, HTTPS'siz
+cookie) API ishga tushmaydi — xato beradi; deploy'da `python -m upapi.db.guard` yashil. Temurning 2 do'koni staging'da
+to'liq sinxronlangan; 24 soat xatosiz; tushum, komissiya, logistika,
 dona legacy bilan 1 so'mgacha bir xil.
 
 ## B3. Frontend poydevori va dizayn tizimi — 6–9 kun

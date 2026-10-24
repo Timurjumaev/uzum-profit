@@ -13,6 +13,7 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U uzum -d uzum"]
       interval: 2s
@@ -24,7 +25,9 @@ services:
       context: ../..
       dockerfile: apps/api/Dockerfile
     environment:
-      UP_DATABASE_URL: postgresql://uzum:uzum@postgres:5432/uzum
+      # Ilova — up_app (RLS'ga bo'ysunadi); migratsiya va seed — jadvallar egasi (faqat dev'da shu konteynerda).
+      UP_DATABASE_URL: postgresql://up_app:up_app@postgres:5432/uzum
+      UP_MIGRATION_DATABASE_URL: postgresql://uzum:uzum@postgres:5432/uzum
     command: ["uvicorn", "upapi.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload",
               "--reload-dir", "/app/apps/api/src", "--reload-dir", "/app/packages/core/src"]
     volumes:

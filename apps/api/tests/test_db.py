@@ -20,14 +20,8 @@ from upapi.db.url import normalize_url
 @pytest.fixture(scope="module")
 def fresh() -> Iterator[dict[str, str]]:
     """RLS testlarining umumiy bazasiga tegmaslik uchun alohida baza."""
-    dbtools.require_admin()
-    name = f"up_test_{uuid.uuid4().hex[:10]}"
-    urls = dbtools.create_database(name)
-    try:
-        dbtools.alembic(urls["owner"], "upgrade", "head")
+    with dbtools.migrated_database() as urls:
         yield urls
-    finally:
-        dbtools.drop_database(name)
 
 
 def _tables(url: str) -> set[str]:
@@ -101,7 +95,7 @@ def test_seed_and_org_transaction(fresh: dict[str, str]) -> None:
 def test_seed_cli_needs_url(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    monkeypatch.delenv("UP_DATABASE_URL", raising=False)
+    monkeypatch.delenv("UP_MIGRATION_DATABASE_URL", raising=False)
     assert demo.main(["seed"]) == 2
     assert "URL" in capsys.readouterr().err
 

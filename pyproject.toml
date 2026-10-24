@@ -62,3 +62,7 @@ check_untyped_defs = true
 [[tool.mypy.overrides]]
 module = "upcore.*"
 strict = true
+
+[tool.coverage.run]
+# SQLAlchemy async greenlet orqali ishlaydi — usiz await'dan keyingi qatorlar "bajarilmagan" ko'rinadi.
+concurrency = ["greenlet", "thread"]

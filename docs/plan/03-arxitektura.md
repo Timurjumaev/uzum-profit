@@ -214,7 +214,12 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
 ## 10. Xavfsizlik
 
 - **Kirish:** telefon + OTP (xeshlangan, 5 daqiqa, 5 urinish), sessiya cookie `HttpOnly; Secure; SameSite=Lax`,
-  token xeshi bazada, har 24 soatda yangilanadi, 30 kun.
+  token xeshi bazada, har 24 soatda yangilanadi, 30 kun. Kod Telegram Gateway orqali (ADR-028). Sessiya va kod
+  jadvallari ilova roliga yopiq: faqat `auth_*` funksiyalari (`SECURITY DEFINER`, egasi `up_auth`), har biri sirni
+  talab qiladi — kod (kirish) yoki sessiya tokeni. Yangilangan tokenning eskisi 60 s ishlaydi (parallel so'rovlar).
+- **DB roli:** API staging/prod'da superuser, `BYPASSRLS`, jadval egasi yoki boshqa rol a'zosi bo'lgan rol bilan
+  ishga tushmaydi (`upapi.db.guard`); dev'da — ogohlantirish. Migratsiya — alohida ega roli
+  (`UP_MIGRATION_DATABASE_URL`).
 - **CSRF:** `Origin` tekshiruvi + maxsus sarlavha (`X-Requested-With`) har o'zgartiruvchi so'rovda.
 - **Ruxsatlar:** har endpoint rol bo'yicha tekshiriladi (dekorator), testlar bilan.
 
@@ -272,7 +277,8 @@ legacy'dagi `UZUM_TEST_HISTORY` kabi).
 
 ## 14. Muhitlar
 
-- **dev:** `docker compose -f infra/compose/dev.yml up` (postgres, api, worker, bot, web dev server), sintetik seed.
+- **dev:** `docker compose -f infra/compose/dev.yml up` (postgres, api, worker, bot, web dev server), sintetik seed
+  (`make seed`). API dev'da ham `up_app` bilan ulanadi (`make db-check`); OTP kodi API terminaliga chiqadi.
 - **staging:** O'zbekistondagi kichik VPS; Temurning haqiqiy do'konlari shu yerda sinxronlanadi (B2.11).
 - **production:** alohida VPS (B8.8); staging bilan bir xil konfiguratsiya, kattaroq resurs.
 - Funksiya bayroqlari (bazada) — yangi funksiyalar avval Temurning tashkilotida yoqiladi.

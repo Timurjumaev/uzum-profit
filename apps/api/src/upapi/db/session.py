@@ -22,9 +22,13 @@ def make_engine(url: str, **kwargs: object) -> AsyncEngine:
 
 @asynccontextmanager
 async def org_transaction(
-    engine: AsyncEngine, org_id: UUID, user_id: UUID | None = None
+    engine: AsyncEngine, org_id: UUID | None, user_id: UUID | None = None
 ) -> AsyncIterator[AsyncConnection]:
-    """Tashkilot doirasidagi tranzaksiya: ichidagi hamma so'rovlar faqat shu tashkilot qatorlarini ko'radi."""
+    """Tashkilot doirasidagi tranzaksiya: ichidagi hamma so'rovlar faqat shu tashkilot qatorlarini ko'radi.
+
+    ``org_id=None`` — faqat foydalanuvchi o'zi (masalan, profilini o'zgartirish)."""
     async with engine.begin() as conn:
-        await conn.execute(_SET, {"org": str(org_id), "user": str(user_id) if user_id else ""})
+        await conn.execute(
+            _SET, {"org": str(org_id) if org_id else "", "user": str(user_id) if user_id else ""}
+        )
         yield conn

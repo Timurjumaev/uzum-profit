@@ -1,4 +1,7 @@
-"""Alembic muhiti: URL ``UP_DATABASE_URL`` (yoki ``-x url=...``) dan, sync va async drayverlar."""
+"""Alembic muhiti: URL ``-x url=...``, ``UP_MIGRATION_DATABASE_URL`` (jadvallar egasi) yoki ``UP_DATABASE_URL`` dan.
+
+Ilova ``up_app`` bilan ulanadi va migratsiya qila olmaydi — migratsiya uchun alohida (ega) URL.
+"""
 
 import asyncio
 import os
@@ -14,7 +17,11 @@ target_metadata = metadata
 
 
 def _url() -> str:
-    raw = context.get_x_argument(as_dictionary=True).get("url") or os.environ.get("UP_DATABASE_URL")
+    raw = (
+        context.get_x_argument(as_dictionary=True).get("url")
+        or os.environ.get("UP_MIGRATION_DATABASE_URL")
+        or os.environ.get("UP_DATABASE_URL")
+    )
     if not raw:
         raise RuntimeError("UP_DATABASE_URL berilmagan")
     return normalize_url(raw)  # drayver ko'rsatilmagan bo'lsa asyncpg
