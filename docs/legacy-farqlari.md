@@ -23,7 +23,7 @@ real natija kelgach har bandga summa qo'shiladi.
 | 1 | Sotuv tannarxi usuli | sanagacha kelgan hamma partiyalar o'rtachasi (kumulyativ) | FIFO (Temur tashkiloti, ADR-025) yoki harakatlanuvchi o'rtacha | F21 |
 | 2 | Tannarxsiz qism | hamma xarajat ayiriladi — foyda kam ko'rinadi | xarajat qamrov ulushida, qolgani "tannarxsiz qism" | F15, ADR-026 |
 | 3 | Marja maxraji | tannarxi ma'lum tushum | xuddi shunday + tannarxsiz ulush alohida | F13, ADR-024 |
-| 4 | Xarajat toifalari | faqat reklama, saqlash, jarima, kompensatsiya | + fotostudiya, pul yechish, pullik jo'natish, boshqa | F9, B1.3 |
+| 4 | Xarajat toifalari | faqat reklama, saqlash, jarima, kompensatsiya | + fotostudiya, pul yechish, pullik jo'natish, boshqa (Temur do'konlarida 2026-07…10 bunday qator yo'q) | F9, B1.3 |
 | 5 | Xarajat kodlari | faqat `У→U` varianti, `U000120` | hamma kirill/lotin variantlari, `Y000119`, `Y000050` | B1.3 |
 | 6 | Xarajat statuslari | filtrlanmaydi | CANCELED/REFUNDED, `BALANCE_CORRECTION` chiqariladi | F9 |
 | 7 | Uzum to'lovi (F6) | Uzum `sellerProfit` | F3 − F4 − F5, farq > 1 so'm bo'lsa log | F6 |
@@ -36,10 +36,16 @@ real natija kelgach har bandga summa qo'shiladi.
 
 - Majburiy tekshiruvlar — hammasi ✓. `sellerProfit` ≠ F3 − F4 − F5: 0 qator. `PARTIALLY_CANCELLED`: 0 qator.
 - Saqlash, jarima, kompensatsiya — bir xil. **Reklama:** yangi kamroq — byDurii −37 388, EL-ONE −2 969 so'm;
-  qatorlar bo'yicha toifalash **bir xil** (klassifikator farqi yo'q) — farq manbadan: legacy summalari `uzum.db`
-  dan, yangi — `uzum_history.json` dan. Skript endi "Xarajat manbalari" jadvalini chiqaradi (faqat bazada /
-  faqat JSON'da / summasi boshqa qatorlar) — tasdiqlash kutilmoqda.
+  qatorlar bo'yicha toifalash **bir xil** (klassifikator farqi yo'q). Farq to'liq manbadan: `uzum.db` JSON
+  eksportidan keyin sinxronlangan (baza oxirgisi 2026-10-23, JSON 2026-10-22 / 21) — faqat bazada byDurii 20 ta
+  reklama qatori = 37 388 so'm, EL-ONE 3 ta = 2 969 so'm, ya'ni farqning o'zi. **Tasdiqlandi.**
 - Tannarx: ikkala partiya qatorlari SKU'ga biriktirilmagan — sotuvlarning birortasida tannarx yo'q (0 / 1 107),
   legacy ham, yangi ham bir xil. FIFO / o'rtacha farqi real ma'lumotda SKU biriktirilgandan keyin tekshiriladi.
 - Sof foyda: legacy −909 040 (hamma xarajat ayirilgan), yangi −214 941 — tannarx qamrovi 0% bo'lgani uchun sotuvli
   kunlar xarajati "tannarxsiz qism"ga o'tadi (656 711), sotuvsiz kunlar xarajati to'liq ayiriladi (F15, ADR-026).
+
+## Ochiq (B1 dan keyin)
+
+- Sotuv tannarxi (F21) real ma'lumotda: partiya qatorlariga SKU biriktirilgach `compare_legacy.py` qayta
+  ishga tushiriladi (legacy kumulyativ o'rtacha ↔ FIFO farqi summasi bilan); kech qolsa — B2.11 da staging'da.
+- `PARTIALLY_CANCELLED`, `amountReturns`, qaytishlar semantikasi — B2.11 (real ma'lumotda 0 qator).
