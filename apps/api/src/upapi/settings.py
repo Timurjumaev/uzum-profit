@@ -64,6 +64,10 @@ class Settings(BaseSettings):
     token_key_version: int = 1
     uzum_base_url: str = UZUM_BASE_URL
     uzum_timeout_seconds: float = 30
+    # Uzum limiti ~2 so'rov/s kalit bo'yicha (08 §8) — so'rovlar orasida kamida shuncha (03 §6).
+    uzum_min_interval_seconds: float = 0.45
+    # Kunlik qoldiq shundan kam bo'lsa fon sinxroni to'xtaydi, qolgani foydalanuvchi amallari uchun (02 M3).
+    uzum_quota_reserve: int = 10_000
     # Kalit tekshiruvi rad etilsa (yaroqsiz kalit) — tashkilot bo'yicha soatiga shuncha urinish.
     mp_verify_failures_per_hour: int = 10
 

@@ -1,0 +1,460 @@
+{
+  "source": "synthetic — legacy (uzum_profit) va selfcheck maydon nomlari asosida; haqiqiy javob emas",
+  "interactions": [
+    {
+      "name": "shops",
+      "request": {
+        "path": "/v1/shops",
+        "params": {}
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-remaining-per-day": "99990"
+        },
+        "body": [
+          {
+            "id": 900001,
+            "name": "<name 1>"
+          },
+          {
+            "id": 900002,
+            "name": "<name 2>"
+          }
+        ]
+      }
+    },
+    {
+      "name": "auth_error",
+      "request": {
+        "path": "/v1/shops",
+        "params": {}
+      },
+      "response": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "error": "Unauthorized"
+        }
+      }
+    },
+    {
+      "name": "orders",
+      "request": {
+        "path": "/v1/finance/orders",
+        "params": {
+          "shopIds": 900001,
+          "group": "false",
+          "page": 0,
+          "size": 5
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-remaining-per-day": "99989"
+        },
+        "body": {
+          "orderItems": [
+            {
+              "id": 910001,
+              "orderId": 920001,
+              "skuTitle": "<skuTitle 1>",
+              "productId": 930001,
+              "productTitle": "<productTitle 1>",
+              "status": "TO_WITHDRAW",
+              "date": 1760003600000,
+              "dateIssued": 1760103600000,
+              "sellPrice": 129000,
+              "amount": 1,
+              "commission": 25800,
+              "sellerProfit": 97950,
+              "logisticDeliveryFee": 5250,
+              "amountReturns": 0,
+              "returnCause": null,
+              "purchasePrice": null
+            },
+            {
+              "id": 910002,
+              "orderId": 920002,
+              "skuTitle": "<skuTitle 2>",
+              "productId": 930001,
+              "productTitle": "<productTitle 1>",
+              "status": "PROCESSING",
+              "date": 1760007200000,
+              "dateIssued": null,
+              "sellPrice": 129000,
+              "amount": 1,
+              "commission": 25800,
+              "sellerProfit": 97950,
+              "logisticDeliveryFee": 5250,
+              "amountReturns": 0,
+              "returnCause": null,
+              "purchasePrice": null
+            },
+            {
+              "id": 910003,
+              "orderId": 920003,
+              "skuTitle": "<skuTitle 3>",
+              "productId": 930001,
+              "productTitle": "<productTitle 1>",
+              "status": "CANCELED",
+              "date": 1760010800000,
+              "dateIssued": null,
+              "sellPrice": 129000,
+              "amount": 1,
+              "commission": 25800,
+              "sellerProfit": 97950,
+              "logisticDeliveryFee": 5250,
+              "amountReturns": 0,
+              "returnCause": null,
+              "purchasePrice": null
+            }
+          ],
+          "totalElements": 3
+        }
+      }
+    },
+    {
+      "name": "orders_end",
+      "request": {
+        "path": "/v1/finance/orders",
+        "params": {
+          "shopIds": 900001,
+          "group": "false",
+          "page": 100000,
+          "size": 5
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-remaining-per-day": "99988"
+        },
+        "body": {
+          "orderItems": [],
+          "totalElements": 3
+        }
+      }
+    },
+    {
+      "name": "expenses",
+      "request": {
+        "path": "/v1/finance/expenses",
+        "params": {
+          "shopIds": 900001,
+          "page": 0,
+          "size": 5
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-remaining-per-day": "99987"
+        },
+        "body": {
+          "payload": {
+            "payments": [
+              {
+                "id": 940001,
+                "dateCreated": 1760000000000,
+                "name": "<name 3>",
+                "source": "Ombor",
+                "paymentPrice": 12000,
+                "externalId": "ID000001",
+                "code": "C000003",
+                "type": "OUTCOME",
+                "status": "PAID"
+              },
+              {
+                "id": 940002,
+                "dateCreated": 1760003600000,
+                "name": "<name 4>",
+                "source": "Marketing",
+                "paymentPrice": 45000,
+                "externalId": "ID000002",
+                "code": "У000120",
+                "type": "OUTCOME",
+                "status": "PAID"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "products",
+      "request": {
+        "path": "/v1/product/shop/900001",
+        "params": {
+          "page": 0,
+          "size": 3
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-remaining-per-day": "99986"
+        },
+        "body": {
+          "productList": [
+            {
+              "productId": 930001,
+              "title": "<title 1>",
+              "skuList": [
+                {
+                  "skuId": 950001,
+                  "skuFullTitle": "<skuFullTitle 1>",
+                  "price": 129000,
+                  "commission": 20,
+                  "barcode": 960001,
+                  "status": {
+                    "value": "ACTIVE",
+                    "title": "<title 2>"
+                  },
+                  "quantitySold": 40,
+                  "quantityReturned": 2,
+                  "quantityDefected": 0,
+                  "quantityAvailableByStockType": {
+                    "fbo": 12,
+                    "fbs": 0
+                  },
+                  "skuDimension": {
+                    "weight": 350
+                  },
+                  "sellerItemCode": "ID000003"
+                }
+              ]
+            }
+          ],
+          "totalProductsAmount": 1
+        }
+      }
+    },
+    {
+      "name": "invoices",
+      "request": {
+        "path": "/v1/shop/900001/invoice",
+        "params": {
+          "page": 0,
+          "size": 3
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-remaining-per-day": "99985"
+        },
+        "body": [
+          {
+            "id": 970001,
+            "invoiceNumber": 980001,
+            "dateCreated": "2026-10-01T10:00:00",
+            "invoiceStatus": {
+              "value": "ACCEPTED",
+              "title": "<title 3>"
+            },
+            "fullPrice": 0,
+            "totalAccepted": 50,
+            "totalToStock": 50,
+            "hasIssue": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "invoice_products",
+      "request": {
+        "path": "/v1/shop/900001/invoice/products",
+        "params": {
+          "invoiceId": 970001,
+          "page": 0,
+          "size": 3
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-remaining-per-day": "99984"
+        },
+        "body": [
+          {
+            "id": 975001,
+            "skuTitle": "<skuTitle 4>",
+            "quantityToStock": 50,
+            "quantityAccepted": 50,
+            "skuForInvoiceDtoList": [
+              {
+                "id": 950001,
+                "quantityToStock": 50,
+                "quantityAccepted": 50
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "returns",
+      "request": {
+        "path": "/v1/shop/900001/return",
+        "params": {
+          "page": 0,
+          "size": 3
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-remaining-per-day": "99983"
+        },
+        "body": {
+          "payload": [
+            {
+              "id": 990001,
+              "dateCreated": 1760200000000,
+              "type": "RETURN",
+              "status": "COMPLETED"
+            }
+          ],
+          "timestamp": "2026-10-24T17:34:16.69874324"
+        }
+      }
+    },
+    {
+      "name": "bad_request",
+      "request": {
+        "path": "/v1/finance/orders",
+        "params": {
+          "shopIds": 900001,
+          "page": 0,
+          "size": -1
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "errors": [
+            {
+              "code": "bad-request"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "waf",
+      "request": {
+        "path": "/v1/shops",
+        "params": {}
+      },
+      "response": {
+        "status": 403,
+        "headers": {
+          "content-type": "text/html"
+        },
+        "body": {
+          "__text__": "<html>"
+        }
+      }
+    },
+    {
+      "name": "burst",
+      "request": {
+        "path": "/v1/shops",
+        "params": {}
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-remaining-per-day": "500"
+        },
+        "body": {
+          "error": "Too Many Requests"
+        }
+      }
+    },
+    {
+      "name": "quota",
+      "request": {
+        "path": "/v1/shops",
+        "params": {}
+      },
+      "response": {
+        "status": 429,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-remaining-per-day": "0"
+        },
+        "body": {
+          "error": "Too Many Requests"
+        }
+      }
+    },
+    {
+      "name": "server_error",
+      "request": {
+        "path": "/v1/shops",
+        "params": {}
+      },
+      "response": {
+        "status": 502,
+        "headers": {
+          "content-type": "text/plain"
+        },
+        "body": {
+          "__text__": "<matn 11 belgi>"
+        }
+      }
+    },
+    {
+      "name": "returns_all",
+      "request": {
+        "path": "/v1/return",
+        "params": {
+          "page": 0,
+          "size": 3
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-remaining-per-day": "99982"
+        },
+        "body": [
+          {
+            "id": 990001,
+            "shopId": 900001,
+            "dateCreated": 1760200000000,
+            "type": "RETURN",
+            "status": "COMPLETED",
+            "returnItems": [
+              {
+                "id": 991001,
+                "skuId": 950001,
+                "amount": 1,
+                "purchasePrice": 70000
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "probes": []
+}

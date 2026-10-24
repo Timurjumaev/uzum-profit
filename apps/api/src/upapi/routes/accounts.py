@@ -36,6 +36,7 @@ from upapi.errors import AppError
 from upapi.logs import get_logger
 from upapi.settings import Settings
 from upapi.uzum.client import (
+    NO_RETRY,
     AuthError,
     BurstLimited,
     QuotaExhausted,
@@ -46,6 +47,7 @@ from upapi.uzum.client import (
     WafBlocked,
     normalize_token,
 )
+from upapi.uzum.limiter import Priority
 
 router = APIRouter(tags=["accounts"])
 log = get_logger("upapi.accounts")
@@ -139,15 +141,21 @@ def _hint(last4: str | None) -> str | None:
 
 
 async def _verify(
-    request: Request, settings: Settings, token: SecretStr
+    request: Request, settings: Settings, token: SecretStr, account_id: UUID | None = None
 ) -> tuple[list[UzumShop], int | None]:
-    """Kalitni Uzum'da tekshirish (``/v1/shops``). Xato — :class:`UzumError` (matnida kalit va javob tanasi yo'q)."""
+    """Kalitni Uzum'da tekshirish (``/v1/shops``). Xato — :class:`UzumError` (matnida kalit va javob tanasi yo'q).
+
+    Foydalanuvchi kutib turibdi: ustuvor navbat, qayta urinishsiz (natija darhol; kerak bo'lsa qayta bosadi)."""
     transport: httpx.AsyncBaseTransport | None = request.app.state.uzum_transport
     async with UzumClient(
         token,
         base_url=settings.uzum_base_url,
         timeout=settings.uzum_timeout_seconds,
         transport=transport,
+        limiter=request.app.state.uzum_limiter if account_id else None,
+        key_id=str(account_id or ""),
+        priority=Priority.USER,
+        retry=NO_RETRY,
     ) as uzum:
         try:
             shops = await uzum.shops()
@@ -371,7 +379,7 @@ async def check_account(
             )
             raise AppError("mp_token_unreadable", 409, detail="Kalitni qayta kiriting") from None
     try:
-        shops, quota = await _verify(request, settings, token)
+        shops, quota = await _verify(request, settings, token, account_id)
         new_status, error = "active", None
     except UzumError as exc:
         if type(exc) not in _STATUS_ON_ERROR:

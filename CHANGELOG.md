@@ -100,3 +100,15 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   tekshirilgan).
 - `CLAUDE.md`: real Uzum API, Temurning kompyuteridagi ma'lumot yoki `.env` kerak bo'lsa — ish to'xtatiladi va
   Temurga aniq buyruq + natijani qayerga yuborish yoziladi (kalit so'ralmaydi).
+- B2.5 Uzum mijozi (`upapi.uzum.client`): hamma o'qish endpointlari (sotuvlar, xarajatlar, mahsulotlar, postavkalar va
+  tarkibi, qaytarishlar) sahifalab, xom JSON bilan (`Page.raw`, qatorlar takrorsiz); qayta urinish (5xx/tarmoq
+  0,8 → 1,6 → 3,2 s, sekundlik 429 — kutib), kunlik kvota kuzatuvi va fon uchun zaxira (`QuotaReserved`), kalit
+  bo'yicha tezlik navbati foydalanuvchi ustuvorligi bilan (`upapi.uzum.limiter`), 400 da kichikroq sahifa, jimgina
+  kesilgan sahifa hajmini aniqlash; `MarketplaceProvider` interfeysi (`upapi.marketplace`). Yozib olingan javoblar:
+  `scripts/record_uzum.py` (Temurning Mac'ida, anonimlashtirilgan kasseta) va kasseta testlari
+  (`apps/api/tests/fixtures/uzum`).
+- B2.5 haqiqiy kasseta (`fixtures/uzum/recorded.json`, Temurning yozuvi): sotuvlar sahifasi 5000 (kesilmasligi
+  tasdiqlandi), xarajatlar 2000; qaytarishlar `/v1/return` — butun akkaunt, tarkibi bilan (`returns()`), do'kon
+  ro'yxati — `shop_returns()`; kontrakt maydonlari (postavka tarkibi, qaytarishlar) va "haqiqiy Uzum faktlari"
+  testi. `record_uzum.py`: sizish tekshiruvi faqat saqlangan qiymatlarda (kalit nomlarida yolg'on xato yo'q),
+  kichik harfli xarajat kodlari, nuqtali sanalar va so'rov parametrlari saqlanadi.

@@ -69,6 +69,15 @@ spetsifikatsiyasi, 2026-aprel asosida).
 - WAF: chet el IP'laridan HTML 403 — server O'zbekistonda bo'lishi kerak.
 - Sahifa hajmlari: `finance/orders` amalda 5 000 gacha, `finance/expenses` 2 000, `fbs/orders` ≤ 50,
   `fbs/invoice` ≤ 20, `/v1/invoice` ≤ 50, `/v1/return` ≤ 50, mahsulot 100.
+- Temurning yozuvi (2026-10-24, `scripts/record_uzum.py`, kasseta `apps/api/tests/fixtures/uzum/recorded.json`):
+  noto'g'ri kalit → **403 JSON** (`errors[]`, `trace`), 401 emas; `size=5000` da `finance/orders` kesilmaydi
+  (2529 / 2529), `finance/expenses` 2254 qator berdi, `payload.totalElements` esa 0 — ishonchsiz; sarlavhalar
+  `x-ratelimit-remaining-per-day`, `-limit-per-day` (100 000), `-remaining`, `-burst-capacity` (2), `-replenish-rate`
+  (2). `/v1/return` — **butun akkaunt** (`shopId` parametri e'tiborsiz), qatorda `shopId` va `returnItems` (SKU,
+  dona, `purchasePrice`); `/v1/shop/{id}/return` — `{"payload": [...]}`, tarkibsiz. Postavka tarkibi — mahsulot
+  qatorlari, ichida `skuForInvoiceDtoList`. Sotuv qatorida `shopId`, `purchasePrice`, `withdrawnProfit`, `cancelled`.
+  Ochiq (B2.6): faktura `dateCreated` matn ko'rinishida (format yozuvda almashtirilgan — skript tuzatildi), xarajat
+  kodlari kichik harfli ham (`logistics-volume`).
 - Endpointlar: shops; product (SKU: qoldiqlar `quantityActive`, `quantityFbs`, `quantityDefected`,
   `quantityPending`, sotilgan/qaytgan, `avgdsales`, `rankInfo.rank`, `paidStoragePriceItem`, IKPU, `purchasePrice`);
   `sendPriceData` (narx o'zgartirish); finance orders/expenses; FBS buyurtmalar, qoldiq, jo'natmalar; FBO postavkalar

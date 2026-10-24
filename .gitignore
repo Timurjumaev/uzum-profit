@@ -15,3 +15,4 @@ dist/
 .mypy_cache/
 legacy_farqlari.md
 .coverage
+/uzum_cassette*.json
