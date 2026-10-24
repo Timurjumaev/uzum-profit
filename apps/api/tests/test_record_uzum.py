@@ -299,3 +299,28 @@ def test_fetch_other_network_error(monkeypatch: pytest.MonkeyPatch) -> None:
     with pytest.raises(RuntimeError) as info:
         rec.make_fetch("https://uzum.test")("/v1/shops", KEY)
     assert KEY not in str(info.value) and "ConnectionRefusedError" in str(info.value)
+
+
+def test_dump_ignores_key_names_and_placeholders() -> None:
+    """Temurning birinchi yozuvi shu sababli to'xtagan: Uzum xato javobidagi ``"size"`` almashtirildi, lekin bu so'z
+    so'rov parametrining nomi sifatida faylda qoladi — sizish emas."""
+    anon = rec.Anonymizer()
+    body = anon.value("body", {"errors": [{"field": "size", "message": "must be positive"}]})
+    name = anon.value("name", "name")  # o'rinbosar "<name 2>" ichida "name" — sizish emas
+    source = anon.value("source", "Ombor")
+    title = anon.value("title", "Ombor")  # Uzum so'zi boshqa maydonda ham — sizish emas
+    cassette_data = {
+        "interactions": [
+            {"params": {"size": -1}, "body": body, "name": name, "source": source, "title": title}
+        ],
+        "_originals": anon.originals,
+    }
+    assert '"size"' in rec.dump(cassette_data, KEY)
+
+
+def test_dump_names_leaking_fields_only() -> None:
+    with pytest.raises(SystemExit) as info:
+        rec.dump(
+            {"interactions": [{"source": f"{SHOP_NAME} ombori"}], "_originals": {SHOP_NAME}}, KEY
+        )
+    assert "maydonlar: source" in str(info.value) and SHOP_NAME not in str(info.value)

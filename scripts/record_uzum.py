@@ -327,17 +327,38 @@ def _replace_ids(path: str, anon: Anonymizer) -> str:
     )
 
 
+_OURS = re.compile(r"^(<.+ \d+>|ID\d{6})$")  # skriptning o'z o'rinbosarlari
+
+
+def _kept_values(data: Any, key: str = "") -> list[tuple[str, str]]:
+    """Faylda qolgan matn qiymatlari (maydon nomi bilan). JSON kalit nomlari va o'rinbosarlar hisobga olinmaydi —
+    masalan, almashtirilgan ``"size"`` so'zi so'rov parametrining nomi sifatida qolishi sizish emas."""
+    if isinstance(data, dict):
+        return [kv for k, v in data.items() for kv in _kept_values(v, str(k))]
+    if isinstance(data, list):
+        return [kv for v in data for kv in _kept_values(v, key)]
+    if isinstance(data, str) and not _OURS.match(data):
+        return [(key, data)]
+    return []
+
+
 def dump(cassette: dict[str, Any], key: str) -> str:
     originals = cassette.pop("_originals", set())
     text = json.dumps(cassette, ensure_ascii=False, indent=2)
-    leaks = [o for o in originals if o in text]
     if key and key in text:
         raise SystemExit(
             "XATO: kalit faylga tushib qoldi — yozilmadi. Claude'ga shu xabarni yuboring."
         )
-    if leaks:
+    # Asl matn saqlangan qiymat ichida qolganmi. Xabarda faqat maydon nomlari — qiymatlar emas.
+    kept = _kept_values(cassette)
+    vocab = {
+        v for k, v in kept if k in KEEP_ANY
+    }  # Uzum'ning o'z so'zlari ("Ombor") boshqa maydonda ham uchraydi
+    fields = sorted({k for k, v in kept for o in originals - vocab if o in v})
+    if fields:
         raise SystemExit(
-            f"XATO: {len(leaks)} ta asl matn almashtirilmadi — yozilmadi. Claude'ga shu xabarni yuboring."
+            f"XATO: asl matn almashtirilmadi (maydonlar: {', '.join(fields)}) — yozilmadi. "
+            "Claude'ga shu xabarni yuboring."
         )
     return text
 
