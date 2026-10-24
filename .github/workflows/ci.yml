@@ -17,6 +17,21 @@ jobs:
   python:
     name: Python (core, api, bot)
     runs-on: ubuntu-24.04
+    # RLS va migratsiya testlari (B2.2) haqiqiy PostgreSQL'da; CI'da DB bo'lmasa testlar xato beradi.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    env:
+      UP_TEST_ADMIN_URL: postgresql://postgres@localhost:5432/postgres
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v7
@@ -81,6 +96,7 @@ jobs:
       - uses: actions/checkout@v5
       - run: docker compose -f infra/compose/dev.yml up --build --detach --wait --wait-timeout 300
       - run: curl --fail --silent http://localhost:8000/health
+      - run: make seed
       - run: curl --fail --silent http://localhost:5173/ | grep -q '<div id="root">'
       - if: failure()
         run: docker compose -f infra/compose/dev.yml logs

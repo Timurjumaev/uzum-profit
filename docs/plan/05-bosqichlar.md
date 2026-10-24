@@ -56,7 +56,7 @@ Ochiq: F21 real ma'lumotda — partiyalarga SKU biriktirilgach (yoki B2.11).
 ## B2. Backend poydevori va staging — 8–12 kun
 
 - [x] B2.1 FastAPI skeleti: sozlamalar, structlog, problem+json xatolar, sog'liq endpoint'i.
-- [ ] B2.2 DB sxemasi (03 §5) + Alembic + RLS + sintetik seed.
+- [x] B2.2 DB sxemasi (03 §5) + Alembic + RLS + sintetik seed.
 - [ ] B2.3 Kirish: telefon + OTP — kod Telegram orqali (ADR-027: Telegram Gateway yoki o'z bot, narx va
   ishlashi tekshirilib tanlanadi; SMS zaxira keyin), sessiyalar, rollar, taklif, audit.
 - [ ] B2.4 Marketplace ulanishi: kalitni AES-GCM bilan saqlash, tekshirish, do'konlarni tanlash.

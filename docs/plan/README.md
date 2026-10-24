@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B2. Backend poydevori va staging** (B1 tugadi, 2026-10-24) |
-| Keyingi vazifa | B2.2 DB sxemasi + Alembic + RLS + sintetik seed |
+| Keyingi vazifa | B2.3 Kirish: telefon + OTP (Telegram, ADR-027), sessiyalar, rollar, taklif, audit |
 | Temurdan kutilmoqda | Q2 (server provayderi) — B2.10 gacha (Q3 hal qilindi: Telegram, ADR-027); ixtiyoriy: partiya qatorlariga SKU biriktirish |
-| Oxirgi yangilanish | 2026-10-24 (B2.1 tayyor, Q3 = Telegram) |
+| Oxirgi yangilanish | 2026-10-24 (B2.2 tayyor: sxema, Alembic, RLS testlari, seed) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 
