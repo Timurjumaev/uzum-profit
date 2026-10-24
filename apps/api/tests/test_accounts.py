@@ -144,6 +144,7 @@ def test_client_error_kinds(mode: str, error: type[uz.UzumError]) -> None:
             SecretStr("k" * 20),
             base_url="https://uzum.test/api/seller-openapi",
             transport=fake.transport,
+            retry=uz.NO_RETRY,  # qayta urinishlar — test_uzum_client.py
         ) as client:
             await client.shops()
 

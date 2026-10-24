@@ -166,6 +166,15 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
   3,2 s, ko'pi bilan 4 urinish), `BadRequest` (400 — qayta urinilmaydi).
 - **Tezlik:** kalit bo'yicha bitta navbat (Procrastinate `lock = account_id`), so'rovlar orasida ≥ 450 ms;
   ustuvorlik: foydalanuvchi amali > fon; kunlik qoldiq < 10 000 bo'lsa fon ishlari to'xtaydi.
+  B2.5 (`upapi.uzum`): jarayon ichidagi navbat `RateLimiter` (kalit = akkaunt id, `UP_UZUM_MIN_INTERVAL_SECONDS`,
+  kutayotgan foydalanuvchi so'rovi fondan oldin o'tadi); jarayonlar orasida — Procrastinate qulfi. API jarayonidagi
+  foydalanuvchi so'rovi (kalit tekshiruvi) ishchi bilan bir vaqtga to'g'ri kelishi mumkin — sekundlik 429 qayta
+  urinish bilan yopiladi. Kvota: har javobdagi qoldiq `on_quota` orqali akkauntga; qoldiq `UP_UZUM_QUOTA_RESERVE`
+  dan kam bo'lsa fon so'rovi yuborilmaydi (`QuotaReserved`).
+- **Sahifalash va xom JSON (B2.5):** har sahifa `Page` — Uzum javobi o'zgarishsiz (`raw`), qatorlar (`rows`, id
+  bo'yicha takrorsiz), jami, `has_more`. Birinchi sahifada 400 bo'lsa kichikroq hajm; jami soni bor endpointda Uzum
+  hajmni jimgina kessa haqiqiy hajm aniqlanadi. Javob shakllari testlari — yozib olingan kassetalarda
+  (`apps/api/tests/fixtures/uzum`, `scripts/record_uzum.py`: Temurning Mac'ida, anonimlashtirilgan).
 - **Upsert qoidalari:** tabiiy kalitlar (03 §5), faqat Uzum bergan ustunlar yangilanadi, `NULL` bilan ustidan
   yozilmaydi; bir partiyada dublikat kalit bo'lsa yozishdan oldin birlashtiriladi.
 - **Sinxron ishlari** (Procrastinate davriy): 02-funksiyalar.md M3 jadvalidagi chastotalar; do'konlar eng eski

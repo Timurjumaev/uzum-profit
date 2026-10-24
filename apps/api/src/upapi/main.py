@@ -16,6 +16,7 @@ from upapi.logs import configure_logging, get_logger
 from upapi.middleware import csrf_guard, request_context
 from upapi.routes import accounts, auth, health, orgs
 from upapi.settings import Settings, get_settings
+from upapi.uzum.limiter import RateLimiter
 
 API_PREFIX = "/api/v1"
 
@@ -88,6 +89,7 @@ def create_app(
     )
     app.state.settings = settings
     app.state.uzum_transport = uzum_transport
+    app.state.uzum_limiter = RateLimiter(settings.uzum_min_interval_seconds)
     app.middleware("http")(csrf_guard(API_PREFIX, settings.allowed_origins))
     # Oxirgi qo'shilgan — tashqi qatlam: so'rov id CSRF xatosida ham bo'ladi.
     app.middleware("http")(request_context)
