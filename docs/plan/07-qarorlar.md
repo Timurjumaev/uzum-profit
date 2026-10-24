@@ -39,6 +39,7 @@ tegishli fayllar yangilanadi. Eski qaror o'chirilmaydi, "almashtirildi: ADR-0XX"
 | ADR-024 | 2026-10-23 | F13 marja maxraji — tannarxi ma'lum qatorlar tushumi (F15 bilan bir asos); marja yonida tannarxsiz qism ulushi (1 − F15) alohida ko'rsatiladi. Ta'sir: 02 (F13, M4), `upcore.metrics` (B1.2) | F15 bo'yicha sof foyda faqat tannarxi ma'lum qism uchun; umumiy tushumga bo'linsa marja sun'iy kamayadi (25% tannarxsiz → 42% o'rniga 32%). Temur tasdiqladi | F12 / F3 (dastlabki reja) |
 | ADR-025 | 2026-10-23 | Q8 javobi: Temurning tashkiloti uchun tannarx usuli — **FIFO** (ADR-008 dagi standart bilan bir xil; o'rtacha sozlamada bir tugma bilan yoqiladi) | Temur tanladi; sotuvchi partiya bilan o'ylaydi, kurs va kargo partiyadan partiyaga o'zgaradi. Ta'sir: B1.5 lot dvigateli, B1.9 legacy farqlari (legacy kumulyativ o'rtacha → FIFO) | harakatlanuvchi o'rtacha |
 | ADR-026 | 2026-10-23 | P&L kataklari: F9–F12 va F15 eng mayda katakda — (kun, do'kon, SKU) — hisoblanadi, har kesim (oy, do'kon, SKU, tashkilot) kataklar yig'indisi. Do'kon xarajati o'sha kuni SKU'larga tushum ulushida (F19 qoidasi), tushum bo'lmasa "taqsimlanmagan" katakka; o'z xarajatlari kunlarga amortizatsiya (F10) va tushum ulushida. **Taqsimlangan xarajatlar to'g'ridan-to'g'ri xarajatlardan ajratib ko'rsatiladi** (SKU'ga bog'langan yoki o'z darajasidagi — to'g'ridan-to'g'ri; tushum ulushida bo'lingan — taqsimlangan; har toifa bo'yicha). Temur tasdiqladi (2026-10-24). Ta'sir: `upcore.pnl` (B1.6), B2.8 `daily_sku_metrics` | M5 qabul mezoni (oylar yig'indisi = davr; P&L = bosh sahifa = SKU jadvali) faqat additiv hisobda bajariladi; F15 butun davr bo'yicha qo'llansa kesimlar yig'indisi umumiy natijaga teng chiqmaydi | F15 ni har kesimda alohida (yig'indi mos kelmaydi); oy katagi ("Bugun" ko'rinishi yo'q) |
+| ADR-027 | 2026-10-24 | Q3 javobi: kirish kodi **Telegram** orqali (asosiy kanal); SMS (masalan, Eskiz) — keyinroq zaxira kanal. Aniq usul (Telegram Gateway — telefon raqamiga kod, yoki o'z bot — kontakt ulashish orqali) B2.3 da narx va O'zbekistonda ishlashi tekshirilib tanlanadi. Ta'sir: M1, B2.3, 03 §10 | Temur tanladi; auditoriya Telegram'da (ADR-018), SMS narxi va yetkazish kechikishi yo'q | faqat SMS |
 
 ## Ochiq qarorlar (Temur hal qiladi)
 
@@ -46,7 +47,7 @@ tegishli fayllar yangilanadi. Eski qaror o'chirilmaydi, "almashtirildi: ADR-0XX"
 |---|---|---|---|
 | Q1 | Brend nomi | B3 oxiri | ishchi nom ichkarida qoladi, UI'da vaqtincha "Foyda" |
 | Q2 | Server provayderi | B2.10 | 7 kunlik sinovdan keyin tezroq ishlagani (Servercore.uz yoki UzCloud) |
-| Q3 | Kirish kodi kanali: SMS provayder (masalan, Eskiz) yoki Telegram orqali kod | B2.3 | staging: kod admin Telegram'iga; production: SMS |
+| Q3 | ~~Kirish kodi kanali: SMS provayder (masalan, Eskiz) yoki Telegram orqali kod~~ — **hal qilindi: Telegram, SMS keyinroq zaxira (ADR-027)** | B2.3 | staging: kod admin Telegram'iga; production: SMS |
 | Q4 | Yuridik shaxs (MChJ / YaTT) | B8 boshi | buxgalter maslahatidan keyin |
 | Q5 | To'lov provayderi | B8.2 | takroriy to'lov va fiskal chekni eng sodda bergan provayder |
 | Q6 | Tarif narxlari | B8.1 | 01-mahsulot.md §7 dagi taklif |

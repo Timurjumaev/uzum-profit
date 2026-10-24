@@ -9,7 +9,7 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 |---|---|
 | Joriy bosqich | **B2. Backend poydevori va staging** (B1 tugadi, 2026-10-24) |
 | Keyingi vazifa | B2.1 FastAPI skeleti (sozlamalar, structlog, problem+json, sog'liq) |
-| Temurdan kutilmoqda | Q2 (server provayderi) — B2.10 gacha; Q3 (kirish kodi kanali) — B2.3 gacha; ixtiyoriy: partiya qatorlariga SKU biriktirish (F21 ni real ma'lumotda tekshirish) |
+| Temurdan kutilmoqda | Q2 (server provayderi) — B2.10 gacha (Q3 hal qilindi: Telegram, ADR-027); ixtiyoriy: partiya qatorlariga SKU biriktirish |
 | Oxirgi yangilanish | 2026-10-24 (B1 tugadi) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)

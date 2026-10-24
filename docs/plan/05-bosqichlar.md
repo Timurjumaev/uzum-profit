@@ -57,8 +57,8 @@ Ochiq: F21 real ma'lumotda — partiyalarga SKU biriktirilgach (yoki B2.11).
 
 - [ ] B2.1 FastAPI skeleti: sozlamalar, structlog, problem+json xatolar, sog'liq endpoint'i.
 - [ ] B2.2 DB sxemasi (03 §5) + Alembic + RLS + sintetik seed.
-- [ ] B2.3 Kirish: telefon + OTP (Q3 provayderi; staging'da provayder tayyor bo'lguncha kod faqat admin
-  Telegram'iga), sessiyalar, rollar, taklif, audit.
+- [ ] B2.3 Kirish: telefon + OTP — kod Telegram orqali (ADR-027: Telegram Gateway yoki o'z bot, narx va
+  ishlashi tekshirilib tanlanadi; SMS zaxira keyin), sessiyalar, rollar, taklif, audit.
 - [ ] B2.4 Marketplace ulanishi: kalitni AES-GCM bilan saqlash, tekshirish, do'konlarni tanlash.
 - [ ] B2.5 Uzum mijozi: xato turlari, tezlik navbati, kvota, xom JSON, yozib olingan javoblar bilan testlar.
 - [ ] B2.6 Sinxron ishlari (Procrastinate): to'liq tarix, inkremental, kunlik snapshot, postavka tarkibi, qaytarishlar,
