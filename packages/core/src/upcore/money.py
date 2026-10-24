@@ -40,6 +40,8 @@ class MoneyError(ValueError):
 
 def to_decimal(value: DecimalLike) -> Decimal:
     """``Decimal`` ga aylantiradi. ``float`` va ``bool`` rad etiladi, NaN va cheksizlik ham."""
+    if type(value) is Decimal and value.is_finite():
+        return value
     if isinstance(value, bool) or not isinstance(value, Decimal | int | str):
         raise MoneyError(f"pul uchun Decimal, int yoki str kerak, {type(value).__name__} berildi")
     try:
@@ -51,9 +53,13 @@ def to_decimal(value: DecimalLike) -> Decimal:
     return result
 
 
+_EXPONENTS = {p: Decimal(1).scaleb(-p) for p in range(13)}
+
+
 def quantize(value: Decimal, places: int) -> Decimal:
     """``places`` xonaga ROUND_HALF_UP bilan yaxlitlaydi."""
-    return value.quantize(Decimal(1).scaleb(-places), rounding=ROUND_HALF_UP)
+    exp = _EXPONENTS.get(places) or Decimal(1).scaleb(-places)
+    return value.quantize(exp, rounding=ROUND_HALF_UP)
 
 
 def round_rate(value: DecimalLike) -> Decimal:
@@ -69,9 +75,20 @@ class Money:
     currency: Currency
 
     def __post_init__(self) -> None:
-        currency = Currency(self.currency)
+        currency = self.currency if type(self.currency) is Currency else Currency(self.currency)
+        amount = self.amount
+        if type(amount) is not Decimal or not amount.is_finite():
+            amount = to_decimal(amount)  # tekshiruv va xato matni shu yerda
         object.__setattr__(self, "currency", currency)
-        object.__setattr__(self, "amount", quantize(to_decimal(self.amount), currency.places))
+        object.__setattr__(self, "amount", quantize(amount, currency.places))
+
+    @classmethod
+    def _exact(cls, amount: Decimal, currency: Currency) -> Money:
+        """Yaxlitlangan summalar yig'indisi/ayirmasi — qayta yaxlitlash shart emas (tez yo'l)."""
+        obj = object.__new__(cls)
+        object.__setattr__(obj, "amount", amount)
+        object.__setattr__(obj, "currency", currency)
+        return obj
 
     @classmethod
     def of(cls, amount: DecimalLike, currency: Currency | str) -> Money:
@@ -87,14 +104,14 @@ class Money:
 
     def __add__(self, other: Money) -> Money:
         self._same(other)
-        return Money(self.amount + other.amount, self.currency)
+        return Money._exact(self.amount + other.amount, self.currency)
 
     def __sub__(self, other: Money) -> Money:
         self._same(other)
-        return Money(self.amount - other.amount, self.currency)
+        return Money._exact(self.amount - other.amount, self.currency)
 
     def __neg__(self) -> Money:
-        return Money(-self.amount, self.currency)
+        return Money._exact(-self.amount, self.currency)
 
     def __mul__(self, factor: DecimalLike) -> Money:
         return Money(self.amount * to_decimal(factor), self.currency)

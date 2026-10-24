@@ -29,7 +29,8 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-addopts = ["--import-mode=importlib"]
+addopts = ["--import-mode=importlib", "-m", "not benchmark"]
+markers = ["benchmark: tezlik testlari (CI'da coverage'siz alohida ishga tushadi)"]
 testpaths = ["packages/core/tests", "apps/api/tests", "apps/bot/tests"]
 
 [tool.ruff]

@@ -36,6 +36,12 @@ def test_to_decimal_accepts_str_int_decimal() -> None:
     assert to_decimal(Decimal("1")) == Decimal(1)
 
 
+def test_direct_constructor_validates() -> None:
+    assert Money(7, "UZS") == Money.of(7, "UZS")  # type: ignore[arg-type]
+    with pytest.raises(MoneyError):
+        Money(Decimal("NaN"), Currency.UZS)
+
+
 def test_unknown_currency() -> None:
     with pytest.raises(ValueError):
         Money.of(1, "XYZ")

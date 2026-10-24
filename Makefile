@@ -18,6 +18,7 @@ check:
 	uv run ruff format --check
 	uv run mypy
 	uv run pytest
+	uv run pytest -m benchmark
 	python3 -m unittest tests.test_all
 	pnpm --filter web lint
 	pnpm --filter web typecheck
