@@ -129,6 +129,8 @@ class _Acc:
     uncovered_lines: int = 0
     uzum: dict[ExpenseCategory, Decimal] = field(default_factory=dict)
     own: dict[str, Decimal] = field(default_factory=dict)
+    uzum_alloc: dict[ExpenseCategory, Decimal] = field(default_factory=dict)
+    own_alloc: dict[str, Decimal] = field(default_factory=dict)
 
 
 def _add[K: Hashable](bucket: dict[K, Decimal], key: K, amount: Decimal) -> None:
@@ -156,6 +158,9 @@ class Statement:
     units: int
     lines: int
     uncovered_lines: int
+    # ADR-026: shundan tushum ulushida taqsimlangan qism (do'kon / tashkilot xarajatidan SKU'larga).
+    uzum_allocated: Mapping[ExpenseCategory, Money] = field(default_factory=dict)
+    own_allocated: Mapping[str, Money] = field(default_factory=dict)
 
     @property
     def payout(self) -> Money:
@@ -174,6 +179,16 @@ class Statement:
     @property
     def own_total(self) -> Money:
         return total(list(self.own_expenses.values()), UZS)
+
+    @property
+    def allocated_total(self) -> Money:
+        """Taqsimlangan xarajatlar (F9 + F10): do'kon / tashkilot xarajatining tushum ulushidagi qismi."""
+        return total([*self.uzum_allocated.values(), *self.own_allocated.values()], UZS)
+
+    @property
+    def direct_total(self) -> Money:
+        """To'g'ridan-to'g'ri xarajatlar (F9 + F10): shu SKU'ga bog'langan yoki o'z darajasidagi."""
+        return self.uzum_total + self.own_total - self.allocated_total
 
     @property
     def overhead(self) -> Money:
@@ -273,11 +288,17 @@ def _sum(statements: Iterable[Statement]) -> Statement:
     items = list(statements)
     uzum: dict[ExpenseCategory, Decimal] = {}
     own: dict[str, Decimal] = {}
+    uzum_alloc: dict[ExpenseCategory, Decimal] = {}
+    own_alloc: dict[str, Decimal] = {}
     for s in items:
         for c, a in s.uzum_expenses.items():
             _add(uzum, c, a.amount)
         for oc, a in s.own_expenses.items():
             _add(own, oc, a.amount)
+        for c, a in s.uzum_allocated.items():
+            _add(uzum_alloc, c, a.amount)
+        for oc, a in s.own_allocated.items():
+            _add(own_alloc, oc, a.amount)
 
     def add(get: Callable[[Statement], Money]) -> Money:
         return Money(sum((get(s).amount for s in items), _D0), UZS)
@@ -296,6 +317,8 @@ def _sum(statements: Iterable[Statement]) -> Statement:
         units=sum(s.units for s in items),
         lines=sum(s.lines for s in items),
         uncovered_lines=sum(s.uncovered_lines for s in items),
+        uzum_allocated=_money_map(uzum_alloc),
+        own_allocated=_money_map(own_alloc),
     )
 
 
@@ -335,40 +358,52 @@ def build_cells(
         sales_by_day[key.day].append(key)
 
     def spread(
-        day: date, shops: Sequence[str] | None, put: Callable[[_Acc, Money], None], amount: Money
+        day: date,
+        shops: Sequence[str] | None,
+        put: Callable[[_Acc, Money, bool], None],
+        amount: Money,
     ) -> None:
-        """Summani kun bo'yicha SKU kataklariga tushum ulushida; tushum yo'q — taqsimlanmagan katak."""
+        """Summani kun bo'yicha SKU kataklariga tushum ulushida ("taqsimlangan"); tushum yo'q —
+        do'kon / tashkilot darajasidagi taqsimlanmagan katakka (o'z darajasida, taqsimlanmagan)."""
         keys = [k for k in sales_by_day.get(day, ()) if shops is None or k.shop in shops]
         weights = [acc[k].revenue for k in keys]
         if keys and any(w > 0 for w in weights):
             for k, part in zip(keys, allocate(amount, weights), strict=True):
-                put(acc[k], part)
+                put(acc[k], part, True)
         else:
-            put(acc[CellKey(day, shops[0] if shops and len(shops) == 1 else "", None)], amount)
+            put(
+                acc[CellKey(day, shops[0] if shops and len(shops) == 1 else "", None)],
+                amount,
+                False,
+            )
 
     for e in expenses:
         if e.day not in period:
             continue
 
-        def put_uzum(a: _Acc, m: Money, c: ExpenseCategory = e.category) -> None:
+        def put_uzum(a: _Acc, m: Money, allocated: bool, c: ExpenseCategory = e.category) -> None:
             _add(a.uzum, c, m.amount)
+            if allocated:
+                _add(a.uzum_alloc, c, m.amount)
 
         if e.sku is not None:
-            put_uzum(acc[CellKey(e.day, e.shop, e.sku)], e.amount)
+            put_uzum(acc[CellKey(e.day, e.shop, e.sku)], e.amount, False)
         else:
             spread(e.day, [e.shop], put_uzum, e.amount)
 
     for oe in own_expenses:
 
-        def put_own(a: _Acc, m: Money, c: str = oe.category) -> None:
+        def put_own(a: _Acc, m: Money, allocated: bool, c: str = oe.category) -> None:
             _add(a.own, c, m.amount)
+            if allocated:
+                _add(a.own_alloc, c, m.amount)
 
         for day in _days(period):
             part = own_expense_in_period(oe.expense, Period(day, day))
             if part.is_zero():
                 continue
             if oe.sku is not None:
-                put_own(acc[CellKey(day, oe.shop or "", oe.sku)], part)
+                put_own(acc[CellKey(day, oe.shop or "", oe.sku)], part, False)
             else:
                 spread(day, None if oe.shop is None else [oe.shop], put_own, part)
 
@@ -398,6 +433,8 @@ def build_cells(
             units=a.units,
             lines=a.lines,
             uncovered_lines=a.uncovered_lines,
+            uzum_allocated=_money_map(a.uzum_alloc),
+            own_allocated=_money_map(a.own_alloc),
         )
     return Cells(period, items)
 

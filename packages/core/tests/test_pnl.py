@@ -91,6 +91,13 @@ def test_expense_allocation_rules() -> None:
     assert loose.uzum_expenses == {C.STORAGE: uzs(9_000)} and loose.net_profit == uzs(-9_000)
     assert CellKey(d(2), "S2", "A") in cells.items
     assert cells.statement().uzum_total == uzs(52_000)
+    # ADR-026: taqsimlangan va to'g'ridan-to'g'ri xarajatlar alohida
+    assert a.uzum_allocated == {C.ADVERTISING: uzs(30_000), C.COMPENSATION: uzs(-3_000)}
+    assert b.uzum_allocated == {C.ADVERTISING: uzs(10_000), C.COMPENSATION: uzs(-1_000)}
+    assert b.allocated_total == uzs(9_000) and b.direct_total == uzs(7_000)
+    assert loose.allocated_total == uzs(0) and loose.direct_total == uzs(9_000)
+    whole = cells.statement()
+    assert whole.allocated_total == uzs(36_000) and whole.direct_total == uzs(16_000)
 
 
 def test_own_expenses_amortized_and_scoped() -> None:
@@ -108,6 +115,12 @@ def test_own_expenses_amortized_and_scoped() -> None:
     }
     assert cells.items[CellKey(d(2), "", None)].own_expenses == {"ijara": uzs(100_000)}
     assert cells.items[CellKey(d(2), "S1", "A")].own_expenses == {"yorliq": uzs(70)}
+    assert cells.items[CellKey(d(2), "S1", "A")].own_allocated == {}
+    assert cells.items[CellKey(d(1), "S2", "B")].own_allocated == {
+        "ijara": uzs(75_000),
+        "qadoq": uzs(500),
+    }
+    assert cells.items[CellKey(d(2), "", None)].own_allocated == {}
     assert cells.statement().own_expenses == {
         "ijara": uzs(3_100_000),
         "qadoq": uzs(500),
@@ -238,6 +251,8 @@ def test_additivity_property(raw_sales: list, raw_exp: list, raw_own: list) -> N
         assert total([s.net_profit for s in view.values()], "UZS") == whole.net_profit
     # Hamma xarajat yo yerda ayrilgan, yo tannarxsiz qismda — yo'qolmaydi.
     assert whole.expenses_deducted + whole.uncovered_expenses == whole.overhead
+    assert whole.direct_total + whole.allocated_total + whole.tax == whole.overhead
+    assert total([s.allocated_total for s in cells.items.values()], "UZS") == whole.allocated_total
     assert whole.uzum_total == total([e.amount for e in exp], "UZS")
     in_oct = total([own_expense_in_oct(o) for o in own], "UZS")
     assert whole.own_total == in_oct
