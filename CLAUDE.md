@@ -16,6 +16,11 @@ Timurjumaev). Avval o'z do'konlari (byDurii 106121, EL-ONE 135204), keyin boshqa
 - Temur bilan o'zbek tilida (lotin), samimiy ("jigar"), qisqa. U band — faqat u qila oladigan narsani so'rang.
 - Uzum API kalitini **hech qachon so'ramang**. Real API tekshiruvi: legacy'da Temur `python3 -m uzum_profit selfcheck`
   ishlatadi; yangi tizimda — staging serverda o'zi kalit kiritadi.
+- **Real ma'lumot kerak bo'lsa — to'xtash.** Vazifa uchun real Uzum API, Temurning kompyuteridagi ma'lumot
+  (`uzum.db`, `uzum_history.json` va h.k.) yoki `.env` kerak bo'lsa: taxmin qilmasdan ishni shu joyda to'xtating va
+  Temurga yozing — "Mac'da shu buyruqni ishga tushir:" + **aniq, nusxalab qo'yiladigan buyruq** (qaysi papkada,
+  qaysi `python3` bilan) + **natijani qayerga yuborish** (masalan: "chiqqan matnni shu chatga tashla" yoki
+  "`~/uzum_samples.json` faylini shu yerga yukla"). Buyruq kalitni chiqarmasligi kerak; kalitni so'ramang.
 
 ## Tuzilma
 

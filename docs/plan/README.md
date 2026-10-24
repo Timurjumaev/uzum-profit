@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B2. Backend poydevori va staging** (B1 tugadi, 2026-10-24) |
-| Keyingi vazifa | B2.4 Marketplace ulanishi: kalitni AES-GCM bilan saqlash, tekshirish, do'konlarni tanlash |
+| Keyingi vazifa | B2.5 Uzum mijozi: xato turlari, tezlik navbati, kvota, xom JSON, yozib olingan javoblar bilan testlar |
 | Temurdan kutilmoqda | Q2 (server provayderi) — B2.10 gacha; ixtiyoriy: partiya qatorlariga SKU biriktirish |
-| Oxirgi yangilanish | 2026-10-24 (B2.3 tayyor: kirish, sessiyalar, rollar, takliflar, audit; DB roli tekshiruvi) |
+| Oxirgi yangilanish | 2026-10-24 (B2.4 tayyor: kalit AES-256-GCM bilan, tekshirish, almashtirish, uzish, do'konlarni tanlash) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

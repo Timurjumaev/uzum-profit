@@ -115,7 +115,7 @@ testlari `apps/api/tests/test_rls.py` da (CI'da PostgreSQL 18). Ilova `asyncpg`,
 (kod xeshi, urinishlar), `audit_log` (oldin/keyin jsonb).
 
 **Marketplace:** `mp_accounts` (provayder, shifrlangan token + kalit versiyasi + oxirgi 4 belgi, holat:
-faol / yaroqsiz / kvota tugagan / WAF, kvota qoldig'i), `shops` (tashqi id, nomi, taxallus, rang, faol,
+faol / yaroqsiz / kvota tugagan / WAF / uzilgan — uzilganda kalit ustunlari NULL, `token_state` cheklovi; kvota qoldig'i), `shops` (tashqi id, nomi, taxallus, rang, faol,
 tarix holati, birinchi sotuv sanasi), `sync_state` (do'kon × tur: oxirgi muvaffaqiyat, kursor), `sync_runs`
 (boshlanish, tugash, holat, olingan/yozilgan, xato, HTTP kod).
 
@@ -236,6 +236,13 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
   admin uchun alohida DB roli. Har endpoint uchun "boshqa tashkilot ma'lumoti ko'rinmaydi" testi.
 - **Sirlar:** server `.env`/Docker secrets'da; Uzum tokeni AES-256-GCM, kalit versiyasi bilan (rotatsiya
   mumkin); shifrlash kaliti zaxira nusxalarda yo'q. Token va kod loglarga yozilmaydi (log filtri testi).
+  B2.4 (`upapi.crypto`): `UP_TOKEN_KEYS` (versiya → base64 32 bayt, `python -m upapi.crypto keygen`),
+  `UP_TOKEN_KEY_VERSION`; bazada `nonce || shifrmatn || teg`, AAD = tashkilot + akkaunt id (shifrmatnni boshqa
+  qatorga ko'chirib bo'lmaydi). Rotatsiya: yangi versiya qo'shiladi, joriy unga o'tkaziladi, eski yozuvlar keyingi
+  tekshiruvda qayta shifrlanadi. Kalit faqat `SecretStr` da yuradi; Uzum xato matnida kalit ham, javob tanasi ham
+  yo'q; transport xatosi zanjirsiz (`from None`). Kalit javob, sarlavha, log (ilova va httpx), xato matni va bazaning
+  hech qayerida yo'qligi — `apps/api/tests/test_token_secrecy.py`. Yaroqsiz kalit urinishlari: tashkilot bo'yicha
+  soatiga `UP_MP_VERIFY_FAILURES_PER_HOUR` (10). Staging/prod dev shifrlash kaliti bilan ishga tushmaydi.
 - **Shaxsiy ma'lumot:** minimal (telefon, ism). DBS xaridor ma'lumoti saqlanmaydi. Ma'lumotlar O'zbekistondagi
   serverlarda (ADR-010).
 - **Sarlavhalar:** qat'iy CSP, HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `frame-ancestors 'none'`.
