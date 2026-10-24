@@ -224,5 +224,15 @@ def test_compare_db_only_and_period(legacy_db: tuple[Path, Path], tmp_path: Path
     assert "uzum.db dan tiklangan" in text and "2026-10-01 — 2026-10-31" in text
 
 
+def test_missing_history_falls_back_to_db(
+    legacy_db: tuple[Path, Path], tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    db, _ = legacy_db
+    out = tmp_path / "farq.md"
+    assert run("--db", str(db), "--history", str(tmp_path / "yoq.json"), "--out", str(out)) == 0
+    assert "uzum.db dan tiklangan" in out.read_text(encoding="utf-8")
+    assert "topilmadi" in capsys.readouterr().err
+
+
 def test_missing_db(tmp_path: Path) -> None:
     assert run("--db", str(tmp_path / "yoq.db"), "--out", os.devnull) == 2

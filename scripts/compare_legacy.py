@@ -422,7 +422,12 @@ def main(argv: list[str] | None = None) -> int:
 
 def _run(conn, args: argparse.Namespace) -> int:
     history = None
-    if args.history:
+    if args.history and not Path(args.history).exists():
+        print(
+            f"Diqqat: {args.history} topilmadi — xarajatlar uzum.db dan tiklanadi (hisobotda aytiladi).",
+            file=sys.stderr,
+        )
+    elif args.history:
         with open(args.history, encoding="utf-8") as fh:
             history = json.load(fh)
 
