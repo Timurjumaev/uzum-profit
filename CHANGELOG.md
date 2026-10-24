@@ -131,3 +131,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   ustunlari va indekslar, `provider_health`, `sync_accounts()` (`up_sync` roli). Testlar: soxta sotuvchi
   (`tests/sellerfake.py`), xaritalash (haqiqiy kasseta), engine, navbat, API, kalit maxfiyligi (sinxron yo'li).
   `psycopg[binary,pool]` — API'ning asosiy bog'liqligi (image'da `--no-dev` bilan ham libpq kerak emas).
+- B2.7 CBU kurslari ishi (F20, `upapi.fx`): `fx.cbu` kuniga 2 marta (Toshkent 09:05 va 16:05), USD/CNY/RUB/EUR
+  (`UP_FX_CURRENCIES`), `Nominal` ga bo'lish `upcore.fx.parse_cbu_row` da; arxiv bazadagi eng eski kundan orqaga
+  `UP_FX_BACKFILL_DAYS` (730) gacha, har ishda ≤ `UP_FX_BACKFILL_PER_RUN` (30) kun; CBU bermagan kun uchun qator
+  o'ylab topilmaydi (dam olish kuni — `rate_on`). Qayta urinish (5xx/tarmoq) va 3 urinishli ish; tushunarsiz javob
+  hech narsa yozmaydi. Yozuv — `fx_upsert()` (migratsiya `0005`, `up_sync` egasi, manba doim `cbu`): `up_app`
+  `fx_rates` ga to'g'ridan-to'g'ri yoza olmaydi, qo'lda kurslarga tegilmaydi. `UP_CBU_URL` staging/prod'da faqat https.
+  Testlar: `tests/test_fx.py`.

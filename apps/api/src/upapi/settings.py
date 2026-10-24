@@ -103,6 +103,13 @@ class Settings(BaseSettings):
     sync_invoice_items_per_run: int = 100
     worker_concurrency: int = 4
 
+    # CBU kurslari (B2.7, F20): kuniga 2 marta (Toshkent vaqti 09:05 va 16:05), arxiv orqaga to'ldiriladi.
+    cbu_url: str = "https://cbu.uz/uz/arkhiv-kursov-valyut/json/"
+    fx_currencies: list[str] = ["USD", "CNY", "RUB", "EUR"]
+    fx_timeout_seconds: float = 20
+    fx_backfill_days: int = 730
+    fx_backfill_per_run: int = 30
+
     @property
     def json_logs(self) -> bool:
         return self.log_json if self.log_json is not None else self.env is not Environment.DEV
@@ -131,6 +138,8 @@ class Settings(BaseSettings):
             out.append(f"UP_TOKEN_KEYS: {dev_key[0]}-versiya — dev kaliti; yangi kalit kerak")
         if self.token_key_version not in self.token_keys:
             out.append("UP_TOKEN_KEY_VERSION: bunday versiya UP_TOKEN_KEYS ichida yo'q")
+        if not self.cbu_url.startswith("https://"):
+            out.append("UP_CBU_URL: faqat https://")
         if not self.uzum_base_url.startswith("https://"):
             out.append("UP_UZUM_BASE_URL: faqat https://")
         if not self.secure_cookies:

@@ -16,12 +16,13 @@ from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
 
-from procrastinate import App, BaseConnector, JobContext, PsycopgConnector
+from procrastinate import App, BaseConnector, JobContext, PsycopgConnector, RetryStrategy
 from procrastinate.exceptions import AlreadyEnqueued
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from upapi.db.url import normalize_url
+from upapi.fx import sync_fx
 from upapi.logs import get_logger
 from upapi.settings import Settings
 from upapi.sync.engine import Kind, Runtime, Trigger, sync_account
@@ -29,6 +30,9 @@ from upapi.sync.engine import Kind, Runtime, Trigger, sync_account
 QUEUE = "sync"
 TICK = "sync.tick"
 ACCOUNT = "sync.account"
+FX = "fx.cbu"
+# Toshkent 09:05 va 16:05 (UTC+5, yoz vaqti yo'q) — CBU kursni ertalab e'lon qiladi, kunduzi tuzatishi mumkin.
+FX_CRON = "5 4,11 * * *"
 PRIORITY = {Trigger.SCHEDULE: 0, Trigger.CONNECT: 5, Trigger.USER: 10}
 _log = get_logger("upapi.sync.jobs")
 
@@ -92,6 +96,18 @@ def build_app(connector: BaseConnector) -> App:
         for org_id, account_id in await due_accounts(rt.engine):
             queued += await defer_account(context.app, org_id, account_id, Trigger.SCHEDULE)
         return queued
+
+    @app.periodic(cron=FX_CRON, periodic_id="fx")
+    @app.task(
+        name=FX,
+        queue=QUEUE,
+        queueing_lock=FX,
+        pass_context=True,
+        retry=RetryStrategy(max_attempts=3, wait=300),
+    )
+    async def fx_cbu(context: JobContext, timestamp: int) -> dict[str, Any]:
+        result = await sync_fx(runtime(context))
+        return {"latest": result.latest, "archived": result.archived, "days": result.days_filled}
 
     @app.task(name=ACCOUNT, queue=QUEUE, pass_context=True)
     async def account(

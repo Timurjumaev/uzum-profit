@@ -69,7 +69,9 @@ Ochiq: F21 real ma'lumotda — partiyalarga SKU biriktirilgach (yoki B2.11).
   `sync_runs`, uzilish rejimi, "Ma'lumotlar holati" API. Qo'shimcha: chuqur (45 kun) sinxron, tarixni kursordan davom
   ettirish, "Hozir yangilash", kalit ulanganda tarix navbatga, ishchi (`python -m upapi.worker`, dev compose).
   Real Uzum bilan tekshiruv — B2.11.
-- [ ] B2.7 CBU kurslari ishi (kuniga 2 marta + arxiv).
+- [x] B2.7 CBU kurslari ishi (kuniga 2 marta + arxiv). Toshkent 09:05 va 16:05 (`fx.cbu`), USD/CNY/RUB/EUR, arxiv
+  eng eski kundan 730 kungacha orqaga (har ishda ≤ 30 kun); yozuv `fx_upsert()` orqali (`up_app` jadvalga yozmaydi).
+  Real cbu.uz arxiv URL formati va dam olish kunlari javobi — B2.11 da tekshiriladi.
 - [ ] B2.8 Hisob ishlari: lotlar, `sale_costs`, `daily_sku_metrics` qayta qurish.
 - [ ] B2.9 O'qish API'lari: dashboard, pnl, skus, sales, expenses, inventory (core ustida) + OpenAPI tiplari.
 - [ ] B2.10 Staging server: O'zbekistondagi VPS (Q2), Docker Compose, Caddy (HTTPS), deploy workflow, tungi zaxira.
