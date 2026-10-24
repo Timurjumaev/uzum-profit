@@ -72,7 +72,10 @@ Ochiq: F21 real ma'lumotda — partiyalarga SKU biriktirilgach (yoki B2.11).
 - [x] B2.7 CBU kurslari ishi (kuniga 2 marta + arxiv). Toshkent 09:05 va 16:05 (`fx.cbu`), USD/CNY/RUB/EUR, arxiv
   eng eski kundan 730 kungacha orqaga (har ishda ≤ 30 kun); yozuv `fx_upsert()` orqali (`up_app` jadvalga yozmaydi).
   Real cbu.uz arxiv URL formati va dam olish kunlari javobi — B2.11 da tekshiriladi.
-- [ ] B2.8 Hisob ishlari: lotlar, `sale_costs`, `daily_sku_metrics` qayta qurish.
+- [x] B2.8 Hisob ishlari: lotlar, `sale_costs`, `daily_sku_metrics` qayta qurish. `upapi.calc`: navbat
+  `recalc_queue` (manba bilan bitta tranzaksiyada), `calc.org` (sinxrondan keyin) va `calc.nightly` (to'liq),
+  faqat o'zgargan tovarlar va kunlar; "qayta hisoblandi" belgisi. Real ma'lumotda tekshiruv (qaytish va
+  `amount` semantikasi) — B2.11. B4 ga: xarid va SKU → tovar tahrirlari `upapi.calc.request` ni chaqiradi.
 - [ ] B2.9 O'qish API'lari: dashboard, pnl, skus, sales, expenses, inventory (core ustida) + OpenAPI tiplari.
 - [ ] B2.10 Staging server: O'zbekistondagi VPS (Q2), Docker Compose, Caddy (HTTPS), deploy workflow, tungi zaxira.
   **Ochiq:** kirish kodi yuborishga IP bo'yicha cheklov (hozir faqat raqam bo'yicha 5 ta/soat — har xil raqam bilan

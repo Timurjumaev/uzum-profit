@@ -21,6 +21,9 @@ holatlar o'zgaradi), **uzilish** (uzilish davrini to'ldirish).
 Xatolar (02 M3): kalit xatosi ketma-ket ``sync_auth_failures`` marta → "kalit yaroqsiz"; WAF va kunlik kvota —
 akkaunt holati; kvota zaxirasi — fon ishi to'xtaydi (foydalanuvchi amali o'tadi); tarmoq/5xx — uzilish signali.
 Uzum'ga so'rov paytida DB tranzaksiyasi ochiq turmaydi: har sahifa o'z qisqa tranzaksiyasida yoziladi.
+
+Hisob (B2.8): yangi yoki o'zgargan sotuv / xarajat va yangi SKU bog'lanishi shu sahifa tranzaksiyasida
+``recalc_queue`` ga so'rov qo'yadi (:mod:`upapi.calc.queue`, eng erta Toshkent kuni bilan).
 """
 
 from __future__ import annotations
@@ -29,7 +32,7 @@ import asyncio
 from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from enum import StrEnum
 from typing import Any
 from uuid import UUID
@@ -41,6 +44,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 from upcore.expenses import CodeBook
 
+from upapi.calc import queue as calc
 from upapi.crypto import CipherError, TokenCipher, account_aad
 from upapi.db import models as m
 from upapi.db.session import make_engine, org_transaction
@@ -700,15 +704,33 @@ async def _write_sales(run: _Run, shop: ShopRef, page: Any, save_cursor: bool = 
         )
         run.counts[shop.id].written += result.written
         run.counts[shop.id].total = page.total
+        changed = [
+            r["ordered_at"]
+            for r in rows
+            if (r["org_id"], r["shop_id"], r["order_id"], r["external_id"]) in result.ids
+        ]
+        if changed:
+            await calc.request(conn, run.org_id, calc.Scope.SHOP, shop.id, _day(min(changed)))
         if save_cursor:
             await run.save_cursor(conn, shop.id)
+
+
+def _day(moment: datetime) -> date:
+    return _local(moment).date()
+
+
+async def _link_sales(run: _Run, conn: AsyncConnection, shop: ShopRef) -> None:
+    """Sotuv → SKU bog'lanishi; yangi bog'langan sotuvlar tannarxi qayta hisoblanadi (B2.8)."""
+    linked, since = await store.link_sales(conn, shop.id)
+    if linked and since is not None:
+        await calc.request(conn, run.org_id, calc.Scope.SHOP, shop.id, _day(since))
 
 
 async def _orders(run: _Run) -> None:
     await _timeline(run, run.client.orders, _write_sales)
     shop = run.task.shops[0]
     async with run.write() as conn:
-        await store.link_sales(conn, shop.id)
+        await _link_sales(run, conn, shop)
         first = await store.first_sale_on(conn, shop.id)
         await conn.execute(
             update(m.shops)
@@ -729,6 +751,13 @@ async def _write_expenses(run: _Run, shop: ShopRef, page: Any, save_cursor: bool
             exact=mapping.EXPENSE_DERIVED,
         )
         run.counts[shop.id].written += result.written
+        changed = [
+            r["created_on"]
+            for r in rows
+            if (r["org_id"], r["shop_id"], r["external_id"]) in result.ids
+        ]
+        if changed:
+            await calc.request(conn, run.org_id, calc.Scope.METRICS, shop.id, _day(min(changed)))
         if save_cursor:
             await run.save_cursor(conn, shop.id)
 
@@ -772,7 +801,7 @@ async def _products(run: _Run) -> None:
                 sku["product_id"] = ids.get(sku.pop("product_ext"))
             counts.written += (await store.upsert(conn, m.mp_skus, skus, key)).written
     async with run.write() as conn:
-        await store.link_sales(conn, shop.id)
+        await _link_sales(run, conn, shop)
         await store.link_children_skus(conn, shop.id)
 
 

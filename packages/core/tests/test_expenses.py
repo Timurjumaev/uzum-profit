@@ -16,6 +16,7 @@ from upcore.expenses import (
     classify_expenses,
     normalize_code,
     parse_expense,
+    signed_amount,
     totals_by_category,
     uzum_expense_total,
 )
@@ -217,3 +218,10 @@ def test_classify_dedup_and_f9_total() -> None:
     refunds = [r.amount for r in records if r.counted and r.direction is Direction.INCOME]
     assert uzum_expenses(charges, refunds) == uzs(5600)
     assert uzum_expense_total([]) == uzs(0)
+
+
+def test_signed_amount() -> None:
+    assert signed_amount(uzs(500), "OUTCOME") == uzs(500)
+    assert signed_amount(uzs(500), Direction.INCOME) == uzs(-500)
+    with pytest.raises(ValueError):
+        signed_amount(uzs(1), "SIDEWAYS")

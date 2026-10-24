@@ -368,6 +368,7 @@ mp_skus = tenant(
 )
 # Sotuv qatori SKU'ga ``skuTitle`` = ``skuFullTitle`` (``sku_code``) orqali bog'lanadi (legacy kabi).
 Index(None, mp_skus.c.org_id, mp_skus.c.shop_id, mp_skus.c.sku_code)
+Index(None, mp_skus.c.org_id, mp_skus.c.item_id)
 sku_daily = tenant(
     "sku_daily",
     Column("day", Date, nullable=False),
@@ -406,6 +407,7 @@ sale_items = tenant(
     refs={"shop_id": ("shops", False), "sku_id": ("mp_skus", True)},
 )
 Index(None, sale_items.c.org_id, sale_items.c.shop_id, sale_items.c.ordered_at)
+Index(None, sale_items.c.org_id, sale_items.c.sku_id)  # B2.8: tovar bo'yicha sotuvlar (SKU → item)
 expense_codes = global_table(
     "expense_codes",
     Column("code", Text, primary_key=True),
@@ -573,8 +575,10 @@ lots = tenant(
     Column("total", UZS, nullable=False),
     Column("unit_cost", RATE, nullable=False),
     Column("flags", ARRAY(Text), nullable=False, server_default="{}"),
+    UniqueConstraint("org_id", "purchase_line_id"),  # bitta xarid qatori — bitta lot (F20)
     refs={"purchase_line_id": ("purchase_lines", False), "item_id": ("items", True)},
 )
+Index(None, lots.c.org_id, lots.c.item_id)
 sale_costs = tenant(
     "sale_costs",
     Column("method", Text, nullable=False),
@@ -583,6 +587,9 @@ sale_costs = tenant(
     Column("flags", ARRAY(Text), nullable=False, server_default="{}"),
     Column("allocations", JSONB),
     Column("computed_at", TS, nullable=False, server_default=func.now()),
+    # "Qayta hisoblandi" (03 §7): oldingi hisobdan keyin COGS o'zgargan vaqt va oldingi qiymat (B2.8).
+    Column("changed_at", TS),
+    Column("previous_cogs", UZS),
     UniqueConstraint("org_id", "sale_item_id"),
     refs={"sale_item_id": ("sale_items", False)},
 )
@@ -597,8 +604,24 @@ daily_sku_metrics = tenant(
     Column("ads", UZS, nullable=False, server_default="0"),
     Column("returns", Integer, nullable=False, server_default="0"),
     Column("canceled", Integer, nullable=False, server_default="0"),
+    # B2.8: tannarxi ma'lum qatorlar (F15, F8) va taxminiy qism (F22).
+    Column("revenue_costed", UZS, nullable=False, server_default="0"),
+    Column("payout_costed", UZS, nullable=False, server_default="0"),
+    Column("cogs_estimated", UZS, nullable=False, server_default="0"),
     UniqueConstraint("org_id", "shop_id", "sku_id", "day", postgresql_nulls_not_distinct=True),
     refs={"shop_id": ("shops", False), "sku_id": ("mp_skus", True)},
+)
+
+# Qayta hisob navbati (B2.8, ``upapi.calc``): manba o'zgargani yozuvi — ma'lumot bilan bitta tranzaksiyada.
+# ``ref_id`` NULL — shu turdagi hammasi; ``since`` (do'kon turlari) — shu Toshkent kunidan, NULL — butun tarix.
+RECALC_KINDS = ("purchase", "item", "shop", "metrics")
+recalc_queue = tenant(
+    "recalc_queue",
+    Column("kind", Text, nullable=False),
+    Column("ref_id", UUID(as_uuid=True)),
+    Column("since", Date),
+    check_in("kind", RECALC_KINDS),
+    UniqueConstraint("org_id", "kind", "ref_id", postgresql_nulls_not_distinct=True),
 )
 
 # --- Pul --------------------------------------------------------------------------------------

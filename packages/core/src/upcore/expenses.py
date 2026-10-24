@@ -188,11 +188,16 @@ class ExpenseRecord:
     @property
     def signed(self) -> Money:
         """P&L ta'siri: OUTCOME +, INCOME − (xarajatni kamaytiradi)."""
-        return self.amount if self.direction is Direction.OUTCOME else -self.amount
+        return signed_amount(self.amount, self.direction)
 
     @property
     def counted(self) -> bool:
         return self.excluded is None
+
+
+def signed_amount(amount: Money, direction: Direction | str) -> Money:
+    """F9: xarajatning P&L ta'siri — OUTCOME +, INCOME − (``amount`` musbat, bazadagi ``mp_expenses`` ham)."""
+    return amount if Direction(direction) is Direction.OUTCOME else -amount
 
 
 def ad_amount_from_text(name: str, payment: Decimal) -> Decimal:

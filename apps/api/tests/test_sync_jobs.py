@@ -34,7 +34,7 @@ def connector(app: Any) -> InMemoryConnector:
 async def drain(app: Any, rt: Runtime) -> None:
     """Navbat bo'shaguncha ishlar bajariladi (``wait=False``)."""
     await app.run_worker_async(
-        queues=[jobs.QUEUE],
+        queues=jobs.QUEUES,
         wait=False,
         install_signal_handlers=False,
         additional_context={"runtime": rt},
@@ -114,6 +114,7 @@ def test_periodic_tick_registered() -> None:
     app = jobs.build_app(InMemoryConnector())
     periodic = list(app.periodic_registry.periodic_tasks.values())
     assert sorted((p.task.name, p.cron) for p in periodic) == [
+        (jobs.CALC_NIGHTLY, jobs.CALC_CRON),
         (jobs.FX, jobs.FX_CRON),
         (jobs.TICK, "* * * * *"),
     ]

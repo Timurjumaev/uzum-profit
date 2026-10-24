@@ -138,3 +138,14 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   hech narsa yozmaydi. Yozuv — `fx_upsert()` (migratsiya `0005`, `up_sync` egasi, manba doim `cbu`): `up_app`
   `fx_rates` ga to'g'ridan-to'g'ri yoza olmaydi, qo'lda kurslarga tegilmaydi. `UP_CBU_URL` staging/prod'da faqat https.
   Testlar: `tests/test_fx.py`.
+- B2.8 Hisob ishlari (`upapi.calc`, migratsiya `0006`): qayta hisob navbati `recalc_queue` (xarid / tovar / do'kon
+  sotuvlari / faqat agregat; manba bilan bitta tranzaksiyada yoziladi, takrori bitta qatorga birlashadi — eng erta
+  kun). `calc.org` ishi (tashkilotga bitta, `FOR UPDATE` bilan — hisob paytidagi so'rov yo'qolmaydi): lotlar (F20:
+  CBU / qo'lda / effektiv kurs, `targets` — qatorlar va qo'lda ulushlar; hisoblab bo'lmaydigan xarid lotsiz va
+  xato bilan), faqat o'zgargan tovarlar uchun `sale_costs` (F21, FIFO / o'rtacha; faqat farqlar yoziladi, COGS
+  o'zgarsa `changed_at` + `previous_cogs` — "qayta hisoblandi"; bekor sotuv qatori o'chadi; SKU tovarga
+  bog'lanmagan — `no_item`, lot yo'q — `no_lots`), o'zgargan kunlardan `daily_sku_metrics` (`upcore.metrics.sale_totals`:
+  F3–F8, F15 tannarxi ma'lum qism, F17, F18, F22 taxminiy COGS; reklama `AD#` orqali SKU'ga, bog'lanmagani do'kon
+  qatorida). Sinxron sotuv/xarajat yozganda so'rov qo'yadi, akkaunt ishi `calc.org` ni navbatga qo'yadi; `calc.nightly`
+  (Toshkent 03:40) — to'liq qayta qurish. Ishchi `sync` va `calc` navbatlarini oladi. Inkremental natija = to'liq
+  qayta qurish (test); 10 000 sotuvli tovar bazasi bilan < 3 s (benchmark). Testlar: `tests/test_calc.py`.

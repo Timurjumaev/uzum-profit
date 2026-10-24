@@ -6,6 +6,11 @@
 - ``sync.account`` — ``lock = account:<id>``: bitta kalitga bir vaqtda bitta ish (ishchilar va jarayonlar orasida).
   Ustuvorlik: foydalanuvchi ("Hozir yangilash") > kalit ulandi > jadval.
 
+- ``calc.org`` (B2.8) — tashkilot hisob ishi (:func:`upapi.calc.recalc_org`): ``lock = calc:<org>``, navbatda bitta.
+  Akkaunt sinxroni biror narsa yozgan bo'lsa navbatga qo'yiladi (so'rovlar ``recalc_queue`` da — ma'lumot bilan
+  bitta tranzaksiyada yozilgan). ``calc.nightly`` — Toshkent 03:40 da har tashkilot uchun to'liq qayta qurish
+  (masalan, CBU arxivi keyinroq kelib, kurslar o'zgargan bo'lsa).
+
 Ish argumentlarida faqat id'lar (kalit yo'q). Ishchi — ``python -m upapi.worker``; API navbatga :class:`JobQueue`
 orqali qo'yadi.
 """
@@ -21,6 +26,8 @@ from procrastinate.exceptions import AlreadyEnqueued
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
+from upapi import calc
+from upapi.db.session import org_transaction
 from upapi.db.url import normalize_url
 from upapi.fx import sync_fx
 from upapi.logs import get_logger
@@ -34,6 +41,11 @@ FX = "fx.cbu"
 # Toshkent 09:05 va 16:05 (UTC+5, yoz vaqti yo'q) — CBU kursni ertalab e'lon qiladi, kunduzi tuzatishi mumkin.
 FX_CRON = "5 4,11 * * *"
 PRIORITY = {Trigger.SCHEDULE: 0, Trigger.CONNECT: 5, Trigger.USER: 10}
+CALC_QUEUE = "calc"
+CALC = "calc.org"
+CALC_NIGHTLY = "calc.nightly"
+CALC_CRON = "40 22 * * *"  # Toshkent 03:40 — sinxron va CBU ishlaridan uzoqda
+QUEUES = [QUEUE, CALC_QUEUE]
 _log = get_logger("upapi.sync.jobs")
 
 
@@ -84,6 +96,23 @@ async def defer_account(
     return True
 
 
+async def defer_calc(app: App, org_id: UUID) -> bool:
+    """Tashkilot hisob ishini navbatga qo'yish. ``False`` — allaqachon navbatda (u navbatdagi hamma so'rovlarni
+    oladi)."""
+    try:
+        await app.configure_task(
+            CALC, queue=CALC_QUEUE, lock=f"calc:{org_id}", queueing_lock=f"calc:{org_id}"
+        ).defer_async(org_id=str(org_id))
+    except AlreadyEnqueued:
+        return False
+    return True
+
+
+async def request_full_rebuild(engine: AsyncEngine, org_id: UUID) -> None:
+    async with org_transaction(engine, org_id) as conn:
+        await calc.request_full(conn, org_id)
+
+
 def build_app(connector: BaseConnector) -> App:
     """Navbat ilovasi (ishchi va API uchun bir xil vazifalar ro'yxati)."""
     app = App(connector=connector)
@@ -124,7 +153,30 @@ def build_app(connector: BaseConnector) -> App:
             trigger=Trigger(trigger),
             kinds=[Kind(k) for k in kinds] if kinds is not None else None,
         )
+        if any(r.written for r in result.runs):
+            await defer_calc(context.app, UUID(org_id))
         return {"status": result.status, "reason": result.reason, "runs": len(result.runs)}
+
+    @app.task(name=CALC, queue=CALC_QUEUE, pass_context=True)
+    async def calc_org(context: JobContext, org_id: str) -> dict[str, Any]:
+        rt = runtime(context)
+        result = await calc.recalc_org(rt.engine, UUID(org_id), rt.clock())
+        return {
+            "status": result.status,
+            "costs": result.costs_written + result.costs_deleted,
+            "metrics": result.metric_rows,
+            "errors": len(result.errors),
+        }
+
+    @app.periodic(cron=CALC_CRON, periodic_id="calc")
+    @app.task(name=CALC_NIGHTLY, queue=CALC_QUEUE, queueing_lock=CALC_NIGHTLY, pass_context=True)
+    async def calc_nightly(context: JobContext, timestamp: int) -> int:
+        rt = runtime(context)
+        queued = 0
+        for org_id in sorted({org for org, _ in await due_accounts(rt.engine)}):
+            await request_full_rebuild(rt.engine, org_id)
+            queued += await defer_calc(context.app, org_id)
+        return queued
 
     return app
 

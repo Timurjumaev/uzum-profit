@@ -103,7 +103,8 @@ def status_group(status: str) -> StatusGroup:
 class SaleLine:
     """``finance/orders`` qatori (so'mda). ``commission`` va ``logistics`` — qator bo'yicha jami.
 
-    ``unit_cost`` — F21 dan sotuvning birlik tannarxi; noma'lum bo'lsa ``None``.
+    ``unit_cost`` — F21 dan sotuvning birlik tannarxi; noma'lum bo'lsa ``None``. ``estimated`` — tannarxda F22
+    taxminiy belgisi bor.
     """
 
     sku: str
@@ -117,6 +118,7 @@ class SaleLine:
     amount_returns: int = 0
     unit_cost: Decimal | None = None
     shop: str = ""
+    estimated: bool = False
 
     @property
     def group(self) -> StatusGroup:
@@ -196,6 +198,45 @@ def gross_profit(lines: Iterable[SaleLine]) -> Money:
     """F8. Yalpi foyda = F6 − F7 (tannarxi ma'lum qatorlar bo'yicha; qamrov — F15)."""
     covered = [line for line in completed(lines) if line.unit_cost is not None]
     return payout(covered) - cogs(covered)
+
+
+@dataclass(frozen=True, slots=True)
+class SaleTotals:
+    """Qatorlar to'plami (masalan, do'kon × SKU × kun — ``daily_sku_metrics``) bo'yicha yig'indilar.
+
+    Hammasi yig'iladigan (additiv) qiymatlar: kunlar yig'indisi davr natijasiga teng, nisbatlar (F13–F18) esa
+    yig'indilardan hisoblanadi.
+    """
+
+    revenue: Money  # F3
+    units: int  # Yakunlangan dona
+    commission: Money  # F4
+    logistics: Money  # F5
+    cogs: Money  # F7 (tannarxi ma'lum qatorlar)
+    revenue_costed: Money  # F15 surati: tannarxi ma'lum qatorlar tushumi
+    payout_costed: Money  # F6 tannarxi ma'lum qatorlar bo'yicha; F8 = payout_costed − cogs
+    cogs_estimated: Money  # F22: taxminiy belgili qatorlar tannarxi (F7 ning qismi)
+    returns: int  # F18 surati: Σ ``amountReturns``
+    canceled: int  # F17 surati: Bekor dona
+
+
+def sale_totals(lines: Iterable[SaleLine]) -> SaleTotals:
+    """F3–F8, F15, F17, F18, F22 yig'indilari bitta to'plam uchun (kunlik agregat jadvali manbasi)."""
+    items = list(lines)
+    done = completed(items)
+    covered = [line for line in done if line.unit_cost is not None]
+    return SaleTotals(
+        revenue=revenue(done),
+        units=_units(done, StatusGroup.COMPLETED),
+        commission=commission(done),
+        logistics=logistics(done),
+        cogs=cogs(covered),
+        revenue_costed=revenue(covered),
+        payout_costed=payout(covered),
+        cogs_estimated=cogs([line for line in covered if line.estimated]),
+        returns=sum(line.amount_returns for line in items),
+        canceled=_units(items, StatusGroup.CANCELED),
+    )
 
 
 # --- F9–F10 ---------------------------------------------------------------------------------
