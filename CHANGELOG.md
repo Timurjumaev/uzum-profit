@@ -60,3 +60,5 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 - B1.9 skripti: `--history` fayli topilmasa yiqilmaydi — ogohlantirish beradi va `uzum.db` bilan davom etadi.
 - B1.9 skripti: xarajatlar qatorlar bo'yicha legacy ↔ yangi toifalash farqi jadvali (sabab, kod, tur, status).
   Real natija `docs/legacy-farqlari.md` ga yozildi: majburiy tekshiruvlar ✓.
+- B1.9 skripti: "Xarajat manbalari" jadvali — `uzum.db` va `uzum_history.json` dagi xarajat qatorlari farqi
+  (faqat bazada, faqat JSON'da, summasi boshqa) legacy toifalari bo'yicha.

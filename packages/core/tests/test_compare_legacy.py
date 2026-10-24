@@ -203,6 +203,14 @@ def legacy_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, Pa
                 "INSERT INTO batch_extras (batch_id,name,amount) VALUES (?,?,?)",
                 (cur.lastrowid, "x", amount),
             )
+    # JSON eksportidan keyin sync bilan kelgan reklama qatori: faqat bazada bor.
+    late = {
+        **EXPENSES[0],
+        "id": 199,
+        "dateCreated": ms("2026-10-20"),
+        "name": "olganida 1234.5 so'm",
+    }
+    sync.upsert_expenses(conn, 106121, [late])
     conn.commit()
     conn.close()
     return db, hist
@@ -237,6 +245,8 @@ def test_compare_with_history(
         in text
     )
     assert "| ad | chiqarildi: status | Y000120 | OUTCOME | CANCELED | 1 | 900 | 0 | -900 |" in text
+    assert "Xarajat manbalari: uzum.db — 6 qator" in text and "JSON — 5 qator" in text
+    assert "| faqat uzum.db da | ad | 1 | 1 234 |" in text
     assert "| 2026-09 |" in text and "| 2026-10 |" in text
     assert "Hisobot saqlandi" in capsys.readouterr().err
 
