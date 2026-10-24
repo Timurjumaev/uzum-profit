@@ -12,3 +12,5 @@ dist/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+legacy_farqlari.md
+.coverage

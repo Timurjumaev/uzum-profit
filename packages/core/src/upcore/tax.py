@@ -46,7 +46,9 @@ SEED_RATES: tuple[TaxRate, ...] = (
     ),
     TaxRate("turnover_ecommerce", date(2026, 1, 1), Decimal(4), "e-tijorat yuridik shaxs, bazaviy"),
     TaxRate("profit", date(2026, 1, 1), Decimal(15), "foyda solig'i, bazaviy"),
-    TaxRate("vat", date(2026, 1, 1), Decimal(12), "QQS"),
+    TaxRate(
+        "vat", date(2026, 1, 1), Decimal(12), "QQS, Soliq kodeksi 36-bob (2026-10-24 tekshirildi)"
+    ),
 )
 
 

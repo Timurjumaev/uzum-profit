@@ -103,6 +103,10 @@ spetsifikatsiyasi, 2026-aprel asosida).
   ([buxgalter.uz](https://buxgalter.uz/oz/publish/doc/text212722_sk-2026_yakka_tartibdagi_tadbirkorlar_va_uzini_uzi_band_qilgan_shahslar_uchun_aylanmadan_olinadigan_soliq_buyicha_uzgarishlar)).
 - Elektron tijorat sub'yektlari uchun pasaytirilgan stavkalar bekor qilindi: 2026 dan foyda solig'i 15%, aylanma 4%
   ([buxgalter.uz](https://buxgalter.uz/oz/publish/doc/text212793_sk-2026_elektron_tijorat_subektlari_soliqlarni_bazaviy_stavkalar_buyicha_tulaydi)).
+- QQS 2026 yilda ham **12%** (Soliq kodeksi, 36-bob: [lex.uz](https://lex.uz/acts/-4674902); 2026–2028 budjetnomasi:
+  [mf.uz](https://api.mf.uz/media/filestore/2026-2028-yillar_uchun_Budjetnoma.pdf)); 2026-06-01 dan chakana savdo va umumiy
+  ovqatlanish uchun 5 mlrd so'mgacha ixtiyoriy 6% ([ihisobchi.uz](https://ihisobchi.uz/uz/spravochnik/nds-uzbekistan-2026/),
+  qaror matni bilan tekshirilmagan). Tekshirildi: 2026-10-24.
 - Bular yangiliklar xulosasi; dasturda stavkalar sozlanadi, standartlar buxgalter bilan tasdiqlanadi.
 - Ochiq savol: Uzum sotuvchidan soliqni agent sifatida ushlab qoladimi — B2.11 da Temurning xarajatlarida tekshiriladi.
 

@@ -19,8 +19,10 @@ Timurjumaev). Avval o'z do'konlari (byDurii 106121, EL-ONE 135204), keyin boshqa
 
 ## Tuzilma
 
-- `uzum_profit/`, `tests/` — **legacy** ilova (Python 3.8 stdlib, SQLite). Temurning Mac'ida (macOS Monterey,
-  Python 3.8) ishlaydi. B4 oxirigacha faqat kritik tuzatishlar; Python 3.8 bilan mos bo'lishi shart.
+- `uzum_profit/`, `tests/` — **legacy** ilova (Python 3.8 stdlib, SQLite). Temurning Mac'ida ishlaydi
+  (2026-10 dan Python 3.15: `/Library/Frameworks/Python.framework/Versions/3.15/bin/python3`). B4 oxirigacha faqat
+  kritik tuzatishlar; Python 3.8 bilan ham mos bo'lishi shart (CI: 3.8, 3.13, 3.15).
+- `scripts/compare_legacy.py` — B1.9 solishtirish (faqat stdlib, Temurning Mac'ida `python3` bilan lokal).
   Testlar: `UZUM_TEST_HISTORY=/mnt/user-data/uploads/uzum_history.json python3 -m unittest tests.test_all`
   (fayl bo'lmasa 3 test o'tkazib yuboriladi); Python 3.8: `/root/.local/bin/python3.8`.
 - `packages/core`, `apps/api`, `apps/web`, `apps/bot`, `infra/` — yangi tizim (B0 dan boshlab), tafsilot

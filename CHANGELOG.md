@@ -52,3 +52,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   solig'i oylik taxmini; stavkalar ma'lumotnomasi), `upcore.cash` (F38 to'lov jadvallari va prognozi, ish
   kunlari va bayramlar, kechikish chegarasi; F39 90 kunlik kassa prognozi va uzilish kuni). Hamma tarif va
   stavkalar ma'lumot (ADR-015), seed qiymatlari 02/08 dan.
+- B1.9 vositasi: `scripts/compare_legacy.py` (faqat stdlib, Python 3.12+; 3.15 da tekshirilgan) — legacy va
+  yangi yadro natijalarini Temurning `uzum.db` / `uzum_history.json` da solishtiradi: partiyalar tannarxi, oylar
+  bo'yicha tushum/komissiya/logistika/dona (majburiy), xarajat toifalari, tannarx (legacy / o'rtacha / FIFO) va
+  foyda farqlari sababi bilan. `docs/legacy-farqlari.md` — farqlar ro'yxati. CI: legacy 3.15 da, yangi
+  "Core (Python 3.15)" job. QQS 12% (2026) manba bilan tasdiqlandi.

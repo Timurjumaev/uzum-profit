@@ -36,13 +36,25 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        python: ["3.8", "3.13"]
+        python: ["3.8", "3.13", "3.15"]  # 3.15 — Temurning Mac'i (2026-10)
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v7
       - run: uv python install ${{ matrix.python }}
       # Legacy faqat stdlib ishlatadi; uv workspace'ga kirmaydi.
       - run: $(uv python find ${{ matrix.python }} --no-project) -m unittest tests.test_all
+
+  core-315:
+    name: Core (Python 3.15)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+      - run: uv python install 3.15
+      # Temurning Mac'idagi Python: yadro va B1.9 solishtirish skripti (faqat stdlib) shu yerda ham ishlashi shart.
+      - run: uv run --no-project --python 3.15 --with pytest --with hypothesis pytest packages/core/tests -p no:cacheprovider
+        env:
+          PYTHONPATH: packages/core/src
 
   web:
     name: Web (lint, typecheck, test, build)
