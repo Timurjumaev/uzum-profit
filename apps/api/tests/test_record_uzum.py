@@ -172,6 +172,9 @@ def test_structure_and_values_kept(recorded: tuple[str, list[tuple[str, str]]]) 
     shop = by_name["shops"]["response"]["body"][0]["id"]
     assert by_name["orders"]["request"]["params"]["shopIds"] == shop
     assert by_name["products"]["request"]["path"] == f"/v1/product/shop/{shop}"
+    assert (
+        by_name["orders"]["request"]["params"]["group"] == "false"
+    )  # parametrlar bizniki — saqlanadi
     expense = by_name["expenses"]["response"]["body"]["payload"]["payments"][0]
     assert (
         expense["code"] == "С000003"
@@ -247,6 +250,10 @@ def test_anonymizer_rules() -> None:
     assert anon.value("sellerItemCode", "ABC-1").startswith("ID")
     assert anon.value("name", "  ") == "  " and anon.value("x", None) is None
     assert anon.value("image", "https://x.uz/a.png").startswith("<url")
+    # Temurning birinchi yozuvidan keyin: Uzum'ning kichik harfli kodlari va nuqtali sana saqlanadi.
+    assert anon.value("code", "logistics-volume") == "logistics-volume"
+    assert anon.value("code", "Saqlash xizmati") != "Saqlash xizmati"
+    assert anon.value("dateCreated", "24.10.2026 10:00") == "24.10.2026 10:00"
 
 
 def test_curl_fallback_on_ssl_error(monkeypatch: pytest.MonkeyPatch) -> None:

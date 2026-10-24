@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B2. Backend poydevori va staging** (B1 tugadi, 2026-10-24) |
-| Keyingi vazifa | B2.5 Uzum mijozi: xato turlari, tezlik navbati, kvota, xom JSON, yozib olingan javoblar bilan testlar |
-| Temurdan kutilmoqda | **B2.5: Mac'da `record_uzum.py` (Uzum javoblari kassetasi)**; Q2 (server provayderi) — B2.10 gacha; ixtiyoriy: partiya qatorlariga SKU biriktirish |
-| Oxirgi yangilanish | 2026-10-24 (B2.5 kodi tayyor, haqiqiy kasseta kutilmoqda; B2.4 merge bo'ldi) |
+| Keyingi vazifa | B2.6 Sinxron ishlari (Procrastinate): to'liq tarix, inkremental, snapshot, postavka tarkibi, qaytarishlar, `sync_runs` |
+| Temurdan kutilmoqda | Q2 (server provayderi) — B2.10 gacha; ixtiyoriy: partiya qatorlariga SKU biriktirish |
+| Oxirgi yangilanish | 2026-10-24 (B2.5 tayyor: Uzum mijozi, haqiqiy kasseta bilan testlar) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

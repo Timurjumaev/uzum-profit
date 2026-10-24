@@ -178,17 +178,19 @@ class Endpoint:
     total: Callable[[Any], Any] = lambda _: None
 
 
-# Sahifa hajmlari: legacy'da sinalgan qiymatlar va 08 §8 chegaralari. Uzum katta hajmni jimgina kesishi mumkin —
-# shuning uchun jami soni bor endpointlarda haqiqiy hajm birinchi sahifadan aniqlanadi (``Page.size``).
+# Sahifa hajmlari (08 §8, Temurning yozuvi 2026-10-24): ``finance/orders`` 5000 ni kesmasdan beradi (2529 / 2529).
+# Jami soni bor endpointlarda Uzum hajmni jimgina kessa haqiqiy hajm birinchi sahifadan aniqlanadi (``Page.size``);
+# jami sonisiz endpointlarda kesishni bilib bo'lmaydi — hujjatlangan xavfsiz hajm ishlatiladi (xarajatlar 2000:
+# 5000 so'ralganda 2254 qator keldi, ``payload.totalElements`` esa doim 0 — ishonib bo'lmaydi).
 ORDERS = Endpoint(
     "orders",
     "/v1/finance/orders",
-    (1000, 200, 50),
+    (5000, 1000, 200),
     lambda d: _key(d, "orderItems"),
     total=lambda d: _key(d, "totalElements"),
 )
 EXPENSES = Endpoint(
-    "expenses", "/v1/finance/expenses", (1000, 200, 50), lambda d: _key(d, "payload", "payments")
+    "expenses", "/v1/finance/expenses", (2000, 1000, 200), lambda d: _key(d, "payload", "payments")
 )
 PRODUCTS = Endpoint(
     "products",
@@ -200,9 +202,13 @@ PRODUCTS = Endpoint(
 )
 INVOICES = Endpoint("invoices", "/v1/shop/{shop_id}/invoice", (50, 20), _first_list)
 INVOICE_PRODUCTS = Endpoint(
-    "invoice_products", "/v1/shop/{shop_id}/invoice/products", (50, 20), _first_list, id_key=None
+    "invoice_products", "/v1/shop/{shop_id}/invoice/products", (50, 20), _first_list
 )
-RETURNS = Endpoint("returns", "/v1/shop/{shop_id}/return", (50, 20), _first_list)
+# Qaytarishlar butun akkaunt bo'yicha: ``shopId`` parametrini Uzum e'tiborsiz qoldiradi (yozuvda boshqa do'kon
+# so'ralganda ham o'sha qaytarishlar keldi); har qatorda ``shopId`` va ``returnItems`` (SKU, dona, narx) bor.
+RETURNS = Endpoint("returns", "/v1/return", (50, 20), _first_list)
+# Do'kon bo'yicha ro'yxat (``{"payload": [...]}``) — ``returnItems`` siz; tarkib uchun :data:`RETURNS`.
+SHOP_RETURNS = Endpoint("shop_returns", "/v1/shop/{shop_id}/return", (50, 20), _first_list)
 
 
 _TOKEN_NOT_FOUND = re.compile(rb"token\s+not\s+found", re.IGNORECASE)
@@ -479,9 +485,13 @@ class UzumClient:
         """Postavka tarkibi."""
         return self.pages(INVOICE_PRODUCTS, {"invoiceId": invoice_id}, shop_id=shop_id, **kw)
 
-    def returns(self, shop_id: int, **kw: Any) -> AsyncIterator[Page]:
-        """Qaytarishlar (FBO qaytarish va brak)."""
-        return self.pages(RETURNS, shop_id=shop_id, **kw)
+    def returns(self, **kw: Any) -> AsyncIterator[Page]:
+        """Qaytarishlar (FBO qaytarish va brak) — **butun akkaunt**, do'kon qatordagi ``shopId`` dan; tarkibi bilan."""
+        return self.pages(RETURNS, **kw)
+
+    def shop_returns(self, shop_id: int, **kw: Any) -> AsyncIterator[Page]:
+        """Do'kon qaytarishlari ro'yxati (tarkibsiz)."""
+        return self.pages(SHOP_RETURNS, shop_id=shop_id, **kw)
 
 
 if TYPE_CHECKING:  # UzumClient provayder interfeysiga mos (mypy tekshiradi)

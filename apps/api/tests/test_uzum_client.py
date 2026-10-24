@@ -41,6 +41,9 @@ CONTRACT: dict[str, set[str]] = {
     "expenses": {"id", "dateCreated", "code", "type", "paymentPrice"},
     "products": {"productId", "skuList"},
     "invoices": {"id", "invoiceNumber", "dateCreated", "invoiceStatus"},
+    "invoice_products": {"id", "quantityToStock", "quantityAccepted"},
+    "returns": {"id", "dateCreated", "status", "type"},
+    "returns_all": {"id", "shopId", "dateCreated", "status", "type", "returnItems"},
 }
 
 
@@ -111,24 +114,27 @@ ENDPOINT_CALLS: dict[str, tuple[uz.Endpoint, Callable[[uz.UzumClient, Any, int],
         uz.INVOICE_PRODUCTS,
         lambda c, p, s: c.invoice_products(s, p["invoiceId"], max_pages=1),
     ),
-    "returns": (uz.RETURNS, lambda c, p, s: c.returns(s, max_pages=1)),
+    "returns": (uz.SHOP_RETURNS, lambda c, p, s: c.shop_returns(s, max_pages=1)),
+    "returns_all": (uz.RETURNS, lambda c, p, s: c.returns(max_pages=1)),
 }
 
 
-def _cases() -> list[Any]:
+def _cases(names: Any) -> list[Any]:
+    """Har yozuv alohida (bir nom bir necha marta — har do'kon uchun)."""
     return [
-        pytest.param(c, i.name, id=f"{c.file}:{i.name}")
+        pytest.param(c, n, id=f"{c.file}:{n}:{i.name}")
         for c in CASSETTES
-        for i in c.interactions
-        if i.name in ENDPOINT_CALLS and i.status == 200
+        for n, i in enumerate(c.interactions)
+        if i.name in names
     ]
 
 
-@pytest.mark.parametrize(("cassette", "name"), _cases())
-def test_recorded_pages(cassette: Cassette, name: str) -> None:
+@pytest.mark.parametrize(("cassette", "index"), _cases(ENDPOINT_CALLS))
+def test_recorded_pages(cassette: Cassette, index: int) -> None:
     """Yozib olingan javob → sahifa: ``raw`` o'zgarishsiz, qatorlar — o'sha obyektlar, kontrakt maydonlari bor."""
-    interaction = cassette.get(name)
-    assert interaction is not None
+    interaction = cassette.interactions[index]
+    name = interaction.name
+    assert interaction.status == 200
     endpoint, call = ENDPOINT_CALLS[name]
     shop = re.search(r"/shop/(\d+)", interaction.path)
     replay = Replay(interaction)
@@ -171,18 +177,10 @@ _ERRORS = {
 }
 
 
-@pytest.mark.parametrize(
-    ("cassette", "name"),
-    [
-        pytest.param(c, i.name, id=f"{c.file}:{i.name}")
-        for c in CASSETTES
-        for i in c.interactions
-        if i.name in _ERRORS
-    ],
-)
-def test_recorded_errors(cassette: Cassette, name: str) -> None:
-    interaction = cassette.get(name)
-    assert interaction is not None
+@pytest.mark.parametrize(("cassette", "index"), _cases(_ERRORS))
+def test_recorded_errors(cassette: Cassette, index: int) -> None:
+    interaction = cassette.interactions[index]
+    name = interaction.name
     if interaction.status == 200:  # masalan, Uzum manfiy hajmni rad etmadi — yozuvda shunday
         pytest.skip(f"{name}: Uzum 200 qaytargan")
     uzum = client(Replay(interaction).handler, retry=uz.NO_RETRY)
@@ -324,7 +322,7 @@ def test_orders_params_and_paging() -> None:
     assert seen[0].url.path == "/api/seller-openapi/v1/finance/orders"
     assert params["shopIds"] == "106121" and params["group"] == "false"
     assert params["dateFrom"] == str(int(since.timestamp() * 1000))
-    assert params["dateTo"] == "1761955200000" and params["size"] == "1000"
+    assert params["dateTo"] == "1761955200000" and params["size"] == "5000"
     assert [r.url.params["page"] for r in seen] == ["0", "1", "2"]
     # Xom JSON: sahifa javobi o'zgarishsiz, qatorlar — o'sha obyektlar.
     assert pages[1].raw is not None and pages[1].rows[0] is pages[1].raw["orderItems"][0]
@@ -339,7 +337,7 @@ def test_orders_params_and_paging() -> None:
 
 
 def test_silently_clamped_page_size() -> None:
-    """Uzum 1000 so'ralganda 500 bersa (jami 1200) — haqiqiy hajm 500, sahifalash davom etadi."""
+    """Uzum 5000 so'ralganda 500 bersa (jami 1200) — haqiqiy hajm 500, sahifalash davom etadi."""
     seen: list[httpx.Request] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -350,7 +348,7 @@ def test_silently_clamped_page_size() -> None:
 
     pages = run(collect(client(handler).orders(1, 0)))
     assert sum(len(p.rows) for p in pages) == 1200 and len(pages) == 3
-    assert [r.url.params["size"] for r in seen] == ["1000", "500", "500"]
+    assert [r.url.params["size"] for r in seen] == ["5000", "500", "500"]
 
 
 def test_duplicates_across_pages_dropped() -> None:
@@ -415,15 +413,17 @@ def test_endpoint_paths_and_params() -> None:
     run(collect(uzum.expenses(9, 1000, 2000)))
     run(collect(uzum.invoices(9)))
     run(collect(uzum.invoice_products(9, 77)))
-    run(collect(uzum.returns(9)))
+    run(collect(uzum.returns()))
+    run(collect(uzum.shop_returns(9)))
     got = [(r.url.path.removeprefix("/api/seller-openapi"), dict(r.url.params)) for r in seen]
     assert got == [
         (
             "/v1/finance/expenses",
-            {"shopIds": "9", "dateFrom": "1000", "dateTo": "2000", "page": "0", "size": "1000"},
+            {"shopIds": "9", "dateFrom": "1000", "dateTo": "2000", "page": "0", "size": "2000"},
         ),
         ("/v1/shop/9/invoice", {"page": "0", "size": "50"}),
         ("/v1/shop/9/invoice/products", {"invoiceId": "77", "page": "0", "size": "50"}),
+        ("/v1/return", {"page": "0", "size": "50"}),
         ("/v1/shop/9/return", {"page": "0", "size": "50"}),
     ]
 
@@ -515,3 +515,37 @@ def test_provider_interface() -> None:
         "returns",
     ):
         assert hasattr(MarketplaceProvider, method) and hasattr(uz.UzumClient, method)
+
+
+# --- Haqiqiy yozuvdan chiqqan faktlar (recorded.json, 2026-10-24) ---------------------------------
+
+RECORDED = next((c for c in CASSETTES if c.file == "recorded.json"), None)
+needs_recording = pytest.mark.skipif(RECORDED is None, reason="recorded.json yo'q")
+
+
+@needs_recording
+def test_recorded_facts() -> None:
+    """Mijoz qarorlari tayangan haqiqiy Uzum xatti-harakati — kasseta yangilansa ham saqlanishi kerak."""
+    assert RECORDED is not None
+    by_name: dict[str, list[Any]] = {}
+    for i in RECORDED.interactions:
+        by_name.setdefault(i.name, []).append(i)
+    # Noto'g'ri kalit — 403 JSON (401 emas): kalit xatosi, WAF emas.
+    auth = by_name["auth_error"][0]
+    assert auth.status == 403 and isinstance(uz.classify(auth.response()), uz.AuthError)
+    # Kunlik qoldiq sarlavhasi.
+    assert uz.QUOTA_HEADER in by_name["shops"][0].headers
+    # 5000 li sahifa kesilmaydi (sotuvlar: qatorlar = jami) — ORDERS.sizes[0] shunga tayanadi.
+    for probe in RECORDED.probes:
+        if probe["name"] == "size_probe_orders":
+            assert probe["status"] == 200 and probe["rows"] == probe["total"]
+    assert uz.ORDERS.sizes[0] == 5000
+    # Xarajatlar: payload.totalElements ishonchsiz (qatorlar bor, jami 0) — EXPENSES jami sonini ishlatmaydi.
+    expenses = by_name["expenses"][0].body["payload"]
+    assert expenses["payments"] and expenses["totalElements"] == 0
+    assert uz.EXPENSES.total(by_name["expenses"][0].body) is None
+    # /v1/return shopId filtrini e'tiborsiz qoldiradi: boshqa do'kon so'ralganda ham o'sha qatorlar.
+    asked = {i.params["shopId"]: {r["shopId"] for r in i.body} for i in by_name["returns_all"]}
+    assert len(asked) == 2 and len({frozenset(v) for v in asked.values()}) == 1
+    assert any(shop not in got for shop, got in asked.items())
+    assert "shopId" not in uz.RETURNS.path

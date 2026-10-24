@@ -107,3 +107,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   kesilgan sahifa hajmini aniqlash; `MarketplaceProvider` interfeysi (`upapi.marketplace`). Yozib olingan javoblar:
   `scripts/record_uzum.py` (Temurning Mac'ida, anonimlashtirilgan kasseta) va kasseta testlari
   (`apps/api/tests/fixtures/uzum`).
+- B2.5 haqiqiy kasseta (`fixtures/uzum/recorded.json`, Temurning yozuvi): sotuvlar sahifasi 5000 (kesilmasligi
+  tasdiqlandi), xarajatlar 2000; qaytarishlar `/v1/return` — butun akkaunt, tarkibi bilan (`returns()`), do'kon
+  ro'yxati — `shop_returns()`; kontrakt maydonlari (postavka tarkibi, qaytarishlar) va "haqiqiy Uzum faktlari"
+  testi. `record_uzum.py`: sizish tekshiruvi faqat saqlangan qiymatlarda (kalit nomlarida yolg'on xato yo'q),
+  kichik harfli xarajat kodlari, nuqtali sanalar va so'rov parametrlari saqlanadi.

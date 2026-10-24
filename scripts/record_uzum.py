@@ -48,11 +48,16 @@ INVALID_KEY = (
 ENUM = re.compile(
     r"^[A-Z\u0410-\u042f\u0401][A-Z\u0410-\u042f\u04010-9_.\-]{0,39}$"
 )  # lotin va kirill
-DATE = re.compile(r"^\d{4}-\d{2}-\d{2}([T ][\d:.]+(Z|[+-]\d{2}:?\d{2})?)?$")
+DATE = re.compile(
+    r"^(\d{4}-\d{2}-\d{2}([T ][\d:.]+(Z|[+-]\d{2}:?\d{2})?)?"  # ISO
+    r"|\d{2}[./]\d{2}[./]\d{4}([ T]\d{2}:\d{2}(:\d{2})?)?)$"  # 24.10.2026 10:00
+)
 # Faqat shu nomli (yoki shu qo'shimchali) maydonlarda — boshqa joyda katta harfli matn ham nom bo'lishi mumkin.
 KEEP_TEXT = re.compile(r"^(status|type|code|currency|value)$|(Status|Type|Code|Currency|Cause)$")
-# Uzum'ning o'z bo'lim nomlari ("Ombor", "Logistika", "Marketing") — xarajat toifasi shundan aniqlanadi (F9).
+# Uzum'ning o'z bo'lim nomlari ("Ombor", "Logistika", "Marketing") va kodlari ("logistics-volume") — xarajat
+# toifasi shulardan aniqlanadi (F9).
 KEEP_ANY = {"source"}
+CODE = re.compile(r"^[\w.\-]{1,40}$")
 # Id kabi maydonlar (camelCase: ``paid`` emas): son ham, matn ham — izchil almashtiriladi (bog'lanishlar saqlanadi).
 ID_KEYS = re.compile(r"^(id|ids|barcode|ikpu|article)$|(Id|Ids|Number|Barcode|ItemCode)$")
 HEADERS_KEPT = re.compile(r"^(content-type|x-ratelimit-.*)$", re.IGNORECASE)
@@ -171,6 +176,7 @@ class Anonymizer:
                 or DATE.match(value)
                 or (KEEP_TEXT.search(key) and ENUM.match(value))
                 or (key in KEEP_ANY and len(value) <= 40)
+                or (key == "code" and CODE.match(value))
             ):
                 return value
             return self._text(key, value)
@@ -277,7 +283,13 @@ def record(
         entries.append(
             {
                 "name": name.split(":")[0],
-                "request": {"path": path, "params": anon.value("params", params)},
+                # Parametrlar bizniki (group=false, sana, sahifa) — faqat id'lar almashtiriladi.
+                "request": {
+                    "path": path,
+                    "params": {
+                        k: anon.value(k, v) if ID_KEYS.search(k) else v for k, v in params.items()
+                    },
+                },
                 "response": {
                     "status": status,
                     "headers": {k: v for k, v in sorted(headers.items()) if HEADERS_KEPT.match(k)},

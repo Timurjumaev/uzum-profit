@@ -63,9 +63,8 @@ Ochiq: F21 real ma'lumotda — partiyalarga SKU biriktirilgach (yoki B2.11).
 - [x] B2.4 Marketplace ulanishi: kalitni AES-GCM bilan saqlash, tekshirish, do'konlarni tanlash. Qo'shimcha: kalitni
   almashtirish va uzish, yaroqsiz kalit urinishlari cheklovi, kalit maxfiyligi testi (`test_token_secrecy.py`).
   Real Uzum bilan tekshiruv — B2.11 (staging).
-- [ ] B2.5 Uzum mijozi: xato turlari, tezlik navbati, kvota, xom JSON, yozib olingan javoblar bilan testlar.
-  Holat: kod va sintetik kassetali testlar tayyor (`claude/b2-5-uzum-client`); **haqiqiy kasseta kutilmoqda** —
-  Temur Mac'da `scripts/record_uzum.py` ni ishga tushiradi (qaytarish va postavka tarkibi javob shakli faqat shundan).
+- [x] B2.5 Uzum mijozi: xato turlari, tezlik navbati, kvota, xom JSON, yozib olingan javoblar bilan testlar.
+  Haqiqiy kasseta Temurning Mac'ida yozildi (`scripts/record_uzum.py`, anonimlashtirilgan); topilmalar 08 §8 da.
 - [ ] B2.6 Sinxron ishlari (Procrastinate): to'liq tarix, inkremental, kunlik snapshot, postavka tarkibi, qaytarishlar,
   `sync_runs`, uzilish rejimi, "Ma'lumotlar holati" API.
 - [ ] B2.7 CBU kurslari ishi (kuniga 2 marta + arxiv).

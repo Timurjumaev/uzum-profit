@@ -1,0 +1,3333 @@
+{
+  "source": "recorded 2026-10-24, anonymized (scripts/record_uzum.py); params.group asl qiymatiga qaytarildi (skript eski versiyasi almashtirgan)",
+  "interactions": [
+    {
+      "name": "shops",
+      "request": {
+        "path": "/v1/shops",
+        "params": {}
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-limit-per-day": "100000",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-remaining-per-day": "99967",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": [
+          {
+            "id": 900001,
+            "name": "<name 1>"
+          },
+          {
+            "id": 900002,
+            "name": "<name 2>"
+          }
+        ]
+      }
+    },
+    {
+      "name": "auth_error",
+      "request": {
+        "path": "/v1/shops",
+        "params": {}
+      },
+      "response": {
+        "status": 403,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": {
+          "payload": null,
+          "errors": [
+            {
+              "code": "<code 3>",
+              "message": "<message 4>"
+            }
+          ],
+          "timestamp": "2026-10-24T17:34:08.677902836",
+          "trace": "<trace 5>",
+          "error": "<message 4>"
+        }
+      }
+    },
+    {
+      "name": "orders",
+      "request": {
+        "path": "/v1/finance/orders",
+        "params": {
+          "shopIds": 900001,
+          "group": "false",
+          "dateFrom": 1785087248460,
+          "page": 0,
+          "size": 5
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-limit-per-day": "100000",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-remaining-per-day": "99966",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": {
+          "orderItems": [
+            {
+              "id": 900003,
+              "status": "PROCESSING",
+              "date": 1792861682288,
+              "orderId": 900004,
+              "skuTitle": "<skuTitle 7>",
+              "productId": 900005,
+              "productImage": {
+                "photo": {
+                  "800": {
+                    "high": "<url 8>",
+                    "low": "<url 9>"
+                  },
+                  "720": {
+                    "high": "<url 8>",
+                    "low": "<url 9>"
+                  },
+                  "480": {
+                    "high": "<url 10>",
+                    "low": "<url 11>"
+                  },
+                  "240": {
+                    "high": "<url 12>",
+                    "low": "<url 13>"
+                  },
+                  "80": {
+                    "high": "<url 14>",
+                    "low": "<url 15>"
+                  },
+                  "24034": {
+                    "high": "<url 12>",
+                    "low": "<url 13>"
+                  },
+                  "120": {
+                    "high": "<url 12>",
+                    "low": "<url 13>"
+                  },
+                  "540": {
+                    "high": "<url 10>",
+                    "low": "<url 11>"
+                  },
+                  "60": {
+                    "high": "<url 14>",
+                    "low": "<url 15>"
+                  }
+                },
+                "photoKey": "<photoKey 16>",
+                "color": null,
+                "hasVerticalPhoto": false
+              },
+              "shopId": 900001,
+              "dateIssued": null,
+              "sellPrice": 17990,
+              "amount": 1,
+              "amountReturns": 0,
+              "commission": 3238,
+              "sellerProfit": 14752,
+              "purchasePrice": 78000,
+              "logisticDeliveryFee": 0,
+              "cancelled": null,
+              "withdrawnProfit": 0,
+              "comment": null,
+              "productTitle": "<productTitle 17>",
+              "returnCause": null
+            },
+            {
+              "id": 900006,
+              "status": "PROCESSING",
+              "date": 1792860864151,
+              "orderId": 900007,
+              "skuTitle": "<skuTitle 18>",
+              "productId": 900008,
+              "productImage": {
+                "photo": {
+                  "800": {
+                    "high": "<url 19>",
+                    "low": "<url 20>"
+                  },
+                  "720": {
+                    "high": "<url 19>",
+                    "low": "<url 20>"
+                  },
+                  "480": {
+                    "high": "<url 21>",
+                    "low": "<url 22>"
+                  },
+                  "240": {
+                    "high": "<url 23>",
+                    "low": "<url 24>"
+                  },
+                  "80": {
+                    "high": "<url 25>",
+                    "low": "<url 26>"
+                  },
+                  "24034": {
+                    "high": "<url 23>",
+                    "low": "<url 24>"
+                  },
+                  "120": {
+                    "high": "<url 23>",
+                    "low": "<url 24>"
+                  },
+                  "540": {
+                    "high": "<url 21>",
+                    "low": "<url 22>"
+                  },
+                  "60": {
+                    "high": "<url 25>",
+                    "low": "<url 26>"
+                  }
+                },
+                "photoKey": "<photoKey 27>",
+                "color": null,
+                "hasVerticalPhoto": false
+              },
+              "shopId": 900001,
+              "dateIssued": null,
+              "sellPrice": 19990,
+              "amount": 1,
+              "amountReturns": 0,
+              "commission": 5997,
+              "sellerProfit": 13993,
+              "purchasePrice": 56000,
+              "logisticDeliveryFee": 0,
+              "cancelled": null,
+              "withdrawnProfit": 0,
+              "comment": null,
+              "productTitle": "<productTitle 28>",
+              "returnCause": null
+            },
+            {
+              "id": 900009,
+              "status": "PROCESSING",
+              "date": 1792856601176,
+              "orderId": 900010,
+              "skuTitle": "<skuTitle 29>",
+              "productId": 900005,
+              "productImage": {
+                "photo": {
+                  "800": {
+                    "high": "<url 30>",
+                    "low": "<url 31>"
+                  },
+                  "720": {
+                    "high": "<url 30>",
+                    "low": "<url 31>"
+                  },
+                  "480": {
+                    "high": "<url 32>",
+                    "low": "<url 33>"
+                  },
+                  "240": {
+                    "high": "<url 34>",
+                    "low": "<url 35>"
+                  },
+                  "80": {
+                    "high": "<url 36>",
+                    "low": "<url 37>"
+                  },
+                  "24034": {
+                    "high": "<url 34>",
+                    "low": "<url 35>"
+                  },
+                  "120": {
+                    "high": "<url 34>",
+                    "low": "<url 35>"
+                  },
+                  "540": {
+                    "high": "<url 32>",
+                    "low": "<url 33>"
+                  },
+                  "60": {
+                    "high": "<url 36>",
+                    "low": "<url 37>"
+                  }
+                },
+                "photoKey": "<photoKey 38>",
+                "color": null,
+                "hasVerticalPhoto": false
+              },
+              "shopId": 900001,
+              "dateIssued": null,
+              "sellPrice": 17540,
+              "amount": 1,
+              "amountReturns": 0,
+              "commission": 3157,
+              "sellerProfit": 14383,
+              "purchasePrice": 85000,
+              "logisticDeliveryFee": 0,
+              "cancelled": null,
+              "withdrawnProfit": 0,
+              "comment": null,
+              "productTitle": "<productTitle 17>",
+              "returnCause": null
+            }
+          ],
+          "totalElements": 2464
+        }
+      }
+    },
+    {
+      "name": "orders_end",
+      "request": {
+        "path": "/v1/finance/orders",
+        "params": {
+          "shopIds": 900001,
+          "group": "false",
+          "dateFrom": 1785087248460,
+          "page": 100000,
+          "size": 5
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-limit-per-day": "100000",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-remaining-per-day": "99965",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": {
+          "orderItems": [],
+          "totalElements": 2464
+        }
+      }
+    },
+    {
+      "name": "expenses",
+      "request": {
+        "path": "/v1/finance/expenses",
+        "params": {
+          "shopIds": 900001,
+          "dateFrom": 1785087248460,
+          "page": 0,
+          "size": 5
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-limit-per-day": "100000",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-remaining-per-day": "99964",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": {
+          "payload": {
+            "payments": [
+              {
+                "id": 900011,
+                "dateCreated": 1792856211249,
+                "dateUpdated": null,
+                "name": "<name 39>",
+                "source": "Marketing",
+                "shopId": 900001,
+                "sellerId": 900012,
+                "paymentPrice": 1880,
+                "amount": 1,
+                "status": "CONFIRMED",
+                "externalId": "ID000013",
+                "code": "У000120",
+                "dateService": 1792852602000,
+                "type": "OUTCOME"
+              },
+              {
+                "id": 900014,
+                "dateCreated": 1792853620349,
+                "dateUpdated": null,
+                "name": "<name 40>",
+                "source": "Logistika",
+                "shopId": 900001,
+                "sellerId": 900012,
+                "paymentPrice": 0,
+                "amount": 1,
+                "status": "CONFIRMED",
+                "externalId": "ID000015",
+                "code": "<code 41>",
+                "dateService": 1792853620348,
+                "type": "INCOME"
+              },
+              {
+                "id": 900016,
+                "dateCreated": 1792853275178,
+                "dateUpdated": null,
+                "name": "<name 42>",
+                "source": "Logistika",
+                "shopId": 900001,
+                "sellerId": 900012,
+                "paymentPrice": 0,
+                "amount": 1,
+                "status": "CONFIRMED",
+                "externalId": "ID000017",
+                "code": "<code 43>",
+                "dateService": 1792853271214,
+                "type": "OUTCOME"
+              }
+            ],
+            "totalElements": 0
+          },
+          "timestamp": "2026-10-24T17:34:12.861536005"
+        }
+      }
+    },
+    {
+      "name": "products",
+      "request": {
+        "path": "/v1/product/shop/900001",
+        "params": {
+          "page": 0,
+          "size": 3
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-limit-per-day": "100000",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-remaining-per-day": "99963",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": {
+          "productList": [
+            {
+              "productId": 900018,
+              "category": "<category 44>",
+              "rating": "<rating 45>",
+              "feedbackQuantity": 0,
+              "status": {
+                "id": 900019,
+                "title": "<title 46>",
+                "value": "ARCHIVED",
+                "description": "<description 47>",
+                "color": "<color 48>",
+                "additional": []
+              },
+              "moderationStatus": {
+                "title": "<title 49>",
+                "color": "<color 48>",
+                "value": "NOT_MODERATED",
+                "hasAnySkuBlocked": null
+              },
+              "commission": null,
+              "commissionDto": null,
+              "skuList": [],
+              "skuTitle": null,
+              "image": "<url 50>",
+              "previewImg": "<url 51>",
+              "title": "<title 52>",
+              "quantityAvailable": 0,
+              "quantityAvailableByStockType": null,
+              "quantityReserved": 0,
+              "quantityActive": 0,
+              "quantityFbs": 0,
+              "quantityAdditional": 0,
+              "quantityOnPhotoStudio": 0,
+              "quantityCreated": 0,
+              "quantitySold": 0,
+              "quantityReturned": 0,
+              "quantityMissing": 0,
+              "quantityDefected": 0,
+              "quantityPending": 0,
+              "quantityArchived": 0,
+              "returnedPercentage": 0.0,
+              "newYearStatus": {
+                "title": "<title 53>",
+                "color": "<color 54>",
+                "value": "NONE"
+              },
+              "price": 0,
+              "clicks": null,
+              "viewers": null,
+              "conversion": null,
+              "roi": "<roi 55>",
+              "rankInfo": {
+                "rank": "<rank 56>",
+                "rankValue": "<rankValue 57>",
+                "dateUpdated": 1790822276210
+              },
+              "blockReason": null,
+              "blockComment": null,
+              "dateModerated": null,
+              "blockingReasons": [],
+              "volumeDiscount": null,
+              "skusHasAllRequiredFilters": false,
+              "allFiltersFilled": true,
+              "auctionMember": false,
+              "isEditable": true,
+              "isEditableSku": true,
+              "isActive": false,
+              "isDeletable": true,
+              "isIlliquid": false,
+              "switchbackActive": null,
+              "promotionStatus": "PROMOTION_UNAVAILABLE",
+              "createdByFlowB": true,
+              "isWithoutWeightDimensional": false,
+              "cpoAdvertisementsDetails": null,
+              "pstorage": null
+            },
+            {
+              "productId": 900020,
+              "category": "<category 44>",
+              "rating": "<rating 58>",
+              "feedbackQuantity": 14,
+              "status": {
+                "id": 900021,
+                "title": "<title 59>",
+                "value": "RUN_OUT",
+                "description": "<description 60>",
+                "color": "<color 48>",
+                "additional": []
+              },
+              "moderationStatus": {
+                "title": "<title 61>",
+                "color": "<color 48>",
+                "value": "ON_MODERATION",
+                "hasAnySkuBlocked": null
+              },
+              "commission": null,
+              "commissionDto": {
+                "minCommission": 27.0,
+                "maxCommission": 27.0
+              },
+              "skuList": [
+                {
+                  "skuTitle": "",
+                  "skuFullTitle": "<skuFullTitle 62>",
+                  "productTitle": "<productTitle 63>",
+                  "skuId": 900022,
+                  "quantityCreated": 0,
+                  "quantityAvailable": 0,
+                  "quantityAvailableByStockType": {
+                    "fbo": 0,
+                    "fbs": 0
+                  },
+                  "quantityActive": 0,
+                  "quantityFbs": 0,
+                  "quantityAdditional": 0,
+                  "quantityOnPhotoStudio": 0,
+                  "quantityArchived": 0,
+                  "quantitySold": 126,
+                  "quantityReturned": 51,
+                  "quantityMissing": 0,
+                  "quantityDefected": 0,
+                  "quantityPending": 0,
+                  "returnedPercentage": 28.8135593220339,
+                  "barcode": 900023,
+                  "archived": false,
+                  "commission": 27.0,
+                  "characteristics": "",
+                  "previewImage": "<url 64>",
+                  "ikpu": "ID000024",
+                  "photo": null,
+                  "purchasePrice": null,
+                  "price": 23990,
+                  "recommendedTotalPrice": null,
+                  "blockingReason": null,
+                  "blockReasons": [],
+                  "skuBlockReason": null,
+                  "blocked": false,
+                  "rankInfo": {
+                    "rank": "<rank 65>",
+                    "rankValue": "<rank 65>",
+                    "dateUpdated": 1791355598621
+                  },
+                  "article": null,
+                  "turnover": null,
+                  "dimensionalGroup": null,
+                  "paidStorageDimensionalGroup": null,
+                  "paidStoragePriceItem": null,
+                  "paidStorageAmount": null,
+                  "actualDimensionalGroup": null,
+                  "hasStudioPhoto": null,
+                  "forecastOutOfStock": false,
+                  "activeSale": false,
+                  "switchbackActive": false,
+                  "marketPrice": 23990,
+                  "characteristicsList": [],
+                  "status": {
+                    "value": "RUN_OUT",
+                    "title": "<title 59>",
+                    "color": "<color 66>"
+                  },
+                  "skuDimension": {
+                    "length": 147,
+                    "width": 91,
+                    "height": 69,
+                    "weight": 60
+                  },
+                  "updatedFromWms": true,
+                  "hasActiveDiscount": null,
+                  "sellerItemCode": "ID000025",
+                  "specialOffer": {
+                    "inOffer": true,
+                    "hasRecommendation": false,
+                    "mechanicType": "UZUM_PROMO",
+                    "mechanicPrice": null,
+                    "endDate": 1793080740000,
+                    "promoName": "<promoName 67>",
+                    "selfExit": null,
+                    "promoIds": [
+                      900026
+                    ]
+                  },
+                  "isWithoutWeightDimensional": false,
+                  "avgdsales": null,
+                  "avgdquantity": null,
+                  "pstorage": null
+                }
+              ],
+              "skuTitle": "<skuTitle 68>",
+              "image": "<url 69>",
+              "previewImg": "<url 70>",
+              "title": "<productTitle 63>",
+              "quantityAvailable": 0,
+              "quantityAvailableByStockType": {
+                "fbo": 0,
+                "fbs": 0
+              },
+              "quantityReserved": 0,
+              "quantityActive": 0,
+              "quantityFbs": 0,
+              "quantityAdditional": 0,
+              "quantityOnPhotoStudio": 0,
+              "quantityCreated": 0,
+              "quantitySold": 126,
+              "quantityReturned": 51,
+              "quantityMissing": 0,
+              "quantityDefected": 0,
+              "quantityPending": 0,
+              "quantityArchived": 0,
+              "returnedPercentage": 28.8,
+              "newYearStatus": {
+                "title": "<title 53>",
+                "color": "<color 54>",
+                "value": "NONE"
+              },
+              "price": 23990,
+              "clicks": null,
+              "viewers": 1015,
+              "conversion": 6.21,
+              "roi": "<roi 71>",
+              "rankInfo": {
+                "rank": "<rank 65>",
+                "rankValue": "<rank 65>",
+                "dateUpdated": 1790822276267
+              },
+              "blockReason": null,
+              "blockComment": null,
+              "dateModerated": null,
+              "blockingReasons": [],
+              "volumeDiscount": null,
+              "skusHasAllRequiredFilters": true,
+              "allFiltersFilled": true,
+              "auctionMember": false,
+              "isEditable": true,
+              "isEditableSku": true,
+              "isActive": true,
+              "isDeletable": false,
+              "isIlliquid": false,
+              "switchbackActive": false,
+              "promotionStatus": "PROMOTION_UNAVAILABLE",
+              "createdByFlowB": true,
+              "isWithoutWeightDimensional": false,
+              "cpoAdvertisementsDetails": null,
+              "pstorage": false
+            },
+            {
+              "productId": 900027,
+              "category": "<category 72>",
+              "rating": "<rating 73>",
+              "feedbackQuantity": 6,
+              "status": {
+                "id": 900021,
+                "title": "<title 59>",
+                "value": "RUN_OUT",
+                "description": "<description 60>",
+                "color": "<color 48>",
+                "additional": []
+              },
+              "moderationStatus": {
+                "title": "<title 74>",
+                "color": "<color 75>",
+                "value": "MODERATED",
+                "hasAnySkuBlocked": null
+              },
+              "commission": null,
+              "commissionDto": {
+                "minCommission": 25.0,
+                "maxCommission": 25.0
+              },
+              "skuList": [
+                {
+                  "skuTitle": "<skuTitle 76>",
+                  "skuFullTitle": "<skuFullTitle 77>",
+                  "productTitle": "<productTitle 78>",
+                  "skuId": 900028,
+                  "quantityCreated": 0,
+                  "quantityAvailable": 0,
+                  "quantityAvailableByStockType": {
+                    "fbo": 0,
+                    "fbs": 0
+                  },
+                  "quantityActive": 0,
+                  "quantityFbs": 0,
+                  "quantityAdditional": 0,
+                  "quantityOnPhotoStudio": 0,
+                  "quantityArchived": 0,
+                  "quantitySold": 9,
+                  "quantityReturned": 5,
+                  "quantityMissing": 0,
+                  "quantityDefected": 0,
+                  "quantityPending": 0,
+                  "returnedPercentage": 35.714285714285715,
+                  "barcode": 900029,
+                  "archived": false,
+                  "commission": 25.0,
+                  "characteristics": "<characteristics 79>",
+                  "previewImage": "<url 80>",
+                  "ikpu": "ID000030",
+                  "photo": null,
+                  "purchasePrice": null,
+                  "price": 45000,
+                  "recommendedTotalPrice": null,
+                  "blockingReason": null,
+                  "blockReasons": [],
+                  "skuBlockReason": null,
+                  "blocked": false,
+                  "rankInfo": {
+                    "rank": "<rank 56>",
+                    "rankValue": "<rankValue 57>",
+                    "dateUpdated": 1791359470103
+                  },
+                  "article": null,
+                  "turnover": null,
+                  "dimensionalGroup": null,
+                  "paidStorageDimensionalGroup": null,
+                  "paidStoragePriceItem": null,
+                  "paidStorageAmount": null,
+                  "actualDimensionalGroup": null,
+                  "hasStudioPhoto": null,
+                  "forecastOutOfStock": false,
+                  "activeSale": false,
+                  "switchbackActive": false,
+                  "marketPrice": 45000,
+                  "characteristicsList": [
+                    {
+                      "characteristicTitle": {
+                        "uz": "<uz 81>",
+                        "ru": "<ru 82>"
+                      },
+                      "definedType": true,
+                      "characteristicValue": {
+                        "uz": "<characteristics 79>",
+                        "ru": "<ru 83>"
+                      }
+                    }
+                  ],
+                  "status": {
+                    "value": "RUN_OUT",
+                    "title": "<title 59>",
+                    "color": "<color 66>"
+                  },
+                  "skuDimension": {
+                    "length": 134,
+                    "width": 62,
+                    "height": 15,
+                    "weight": 15
+                  },
+                  "updatedFromWms": true,
+                  "hasActiveDiscount": null,
+                  "sellerItemCode": null,
+                  "specialOffer": {
+                    "inOffer": false,
+                    "hasRecommendation": false,
+                    "mechanicType": null,
+                    "mechanicPrice": null,
+                    "endDate": 1778565540000,
+                    "promoName": "<promoName 84>",
+                    "selfExit": false,
+                    "promoIds": [
+                      900031
+                    ]
+                  },
+                  "isWithoutWeightDimensional": false,
+                  "avgdsales": null,
+                  "avgdquantity": null,
+                  "pstorage": null
+                },
+                {
+                  "skuTitle": "<skuTitle 85>",
+                  "skuFullTitle": "<skuFullTitle 86>",
+                  "productTitle": "<productTitle 78>",
+                  "skuId": 900032,
+                  "quantityCreated": 0,
+                  "quantityAvailable": 0,
+                  "quantityAvailableByStockType": {
+                    "fbo": 0,
+                    "fbs": 0
+                  },
+                  "quantityActive": 0,
+                  "quantityFbs": 0,
+                  "quantityAdditional": 0,
+                  "quantityOnPhotoStudio": 0,
+                  "quantityArchived": 0,
+                  "quantitySold": 9,
+                  "quantityReturned": 2,
+                  "quantityMissing": 0,
+                  "quantityDefected": 0,
+                  "quantityPending": 0,
+                  "returnedPercentage": 18.181818181818183,
+                  "barcode": 900033,
+                  "archived": false,
+                  "commission": 25.0,
+                  "characteristics": "<characteristics 87>",
+                  "previewImage": "<url 88>",
+                  "ikpu": "ID000030",
+                  "photo": null,
+                  "purchasePrice": null,
+                  "price": 35000,
+                  "recommendedTotalPrice": null,
+                  "blockingReason": null,
+                  "blockReasons": [],
+                  "skuBlockReason": null,
+                  "blocked": false,
+                  "rankInfo": {
+                    "rank": "<rank 56>",
+                    "rankValue": "<rankValue 57>",
+                    "dateUpdated": 1791359470154
+                  },
+                  "article": null,
+                  "turnover": null,
+                  "dimensionalGroup": null,
+                  "paidStorageDimensionalGroup": null,
+                  "paidStoragePriceItem": null,
+                  "paidStorageAmount": null,
+                  "actualDimensionalGroup": null,
+                  "hasStudioPhoto": null,
+                  "forecastOutOfStock": false,
+                  "activeSale": false,
+                  "switchbackActive": false,
+                  "marketPrice": 35000,
+                  "characteristicsList": [
+                    {
+                      "characteristicTitle": {
+                        "uz": "<uz 81>",
+                        "ru": "<ru 82>"
+                      },
+                      "definedType": true,
+                      "characteristicValue": {
+                        "uz": "<characteristics 87>",
+                        "ru": "<ru 89>"
+                      }
+                    }
+                  ],
+                  "status": {
+                    "value": "RUN_OUT",
+                    "title": "<title 59>",
+                    "color": "<color 66>"
+                  },
+                  "skuDimension": {
+                    "length": 126,
+                    "width": 122,
+                    "height": 24,
+                    "weight": 25
+                  },
+                  "updatedFromWms": true,
+                  "hasActiveDiscount": null,
+                  "sellerItemCode": null,
+                  "specialOffer": {
+                    "inOffer": false,
+                    "hasRecommendation": false,
+                    "mechanicType": null,
+                    "mechanicPrice": null,
+                    "endDate": 1778565540000,
+                    "promoName": "<promoName 84>",
+                    "selfExit": false,
+                    "promoIds": [
+                      900031
+                    ]
+                  },
+                  "isWithoutWeightDimensional": false,
+                  "avgdsales": null,
+                  "avgdquantity": null,
+                  "pstorage": null
+                }
+              ],
+              "skuTitle": "<skuTitle 90>",
+              "image": "<url 91>",
+              "previewImg": "<url 92>",
+              "title": "<productTitle 78>",
+              "quantityAvailable": 0,
+              "quantityAvailableByStockType": {
+                "fbo": 0,
+                "fbs": 0
+              },
+              "quantityReserved": 0,
+              "quantityActive": 0,
+              "quantityFbs": 0,
+              "quantityAdditional": 0,
+              "quantityOnPhotoStudio": 0,
+              "quantityCreated": 0,
+              "quantitySold": 26,
+              "quantityReturned": 15,
+              "quantityMissing": 0,
+              "quantityDefected": 0,
+              "quantityPending": 0,
+              "quantityArchived": 0,
+              "returnedPercentage": 36.6,
+              "newYearStatus": {
+                "title": "<title 53>",
+                "color": "<color 54>",
+                "value": "NONE"
+              },
+              "price": 35000,
+              "clicks": null,
+              "viewers": 4,
+              "conversion": 0.0,
+              "roi": "<roi 93>",
+              "rankInfo": {
+                "rank": "<rank 56>",
+                "rankValue": "<rankValue 57>",
+                "dateUpdated": 1790821566503
+              },
+              "blockReason": null,
+              "blockComment": null,
+              "dateModerated": null,
+              "blockingReasons": [],
+              "volumeDiscount": null,
+              "skusHasAllRequiredFilters": true,
+              "allFiltersFilled": true,
+              "auctionMember": false,
+              "isEditable": true,
+              "isEditableSku": true,
+              "isActive": true,
+              "isDeletable": false,
+              "isIlliquid": false,
+              "switchbackActive": false,
+              "promotionStatus": "PROMOTION_UNAVAILABLE",
+              "createdByFlowB": true,
+              "isWithoutWeightDimensional": false,
+              "cpoAdvertisementsDetails": null,
+              "pstorage": false
+            }
+          ],
+          "totalProductsAmount": 60,
+          "totalProductsAmountWithoutWeightDimensional": 0
+        }
+      }
+    },
+    {
+      "name": "invoices",
+      "request": {
+        "path": "/v1/shop/900001/invoice",
+        "params": {
+          "page": 0,
+          "size": 3
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-limit-per-day": "100000",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-remaining-per-day": "99962",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": [
+          {
+            "id": 900034,
+            "invoiceNumber": 900035,
+            "deliveryCertificate": null,
+            "dateCreated": "<dateCreated 94>",
+            "status": "<status 95>",
+            "invoiceStatus": {
+              "text": "<status 95>",
+              "color": "<color 96>",
+              "value": "ACCEPTED"
+            },
+            "fullPrice": 89000,
+            "timeSlotReservation": {
+              "id": 900036,
+              "timeSlots": [
+                {
+                  "timeFrom": 1790427600000,
+                  "timeTo": 1790431200000
+                }
+              ],
+              "status": "RESERVED",
+              "timeFrom": 1790427600000,
+              "timeTo": 1790431200000
+            },
+            "totalAccepted": 1,
+            "totalToStock": 1,
+            "remainingAmountOfUpdates": 2,
+            "dateAccepted": 1790506753652,
+            "expressAcceptanceDate": null,
+            "stock": {
+              "id": 900037,
+              "externalId": "ID000038",
+              "title": "<title 97>",
+              "address": "<address 98>",
+              "timeFrom": "<timeFrom 99>",
+              "timeTo": "<timeTo 100>",
+              "poolSource": "<poolSource 101>",
+              "dimensionalGroups": [
+                {
+                  "group": "<group 102>",
+                  "title": "<title 103>"
+                },
+                {
+                  "group": "<group 104>",
+                  "title": "<title 105>"
+                }
+              ]
+            },
+            "hasIssue": false,
+            "externalNumber": null,
+            "invoiceEttn": {
+              "isEditable": true,
+              "warningFlag": false,
+              "slaEttnUpdate": null,
+              "ettn": null
+            },
+            "fines": [],
+            "createdInvoiceCount": 0
+          },
+          {
+            "id": 900039,
+            "invoiceNumber": 900040,
+            "deliveryCertificate": null,
+            "dateCreated": "<dateCreated 106>",
+            "status": "<status 95>",
+            "invoiceStatus": {
+              "text": "<status 95>",
+              "color": "<color 96>",
+              "value": "ACCEPTED"
+            },
+            "fullPrice": 115582747,
+            "timeSlotReservation": {
+              "id": 900041,
+              "timeSlots": [
+                {
+                  "timeFrom": 1790150400000,
+                  "timeTo": 1790154000000
+                }
+              ],
+              "status": "RESERVED",
+              "timeFrom": 1790150400000,
+              "timeTo": 1790154000000
+            },
+            "totalAccepted": 1137,
+            "totalToStock": 1146,
+            "remainingAmountOfUpdates": 2,
+            "dateAccepted": 1790434758598,
+            "expressAcceptanceDate": 1790289402978,
+            "stock": {
+              "id": 900037,
+              "externalId": "ID000038",
+              "title": "<title 97>",
+              "address": "<address 98>",
+              "timeFrom": "<timeFrom 99>",
+              "timeTo": "<timeTo 100>",
+              "poolSource": "<poolSource 101>",
+              "dimensionalGroups": [
+                {
+                  "group": "<group 102>",
+                  "title": "<title 103>"
+                },
+                {
+                  "group": "<group 104>",
+                  "title": "<title 105>"
+                }
+              ]
+            },
+            "hasIssue": true,
+            "externalNumber": null,
+            "invoiceEttn": {
+              "isEditable": true,
+              "warningFlag": false,
+              "slaEttnUpdate": null,
+              "ettn": null
+            },
+            "fines": [],
+            "createdInvoiceCount": 0
+          },
+          {
+            "id": 900042,
+            "invoiceNumber": 900043,
+            "deliveryCertificate": null,
+            "dateCreated": "<dateCreated 107>",
+            "status": "<status 95>",
+            "invoiceStatus": {
+              "text": "<status 95>",
+              "color": "<color 96>",
+              "value": "ACCEPTED"
+            },
+            "fullPrice": 1010000,
+            "timeSlotReservation": {
+              "id": 900044,
+              "timeSlots": [
+                {
+                  "timeFrom": 1786983300000,
+                  "timeTo": 1786987800000
+                }
+              ],
+              "status": "RESERVED",
+              "timeFrom": 1786983300000,
+              "timeTo": 1786987800000
+            },
+            "totalAccepted": 7,
+            "totalToStock": 7,
+            "remainingAmountOfUpdates": 2,
+            "dateAccepted": 1787030433732,
+            "expressAcceptanceDate": null,
+            "stock": {
+              "id": 900037,
+              "externalId": "ID000038",
+              "title": "<title 97>",
+              "address": "<address 98>",
+              "timeFrom": "<timeFrom 99>",
+              "timeTo": "<timeTo 100>",
+              "poolSource": "<poolSource 101>",
+              "dimensionalGroups": [
+                {
+                  "group": "<group 102>",
+                  "title": "<title 103>"
+                },
+                {
+                  "group": "<group 104>",
+                  "title": "<title 105>"
+                }
+              ]
+            },
+            "hasIssue": false,
+            "externalNumber": null,
+            "invoiceEttn": {
+              "isEditable": true,
+              "warningFlag": false,
+              "slaEttnUpdate": null,
+              "ettn": null
+            },
+            "fines": [],
+            "createdInvoiceCount": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "invoice_products",
+      "request": {
+        "path": "/v1/shop/900001/invoice/products",
+        "params": {
+          "invoiceId": 900034,
+          "page": 0,
+          "size": 3
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-limit-per-day": "100000",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-remaining-per-day": "99961",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": [
+          {
+            "id": 900045,
+            "skuTitle": "<skuTitle 108>",
+            "productTitle": "<productTitle 109>",
+            "quantityToStock": 1,
+            "quantityAccepted": 1,
+            "purchasePrice": 89000,
+            "skuForInvoiceDtoList": [
+              {
+                "id": 900046,
+                "skuTitle": "<skuTitle 110>",
+                "quantityToStock": 1,
+                "quantityAccepted": 1,
+                "purchasePrice": 89000,
+                "photo": {
+                  "photo": {
+                    "800": {
+                      "high": "<url 111>",
+                      "low": "<url 112>"
+                    },
+                    "720": {
+                      "high": "<url 111>",
+                      "low": "<url 112>"
+                    },
+                    "480": {
+                      "high": "<url 113>",
+                      "low": "<url 114>"
+                    },
+                    "240": {
+                      "high": "<url 115>",
+                      "low": "<url 116>"
+                    },
+                    "80": {
+                      "high": "<url 117>",
+                      "low": "<url 118>"
+                    },
+                    "24034": {
+                      "high": "<url 115>",
+                      "low": "<url 116>"
+                    },
+                    "120": {
+                      "high": "<url 115>",
+                      "low": "<url 116>"
+                    },
+                    "540": {
+                      "high": "<url 113>",
+                      "low": "<url 114>"
+                    },
+                    "60": {
+                      "high": "<url 117>",
+                      "low": "<url 118>"
+                    }
+                  },
+                  "photoKey": "<photoKey 119>",
+                  "color": null,
+                  "hasVerticalPhoto": false
+                },
+                "issue": null
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "returns",
+      "request": {
+        "path": "/v1/shop/900001/return",
+        "params": {
+          "page": 0,
+          "size": 3
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-limit-per-day": "100000",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-remaining-per-day": "99960",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": {
+          "payload": [
+            {
+              "id": 900047,
+              "dateCreated": 1789733634869,
+              "status": "ASSEMBLED",
+              "stock": {
+                "id": 900048,
+                "externalId": "ID000049",
+                "title": "<title 120>",
+                "address": "<address 121>",
+                "timeFrom": "<timeFrom 99>",
+                "timeTo": "<timeTo 100>",
+                "poolSource": "<poolSource 122>",
+                "dimensionalGroups": [
+                  {
+                    "group": "<group 104>",
+                    "title": "<title 105>"
+                  },
+                  {
+                    "group": "<group 102>",
+                    "title": "<title 103>"
+                  }
+                ]
+              },
+              "timeSlotReservation": null,
+              "paidStorage": {
+                "startDate": 1790658434487,
+                "endDate": null,
+                "status": "ACTIVE"
+              },
+              "executionDate": null,
+              "assembledDate": 1789794434487,
+              "completedDate": null,
+              "canceledDate": null,
+              "externalNumber": null,
+              "type": "DEFECTED",
+              "ettnInfo": null,
+              "returnDropInfo": null
+            },
+            {
+              "id": 900050,
+              "dateCreated": 1776231712615,
+              "status": "UTILIZED",
+              "stock": {
+                "id": 900048,
+                "externalId": "ID000049",
+                "title": "<title 120>",
+                "address": "<address 121>",
+                "timeFrom": "<timeFrom 99>",
+                "timeTo": "<timeTo 100>",
+                "poolSource": "<poolSource 122>",
+                "dimensionalGroups": [
+                  {
+                    "group": "<group 104>",
+                    "title": "<title 105>"
+                  },
+                  {
+                    "group": "<group 102>",
+                    "title": "<title 103>"
+                  }
+                ]
+              },
+              "timeSlotReservation": {
+                "id": 900051,
+                "timeSlots": [
+                  {
+                    "timeFrom": 1777111200000,
+                    "timeTo": 1777118400000
+                  }
+                ],
+                "status": "RESERVED",
+                "timeFrom": 1777111200000,
+                "timeTo": 1777118400000
+              },
+              "paidStorage": {
+                "startDate": 1777098730749,
+                "endDate": 1777294603518,
+                "status": "COMPLETED"
+              },
+              "executionDate": 1777476664104,
+              "assembledDate": 1776234730749,
+              "completedDate": null,
+              "canceledDate": null,
+              "externalNumber": null,
+              "type": "DEFECTED",
+              "ettnInfo": null,
+              "returnDropInfo": null
+            }
+          ],
+          "timestamp": "2026-10-24T17:34:16.69874324"
+        }
+      }
+    },
+    {
+      "name": "returns_all",
+      "request": {
+        "path": "/v1/return",
+        "params": {
+          "shopId": 900001,
+          "page": 0,
+          "size": 3
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-limit-per-day": "100000",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-remaining-per-day": "99959",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": [
+          {
+            "id": 900047,
+            "dateCreated": 1789733634869,
+            "status": "ASSEMBLED",
+            "stock": {
+              "id": 900048,
+              "externalId": "ID000049",
+              "title": "<title 120>",
+              "address": "<address 121>",
+              "timeFrom": "<timeFrom 99>",
+              "timeTo": "<timeTo 100>",
+              "poolSource": "<poolSource 122>",
+              "dimensionalGroups": [
+                {
+                  "group": null,
+                  "title": "<title 123>"
+                },
+                {
+                  "group": null,
+                  "title": "<title 105>"
+                }
+              ]
+            },
+            "timeSlotReservation": null,
+            "paidStorage": {
+              "startDate": 1790658434487,
+              "endDate": null,
+              "status": "ACTIVE"
+            },
+            "executionDate": null,
+            "assembledDate": 1789794434487,
+            "completedDate": null,
+            "canceledDate": null,
+            "externalNumber": null,
+            "type": "DEFECTED",
+            "ettnInfo": null,
+            "returnDropInfo": null,
+            "shopId": 900001,
+            "shopTitle": "<name 1>",
+            "returnItems": [
+              {
+                "id": 900052,
+                "skuId": 900053,
+                "amount": 1,
+                "packedAmount": 1,
+                "skuTitle": "<skuTitle 124>",
+                "productTitle": "<productTitle 125>",
+                "purchasePrice": 70000,
+                "photo": null
+              }
+            ],
+            "totalAmount": 1,
+            "totalPackedAmount": 1,
+            "countAllowedChange": 2,
+            "maxCountAllowedChange": 2
+          },
+          {
+            "id": 900050,
+            "dateCreated": 1776231712615,
+            "status": "UTILIZED",
+            "stock": {
+              "id": 900048,
+              "externalId": "ID000049",
+              "title": "<title 120>",
+              "address": "<address 121>",
+              "timeFrom": "<timeFrom 99>",
+              "timeTo": "<timeTo 100>",
+              "poolSource": "<poolSource 122>",
+              "dimensionalGroups": [
+                {
+                  "group": null,
+                  "title": "<title 123>"
+                },
+                {
+                  "group": null,
+                  "title": "<title 105>"
+                }
+              ]
+            },
+            "timeSlotReservation": {
+              "id": 900051,
+              "timeSlots": [
+                {
+                  "timeFrom": 1777111200000,
+                  "timeTo": 1777118400000
+                }
+              ],
+              "status": "RESERVED",
+              "timeFrom": 1777111200000,
+              "timeTo": 1777118400000
+            },
+            "paidStorage": {
+              "startDate": 1777098730749,
+              "endDate": 1777294603518,
+              "status": "COMPLETED"
+            },
+            "executionDate": 1777476664104,
+            "assembledDate": 1776234730749,
+            "completedDate": null,
+            "canceledDate": null,
+            "externalNumber": null,
+            "type": "DEFECTED",
+            "ettnInfo": null,
+            "returnDropInfo": null,
+            "shopId": 900001,
+            "shopTitle": "<name 1>",
+            "returnItems": [
+              {
+                "id": 900054,
+                "skuId": 900055,
+                "amount": 1,
+                "packedAmount": 1,
+                "skuTitle": "<skuTitle 126>",
+                "productTitle": "<productTitle 127>",
+                "purchasePrice": 155000,
+                "photo": null
+              },
+              {
+                "id": 900056,
+                "skuId": 900057,
+                "amount": 1,
+                "packedAmount": 1,
+                "skuTitle": "<skuTitle 128>",
+                "productTitle": "<productTitle 129>",
+                "purchasePrice": 88000,
+                "photo": null
+              },
+              {
+                "id": 900058,
+                "skuId": 900059,
+                "amount": 1,
+                "packedAmount": 1,
+                "skuTitle": "<skuTitle 130>",
+                "productTitle": "<productTitle 131>",
+                "purchasePrice": 250000,
+                "photo": null
+              }
+            ],
+            "totalAmount": 3,
+            "totalPackedAmount": 3,
+            "countAllowedChange": 1,
+            "maxCountAllowedChange": 2
+          }
+        ]
+      }
+    },
+    {
+      "name": "bad_request",
+      "request": {
+        "path": "/v1/finance/orders",
+        "params": {
+          "shopIds": 900001,
+          "page": 0,
+          "size": -1
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-limit-per-day": "100000",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-remaining-per-day": "99957",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": {
+          "payload": null,
+          "errors": [
+            {
+              "code": "<code 132>",
+              "message": "<message 133>"
+            }
+          ],
+          "timestamp": "2026-10-24T17:34:24.553958680",
+          "trace": "<trace 134>",
+          "error": "<message 133>"
+        }
+      }
+    },
+    {
+      "name": "orders",
+      "request": {
+        "path": "/v1/finance/orders",
+        "params": {
+          "shopIds": 900002,
+          "group": "false",
+          "dateFrom": 1785087248460,
+          "page": 0,
+          "size": 5
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-limit-per-day": "100000",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-remaining-per-day": "99956",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": {
+          "orderItems": [
+            {
+              "id": 900060,
+              "status": "PROCESSING",
+              "date": 1792860821301,
+              "orderId": 900061,
+              "skuTitle": "<skuTitle 135>",
+              "productId": 900062,
+              "productImage": {
+                "photo": {
+                  "800": {
+                    "high": "<url 136>",
+                    "low": "<url 137>"
+                  },
+                  "720": {
+                    "high": "<url 136>",
+                    "low": "<url 137>"
+                  },
+                  "480": {
+                    "high": "<url 138>",
+                    "low": "<url 139>"
+                  },
+                  "240": {
+                    "high": "<url 140>",
+                    "low": "<url 141>"
+                  },
+                  "80": {
+                    "high": "<url 142>",
+                    "low": "<url 143>"
+                  },
+                  "24034": {
+                    "high": "<url 140>",
+                    "low": "<url 141>"
+                  },
+                  "120": {
+                    "high": "<url 140>",
+                    "low": "<url 141>"
+                  },
+                  "540": {
+                    "high": "<url 138>",
+                    "low": "<url 139>"
+                  },
+                  "60": {
+                    "high": "<url 142>",
+                    "low": "<url 143>"
+                  }
+                },
+                "photoKey": "<photoKey 144>",
+                "color": null,
+                "hasVerticalPhoto": false
+              },
+              "shopId": 900002,
+              "dateIssued": null,
+              "sellPrice": 24990,
+              "amount": 1,
+              "amountReturns": 0,
+              "commission": 5122,
+              "sellerProfit": 19868,
+              "purchasePrice": 80000,
+              "logisticDeliveryFee": 0,
+              "cancelled": null,
+              "withdrawnProfit": 0,
+              "comment": null,
+              "productTitle": "<productTitle 145>",
+              "returnCause": null
+            },
+            {
+              "id": 900063,
+              "status": "PROCESSING",
+              "date": 1792854845998,
+              "orderId": 900064,
+              "skuTitle": "<skuTitle 146>",
+              "productId": 900065,
+              "productImage": {
+                "photo": {
+                  "800": {
+                    "high": "<url 147>",
+                    "low": "<url 148>"
+                  },
+                  "720": {
+                    "high": "<url 147>",
+                    "low": "<url 148>"
+                  },
+                  "480": {
+                    "high": "<url 149>",
+                    "low": "<url 150>"
+                  },
+                  "240": {
+                    "high": "<url 151>",
+                    "low": "<url 152>"
+                  },
+                  "80": {
+                    "high": "<url 153>",
+                    "low": "<url 154>"
+                  },
+                  "24034": {
+                    "high": "<url 151>",
+                    "low": "<url 152>"
+                  },
+                  "120": {
+                    "high": "<url 151>",
+                    "low": "<url 152>"
+                  },
+                  "540": {
+                    "high": "<url 149>",
+                    "low": "<url 150>"
+                  },
+                  "60": {
+                    "high": "<url 153>",
+                    "low": "<url 154>"
+                  }
+                },
+                "photoKey": "<photoKey 155>",
+                "color": null,
+                "hasVerticalPhoto": false
+              },
+              "shopId": 900002,
+              "dateIssued": null,
+              "sellPrice": 29980,
+              "amount": 1,
+              "amountReturns": 0,
+              "commission": 6145,
+              "sellerProfit": 23835,
+              "purchasePrice": 85000,
+              "logisticDeliveryFee": 0,
+              "cancelled": null,
+              "withdrawnProfit": 0,
+              "comment": null,
+              "productTitle": "<productTitle 156>",
+              "returnCause": null
+            },
+            {
+              "id": 900066,
+              "status": "PROCESSING",
+              "date": 1792854845998,
+              "orderId": 900064,
+              "skuTitle": "<skuTitle 157>",
+              "productId": 900062,
+              "productImage": {
+                "photo": {
+                  "800": {
+                    "high": "<url 158>",
+                    "low": "<url 159>"
+                  },
+                  "720": {
+                    "high": "<url 158>",
+                    "low": "<url 159>"
+                  },
+                  "480": {
+                    "high": "<url 160>",
+                    "low": "<url 161>"
+                  },
+                  "240": {
+                    "high": "<url 162>",
+                    "low": "<url 163>"
+                  },
+                  "80": {
+                    "high": "<url 164>",
+                    "low": "<url 165>"
+                  },
+                  "24034": {
+                    "high": "<url 162>",
+                    "low": "<url 163>"
+                  },
+                  "120": {
+                    "high": "<url 162>",
+                    "low": "<url 163>"
+                  },
+                  "540": {
+                    "high": "<url 160>",
+                    "low": "<url 161>"
+                  },
+                  "60": {
+                    "high": "<url 164>",
+                    "low": "<url 165>"
+                  }
+                },
+                "photoKey": "<photoKey 166>",
+                "color": null,
+                "hasVerticalPhoto": false
+              },
+              "shopId": 900002,
+              "dateIssued": null,
+              "sellPrice": 24990,
+              "amount": 1,
+              "amountReturns": 0,
+              "commission": 5122,
+              "sellerProfit": 19868,
+              "purchasePrice": 80000,
+              "logisticDeliveryFee": 0,
+              "cancelled": null,
+              "withdrawnProfit": 0,
+              "comment": null,
+              "productTitle": "<productTitle 145>",
+              "returnCause": null
+            }
+          ],
+          "totalElements": 222
+        }
+      }
+    },
+    {
+      "name": "orders_end",
+      "request": {
+        "path": "/v1/finance/orders",
+        "params": {
+          "shopIds": 900002,
+          "group": "false",
+          "dateFrom": 1785087248460,
+          "page": 100000,
+          "size": 5
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-limit-per-day": "100000",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-remaining-per-day": "99955",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": {
+          "orderItems": [],
+          "totalElements": 222
+        }
+      }
+    },
+    {
+      "name": "expenses",
+      "request": {
+        "path": "/v1/finance/expenses",
+        "params": {
+          "shopIds": 900002,
+          "dateFrom": 1785087248460,
+          "page": 0,
+          "size": 5
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-limit-per-day": "100000",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-remaining-per-day": "99954",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": {
+          "payload": {
+            "payments": [
+              {
+                "id": 900067,
+                "dateCreated": 1792837128434,
+                "dateUpdated": null,
+                "name": "<name 167>",
+                "source": "Logistika",
+                "shopId": 900002,
+                "sellerId": 900012,
+                "paymentPrice": 0,
+                "amount": 1,
+                "status": "CONFIRMED",
+                "externalId": "ID000068",
+                "code": "<code 43>",
+                "dateService": 1792837127467,
+                "type": "OUTCOME"
+              },
+              {
+                "id": 900069,
+                "dateCreated": 1792831916753,
+                "dateUpdated": null,
+                "name": "<name 168>",
+                "source": "Logistika",
+                "shopId": 900002,
+                "sellerId": 900012,
+                "paymentPrice": 0,
+                "amount": 1,
+                "status": "CONFIRMED",
+                "externalId": "ID000070",
+                "code": "<code 43>",
+                "dateService": 1792831915525,
+                "type": "OUTCOME"
+              },
+              {
+                "id": 900071,
+                "dateCreated": 1792822139643,
+                "dateUpdated": null,
+                "name": "<name 169>",
+                "source": "Logistika",
+                "shopId": 900002,
+                "sellerId": 900012,
+                "paymentPrice": 0,
+                "amount": 1,
+                "status": "CONFIRMED",
+                "externalId": "ID000072",
+                "code": "<code 41>",
+                "dateService": 1792822139643,
+                "type": "INCOME"
+              }
+            ],
+            "totalElements": 0
+          },
+          "timestamp": "2026-10-24T17:34:27.204447705"
+        }
+      }
+    },
+    {
+      "name": "products",
+      "request": {
+        "path": "/v1/product/shop/900002",
+        "params": {
+          "page": 0,
+          "size": 3
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-limit-per-day": "100000",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-remaining-per-day": "99953",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": {
+          "productList": [
+            {
+              "productId": 900062,
+              "category": "<category 170>",
+              "rating": "<rating 73>",
+              "feedbackQuantity": 1,
+              "status": {
+                "id": 900073,
+                "title": "<title 171>",
+                "value": "IN_STOCK",
+                "description": "<description 172>",
+                "color": "<color 75>",
+                "additional": []
+              },
+              "moderationStatus": {
+                "title": "<title 61>",
+                "color": "<color 48>",
+                "value": "ON_MODERATION",
+                "hasAnySkuBlocked": null
+              },
+              "commission": null,
+              "commissionDto": {
+                "minCommission": 20.5,
+                "maxCommission": 20.5
+              },
+              "skuList": [
+                {
+                  "skuTitle": "<skuTitle 173>",
+                  "skuFullTitle": "<skuFullTitle 174>",
+                  "productTitle": "<productTitle 145>",
+                  "skuId": 900074,
+                  "quantityCreated": 0,
+                  "quantityAvailable": 0,
+                  "quantityAvailableByStockType": {
+                    "fbo": 0,
+                    "fbs": 0
+                  },
+                  "quantityActive": 0,
+                  "quantityFbs": 0,
+                  "quantityAdditional": 0,
+                  "quantityOnPhotoStudio": 0,
+                  "quantityArchived": 0,
+                  "quantitySold": 1,
+                  "quantityReturned": 0,
+                  "quantityMissing": 0,
+                  "quantityDefected": 0,
+                  "quantityPending": 0,
+                  "returnedPercentage": 0.0,
+                  "barcode": 900075,
+                  "archived": false,
+                  "commission": 20.5,
+                  "characteristics": "<characteristics 175>",
+                  "previewImage": "<url 176>",
+                  "ikpu": "ID000076",
+                  "photo": null,
+                  "purchasePrice": null,
+                  "price": 24990,
+                  "recommendedTotalPrice": null,
+                  "blockingReason": null,
+                  "blockReasons": [],
+                  "skuBlockReason": null,
+                  "blocked": false,
+                  "rankInfo": {
+                    "rank": "<rank 56>",
+                    "rankValue": "<rankValue 57>",
+                    "dateUpdated": 1791363960634
+                  },
+                  "article": null,
+                  "turnover": null,
+                  "dimensionalGroup": null,
+                  "paidStorageDimensionalGroup": null,
+                  "paidStoragePriceItem": null,
+                  "paidStorageAmount": null,
+                  "actualDimensionalGroup": null,
+                  "hasStudioPhoto": null,
+                  "forecastOutOfStock": false,
+                  "activeSale": false,
+                  "switchbackActive": false,
+                  "marketPrice": 24990,
+                  "characteristicsList": [
+                    {
+                      "characteristicTitle": {
+                        "uz": "<uz 81>",
+                        "ru": "<ru 82>"
+                      },
+                      "definedType": true,
+                      "characteristicValue": {
+                        "uz": "<characteristics 79>",
+                        "ru": "<ru 83>"
+                      }
+                    },
+                    {
+                      "characteristicTitle": {
+                        "uz": "<uz 177>",
+                        "ru": "<ru 178>"
+                      },
+                      "definedType": false,
+                      "characteristicValue": {
+                        "uz": "<uz 179>",
+                        "ru": "<uz 179>"
+                      }
+                    }
+                  ],
+                  "status": {
+                    "value": "RUN_OUT",
+                    "title": "<title 59>",
+                    "color": "<color 66>"
+                  },
+                  "skuDimension": {
+                    "length": 147,
+                    "width": 83,
+                    "height": 23,
+                    "weight": 25
+                  },
+                  "updatedFromWms": true,
+                  "hasActiveDiscount": false,
+                  "sellerItemCode": null,
+                  "specialOffer": {
+                    "inOffer": true,
+                    "hasRecommendation": false,
+                    "mechanicType": "UZUM_PROMO",
+                    "mechanicPrice": null,
+                    "endDate": 1793080740000,
+                    "promoName": "<promoName 67>",
+                    "selfExit": null,
+                    "promoIds": [
+                      900026
+                    ]
+                  },
+                  "isWithoutWeightDimensional": false,
+                  "avgdsales": null,
+                  "avgdquantity": null,
+                  "pstorage": null
+                },
+                {
+                  "skuTitle": "<skuTitle 180>",
+                  "skuFullTitle": "<skuFullTitle 181>",
+                  "productTitle": "<productTitle 145>",
+                  "skuId": 900077,
+                  "quantityCreated": 0,
+                  "quantityAvailable": 1,
+                  "quantityAvailableByStockType": {
+                    "fbo": 1,
+                    "fbs": 0
+                  },
+                  "quantityActive": 1,
+                  "quantityFbs": 0,
+                  "quantityAdditional": 0,
+                  "quantityOnPhotoStudio": 0,
+                  "quantityArchived": 0,
+                  "quantitySold": 0,
+                  "quantityReturned": 0,
+                  "quantityMissing": 0,
+                  "quantityDefected": 0,
+                  "quantityPending": 0,
+                  "returnedPercentage": 0.0,
+                  "barcode": 900078,
+                  "archived": false,
+                  "commission": 20.5,
+                  "characteristics": "<characteristics 182>",
+                  "previewImage": "<url 176>",
+                  "ikpu": "ID000076",
+                  "photo": null,
+                  "purchasePrice": null,
+                  "price": 24990,
+                  "recommendedTotalPrice": null,
+                  "blockingReason": null,
+                  "blockReasons": [],
+                  "skuBlockReason": null,
+                  "blocked": false,
+                  "rankInfo": {
+                    "rank": "<rank 56>",
+                    "rankValue": "<rankValue 57>",
+                    "dateUpdated": 1791366827150
+                  },
+                  "article": null,
+                  "turnover": null,
+                  "dimensionalGroup": "<title 103>",
+                  "paidStorageDimensionalGroup": null,
+                  "paidStoragePriceItem": 24,
+                  "paidStorageAmount": null,
+                  "actualDimensionalGroup": null,
+                  "hasStudioPhoto": null,
+                  "forecastOutOfStock": false,
+                  "activeSale": false,
+                  "switchbackActive": false,
+                  "marketPrice": 24990,
+                  "characteristicsList": [
+                    {
+                      "characteristicTitle": {
+                        "uz": "<uz 81>",
+                        "ru": "<ru 82>"
+                      },
+                      "definedType": true,
+                      "characteristicValue": {
+                        "uz": "<characteristics 79>",
+                        "ru": "<ru 83>"
+                      }
+                    },
+                    {
+                      "characteristicTitle": {
+                        "uz": "<uz 177>",
+                        "ru": "<ru 178>"
+                      },
+                      "definedType": false,
+                      "characteristicValue": {
+                        "uz": "<uz 183>",
+                        "ru": "<uz 183>"
+                      }
+                    }
+                  ],
+                  "status": {
+                    "value": "IN_STOCK",
+                    "title": "<title 184>",
+                    "color": "<color 75>"
+                  },
+                  "skuDimension": {
+                    "length": 153,
+                    "width": 83,
+                    "height": 17,
+                    "weight": 25
+                  },
+                  "updatedFromWms": true,
+                  "hasActiveDiscount": false,
+                  "sellerItemCode": null,
+                  "specialOffer": {
+                    "inOffer": true,
+                    "hasRecommendation": false,
+                    "mechanicType": "UZUM_PROMO",
+                    "mechanicPrice": null,
+                    "endDate": 1793080740000,
+                    "promoName": "<promoName 67>",
+                    "selfExit": null,
+                    "promoIds": [
+                      900026
+                    ]
+                  },
+                  "isWithoutWeightDimensional": false,
+                  "avgdsales": 0.0,
+                  "avgdquantity": 0.3,
+                  "pstorage": false
+                }
+              ],
+              "skuTitle": "<skuTitle 185>",
+              "image": "<url 186>",
+              "previewImg": "<url 187>",
+              "title": "<productTitle 145>",
+              "quantityAvailable": 39,
+              "quantityAvailableByStockType": {
+                "fbo": 39,
+                "fbs": 0
+              },
+              "quantityReserved": 0,
+              "quantityActive": 39,
+              "quantityFbs": 0,
+              "quantityAdditional": 0,
+              "quantityOnPhotoStudio": 0,
+              "quantityCreated": 0,
+              "quantitySold": 26,
+              "quantityReturned": 4,
+              "quantityMissing": 0,
+              "quantityDefected": 0,
+              "quantityPending": 0,
+              "quantityArchived": 0,
+              "returnedPercentage": 13.3,
+              "newYearStatus": {
+                "title": "<title 53>",
+                "color": "<color 54>",
+                "value": "NONE"
+              },
+              "price": 24990,
+              "clicks": null,
+              "viewers": 19,
+              "conversion": 10.53,
+              "roi": null,
+              "rankInfo": {
+                "rank": "<rank 56>",
+                "rankValue": "<rankValue 57>",
+                "dateUpdated": 1790822176688
+              },
+              "blockReason": null,
+              "blockComment": null,
+              "dateModerated": null,
+              "blockingReasons": [],
+              "volumeDiscount": null,
+              "skusHasAllRequiredFilters": true,
+              "allFiltersFilled": false,
+              "auctionMember": false,
+              "isEditable": true,
+              "isEditableSku": true,
+              "isActive": true,
+              "isDeletable": false,
+              "isIlliquid": false,
+              "switchbackActive": false,
+              "promotionStatus": "PROMOTION_UNAVAILABLE",
+              "createdByFlowB": true,
+              "isWithoutWeightDimensional": false,
+              "cpoAdvertisementsDetails": null,
+              "pstorage": false
+            },
+            {
+              "productId": 900065,
+              "category": "<category 170>",
+              "rating": "<rating 45>",
+              "feedbackQuantity": 0,
+              "status": {
+                "id": 900073,
+                "title": "<title 171>",
+                "value": "IN_STOCK",
+                "description": "<description 172>",
+                "color": "<color 75>",
+                "additional": []
+              },
+              "moderationStatus": {
+                "title": "<title 74>",
+                "color": "<color 75>",
+                "value": "MODERATED",
+                "hasAnySkuBlocked": null
+              },
+              "commission": null,
+              "commissionDto": {
+                "minCommission": 20.5,
+                "maxCommission": 20.5
+              },
+              "skuList": [
+                {
+                  "skuTitle": "<skuTitle 173>",
+                  "skuFullTitle": "<skuFullTitle 188>",
+                  "productTitle": "<productTitle 156>",
+                  "skuId": 900079,
+                  "quantityCreated": 0,
+                  "quantityAvailable": 0,
+                  "quantityAvailableByStockType": {
+                    "fbo": 0,
+                    "fbs": 0
+                  },
+                  "quantityActive": 0,
+                  "quantityFbs": 0,
+                  "quantityAdditional": 0,
+                  "quantityOnPhotoStudio": 0,
+                  "quantityArchived": 0,
+                  "quantitySold": 1,
+                  "quantityReturned": 0,
+                  "quantityMissing": 0,
+                  "quantityDefected": 0,
+                  "quantityPending": 0,
+                  "returnedPercentage": 0.0,
+                  "barcode": 900080,
+                  "archived": false,
+                  "commission": 20.5,
+                  "characteristics": "<characteristics 189>",
+                  "previewImage": "<url 190>",
+                  "ikpu": "ID000076",
+                  "photo": null,
+                  "purchasePrice": null,
+                  "price": 29980,
+                  "recommendedTotalPrice": null,
+                  "blockingReason": null,
+                  "blockReasons": [],
+                  "skuBlockReason": null,
+                  "blocked": false,
+                  "rankInfo": {
+                    "rank": "<rank 56>",
+                    "rankValue": "<rankValue 57>",
+                    "dateUpdated": 1791362943760
+                  },
+                  "article": null,
+                  "turnover": null,
+                  "dimensionalGroup": "<title 103>",
+                  "paidStorageDimensionalGroup": null,
+                  "paidStoragePriceItem": 24,
+                  "paidStorageAmount": null,
+                  "actualDimensionalGroup": null,
+                  "hasStudioPhoto": null,
+                  "forecastOutOfStock": false,
+                  "activeSale": false,
+                  "switchbackActive": false,
+                  "marketPrice": 29980,
+                  "characteristicsList": [
+                    {
+                      "characteristicTitle": {
+                        "uz": "<uz 81>",
+                        "ru": "<ru 82>"
+                      },
+                      "definedType": true,
+                      "characteristicValue": {
+                        "uz": "<characteristics 79>",
+                        "ru": "<ru 83>"
+                      }
+                    },
+                    {
+                      "characteristicTitle": {
+                        "uz": "<uz 177>",
+                        "ru": "<uz 177>"
+                      },
+                      "definedType": false,
+                      "characteristicValue": {
+                        "uz": "<uz 191>",
+                        "ru": "<uz 191>"
+                      }
+                    }
+                  ],
+                  "status": {
+                    "value": "RUN_OUT",
+                    "title": "<title 59>",
+                    "color": "<color 66>"
+                  },
+                  "skuDimension": {
+                    "length": 168,
+                    "width": 84,
+                    "height": 25,
+                    "weight": 25
+                  },
+                  "updatedFromWms": true,
+                  "hasActiveDiscount": false,
+                  "sellerItemCode": null,
+                  "specialOffer": {
+                    "inOffer": true,
+                    "hasRecommendation": false,
+                    "mechanicType": "UZUM_PROMO",
+                    "mechanicPrice": null,
+                    "endDate": 1793080740000,
+                    "promoName": "<promoName 67>",
+                    "selfExit": null,
+                    "promoIds": [
+                      900026
+                    ]
+                  },
+                  "isWithoutWeightDimensional": false,
+                  "avgdsales": 0.0,
+                  "avgdquantity": 0.3,
+                  "pstorage": false
+                },
+                {
+                  "skuTitle": "<skuTitle 180>",
+                  "skuFullTitle": "<skuFullTitle 192>",
+                  "productTitle": "<productTitle 156>",
+                  "skuId": 900081,
+                  "quantityCreated": 0,
+                  "quantityAvailable": 0,
+                  "quantityAvailableByStockType": {
+                    "fbo": 0,
+                    "fbs": 0
+                  },
+                  "quantityActive": 0,
+                  "quantityFbs": 0,
+                  "quantityAdditional": 0,
+                  "quantityOnPhotoStudio": 0,
+                  "quantityArchived": 0,
+                  "quantitySold": 1,
+                  "quantityReturned": 0,
+                  "quantityMissing": 0,
+                  "quantityDefected": 0,
+                  "quantityPending": 0,
+                  "returnedPercentage": 0.0,
+                  "barcode": 900082,
+                  "archived": false,
+                  "commission": 20.5,
+                  "characteristics": "<characteristics 193>",
+                  "previewImage": "<url 190>",
+                  "ikpu": "ID000076",
+                  "photo": null,
+                  "purchasePrice": null,
+                  "price": 29980,
+                  "recommendedTotalPrice": null,
+                  "blockingReason": null,
+                  "blockReasons": [],
+                  "skuBlockReason": null,
+                  "blocked": false,
+                  "rankInfo": {
+                    "rank": "<rank 56>",
+                    "rankValue": "<rankValue 57>",
+                    "dateUpdated": 1791362943372
+                  },
+                  "article": null,
+                  "turnover": null,
+                  "dimensionalGroup": "<title 103>",
+                  "paidStorageDimensionalGroup": null,
+                  "paidStoragePriceItem": 24,
+                  "paidStorageAmount": null,
+                  "actualDimensionalGroup": null,
+                  "hasStudioPhoto": null,
+                  "forecastOutOfStock": false,
+                  "activeSale": false,
+                  "switchbackActive": false,
+                  "marketPrice": 29980,
+                  "characteristicsList": [
+                    {
+                      "characteristicTitle": {
+                        "uz": "<uz 81>",
+                        "ru": "<ru 82>"
+                      },
+                      "definedType": true,
+                      "characteristicValue": {
+                        "uz": "<characteristics 79>",
+                        "ru": "<ru 83>"
+                      }
+                    },
+                    {
+                      "characteristicTitle": {
+                        "uz": "<uz 177>",
+                        "ru": "<uz 177>"
+                      },
+                      "definedType": false,
+                      "characteristicValue": {
+                        "uz": "<uz 194>",
+                        "ru": "<uz 194>"
+                      }
+                    }
+                  ],
+                  "status": {
+                    "value": "RUN_OUT",
+                    "title": "<title 59>",
+                    "color": "<color 66>"
+                  },
+                  "skuDimension": {
+                    "length": 181,
+                    "width": 78,
+                    "height": 23,
+                    "weight": 30
+                  },
+                  "updatedFromWms": true,
+                  "hasActiveDiscount": false,
+                  "sellerItemCode": null,
+                  "specialOffer": {
+                    "inOffer": true,
+                    "hasRecommendation": false,
+                    "mechanicType": "UZUM_PROMO",
+                    "mechanicPrice": null,
+                    "endDate": 1793080740000,
+                    "promoName": "<promoName 67>",
+                    "selfExit": null,
+                    "promoIds": [
+                      900026
+                    ]
+                  },
+                  "isWithoutWeightDimensional": false,
+                  "avgdsales": 0.0,
+                  "avgdquantity": 0.3,
+                  "pstorage": false
+                }
+              ],
+              "skuTitle": "<skuTitle 195>",
+              "image": "<url 196>",
+              "previewImg": "<url 197>",
+              "title": "<productTitle 156>",
+              "quantityAvailable": 24,
+              "quantityAvailableByStockType": {
+                "fbo": 24,
+                "fbs": 0
+              },
+              "quantityReserved": 0,
+              "quantityActive": 24,
+              "quantityFbs": 0,
+              "quantityAdditional": 0,
+              "quantityOnPhotoStudio": 0,
+              "quantityCreated": 0,
+              "quantitySold": 15,
+              "quantityReturned": 2,
+              "quantityMissing": 0,
+              "quantityDefected": 0,
+              "quantityPending": 0,
+              "quantityArchived": 0,
+              "returnedPercentage": 11.8,
+              "newYearStatus": {
+                "title": "<title 53>",
+                "color": "<color 54>",
+                "value": "NONE"
+              },
+              "price": 29980,
+              "clicks": null,
+              "viewers": 18,
+              "conversion": 5.56,
+              "roi": "<roi 198>",
+              "rankInfo": {
+                "rank": "<rank 56>",
+                "rankValue": "<rankValue 57>",
+                "dateUpdated": 1790823140279
+              },
+              "blockReason": null,
+              "blockComment": null,
+              "dateModerated": null,
+              "blockingReasons": [],
+              "volumeDiscount": null,
+              "skusHasAllRequiredFilters": true,
+              "allFiltersFilled": false,
+              "auctionMember": false,
+              "isEditable": true,
+              "isEditableSku": true,
+              "isActive": true,
+              "isDeletable": false,
+              "isIlliquid": false,
+              "switchbackActive": false,
+              "promotionStatus": "PROMOTION_UNAVAILABLE",
+              "createdByFlowB": true,
+              "isWithoutWeightDimensional": false,
+              "cpoAdvertisementsDetails": null,
+              "pstorage": false
+            },
+            {
+              "productId": 900083,
+              "category": "<category 170>",
+              "rating": "<rating 45>",
+              "feedbackQuantity": 0,
+              "status": {
+                "id": 900073,
+                "title": "<title 171>",
+                "value": "IN_STOCK",
+                "description": "<description 172>",
+                "color": "<color 75>",
+                "additional": []
+              },
+              "moderationStatus": {
+                "title": "<title 74>",
+                "color": "<color 75>",
+                "value": "MODERATED",
+                "hasAnySkuBlocked": null
+              },
+              "commission": null,
+              "commissionDto": {
+                "minCommission": 20.5,
+                "maxCommission": 20.5
+              },
+              "skuList": [
+                {
+                  "skuTitle": "<uz 191>",
+                  "skuFullTitle": "<skuFullTitle 199>",
+                  "productTitle": "<productTitle 145>",
+                  "skuId": 900084,
+                  "quantityCreated": 0,
+                  "quantityAvailable": 2,
+                  "quantityAvailableByStockType": {
+                    "fbo": 2,
+                    "fbs": 0
+                  },
+                  "quantityActive": 2,
+                  "quantityFbs": 0,
+                  "quantityAdditional": 0,
+                  "quantityOnPhotoStudio": 0,
+                  "quantityArchived": 0,
+                  "quantitySold": 1,
+                  "quantityReturned": 1,
+                  "quantityMissing": 0,
+                  "quantityDefected": 0,
+                  "quantityPending": 0,
+                  "returnedPercentage": 50.0,
+                  "barcode": 900085,
+                  "archived": false,
+                  "commission": 20.5,
+                  "characteristics": "<uz 191>",
+                  "previewImage": "<url 200>",
+                  "ikpu": "ID000076",
+                  "photo": null,
+                  "purchasePrice": null,
+                  "price": 29980,
+                  "recommendedTotalPrice": null,
+                  "blockingReason": null,
+                  "blockReasons": [],
+                  "skuBlockReason": null,
+                  "blocked": false,
+                  "rankInfo": {
+                    "rank": "<rank 56>",
+                    "rankValue": "<rankValue 57>",
+                    "dateUpdated": 1791364225836
+                  },
+                  "article": null,
+                  "turnover": null,
+                  "dimensionalGroup": "<title 103>",
+                  "paidStorageDimensionalGroup": null,
+                  "paidStoragePriceItem": 24,
+                  "paidStorageAmount": null,
+                  "actualDimensionalGroup": null,
+                  "hasStudioPhoto": null,
+                  "forecastOutOfStock": false,
+                  "activeSale": false,
+                  "switchbackActive": false,
+                  "marketPrice": 29980,
+                  "characteristicsList": [
+                    {
+                      "characteristicTitle": {
+                        "uz": "<uz 177>",
+                        "ru": "<uz 177>"
+                      },
+                      "definedType": false,
+                      "characteristicValue": {
+                        "uz": "<uz 191>",
+                        "ru": "<uz 191>"
+                      }
+                    }
+                  ],
+                  "status": {
+                    "value": "IN_STOCK",
+                    "title": "<title 184>",
+                    "color": "<color 75>"
+                  },
+                  "skuDimension": {
+                    "length": 155,
+                    "width": 88,
+                    "height": 19,
+                    "weight": 30
+                  },
+                  "updatedFromWms": true,
+                  "hasActiveDiscount": true,
+                  "sellerItemCode": null,
+                  "specialOffer": {
+                    "inOffer": true,
+                    "hasRecommendation": false,
+                    "mechanicType": "UZUM_PROMO",
+                    "mechanicPrice": null,
+                    "endDate": 1793080740000,
+                    "promoName": "<promoName 67>",
+                    "selfExit": null,
+                    "promoIds": [
+                      900026
+                    ]
+                  },
+                  "isWithoutWeightDimensional": false,
+                  "avgdsales": 0.0,
+                  "avgdquantity": 1.0,
+                  "pstorage": false
+                },
+                {
+                  "skuTitle": "<uz 194>",
+                  "skuFullTitle": "<skuFullTitle 201>",
+                  "productTitle": "<productTitle 145>",
+                  "skuId": 900086,
+                  "quantityCreated": 0,
+                  "quantityAvailable": 1,
+                  "quantityAvailableByStockType": {
+                    "fbo": 1,
+                    "fbs": 0
+                  },
+                  "quantityActive": 1,
+                  "quantityFbs": 0,
+                  "quantityAdditional": 0,
+                  "quantityOnPhotoStudio": 0,
+                  "quantityArchived": 0,
+                  "quantitySold": 0,
+                  "quantityReturned": 1,
+                  "quantityMissing": 0,
+                  "quantityDefected": 0,
+                  "quantityPending": 0,
+                  "returnedPercentage": 100.0,
+                  "barcode": 900087,
+                  "archived": false,
+                  "commission": 20.5,
+                  "characteristics": "<uz 194>",
+                  "previewImage": "<url 200>",
+                  "ikpu": "ID000076",
+                  "photo": null,
+                  "purchasePrice": null,
+                  "price": 29980,
+                  "recommendedTotalPrice": null,
+                  "blockingReason": null,
+                  "blockReasons": [],
+                  "skuBlockReason": null,
+                  "blocked": false,
+                  "rankInfo": {
+                    "rank": "<rank 56>",
+                    "rankValue": "<rankValue 57>",
+                    "dateUpdated": 1791364225773
+                  },
+                  "article": null,
+                  "turnover": null,
+                  "dimensionalGroup": "<title 103>",
+                  "paidStorageDimensionalGroup": null,
+                  "paidStoragePriceItem": 24,
+                  "paidStorageAmount": null,
+                  "actualDimensionalGroup": null,
+                  "hasStudioPhoto": null,
+                  "forecastOutOfStock": false,
+                  "activeSale": false,
+                  "switchbackActive": false,
+                  "marketPrice": 29980,
+                  "characteristicsList": [
+                    {
+                      "characteristicTitle": {
+                        "uz": "<uz 177>",
+                        "ru": "<uz 177>"
+                      },
+                      "definedType": false,
+                      "characteristicValue": {
+                        "uz": "<uz 194>",
+                        "ru": "<uz 194>"
+                      }
+                    }
+                  ],
+                  "status": {
+                    "value": "IN_STOCK",
+                    "title": "<title 184>",
+                    "color": "<color 75>"
+                  },
+                  "skuDimension": {
+                    "length": 155,
+                    "width": 82,
+                    "height": 17,
+                    "weight": 35
+                  },
+                  "updatedFromWms": true,
+                  "hasActiveDiscount": true,
+                  "sellerItemCode": null,
+                  "specialOffer": {
+                    "inOffer": true,
+                    "hasRecommendation": false,
+                    "mechanicType": "UZUM_PROMO",
+                    "mechanicPrice": null,
+                    "endDate": 1793080740000,
+                    "promoName": "<promoName 67>",
+                    "selfExit": null,
+                    "promoIds": [
+                      900026
+                    ]
+                  },
+                  "isWithoutWeightDimensional": false,
+                  "avgdsales": 0.0,
+                  "avgdquantity": 0.7,
+                  "pstorage": false
+                }
+              ],
+              "skuTitle": "<skuTitle 202>",
+              "image": "<url 203>",
+              "previewImg": "<url 204>",
+              "title": "<productTitle 145>",
+              "quantityAvailable": 27,
+              "quantityAvailableByStockType": {
+                "fbo": 27,
+                "fbs": 0
+              },
+              "quantityReserved": 0,
+              "quantityActive": 27,
+              "quantityFbs": 0,
+              "quantityAdditional": 0,
+              "quantityOnPhotoStudio": 0,
+              "quantityCreated": 0,
+              "quantitySold": 17,
+              "quantityReturned": 5,
+              "quantityMissing": 0,
+              "quantityDefected": 0,
+              "quantityPending": 0,
+              "quantityArchived": 0,
+              "returnedPercentage": 22.7,
+              "newYearStatus": {
+                "title": "<title 53>",
+                "color": "<color 54>",
+                "value": "NONE"
+              },
+              "price": 29980,
+              "clicks": null,
+              "viewers": 8,
+              "conversion": 0.0,
+              "roi": null,
+              "rankInfo": {
+                "rank": "<rank 56>",
+                "rankValue": "<rankValue 57>",
+                "dateUpdated": 1790823070450
+              },
+              "blockReason": null,
+              "blockComment": null,
+              "dateModerated": null,
+              "blockingReasons": [],
+              "volumeDiscount": null,
+              "skusHasAllRequiredFilters": true,
+              "allFiltersFilled": false,
+              "auctionMember": false,
+              "isEditable": true,
+              "isEditableSku": true,
+              "isActive": true,
+              "isDeletable": false,
+              "isIlliquid": false,
+              "switchbackActive": false,
+              "promotionStatus": "PROMOTION_UNAVAILABLE",
+              "createdByFlowB": true,
+              "isWithoutWeightDimensional": false,
+              "cpoAdvertisementsDetails": null,
+              "pstorage": false
+            }
+          ],
+          "totalProductsAmount": 24,
+          "totalProductsAmountWithoutWeightDimensional": 0
+        }
+      }
+    },
+    {
+      "name": "invoices",
+      "request": {
+        "path": "/v1/shop/900002/invoice",
+        "params": {
+          "page": 0,
+          "size": 3
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-limit-per-day": "100000",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-remaining-per-day": "99952",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": [
+          {
+            "id": 900088,
+            "invoiceNumber": 900089,
+            "deliveryCertificate": null,
+            "dateCreated": "<dateCreated 205>",
+            "status": "<status 95>",
+            "invoiceStatus": {
+              "text": "<status 95>",
+              "color": "<color 96>",
+              "value": "ACCEPTED"
+            },
+            "fullPrice": 750000,
+            "timeSlotReservation": {
+              "id": 900090,
+              "timeSlots": [
+                {
+                  "timeFrom": 1791111600000,
+                  "timeTo": 1791117000000
+                }
+              ],
+              "status": "RESERVED",
+              "timeFrom": 1791111600000,
+              "timeTo": 1791117000000
+            },
+            "totalAccepted": 5,
+            "totalToStock": 5,
+            "remainingAmountOfUpdates": 2,
+            "dateAccepted": 1791118137170,
+            "expressAcceptanceDate": null,
+            "stock": {
+              "id": 900037,
+              "externalId": "ID000038",
+              "title": "<title 97>",
+              "address": "<address 98>",
+              "timeFrom": "<timeFrom 99>",
+              "timeTo": "<timeTo 100>",
+              "poolSource": "<poolSource 101>",
+              "dimensionalGroups": [
+                {
+                  "group": "<group 206>",
+                  "title": "<title 123>"
+                },
+                {
+                  "group": "<group 104>",
+                  "title": "<title 105>"
+                }
+              ]
+            },
+            "hasIssue": false,
+            "externalNumber": null,
+            "invoiceEttn": {
+              "isEditable": true,
+              "warningFlag": false,
+              "slaEttnUpdate": null,
+              "ettn": null
+            },
+            "fines": [],
+            "createdInvoiceCount": 0
+          },
+          {
+            "id": 900091,
+            "invoiceNumber": 900092,
+            "deliveryCertificate": null,
+            "dateCreated": "<dateCreated 94>",
+            "status": "<status 95>",
+            "invoiceStatus": {
+              "text": "<status 95>",
+              "color": "<color 96>",
+              "value": "ACCEPTED"
+            },
+            "fullPrice": 8245000,
+            "timeSlotReservation": {
+              "id": 900093,
+              "timeSlots": [
+                {
+                  "timeFrom": 1790820000000,
+                  "timeTo": 1790825400000
+                }
+              ],
+              "status": "RESERVED",
+              "timeFrom": 1790820000000,
+              "timeTo": 1790825400000
+            },
+            "totalAccepted": 97,
+            "totalToStock": 97,
+            "remainingAmountOfUpdates": 0,
+            "dateAccepted": 1790877653792,
+            "expressAcceptanceDate": 1790723011662,
+            "stock": {
+              "id": 900037,
+              "externalId": "ID000038",
+              "title": "<title 97>",
+              "address": "<address 98>",
+              "timeFrom": "<timeFrom 99>",
+              "timeTo": "<timeTo 100>",
+              "poolSource": "<poolSource 101>",
+              "dimensionalGroups": [
+                {
+                  "group": "<group 206>",
+                  "title": "<title 123>"
+                },
+                {
+                  "group": "<group 104>",
+                  "title": "<title 105>"
+                }
+              ]
+            },
+            "hasIssue": false,
+            "externalNumber": null,
+            "invoiceEttn": {
+              "isEditable": true,
+              "warningFlag": false,
+              "slaEttnUpdate": null,
+              "ettn": null
+            },
+            "fines": [],
+            "createdInvoiceCount": 0
+          },
+          {
+            "id": 900094,
+            "invoiceNumber": 900095,
+            "deliveryCertificate": null,
+            "dateCreated": "<dateCreated 94>",
+            "status": "<status 95>",
+            "invoiceStatus": {
+              "text": "<status 95>",
+              "color": "<color 96>",
+              "value": "ACCEPTED"
+            },
+            "fullPrice": 17910000,
+            "timeSlotReservation": {
+              "id": 900096,
+              "timeSlots": [
+                {
+                  "timeFrom": 1790820000000,
+                  "timeTo": 1790825400000
+                }
+              ],
+              "status": "RESERVED",
+              "timeFrom": 1790820000000,
+              "timeTo": 1790825400000
+            },
+            "totalAccepted": 164,
+            "totalToStock": 166,
+            "remainingAmountOfUpdates": 0,
+            "dateAccepted": 1790966562123,
+            "expressAcceptanceDate": 1790808528954,
+            "stock": {
+              "id": 900037,
+              "externalId": "ID000038",
+              "title": "<title 97>",
+              "address": "<address 98>",
+              "timeFrom": "<timeFrom 99>",
+              "timeTo": "<timeTo 100>",
+              "poolSource": "<poolSource 101>",
+              "dimensionalGroups": [
+                {
+                  "group": "<group 206>",
+                  "title": "<title 123>"
+                },
+                {
+                  "group": "<group 104>",
+                  "title": "<title 105>"
+                }
+              ]
+            },
+            "hasIssue": false,
+            "externalNumber": null,
+            "invoiceEttn": {
+              "isEditable": true,
+              "warningFlag": false,
+              "slaEttnUpdate": null,
+              "ettn": null
+            },
+            "fines": [],
+            "createdInvoiceCount": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "invoice_products",
+      "request": {
+        "path": "/v1/shop/900002/invoice/products",
+        "params": {
+          "invoiceId": 900088,
+          "page": 0,
+          "size": 3
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-limit-per-day": "100000",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-remaining-per-day": "99951",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": [
+          {
+            "id": 900097,
+            "skuTitle": "<skuTitle 207>",
+            "productTitle": "<productTitle 208>",
+            "quantityToStock": 5,
+            "quantityAccepted": 5,
+            "purchasePrice": 150000,
+            "skuForInvoiceDtoList": [
+              {
+                "id": 900098,
+                "skuTitle": "<skuTitle 209>",
+                "quantityToStock": 5,
+                "quantityAccepted": 5,
+                "purchasePrice": 150000,
+                "photo": {
+                  "photo": {
+                    "800": {
+                      "high": "<url 210>",
+                      "low": "<url 211>"
+                    },
+                    "720": {
+                      "high": "<url 210>",
+                      "low": "<url 211>"
+                    },
+                    "480": {
+                      "high": "<url 212>",
+                      "low": "<url 213>"
+                    },
+                    "240": {
+                      "high": "<url 214>",
+                      "low": "<url 215>"
+                    },
+                    "80": {
+                      "high": "<url 216>",
+                      "low": "<url 217>"
+                    },
+                    "24034": {
+                      "high": "<url 214>",
+                      "low": "<url 215>"
+                    },
+                    "120": {
+                      "high": "<url 214>",
+                      "low": "<url 215>"
+                    },
+                    "540": {
+                      "high": "<url 212>",
+                      "low": "<url 213>"
+                    },
+                    "60": {
+                      "high": "<url 216>",
+                      "low": "<url 217>"
+                    }
+                  },
+                  "photoKey": "<photoKey 218>",
+                  "color": null,
+                  "hasVerticalPhoto": false
+                },
+                "issue": null
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "returns",
+      "request": {
+        "path": "/v1/shop/900002/return",
+        "params": {
+          "page": 0,
+          "size": 3
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-limit-per-day": "100000",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-remaining-per-day": "99950",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": {
+          "payload": [],
+          "timestamp": "2026-10-24T17:34:33.267764245"
+        }
+      }
+    },
+    {
+      "name": "returns_all",
+      "request": {
+        "path": "/v1/return",
+        "params": {
+          "shopId": 900002,
+          "page": 0,
+          "size": 3
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-limit-per-day": "100000",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-remaining-per-day": "99949",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": [
+          {
+            "id": 900047,
+            "dateCreated": 1789733634869,
+            "status": "ASSEMBLED",
+            "stock": {
+              "id": 900048,
+              "externalId": "ID000049",
+              "title": "<title 120>",
+              "address": "<address 121>",
+              "timeFrom": "<timeFrom 99>",
+              "timeTo": "<timeTo 100>",
+              "poolSource": "<poolSource 122>",
+              "dimensionalGroups": [
+                {
+                  "group": null,
+                  "title": "<title 123>"
+                },
+                {
+                  "group": null,
+                  "title": "<title 105>"
+                }
+              ]
+            },
+            "timeSlotReservation": null,
+            "paidStorage": {
+              "startDate": 1790658434487,
+              "endDate": null,
+              "status": "ACTIVE"
+            },
+            "executionDate": null,
+            "assembledDate": 1789794434487,
+            "completedDate": null,
+            "canceledDate": null,
+            "externalNumber": null,
+            "type": "DEFECTED",
+            "ettnInfo": null,
+            "returnDropInfo": null,
+            "shopId": 900001,
+            "shopTitle": "<name 1>",
+            "returnItems": [
+              {
+                "id": 900052,
+                "skuId": 900053,
+                "amount": 1,
+                "packedAmount": 1,
+                "skuTitle": "<skuTitle 124>",
+                "productTitle": "<productTitle 125>",
+                "purchasePrice": 70000,
+                "photo": null
+              }
+            ],
+            "totalAmount": 1,
+            "totalPackedAmount": 1,
+            "countAllowedChange": 2,
+            "maxCountAllowedChange": 2
+          },
+          {
+            "id": 900050,
+            "dateCreated": 1776231712615,
+            "status": "UTILIZED",
+            "stock": {
+              "id": 900048,
+              "externalId": "ID000049",
+              "title": "<title 120>",
+              "address": "<address 121>",
+              "timeFrom": "<timeFrom 99>",
+              "timeTo": "<timeTo 100>",
+              "poolSource": "<poolSource 122>",
+              "dimensionalGroups": [
+                {
+                  "group": null,
+                  "title": "<title 123>"
+                },
+                {
+                  "group": null,
+                  "title": "<title 105>"
+                }
+              ]
+            },
+            "timeSlotReservation": {
+              "id": 900051,
+              "timeSlots": [
+                {
+                  "timeFrom": 1777111200000,
+                  "timeTo": 1777118400000
+                }
+              ],
+              "status": "RESERVED",
+              "timeFrom": 1777111200000,
+              "timeTo": 1777118400000
+            },
+            "paidStorage": {
+              "startDate": 1777098730749,
+              "endDate": 1777294603518,
+              "status": "COMPLETED"
+            },
+            "executionDate": 1777476664104,
+            "assembledDate": 1776234730749,
+            "completedDate": null,
+            "canceledDate": null,
+            "externalNumber": null,
+            "type": "DEFECTED",
+            "ettnInfo": null,
+            "returnDropInfo": null,
+            "shopId": 900001,
+            "shopTitle": "<name 1>",
+            "returnItems": [
+              {
+                "id": 900054,
+                "skuId": 900055,
+                "amount": 1,
+                "packedAmount": 1,
+                "skuTitle": "<skuTitle 126>",
+                "productTitle": "<productTitle 127>",
+                "purchasePrice": 155000,
+                "photo": null
+              },
+              {
+                "id": 900056,
+                "skuId": 900057,
+                "amount": 1,
+                "packedAmount": 1,
+                "skuTitle": "<skuTitle 128>",
+                "productTitle": "<productTitle 129>",
+                "purchasePrice": 88000,
+                "photo": null
+              },
+              {
+                "id": 900058,
+                "skuId": 900059,
+                "amount": 1,
+                "packedAmount": 1,
+                "skuTitle": "<skuTitle 130>",
+                "productTitle": "<productTitle 131>",
+                "purchasePrice": 250000,
+                "photo": null
+              }
+            ],
+            "totalAmount": 3,
+            "totalPackedAmount": 3,
+            "countAllowedChange": 1,
+            "maxCountAllowedChange": 2
+          }
+        ]
+      }
+    },
+    {
+      "name": "bad_request",
+      "request": {
+        "path": "/v1/finance/orders",
+        "params": {
+          "shopIds": 900002,
+          "page": 0,
+          "size": -1
+        }
+      },
+      "response": {
+        "status": 400,
+        "headers": {
+          "content-type": "application/json",
+          "x-ratelimit-burst-capacity": "2",
+          "x-ratelimit-limit-per-day": "100000",
+          "x-ratelimit-remaining": "1",
+          "x-ratelimit-remaining-per-day": "99947",
+          "x-ratelimit-replenish-rate": "2",
+          "x-ratelimit-requested-tokens": "1"
+        },
+        "body": {
+          "payload": null,
+          "errors": [
+            {
+              "code": "<code 132>",
+              "message": "<message 133>"
+            }
+          ],
+          "timestamp": "2026-10-24T17:34:37.493321345",
+          "trace": "<trace 219>",
+          "error": "<message 133>"
+        }
+      }
+    }
+  ],
+  "probes": [
+    {
+      "name": "size_probe_orders",
+      "requested": 5000,
+      "status": 200,
+      "rows": 2529,
+      "total": 2529
+    },
+    {
+      "name": "size_probe_expenses",
+      "requested": 5000,
+      "status": 200,
+      "rows": 2254,
+      "total": null
+    },
+    {
+      "name": "size_probe_orders",
+      "requested": 5000,
+      "status": 200,
+      "rows": 222,
+      "total": 222
+    },
+    {
+      "name": "size_probe_expenses",
+      "requested": 5000,
+      "status": 200,
+      "rows": 184,
+      "total": null
+    }
+  ]
+}
