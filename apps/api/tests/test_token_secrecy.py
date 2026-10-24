@@ -190,3 +190,78 @@ def test_secret_containers_hide_value() -> None:
             assert_clean(text, type(obj).__name__)
             assert DEV_TOKEN_KEY not in text  # shifrlash kaliti ham
     assert TOKEN not in body.model_dump_json()
+
+
+def test_sync_never_leaks_token(
+    urls: dict[str, str], capsys: pytest.CaptureFixture[str], caplog: pytest.LogCaptureFixture
+) -> None:
+    """B2.6: sinxron ishlari (muvaffaqiyat va har xil xatolar) — kalit logda, ``sync_runs``/``sync_state``, audit,
+    navbat (Procrastinate) va boshqa jadvallarda yo'q."""
+    import asyncio
+
+    import sellerfake as sf
+    from procrastinate.testing import InMemoryConnector
+    from upapi.logs import configure_logging
+    from upapi.sync import engine as eng
+    from upapi.sync import jobs
+
+    configure_logging("DEBUG", True)
+    caplog.set_level(logging.DEBUG)
+    capsys.readouterr()
+    token = "SECRET-sync-" + uuid.uuid4().hex + "-Z9q7"
+    secrets = _fragments(token)
+    fake = sf.seller(token=token)
+    clock = sf.Clock()
+    account = sf.create_account(urls, sf.settings_for(urls), token, [sf.A])
+    with sf.runtime(urls, fake, clock, log_level="DEBUG") as run:
+        run(lambda rt: eng.sync_account(rt, account.org_id, account.account_id))
+        for mode in (
+            "network",
+            "crash",
+            "5xx",
+            "auth",
+            "token_not_found",
+            "waf",
+            "quota",
+            "html200",
+        ):
+            sf.admin(urls, "DELETE FROM provider_health")
+            sf.admin(
+                urls, "UPDATE mp_accounts SET status = 'active' WHERE id = %s", [account.account_id]
+            )
+            fake.fail = {"shops": mode, "orders": mode}
+            run(
+                lambda rt: eng.sync_account(
+                    rt, account.org_id, account.account_id, kinds=[eng.Kind.SHOPS, eng.Kind.ORDERS]
+                )
+            )
+    app = jobs.build_app(InMemoryConnector())
+
+    async def queue() -> None:
+        async with app.open_async():
+            await jobs.defer_account(app, account.org_id, account.account_id, eng.Trigger.USER)
+
+    asyncio.run(queue())
+    assert any(r.headers.get("authorization") == token for r in fake.seen)
+    out, err = capsys.readouterr()
+    for text, where in ((out, "stdout"), (err, "stderr"), (caplog.text, "stdlib loglari")):
+        for fragment in secrets:
+            assert fragment not in text, f"kalit bo'lagi {where} ichida"
+    assert '"sync_run_failed"' in out.replace(" ", "")
+    jobs_text = str(list(app.connector.jobs.values()))  # type: ignore[attr-defined]
+    with psycopg.connect(urls["admin"]) as conn:
+        tables = [
+            t
+            for (t,) in conn.execute(
+                "SELECT tablename FROM pg_tables WHERE schemaname = 'public'"
+            ).fetchall()
+        ]
+        dump = "\n".join(
+            row[0]
+            for t in tables
+            for row in conn.execute(f"SELECT row_to_json(x)::text FROM {t} x").fetchall()
+        )
+    assert "sync_runs" in tables and "procrastinate_jobs" in tables
+    for fragment in secrets:
+        assert fragment not in dump and fragment.encode().hex() not in dump
+        assert fragment not in jobs_text

@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B2. Backend poydevori va staging** (B1 tugadi, 2026-10-24) |
-| Keyingi vazifa | B2.6 Sinxron ishlari (Procrastinate): to'liq tarix, inkremental, snapshot, postavka tarkibi, qaytarishlar, `sync_runs` |
+| Keyingi vazifa | B2.7 CBU kurslari ishi (kuniga 2 marta + arxiv) |
 | Temurdan kutilmoqda | Q2 (server provayderi) — B2.10 gacha; ixtiyoriy: partiya qatorlariga SKU biriktirish |
-| Oxirgi yangilanish | 2026-10-24 (B2.5 tayyor: Uzum mijozi, haqiqiy kasseta bilan testlar) |
+| Oxirgi yangilanish | 2026-10-24 (B2.6 tayyor: sinxron ishlari, uzilish rejimi, "Ma'lumotlar holati" API) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

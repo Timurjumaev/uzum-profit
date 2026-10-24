@@ -3,6 +3,7 @@ o'chira va qo'sha olmaydi; o'z qatorini B ga ko'chira olmaydi va B ning ota qato
 
 from __future__ import annotations
 
+import re
 import uuid
 from collections.abc import Iterator
 from typing import Any
@@ -111,16 +112,28 @@ def _fresh(seed: dbtools.Seed, table: str, org: uuid.UUID) -> dict[str, Any]:
     tbl = m.metadata.tables[table]
     values = dict(seed.values[org][table])
     values["id"] = uuid.uuid4()
-    keep = _keep(tbl)
+    keep, choices = _keep(tbl), _choices(tbl)
     for c in tbl.constraints:
         if isinstance(c, sa.UniqueConstraint):
             for col in c.columns:
-                if col.name in values and col.name not in keep:
+                if col.name in choices:  # CHECK ... IN (...) — boshqa ruxsat etilgan qiymat
+                    values[col.name] = next(v for v in choices[col.name] if v != values[col.name])
+                elif col.name in values and col.name not in keep:
                     values[col.name] = _bump(values[col.name])
     for col in tbl.columns:
         if col.unique and col.name in values:
             values[col.name] = _bump(values[col.name])
     return values
+
+
+def _choices(tbl: sa.Table) -> dict[str, list[str]]:
+    out = {}
+    for c in tbl.constraints:
+        if isinstance(c, sa.CheckConstraint):
+            match = re.match(r"(\w+) IN \((.+)\)$", str(c.sqltext))
+            if match:
+                out[match.group(1)] = re.findall(r"'([^']+)'", match.group(2))
+    return out
 
 
 def _keep(tbl: sa.Table) -> set[str]:
@@ -226,7 +239,7 @@ def test_app_role_is_restricted(db: dict[str, str]) -> None:
 
 def test_every_table_is_classified_and_protected(db: dict[str, str]) -> None:
     """Yangi jadval RLS'siz qolib ketmasligi uchun: har jadval aniq bir sinfda va bazada himoyalangan."""
-    classes = [set(m.TENANT), set(m.GLOBAL), set(m.AUTH), set(m.SPECIAL)]
+    classes = [set(m.TENANT), set(m.GLOBAL), set(m.AUTH), set(m.SPECIAL), set(m.SYSTEM)]
     every = set(m.metadata.tables)
     assert set().union(*classes) == every
     assert sum(len(c) for c in classes) == len(every)
@@ -267,6 +280,9 @@ def test_every_table_is_classified_and_protected(db: dict[str, str]) -> None:
             )
         for table in m.AUTH:
             assert not any(priv(table, p) for p in ("SELECT", "INSERT", "UPDATE", "DELETE")), table
+        for table in m.SYSTEM:
+            assert all(priv(table, p) for p in ("SELECT", "INSERT", "UPDATE")), table
+            assert not priv(table, "DELETE"), table
 
 
 @pytest.mark.parametrize("table", sorted(m.TENANT))

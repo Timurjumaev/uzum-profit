@@ -44,6 +44,21 @@ services:
       timeout: 3s
       retries: 20
 
+  # Fon ishchisi (B2.6): Procrastinate navbati — sinxron ishlari. Migratsiyagacha (`make migrate`) kutib turadi.
+  worker:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    environment:
+      UP_DATABASE_URL: postgresql://up_app:up_app@postgres:5432/uzum
+    command: ["python", "-m", "upapi.worker"]
+    volumes:
+      - ../../apps/api/src:/app/apps/api/src:ro
+      - ../../packages/core/src:/app/packages/core/src:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   web:
     image: node:24-slim
     working_dir: /repo

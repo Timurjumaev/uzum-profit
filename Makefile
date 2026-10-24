@@ -2,7 +2,7 @@ COMPOSE_DEV = docker compose -f infra/compose/dev.yml
 
 .PHONY: dev down logs migrate seed db-check db-reset check
 
-## Lokal muhit: postgres + api (http://localhost:8000/health) + web (http://localhost:5173)
+## Lokal muhit: postgres + api (http://localhost:8000/health) + worker (sinxron navbati) + web (http://localhost:5173)
 dev:
 	$(COMPOSE_DEV) up --build
 

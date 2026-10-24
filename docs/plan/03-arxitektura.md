@@ -115,16 +115,20 @@ testlari `apps/api/tests/test_rls.py` da (CI'da PostgreSQL 18). Ilova `asyncpg`,
 (kod xeshi, urinishlar), `audit_log` (oldin/keyin jsonb).
 
 **Marketplace:** `mp_accounts` (provayder, shifrlangan token + kalit versiyasi + oxirgi 4 belgi, holat:
-faol / yaroqsiz / kvota tugagan / WAF / uzilgan — uzilganda kalit ustunlari NULL, `token_state` cheklovi; kvota qoldig'i), `shops` (tashqi id, nomi, taxallus, rang, faol,
-tarix holati, birinchi sotuv sanasi), `sync_state` (do'kon × tur: oxirgi muvaffaqiyat, kursor), `sync_runs`
-(boshlanish, tugash, holat, olingan/yozilgan, xato, HTTP kod).
+faol / yaroqsiz / kvota tugagan / WAF / uzilgan — uzilganda kalit ustunlari NULL, `token_state` cheklovi; kvota qoldig'i;
+ketma-ket kalit xatolari, sinxron pauzasi), `shops` (tashqi id, nomi, taxallus, rang, faol,
+tarix holati, birinchi sotuv sanasi), `sync_state` (do'kon × tur: oxirgi muvaffaqiyat va urinish, holat, xato,
+ketma-ket xatolar, kursor), `sync_runs` (boshlanish, tugash, holat, olingan/yozilgan/jami, so'rovlar, kim boshlagan,
+usul, xato kodi, HTTP kod), `provider_health` (tizim jadvali: Uzum uzilishi holati), Procrastinate navbat jadvallari
+(`procrastinate_*`, tashkilotsiz — ish argumentlarida faqat id'lar).
 
 **Katalog:** `items` (bizning tovar: nom, rasm, vazn, o'lchamlar), `mp_products`, `mp_skus` (tashqi sku id,
 barkod, artikul, IKPU, narx, komissiya %, qoldiqlar: active/fbs/defected/pending, sotilgan, qaytgan, `avgdsales`,
 rank, saqlash narxi, holat, `item_id`), `sku_daily` (kunlik snapshot: qoldiqlar, narx, komissiya).
 
-**Uzum faktlari:** `sale_items` (unikal: shop, order_id, id; holat, sana, narx, dona, komissiya, logistika,
-`sellerProfit`, `amountReturns`, `returnCause`, `purchasePrice` — faqat ma'lumot uchun, ADR-016), `mp_expenses`
+**Uzum faktlari:** `sale_items` (unikal: shop, order_id, id; holat, sana, topshirilgan vaqt, narx, dona, komissiya,
+logistika, `sellerProfit`, `amountReturns`, `returnCause`, `purchasePrice` — faqat ma'lumot uchun, ADR-016; SKU nomi
+`skuTitle` — `mp_skus.sku_code` = `skuFullTitle` bilan bog'lanadi), `mp_expenses`
 (tashqi id unikal; asl va normallashtirilgan kod, toifa, status, summa, tur, sanalar, bog'langan buyurtma/sotuv),
 `expense_codes` (global lug'at: kod → toifa, nomlar uz/ru, P&L'ga kiradimi), `fbo_invoices` + `fbo_invoice_items`,
 `mp_returns` + `mp_return_items`, `fbs_orders` [B5] (xaridor shaxsiy ma'lumoti SAQLANMAYDI).
@@ -180,8 +184,28 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
 - **Sinxron ishlari** (Procrastinate davriy): 02-funksiyalar.md M3 jadvalidagi chastotalar; do'konlar eng eski
   yangilanganidan boshlab aylantiriladi; har ish `sync_runs` ga yoziladi (0 ta obyekt bilan tugagan ish ham
   ogohlantirish).
+  B2.6 (`upapi.sync`): `sync.tick` (har daqiqa) ulangan akkauntlar uchun `sync.account` ishini qo'yadi
+  (`queueing_lock` — navbatda bitta; `lock = account:<id>` — bitta kalitga bitta ish; ustuvorlik: "Hozir yangilash" 10,
+  kalit ulandi 5, jadval 0). Akkaunt ishi vaqti kelgan turlarni (`UP_SYNC_INTERVALS`; snapshot — Toshkent 23:50 dan
+  keyin kuniga bir marta) bajaradi; do'konlar va qaytarishlar butun akkaunt bo'yicha bir so'rov. Sotuv va xarajat
+  usullari: **tarix** (birinchi marta 2020-01-01 dan, rad etilsa 1825/1095/730/365/180/100 kun — do'konda "full" /
+  "limited:N"; uzilsa kursordagi sahifa va hajmdan davom), **inkremental** (3 kun yoki oxirgi muvaffaqiyatdan 1 kun
+  oldin), **chuqur** (kuniga bir marta 45 kun), **uzilish** (tiklangach uzilish davri). Postavka tarkibi — yangi yoki
+  holati o'zgargan postavka uchun bir marta (ishda ko'pi bilan 100 ta). Ishchi `up_app` bilan ulanadi; tashkilotlar
+  bo'ylab ro'yxat faqat `sync_accounts()` orqali (`SECURITY DEFINER`, egasi `up_sync`, faqat id'lar — 0004).
+  Ishchi: `python -m upapi.worker` (migratsiyagacha kutadi; API kabi xavfli sozlama va DB rolida ishga tushmaydi).
+- **Xato → akkaunt holati (B2.6):** ketma-ket `UP_SYNC_AUTH_FAILURES` (3) kalit xatosi → "yaroqsiz" (audit), WAF va
+  kunlik kvota → holat, `UP_SYNC_PROBE_MINUTES` (30) da bitta sinov, muvaffaqiyatda "faol"; kvota zaxirasi → fon ishi
+  "skipped"; 400 va kutilmagan javob — faqat shu tur xatosi. Kunlik qoldiq har ishda birinchi javobdan olinadi
+  (saqlangan qiymat eskirgan bo'lishi mumkin). Kalit tekshiruvi yoki almashtirish xatolar hisobini tozalaydi.
 - **Uzilish rejimi:** ko'p do'konda bir vaqtda tarmoq xatosi → 15 daqiqa umumiy pauza, vaqti-vaqti bilan bitta
-  sinov; tiklangach uzilish davri chuqur sinxron.
+  sinov; tiklangach uzilish davri chuqur sinxron. B2.6 (`upapi.sync.health`, `provider_health`): 5 daqiqa ichida
+  `UP_SYNC_OUTAGE_SHOPS` (2) ta do'konda tarmoq/5xx → uzilish; pauza tugagach birinchi ish sinov huquqini oladi
+  (`FOR UPDATE`), muvaffaqiyatda uzilish davri saqlanadi va keyingi sotuv/xarajat ishida to'ldiriladi.
+- **"Ma'lumotlar holati" API (B2.6):** `GET /orgs/{id}/sync` — do'kon × tur (oxirgi muvaffaqiyat/urinish, oxirgi
+  ish: holat, usul, olingan/yozilgan/jami, xato kodi, HTTP kod), akkaunt holati va kvota, uzilish, "yashil" (24 soat
+  xatosiz va sotuvlar 24 soat ichida yangilangan), `freshness`; `POST /orgs/{id}/sync/refresh` — "Hozir yangilash"
+  (tashkilot bo'yicha 60 s da bir marta, uzilishda 503). Har a'zo uchun.
 - **Sinxrondan keyin:** o'zgargan tovarlar uchun tannarx qayta hisob (F21), `daily_sku_metrics` yangilanadi,
   bildirishnoma qoidalari tekshiriladi.
 
@@ -226,9 +250,10 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
   token xeshi bazada, har 24 soatda yangilanadi, 30 kun. Kod Telegram Gateway orqali (ADR-028). Sessiya va kod
   jadvallari ilova roliga yopiq: faqat `auth_*` funksiyalari (`SECURITY DEFINER`, egasi `up_auth`), har biri sirni
   talab qiladi — kod (kirish) yoki sessiya tokeni. Yangilangan tokenning eskisi 60 s ishlaydi (parallel so'rovlar).
-- **DB roli:** API staging/prod'da superuser, `BYPASSRLS`, jadval egasi yoki boshqa rol a'zosi bo'lgan rol bilan
-  ishga tushmaydi (`upapi.db.guard`); dev'da — ogohlantirish. Migratsiya — alohida ega roli
-  (`UP_MIGRATION_DATABASE_URL`).
+- **DB roli:** API va ishchi staging/prod'da superuser, `BYPASSRLS`, jadval egasi yoki boshqa rol a'zosi bo'lgan rol
+  bilan ishga tushmaydi (`upapi.db.guard`, `upapi.startup`); dev'da — ogohlantirish. Migratsiya — alohida ega roli
+  (`UP_MIGRATION_DATABASE_URL`), u `up_auth` (0002) va `up_sync` (0004) rollari a'zosi yoki superuser bo'lishi kerak
+  (`SECURITY DEFINER` funksiyalari egasi; ikkalasi NOLOGIN, BYPASSRLS'siz, faqat kerakli ustunlarga huquq).
 - **CSRF:** `Origin` tekshiruvi + maxsus sarlavha (`X-Requested-With`) har o'zgartiruvchi so'rovda.
 - **Ruxsatlar:** har endpoint rol bo'yicha tekshiriladi (dekorator), testlar bilan.
 

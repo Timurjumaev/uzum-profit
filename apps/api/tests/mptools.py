@@ -15,9 +15,11 @@ from typing import Any
 import httpx
 import psycopg
 from fastapi.testclient import TestClient
+from procrastinate.testing import InMemoryConnector
 from upapi.auth.senders import MemorySender
 from upapi.main import create_app
 from upapi.settings import Environment, Settings
+from upapi.sync.jobs import JobQueue, build_app
 
 CSRF = {"X-Requested-With": "test"}
 BASE = "https://uzum.test/api/seller-openapi"
@@ -92,6 +94,14 @@ class MpApi:
     sender: MemorySender
     uzum: FakeUzum
     urls: dict[str, str]
+    jobs: JobQueue
+
+    @property
+    def queued(self) -> list[dict[str, Any]]:
+        """Navbatga qo'yilgan ishlar (xotiradagi Procrastinate)."""
+        connector = self.jobs.app.connector
+        assert isinstance(connector, InMemoryConnector)
+        return list(connector.jobs.values())
 
     def phone(self) -> str:
         return f"+99891{random.randint(0, 9_999_999):07d}"
@@ -137,9 +147,12 @@ def settings_for(urls: dict[str, str], **extra: Any) -> Settings:
 @contextmanager
 def mp_api(urls: dict[str, str], **extra: Any) -> Iterator[MpApi]:
     sender, uzum = MemorySender(), FakeUzum()
-    app = create_app(settings_for(urls, **extra), sender=sender, uzum_transport=uzum.transport)
+    jobs = JobQueue(build_app(InMemoryConnector()))
+    app = create_app(
+        settings_for(urls, **extra), sender=sender, uzum_transport=uzum.transport, jobs=jobs
+    )
     with TestClient(app, headers=CSRF, raise_server_exceptions=False) as client:
-        yield MpApi(client, sender, uzum, urls)
+        yield MpApi(client, sender, uzum, urls, jobs)
 
 
 def log_lines(out: str) -> list[dict[str, Any]]:

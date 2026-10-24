@@ -38,7 +38,7 @@ from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP, UUID
 from upapi.db import models as m
 
 ADMIN_URL = os.environ.get("UP_TEST_ADMIN_URL")
-APP_ROLE, OWNER_ROLE, AUTH_ROLE = "up_app", "up_owner", "up_auth"
+APP_ROLE, OWNER_ROLE, AUTH_ROLE, SYNC_ROLE = "up_app", "up_owner", "up_auth", "up_sync"
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -73,10 +73,11 @@ def ensure_roles(admin: psycopg.Connection) -> None:
             admin.execute(
                 f"CREATE ROLE {role} LOGIN PASSWORD '{role}' NOSUPERUSER NOBYPASSRLS {extra}"
             )
-    # auth_* funksiyalari egasi (0002): migratsiya roli uning a'zosi bo'lishi kerak.
-    if not admin.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", [AUTH_ROLE]).fetchone():
-        admin.execute(f"CREATE ROLE {AUTH_ROLE} NOLOGIN NOSUPERUSER NOBYPASSRLS")
-    admin.execute(f"GRANT {AUTH_ROLE} TO {OWNER_ROLE}")
+    # auth_* (0002) va sync_accounts() (0004) funksiyalari egalari: migratsiya roli ularning a'zosi bo'lishi kerak.
+    for role in (AUTH_ROLE, SYNC_ROLE):
+        if not admin.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", [role]).fetchone():
+            admin.execute(f"CREATE ROLE {role} NOLOGIN NOSUPERUSER NOBYPASSRLS")
+        admin.execute(f"GRANT {role} TO {OWNER_ROLE}")
 
 
 def create_database(name: str) -> dict[str, str]:

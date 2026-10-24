@@ -16,7 +16,6 @@ import httpx
 from fastapi import APIRouter, Depends, Request, status
 from pydantic import BaseModel, Field, SecretStr, field_validator
 from sqlalchemy import Row, func, insert, select, text, update
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from upapi.auth.deps import (
@@ -35,6 +34,8 @@ from upapi.db import models as m
 from upapi.errors import AppError
 from upapi.logs import get_logger
 from upapi.settings import Settings
+from upapi.sync import store
+from upapi.sync.engine import Trigger
 from upapi.uzum.client import (
     NO_RETRY,
     AuthError,
@@ -250,30 +251,6 @@ async def _taken_elsewhere(conn: AsyncConnection, account_id: UUID, shops: list[
     )
 
 
-async def _upsert_shops(
-    conn: AsyncConnection, org_id: UUID, account_id: UUID, shops: list[UzumShop]
-) -> None:
-    """Uzum bergan do'konlar: yangisi faol holda qo'shiladi (M2: hammasi belgilangan), borining nomi yangilanadi.
-    Sotuvchi kiritgani (taxallus, rang, faollik) o'zgarmaydi; Uzum ro'yxatidan yo'qolgan do'kon o'chirilmaydi."""
-    stmt = pg_insert(m.shops).values(
-        [
-            {
-                "org_id": org_id,
-                "account_id": account_id,
-                "external_id": s.external_id,
-                "name": s.name,
-            }
-            for s in shops
-        ]
-    )
-    await conn.execute(
-        stmt.on_conflict_do_update(
-            index_elements=["org_id", "account_id", "external_id"],
-            set_={"name": stmt.excluded.name, "updated_at": func.now()},
-        )
-    )
-
-
 def _token_values(
     cipher: TokenCipher, org_id: UUID, account_id: UUID, token: SecretStr
 ) -> dict[str, object]:
@@ -327,7 +304,7 @@ async def connect_account(
                 **_token_values(cipher, org_id, account_id, body.token),
             )
         )
-        await _upsert_shops(ctx.conn, org_id, account_id, shops)
+        await store.upsert_shops(ctx.conn, org_id, account_id, shops)
         row = await _account_row(ctx.conn, account_id)
         await ctx.audit(
             "account.connect",
@@ -347,7 +324,18 @@ async def connect_account(
                 props={"shops": len(shops)},
             )
         )
-        return await _account_out(ctx.conn, row)
+        out = await _account_out(ctx.conn, row)
+    await _start_sync(request, org_id, account_id)
+    return out
+
+
+async def _start_sync(request: Request, org_id: UUID, account_id: UUID) -> None:
+    """Kalit ulangach tarix darhol yuklana boshlaydi (M2 3-qadam). Navbatga qo'yib bo'lmasa — rejalashtiruvchi bir
+    daqiqada o'zi oladi; ulash bundan muvaffaqiyatsiz bo'lmaydi."""
+    try:
+        await request.app.state.jobs.defer_account(org_id, account_id, Trigger.CONNECT)
+    except Exception as exc:
+        log.warning("sync_defer_failed", account_id=str(account_id), error_code=type(exc).__name__)
 
 
 @router.post("/orgs/{org_id}/accounts/{account_id}/check", response_model=AccountOut)
@@ -394,6 +382,10 @@ async def check_account(
         }
         if quota is not None:
             values["quota_remaining"] = quota
+        if (
+            new_status == "active"
+        ):  # kalit ishlayapti — sinxron xatolari hisobi va pauzasi tozalanadi (B2.6)
+            values.update(auth_failures=0, sync_paused_until=None)
         if row.token_encrypted is not None and cipher.needs_rotation(row.key_version):
             values.update(_token_values(cipher, org_id, account_id, token))
         if row.token_encrypted is not None:  # parallel uzilgan bo'lsa — holat o'zgarmaydi
@@ -401,7 +393,7 @@ async def check_account(
                 update(m.mp_accounts).where(m.mp_accounts.c.id == account_id).values(**values)
             )
         if shops:
-            await _upsert_shops(ctx.conn, org_id, account_id, shops)
+            await store.upsert_shops(ctx.conn, org_id, account_id, shops)
         if row.status != new_status:
             await ctx.audit(
                 "account.check",
@@ -448,10 +440,12 @@ async def replace_token(
                 quota_remaining=quota,
                 checked_at=func.now(),
                 updated_at=func.now(),
+                auth_failures=0,
+                sync_paused_until=None,
                 **_token_values(cipher, org_id, account_id, body.token),
             )
         )
-        await _upsert_shops(ctx.conn, org_id, account_id, shops)
+        await store.upsert_shops(ctx.conn, org_id, account_id, shops)
         fresh = await _account_row(ctx.conn, account_id)
         await ctx.audit(
             "account.token_replace",
@@ -460,7 +454,9 @@ async def replace_token(
             before={"status": row.status, "key_hint": _hint(row.token_last4)},
             after={"status": "active", "key_hint": _hint(fresh.token_last4)},
         )
-        return await _account_out(ctx.conn, fresh)
+        out = await _account_out(ctx.conn, fresh)
+    await _start_sync(request, org_id, account_id)
+    return out
 
 
 @router.delete("/orgs/{org_id}/accounts/{account_id}/token", status_code=status.HTTP_204_NO_CONTENT)

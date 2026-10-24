@@ -64,3 +64,8 @@ def users(role: str) -> list[str]:
         "WITH CHECK (id = app_current_user())",
         f"GRANT SELECT, UPDATE ON users TO {role}",
     ]
+
+
+def system(table: str, role: str) -> list[str]:
+    """Tizim jadvallari (tashkilotsiz, sirsiz holat): ilova roli o'qiydi, qo'shadi, yangilaydi; o'chirmaydi."""
+    return [f"GRANT SELECT, INSERT, UPDATE ON {table} TO {role}"]

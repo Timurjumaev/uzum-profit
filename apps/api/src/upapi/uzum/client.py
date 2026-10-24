@@ -373,24 +373,28 @@ class UzumClient:
         *,
         shop_id: int | None = None,
         max_pages: int = 1000,
+        start_page: int = 0,
+        size: int | None = None,
     ) -> AsyncIterator[Page]:
-        """Hamma sahifalar ketma-ket (0 dan). To'xtaydi: bo'sh yoki to'lmagan sahifa, jami soniga yetdi yoki
-        ``max_pages`` (oxirgi sahifada ``has_more=True`` qoladi — chaqiruvchi davom ettirishi mumkin).
+        """Hamma sahifalar ketma-ket (``start_page`` dan). To'xtaydi: bo'sh yoki to'lmagan sahifa, jami soniga yetdi
+        yoki ``max_pages`` ta sahifa (oxirgi sahifada ``has_more=True`` qoladi — chaqiruvchi davom ettirishi mumkin).
 
-        Birinchi sahifada 400 bo'lsa keyingi (kichikroq) hajm sinaladi. Qatorlar endpoint id'si bo'yicha
-        takrorlanmaydi (sahifalar orasida yangi yozuv qo'shilib siljish bo'lsa)."""
+        Birinchi sahifada 400 bo'lsa keyingi (kichikroq) hajm sinaladi. Uzilgan yuklashni davom ettirish
+        (``start_page``) avvalgi hajm bilan bo'ladi — ``size`` (``Page.size``), aks holda sahifalar siljiydi. Qatorlar
+        endpoint id'si bo'yicha takrorlanmaydi (sahifalar orasida yangi yozuv qo'shilib siljish bo'lsa)."""
         path = endpoint.path.format(shop_id=shop_id)
         base = dict(params or {})
-        size, first = endpoint.sizes[0], None
-        for size in endpoint.sizes:
+        sizes = (size,) if size else endpoint.sizes
+        size, first = sizes[0], None
+        for size in sizes:
             try:
-                first = await self.get(path, {**base, "page": 0, "size": size})
+                first = await self.get(path, {**base, "page": start_page, "size": size})
                 break
             except BadRequest:
-                if size == endpoint.sizes[-1]:
+                if size == sizes[-1]:
                     raise
         seen: set[Any] = set()
-        fetched, page, data = 0, 0, first
+        fetched, page, data = start_page * size, start_page, first
         while True:
             rows = endpoint.rows(data)
             if not isinstance(rows, list) or not all(isinstance(r, dict) for r in rows):
@@ -421,7 +425,7 @@ class UzumClient:
                 quota_remaining=self.quota_remaining,
             )
             page += 1
-            if not has_more or page >= max_pages:
+            if not has_more or page - start_page >= max_pages:
                 return
             data = await self.get(path, {**base, "page": page, "size": size})
 

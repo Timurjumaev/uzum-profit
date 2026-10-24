@@ -11,6 +11,8 @@ Tashkilotlarni ajratish (ADR-012) ikki qavatli: ilova ``org_id`` bo'yicha filtrl
 - **Global** ma'lumotnomalar (``GLOBAL``) — RLS'siz, ilova roli faqat o'qiydi.
 - **Kirish** jadvallari (``AUTH``: sessiyalar, kodlar) — ilova roliga berilmaydi; faqat ``auth_*`` funksiyalari
   (``SECURITY DEFINER``, ``up_auth`` roli, 0002 migratsiyasi) orqali, OTP kodi yoki sessiya tokeni bilan.
+- **Tizim** jadvallari (``SYSTEM``) — tashkilotga tegishli emas, sirsiz (masalan, Uzum uzilishi holati, B2.6);
+  RLS'siz, ilova roli o'qiydi va yozadi (o'chirmaydi).
 
 Pul ``numeric(18,2)`` (so'm), valyuta ``numeric(18,4)``, kurs ``numeric(18,6)``; vaqt ``timestamptz``.
 """
@@ -60,6 +62,7 @@ TS = TIMESTAMP(timezone=True)
 TENANT: list[str] = []  # RLS: org_id = app.org_id
 GLOBAL: list[str] = []  # ilova roli: faqat SELECT
 AUTH: list[str] = []  # ilova roliga berilmaydi
+SYSTEM: list[str] = []  # tashkilotsiz tizim holati: ilova roli SELECT, INSERT, UPDATE
 APPEND_ONLY: set[str] = set()  # ilova roli: UPDATE/DELETE yo'q
 
 
@@ -113,6 +116,11 @@ def tenant(
 
 def global_table(name: str, *columns: Any) -> Table:
     GLOBAL.append(name)
+    return Table(name, metadata, *columns)
+
+
+def system_table(name: str, *columns: Any) -> Table:
+    SYSTEM.append(name)
     return Table(name, metadata, *columns)
 
 
@@ -237,6 +245,9 @@ mp_accounts = tenant(
     Column("status", Text, nullable=False, server_default="active"),
     Column("quota_remaining", Integer),
     Column("checked_at", TS),
+    # Sinxron (B2.6): ketma-ket JSON 401/403 soni (3 ta — "kalit yaroqsiz") va akkaunt sinxroni pauzasi.
+    Column("auth_failures", Integer, nullable=False, server_default="0"),
+    Column("sync_paused_until", TS),
     check_in("status", MP_ACCOUNT_STATUSES),
     CheckConstraint(TOKEN_STATE, name="token_state"),
 )
@@ -252,12 +263,23 @@ shops = tenant(
     UniqueConstraint("org_id", "account_id", "external_id"),
     refs={"account_id": ("mp_accounts", False)},
 )
+SYNC_KINDS = ("shops", "orders", "expenses", "products", "snapshot", "invoices", "returns")
+SYNC_RUN_STATUSES = ("running", "ok", "warning", "error", "skipped")
+SYNC_TRIGGERS = ("schedule", "user", "connect")
+SYNC_MODES = ("full", "history", "incremental", "deep", "outage")
+
 sync_state = tenant(
     "sync_state",
     Column("kind", Text, nullable=False),
     Column("last_success_at", TS),
     Column("cursor", JSONB),
+    # B2.6: navbat va "Ma'lumotlar holati" uchun oxirgi urinish (muvaffaqiyatli yoki yo'q).
+    Column("last_attempt_at", TS),
+    Column("last_status", Text),
+    Column("last_error", Text),
+    Column("failures", Integer, nullable=False, server_default="0"),
     UniqueConstraint("org_id", "shop_id", "kind"),
+    check_in("kind", SYNC_KINDS),
     refs={"shop_id": ("shops", False)},
 )
 sync_runs = tenant(
@@ -270,7 +292,30 @@ sync_runs = tenant(
     Column("written", Integer, nullable=False, server_default="0"),
     Column("error", Text),
     Column("http_status", Integer),
+    # B2.6: progress (Uzum aytgan jami), sarflangan so'rovlar, kim boshlagan va qaysi usulda.
+    Column("total", Integer),
+    Column("requests", Integer, nullable=False, server_default="0"),
+    Column("trigger", Text, nullable=False, server_default="schedule"),
+    Column("mode", Text),
+    check_in("kind", SYNC_KINDS),
+    check_in("status", SYNC_RUN_STATUSES),
+    check_in("trigger", SYNC_TRIGGERS),
+    check_in("mode", SYNC_MODES),
     refs={"shop_id": ("shops", False)},
+)
+Index(None, sync_runs.c.org_id, sync_runs.c.shop_id, sync_runs.c.kind, sync_runs.c.started_at)
+# Uzum uzilishi (03 §6): bir necha do'konda bir vaqtda tarmoq/5xx xatosi → umumiy pauza va vaqti-vaqti bilan bitta
+# sinov; tiklangach uzilish davri chuqur sinxron bilan to'ldiriladi. Tashkilotsiz, sirsiz: ``failures`` — do'kon
+# uuid'i → oxirgi xato vaqti (ISO).
+provider_health = system_table(
+    "provider_health",
+    Column("provider", Text, primary_key=True),
+    Column("outage_since", TS),
+    Column("paused_until", TS),
+    Column("failures", JSONB, nullable=False, server_default=text("'{}'::jsonb")),
+    Column("recovered_from", TS),
+    Column("recovered_at", TS),
+    Column("updated_at", TS, nullable=False, server_default=func.now()),
 )
 
 # --- Katalog ----------------------------------------------------------------------------------
@@ -321,6 +366,8 @@ mp_skus = tenant(
         "item_id": ("items", True),
     },
 )
+# Sotuv qatori SKU'ga ``skuTitle`` = ``skuFullTitle`` (``sku_code``) orqali bog'lanadi (legacy kabi).
+Index(None, mp_skus.c.org_id, mp_skus.c.shop_id, mp_skus.c.sku_code)
 sku_daily = tenant(
     "sku_daily",
     Column("day", Date, nullable=False),
@@ -351,9 +398,14 @@ sale_items = tenant(
     Column("return_cause", Text),
     Column("purchase_price", UZS),  # faqat ma'lumot uchun (ADR-016)
     Column("raw", JSONB),
+    # B2.6: SKU bog'lanishi (``skuTitle``), mahsulot va topshirilgan vaqt (``dateIssued``).
+    Column("sku_title", Text),
+    Column("product_external_id", BigInteger),
+    Column("issued_at", TS),
     UniqueConstraint("org_id", "shop_id", "order_id", "external_id"),
     refs={"shop_id": ("shops", False), "sku_id": ("mp_skus", True)},
 )
+Index(None, sale_items.c.org_id, sale_items.c.shop_id, sale_items.c.ordered_at)
 expense_codes = global_table(
     "expense_codes",
     Column("code", Text, primary_key=True),
@@ -382,6 +434,7 @@ mp_expenses = tenant(
     UniqueConstraint("org_id", "shop_id", "external_id"),
     refs={"shop_id": ("shops", False), "sale_item_id": ("sale_items", True)},
 )
+Index(None, mp_expenses.c.org_id, mp_expenses.c.shop_id, mp_expenses.c.created_on)
 fbo_invoices = tenant(
     "fbo_invoices",
     Column("external_id", BigInteger, nullable=False),

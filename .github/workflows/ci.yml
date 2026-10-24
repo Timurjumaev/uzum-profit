@@ -98,6 +98,8 @@ jobs:
       - run: curl --fail --silent http://localhost:8000/health
       - run: make seed
       - run: make db-check
+      # Ishchi (B2.6) migratsiyadan keyin navbatni tinglaydi va yiqilmagan.
+      - run: sleep 5 && docker compose -f infra/compose/dev.yml ps --status running --services | grep -qx worker
       - run: curl --fail --silent http://localhost:5173/ | grep -q '<div id="root">'
       - if: failure()
         run: docker compose -f infra/compose/dev.yml logs
