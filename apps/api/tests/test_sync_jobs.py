@@ -113,7 +113,10 @@ def test_job_queue_opens_lazily(fresh: dict[str, str]) -> None:
 def test_periodic_tick_registered() -> None:
     app = jobs.build_app(InMemoryConnector())
     periodic = list(app.periodic_registry.periodic_tasks.values())
-    assert [(p.task.name, p.cron) for p in periodic] == [(jobs.TICK, "* * * * *")]
+    assert sorted((p.task.name, p.cron) for p in periodic) == [
+        (jobs.FX, jobs.FX_CRON),
+        (jobs.TICK, "* * * * *"),
+    ]
     assert jobs.connector_for(sf.settings_for({"app": "postgresql://u:p@h:5/d"}))
 
 
