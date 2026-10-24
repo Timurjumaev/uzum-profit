@@ -252,6 +252,72 @@ def new_expenses(conn, shop_id: int, history: dict | None) -> tuple[list[Expense
     ), "uzum.db dan tiklangan (status, source yo'q)"
 
 
+def _legacy_value(kind: str, typ: str, price: Decimal) -> tuple[str | None, Decimal]:
+    """Legacy ``expense_totals`` qoidasi: qaysi toifaga va qanday ishora bilan kiradi."""
+    if kind in ("ad", "storage", "fine") and typ == "OUTCOME":
+        return kind, price
+    if kind == "compensation" and typ == "INCOME":
+        return kind, -price
+    return None, D(0)
+
+
+def source_diff(conn, shop_id: int, raw: list[dict], period: Period) -> list[str]:
+    """Manbalar farqi: legacy summalari ``uzum.db`` dan, yangi — ``uzum_history.json`` dan olinadi.
+
+    Bazada bo'lib JSON'da yo'q (masalan, keyingi ``sync`` bilan kelgan), JSON'da bo'lib bazada yo'q va
+    ikkalasida bo'lib summasi farq qiladigan qatorlar legacy toifalari bo'yicha."""
+    js: dict[str, tuple[str | None, Decimal, date]] = {}
+    for r in raw:
+        typ = str(r.get("type") or "")
+        kind = legacy_sync.classify(r.get("code"), r.get("source"), r.get("name") or "", typ)
+        price = d(r.get("paymentPrice") or 0)
+        if kind == "ad":
+            m = legacy_sync.AD_RE.search(r.get("name") or "")
+            if m:
+                price = d(m.group(1))
+        bucket, val = _legacy_value(kind, typ, price)
+        js[str(r["id"])] = (bucket, val, ms_date(int(r["dateCreated"])))
+    db: dict[str, tuple[str | None, Decimal, date]] = {}
+    for r in conn.execute(
+        "SELECT id, kind, type, price, created_ms FROM expenses WHERE shop_id=?", (shop_id,)
+    ):
+        bucket, val = _legacy_value(r["kind"], r["type"] or "", d(r["price"]))
+        db[str(r["id"])] = (bucket, val, ms_date(r["created_ms"]))
+    groups: dict[tuple[str, str], list[Decimal]] = defaultdict(lambda: [D(0), D(0)])
+    for rid in db.keys() | js.keys():
+        a, b = db.get(rid), js.get(rid)
+        if a and b and a[0] == b[0] and a[1] == b[1]:
+            continue
+        for side, item, sign in (
+            ("faqat uzum.db da", a if not b else None, 1),
+            ("faqat JSON da", b if not a else None, -1),
+        ):
+            if item and item[0] and item[2] in period:
+                g = groups[(side, item[0])]
+                g[0] += 1
+                g[1] += item[1] * sign
+        if a and b and (a[0] or b[0]) and (a[2] in period or b[2] in period):
+            g = groups[("ikkalasida, summa/toifa boshqa", a[0] or b[0] or "")]
+            g[0] += 1
+            g[1] += a[1] - b[1]
+    db_last = max((v[2] for v in db.values()), default=None)
+    js_last = max((v[2] for v in js.values()), default=None)
+    out = [
+        "",
+        f"Xarajat manbalari: uzum.db — {len(db)} qator (oxirgisi {db_last}), JSON — {len(js)} qator (oxirgisi {js_last}).",
+    ]
+    if not groups:
+        return [*out, "Davrda legacy hisobiga kiradigan qatorlar ikkala manbada bir xil."]
+    out += [
+        "",
+        "| Manba farqi | Legacy toifasi | Qatorlar | Legacy jamiga ta'siri (uzum.db − JSON) |",
+        "|---|---|---|---|",
+    ]
+    for (side, kind), (n, val) in sorted(groups.items()):
+        out.append(f"| {side} | {kind} | {int(n)} | {fmt(val)} |")
+    return out
+
+
 def expense_diff(raw: list[dict], period: Period) -> list[str]:
     """Xarajat qatorlari bo'yicha legacy va yangi toifalash farqi (sabablari bilan, guruhlangan).
 
@@ -419,6 +485,7 @@ def shop_section(
     )
     if raw:
         out += expense_diff(raw, period)
+        out += source_diff(conn, shop_id, raw, period)
 
     # Tannarx va foyda: avval legacy bilan bir xil qatorlar (TO_WITHDRAW), keyin to'liq yangi hisob.
     def only_strict(items: list[SaleLine]) -> list[SaleLine]:

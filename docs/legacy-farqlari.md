@@ -36,7 +36,9 @@ real natija kelgach har bandga summa qo'shiladi.
 
 - Majburiy tekshiruvlar — hammasi ✓. `sellerProfit` ≠ F3 − F4 − F5: 0 qator. `PARTIALLY_CANCELLED`: 0 qator.
 - Saqlash, jarima, kompensatsiya — bir xil. **Reklama:** yangi kamroq — byDurii −37 388, EL-ONE −2 969 so'm;
-  sababi qatorlar jadvalida (`compare_legacy.py` keyingi ishga tushirishda, guruhlangan) — aniqlanmoqda.
+  qatorlar bo'yicha toifalash **bir xil** (klassifikator farqi yo'q) — farq manbadan: legacy summalari `uzum.db`
+  dan, yangi — `uzum_history.json` dan. Skript endi "Xarajat manbalari" jadvalini chiqaradi (faqat bazada /
+  faqat JSON'da / summasi boshqa qatorlar) — tasdiqlash kutilmoqda.
 - Tannarx: ikkala partiya qatorlari SKU'ga biriktirilmagan — sotuvlarning birortasida tannarx yo'q (0 / 1 107),
   legacy ham, yangi ham bir xil. FIFO / o'rtacha farqi real ma'lumotda SKU biriktirilgandan keyin tekshiriladi.
 - Sof foyda: legacy −909 040 (hamma xarajat ayirilgan), yangi −214 941 — tannarx qamrovi 0% bo'lgani uchun sotuvli
