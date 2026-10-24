@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B1. Domen yadrosi** |
-| Keyingi vazifa | B1.8 Tariflar va soliq (F37, F40, F11, F38–F39) |
+| Keyingi vazifa | B1.9 Legacy bilan solishtirish testi (Temur ma'lumoti, lokal) |
 | Temurdan kutilmoqda | Q2 (server) — B2.10 gacha (Q8 hal qilindi: FIFO, ADR-025) |
-| Oxirgi yangilanish | 2026-10-24 (B1.7 tayyor, ADR-026 tasdiqlandi) |
+| Oxirgi yangilanish | 2026-10-24 (B1.8 tayyor) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

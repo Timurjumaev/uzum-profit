@@ -90,7 +90,7 @@ class TaxBase(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class TaxRule:
-    """F11 (a): aylanmadan foiz. Boshqa profillar (agent, QQS + foyda solig'i) — B1.8."""
+    """F11 (a): aylanmadan foiz. Profillar va sana bo'yicha tanlash — ``upcore.tax``."""
 
     rate_pct: Decimal
     base: TaxBase = TaxBase.REVENUE
@@ -331,7 +331,7 @@ def build_cells(
     lines: Iterable[SaleLine],
     expenses: Iterable[ExpenseItem] = (),
     own_expenses: Iterable[OwnExpense] = (),
-    tax: TaxRule | None = None,
+    tax: TaxRule | Callable[[date], TaxRule | None] | None = None,
 ) -> Cells:
     """F12–F15 kataklari. Davrdan tashqari sotuv va xarajatlar e'tiborga olinmaydi."""
     acc: dict[CellKey, _Acc] = defaultdict(_Acc)
@@ -412,7 +412,8 @@ def build_cells(
         a = acc[key]
         revenue = Money(a.revenue, UZS)
         payout = Money(a.revenue - a.commission - a.logistics, UZS)
-        tax_amount = tax.on(revenue, payout) if tax else ZERO
+        rule = tax(key.day) if callable(tax) else tax  # F11 profili sana bo'yicha (upcore.tax)
+        tax_amount = rule.on(revenue, payout) if rule else ZERO
         uzum, own = _money_map(a.uzum), _money_map(a.own)
         overhead = sum((m.amount for m in (*uzum.values(), *own.values())), tax_amount.amount)
         if a.revenue == 0:
