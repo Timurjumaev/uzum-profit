@@ -1,5 +1,5 @@
 // Marshrutlar (03 §9). Har sahifa alohida bo'lak (`lazyRouteComponent`). Kirish talab qiladigan sahifalar `app`
-// tartibi ostida: sessiya yo'q (401) — `/login?redirect=...`. Sahifalarning o'zi B3.5–B4 da.
+// tartibi ostida: sessiya yo'q (401) — `/login?redirect=...`; ular `AppShell` karkasida (B3.5). Sahifalarning o'zi B4 da.
 import type { QueryClient } from "@tanstack/react-query";
 import {
   createRootRouteWithContext,
@@ -11,8 +11,10 @@ import {
   type RouterHistory,
 } from "@tanstack/react-router";
 
+import { AppShell } from "../components/shell";
 import { ApiError } from "../lib/api/client";
 import { NotFound, Pending, RouteError } from "./errors";
+import { filterSearch } from "./filters";
 import { meQuery } from "./query";
 
 export type RouterContext = { queryClient: QueryClient };
@@ -25,6 +27,8 @@ const root = createRootRouteWithContext<RouterContext>()({
 const app = createRoute({
   getParentRoute: () => root,
   id: "app",
+  // Umumiy filtrlar (do'kon, davr, solishtirish) — URL'da, hamma sahifada (app/filters).
+  validateSearch: filterSearch,
   beforeLoad: async ({ context, location }) => {
     try {
       return { me: await context.queryClient.ensureQueryData(meQuery) };
@@ -35,7 +39,7 @@ const app = createRoute({
       throw error;
     }
   },
-  component: Outlet,
+  component: AppShell,
 });
 
 const home = createRoute({
@@ -49,6 +53,23 @@ const status = createRoute({
   path: "/status",
   component: lazyRouteComponent(() => import("../routes/status"), "Status"),
 });
+
+// Sahifalari hali yo'q bo'limlar (B4+): menyu ishlaydi, sahifa "qurilmoqda".
+const soon = <const P extends string>(path: P, name: keyof typeof import("../routes/soon")) =>
+  createRoute({
+    getParentRoute: () => app,
+    path,
+    component: lazyRouteComponent(() => import("../routes/soon"), name),
+  });
+const pnl = soon("/pnl", "Pnl");
+const products = soon("/products", "Products");
+const orders = soon("/orders", "Orders");
+const expenses = soon("/expenses", "Expenses");
+const purchases = soon("/purchases", "Purchases");
+const inventory = soon("/inventory", "Inventory");
+const cash = soon("/cash", "Cash");
+const reports = soon("/reports", "Reports");
+const settings = soon("/settings", "Settings");
 
 export type LoginSearch = { redirect?: string };
 
@@ -72,7 +93,11 @@ const uiKit = createRoute({
   component: lazyRouteComponent(() => import("../routes/ui-kit"), "UiKit"),
 });
 
-export const routeTree = root.addChildren([app.addChildren([home, status]), login, uiKit]);
+export const routeTree = root.addChildren([
+  app.addChildren([home, status, pnl, products, orders, expenses, purchases, inventory, cash, reports, settings]),
+  login,
+  uiKit,
+]);
 
 export type AppRouter = ReturnType<typeof createAppRouter>;
 

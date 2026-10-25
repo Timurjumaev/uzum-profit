@@ -9,28 +9,11 @@ import { I18nextProvider } from "react-i18next";
 import { makeQueryClient, meQuery, shouldRetry, STALE_MS } from "./app/query";
 import { loginSearch } from "./app/router";
 import { ApiError } from "./lib/api/client";
-
-const ME = {
-  user: { id: "u1", phone: "+998901234567", name: null, language: "uz-Latn" },
-  orgs: [{ id: "o1", name: "byDurii", role: "owner" }],
-};
-
-function json(status: number, body: unknown, headers: Record<string, string> = {}): Response {
-  return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", ...headers } });
-}
-
-const problem = (status: number, code: string, extra: Record<string, unknown> = {}) =>
-  json(status, { type: "x", title: "x", status, code, ...extra }, { "Content-Type": "application/problem+json" });
+import { json, ME, ME_ROUTE, mockApi, problem } from "./test/api";
 
 /** `responses` — /auth/me ga ketma-ket javoblar (oxirgisi takrorlanadi). */
 function serve(...responses: Array<() => Response>) {
-  const fetch = vi.fn(async (request: Request) => {
-    expect(new URL(request.url).pathname).toBe("/api/v1/auth/me");
-    const next = responses.length > 1 ? responses.shift()! : responses[0];
-    return next();
-  });
-  vi.stubGlobal("fetch", fetch);
-  return fetch;
+  return mockApi({ [ME_ROUTE]: responses });
 }
 
 function renderAt(path: string) {
@@ -47,10 +30,11 @@ afterEach(() => {
 
 describe("ilova karkasi (B3.1)", () => {
   it("kirgan foydalanuvchi — bosh sahifa, tashkilotlar bilan", async () => {
-    serve(() => json(200, ME));
+    const api = serve(() => json(200, ME));
     renderAt("/");
     expect(await screen.findByRole("heading", { name: "Uzum Profit" })).toBeTruthy();
     expect(await screen.findByText("byDurii")).toBeTruthy();
+    expect(api.unmocked).toEqual([]);
   });
 
   it("kirmagan (401) — /login ga, qaytish manzili bilan", async () => {
@@ -62,7 +46,7 @@ describe("ilova karkasi (B3.1)", () => {
   });
 
   it("server xatosi — xato sahifasi, so'rov ID, qayta urinish", async () => {
-    const fetch = serve(
+    const api = serve(
       () => problem(503, "unavailable", { request_id: "req-42" }),
       () => problem(503, "unavailable", { request_id: "req-42" }),
       () => problem(503, "unavailable", { request_id: "req-42" }),
@@ -72,7 +56,7 @@ describe("ilova karkasi (B3.1)", () => {
     const alert = await screen.findByRole("alert", {}, { timeout: 5000 });
     expect(alert.textContent).toContain("Server javob bermadi");
     expect(alert.textContent).toContain("Soʻrov ID: req-42");
-    expect(fetch).toHaveBeenCalledTimes(3); // 1 + 2 qayta urinish
+    expect(api.count(ME_ROUTE)).toBe(3); // 1 + 2 qayta urinish
     fireEvent.click(screen.getByRole("button", { name: "Qayta urinish" }));
     expect(await screen.findByText("byDurii")).toBeTruthy();
   });

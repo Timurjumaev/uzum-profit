@@ -148,13 +148,29 @@ dona legacy bilan 1 so'mgacha bir xil.
   Skeleton (300 ms), ProgressBar, ProductThumb, FileDrop; `/ui-kit` (kirishsiz, mavzu va til tanlash). axe-core:
   jiddiy xato 0 (ochiq qatlamlar bilan ham, CI'da). DataTable ustun tanlash/eksport/virtual — B4.3; sahifa
   karkasi komponentlari (Sidebar, TopBar, CommandPalette, SyncIndicator) — B3.5; grafiklar — B3.6.
-- [ ] B3.5 Karkas: sidebar, topbar (do'kon, davr, solishtirish, SyncIndicator), mobil tab bar, Ctrl+K.
+- [x] B3.5 Karkas: sidebar, topbar (do'kon, davr, solishtirish, SyncIndicator), mobil tab bar, Ctrl+K.
+  ✓ 2026-10-25: `components/shell` — `AppShell` (`app` marshruti ostida; bitta `<main>`, "o'tkazib yuborish" havolasi),
+  Sidebar (232/64 px, tanlov saqlanadi; 768–1023 px da har doim yig'ilgan), TopBar (do'kon — bir nechta, davr,
+  solishtirish; hammasi URL'da: `app/filters` — `shop`, `from`, `to`, `cmp`, noto'g'ri qiymat jim tashlanadi,
+  tanlanmagan davr = "Shu oy", bo'limdan bo'limga o'tganda saqlanadi), SyncIndicator (M3: uzilish / xato / eskirgan
+  > 1 soat / hali yo'q / yangi — ikon + matn; bosilsa tur bo'yicha holat, "Hozir yangilash", "Ma'lumotlar holati";
+  har daqiqa yangilanadi) va Uzum uzilishi sariq banneri, MobileTabBar (Asosiy · Foyda · Ombor · Xaridlar · Yana;
+  "Yana" — qolgan bo'limlar, solishtirish, mavzu/til, chiqish), CommandPalette (Ctrl/⌘ + K, `searchKey`: lotin/kirill va
+  apostrofsiz qidiruv, ↑ ↓ Enter Esc; manba — `PaletteItem`: hozir sahifalar va amallar (mavzu, til); SKU va xarid
+  guruhlari B4.3/B4.6 da shu ro'yxatga qo'shiladi), foydalanuvchi menyusi (mavzu — B3.3 topbar tugmasi shu yerda, til,
+  chiqish). Sahifalari yo'q bo'limlar (`/pnl`, `/products`, `/orders`, `/expenses`, `/purchases`, `/inventory`,
+  `/cash`, `/reports`, `/settings`) "qurilmoqda" sahifasiga olib boradi. Testlar: `shell.test.tsx` (menyu, filtrlar,
+  sinxron holatlari, Ctrl+K, chiqish, tab bar, axe: jiddiy xato 0), `filters.test.ts`, `sync.test.ts`; umumiy soxta API
+  `src/test/api.ts` (App.test unga o'tkazildi). Boshlang'ich JS 146,8 KB gzip. Qoldi (B3.8): vizual skrinshotlar.
 - [ ] B3.6 Grafik komponentlari (ECharts temasi, tooltip, jadval ko'rinishi).
 - [ ] B3.7 Kirish sahifalari, onboarding wizard (M2), "Ma'lumotlar holati" sahifasi.
 - [ ] B3.8 Playwright: e2e (kirish, onboarding), vizual skrinshotlar, axe.
 - T: `/ui-kit` va onboarding skrinshotlarini ko'rib fikr bildirish; Q1 — brend nomini tanlash.
+  ✓ 2026-10-25 `/ui-kit` skrinshotlari (yorug'/qorong'i, 1440/390 px) Temur tomonidan ma'qullandi (B3.4 komponentlari
+  o'zgarishsiz qoladi). Qoldi: onboarding skrinshotlari (B3.7) va Q1 (brend nomi).
 
-**Chiqish:** UI-kit skrinshotlari (yorug'/qorong'i, 1440/390 px) Temur tomonidan ma'qullangan; axe — jiddiy xato 0.
+**Chiqish:** UI-kit skrinshotlari (yorug'/qorong'i, 1440/390 px) Temur tomonidan ma'qullangan ✓ 2026-10-25; axe — jiddiy
+xato 0 (B3.4 dan CI'da; karkas va yangi sahifalar qo'shilgach ham). Onboarding skrinshotlari (B3.7) ma'qullanishi — B3 yopilishi uchun.
 
 ## B4. Asosiy ekranlar — Temur yangi dasturga o'tadi — 10–15 kun
 

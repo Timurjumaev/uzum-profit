@@ -4,9 +4,9 @@ import { useTranslation } from "react-i18next";
 export function Status() {
   const { t } = useTranslation();
   return (
-    <main>
+    <section>
       <h1>{t("pages.status.title")}</h1>
       <p>{t("pages.status.building")}</p>
-    </main>
+    </section>
   );
 }

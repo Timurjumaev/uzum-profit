@@ -6,6 +6,7 @@ import "./styles/fonts.css";
 import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/components.css";
+import "./styles/shell.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
