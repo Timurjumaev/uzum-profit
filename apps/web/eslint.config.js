@@ -10,6 +10,20 @@ export default tseslint.config(
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     languageOptions: { globals: globals.browser },
     plugins: { "react-hooks": reactHooks },
-    rules: reactHooks.configs.recommended.rules,
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      // Formatlash faqat lib/format orqali (03 §9, 04 §8.4).
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "CallExpression[callee.property.name=/^toLocale(String|DateString|TimeString)$/]",
+          message: "Formatlash faqat lib/format orqali (04 §8.4).",
+        },
+        {
+          selector: "MemberExpression[object.name='Intl']",
+          message: "Formatlash faqat lib/format orqali (04 §8.4).",
+        },
+      ],
+    },
   },
 );

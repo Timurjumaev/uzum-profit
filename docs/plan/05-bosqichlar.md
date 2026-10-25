@@ -125,7 +125,13 @@ dona legacy bilan 1 so'mgacha bir xil.
   `/login?redirect=`), `app/router` (lazy marshrutlar, kirish talab qiladigan `app` tartibi, ichki `redirect`),
   xato chegaralari (marshrut xatosi — so'rov ID va "Qayta urinish", 404, ildiz `AppErrorBoundary`); boshlang'ich JS
   ~103 KB gzip, CI'da byudjet (`pnpm --filter web size`, ≤ 250 KB).
-- [ ] B3.2 i18n (uz-Latn, uz-Cyrl transliteratsiya, ru), `lib/format` (04 §8.4) + testlar.
+- [x] B3.2 i18n (uz-Latn, uz-Cyrl transliteratsiya, ru), `lib/format` (04 §8.4) + testlar.
+  ✓ 2026-10-25: `lib/i18n` (i18next; uz-Cyrl — uz-Latn'dan avtomatik `translit.ts` + so'z istisnolari va kalit
+  tuzatishlari; ru qo'lda, kalitlar tip bilan majburiy; tanlov `localStorage` → brauzer tili; `<html lang>`;
+  `useFormat()`; atamalar `terms` / `glossary.ts`; xato matni API `code` bo'yicha), `searchKey` (lotin/kirill va
+  apostrof turlaridan qat'i nazar qidiruv), `lib/format` (U+00A0, vergul, U+2212, pul, valyuta, ixcham, foiz,
+  o'zgarish, sana/kun/davr/hafta kuni Toshkent bo'yicha, nisbiy vaqt, rus ko'plik shakli; satr ustida ROUND_HALF_UP);
+  eslint: `toLocaleString`/`Intl` faqat `lib/format` da. Profil tili (`user.language`) bilan bog'lash — B3.7 sozlamalar.
 - [ ] B3.3 Tokenlar (04 §4), Inter subset, yorug'/qorong'i rejim.
 - [ ] B3.4 Komponentlar katalogi (04 §5) + `/ui-kit` sahifasi.
 - [ ] B3.5 Karkas: sidebar, topbar (do'kon, davr, solishtirish, SyncIndicator), mobil tab bar, Ctrl+K.
