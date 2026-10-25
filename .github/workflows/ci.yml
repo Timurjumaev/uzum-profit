@@ -142,6 +142,12 @@ jobs:
           done
           if grep -qi '^server:' <<<"$headers"; then echo "Server sarlavhasi ochiq"; exit 1; fi
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost/)" = 308
+      - name: Real sinov hisoboti (B2.11) — image ichida, up_app bilan; ulangan do'kon yo'q
+        run: |
+          code=0; infra/staging/realcheck.sh > realcheck.json 2> realcheck.err || code=$?
+          cat realcheck.err
+          test "$code" = 1 && grep -q "Ulangan do'kon yo'q" realcheck.err
+          python3 -c "import json; assert json.load(open('realcheck.json'))['orgs'] == []"
       - name: Zaxira va tiklash
         run: |
           infra/backup/backup.sh ci

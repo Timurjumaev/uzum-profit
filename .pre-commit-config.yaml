@@ -17,10 +17,10 @@ repos:
     hooks:
       - id: no-secrets-or-data
         name: .env, *.db, uzum_history.json, uzum_samples*.json taqiqlangan
-        entry: "taqiqlangan fayl: .env, *.db, uzum_history.json, uzum_samples*.json repozitoriyga kirmaydi"
+        entry: "taqiqlangan fayl: .env, *.db, uzum_history.json, uzum_samples*.json, realcheck*.json repozitoriyga kirmaydi"
         language: fail
         # uzum_cassette*.json (record_uzum.py chiqishi) ildizda — tekshirilmagan; fixtures/uzum/ ga ko'rib chiqilgach.
-        files: '(^|/)(\.env|.*\.db|uzum_history\.json|uzum_samples.*\.json)$|^uzum_cassette.*\.json$'
+        files: '(^|/)(\.env|.*\.db|uzum_history\.json|uzum_samples.*\.json)$|^uzum_cassette.*\.json$|(^|/)realcheck.*\.json$'
       - id: ruff-check
         name: ruff check
         entry: uv run ruff check --fix

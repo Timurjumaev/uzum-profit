@@ -14,5 +14,7 @@ dist/
 .ruff_cache/
 .mypy_cache/
 legacy_farqlari.md
+staging_farqlari.md
+realcheck*.json
 .coverage
 /uzum_cassette*.json

@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B2. Backend poydevori va staging** (B1 tugadi, 2026-10-24) |
-| Keyingi vazifa | B2.11 Real sinov (Temur staging'da Uzum kalitini kiritadi) |
-| Temurdan kutilmoqda | B2.11: staging'ga kirib Uzum kalitini kiritish; ixtiyoriy: partiya qatorlariga SKU biriktirish |
-| Oxirgi yangilanish | 2026-10-25 (B2.10 tayyor: staging https://16-170-178-179.sslip.io ishlayapti, deploy GitHub Actions orqali) |
+| Keyingi vazifa | B2.11 Real sinov — vositalar tayyor; Temurning real natijasi bilan yakunlanadi |
+| Temurdan kutilmoqda | B2.11: `python3 scripts/staging_connect.py` bilan kalitni kiritish, tarix yuklangach `docs/staging.md` "Real sinov" 2–3-qadamlar va `staging_farqlari.md` ni yuborish; ixtiyoriy: partiya qatorlariga SKU biriktirish |
+| Oxirgi yangilanish | 2026-10-25 (B2.11 vositalari: kalitni ulash skripti, serverda `upapi.realcheck`, legacy bilan solishtirish) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

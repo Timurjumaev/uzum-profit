@@ -61,6 +61,32 @@ systemctl list-timers uzum-backup.timer          # keyingi tungi zaxira (03:30 T
 
 Qo'lda deploy yoki qaytish: `infra/staging/deploy.sh <git sha>` (image'lar GHCR'da yoki serverda bo'lishi kerak).
 
+## Real sinov (B2.11)
+
+Temurning Mac'ida, repozitoriy papkasida (`git checkout main && git pull`):
+
+```bash
+# 1. Kirish (kod Telegram'ga keladi) → tashkilot → Uzum kaliti (yashirin so'raladi) → sinxron holati
+python3 scripts/staging_connect.py
+python3 scripts/staging_connect.py status --watch   # tarix to'liq yuklanguncha (Ctrl+C — to'xtatish)
+
+# 2. Tarix "full" bo'lgach: legacy'ni ham yangilash va serverdan hisobotni olish
+python3 -m uzum_profit sync
+ssh -i ~/Downloads/awskey.pem ubuntu@16.170.178.179 \
+  'sudo -u deploy /srv/uzum-profit/infra/staging/realcheck.sh' > ~/realcheck.json
+
+# 3. Solishtirish → staging_farqlari.md (✓/✗, chiqish kodi 0 — hammasi mos)
+python3 scripts/compare_staging.py --staging ~/realcheck.json --db uzum.db
+```
+
+- `staging_connect.py` — faqat stdlib; kalit faqat `getpass` bilan so'raladi, hech qayerga yozilmaydi; sessiya cookie'si
+  `~/.uzum-profit/staging-session.json` (600).
+- `realcheck.sh` → `python -m upapi.realcheck` (api konteynerida, `up_app` bilan): do'kon × oy × holat yig'indilari,
+  sotuv qatorlari, B2.6/B2.8 taxminlari (postavka SKU id, faktura sanasi, `/v1/return`, logistika `externalId`,
+  `amount`/`amountReturns`), oxirgi 24 soat sinxron xatolari. Kalit va sirlar o'qilmaydi.
+- `compare_staging.py` — legacy `uzum.db` bilan har oy TO_WITHDRAW dona/tushum/komissiya/logistika (1 so'mgacha),
+  qator darajasida farqlar, taxminlar hukmi (✓ / ✗ — kodni tuzatish kerak / ≈ — qo'lda ko'rish).
+
 ## Xavfsizlik
 
 - Sirlar faqat serverdagi `.env` da (600, `gen-env.sh` tasodifiy yaratadi); repozitoriyda, CI loglarida va zaxira
