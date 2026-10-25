@@ -29,8 +29,8 @@ case "$args" in
   *" pg_dump "*) printf 'PGDMP-fake' ;;
   *" pg_restore --list "*) cat > /dev/null ;;
   *" ps --status running --services "*) echo api; echo worker; echo caddy ;;
-  *" config --images api caddy "*) echo "ghcr.io/x/uzum-profit-api:$UP_TAG"; echo "ghcr.io/x/uzum-profit-web:$UP_TAG" ;;
-  *" image inspect "*":missing "*) exit 1 ;;
+  *" config --images api caddy "*) echo "ghcr.io/x/uzum-profit-api:$UP_TAG"; echo "ghcr.io/x/uzum-profit-web:$UP_TAG"; echo postgres:18 ;;
+  *" image inspect "*":missing "*|*" image inspect postgres:18 "*) exit 1 ;;
   *" image ls "*) printf '%s\n' ghcr.io/x/uzum-profit-api:old ghcr.io/x/uzum-profit-api:v1 ghcr.io/x/uzum-profit-web:v2 postgres:18 ;;
 esac
 exit 0

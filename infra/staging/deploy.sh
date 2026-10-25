@@ -25,7 +25,8 @@ if [ "${UP_SKIP_PULL:-0}" != 1 ]; then
 fi
 
 # Image'lar serverda bo'lishi shart: aks holda compose ularni bu yerda (manba kodsiz) yig'ishga urinadi.
-for image in $(UP_TAG=$tag compose config --images api caddy); do
+# (`config --images` bog'liq servislarni ham qaytaradi — postgres keyin `up` da o'zi tortiladi.)
+for image in $(UP_TAG=$tag compose config --images api caddy | grep -E -- '-(api|web):'); do
 	docker image inspect "$image" >/dev/null 2>&1 || die "image yo'q: $image"
 done
 
