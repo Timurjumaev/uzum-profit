@@ -246,7 +246,14 @@ class Cli:
         """Tashkilot sinxron holati; tarix hamma do'konda to'liq va ishlayotgan ish yo'q bo'lsa ``True``."""
         data = self.api.call("GET", f"/orgs/{org['id']}/sync")
         self.save()
-        health = "✓ sog'lom" if data["healthy"] else "✗ muammo bor"
+        errors = any(s["errors_24h"] for s in data["shops"])
+        loading = any(s["history_status"] != "full" for s in data["shops"])
+        if data["healthy"]:
+            health = "✓ sog'lom"
+        elif loading and not errors and not data["outage"]["active"]:
+            health = "⏳ tarix yuklanmoqda"
+        else:
+            health = "✗ muammo bor"
         self.say(f"\n{org['name']}: {health}")
         if data["outage"]["active"]:
             self.say(f"  Uzum uzilishi: {data['outage']['since']} dan")

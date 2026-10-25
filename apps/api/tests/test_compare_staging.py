@@ -165,3 +165,11 @@ def test_shop_missing_in_staging(
 def test_missing_files(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert cs.main(["--staging", str(tmp_path / "yoq.json"), "--db", str(tmp_path)]) == 2
     assert "topilmadi" in capsys.readouterr().err
+
+
+def test_empty_staging_file(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Serverdagi skript xato bersa ``> realcheck.json`` bo'sh qoladi — traceback emas, tushunarli xabar."""
+    empty = tmp_path / "realcheck.json"
+    empty.write_text("")
+    assert cs.main(["--staging", str(empty), "--db", str(tmp_path)]) == 2
+    assert "JSON emas yoki bo'sh" in capsys.readouterr().err

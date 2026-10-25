@@ -393,8 +393,16 @@ def main(argv: list[str] | None = None) -> int:
         if not Path(path).exists():
             print(f"Fayl topilmadi: {path}", file=sys.stderr)
             return 2
-    with open(args.staging, encoding="utf-8") as fh:
-        staging = json.load(fh)
+    try:
+        with open(args.staging, encoding="utf-8") as fh:
+            staging = json.load(fh)
+    except ValueError:
+        print(
+            f"{args.staging} — JSON emas yoki bo'sh: serverdagi realcheck.sh xato bergan bo'lishi mumkin "
+            "(ssh buyrug'i chiqargan xabarni ko'ring).",
+            file=sys.stderr,
+        )
+        return 2
     load_env()
     conn = connect(args.db)
     try:

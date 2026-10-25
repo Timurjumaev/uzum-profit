@@ -99,6 +99,7 @@ def test_connect_flow_and_saved_session(api: MpApi, tmp_path: Path) -> None:
     assert f"✓ Kalit ulandi (…{token[-4:]})" in text
     assert "  - byDurii (106121)" in text and "  - EL-ONE (135204)" in text
     assert "byDurii: tarix=yuklanmoqda" in text
+    assert "⏳ tarix yuklanmoqda" in text and "muammo bor" not in text
     assert token not in text
     # Sessiya: faqat egasi o'qiydi, kalit yo'q; tarix navbatga qo'yildi.
     assert stat.S_IMODE(session.stat().st_mode) == 0o600
@@ -122,6 +123,14 @@ def test_connect_flow_and_saved_session(api: MpApi, tmp_path: Path) -> None:
     assert run(api, session, watch, "status", "--watch", sleep=finish) == 0
     assert watch.text.count("soniyadan keyin yana") == 1
     assert "byDurii: tarix=full" in watch.text
+    # Tarix to'liq, lekin xato bor — "muammo".
+    api.admin(
+        "INSERT INTO sync_runs (org_id, shop_id, kind, status, error) SELECT org_id, id, 'orders', "
+        "'error', 'upstream' FROM shops WHERE external_id = 106121"
+    )
+    broken = Io([])
+    assert run(api, session, broken, "status") == 0
+    assert "✗ muammo bor" in broken.text and "orders: error — upstream" in broken.text
 
 
 def test_wrong_code_then_invalid_key(api: MpApi, tmp_path: Path) -> None:

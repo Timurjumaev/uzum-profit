@@ -11,4 +11,6 @@ here=$(cd "$(dirname "$0")" && pwd)
 . "$here/lib.sh"
 
 [ -n "$(deployed_tag)" ] || die "staging hali deploy qilinmagan (.deployed-tag yo'q)"
+# `sudo -u deploy` chaqiruvchining papkasida (masalan, /home/ubuntu) qoladi — deploy uni o'qiy olmaydi, compose yiqiladi.
+cd "$UP_ROOT"
 compose exec -T api python -m upapi.realcheck "$@"
