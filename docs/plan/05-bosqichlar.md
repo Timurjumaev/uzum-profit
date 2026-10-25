@@ -82,9 +82,9 @@ Ochiq: F21 real ma'lumotda — partiyalarga SKU biriktirilgach (yoki B2.11).
   hisoblandi", `meta.freshness`, kursor; ombor F23–F30 (omborchiga summasiz). `apps/api/openapi.json` →
   `apps/web/src/lib/api/schema.d.ts` (CI'da farq — xato). Tezlik (M4 maqsadi p95 < 700 ms): og'ir sintetik yil
   (50 000 qator, 3 000 reklama) — bosh sahifa ~0,8 s (sandbox), qolganlari ~0,6–0,7 s; B4.1 ga yozildi.
-- [ ] B2.10 Staging server: O'zbekistondagi VPS (Q2), Docker Compose, Caddy (HTTPS), deploy workflow, tungi zaxira.
-  **Kod tayyor (2026-10-25), server ishga tushirilishi qoldi** (Temur, `docs/staging.md`; VM — Uztelecom Cloud,
-  ADR-029). `infra/compose/staging.yml` (postgres, migrate, api, worker `up_app` bilan, caddy), `infra/caddy/` (web
+- [x] B2.10 Staging server: O'zbekistondagi VPS (Q2), Docker Compose, Caddy (HTTPS), deploy workflow, tungi zaxira.
+  ✓ 2026-10-25: staging ishlayapti — https://16-170-178-179.sslip.io (AWS eu-north-1, Ubuntu 26.04, Elastic IP;
+  vaqtincha, ADR-029: Uztelecom Sandbox VM'iga tashqaridan kirib bo'lmadi). Uzum API shu serverdan javob beradi (401). `infra/compose/staging.yml` (postgres, migrate, api, worker `up_app` bilan, caddy), `infra/caddy/` (web
   build + Caddy: HTTPS, xavfsizlik sarlavhalari, CSP), `infra/staging/` (`bootstrap.sh` — Ubuntu 22.04/24.04, Docker,
   ufw, swap, `deploy` foydalanuvchisi, tungi zaxira taymeri; `gen-env.sh` — tasodifiy sirlar; `deploy.sh` — zaxira →
   migratsiya → konteynerlar → HTTPS orqali sog'liq → ishlamasa oldingi image), `infra/backup/` (`pg_dump` + tekshiruv

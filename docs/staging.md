@@ -15,27 +15,39 @@ konteynerlar → sog'liq tekshiruvi → ishlamasa oldingi versiyaga qaytish).
 - Domen: `<ip, nuqtalar o'rniga chiziqcha>.sslip.io`, masalan `89-126-221-34.sslip.io`. Sertifikatni Caddy
   Let's Encrypt'dan o'zi oladi.
 
-## Bir martalik sozlash (Temur, Mac'da, repozitoriy papkasida)
+## Hozirgi server (2026-10-25, ADR-029)
+
+AWS EC2 eu-north-1, Ubuntu 26.04 LTS, 2 GB RAM; Elastic IP `16.170.178.179` (o'chirib-yoqilganda o'zgarmaydi);
+<https://16-170-178-179.sslip.io>. Kirish: `ssh -i ~/Downloads/awskey.pem ubuntu@16.170.178.179` (AWS'da `root` emas,
+`ubuntu`); ilova fayllari — `sudo -u deploy -i`, keyin `cd /srv/uzum-profit`. AWS Security group: kiruvchi 22, 80, 443.
+
+## Bir martalik sozlash (yangi server bo'lsa; Temur, Mac'da, repozitoriy papkasida, `main` branch'da)
+
+`KEY` — provayder bergan kalit (`-i ~/Downloads/awskey.pem`), `USER@IP` — `ubuntu@<ip>` (yoki `root@<ip>`),
+`DOMEN` — `<ip, nuqtalar o'rniga chiziqcha>.sslip.io`.
 
 ```bash
 # 1. GitHub Actions uchun alohida SSH kalit (parolsiz, faqat deploy uchun)
 ssh-keygen -t ed25519 -N "" -C uzum-staging-deploy -f ~/.ssh/uzum_staging_deploy
 
 # 2. Serverni tayyorlash (Docker, deploy foydalanuvchisi, firewall, swap, tungi zaxira taymeri)
-git pull
-ssh root@89.126.221.34 'bash -s' -- "$(cat ~/.ssh/uzum_staging_deploy.pub)" < infra/staging/bootstrap.sh
-#    Oxirida "Server SSH kaliti" ostida chiqqan qatorni (ssh-ed25519 AAAA...) saqlab qo'ying — 4-qadamda kerak.
+git checkout main && git pull
+ssh KEY USER@IP "sudo bash -s -- '$(cat ~/.ssh/uzum_staging_deploy.pub)'" < infra/staging/bootstrap.sh
+#    Oxirida chiqqan `ssh-ed25519 AAAA...` qatorini saqlang — 4-qadamda kerak.
 
 # 3. Sirlar fayli (/srv/uzum-profit/.env). Telegram Gateway tokeni so'raladi, ekranga chiqmaydi.
-scp infra/staging/gen-env.sh root@89.126.221.34:/tmp/
-ssh -t root@89.126.221.34 'sudo -u deploy bash /tmp/gen-env.sh 89-126-221-34.sslip.io && rm /tmp/gen-env.sh'
+scp KEY infra/staging/gen-env.sh USER@IP:/tmp/
+ssh -t KEY USER@IP 'sudo -u deploy bash /tmp/gen-env.sh DOMEN && rm /tmp/gen-env.sh'
 ```
 
 4. GitHub → repozitoriy → Settings → Secrets and variables → Actions:
-   - **Variables** → `STAGING_HOST` = `89.126.221.34`
+   - **Variables** → `STAGING_HOST` = server IP
    - **Secrets** → `STAGING_SSH_KEY` = `cat ~/.ssh/uzum_staging_deploy` chiqargan matn (to'liq, BEGIN/END qatorlari
      bilan); `STAGING_HOST_KEY` = 2-qadam oxirida chiqqan `ssh-ed25519 AAAA...` qatori.
-5. GitHub → Actions → **Deploy staging** → Run workflow. Yashil bo'lsa: <https://89-126-221-34.sslip.io/health>.
+5. GitHub → Actions → **Deploy staging** → Run workflow. Yashil bo'lsa: `https://DOMEN/health`.
+
+IP o'zgarsa: `.env` dagi domenni almashtirish (`sudo -u deploy sed -i 's/ESKI-IP/YANGI-IP/g' /srv/uzum-profit/.env`)
+va GitHub'dagi `STAGING_HOST`.
 
 ## Kundalik ishlar (serverda, `deploy` foydalanuvchisi)
 
