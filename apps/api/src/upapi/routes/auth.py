@@ -101,6 +101,11 @@ def _phone(raw: str) -> str:
         raise AppError("invalid_phone", 422, detail="Telefon raqami noto'g'ri") from None
 
 
+def _client_ip(request: Request) -> str:
+    """Caddy ortida — ``X-Forwarded-For`` dan (uvicorn ``--proxy-headers``), aks holda TCP manzil."""
+    return request.client.host if request.client else "unknown"
+
+
 def _sender(request: Request) -> CodeSender:
     sender: CodeSender = request.app.state.sender
     return sender
@@ -115,8 +120,11 @@ async def user_orgs(conn: AsyncConnection, digest: bytes) -> list[OrgSummary]:
 async def request_code(
     body: OtpRequest, request: Request, engine: Engine, settings: Config
 ) -> OtpSent:
-    """Kirish kodini Telegram'ga yuborish. Raqam bo'yicha soatiga ``otp_per_hour`` ta; 5 xato → 15 daqiqa blok."""
+    """Kirish kodini Telegram'ga yuborish. Raqam bo'yicha soatiga ``otp_per_hour`` ta, IP bo'yicha
+    ``otp_per_ip_hour`` ta; 5 xato → 15 daqiqa blok."""
     phone = _phone(body.phone)
+    if not request.app.state.otp_ip_limiter.hit(_client_ip(request)):
+        raise AppError("otp_ip_rate_limited", 429)
     code = new_code()
     async with engine.begin() as conn:
         result = await conn.scalar(

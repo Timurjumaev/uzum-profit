@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B2. Backend poydevori va staging** (B1 tugadi, 2026-10-24) |
-| Keyingi vazifa | B2.10 Staging server (Q2 kerak) |
-| Temurdan kutilmoqda | Q2 (server provayderi) — B2.10 gacha; ixtiyoriy: partiya qatorlariga SKU biriktirish |
-| Oxirgi yangilanish | 2026-10-25 (B2.9 tayyor: o'qish API'lari — dashboard, pnl, skus, sales, expenses, inventory + OpenAPI tiplari) |
+| Keyingi vazifa | B2.10 Staging server — kod tayyor, server ishga tushirilishi qoldi; keyin B2.11 |
+| Temurdan kutilmoqda | VM'ni Ubuntu 24.04 ga o'tkazish va `docs/staging.md` qadamlari (SSH kalit, bootstrap, Telegram Gateway tokeni, GitHub sirlari); ixtiyoriy: partiya qatorlariga SKU biriktirish |
+| Oxirgi yangilanish | 2026-10-25 (B2.10 kodi: staging compose, Caddy HTTPS, deploy workflow va qaytish, tungi zaxira, IP bo'yicha kod cheklovi) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

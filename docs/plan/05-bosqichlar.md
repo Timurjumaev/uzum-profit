@@ -83,10 +83,15 @@ Ochiq: F21 real ma'lumotda — partiyalarga SKU biriktirilgach (yoki B2.11).
   `apps/web/src/lib/api/schema.d.ts` (CI'da farq — xato). Tezlik (M4 maqsadi p95 < 700 ms): og'ir sintetik yil
   (50 000 qator, 3 000 reklama) — bosh sahifa ~0,8 s (sandbox), qolganlari ~0,6–0,7 s; B4.1 ga yozildi.
 - [ ] B2.10 Staging server: O'zbekistondagi VPS (Q2), Docker Compose, Caddy (HTTPS), deploy workflow, tungi zaxira.
-  **Ochiq:** kirish kodi yuborishga IP bo'yicha cheklov (hozir faqat raqam bo'yicha 5 ta/soat — har xil raqam bilan
-  ko'p so'rov har biri ≈ $0.01 turadi, ADR-028): Caddy `rate_limit` va/yoki API'da IP bo'yicha hisoblagich, testi bilan.
-  B2.6 dan: compose'da `worker` servisi (`python -m upapi.worker`, `up_app` bilan); migratsiya roli `up_auth` va
-  `up_sync` rollari a'zosi (yoki rollar oldindan yaratilgan).
+  **Kod tayyor (2026-10-25), server ishga tushirilishi qoldi** (Temur, `docs/staging.md`; VM — Uztelecom Cloud,
+  ADR-029). `infra/compose/staging.yml` (postgres, migrate, api, worker `up_app` bilan, caddy), `infra/caddy/` (web
+  build + Caddy: HTTPS, xavfsizlik sarlavhalari, CSP), `infra/staging/` (`bootstrap.sh` — Ubuntu 22.04/24.04, Docker,
+  ufw, swap, `deploy` foydalanuvchisi, tungi zaxira taymeri; `gen-env.sh` — tasodifiy sirlar; `deploy.sh` — zaxira →
+  migratsiya → konteynerlar → HTTPS orqali sog'liq → ishlamasa oldingi image), `infra/backup/` (`pg_dump` + tekshiruv
+  + 14 kun; tiklash), `deploy-staging.yml` (GHCR, SSH, server kaliti oldindan ma'lum). Migratsiya roli —
+  POSTGRES_USER (superuser), ilova — `up_app`. Kirish kodi IP bo'yicha soatiga 20 ta (`upapi.ratelimit`, Caddy
+  `X-Forwarded-For` ni almashtiradi — soxtalashtirib bo'lmaydi). CI `staging` ishi: shu oqimning o'zi (strict staging
+  tekshiruvlari, HTTPS, zaxira → tiklash, qayta deploy); skriptlar testi `infra/tests/` (qaytish, migratsiya xatosi).
 - [ ] B2.11 Real sinov: Temur staging'da o'z kalitini kiritadi → to'liq sinxron → legacy raqamlari bilan solishtirish;
   `PARTIALLY_CANCELLED`, `amountReturns`, qaytishlar semantikasi tasdiqlanadi va testga yoziladi. B2.6 dan
   tekshiriladigan taxminlar: postavka tarkibida `skuForInvoiceDtoList[].id` = SKU id, faktura `dateCreated` matn

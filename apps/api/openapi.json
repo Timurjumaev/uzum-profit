@@ -93,7 +93,7 @@
           "auth"
         ],
         "summary": "Request Code",
-        "description": "Kirish kodini Telegram'ga yuborish. Raqam bo'yicha soatiga ``otp_per_hour`` ta; 5 xato → 15 daqiqa blok.",
+        "description": "Kirish kodini Telegram'ga yuborish. Raqam bo'yicha soatiga ``otp_per_hour`` ta, IP bo'yicha\n``otp_per_ip_hour`` ta; 5 xato → 15 daqiqa blok.",
         "operationId": "request_code_api_v1_auth_otp_post",
         "requestBody": {
           "content": {

@@ -1,0 +1,40 @@
+# Caddy (03 §1, §10): HTTPS (Let's Encrypt; `localhost` — Caddy'ning ichki CA'si, CI uchun), statik web,
+# /api va /health → API. Domen staging'da `<ip>.sslip.io` (06 §1), keyin brend domeni (Q7).
+{
+	admin off
+}
+
+{$UP_DOMAIN} {
+	encode zstd gzip
+
+	# Xavfsizlik sarlavhalari (03 §10). Caddy tashqaridan kelgan X-Forwarded-For'ga ishonmaydi va uni mijoz
+	# IP manzili bilan almashtiradi — API'dagi IP cheklovi (B2.10) shunga tayanadi.
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Frame-Options DENY
+		-Server
+	}
+
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+	handle /health {
+		reverse_proxy api:8000
+	}
+
+	handle {
+		header Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		root * /srv/web
+		try_files {path} /index.html
+		file_server
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

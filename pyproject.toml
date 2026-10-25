@@ -32,7 +32,7 @@ dev = [
 [tool.pytest.ini_options]
 addopts = ["--import-mode=importlib", "-m", "not benchmark"]
 markers = ["benchmark: tezlik testlari (CI'da coverage'siz alohida ishga tushadi)"]
-testpaths = ["packages/core/tests", "apps/api/tests", "apps/bot/tests"]
+testpaths = ["packages/core/tests", "apps/api/tests", "apps/bot/tests", "infra/tests"]
 
 [tool.ruff]
 line-length = 100

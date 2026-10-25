@@ -48,6 +48,8 @@ class Settings(BaseSettings):
     telegram_gateway_token: SecretStr | None = None
     otp_ttl_seconds: int = 300
     otp_per_hour: int = 5
+    # Bitta IP manzildan soatiga shuncha kod so'rovi (har xil raqam bilan ham; har kod ≈ $0.01, ADR-028).
+    otp_per_ip_hour: int = 20
     otp_max_attempts: int = 5
     otp_block_minutes: int = 15
     session_days: int = 30

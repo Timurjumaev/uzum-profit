@@ -109,3 +109,55 @@ jobs:
         run: docker compose -f infra/compose/dev.yml logs
       - if: always()
         run: docker compose -f infra/compose/dev.yml down --volumes
+
+  staging:
+    name: Staging (compose, Caddy HTTPS, deploy, zaxira)
+    runs-on: ubuntu-24.04
+    # Serverdagi oqimning o'zi (B2.10): gen-env → deploy.sh (strict staging tekshiruvlari bilan) → zaxira → tiklash →
+    # qayta deploy. Domen `localhost` — Caddy ichki CA bilan HTTPS beradi (curl -k).
+    env:
+      UP_ROOT: ${{ github.workspace }}
+      UP_TAG: ci
+      UP_SKIP_PULL: "1"
+      UP_HEALTH_INSECURE: "1"
+      COMPOSE: docker compose -f infra/compose/staging.yml --env-file .env
+    steps:
+      - uses: actions/checkout@v5
+      - run: shellcheck -x infra/staging/*.sh infra/backup/*.sh infra/compose/postgres-init-staging/*.sh
+      - run: infra/staging/gen-env.sh localhost
+        env:
+          UP_TELEGRAM_GATEWAY_TOKEN: ci-not-a-real-token
+      - run: $COMPOSE build
+      - run: docker run --rm -e UP_DOMAIN=localhost ghcr.io/timurjumaev/uzum-profit-web:ci caddy validate --config /etc/caddy/Caddyfile
+      - run: infra/staging/deploy.sh ci
+      - name: HTTPS, web, API, xavfsizlik sarlavhalari
+        run: |
+          curl -fsSk https://localhost/health | grep -q '"env":"staging"'
+          curl -fsSk https://localhost/api/v1/health | grep -q '"status":"ok"'
+          curl -fsSk https://localhost/ | grep -q '<div id="root">'
+          curl -fsSk https://localhost/biror/sahifa | grep -q '<div id="root">'  # SPA marshrutlari
+          headers=$(curl -fsSkI https://localhost/)
+          for h in strict-transport-security content-security-policy x-content-type-options x-frame-options; do
+            grep -qi "^$h:" <<<"$headers" || { echo "sarlavha yo'q: $h"; exit 1; }
+          done
+          if grep -qi '^server:' <<<"$headers"; then echo "Server sarlavhasi ochiq"; exit 1; fi
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost/)" = 308
+      - name: Zaxira va tiklash
+        run: |
+          infra/backup/backup.sh ci
+          dump=$(ls backups/*-ci.dump)
+          $COMPOSE exec -T postgres psql -U uzum -d uzum -c "CREATE TABLE ci_marker (x int)"
+          infra/backup/restore.sh "$dump"
+          test "$($COMPOSE exec -T postgres psql -U uzum -d uzum -tAc "SELECT to_regclass('ci_marker') IS NULL")" = t
+          $COMPOSE exec -T api python -m upapi.db.guard  # tiklangan bazada ham ilova roli RLS'ga bo'ysunadi
+          curl -fsSk https://localhost/health
+      - name: Qayta deploy (oldingi versiya saqlanadi)
+        run: |
+          for n in api web; do docker tag ghcr.io/timurjumaev/uzum-profit-$n:ci ghcr.io/timurjumaev/uzum-profit-$n:ci2; done
+          infra/staging/deploy.sh ci2
+          test "$(cat .deployed-tag)" = ci2
+          docker image inspect ghcr.io/timurjumaev/uzum-profit-api:ci >/dev/null
+      - if: failure()
+        run: $COMPOSE logs
+      - if: always()
+        run: $COMPOSE down --volumes

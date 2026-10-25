@@ -1,3 +1,4 @@
+import os
 import sys
 from collections.abc import Iterator
 from pathlib import Path
@@ -9,6 +10,9 @@ from upapi.settings import Environment, Settings
 
 sys.path.insert(0, str(Path(__file__).parent))
 import dbtools
+
+# Testlarda hamma so'rov bitta "IP"dan (``testclient``) — IP cheklovi (B2.10) faqat o'z testida tekshiriladi.
+os.environ.setdefault("UP_OTP_PER_IP_HOUR", "100000")
 
 
 @pytest.fixture
