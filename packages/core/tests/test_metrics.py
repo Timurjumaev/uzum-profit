@@ -384,3 +384,77 @@ def test_breakeven_price_covers_share(fixed_amount: int, share: Decimal) -> None
     # narx − ulush = qat'iy xarajat (yaxlitlash 1 tiyingacha)
     leftover = price.amount * (1 - share / 100)
     assert abs(leftover - fixed_amount) <= D("0.01")
+
+
+# --- B2.9: o'qish API'lari uchun yordamchilar ------------------------------------------------
+
+
+def test_statuses_by_group() -> None:
+    from upcore.metrics import statuses
+
+    assert statuses(StatusGroup.COMPLETED) == {"TO_WITHDRAW", "PARTIALLY_CANCELLED"}
+    assert statuses(StatusGroup.PROCESSING) == {"PROCESSING"}
+    assert statuses(StatusGroup.UNKNOWN) == frozenset()
+
+
+def test_sale_totals_counts_lines() -> None:
+    from upcore.metrics import sale_totals
+
+    t = sale_totals(
+        [
+            SaleLine("A", date(2026, 10, 1), "TO_WITHDRAW", Decimal(100), 2, unit_cost=Decimal(1)),
+            SaleLine("A", date(2026, 10, 1), "TO_WITHDRAW", Decimal(100), 1),
+            SaleLine("A", date(2026, 10, 1), "CANCELED", Decimal(100), 1),
+        ]
+    )
+    assert (t.lines, t.uncovered_lines, t.units, t.units_costed, t.canceled) == (2, 1, 3, 2, 1)
+
+
+def test_unit_rates_match_line_rates() -> None:
+    from upcore.metrics import cancel_rate, realization_rate_units
+
+    lines = [
+        SaleLine("A", date(2026, 10, 1), "TO_WITHDRAW", Decimal(1), 30),
+        SaleLine("A", date(2026, 10, 1), "CANCELED", Decimal(1), 30),
+    ]
+    assert cancel_rate(30, 30) == cancel_share(lines) == Decimal("0.5")
+    assert realization_rate_units(30, 30) == realization_rate(lines) == Decimal("0.5")
+    assert realization_rate_units(30, 19) is None  # 49 < 50
+    assert cancel_rate(0, 0) is None
+
+
+def test_run_rate() -> None:
+    from upcore.metrics import run_rate
+
+    assert run_rate(Decimal("1000000.00"), 10, 31) == Decimal("3100000.00")
+    assert run_rate(7, 3, 31) == Decimal("72.33")
+    assert run_rate(1, 0, 31) is None
+
+
+def test_profit_label() -> None:
+    from upcore.metrics import ProfitLabel, profit_label
+
+    m = Money.of
+    assert profit_label(m(-1, "UZS"), Decimal("-0.1")) is ProfitLabel.LOSS
+    assert profit_label(m(-1, "UZS"), None) is ProfitLabel.LOSS  # sotuvsiz reklama
+    assert profit_label(m(0, "UZS"), None) is ProfitLabel.NO_DATA
+    assert profit_label(m(10, "UZS"), Decimal("0.049")) is ProfitLabel.BORDERLINE
+    assert profit_label(m(10, "UZS"), Decimal("0.05")) is ProfitLabel.PROFITABLE
+
+
+def test_line_gross_profit() -> None:
+    line = SaleLine(
+        "A", date(2026, 10, 1), "TO_WITHDRAW", Decimal(100), 2, Decimal(20), Decimal(10)
+    )
+    assert line.gross_profit is None
+    costed = SaleLine(
+        "A",
+        date(2026, 10, 1),
+        "TO_WITHDRAW",
+        Decimal(100),
+        2,
+        Decimal(20),
+        Decimal(10),
+        unit_cost=Decimal(50),
+    )
+    assert costed.gross_profit == Decimal(70)  # 200 − 20 − 10 − 100

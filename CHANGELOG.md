@@ -149,3 +149,19 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   qatorida). Sinxron sotuv/xarajat yozganda so'rov qo'yadi, akkaunt ishi `calc.org` ni navbatga qo'yadi; `calc.nightly`
   (Toshkent 03:40) — to'liq qayta qurish. Ishchi `sync` va `calc` navbatlarini oladi. Inkremental natija = to'liq
   qayta qurish (test); 10 000 sotuvli tovar bazasi bilan < 3 s (benchmark). Testlar: `tests/test_calc.py`.
+- B2.9 O'qish API'lari (`upapi.reports`, `upapi.routes`, migratsiya `0007`): `GET /orgs/{id}/dashboard` (M4: hisob
+  varag'i oldingi davr bilan, bugun/kecha/shu oy/o'tgan oy, oy prognozi, kunlik grafik, TOP-5 va zarar-5 SKU, F13–F19,
+  F16, F29, "Diqqat talab qiladi" sanoqlari), `/pnl` (M5: qatorlar va solishtirish, oylar/kunlar/do'konlar/SKU
+  ustunlari, F16 do'konlar bo'yicha, "qayta hisoblandi" soni), `/skus` (M6: unit-iqtisod, holat belgisi, F17, F18,
+  qoldiq, F24, ABC; lotin/kirill va tutuqdan qat'i nazar qidiruv, saralash, kursor; bog'lanmagan va taqsimlanmagan
+  alohida), `/sales` (M7: qatorlar F6–F8, tannarx belgilari, kursor, F17/F18 xulosasi), `/expenses` (M8: F9 toifalar,
+  oylar, eng katta jarimalar, chiqarilganlar sababi bilan; F10 davr qismi), `/inventory` (M10 asos: F23–F30, mahsulot
+  holati, muzlagan pul joylar bo'yicha; omborchiga summasiz). Davr va do'kon filtri, `meta.freshness`. P&L kataklari
+  `daily_sku_metrics` dan (`lines`, `lines_uncosted`, `units_costed` ustunlari qo'shildi). `upcore`:
+  `build_cells(totals=CellSales)`, `Cells.within / statements / by_and_total`, `unit_economics` (M6),
+  `profit_label`, `run_rate` (M4), `statuses`, `cancel_rate`, `realization_rate_units`, `SaleLine.gross_profit`,
+  `money.split`; P&L kataklari xom `Decimal` da (`Cell`) — 50 000 katakli yil 3,4 s → 0,5 s. OpenAPI:
+  `apps/api/openapi.json` (`python -m upapi.openapi`) → `apps/web/src/lib/api/schema.d.ts` (`pnpm --filter web
+  api:types`, openapi-typescript), CI'da ikkalasining sinxronligi. Testlar: `tests/test_reports.py` (P&L = qatorlardan
+  qurilgan `upcore` P&L, bosh sahifa = P&L = SKU yig'indisi, ustunlar va drill-down yig'indilari, rollar, tashkilotlar
+  ajratilgani, benchmark).

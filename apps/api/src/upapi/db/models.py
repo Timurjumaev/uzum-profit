@@ -608,6 +608,11 @@ daily_sku_metrics = tenant(
     Column("revenue_costed", UZS, nullable=False, server_default="0"),
     Column("payout_costed", UZS, nullable=False, server_default="0"),
     Column("cogs_estimated", UZS, nullable=False, server_default="0"),
+    # B2.9: Yakunlangan qatorlar soni, shundan tannarxsizlari (P&L "N ta sotuv tannarxsiz", F15) va tannarxi
+    # ma'lum dona (M6: tannarx/dona, foyda/dona).
+    Column("lines", Integer, nullable=False, server_default="0"),
+    Column("lines_uncosted", Integer, nullable=False, server_default="0"),
+    Column("units_costed", Integer, nullable=False, server_default="0"),
     UniqueConstraint("org_id", "shop_id", "sku_id", "day", postgresql_nulls_not_distinct=True),
     refs={"shop_id": ("shops", False), "sku_id": ("mp_skus", True)},
 )

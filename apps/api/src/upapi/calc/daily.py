@@ -137,6 +137,9 @@ async def rebuild_shop(
                 "revenue_costed": t.revenue_costed.amount,
                 "payout_costed": t.payout_costed.amount,
                 "cogs_estimated": t.cogs_estimated.amount,
+                "lines": t.lines,
+                "lines_uncosted": t.uncovered_lines,
+                "units_costed": t.units_costed,
             }
         )
     for start in range(0, len(rows), 2_000):

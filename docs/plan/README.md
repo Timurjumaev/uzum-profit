@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B2. Backend poydevori va staging** (B1 tugadi, 2026-10-24) |
-| Keyingi vazifa | B2.9 O'qish API'lari (dashboard, pnl, skus, sales, expenses, inventory) |
+| Keyingi vazifa | B2.10 Staging server (Q2 kerak) |
 | Temurdan kutilmoqda | Q2 (server provayderi) — B2.10 gacha; ixtiyoriy: partiya qatorlariga SKU biriktirish |
-| Oxirgi yangilanish | 2026-10-25 (B2.8 tayyor: hisob ishlari — lotlar, sotuv tannarxi, kunlik agregat) |
+| Oxirgi yangilanish | 2026-10-25 (B2.9 tayyor: o'qish API'lari — dashboard, pnl, skus, sales, expenses, inventory + OpenAPI tiplari) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 
