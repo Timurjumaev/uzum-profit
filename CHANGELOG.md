@@ -184,3 +184,6 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   (legacy `uzum.db` bilan oylar bo'yicha 1 so'mgacha, qator farqlari, taxminlar hukmi ✓/✗/≈). CI `staging` ishida
   realcheck image ichida. Testlar: `test_realcheck.py`, `test_compare_staging.py` (sinxron → realcheck → legacy import
   bilan solishtirish), `test_staging_connect.py` (haqiqiy API bilan), `infra/tests`.
+- B2.11 tuzatish: `realcheck.sh` `sudo -u deploy` bilan chaqirilganda `UP_ROOT` ga o'tadi (oldin `/home/ubuntu` da
+  qolib, compose "stat .: permission denied" bilan yiqilardi); `compare_staging.py` bo'sh yoki buzuq JSON'da traceback
+  o'rniga tushunarli xabar; `staging_connect.py` tarix yuklanayotganda (xatosiz) "⏳ tarix yuklanmoqda" ko'rsatadi.

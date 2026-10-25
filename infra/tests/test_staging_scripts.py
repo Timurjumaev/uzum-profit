@@ -25,6 +25,7 @@ SCRIPTS = [
 
 FAKE_DOCKER = r"""#!/usr/bin/env bash
 echo "UP_TAG=${UP_TAG:-} $*" >> "$FAKE_LOG"
+[ -n "${FAKE_PWD:-}" ] && pwd >> "$FAKE_PWD"
 args=" $* "
 if [ -n "${FAKE_FAIL:-}" ] && [[ "$args" == *"$FAKE_FAIL"* ]] &&
    [[ -z "${FAKE_FAIL_TAG:-}" || "${UP_TAG:-}" == "$FAKE_FAIL_TAG" ]]; then
@@ -68,7 +69,9 @@ def root(tmp_path: Path) -> Path:
     return root
 
 
-def run(root: Path, script: str, *args: str, **env: str) -> subprocess.CompletedProcess[str]:
+def run(
+    root: Path, script: str, *args: str, cwd: Path | None = None, **env: str
+) -> subprocess.CompletedProcess[str]:
     full_env = {
         **os.environ,
         "PATH": f"{root.parent / 'bin'}:{os.environ['PATH']}",
@@ -80,7 +83,12 @@ def run(root: Path, script: str, *args: str, **env: str) -> subprocess.Completed
         **env,
     }
     return subprocess.run(
-        [str(root / script), *args], env=full_env, capture_output=True, text=True, timeout=60
+        [str(root / script), *args],
+        env=full_env,
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
 
 
@@ -185,11 +193,18 @@ def test_first_deploy_without_previous(root: Path) -> None:
 def test_realcheck_runs_in_deployed_api(root: Path) -> None:
     """B2.11: hisobot ishlab turgan versiyaning api konteynerida, argumentlar o'tadi."""
     (root / ".deployed-tag").write_text("v7\n")
-    r = run(root, "infra/staging/realcheck.sh", "--org", "x")
+    # `sudo -u deploy` boshqa foydalanuvchining papkasida qoladi — skript o'zi UP_ROOT ga o'tadi.
+    elsewhere = root.parent / "ubuntu"
+    elsewhere.mkdir()
+    r = run(
+        root, "infra/staging/realcheck.sh", "--org", "x", cwd=elsewhere,
+        FAKE_PWD=str(root / "pwd.log"),
+    )  # fmt: skip
     assert r.returncode == 0, r.stderr
     (call,) = calls(root)
     assert call.startswith("UP_TAG=v7 compose -f ")
     assert call.endswith("exec -T api python -m upapi.realcheck --org x")
+    assert (root / "pwd.log").read_text().strip() == str(root)
 
 
 def test_realcheck_needs_deploy(root: Path) -> None:
