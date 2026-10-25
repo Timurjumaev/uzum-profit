@@ -107,7 +107,7 @@ Matn satri ≤ 75 belgi (yordam matnlari, tavsiflar). Hamma matn chapga tekislan
 | `text-muted` (faqat ≥ 14 px yoki ikkinchi darajali) | `#7C8291` | `#8A91A0` |
 | `border-hairline` | `#E3E6EB` | `#2A3140` |
 | `border-rule` | `#121826` | `#EEF0F4` |
-| `border-input` (≥ 3:1) | `#8B909C` | `#6B7282` |
+| `border-input` (≥ 3:1) | `#858A96` | `#6B7282` |
 | `accent` (tugma foni) | `#256ABF` | `#256ABF` |
 | `accent-hover` | `#1C5CAB` | `#3987E5` |
 | `accent-text` (havola) | `#256ABF` | `#6DA7EC` |
@@ -161,7 +161,9 @@ qo'lda tanlay oladi (`data-theme`).
 - Qorong'i (`#161B24` fonda): hammasi PASS (CVD 8,4, oddiy ko'z 19,3, kontrast ≥ 3:1).
 - Scatter/xarita kabi "hamma juftlik" grafiklarida ko'pi bilan 3 seriya.
 - Matn kontrastlari (WCAG): siyoh 17,3; ikkinchi darajali 7,7; muted 3,75 (shuning uchun kichik matnda ishlatilmaydi);
-  havola 5,4; oq matn aksent tugmada 5,4; foyda 7,5; zarar 6,2; ogohlantirish 5,9; input chegarasi 3,2 (≥ 3:1).
+  havola 5,4; oq matn aksent tugmada 5,4; foyda 7,5; zarar 6,2; ogohlantirish 5,9; input chegarasi 3,5 (≥ 3:1;
+  2026-10-25, B3.3: `#8B909C` → `#858A96` — eskisi qog'oz va hover fonida 2,9 edi, endi hamma fonda ≥ 3,08).
+  Kontrastlar `apps/web/src/styles/tokens.test.ts` da avtomatik tekshiriladi.
   Qorong'i: matn 15,1; ikkinchi 8,9; muted 5,5; havola 6,9; foyda 7,2; zarar 7,1; input chegarasi 3,6.
 
 Palitra o'zgartirilsa — validator qayta ishlatiladi (`validate_palette.js`, ikkala rejim).
