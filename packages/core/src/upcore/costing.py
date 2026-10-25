@@ -4,8 +4,9 @@ Bitta tovar bo'yicha hodisalar sana tartibida: lot kirimi (+), sotuvga yaroqli q
 brak / yo'qotish (−). Usul — tashkilot sozlamasi: FIFO (standart, ADR-008/025) yoki harakatlanuvchi o'rtacha.
 
 Bir kundagi tartib: kirimlar → qaytishlar → sotuvlar va hisobdan chiqarishlar (id bo'yicha). Natija
-deterministik: bir xil kirish → bir xil natija, shuning uchun qayta hisob har doim to'liq va idempotent
-(o'zgargan sanadan boshlab optimallashtirish — B2.8, natija shu funksiya bilan bir xil bo'lishi shart).
+deterministik: bir xil kirish → bir xil natija, shuning uchun qayta hisob har doim to'liq va idempotent.
+B2.8 (``upapi.calc``) faqat o'zgargan tovarlarni qayta hisoblaydi va faqat o'zgargan sotuvlarni yozadi; tovar
+ichida sanadan kesilmaydi: keyinroq tayyor bo'lgan lot "erta sotuv" orqali oldingi sotuvga ta'sir qilishi mumkin.
 
 Tayyor lot yetmasa (F21): avval tayyor sanasi keyinroq bo'lgan lot ("erta sotuv"), keyin sanasiz — yo'ldagi
 lot ("qabul belgilanmagan": sotuv bor — demak tovar kelgan). Hammasi tugasa — oxirgi ma'lum narx + "lot
@@ -40,6 +41,10 @@ class CostFlag(StrEnum):
     NOT_RECEIVED_MARKED = "not_received_marked"  # yo'ldagi (sanasiz) lotdan olindi
     LOT_SHORTAGE = "lot_shortage"  # lotlar yetmadi — oxirgi ma'lum narx
     RETURN_UNMATCHED = "return_unmatched"  # qaytishning asl sotuvi topilmadi
+    NO_LOTS = "no_lots"  # tovarda lot umuman yo'q — tannarx yo'q
+    NO_ITEM = (
+        "no_item"  # SKU tovarga bog'lanmagan — tannarx yo'q (dvigatelga kirmaydi, B2.8 belgisi)
+    )
 
 
 type AnyFlag = CostFlag | Flag
@@ -264,7 +269,7 @@ class _Engine:
             self.last_unit, self.last_flags = unit, set(layer.flags)
         if need > 0:
             if self.last_unit is None:  # tovarda lot umuman yo'q
-                self._record(event, None, (), flags)
+                self._record(event, None, (), flags | {CostFlag.NO_LOTS})
                 return
             flags |= self.last_flags | {CostFlag.LOT_SHORTAGE}
             allocations.append(Allocation(None, need, self.last_unit))

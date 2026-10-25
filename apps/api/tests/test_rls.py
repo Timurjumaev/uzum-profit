@@ -189,6 +189,8 @@ def test_cannot_reference_other_org_parent(
 ) -> None:
     """FK tekshiruvi RLS'ni chetlab o'tadi — kompozit FK (org_id, id) boshqa tashkilot ota qatorini rad etadi."""
     a, b = seed.orgs
+    if _natural_key_only(table):  # unikal kalit to'qnashuvi FK xatosini yashirmasin (masalan, lots)
+        app.execute(f"DELETE FROM {table} WHERE id = %s", [seed.rows[a][table]])
     values = _fresh(seed, table, a)
     values[column] = seed.rows[b][parent]
     with pytest.raises(errors.ForeignKeyViolation):

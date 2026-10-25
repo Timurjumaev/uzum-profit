@@ -219,6 +219,13 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
    P&L'da "qayta hisoblandi" belgisi (oxirgi 7 kun ko'rinadi).
 5. Qaytish va qisman bekor semantikasi B2.11 da real ma'lumot bilan tasdiqlanadi va testga yoziladi.
 6. Tezlik: 10 000 sotuvli tovar uchun qayta hisob < 1 s (benchmark testi).
+7. B2.8 (`upapi.calc`): manba o'zgarganda shu tranzaksiyada `recalc_queue` ga so'rov (`purchase`, `item`, `shop` +
+   kun, `metrics` + kun); `calc.org` ishi (Procrastinate, `lock = calc:<org>`) navbatni `FOR UPDATE` bilan oladi,
+   bitta tranzaksiyada lotlar → `sale_costs` → `daily_sku_metrics`. Tovar ichida doim to'liq hisoblanadi (keyingi
+   lot "erta sotuv" orqali oldingi sotuvga ta'sir qiladi), bazaga faqat farqlar yoziladi; COGS o'zgarsa
+   `changed_at`/`previous_cogs`. `amount` qaytganlarsiz (F18), shuning uchun qaytish hodisasi yo'q; hisobdan
+   chiqarish — `stock_moves` (`writeoff`, manfiy `adjust`). `calc.nightly` — to'liq qayta qurish (kurs arxivi kech
+   kelsa ham). Benchmark: 10 000 sotuvli tovar bazasi bilan < 3 s.
 
 ## 8. API dizayni
 

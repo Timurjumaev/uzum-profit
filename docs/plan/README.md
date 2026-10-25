@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B2. Backend poydevori va staging** (B1 tugadi, 2026-10-24) |
-| Keyingi vazifa | B2.8 Hisob ishlari (lotlar, `sale_costs`, `daily_sku_metrics`) |
+| Keyingi vazifa | B2.9 O'qish API'lari (dashboard, pnl, skus, sales, expenses, inventory) |
 | Temurdan kutilmoqda | Q2 (server provayderi) — B2.10 gacha; ixtiyoriy: partiya qatorlariga SKU biriktirish |
-| Oxirgi yangilanish | 2026-10-24 (B2.7 tayyor: CBU kurslari ishi, kuniga 2 marta + arxiv) |
+| Oxirgi yangilanish | 2026-10-25 (B2.8 tayyor: hisob ishlari — lotlar, sotuv tannarxi, kunlik agregat) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

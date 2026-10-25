@@ -105,6 +105,7 @@ def test_shortage_uses_last_price() -> None:
 def test_no_lots_no_cost() -> None:
     r = compute_costs([], [Sale("s", d(1), 1)])
     assert r.sales["s"].cost is None and r.sales["s"].unit_cost is None
+    assert r.sales["s"].flags == {CostFlag.NO_LOTS}
     assert r.remaining_value == uzs(0)
 
 

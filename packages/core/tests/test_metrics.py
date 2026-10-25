@@ -31,6 +31,7 @@ from upcore.metrics import (
     realization_rate,
     return_share,
     revenue,
+    sale_totals,
     sku_acos,
     status_group,
     target_margin_price,
@@ -57,6 +58,7 @@ def line(
     day: date = DAY,
     seller_profit: int | None = None,
     returns: int = 0,
+    estimated: bool = False,
 ) -> SaleLine:
     return SaleLine(
         sku=sku,
@@ -69,6 +71,7 @@ def line(
         seller_profit=None if seller_profit is None else D(seller_profit),
         amount_returns=returns,
         unit_cost=None if cost is None else D(cost),
+        estimated=estimated,
     )
 
 
@@ -144,6 +147,35 @@ def test_payout_mismatches() -> None:
     off_by_one = line(seller_profit=75_001)
     bad = line(seller_profit=74_000)
     assert payout_mismatches([ok, off_by_one, bad, line()]) == [bad]
+
+
+def test_sale_totals() -> None:
+    lines = [
+        line(amount=2, comm=40_000, log=10_000, returns=1),
+        line(cost=None, price=50_000, comm=10_000, log=5_000),
+        line(estimated=True, cost=30_000),
+        line("PROCESSING"),
+        line("CANCELED", amount=3),
+    ]
+    t = sale_totals(lines)
+    assert t.revenue == uzs(350_000) and t.units == 4
+    assert (t.commission, t.logistics) == (uzs(70_000), uzs(20_000))
+    assert t.cogs == uzs(110_000) and t.cogs_estimated == uzs(30_000)
+    assert t.revenue_costed == uzs(300_000) and t.payout_costed == uzs(300_000 - 60_000 - 15_000)
+    assert (t.returns, t.canceled) == (1, 3)
+    assert t.payout_costed - t.cogs == gross_profit(lines)  # F8
+
+
+@given(st.lists(st.tuples(st.integers(1, 5), st.integers(0, 3)), max_size=12))
+def test_sale_totals_additive(rows: list[tuple[int, int]]) -> None:
+    lines = [line(amount=a, day=DAY + timedelta(days=d)) for a, d in rows]
+    whole = sale_totals(lines)
+    parts = [
+        sale_totals([x for x in lines if x.order_date == DAY + timedelta(days=d)]) for d in range(4)
+    ]
+    assert total([p.revenue for p in parts], "UZS") == whole.revenue == revenue(lines)
+    assert total([p.cogs for p in parts], "UZS") == whole.cogs == cogs(lines)
+    assert sum(p.units for p in parts) == whole.units
 
 
 # F9–F10 ---------------------------------------------------------------------------------------

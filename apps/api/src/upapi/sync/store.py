@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime
 from typing import Any
 from uuid import UUID
 
@@ -132,19 +132,22 @@ async def upsert_shops(
 # --- Bog'lanishlar -------------------------------------------------------------------------------
 
 
-async def link_sales(conn: AsyncConnection, shop_id: UUID) -> int:
+async def link_sales(conn: AsyncConnection, shop_id: UUID) -> tuple[int, datetime | None]:
     """Sotuv qatori → SKU: ``skuTitle`` = ``skuFullTitle`` (legacy kabi), faqat do'kon ichida bir ma'noli kod.
-    Bog'langan qator qayta bog'lanmaydi."""
-    result = await conn.execute(
-        text(
-            "UPDATE sale_items s SET sku_id = k.id, updated_at = now() FROM mp_skus k "
-            "WHERE s.shop_id = :shop AND s.sku_id IS NULL AND k.shop_id = s.shop_id "
-            "AND k.sku_code = s.sku_title AND NOT EXISTS (SELECT 1 FROM mp_skus d "
-            "WHERE d.shop_id = k.shop_id AND d.sku_code = k.sku_code AND d.id <> k.id)"
-        ),
-        {"shop": shop_id},
-    )
-    return result.rowcount
+    Bog'langan qator qayta bog'lanmaydi. Qaytadi: bog'langanlar soni va eng erta buyurtma vaqti (qayta hisob uchun)."""
+    row = (
+        await conn.execute(
+            text(
+                "WITH linked AS (UPDATE sale_items s SET sku_id = k.id, updated_at = now() FROM mp_skus k "
+                "WHERE s.shop_id = :shop AND s.sku_id IS NULL AND k.shop_id = s.shop_id "
+                "AND k.sku_code = s.sku_title AND NOT EXISTS (SELECT 1 FROM mp_skus d "
+                "WHERE d.shop_id = k.shop_id AND d.sku_code = k.sku_code AND d.id <> k.id) "
+                "RETURNING s.ordered_at) SELECT count(*), min(ordered_at) FROM linked"
+            ),
+            {"shop": shop_id},
+        )
+    ).one()
+    return int(row[0]), row[1]
 
 
 async def link_expenses(conn: AsyncConnection, shop_id: UUID) -> int:
