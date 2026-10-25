@@ -153,8 +153,11 @@ dona legacy bilan 1 so'mgacha bir xil.
 - [ ] B3.7 Kirish sahifalari, onboarding wizard (M2), "Ma'lumotlar holati" sahifasi.
 - [ ] B3.8 Playwright: e2e (kirish, onboarding), vizual skrinshotlar, axe.
 - T: `/ui-kit` va onboarding skrinshotlarini ko'rib fikr bildirish; Q1 — brend nomini tanlash.
+  ✓ 2026-10-25 `/ui-kit` skrinshotlari (yorug'/qorong'i, 1440/390 px) Temur tomonidan ma'qullandi (B3.4 komponentlari
+  o'zgarishsiz qoladi). Qoldi: onboarding skrinshotlari (B3.7) va Q1 (brend nomi).
 
-**Chiqish:** UI-kit skrinshotlari (yorug'/qorong'i, 1440/390 px) Temur tomonidan ma'qullangan; axe — jiddiy xato 0.
+**Chiqish:** UI-kit skrinshotlari (yorug'/qorong'i, 1440/390 px) Temur tomonidan ma'qullangan ✓ 2026-10-25; axe — jiddiy
+xato 0 (B3.4 dan CI'da; karkas va yangi sahifalar qo'shilgach ham). Onboarding skrinshotlari (B3.7) ma'qullanishi — B3 yopilishi uchun.
 
 ## B4. Asosiy ekranlar — Temur yangi dasturga o'tadi — 10–15 kun
 
