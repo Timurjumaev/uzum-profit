@@ -236,3 +236,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   EmptyState, Skeleton (300 ms kechikish), ProgressBar, ProductThumb (lazy, harf-belgi), FileDrop. Lucide ikonlar.
   `formatMonth`. Testlar: `ui.test.tsx` (xatti-harakat), `ui-kit.test.tsx` (axe-core: jiddiy xato 0, ochiq
   qatlamlar va ruscha bilan). Boshlang'ich JS 135 KB gzip.
+- B3.5 Sahifa karkasi (`apps/web/src/components/shell`, 04 §7.1): `AppShell` kirish talab qiladigan sahifalar uchun;
+  Sidebar (232/64 px, tanlov saqlanadi), TopBar — do'kon (bir nechta), davr, solishtirish, SyncIndicator va uzilish
+  banneri (M3), mobil tab bar ("Yana" paneli bilan), Ctrl/⌘ + K palitrasi (sahifalar, mavzu, til; lotin/kirill
+  qidiruvi), foydalanuvchi menyusi (mavzu, til, chiqish). Umumiy filtrlar URL'da (`shop`, `from`, `to`, `cmp`;
+  `app/filters`) va bo'limdan bo'limga o'tganda saqlanadi. Sahifalari yo'q bo'limlar "qurilmoqda" sahifasida.
+  Testlar: karkas (axe-core bilan), filtrlar, sinxron holati; soxta API `src/test/api.ts`. Boshlang'ich JS 146,8 KB gzip.

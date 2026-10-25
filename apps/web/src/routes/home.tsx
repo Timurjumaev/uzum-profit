@@ -8,7 +8,7 @@ export function Home() {
   const { t } = useTranslation();
   const { data } = useSuspenseQuery(meQuery);
   return (
-    <main>
+    <section>
       <h1>{t("app.name")}</h1>
       <p>{t("pages.home.building")}</p>
       <ul aria-label={t("common.orgs")}>
@@ -16,6 +16,6 @@ export function Home() {
           <li key={org.id}>{org.name}</li>
         ))}
       </ul>
-    </main>
+    </section>
   );
 }
