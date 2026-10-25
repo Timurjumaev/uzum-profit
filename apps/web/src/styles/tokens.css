@@ -1,0 +1,162 @@
+/* Dizayn tokenlari (04 §2–4). Qiymatlar `tokens.ts` bilan bir xil (test tekshiradi) — o'zgartirilsa ikkalasida.
+   Mavzu: tizim sozlamasi; foydalanuvchi tanlasa `<html data-theme="light|dark">` (lib/theme). */
+
+:root {
+  color-scheme: light;
+  --bg-page: #F5F6F8;
+  --bg-surface: #FFFFFF;
+  --bg-raised: #F0F2F5;
+  --text-primary: #121826;
+  --text-secondary: #4B5160;
+  --text-muted: #7C8291;
+  --border-hairline: #E3E6EB;
+  --border-rule: #121826;
+  --border-input: #858A96;
+  --accent: #256ABF;
+  --accent-hover: #1C5CAB;
+  --accent-text: #256ABF;
+  --on-accent: #FFFFFF;
+  --focus-ring: #256ABF;
+  --positive-text: #006300;
+  --positive-bg: #E3F4E3;
+  --negative-text: #B42F2F;
+  --negative-bg: #FBE9E9;
+  --warning-text: #8A5A00;
+  --warning-bg: #FDF1D6;
+  --info-text: #1C5CAB;
+  --info-bg: #E7F0FB;
+  --chart-1: #2A78D6;
+  --chart-2: #EB6834;
+  --chart-3: #1BAF7A;
+  --chart-4: #EDA100;
+  --chart-5: #E87BA4;
+  --chart-6: #008300;
+  --chart-7: #6250D6;
+  --chart-8: #E34948;
+  --chart-diverging-mid: #F0EFEC;
+
+  --chart-good: #0CA30C;
+  --chart-warning: #FAB219;
+  --chart-serious: #EC835A;
+  --chart-critical: #D03B3B;
+
+  --font-sans: Inter, "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --type-hero: 600 48px/52px var(--font-sans);
+  --tracking-hero: -0.02em;
+  --type-display: 600 36px/44px var(--font-sans);
+  --tracking-display: 0em;
+  --type-h1: 600 24px/32px var(--font-sans);
+  --tracking-h1: -0.01em;
+  --type-h2: 600 18px/26px var(--font-sans);
+  --tracking-h2: 0em;
+  --type-h3: 600 15px/22px var(--font-sans);
+  --tracking-h3: 0em;
+  --type-body: 400 14px/20px var(--font-sans);
+  --tracking-body: 0em;
+  --type-body-strong: 500 14px/20px var(--font-sans);
+  --tracking-body-strong: 0em;
+  --type-table: 400 13px/18px var(--font-sans);
+  --tracking-table: 0em;
+  --type-label: 500 12px/16px var(--font-sans);
+  --tracking-label: 0em;
+  --type-kpi: 600 28px/34px var(--font-sans);
+  --tracking-kpi: 0em;
+  --type-caption: 400 12px/16px var(--font-sans);
+  --tracking-caption: 0em;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --radius-control: 6px;
+  --radius-panel: 10px;
+  --shadow-float: 0 8px 24px rgb(18 24 38 / 0.12);
+  --content-max: 1440px;
+  --gutter: 16px;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --gutter: 24px;
+  }
+}
+
+/* Qorong'i: tizim sozlamasi (foydalanuvchi yorug'ni tanlamagan bo'lsa) yoki qo'lda tanlangan. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg-page: #0E121A;
+    --bg-surface: #161B24;
+    --bg-raised: #1E2430;
+    --text-primary: #EEF0F4;
+    --text-secondary: #B4BAC6;
+    --text-muted: #8A91A0;
+    --border-hairline: #2A3140;
+    --border-rule: #EEF0F4;
+    --border-input: #6B7282;
+    --accent: #256ABF;
+    --accent-hover: #3987E5;
+    --accent-text: #6DA7EC;
+    --on-accent: #FFFFFF;
+    --focus-ring: #6DA7EC;
+    --positive-text: #3FBF3F;
+    --positive-bg: #13301A;
+    --negative-text: #EF8A8A;
+    --negative-bg: #3A1C1C;
+    --warning-text: #FAB219;
+    --warning-bg: #3A2C0E;
+    --info-text: #86B6EF;
+    --info-bg: #16263D;
+    --chart-1: #3987E5;
+    --chart-2: #D95926;
+    --chart-3: #199E70;
+    --chart-4: #C98500;
+    --chart-5: #D55181;
+    --chart-6: #008300;
+    --chart-7: #9085E9;
+    --chart-8: #E66767;
+    --chart-diverging-mid: #383835;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-page: #0E121A;
+  --bg-surface: #161B24;
+  --bg-raised: #1E2430;
+  --text-primary: #EEF0F4;
+  --text-secondary: #B4BAC6;
+  --text-muted: #8A91A0;
+  --border-hairline: #2A3140;
+  --border-rule: #EEF0F4;
+  --border-input: #6B7282;
+  --accent: #256ABF;
+  --accent-hover: #3987E5;
+  --accent-text: #6DA7EC;
+  --on-accent: #FFFFFF;
+  --focus-ring: #6DA7EC;
+  --positive-text: #3FBF3F;
+  --positive-bg: #13301A;
+  --negative-text: #EF8A8A;
+  --negative-bg: #3A1C1C;
+  --warning-text: #FAB219;
+  --warning-bg: #3A2C0E;
+  --info-text: #86B6EF;
+  --info-bg: #16263D;
+  --chart-1: #3987E5;
+  --chart-2: #D95926;
+  --chart-3: #199E70;
+  --chart-4: #C98500;
+  --chart-5: #D55181;
+  --chart-6: #008300;
+  --chart-7: #9085E9;
+  --chart-8: #E66767;
+  --chart-diverging-mid: #383835;
+}

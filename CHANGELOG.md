@@ -214,3 +214,13 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   nisbiy vaqt (rus ko'plik shakli) — Toshkent sanasi bo'yicha; API satrlari float'siz, ROUND_HALF_UP. B3.1 matnlari
   i18n'ga ko'chdi. eslint: `toLocaleString`/`Intl` faqat `lib/format` da. Testlar: `format.test.ts`, `i18n.test.tsx`,
   `App.test.tsx` (ruscha va kirillcha karkas, xato matni).
+- B3.3 Dizayn tokenlari va mavzu (`apps/web`): `src/styles/tokens.ts` — yagona manba (ranglar 04 §4.2 ikkala
+  rejimda, grafik slotlari 1–8, holat, ketma-ket va ikki qutbli ranglar, rollar §4.3, tipografik shkala §2.1, oraliq,
+  radius, breakpointlar, soya, shrift steklari); `tokens.css` — CSS o'zgaruvchilari (tizim sozlamasi
+  `prefers-color-scheme` yoki `data-theme`), test bilan `tokens.ts` ga teng. WCAG kontrasti testi (matn ≥ 4,5,
+  muted/input/fokus ≥ 3, holat matni o'z fonida ≥ 4,5) — `border-input` yorug' rejimda `#858A96` ga o'zgardi (eskisi
+  qog'oz/hover fonida 2,9; 04 §4.4 yangilandi). Inter variable (wght + opsz, `@fontsource-variable/inter`) o'zimizda:
+  lotin, lotin-ext, kirill, kirill-ext subsetlari `unicode-range` bilan, `font-display: swap`, lotin fayli preload
+  (vite plagini); belgilar qamrovi testda. `base.css` — shkala, `.num` (tabular-nums), `.mono`, `.hero`, fokus halqasi,
+  mobil o'lchamlar, `prefers-reduced-motion`. `lib/theme.ts` — `applyTheme` / `useTheme` (tizim / yorug' / qorong'i,
+  `localStorage`, `theme-color`), `public/theme-init.js` — React'dan oldin (CSP `script-src 'self'`, inline yo'q).

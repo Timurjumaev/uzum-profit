@@ -1,0 +1,116 @@
+/* Asosiy uslublar (04 §2–3): shrift, tipografik shkala, fokus. Komponentlar — B3.4. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-sans);
+  font-optical-sizing: auto;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 360px;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font: var(--type-body);
+}
+
+h1 {
+  margin: 0 0 var(--space-4);
+  font: var(--type-h1);
+  letter-spacing: var(--tracking-h1);
+}
+
+h2 {
+  margin: 0 0 var(--space-3);
+  font: var(--type-h2);
+}
+
+h3 {
+  margin: 0 0 var(--space-2);
+  font: var(--type-h3);
+}
+
+p {
+  margin: 0 0 var(--space-3);
+  max-width: 75ch;
+}
+
+a {
+  color: var(--accent-text);
+}
+
+button {
+  font: var(--type-body-strong);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Raqamlar: jadval, o'q yozuvlari, hisob varag'i — bir xil kenglikda; katta yolg'iz raqam — proportsional. */
+.num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.hero {
+  font: var(--type-hero);
+  letter-spacing: var(--tracking-hero);
+}
+
+.kpi {
+  font: var(--type-kpi);
+}
+
+.label {
+  font: var(--type-label);
+}
+
+.caption,
+.muted {
+  font: var(--type-caption);
+  color: var(--text-secondary);
+}
+
+main {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--space-6) var(--gutter);
+}
+
+/* Holat sahifalari (xato, 404, yuklanmoqda). */
+.state {
+  max-width: 40rem;
+  margin: 15vh auto 0;
+  padding: 0 var(--gutter);
+}
+
+@media (max-width: 639px) {
+  body {
+    font: 400 15px/22px var(--font-sans);
+  }
+
+  .hero {
+    font: 600 36px/40px var(--font-sans);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

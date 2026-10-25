@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B2. Backend poydevori va staging** (B1 tugadi, 2026-10-24) |
-| Keyingi vazifa | B2.11 yakuni: 24 soat xatosiz tekshiruvi (2026-10-26); parallel — B3.3 tokenlar, Inter, yorugʻ/qorongʻi rejim (B3.1–B3.2 tayyor) |
+| Keyingi vazifa | B2.11 yakuni: 24 soat xatosiz tekshiruvi (2026-10-26); parallel — B3.4 komponentlar katalogi va `/ui-kit` (B3.1–B3.3 tayyor) |
 | Temurdan kutilmoqda | **2026-10-26 ~21:55 (Toshkent) eslatma:** loyiha papkasida `python3 -m uzum_profit sync`, so'ng `docs/staging.md` "Real sinov" 2–3-qadamlari (realcheck → compare) va yangi `staging_farqlari.md` ni chatga yuklash (B2 chiqishi: 24 soat xatosiz); ixtiyoriy: partiya qatorlariga SKU biriktirish |
-| Oxirgi yangilanish | 2026-10-25 (B3.2: i18n uz-Latn/uz-Cyrl/ru, `lib/format`) |
+| Oxirgi yangilanish | 2026-10-25 (B3.3: tokenlar, Inter, yorugʻ/qorongʻi rejim) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

@@ -132,7 +132,13 @@ dona legacy bilan 1 so'mgacha bir xil.
   apostrof turlaridan qat'i nazar qidiruv), `lib/format` (U+00A0, vergul, U+2212, pul, valyuta, ixcham, foiz,
   o'zgarish, sana/kun/davr/hafta kuni Toshkent bo'yicha, nisbiy vaqt, rus ko'plik shakli; satr ustida ROUND_HALF_UP);
   eslint: `toLocaleString`/`Intl` faqat `lib/format` da. Profil tili (`user.language`) bilan bog'lash — B3.7 sozlamalar.
-- [ ] B3.3 Tokenlar (04 §4), Inter subset, yorug'/qorong'i rejim.
+- [x] B3.3 Tokenlar (04 §4), Inter subset, yorug'/qorong'i rejim.
+  ✓ 2026-10-25: `styles/tokens.ts` (yagona manba: ranglar 04 §4.2, grafik slotlari va rollari §4.3, tipografik
+  shkala §2.1, oraliq, radius, breakpointlar) = `styles/tokens.css` (test); WCAG kontrasti testda (topildi va
+  tuzatildi: `border-input` yorug' `#8B909C` → `#858A96`, 04 §4.4); Inter variable (wght + opsz) o'zimizda, 4 subset
+  (lotin, lotin-ext, kirill, kirill-ext; ʻ ʼ U+00A0 U+202F − № qamrovi testda), lotin fayli preload; mavzu — tizim
+  yoki qo'lda (`lib/theme`, `data-theme`, `localStorage`, `theme-color`, `public/theme-init.js` — CSP'ga mos,
+  miltillamaydi). Mavzu tanlash tugmasi — B3.5 topbar.
 - [ ] B3.4 Komponentlar katalogi (04 §5) + `/ui-kit` sahifasi.
 - [ ] B3.5 Karkas: sidebar, topbar (do'kon, davr, solishtirish, SyncIndicator), mobil tab bar, Ctrl+K.
 - [ ] B3.6 Grafik komponentlari (ECharts temasi, tooltip, jadval ko'rinishi).
