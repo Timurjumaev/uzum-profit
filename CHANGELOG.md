@@ -174,3 +174,13 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   IP bo'yicha soatiga 20 ta (`UP_OTP_PER_IP_HOUR`, `upapi.ratelimit`, `otp_ip_rate_limited`), uvicorn
   `--proxy-headers`. CI: `staging` ishi (shu oqim real konteynerlarda), `infra/tests/` (skriptlar: qaytish, migratsiya
   xatosi, image yo'qligi, zaxira aylanishi, sirlar staging tekshiruvlaridan o'tadi).
+- B2.11 real sinov vositalari (`docs/staging.md` "Real sinov"): `scripts/staging_connect.py` (stdlib, Mac'da — telefon +
+  Telegram kodi, tashkilot, Uzum kaliti `getpass` bilan, yaroqsiz kalitni almashtirish, sinxron holati `status --watch`;
+  sessiya `~/.uzum-profit/staging-session.json` 600, kalit hech qayerga yozilmaydi); `python -m upapi.realcheck` +
+  `infra/staging/realcheck.sh` (serverda, `up_app`/RLS bilan JSON: do'kon × oy × holat bo'yicha F3–F6 yig'indilari va
+  qatorlar, taxminlar — postavka `skuForInvoiceDtoList[].id`, faktura `dateCreated` ko'rinishlari, `/v1/return`
+  ishi, logistika `externalId` (buyurtma id'siga mosligi ham), `sellerProfit` bo'yicha `amount`/`amountReturns` va
+  `PARTIALLY_CANCELLED` semantikasi, "boshqa" xarajat kodlari; 24 soatlik sinxron xatolari); `scripts/compare_staging.py`
+  (legacy `uzum.db` bilan oylar bo'yicha 1 so'mgacha, qator farqlari, taxminlar hukmi ✓/✗/≈). CI `staging` ishida
+  realcheck image ichida. Testlar: `test_realcheck.py`, `test_compare_staging.py` (sinxron → realcheck → legacy import
+  bilan solishtirish), `test_staging_connect.py` (haqiqiy API bilan), `infra/tests`.

@@ -16,7 +16,12 @@ import pytest
 from upapi.settings import Environment, Settings
 
 REPO = Path(__file__).resolve().parents[2]
-SCRIPTS = ["infra/staging/lib.sh", "infra/staging/deploy.sh", "infra/backup/backup.sh"]
+SCRIPTS = [
+    "infra/staging/lib.sh",
+    "infra/staging/deploy.sh",
+    "infra/staging/realcheck.sh",
+    "infra/backup/backup.sh",
+]
 
 FAKE_DOCKER = r"""#!/usr/bin/env bash
 echo "UP_TAG=${UP_TAG:-} $*" >> "$FAKE_LOG"
@@ -175,6 +180,22 @@ def test_first_deploy_without_previous(root: Path) -> None:
     r = run(root, "infra/staging/deploy.sh", "v1", UP_SKIP_PULL="1", FAKE_CURL_FAIL="1")
     assert r.returncode == 1 and "qaytadigan oldingi versiya yo'q" in r.stderr
     assert not (root / ".deployed-tag").exists()
+
+
+def test_realcheck_runs_in_deployed_api(root: Path) -> None:
+    """B2.11: hisobot ishlab turgan versiyaning api konteynerida, argumentlar o'tadi."""
+    (root / ".deployed-tag").write_text("v7\n")
+    r = run(root, "infra/staging/realcheck.sh", "--org", "x")
+    assert r.returncode == 0, r.stderr
+    (call,) = calls(root)
+    assert call.startswith("UP_TAG=v7 compose -f ")
+    assert call.endswith("exec -T api python -m upapi.realcheck --org x")
+
+
+def test_realcheck_needs_deploy(root: Path) -> None:
+    r = run(root, "infra/staging/realcheck.sh")
+    assert r.returncode == 1 and "deploy qilinmagan" in r.stderr
+    assert not (root / "calls.log").exists()
 
 
 def test_backup_verifies_and_rotates(root: Path) -> None:

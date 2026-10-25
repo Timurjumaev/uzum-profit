@@ -96,6 +96,9 @@ Ochiq: F21 real ma'lumotda — partiyalarga SKU biriktirilgach (yoki B2.11).
   `PARTIALLY_CANCELLED`, `amountReturns`, qaytishlar semantikasi tasdiqlanadi va testga yoziladi. B2.6 dan
   tekshiriladigan taxminlar: postavka tarkibida `skuForInvoiceDtoList[].id` = SKU id, faktura `dateCreated` matn
   formati, `/v1/return` sahifalash (`dateFrom` qo'llanmaydi) va hajmi, logistika xarajati `externalId` = sotuv qatori id.
+  Vositalar tayyor (2026-10-25): `scripts/staging_connect.py` (kirish va kalit, Mac'da), `python -m upapi.realcheck` /
+  `infra/staging/realcheck.sh` (serverda hisobot), `scripts/compare_staging.py` (legacy bilan, Mac'da) — `docs/staging.md`
+  "Real sinov". Kutilmoqda: Temur kalitni kiritadi va hisobotni yuboradi; natija va semantika testga yoziladi.
 - T: Q2 — provayder tanlash, akkaunt ochish va staging VPS uchun to'lash (taxminan 210–260 ming so'm/oy).
 - T: GitHub Actions uchun SSH kirishini qo'shish (men qadam-baqadam yo'riqnoma beraman).
 - T: @BotFather'da bot yaratish (admin ogohlantirishlari, keyin B6 xulosalari uchun) va tokenni staging sozlamasiga
