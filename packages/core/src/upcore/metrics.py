@@ -227,8 +227,8 @@ class SaleTotals:
     revenue_costed: Money  # F15 surati: tannarxi ma'lum qatorlar tushumi
     payout_costed: Money  # F6 tannarxi ma'lum qatorlar bo'yicha; F8 = payout_costed − cogs
     cogs_estimated: Money  # F22: taxminiy belgili qatorlar tannarxi (F7 ning qismi)
-    returns: int  # F18 surati: Σ ``amountReturns``
-    canceled: int  # F17 surati: Bekor dona
+    returns: int  # F18 surati: Yakunlangan qatorlardagi Σ ``amountReturns``
+    canceled: int  # F17 surati: Bekor dona (``amount`` + ``amountReturns``)
     lines: int = 0  # Yakunlangan qatorlar soni
     uncovered_lines: int = 0  # shundan tannarxsiz (F15 "N ta sotuv tannarxsiz")
     units_costed: int = 0  # tannarxi ma'lum Yakunlangan dona (tannarx/dona, foyda/dona — M6)
@@ -248,7 +248,7 @@ def sale_totals(lines: Iterable[SaleLine]) -> SaleTotals:
         revenue_costed=revenue(covered),
         payout_costed=payout(covered),
         cogs_estimated=cogs([line for line in covered if line.estimated]),
-        returns=sum(line.amount_returns for line in items),
+        returns=_returned(items),
         canceled=_units(items, StatusGroup.CANCELED),
         lines=len(done),
         uncovered_lines=len(done) - len(covered),
@@ -395,7 +395,17 @@ def profit_summary(
 
 
 def _units(lines: Iterable[SaleLine], group: StatusGroup) -> int:
+    """Guruh donasi. Bekor qatorda Uzum ``amount`` = 0 beradi, bekor qilingan dona ``amountReturns`` da (B2.11, real
+    ma'lumot: 905 ta CANCELED qatorning hammasi shunday) — shuning uchun Bekor dona = ``amount`` + ``amountReturns``."""
+    if group is StatusGroup.CANCELED:
+        return sum(line.amount + line.amount_returns for line in lines if line.group is group)
     return sum(line.amount for line in lines if line.group is group)
+
+
+def _returned(lines: Iterable[SaleLine]) -> int:
+    """F18 surati: Yakunlangan qatorlardagi ``amountReturns``. Bekor qatorlarniki — bekor qilingan dona (F17), qaytish
+    emas."""
+    return sum(line.amount_returns for line in completed(lines))
 
 
 def realization_rate(window: Iterable[SaleLine], min_units: int = 50) -> Decimal | None:
@@ -458,11 +468,9 @@ def return_share(sold: int, returned: int) -> Decimal | None:
 
 
 def period_return_share(lines: Iterable[SaleLine]) -> Decimal | None:
-    """F18 davr bo'yicha: sotilgan = Yakunlangan ``amount``, qaytgan = Σ ``amountReturns``."""
+    """F18 davr bo'yicha: sotilgan = Yakunlangan ``amount``, qaytgan = Yakunlangan qatorlardagi Σ ``amountReturns``."""
     items = list(lines)
-    return return_share(
-        _units(items, StatusGroup.COMPLETED), sum(line.amount_returns for line in items)
-    )
+    return return_share(_units(items, StatusGroup.COMPLETED), _returned(items))
 
 
 # --- F19 ------------------------------------------------------------------------------------

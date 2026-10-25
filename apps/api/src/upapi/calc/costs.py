@@ -4,8 +4,8 @@ Tovar (``items``) bo'yicha hodisalar:
 
 - **lot kirimi** — ``lots`` (F20), tayyor sanasi ``ready_on``; yo'ldagi lotlar tartibi — xarid buyurtma sanasi;
 - **sotuv** — SKU'si shu tovarga bog'langan ``sale_items`` (Yakunlangan va Jarayonda, F2), kun — F1, dona —
-  ``amount``. ``amount`` qaytganlarsiz (F18: qaytgan alohida, ``amountReturns``) — qaytgan dona lotdan olinmaydi,
-  shuning uchun alohida qaytish hodisasi yo'q. Semantika B2.11 da real ma'lumotda tasdiqlanadi;
+  ``amount``. ``amount`` — qolgan (sof) dona: ``sellerProfit`` hamma real qatorda ``amount`` bilan F6 ga teng (B2.11);
+  qaytgan yoki bekor dona (``amountReturns``) lotdan olinmaydi, shuning uchun alohida qaytish hodisasi yo'q;
 - **hisobdan chiqarish** — ``stock_moves``: ``writeoff`` va manfiy ``adjust`` (brak, yo'qotish, kamomad).
 
 Hisob faqat ``upcore.costing.compute_costs`` da (tashkilot usuli: FIFO / o'rtacha). Tovar ichida doim to'liq

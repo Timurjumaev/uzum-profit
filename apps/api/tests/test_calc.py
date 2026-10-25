@@ -203,6 +203,8 @@ def test_lots_sale_costs_and_metrics(org: Org) -> None:
     s2 = org.sale(sku, d(10, 5), 4, amount_returns=1)
     s3 = org.sale(sku, d(10, 6), 1, "PROCESSING")
     canceled = org.sale(sku, d(10, 6), 2, "CANCELED")
+    # Haqiqiy Uzum shakli (B2.11): bekor qatorda amount = 0, bekor dona — amountReturns.
+    real_canceled = org.sale(sku, d(10, 6), 0, "CANCELED", amount_returns=3)
     _, other = org.item("Lotsiz")
     no_lots = org.sale(other, d(10, 6))
     unlinked = org.sale(None, d(10, 6), sku_title="Noma'lum")
@@ -239,12 +241,12 @@ def test_lots_sale_costs_and_metrics(org: Org) -> None:
     assert all(
         c[4] is None and c[6] == "fifo" for c in costs.values()
     )  # birinchi hisob — belgi yo'q
-    assert canceled not in costs
+    assert canceled not in costs and real_canceled not in costs
 
     metrics = org.metrics()
     oct6 = metrics[(sku, d(10, 6))]
-    # Jarayonda va bekor qilingan: tushumda yo'q; bekor dona — 2.
-    assert oct6 == (D(0), 0, D(0), D(0), D(0), D(0), 0, 2, D(0), D(0), D(0))
+    # Jarayonda va bekor qilingan: tushumda yo'q; bekor dona — 2 + 3 (F17), qaytish emas (F18 = 0).
+    assert oct6 == (D(0), 0, D(0), D(0), D(0), D(0), 0, 5, D(0), D(0), D(0))
     oct5 = metrics[(sku, d(10, 5))]
     assert oct5 == (
         D("800000.00"),

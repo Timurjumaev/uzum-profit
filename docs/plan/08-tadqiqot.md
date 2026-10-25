@@ -79,6 +79,12 @@ spetsifikatsiyasi, 2026-aprel asosida).
   Faktura `dateCreated` matn ko'rinishida (format yozuvda almashtirilgan — skript tuzatildi), xarajat
   kodlari kichik harfli ham (`logistics-volume`). B2.6 da: vaqt millisekund, ISO yoki `dd.MM.yyyy[ HH:mm]` (Toshkent)
   sifatida o'qiladi, tushunarsizi `NULL` (xom JSON'da qoladi); kodlar `normalize_code` bilan. Haqiqiy format — B2.11.
+- **B2.11 real sinov (2026-10-25, staging, ikkala do'kon to'liq tarix):** legacy bilan har oy TO_WITHDRAW dona,
+  tushum, komissiya, logistika 0 so'm farq. Tasdiqlandi: postavka `skuForInvoiceDtoList[].id` = SKU id (561/561);
+  faktura `dateCreated` — `dd.MM.yyyy` matni (17/17); `/v1/return` bitta so'rovda (byDurii 2 ta DEFECTED, tarkibi
+  SKU'ga bog'landi); logistika xarajati `externalId` = sotuv qatori id (1765/1765). `sellerProfit` = F3 − F4 − F5
+  hamma qatorda `amount` bilan; **Bekor qator: `amount` = 0, komissiya/logistika/`sellerProfit` = 0, bekor dona
+  `amountReturns` da** (905/905); Yakunlangan qatorlarda `amountReturns` > 0 yo'q, `PARTIALLY_CANCELLED` yo'q.
 - Endpointlar: shops; product (SKU: qoldiqlar `quantityActive`, `quantityFbs`, `quantityDefected`,
   `quantityPending`, sotilgan/qaytgan, `avgdsales`, `rankInfo.rank`, `paidStoragePriceItem`, IKPU, `purchasePrice`);
   `sendPriceData` (narx o'zgartirish); finance orders/expenses; FBS buyurtmalar, qoldiq, jo'natmalar; FBO postavkalar

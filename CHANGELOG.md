@@ -187,3 +187,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 - B2.11 tuzatish: `realcheck.sh` `sudo -u deploy` bilan chaqirilganda `UP_ROOT` ga o'tadi (oldin `/home/ubuntu` da
   qolib, compose "stat .: permission denied" bilan yiqilardi); `compare_staging.py` bo'sh yoki buzuq JSON'da traceback
   o'rniga tushunarli xabar; `staging_connect.py` tarix yuklanayotganda (xatosiz) "⏳ tarix yuklanmoqda" ko'rsatadi.
+- B2.11 real natija (Temurning ikkala do'koni, staging): legacy bilan har oy TO_WITHDRAW dona/tushum/komissiya/logistika
+  0 so'm farq; postavka SKU id, faktura sanasi, `/v1/return`, logistika `externalId` taxminlari tasdiqlandi (08 §4).
+  **Tuzatildi** (`upcore.metrics`): Uzum Bekor qatorda `amount` = 0 beradi, bekor dona `amountReturns` da — F17 bekor
+  ulushi va F16 realizatsiya darajasi bekor donani 0 deb olardi (R = 100%), F18 qaytish ulushi va ombor tezligi
+  (`daily_sku_metrics.returns`) bekor qilinganni qaytish deb sanardi. Endi Bekor dona = `amount` + `amountReturns`,
+  F18 — faqat Yakunlangan qatorlardan. Mavjud agregatlar tungi `calc.nightly` da qayta quriladi. Testlar: haqiqiy
+  shakldagi Bekor qator (`test_metrics.py`, `test_calc.py`).

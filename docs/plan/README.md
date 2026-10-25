@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B2. Backend poydevori va staging** (B1 tugadi, 2026-10-24) |
-| Keyingi vazifa | B2.11 Real sinov — vositalar tayyor; Temurning real natijasi bilan yakunlanadi |
-| Temurdan kutilmoqda | B2.11: `python3 scripts/staging_connect.py` bilan kalitni kiritish, tarix yuklangach `docs/staging.md` "Real sinov" 2–3-qadamlar va `staging_farqlari.md` ni yuborish; ixtiyoriy: partiya qatorlariga SKU biriktirish |
-| Oxirgi yangilanish | 2026-10-25 (B2.11 vositalari: kalitni ulash skripti, serverda `upapi.realcheck`, legacy bilan solishtirish) |
+| Keyingi vazifa | B2.11 yakuni: 24 soat xatosiz tekshiruvi (2026-10-26); keyin B3.1 |
+| Temurdan kutilmoqda | **2026-10-26 ~21:55 (Toshkent) eslatma:** loyiha papkasida `python3 -m uzum_profit sync`, so'ng `docs/staging.md` "Real sinov" 2–3-qadamlari (realcheck → compare) va yangi `staging_farqlari.md` ni chatga yuklash (B2 chiqishi: 24 soat xatosiz); ixtiyoriy: partiya qatorlariga SKU biriktirish |
+| Oxirgi yangilanish | 2026-10-25 (B2.11: staging ↔ legacy har oy 0 so'm farq, taxminlar tasdiqlandi; F17/F18 bekor qator tuzatildi) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

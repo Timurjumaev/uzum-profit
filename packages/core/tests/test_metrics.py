@@ -325,9 +325,27 @@ def test_cancel_and_return_share() -> None:
     ]
     assert cancel_share(lines) == D("0.2")
     assert cancel_share([]) is None
-    assert period_return_share(lines) == D("0.2")  # 2 / (8 + 2)
+    # Qaytgan — faqat Yakunlangan qatorlarnikidan: 1 / (8 + 1); Jarayondagi qator hisobga kirmaydi.
+    assert period_return_share(lines) == D("0.111111")
     assert return_share(sold=95, returned=5) == D("0.05")
     assert return_share(0, 0) is None
+
+
+def test_real_canceled_line_shape() -> None:
+    """B2.11 (Temurning real ma'lumoti, 905 ta CANCELED qator): Uzum bekor qatorda ``amount`` = 0, ``commission``,
+    ``logisticDeliveryFee``, ``sellerProfit`` = 0 beradi, bekor qilingan dona ``amountReturns`` da. Bekor dona F17 va
+    F16 ga kiradi, F18 (qaytish) ga kirmaydi."""
+    real = SaleLine(
+        "A", date(2026, 10, 1), "CANCELED", D(92_000), 0, D(0), D(0), D(0), amount_returns=2
+    )
+    done = SaleLine("A", date(2026, 10, 1), "TO_WITHDRAW", D(92_000), 2, D(20_000), D(5_000))
+    lines = [real, done]
+    assert real.revenue == 0 and real.payout == 0
+    assert cancel_share(lines) == D("0.5")  # 2 / (2 + 2)
+    assert period_return_share(lines) == 0
+    t = sale_totals(lines)
+    assert (t.units, t.canceled, t.returns) == (2, 2, 0)
+    assert payout_mismatches([real]) == []
 
 
 # F19 ------------------------------------------------------------------------------------------
