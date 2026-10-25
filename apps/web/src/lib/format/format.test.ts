@@ -125,6 +125,8 @@ describe("sanalar (Toshkent)", () => {
     expect(f.compact(2_000_000)).toBe(v("2_млн"));
     expect(f.period("2026-10-01", "2026-10-02")).toBe(v("1–2_октября"));
     expect(f.weekday("2026-10-26")).toBe("Пн");
+    expect(f.month("2026-10-23")).toBe("октябрь 2026");
+    expect(formatterFor("uz-Latn").month("2026-09-01")).toBe("sentabr 2026");
     expect(f.relative(new Date(), new Date())).toBe("только что");
   });
 });

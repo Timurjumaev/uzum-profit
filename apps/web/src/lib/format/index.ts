@@ -5,15 +5,22 @@
 export type Lang = "uz-Latn" | "uz-Cyrl" | "ru";
 export type Numeric = string | number | bigint;
 
-export const NBSP = " ";
+export const NBSP = "\u00A0";
 export const MINUS = "−";
-const NARROW = " "; // raqam va birlik orasida (04 §2: shriftda tekshirilgan)
+const NARROW = "\u202F"; // raqam va birlik orasida (04 §2: shriftda tekshirilgan)
 
 const MONTHS: Record<Lang, string[]> = {
   "uz-Latn": ["yanvar", "fevral", "mart", "aprel", "may", "iyun", "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr"],
   "uz-Cyrl": ["январ", "феврал", "март", "апрел", "май", "июн", "июл", "август", "сентябр", "октябр", "ноябр", "декабр"],
   // Rus: "23 октября" — qaratqich kelishigi.
   ru: ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"],
+};
+
+// Bosh kelishik (kalendar sarlavhasi: "oktabr 2026", "октябрь 2026").
+const MONTHS_NOMINATIVE: Record<Lang, string[]> = {
+  "uz-Latn": MONTHS["uz-Latn"],
+  "uz-Cyrl": MONTHS["uz-Cyrl"],
+  ru: ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"],
 };
 
 const WEEKDAYS: Record<Lang, string[]> = {
@@ -170,6 +177,12 @@ export function formatPeriod(start: string | Date, end: string | Date, lang: Lan
   return `${formatDay(start, lang, { withYear })} – ${formatDay(end, lang, { withYear })}`;
 }
 
+/** Oy va yil: `oktabr 2026` / `октябрь 2026`. */
+export function formatMonth(value: string | Date, lang: Lang): string {
+  const { y, m } = ymd(value);
+  return `${MONTHS_NOMINATIVE[lang][m - 1]} ${y}`;
+}
+
 /** Hafta kunining qisqa nomi (Du … Ya; dushanbadan). */
 export function formatWeekday(value: string | Date, lang: Lang): string {
   const { y, m, d } = ymd(value);
@@ -230,8 +243,39 @@ export function formatterFor(lang: Lang) {
     day: (value: string | Date) => formatDay(value, lang),
     period: (start: string | Date, end: string | Date) => formatPeriod(start, end, lang),
     weekday: (value: string | Date) => formatWeekday(value, lang),
+    month: (value: string | Date) => formatMonth(value, lang),
     relative: (value: string | Date, now?: Date) => formatRelative(value, lang, now),
   };
 }
 
 export type Formatter = ReturnType<typeof formatterFor>;
+
+// --- Kiritilgan sonni o'qish (MoneyInput, NumberInput — 04 §5) -----------------------------------
+
+/** "1 234,5", "1234.5", "1 234 567", "−312 400", "1.234.567,50" → "1234.5" (API uchun nuqtali satr); son emas — `null`.
+ * Bo'shliqlar (oddiy, U+00A0, U+202F) va apostrof guruh ajratgich; vergul yoki nuqta — oxirgisi kasr (bitta bo'lsa
+ * va undan keyin 3 dan boshqa raqam bo'lsa ham kasr; "1.234.567" kabi bir nechta nuqta — guruh). */
+export function parseNumber(input: string): string | null {
+  let text = input.trim().replace(/[\s\u00A0\u202F'ʼ’]/g, "").replace(MINUS, "-");
+  if (!text) return null;
+  const negative = text.startsWith("-");
+  if (negative || text.startsWith("+")) text = text.slice(1);
+  const separators = text.match(/[.,]/g) ?? [];
+  let int = text;
+  let frac = "";
+  if (separators.length > 0) {
+    const last = Math.max(text.lastIndexOf("."), text.lastIndexOf(","));
+    const lastSep = text[last];
+    const sameKind = separators.every((s) => s === lastSep);
+    if (!sameKind && separators.filter((sep) => sep === lastSep).length > 1) return null; // "1,2,3.4.5"
+    if (sameKind && separators.length > 1) {
+      int = text.replaceAll(lastSep, ""); // 1.234.567 — hammasi guruh
+    } else {
+      int = text.slice(0, last).replace(/[.,]/g, "");
+      frac = text.slice(last + 1);
+    }
+  }
+  if (!/^\d+$/.test(int || "0") || !/^\d*$/.test(frac) || (!int && !frac)) return null;
+  const digits = (int || "0").replace(/^0+(?=\d)/, "") + (frac ? `.${frac}` : "");
+  return negative && /[1-9]/.test(digits) ? `-${digits}` : digits;
+}

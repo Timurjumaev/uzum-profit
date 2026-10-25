@@ -1,0 +1,21 @@
+// Komponentlar katalogi (04 §5) — hammasi `/ui-kit` sahifasida ko'rinadi.
+export { Badge, StatusPill, type Tone } from "./Badge";
+export { Banner } from "./Banner";
+export { Button } from "./Button";
+export { Combobox, filterOptions, type ComboOption } from "./Combobox";
+export { CompareToggle, type CompareMode } from "./CompareToggle";
+export { DataTable, type Column } from "./DataTable";
+export { DateRangePicker } from "./DateRangePicker";
+export { EmptyState, ProgressBar, Skeleton, useDelayed } from "./Feedback";
+export { Field } from "./Field";
+export { FileDrop } from "./FileDrop";
+export { FormulaPopover } from "./FormulaPopover";
+export { MoneyInput, NumberInput, TextInput } from "./Input";
+export { changeTone, Kpi, Sparkline } from "./Kpi";
+export { LedgerTable, type LedgerRow } from "./LedgerTable";
+export { Dialog, Drawer } from "./Overlay";
+export { Popover, Tooltip } from "./Popover";
+export { ProductThumb } from "./ProductThumb";
+export { Select } from "./Select";
+export { Stepper, Timeline, type Stage } from "./Steps";
+export { ToastProvider, useToast } from "./Toast";

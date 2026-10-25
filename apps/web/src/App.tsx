@@ -6,6 +6,7 @@ import { useState } from "react";
 import { I18nextProvider } from "react-i18next";
 
 import { AppErrorBoundary } from "./app/errors";
+import { ToastProvider } from "./components/ui";
 import { makeQueryClient } from "./app/query";
 import { createAppRouter, type AppRouter } from "./app/router";
 import { createI18n, type Lang } from "./lib/i18n";
@@ -33,7 +34,9 @@ export function App({ state }: { state?: AppState }) {
     <I18nextProvider i18n={i18n}>
       <AppErrorBoundary>
         <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router} />
+          <ToastProvider>
+            <RouterProvider router={router} />
+          </ToastProvider>
         </QueryClientProvider>
       </AppErrorBoundary>
     </I18nextProvider>
