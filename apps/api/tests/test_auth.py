@@ -196,6 +196,24 @@ def test_code_rate_limit_per_phone(api: Api) -> None:
     assert api.request_code(api.phone()).status_code == 202  # boshqa raqam — alohida
 
 
+def test_code_rate_limit_per_ip(urls: dict[str, str]) -> None:
+    """B2.10: bitta IP har xil raqamlar bilan ham soatiga ``otp_per_ip_hour`` tadan ko'p kod so'ray olmaydi."""
+    sender = MemorySender()
+    app = create_app(_settings(urls, otp_per_ip_hour=3), sender=sender)
+    with TestClient(app, headers=CSRF) as client:
+        phones = [f"+99891{random.randint(0, 9_999_999):07d}" for _ in range(4)]
+        codes = [client.post("/api/v1/auth/otp", json={"phone": p}).status_code for p in phones]
+        assert codes == [202, 202, 202, 429]
+        r = client.post("/api/v1/auth/otp", json={"phone": phones[0]})
+        assert r.status_code == 429 and r.json()["code"] == "otp_ip_rate_limited"
+        assert phones[3] not in {p for p, _ in sender.outbox}  # kod yuborilmadi (pul sarflanmadi)
+        # Noto'g'ri raqam hisoblagichdan oldin rad etiladi.
+        assert client.post("/api/v1/auth/otp", json={"phone": "abc"}).status_code == 422
+    other = TestClient(app, headers=CSRF, client=("203.0.113.7", 50000))
+    with other:
+        assert other.post("/api/v1/auth/otp", json={"phone": phones[3]}).status_code == 202
+
+
 @pytest.mark.parametrize("phone", ["12", "+998 90 12", "0901234567", "abc"])
 def test_invalid_phone(api: Api, phone: str) -> None:
     r = api.request_code(phone)

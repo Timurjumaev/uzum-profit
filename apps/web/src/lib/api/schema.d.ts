@@ -49,7 +49,8 @@ export interface paths {
         put?: never;
         /**
          * Request Code
-         * @description Kirish kodini Telegram'ga yuborish. Raqam bo'yicha soatiga ``otp_per_hour`` ta; 5 xato → 15 daqiqa blok.
+         * @description Kirish kodini Telegram'ga yuborish. Raqam bo'yicha soatiga ``otp_per_hour`` ta, IP bo'yicha
+         *     ``otp_per_ip_hour`` ta; 5 xato → 15 daqiqa blok.
          */
         post: operations["request_code_api_v1_auth_otp_post"];
         delete?: never;

@@ -13,6 +13,7 @@ from upapi.db.session import make_engine
 from upapi.errors import Problem, install_error_handlers
 from upapi.logs import configure_logging
 from upapi.middleware import csrf_guard, request_context
+from upapi.ratelimit import SlidingWindow
 from upapi.routes import (
     accounts,
     auth,
@@ -85,6 +86,7 @@ def create_app(
     app.state.settings = settings
     app.state.uzum_transport = uzum_transport
     app.state.uzum_limiter = RateLimiter(settings.uzum_min_interval_seconds)
+    app.state.otp_ip_limiter = SlidingWindow(settings.otp_per_ip_hour, 3600)
     app.middleware("http")(csrf_guard(API_PREFIX, settings.allowed_origins))
     # Oxirgi qo'shilgan — tashqi qatlam: so'rov id CSRF xatosida ham bo'ladi.
     app.middleware("http")(request_context)

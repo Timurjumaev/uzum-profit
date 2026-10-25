@@ -1,0 +1,93 @@
+# Staging (B2.10, 03 §1, §14; production — B8, shu fayl asosida). Serverda: `infra/staging/deploy.sh <tag>`.
+# Sirlar `../../.env` da (serverda `/srv/uzum-profit/.env`, `infra/staging/gen-env.sh` yaratadi) — repozitoriyda yo'q.
+# Image'lar GHCR'dan (`deploy-staging.yml`); CI'da shu fayl bilan lokal build qilinadi (`build:`).
+name: uzum-profit
+
+x-app: &app
+  image: ${UP_IMAGE_PREFIX:-ghcr.io/timurjumaev/uzum-profit}-api:${UP_TAG:?UP_TAG kerak}
+  build:
+    context: ../..
+    dockerfile: apps/api/Dockerfile
+  env_file: ../../.env
+  restart: unless-stopped
+  logging: &logging
+    driver: json-file
+    options: {max-size: "10m", max-file: "5"}  # disk kichik — loglar aylanadi
+
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: uzum
+      POSTGRES_DB: uzum
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD kerak}
+      UP_APP_DB_PASSWORD: ${UP_APP_DB_PASSWORD:?UP_APP_DB_PASSWORD kerak}
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./postgres-init-staging:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U uzum -d uzum"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+    logging: *logging
+
+  # Bir martalik: `deploy.sh` har deploy'da (zaxiradan keyin) ishga tushiradi. Ega roli — faqat shu konteynerda.
+  migrate:
+    <<: *app
+    environment:
+      UP_MIGRATION_DATABASE_URL: postgresql://uzum:${POSTGRES_PASSWORD}@postgres:5432/uzum
+    command: ["alembic", "-c", "apps/api/alembic.ini", "upgrade", "head"]
+    restart: "no"
+    profiles: ["tools"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    <<: *app
+    # Faqat Caddy orqali (port tashqariga ochilmaydi), shuning uchun X-Forwarded-For'ga ishonish xavfsiz.
+    command: ["uvicorn", "upapi.main:app", "--host", "0.0.0.0", "--port", "8000",
+              "--proxy-headers", "--forwarded-allow-ips", "*", "--no-server-header"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  # Fon ishchisi (B2.6–B2.8): sinxron, CBU kurslari, hisob. `up_app` bilan, API kabi tekshiruvlardan o'tadi.
+  worker:
+    <<: *app
+    command: ["python", "-m", "upapi.worker"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  caddy:
+    image: ${UP_IMAGE_PREFIX:-ghcr.io/timurjumaev/uzum-profit}-web:${UP_TAG:?UP_TAG kerak}
+    build:
+      context: ../..
+      dockerfile: infra/caddy/Dockerfile
+    environment:
+      UP_DOMAIN: ${UP_DOMAIN:?UP_DOMAIN kerak}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data  # sertifikatlar — qayta deploy'da yangidan so'ralmaydi
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    logging: *logging
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

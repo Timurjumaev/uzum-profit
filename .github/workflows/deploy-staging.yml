@@ -1,0 +1,85 @@
+# Staging deploy (03 §13, 06 §2): main'ga merge → image'lar GHCR'ga → SSH orqali serverda `infra/staging/deploy.sh`
+# (zaxira → migratsiya → yangi konteynerlar → sog'liq tekshiruvi → muvaffaqiyatsiz bo'lsa oldingi image).
+# Server ulanmaguncha (repo o'zgaruvchisi STAGING_HOST yo'q) faqat image'lar yig'iladi, deploy o'tkazib yuboriladi.
+# Kerakli sozlamalar (docs/staging.md): vars.STAGING_HOST, secrets.STAGING_SSH_KEY, secrets.STAGING_HOST_KEY.
+name: Deploy staging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_PREFIX: ghcr.io/timurjumaev/uzum-profit
+
+jobs:
+  images:
+    name: Image'lar (GHCR)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}-api:${{ github.sha }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,scope=api,mode=max
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/caddy/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}-web:${{ github.sha }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
+
+  deploy:
+    name: Staging serverga
+    needs: images
+    if: vars.STAGING_HOST != ''
+    runs-on: ubuntu-24.04
+    environment: staging
+    permissions:
+      contents: read
+      packages: read
+    env:
+      HOST: ${{ vars.STAGING_HOST }}
+      TARGET: deploy@${{ vars.STAGING_HOST }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: SSH kaliti (server kaliti oldindan ma'lum — birinchi ulanishda ham soxta serverga ulanmaydi)
+        env:
+          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+          HOST_KEY: ${{ secrets.STAGING_HOST_KEY }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s %s\n' "$HOST" "$HOST_KEY" > ~/.ssh/known_hosts
+      - name: infra/ fayllarini serverga
+        run: |
+          tar -czf - infra | ssh "$TARGET" 'set -e; cd /srv/uzum-profit; rm -rf infra.new; mkdir infra.new
+            tar -xzf - -C infra.new; rm -rf infra; mv infra.new/infra infra; rmdir infra.new'
+      - name: deploy.sh
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Token buyruq qatorida emas (serverda `ps` da ko'rinmasin) — stdin orqali; deploy oxirida docker logout.
+        run: |
+          printf '%s\n' "$TOKEN" | ssh "$TARGET" \
+            "read -r UP_REGISTRY_TOKEN; export UP_REGISTRY_TOKEN; /srv/uzum-profit/infra/staging/deploy.sh ${{ github.sha }}"

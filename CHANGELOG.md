@@ -165,3 +165,12 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   api:types`, openapi-typescript), CI'da ikkalasining sinxronligi. Testlar: `tests/test_reports.py` (P&L = qatorlardan
   qurilgan `upcore` P&L, bosh sahifa = P&L = SKU yig'indisi, ustunlar va drill-down yig'indilari, rollar, tashkilotlar
   ajratilgani, benchmark).
+- B2.10 Staging (kod; server Temurda — `docs/staging.md`): `infra/compose/staging.yml` (postgres, migrate, api,
+  worker, caddy; image'lar GHCR'dan), `infra/caddy/` (web build + Caddy: HTTPS, HSTS, CSP, SPA marshrutlari),
+  `infra/staging/bootstrap.sh` (Ubuntu 22.04/24.04: Docker, ufw, fail2ban, swap, `deploy` foydalanuvchisi, tungi
+  zaxira taymeri), `gen-env.sh` (tasodifiy sirlar, `.env` 600), `deploy.sh` (zaxira → migratsiya → konteynerlar →
+  HTTPS orqali sog'liq → ishlamasa oldingi image; disk uchun eski image'lar tozalanadi), `infra/backup/` (`pg_dump`,
+  `pg_restore --list` tekshiruvi, 14 kun; to'liq tiklash), `.github/workflows/deploy-staging.yml`. API: kirish kodi
+  IP bo'yicha soatiga 20 ta (`UP_OTP_PER_IP_HOUR`, `upapi.ratelimit`, `otp_ip_rate_limited`), uvicorn
+  `--proxy-headers`. CI: `staging` ishi (shu oqim real konteynerlarda), `infra/tests/` (skriptlar: qaytish, migratsiya
+  xatosi, image yo'qligi, zaxira aylanishi, sirlar staging tekshiruvlaridan o'tadi).
