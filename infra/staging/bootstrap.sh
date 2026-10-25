@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Staging serverni bir marta tayyorlash (B2.10): Ubuntu 22.04/24.04, root sifatida. Takror ishga tushirsa bo'ladi.
+# Staging serverni bir marta tayyorlash (B2.10): Ubuntu 22.04/24.04/26.04 LTS, root sifatida. Takror ishga tushirsa bo'ladi.
 # Docker (rasmiy repo), `deploy` foydalanuvchisi (GitHub Actions shu bilan kiradi), /srv/uzum-profit, ufw (22, 80,
 # 443), fail2ban, avtomatik xavfsizlik yangilanishlari, swap, Toshkent vaqti, tungi zaxira taymeri (03:30).
 #
@@ -13,8 +13,8 @@ root=/srv/uzum-profit
 # shellcheck source=/dev/null
 . /etc/os-release
 case "${ID}:${VERSION_ID}" in
-ubuntu:22.04 | ubuntu:24.04) ;;
-*) echo "Ubuntu 22.04 yoki 24.04 kerak (hozir: $PRETTY_NAME)" >&2; exit 1 ;;
+ubuntu:22.04 | ubuntu:24.04 | ubuntu:26.04) ;;
+*) echo "Ubuntu 22.04, 24.04 yoki 26.04 kerak (hozir: $PRETTY_NAME)" >&2; exit 1 ;;
 esac
 
 export DEBIAN_FRONTEND=noninteractive

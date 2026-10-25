@@ -7,7 +7,7 @@ konteynerlar → sog'liq tekshiruvi → ishlamasa oldingi versiyaga qaytish).
 
 ## Server talablari
 
-- **Ubuntu 24.04 LTS** (yoki 22.04). 20.04 ning rasmiy qo'llab-quvvatlashi 2025-05 da tugagan, Docker uni endi
+- **Ubuntu 24.04 yoki 26.04 LTS** (yoki 22.04). 20.04 ning rasmiy qo'llab-quvvatlashi 2025-05 da tugagan, Docker uni endi
   qo'llab-quvvatlamaydi, shuning uchun `bootstrap.sh` 20.04 da ishlamaydi.
 - RAM ≥ 2 GB (4 GB tavsiya), disk ≥ 15 GB (tavsiya 30–40 GB). Hamma servislar birga ~250 MB RAM ishlatadi, image'lar
   ~2 GB, zaxiralar 14 kun saqlanadi.
