@@ -165,7 +165,7 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   api:types`, openapi-typescript), CI'da ikkalasining sinxronligi. Testlar: `tests/test_reports.py` (P&L = qatorlardan
   qurilgan `upcore` P&L, bosh sahifa = P&L = SKU yig'indisi, ustunlar va drill-down yig'indilari, rollar, tashkilotlar
   ajratilgani, benchmark).
-- B2.10 Staging (kod; server Temurda — `docs/staging.md`): `infra/compose/staging.yml` (postgres, migrate, api,
+- B2.10 Staging (https://16-170-178-179.sslip.io, AWS eu-north-1 vaqtincha — ADR-029; `docs/staging.md`): `infra/compose/staging.yml` (postgres, migrate, api,
   worker, caddy; image'lar GHCR'dan), `infra/caddy/` (web build + Caddy: HTTPS, HSTS, CSP, SPA marshrutlari),
   `infra/staging/bootstrap.sh` (Ubuntu 22.04/24.04: Docker, ufw, fail2ban, swap, `deploy` foydalanuvchisi, tungi
   zaxira taymeri), `gen-env.sh` (tasodifiy sirlar, `.env` 600), `deploy.sh` (zaxira → migratsiya → konteynerlar →
