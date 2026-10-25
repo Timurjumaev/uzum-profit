@@ -39,3 +39,4 @@ check:
 	pnpm --filter web typecheck
 	pnpm --filter web test
 	pnpm --filter web build
+	pnpm --filter web size

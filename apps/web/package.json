@@ -10,9 +10,13 @@
     "test": "vitest run",
     "preview": "vite preview",
     "lint": "eslint .",
-    "api:types": "openapi-typescript ../api/openapi.json -o src/lib/api/schema.d.ts"
+    "api:types": "openapi-typescript ../api/openapi.json -o src/lib/api/schema.d.ts",
+    "size": "node scripts/check-size.mjs"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.104.5",
+    "@tanstack/react-router": "^1.170.46",
+    "openapi-fetch": "^0.17.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
