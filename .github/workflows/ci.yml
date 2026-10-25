@@ -92,6 +92,7 @@ jobs:
       - run: pnpm --filter web typecheck
       - run: pnpm --filter web test
       - run: pnpm --filter web build
+      - run: pnpm --filter web size  # boshlang'ich JS ≤ 250 KB gzip (03 §9)
 
   compose:
     name: Dev muhit (docker compose)

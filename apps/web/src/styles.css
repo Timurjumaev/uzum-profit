@@ -22,3 +22,15 @@ body {
 main {
   padding: 24px 16px;
 }
+
+/* Holat sahifalari (B3.1: xato, 404, yuklanmoqda) — to'liq komponentlar B3.4 da. */
+.state {
+  max-width: 40rem;
+  margin: 15vh auto 0;
+  padding: 0 16px;
+}
+
+.muted {
+  opacity: 0.7;
+  font-size: 0.875rem;
+}

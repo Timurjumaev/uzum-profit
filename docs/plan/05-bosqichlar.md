@@ -119,7 +119,12 @@ dona legacy bilan 1 so'mgacha bir xil.
 
 ## B3. Frontend poydevori va dizayn tizimi — 6–9 kun
 
-- [ ] B3.1 Vite + React + TS, TanStack Router/Query, openapi-fetch, xato chegaralari.
+- [x] B3.1 Vite + React + TS, TanStack Router/Query, openapi-fetch, xato chegaralari.
+  ✓ 2026-10-25 (B2 ning 24 soatlik tekshiruvini kutish vaqtida, Temur roziligi bilan): `lib/api/client` (openapi-fetch,
+  cookie, CSRF sarlavhasi, problem+json → `ApiError`), `app/query` (staleTime 60 s, 4xx qayta so'ralmaydi, 401 →
+  `/login?redirect=`), `app/router` (lazy marshrutlar, kirish talab qiladigan `app` tartibi, ichki `redirect`),
+  xato chegaralari (marshrut xatosi — so'rov ID va "Qayta urinish", 404, ildiz `AppErrorBoundary`); boshlang'ich JS
+  ~103 KB gzip, CI'da byudjet (`pnpm --filter web size`, ≤ 250 KB).
 - [ ] B3.2 i18n (uz-Latn, uz-Cyrl transliteratsiya, ru), `lib/format` (04 §8.4) + testlar.
 - [ ] B3.3 Tokenlar (04 §4), Inter subset, yorug'/qorong'i rejim.
 - [ ] B3.4 Komponentlar katalogi (04 §5) + `/ui-kit` sahifasi.
