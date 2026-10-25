@@ -65,7 +65,14 @@ const login = createRoute({
   component: lazyRouteComponent(() => import("../routes/login"), "Login"),
 });
 
-export const routeTree = root.addChildren([app.addChildren([home, status]), login]);
+// Komponentlar katalogi (04 §5) — kirishsiz, ma'lumotsiz (sintetik namunalar).
+const uiKit = createRoute({
+  getParentRoute: () => root,
+  path: "/ui-kit",
+  component: lazyRouteComponent(() => import("../routes/ui-kit"), "UiKit"),
+});
+
+export const routeTree = root.addChildren([app.addChildren([home, status]), login, uiKit]);
 
 export type AppRouter = ReturnType<typeof createAppRouter>;
 

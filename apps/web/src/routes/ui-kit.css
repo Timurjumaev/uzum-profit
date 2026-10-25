@@ -1,0 +1,66 @@
+/* Faqat /ui-kit sahifasi joylashuvi. */
+.kit {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr); /* bolalar ekrandan kengaymasin */
+  gap: var(--space-8);
+}
+
+.kit-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.kit-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  padding-block-start: var(--space-4);
+  border-block-start: 1px solid var(--border-hairline);
+}
+
+.kit-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.kit-row > .ui-field {
+  flex: 1 1 14rem;
+  min-inline-size: 0;
+}
+
+.kit-head .kit-row {
+  flex: 0 1 28rem;
+}
+
+.kit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--space-4);
+  inline-size: 100%;
+}
+
+.kit-stack {
+  display: grid;
+  gap: var(--space-3);
+  inline-size: 100%;
+}
+
+.kit-ledger {
+  inline-size: min(40rem, 100%);
+}
+
+.kit-sku {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.kit .ui-table-wrap {
+  flex: 1 1 100%;
+}

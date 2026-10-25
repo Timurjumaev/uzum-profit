@@ -224,3 +224,15 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   (vite plagini); belgilar qamrovi testda. `base.css` — shkala, `.num` (tabular-nums), `.mono`, `.hero`, fokus halqasi,
   mobil o'lchamlar, `prefers-reduced-motion`. `lib/theme.ts` — `applyTheme` / `useTheme` (tizim / yorug' / qorong'i,
   `localStorage`, `theme-color`), `public/theme-init.js` — React'dan oldin (CSP `script-src 'self'`, inline yo'q).
+- B3.4 Komponentlar katalogi (`apps/web/src/components/ui`, 04 §5–6) va `/ui-kit` sahifasi (kirishsiz, sintetik
+  namunalar, mavzu va til tanlash): Button (4 tur, 3 o'lcham, yuklanish), Field + TextInput / NumberInput /
+  MoneyInput (`lib/format.parseNumber` — "1 234,5", "1234.5", "1.234.567,50"; API uchun nuqtali satr, valyuta
+  qo'shimchasi), Select, Combobox (`searchKey` + apostrofsiz, ↑ ↓ Enter Esc, ARIA combobox/listbox, rasm bilan),
+  DateRangePicker (`lib/dates`: Toshkent bugungi kuni, 8 tayyor davr, oldingi davr / o'tgan yil, oy kalendari;
+  kalendar bilan ikki bosishda), CompareToggle, KPI (o'zgarish rangi = yo'nalish × yaxshimi, sparkline), FormulaPopover
+  (F-raqam, manba, taxminiy sababi), LedgerTable (operator ustuni, oraliq summa `rule`, yakun `rule-double`,
+  drill-down), DataTable (asos), Badge / StatusPill, Banner, Dialog / Drawer (fokus tuzog'i, Esc, fon, fokus qaytadi;
+  drawer mobilda pastdan), Popover, Tooltip, Toast (`ToastProvider`, 5 s), Stepper, Timeline (Partiya yo'li),
+  EmptyState, Skeleton (300 ms kechikish), ProgressBar, ProductThumb (lazy, harf-belgi), FileDrop. Lucide ikonlar.
+  `formatMonth`. Testlar: `ui.test.tsx` (xatti-harakat), `ui-kit.test.tsx` (axe-core: jiddiy xato 0, ochiq
+  qatlamlar va ruscha bilan). Boshlang'ich JS 135 KB gzip.

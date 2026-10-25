@@ -139,7 +139,15 @@ dona legacy bilan 1 so'mgacha bir xil.
   (lotin, lotin-ext, kirill, kirill-ext; ʻ ʼ U+00A0 U+202F − № qamrovi testda), lotin fayli preload; mavzu — tizim
   yoki qo'lda (`lib/theme`, `data-theme`, `localStorage`, `theme-color`, `public/theme-init.js` — CSP'ga mos,
   miltillamaydi). Mavzu tanlash tugmasi — B3.5 topbar.
-- [ ] B3.4 Komponentlar katalogi (04 §5) + `/ui-kit` sahifasi.
+- [x] B3.4 Komponentlar katalogi (04 §5) + `/ui-kit` sahifasi.
+  ✓ 2026-10-25: `components/ui` — Button, TextInput/NumberInput/MoneyInput (`parseNumber`: "1 234,5", "1234.5",
+  "1.234.567,50"), Select, Combobox (lotin/kirill, apostrofsiz qidiruv, klaviatura, ARIA), DateRangePicker (8 tayyor
+  davr + kalendar, `lib/dates`), CompareToggle, KPI (rang = yo'nalish × yaxshimi, sparkline), FormulaPopover,
+  LedgerTable (04 §6.1), DataTable (asos: tabular, qotgan birinchi ustun, jami), Badge/StatusPill (ikon + matn),
+  Banner, Dialog/Drawer (fokus tuzog'i, Esc), Popover, Tooltip, Toast, Stepper, Timeline (04 §6.2), EmptyState,
+  Skeleton (300 ms), ProgressBar, ProductThumb, FileDrop; `/ui-kit` (kirishsiz, mavzu va til tanlash). axe-core:
+  jiddiy xato 0 (ochiq qatlamlar bilan ham, CI'da). DataTable ustun tanlash/eksport/virtual — B4.3; sahifa
+  karkasi komponentlari (Sidebar, TopBar, CommandPalette, SyncIndicator) — B3.5; grafiklar — B3.6.
 - [ ] B3.5 Karkas: sidebar, topbar (do'kon, davr, solishtirish, SyncIndicator), mobil tab bar, Ctrl+K.
 - [ ] B3.6 Grafik komponentlari (ECharts temasi, tooltip, jadval ko'rinishi).
 - [ ] B3.7 Kirish sahifalari, onboarding wizard (M2), "Ma'lumotlar holati" sahifasi.
