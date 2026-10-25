@@ -202,3 +202,15 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   chegaralari `app/errors.tsx` (marshrut xatosi — matn, so'rov ID, "Qayta urinish"; 404; yuklanmoqda; ildiz
   `AppErrorBoundary`). Sahifalar — B3.5–B4 da. Tezlik byudjeti: `pnpm --filter web size` (boshlang'ich JS ≤ 250 KB
   gzip; hozir ~103 KB), CI'da. Testlar: `App.test.tsx`, `lib/api/client.test.ts`.
+- B3.2 Tillar va formatlash (`apps/web`): `lib/i18n` — i18next, uz-Latn (asosiy; testda oddiy apostrof yo'qligi va
+  oʻ/gʻ U+02BB), uz-Cyrl uz-Latn'dan avtomatik (`translit.ts`: oʻ/gʻ/sh/ch/yo/yu/ya, e/э, tutuq → ъ, katta harf,
+  `{{...}}` va teglar o'zgarmaydi, nomlar — Uzum, Telegram, ROI ...; so'z istisnolari — sentabr → сентябр,
+  kompensatsiya; kalit tuzatishlari `uz-Cyrl.fixes.ts`), ru qo'lda (`Messages` tipi — kalit yetishmasa typecheck
+  xatosi); tanlov `localStorage` (yopiq bo'lsa ham ishlaydi) → brauzer tili → uz-Latn, `<html lang>`, `setLanguage`,
+  `useFormat()`; atamalar lug'ati (04 §8.2) `terms` + `glossary.ts`; API xato `code` lari matni (04 §8.1 ovozida).
+  `searchKey` — kirill/lotin va apostrof turlaridan qat'i nazar qidiruv kaliti (04 §8.3). `lib/format` (04 §8.4):
+  guruh U+00A0, kasr vergul, manfiy U+2212, pul (soʻm / сўм / сум, jadvalda valyutasiz), valyuta ($ ¥ € ₽), ixcham
+  (ming/mln/mlrd, тыс./млн/млрд), foiz va o'zgarish (▲/▼), sana, kun (`23-oktabr`, `23 октября`), davr, hafta kuni,
+  nisbiy vaqt (rus ko'plik shakli) — Toshkent sanasi bo'yicha; API satrlari float'siz, ROUND_HALF_UP. B3.1 matnlari
+  i18n'ga ko'chdi. eslint: `toLocaleString`/`Intl` faqat `lib/format` da. Testlar: `format.test.ts`, `i18n.test.tsx`,
+  `App.test.tsx` (ruscha va kirillcha karkas, xato matni).

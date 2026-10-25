@@ -3,7 +3,9 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App, createAppState } from "./App";
-import { AppErrorBoundary } from "./app/errors";
+import { AppErrorBoundary, errorText } from "./app/errors";
+import { createI18n } from "./lib/i18n";
+import { I18nextProvider } from "react-i18next";
 import { makeQueryClient, meQuery, shouldRetry, STALE_MS } from "./app/query";
 import { loginSearch } from "./app/router";
 import { ApiError } from "./lib/api/client";
@@ -33,7 +35,7 @@ function serve(...responses: Array<() => Response>) {
 
 function renderAt(path: string) {
   const history = createMemoryHistory({ initialEntries: [path] });
-  const state = createAppState(history);
+  const state = createAppState(history, "uz-Latn");
   render(<App state={state} />);
   return { history, state };
 }
@@ -102,6 +104,29 @@ describe("ilova karkasi (B3.1)", () => {
   });
 });
 
+describe("til (B3.2)", () => {
+  it("ruscha va kirillcha karkas", async () => {
+    serve(() => json(200, ME));
+    render(<App state={createAppState(createMemoryHistory({ initialEntries: ["/yoq"] }), "ru")} />);
+    expect(await screen.findByRole("heading", { name: "Страница не найдена" })).toBeTruthy();
+    cleanup();
+    render(<App state={createAppState(createMemoryHistory({ initialEntries: ["/yoq"] }), "uz-Cyrl")} />);
+    expect(await screen.findByRole("heading", { name: "Саҳифа топилмади" })).toBeTruthy();
+  });
+
+  it("xato matni: avval API code, keyin HTTP holati", () => {
+    const t = createI18n("uz-Latn").t;
+    expect(errorText(new ApiError(400, { code: "otp_invalid" }), t)).toContain("Kod notoʻgʻri");
+    expect(errorText(new ApiError(400, { code: "nomaʼlum" }), t)).toBe("Kutilmagan xatolik yuz berdi.");
+    expect(errorText(new ApiError(404, { code: "not_found" }), t)).toBe("Maʼlumot topilmadi.");
+    expect(errorText(new ApiError(403, { code: "forbidden" }), t)).toBe("Bu sahifaga ruxsatingiz yoʻq.");
+    expect(errorText(new ApiError(429, null), t)).toContain("Soʻrovlar juda koʻp");
+    expect(errorText(new Error("x"), t)).toBe("Kutilmagan xatolik yuz berdi.");
+    const ruT = createI18n("ru").t;
+    expect(errorText(new ApiError(0, null), ruT)).toContain("Нет подключения");
+  });
+});
+
 describe("so'rov sozlamalari", () => {
   it("4xx qayta so'ralmaydi, tarmoq/5xx — 2 marta", () => {
     expect(STALE_MS).toBe(60_000);
@@ -135,9 +160,11 @@ describe("AppErrorBoundary", () => {
       throw new Error("buzildi");
     }
     render(
-      <AppErrorBoundary onError={onError}>
-        <Broken />
-      </AppErrorBoundary>,
+      <I18nextProvider i18n={createI18n("uz-Latn")}>
+        <AppErrorBoundary onError={onError}>
+          <Broken />
+        </AppErrorBoundary>
+      </I18nextProvider>,
     );
     expect(screen.getByRole("alert").textContent).toContain("Kutilmagan xatolik");
     expect(screen.getByRole("button", { name: "Sahifani yangilash" })).toBeTruthy();
