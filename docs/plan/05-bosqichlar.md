@@ -98,7 +98,11 @@ Ochiq: F21 real ma'lumotda — partiyalarga SKU biriktirilgach (yoki B2.11).
   formati, `/v1/return` sahifalash (`dateFrom` qo'llanmaydi) va hajmi, logistika xarajati `externalId` = sotuv qatori id.
   Vositalar tayyor (2026-10-25): `scripts/staging_connect.py` (kirish va kalit, Mac'da), `python -m upapi.realcheck` /
   `infra/staging/realcheck.sh` (serverda hisobot), `scripts/compare_staging.py` (legacy bilan, Mac'da) — `docs/staging.md`
-  "Real sinov". Kutilmoqda: Temur kalitni kiritadi va hisobotni yuboradi; natija va semantika testga yoziladi.
+  "Real sinov". ✓ 2026-10-25 natija: ikkala do'kon to'liq tarix, legacy bilan har oy 0 so'm farq, to'rt taxmin
+  tasdiqlandi (08 §4). Topildi va tuzatildi: Bekor qatorda `amount` = 0, dona `amountReturns` da — F17/F16 bekor
+  donani yo'qotardi, F18 va ombor tezligi bekorni qaytish deb sanardi (02 F2, F17, F18; testlar). `PARTIALLY_CANCELLED`
+  real ma'lumotda yo'q — taxmin qoladi. **Qoldi: 24 soat xatosiz** — 2026-10-26 ~21:55 (Toshkent) Temur realcheck +
+  compare'ni qayta ishga tushiradi; ✓ bo'lsa B2.11 va B2 yopiladi.
 - T: Q2 — provayder tanlash, akkaunt ochish va staging VPS uchun to'lash (taxminan 210–260 ming so'm/oy).
 - T: GitHub Actions uchun SSH kirishini qo'shish (men qadam-baqadam yo'riqnoma beraman).
 - T: @BotFather'da bot yaratish (admin ogohlantirishlari, keyin B6 xulosalari uchun) va tokenni staging sozlamasiga

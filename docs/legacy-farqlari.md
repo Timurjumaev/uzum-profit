@@ -48,4 +48,6 @@ real natija kelgach har bandga summa qo'shiladi.
 
 - Sotuv tannarxi (F21) real ma'lumotda: partiya qatorlariga SKU biriktirilgach `compare_legacy.py` qayta
   ishga tushiriladi (legacy kumulyativ o'rtacha ↔ FIFO farqi summasi bilan); kech qolsa — B2.11 da staging'da.
-- `PARTIALLY_CANCELLED`, `amountReturns`, qaytishlar semantikasi — B2.11 (real ma'lumotda 0 qator).
+- `PARTIALLY_CANCELLED` — real ma'lumotda hali 0 qator (taxmin qoladi). `amountReturns` — B2.11 da aniqlandi: Bekor
+  qatorda bekor qilingan dona (`amount` = 0); F17/F16 Bekor donaga, F18 faqat Yakunlangan qatorlarga (02 F2, F17, F18).
+  Staging ↔ legacy (B2.11): har oy 0 so'm farq (`scripts/compare_staging.py`).

@@ -311,7 +311,10 @@ Umumiy qoidalar:
 Yakunlangan sana Open API'da yo'q (FBO uchun), shuning uchun yagona asos — buyurtma sanasi (ADR-017).
 
 **F2. Holatlar.** Yakunlangan = `TO_WITHDRAW`; Jarayonda = `PROCESSING`; Bekor = `CANCELED`;
-Qisman bekor = `PARTIALLY_CANCELLED` (qolgan `amount` yakunlangan sifatida — B2.11 da real ma'lumotda tekshiriladi).
+Qisman bekor = `PARTIALLY_CANCELLED` (qolgan `amount` yakunlangan sifatida; Temurning real ma'lumotida bunday qator
+yo'q — taxmin, birinchi real qatorda `scripts/compare_staging.py` tekshiradi). Real ma'lumot (B2.11): Bekor qatorda
+Uzum `amount` = 0, `commission`, `logisticDeliveryFee`, `sellerProfit` = 0 beradi, bekor qilingan dona — `amountReturns`.
+`sellerProfit` hamma qatorda `amount` bilan F6 ga teng — `amount` doim qolgan (sof) dona.
 
 **F3. Tushum** = Σ `sellPrice` × `amount` (Yakunlangan).
 
@@ -357,10 +360,10 @@ qatorida alohida ko'rsatiladi. (Legacy hamma xarajatni ayirib, foydani kam ko'rs
 90 kunida yakuniy holatga yetgan donalar ichida Yakunlangan ulushi. Ma'lumot kam bo'lsa (< 50 dona) R ko'rsatilmaydi.
 (Legacy'dagi 0,75 doimiysi o'rniga.)
 
-**F17. Bekor ulushi** = Bekor / (Yakunlangan + Bekor), dona bo'yicha.
+**F17. Bekor ulushi** = Bekor / (Yakunlangan + Bekor), dona bo'yicha. Bekor dona = `amount` + `amountReturns` (F2).
 
 **F18. Qaytish ulushi** = qaytgan / (sotilgan + qaytgan) — Uzum ta'rifi (SKU `quantityReturned`, `quantitySold`);
-davr bo'yicha esa sotuv qatoridagi `amountReturns` dan.
+davr bo'yicha esa Yakunlangan qatorlardagi `amountReturns` dan (Bekor qatorniki — bekor qilingan dona, qaytish emas).
 
 **F19. Reklama ulushi (DRR)** = reklama / F3. SKU ACOS = SKU'ga bog'langan reklama (AD#id → sotuv qatori) /
 SKU tushumi. Bog'lanmagan reklama SKU'larga tushum ulushi bo'yicha taqsimlanadi (sozlamada o'chirish mumkin).
