@@ -21,6 +21,7 @@ from upapi.auth.deps import OrgContext, org_context
 from upapi.db import models as m
 from upapi.errors import AppError
 from upapi.logs import get_logger
+from upapi.reports.common import freshness
 from upapi.settings import Settings
 from upapi.sync import health
 from upapi.sync.engine import ACCOUNT_KINDS, SHOP_KINDS, Kind, Trigger
@@ -165,12 +166,6 @@ async def sync_status(request: Request, ctx: Member) -> SyncStatusOut:
             )
         )
     active = [s for s in shops if s.active]
-    freshness: dict[str, datetime | None] = {}
-    for kind in KINDS:
-        values = [next(k.last_success_at for k in s.kinds if k.kind == kind.value) for s in active]
-        known = [v for v in values if v is not None]
-        # Hali bir marta ham yangilanmagan do'kon bo'lsa — noma'lum (eng eskisi).
-        freshness[kind.value] = min(known) if known and len(known) == len(values) else None
     return SyncStatusOut(
         healthy=bool(active)
         and all(s.healthy for s in active)
@@ -185,7 +180,7 @@ async def sync_status(request: Request, ctx: Member) -> SyncStatusOut:
         ),
         accounts=accounts,
         shops=shops,
-        freshness=freshness,
+        freshness=await freshness(conn, [k.value for k in KINDS]),
     )
 
 

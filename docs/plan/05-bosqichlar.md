@@ -76,7 +76,12 @@ Ochiq: F21 real ma'lumotda — partiyalarga SKU biriktirilgach (yoki B2.11).
   `recalc_queue` (manba bilan bitta tranzaksiyada), `calc.org` (sinxrondan keyin) va `calc.nightly` (to'liq),
   faqat o'zgargan tovarlar va kunlar; "qayta hisoblandi" belgisi. Real ma'lumotda tekshiruv (qaytish va
   `amount` semantikasi) — B2.11. B4 ga: xarid va SKU → tovar tahrirlari `upapi.calc.request` ni chaqiradi.
-- [ ] B2.9 O'qish API'lari: dashboard, pnl, skus, sales, expenses, inventory (core ustida) + OpenAPI tiplari.
+- [x] B2.9 O'qish API'lari: dashboard, pnl, skus, sales, expenses, inventory (core ustida) + OpenAPI tiplari.
+  `upapi.reports`: P&L kataklari `daily_sku_metrics` dan (`upcore.pnl.build_cells(totals=...)`, qatorlardan qurilgani
+  bilan bir xil — test), bosh sahifa = P&L = SKU jadvali, ustunlar va drill-down yig'indilari testda; F16, "qayta
+  hisoblandi", `meta.freshness`, kursor; ombor F23–F30 (omborchiga summasiz). `apps/api/openapi.json` →
+  `apps/web/src/lib/api/schema.d.ts` (CI'da farq — xato). Tezlik (M4 maqsadi p95 < 700 ms): og'ir sintetik yil
+  (50 000 qator, 3 000 reklama) — bosh sahifa ~0,8 s (sandbox), qolganlari ~0,6–0,7 s; B4.1 ga yozildi.
 - [ ] B2.10 Staging server: O'zbekistondagi VPS (Q2), Docker Compose, Caddy (HTTPS), deploy workflow, tungi zaxira.
   **Ochiq:** kirish kodi yuborishga IP bo'yicha cheklov (hozir faqat raqam bo'yicha 5 ta/soat — har xil raqam bilan
   ko'p so'rov har biri ≈ $0.01 turadi, ADR-028): Caddy `rate_limit` va/yoki API'da IP bo'yicha hisoblagich, testi bilan.
@@ -117,6 +122,8 @@ dona legacy bilan 1 so'mgacha bir xil.
 ## B4. Asosiy ekranlar — Temur yangi dasturga o'tadi — 10–15 kun
 
 - [ ] B4.1 Bosh sahifa (M4) — hisob varag'i, davr chizig'i, grafik, "Diqqat talab qiladi", TOP/zarar SKU.
+  B2.9 dan: M4 tezlik mezoni (p95 < 700 ms) staging'da o'lchanadi; yetmasa — tashkilot × davr bo'yicha natija keshi
+  (hisob ishi tugaganda bekor qilinadi) yoki oylik agregat. Standart muddatlar (F25) sozlamasi — B4.8.
 - [ ] B4.2 Foyda va zarar (M5) — drill-down, sharshara, oylar, kutilayotgan, qamrov banneri, F40;
   F9/F10 qatorlarida to'g'ridan-to'g'ri va taqsimlangan xarajatlar alohida (ADR-026).
 - [ ] B4.3 Mahsulotlar (M6) — jadval, SKU sahifasi, unit kalkulyator, tovar ↔ SKU bog'lash; SKU xarajatlari

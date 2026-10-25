@@ -10,6 +10,7 @@ from upcore.metrics import ManualExpense, Period, SaleLine, profit_summary
 from upcore.money import Money, total
 from upcore.pnl import (
     CellKey,
+    CellSales,
     ExpenseItem,
     OwnExpense,
     TaxBase,
@@ -247,6 +248,14 @@ def test_additivity_property(raw_sales: list, raw_exp: list, raw_own: list) -> N
     ]
     cells = build_cells(OCT, lines, exp, own, TaxRule(D("1.5")))
     whole = cells.statement()
+    for key in (lambda k: k.day, lambda k: k.sku):
+        groups, combined = cells.by_and_total(key)
+        assert combined == whole and groups == cells.by(key)
+    assert cells.statements({"all": lambda _: True, "none": lambda _: False}) == {
+        "all": whole,
+        "none": build_cells(OCT, []).statement(),
+    }
+    assert cells.within(OCT).statement() == whole
     for view in (cells.by_day(), cells.by_shop(), cells.by_sku()):
         assert total([s.net_profit for s in view.values()], "UZS") == whole.net_profit
     # Hamma xarajat yo yerda ayrilgan, yo tannarxsiz qismda — yo'qolmaydi.
@@ -291,3 +300,90 @@ def test_year_50k_lines_fast() -> None:
     months = cells.by_month()
     assert time.perf_counter() - start < 5.0
     assert total([m.net_profit for m in months.values()], "UZS") == cells.statement().net_profit
+
+
+@settings(max_examples=60, deadline=None)
+@given(
+    st.lists(
+        st.tuples(
+            st.integers(1, 31),
+            st.sampled_from(["A", "B"]),
+            st.sampled_from(["S1", "S2"]),
+            st.integers(1, 10**6),
+            st.integers(1, 3),
+            st.booleans(),
+            st.sampled_from(["TO_WITHDRAW", "PROCESSING", "CANCELED"]),
+        ),
+        max_size=25,
+    ),
+    st.lists(
+        st.tuples(st.integers(1, 31), st.sampled_from(["S1", "S2"]), st.integers(1, 10**6)),
+        max_size=6,
+    ),
+)
+def test_totals_input_matches_lines(raw_sales: list, raw_exp: list) -> None:
+    """``daily_sku_metrics`` yig'indilari (``sale_totals``) qatorlar bilan bir xil kataklar beradi (B2.9)."""
+    from upcore.metrics import sale_totals
+
+    lines = [
+        sale(dd, sku, shop, price, qty, cost=40_000 if known else None, status=status)
+        for dd, sku, shop, price, qty, known, status in raw_sales
+    ]
+    groups: dict[CellKey, list[SaleLine]] = {}
+    for line in lines:
+        groups.setdefault(CellKey(line.order_date, line.shop, line.sku), []).append(line)
+    totals = [(k, CellSales.of(sale_totals(v))) for k, v in groups.items()]
+    exp = [ExpenseItem(d(dd), shop, C.STORAGE, uzs(a)) for dd, shop, a in raw_exp]
+    by_lines = build_cells(OCT, lines, exp, tax=TaxRule(D(4)))
+    by_totals = build_cells(OCT, [], exp, tax=TaxRule(D(4)), totals=totals)
+    assert by_lines.items == by_totals.items
+
+
+def test_totals_outside_period_ignored() -> None:
+    from upcore.metrics import sale_totals
+
+    lines = [sale(3), sale(4, status="CANCELED")]
+    totals = [(CellKey(x.order_date, x.shop, x.sku), CellSales.of(sale_totals([x]))) for x in lines]
+    cells = build_cells(Period(d(4), d(5)), [], totals=totals)
+    assert cells.items == {}  # 3-kun davrdan tashqarida, 4-kunda faqat bekor
+
+
+def test_unit_economics() -> None:
+    from upcore.pnl import unit_economics
+
+    lines = [sale(3, qty=2), sale(3, price=50_000, cost=None)]
+    exp = [ExpenseItem(d(3), "S1", C.ADVERTISING, uzs(30_000), sku="A")]
+    s = build_cells(OCT, lines, exp).statement()
+    assert (s.units, s.covered_units) == (3, 2)
+    u = unit_economics(s)
+    assert u.avg_price == uzs("83333.33")  # 250 000 / 3
+    assert u.commission_share == D("0.2")
+    assert u.logistics_per_unit == uzs(5_000)
+    assert u.cogs_per_unit == uzs(40_000)
+    assert u.ads_per_unit == uzs(10_000) and u.acos == D("0.12")
+    assert u.profit_per_unit == total([s.net_profit], "UZS") * D("0.5")
+    empty = unit_economics(build_cells(OCT, []).statement())
+    assert empty.avg_price is None and empty.cogs_per_unit is None and empty.acos is None
+
+
+def test_direct_then_allocated_in_same_cell() -> None:
+    """SKU'ga bog'langan xarajat avval kelsa ham, keyingi taqsimlangan qism alohida hisoblanadi (ADR-026)."""
+    lines = [sale(1, "A")]
+    exp = [
+        ExpenseItem(d(1), "S1", C.FINE, uzs(5_000), sku="A"),
+        ExpenseItem(d(1), "S1", C.FINE, uzs(7_000)),
+    ]
+    own = [
+        OwnExpense(ManualExpense(uzs(3_000), d(1), d(1)), "qadoq", "S1", "A"),
+        OwnExpense(ManualExpense(uzs(2_000), d(1), d(1)), "qadoq"),
+    ]
+    s = build_cells(OCT, lines, exp, own).items[CellKey(d(1), "S1", "A")]
+    assert s.uzum_expenses == {C.FINE: uzs(12_000)} and s.uzum_allocated == {C.FINE: uzs(7_000)}
+    assert s.own_expenses == {"qadoq": uzs(5_000)} and s.own_allocated == {"qadoq": uzs(2_000)}
+    assert s.direct_total == uzs(8_000) and s.allocated_total == uzs(9_000)
+
+
+def test_tax_rule_money_and_raw() -> None:
+    rule = TaxRule(D("1.5"), TaxBase.PAYOUT)
+    assert rule.on(uzs(100_000), uzs(70_001)) == uzs("1050.02")
+    assert rule.amount_on(D(100_000), D(70_001)) == D("1050.02")

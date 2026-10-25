@@ -41,6 +41,8 @@ jobs:
       - run: uv run ruff check
       - run: uv run ruff format --check
       - run: uv run mypy
+      # OpenAPI sxemasi (frontend tiplari manbasi) kod bilan bir xil (03 §8, §13).
+      - run: uv run python -m upapi.openapi --check
       # Domen yadrosi qamrovi ≥ 95% (03-arxitektura.md §12).
       - run: uv run pytest --cov=upcore --cov-report=term-missing --cov-fail-under=95
       # API qamrovi ≥ 80% (03-arxitektura.md §12).
@@ -84,6 +86,8 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # API tiplari openapi.json dan generatsiya qilingan va yangi (farq bo'lsa — `pnpm --filter web api:types`).
+      - run: pnpm --filter web api:types && git diff --exit-code -- apps/web/src/lib/api/schema.d.ts
       - run: pnpm --filter web lint
       - run: pnpm --filter web typecheck
       - run: pnpm --filter web test

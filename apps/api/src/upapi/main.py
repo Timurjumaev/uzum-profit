@@ -13,7 +13,19 @@ from upapi.db.session import make_engine
 from upapi.errors import Problem, install_error_handlers
 from upapi.logs import configure_logging
 from upapi.middleware import csrf_guard, request_context
-from upapi.routes import accounts, auth, health, orgs, sync
+from upapi.routes import (
+    accounts,
+    auth,
+    dashboard,
+    expenses,
+    health,
+    inventory,
+    orgs,
+    pnl,
+    sales,
+    skus,
+    sync,
+)
 from upapi.settings import Settings, get_settings
 from upapi.startup import UnsafeConfiguration, check_role, check_settings
 from upapi.sync.jobs import JobQueue
@@ -83,6 +95,8 @@ def create_app(
     app.include_router(orgs.router, prefix=API_PREFIX)
     app.include_router(accounts.router, prefix=API_PREFIX)
     app.include_router(sync.router, prefix=API_PREFIX)
+    for reports in (dashboard, pnl, skus, sales, expenses, inventory):  # B2.9 o'qish API'lari
+        app.include_router(reports.router, prefix=API_PREFIX)
     return app
 
 

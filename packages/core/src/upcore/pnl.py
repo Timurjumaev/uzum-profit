@@ -14,16 +14,21 @@ O'z xarajatlari kunlarga amortizatsiya qilinadi (F10), kunlar yig'indisi xarajat
 
 Katakda F15: ayriladigan xarajat = katak xarajati × katak qamrovi (tannarxi ma'lum tushum / tushum;
 tushum 0 bo'lsa 1). Qolgani — "tannarxsiz qism".
+
+Sotuvlar ikki ko'rinishda beriladi: qatorlar (``SaleLine``) yoki katak yig'indilari (``CellSales`` —
+``daily_sku_metrics`` qatori, ``upcore.metrics.sale_totals`` natijasining xom ko'rinishi). Ikkalasi bir xil
+kataklar beradi.
 """
 
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Hashable, Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import Decimal
 from enum import StrEnum
+from typing import NamedTuple, cast
 
 from upcore.expenses import ExpenseCategory, ExpenseRecord
 from upcore.metrics import (
@@ -31,6 +36,7 @@ from upcore.metrics import (
     ManualExpense,
     Period,
     SaleLine,
+    SaleTotals,
     StatusGroup,
     completed,
     expected_profit,
@@ -38,7 +44,7 @@ from upcore.metrics import (
     ratio,
     realization_rate,
 )
-from upcore.money import Currency, Money, allocate, to_decimal, total
+from upcore.money import Currency, Money, quantize, split, to_decimal, total
 
 UZS = Currency.UZS
 ZERO = Money.zero(UZS)
@@ -96,15 +102,20 @@ class TaxRule:
     base: TaxBase = TaxBase.REVENUE
 
     def on(self, revenue: Money, payout: Money) -> Money:
+        return Money(self.amount_on(revenue.amount, payout.amount), UZS)
+
+    def amount_on(self, revenue: Decimal, payout: Decimal) -> Decimal:
+        """``on`` ning xom ko'rinishi (so'm, tiyinga yaxlitlangan) — P&L kataklari uchun."""
         base = revenue if self.base is TaxBase.REVENUE else payout
-        return base * (to_decimal(self.rate_pct) / 100)
+        return quantize(base * (to_decimal(self.rate_pct) / 100), UZS.places)
 
 
 # --- Katak ----------------------------------------------------------------------------------
 
 
-@dataclass(frozen=True, slots=True)
-class CellKey:
+class CellKey(NamedTuple):
+    """Katak kaliti (kortej — xeshlash tez: davrda o'n minglab katak)."""
+
     day: date
     shop: str
     sku: str | None  # None — do'kon (yoki tashkilot) xarajatlarining taqsimlanmagan qismi
@@ -115,8 +126,10 @@ class CellKey:
 
 
 @dataclass(slots=True)
-class _Acc:
-    """Katak yig'uvchisi: tezlik uchun xom ``Decimal`` (so'm), ``Money`` — faqat natijada."""
+class Cell:
+    """Katak: xom ``Decimal`` (so'm, tiyinga yaxlitlangan qismlar) — tezlik uchun ``Money`` emas. Kesim natijasi
+    (``Statement``) kataklar yig'indisidan bir marta yaratiladi. ``tax`` va ``deducted`` — katakda yaxlitlangan
+    (kesimlar yig'indisi jamiga tiyinigacha teng bo'lishi uchun)."""
 
     revenue: Decimal = _D0
     commission: Decimal = _D0
@@ -125,20 +138,60 @@ class _Acc:
     covered_revenue: Decimal = _D0
     covered_payout: Decimal = _D0
     units: int = 0
+    covered_units: int = 0
     lines: int = 0
     uncovered_lines: int = 0
-    uzum: dict[ExpenseCategory, Decimal] = field(default_factory=dict)
-    own: dict[str, Decimal] = field(default_factory=dict)
-    uzum_alloc: dict[ExpenseCategory, Decimal] = field(default_factory=dict)
-    own_alloc: dict[str, Decimal] = field(default_factory=dict)
+    # Xarajatlar (F9 turlari, F10 toifalari) va shundan taqsimlangani; ``None`` — yo'q (lug'at kerak bo'lganda).
+    uzum: dict[ExpenseCategory, Decimal] | None = None
+    own: dict[str, Decimal] | None = None
+    uzum_alloc: dict[ExpenseCategory, Decimal] | None = None
+    own_alloc: dict[str, Decimal] | None = None
+    tax: Decimal = _D0
+    deducted: Decimal = _D0
 
 
-def _add[K: Hashable](bucket: dict[K, Decimal], key: K, amount: Decimal) -> None:
-    bucket[key] = bucket.get(key, _D0) + amount
+def _uzs(amount: Decimal) -> Money:
+    return Money.rounded(amount, UZS)
+
+
+def _cents(amount: Decimal) -> Decimal:
+    return quantize(amount, UZS.places)
 
 
 def _money_map[K: Hashable](bucket: Mapping[K, Decimal]) -> dict[K, Money]:
-    return {k: Money(v, UZS) for k, v in bucket.items()}
+    return {k: Money.rounded(v, UZS) for k, v in bucket.items()}
+
+
+@dataclass(frozen=True, slots=True)
+class CellSales:
+    """Katak sotuvlari yig'indisi, xom so'm (``daily_sku_metrics`` qatori) — ``SaleTotals`` ning P&L uchun
+    keragi. Ko'p katakli davrda ``Money`` yaratmaslik uchun (M4: 1 yil, 50 000 qator)."""
+
+    revenue: Decimal  # F3
+    commission: Decimal  # F4
+    logistics: Decimal  # F5
+    cogs: Decimal  # F7
+    revenue_costed: Decimal
+    payout_costed: Decimal
+    units: int
+    units_costed: int
+    lines: int
+    uncovered_lines: int
+
+    @classmethod
+    def of(cls, t: SaleTotals) -> CellSales:
+        return cls(
+            revenue=t.revenue.amount,
+            commission=t.commission.amount,
+            logistics=t.logistics.amount,
+            cogs=t.cogs.amount,
+            revenue_costed=t.revenue_costed.amount,
+            payout_costed=t.payout_costed.amount,
+            units=t.units,
+            units_costed=t.units_costed,
+            lines=t.lines,
+            uncovered_lines=t.uncovered_lines,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -161,6 +214,7 @@ class Statement:
     # ADR-026: shundan tushum ulushida taqsimlangan qism (do'kon / tashkilot xarajatidan SKU'larga).
     uzum_allocated: Mapping[ExpenseCategory, Money] = field(default_factory=dict)
     own_allocated: Mapping[str, Money] = field(default_factory=dict)
+    covered_units: int = 0  # tannarxi ma'lum Yakunlangan dona
 
     @property
     def payout(self) -> Money:
@@ -256,20 +310,58 @@ class Statement:
 
 @dataclass(frozen=True, slots=True)
 class Cells:
-    """Davr kataklari; kesimlar shu yerdan olinadi."""
+    """Davr kataklari; kesimlar shu yerdan olinadi (har kesim — kataklar yig'indisi)."""
 
     period: Period
-    items: Mapping[CellKey, Statement]
+    cells: Mapping[CellKey, Cell]
+
+    @property
+    def items(self) -> dict[CellKey, Statement]:
+        """Har katak hisoboti (kam kataklar uchun: tekshiruv, izoh)."""
+        return {k: _total([c]) for k, c in self.cells.items()}
+
+    def within(self, period: Period, where: Callable[[CellKey], bool] | None = None) -> Cells:
+        """Ichki davr (va tanlangan) kataklari — masalan, joriy va oldingi davr bitta hisobdan."""
+        first, last = period.start, period.end
+        return Cells(
+            period,
+            {
+                k: c
+                for k, c in self.cells.items()
+                if first <= k[0] <= last and (where is None or where(k))
+            },
+        )
 
     def statement(self, where: Callable[[CellKey], bool] | None = None) -> Statement:
         """Tanlangan kataklar yig'indisi (``where`` yo'q — butun davr, tashkilot)."""
-        return _sum(s for k, s in self.items.items() if where is None or where(k))
+        return _total(c for k, c in self.cells.items() if where is None or where(k))
+
+    def statements[K: Hashable](
+        self, groups: Mapping[K, Callable[[CellKey], bool]]
+    ) -> dict[K, Statement]:
+        """Bir necha (kesishishi mumkin bo'lgan) kesim bir o'tishda: masalan, joriy va oldingi davr, bugun,
+        shu oy — har biri ``statement(where)`` bilan bir xil."""
+        chosen: dict[K, list[Cell]] = {g: [] for g in groups}
+        tests = list(groups.items())
+        for k, c in self.cells.items():
+            for g, where in tests:
+                if where(k):
+                    chosen[g].append(c)
+        return {g: _total(cells) for g, cells in chosen.items()}
 
     def by[K: Hashable](self, key: Callable[[CellKey], K]) -> dict[K, Statement]:
-        groups: dict[K, list[Statement]] = defaultdict(list)
-        for k, s in self.items.items():
-            groups[key(k)].append(s)
-        return {g: _sum(groups[g]) for g in sorted(groups, key=lambda g: (g is None, str(g)))}
+        return self.by_and_total(key)[0]
+
+    def by_and_total[K: Hashable](
+        self, key: Callable[[CellKey], K]
+    ) -> tuple[dict[K, Statement], Statement]:
+        """``by`` va ``statement()`` bir o'tishda: jami — guruhlar (xom) yig'indisi, kataklar yig'indisi bilan
+        bir xil (summalar aniq qo'shiladi)."""
+        groups: dict[K, list[Cell]] = defaultdict(list)
+        for k, c in self.cells.items():
+            groups[key(k)].append(c)
+        rolled = {g: _roll(groups[g]) for g in sorted(groups, key=lambda g: (g is None, str(g)))}
+        return {g: _statement(c) for g, c in rolled.items()}, _total(rolled.values())
 
     def by_month(self) -> dict[date, Statement]:
         return self.by(lambda k: k.day.replace(day=1))
@@ -284,42 +376,97 @@ class Cells:
         return self.by(lambda k: k.sku)
 
 
-def _sum(statements: Iterable[Statement]) -> Statement:
-    items = list(statements)
+def _roll(cells: Iterable[Cell]) -> Cell:
+    """Kataklar yig'indisi (xom): kesim natijasi va kesimlar jami uchun."""
+    revenue = commission = logistics = cogs = covered_revenue = covered_payout = _D0
+    tax = deducted = _D0
+    units = lines = uncovered = covered_units = 0
     uzum: dict[ExpenseCategory, Decimal] = {}
     own: dict[str, Decimal] = {}
     uzum_alloc: dict[ExpenseCategory, Decimal] = {}
     own_alloc: dict[str, Decimal] = {}
-    for s in items:
-        for c, a in s.uzum_expenses.items():
-            _add(uzum, c, a.amount)
-        for oc, a in s.own_expenses.items():
-            _add(own, oc, a.amount)
-        for c, a in s.uzum_allocated.items():
-            _add(uzum_alloc, c, a.amount)
-        for oc, a in s.own_allocated.items():
-            _add(own_alloc, oc, a.amount)
-
-    def add(get: Callable[[Statement], Money]) -> Money:
-        return Money(sum((get(s).amount for s in items), _D0), UZS)
-
-    return Statement(
-        revenue=add(lambda s: s.revenue),
-        commission=add(lambda s: s.commission),
-        logistics=add(lambda s: s.logistics),
-        cogs=add(lambda s: s.cogs),
-        covered_revenue=add(lambda s: s.covered_revenue),
-        covered_payout=add(lambda s: s.covered_payout),
-        uzum_expenses=_money_map(uzum),
-        own_expenses=_money_map(own),
-        tax=add(lambda s: s.tax),
-        expenses_deducted=add(lambda s: s.expenses_deducted),
-        units=sum(s.units for s in items),
-        lines=sum(s.lines for s in items),
-        uncovered_lines=sum(s.uncovered_lines for s in items),
-        uzum_allocated=_money_map(uzum_alloc),
-        own_allocated=_money_map(own_alloc),
+    for c in cells:
+        revenue += c.revenue
+        commission += c.commission
+        logistics += c.logistics
+        cogs += c.cogs
+        covered_revenue += c.covered_revenue
+        covered_payout += c.covered_payout
+        tax += c.tax
+        deducted += c.deducted
+        units += c.units
+        lines += c.lines
+        uncovered += c.uncovered_lines
+        covered_units += c.covered_units
+        if c.uzum:
+            for cat, a in c.uzum.items():
+                uzum[cat] = uzum.get(cat, _D0) + a
+        if c.own:
+            for oc, a in c.own.items():
+                own[oc] = own.get(oc, _D0) + a
+        if c.uzum_alloc:
+            for cat, a in c.uzum_alloc.items():
+                uzum_alloc[cat] = uzum_alloc.get(cat, _D0) + a
+        if c.own_alloc:
+            for oc, a in c.own_alloc.items():
+                own_alloc[oc] = own_alloc.get(oc, _D0) + a
+    return Cell(
+        revenue=revenue,
+        commission=commission,
+        logistics=logistics,
+        cogs=cogs,
+        covered_revenue=covered_revenue,
+        covered_payout=covered_payout,
+        units=units,
+        covered_units=covered_units,
+        lines=lines,
+        uncovered_lines=uncovered,
+        uzum=uzum,
+        own=own,
+        uzum_alloc=uzum_alloc,
+        own_alloc=own_alloc,
+        tax=tax,
+        deducted=deducted,
     )
+
+
+def _statement(c: Cell) -> Statement:
+    return Statement(
+        revenue=_uzs(c.revenue),
+        commission=_uzs(c.commission),
+        logistics=_uzs(c.logistics),
+        cogs=_uzs(c.cogs),
+        covered_revenue=_uzs(c.covered_revenue),
+        covered_payout=_uzs(c.covered_payout),
+        uzum_expenses=_money_map(c.uzum or {}),
+        own_expenses=_money_map(c.own or {}),
+        tax=_uzs(c.tax),
+        expenses_deducted=_uzs(c.deducted),
+        units=c.units,
+        lines=c.lines,
+        uncovered_lines=c.uncovered_lines,
+        uzum_allocated=_money_map(c.uzum_alloc or {}),
+        own_allocated=_money_map(c.own_alloc or {}),
+        covered_units=c.covered_units,
+    )
+
+
+def _total(cells: Iterable[Cell]) -> Statement:
+    return _statement(_roll(cells))
+
+
+def _put(a: Cell, own: bool, category: str, amount: Decimal) -> None:
+    """Katakka to'g'ridan-to'g'ri (taqsimlanmagan) xarajat: ``own`` — o'z xarajati toifasi (F10), aks holda Uzum
+    turi (F9). Tushum ulushidagi taqsimot — ``build_cells`` ichidagi ``spread``."""
+    if own:
+        if a.own is None:
+            a.own = {}
+        a.own[category] = a.own.get(category, _D0) + amount
+    else:
+        c = cast(ExpenseCategory, category)
+        if a.uzum is None:
+            a.uzum = {}
+        a.uzum[c] = a.uzum.get(c, _D0) + amount
 
 
 def _days(period: Period) -> list[date]:
@@ -332,112 +479,167 @@ def build_cells(
     expenses: Iterable[ExpenseItem] = (),
     own_expenses: Iterable[OwnExpense] = (),
     tax: TaxRule | Callable[[date], TaxRule | None] | None = None,
+    totals: Iterable[tuple[CellKey, CellSales]] = (),
 ) -> Cells:
-    """F12–F15 kataklari. Davrdan tashqari sotuv va xarajatlar e'tiborga olinmaydi."""
-    acc: dict[CellKey, _Acc] = defaultdict(_Acc)
+    """F12–F15 kataklari. Davrdan tashqari sotuv va xarajatlar e'tiborga olinmaydi.
+
+    ``totals`` — tayyor katak yig'indilari (``CellSales``, masalan ``daily_sku_metrics``); ``lines`` bilan bir
+    xil natija beradi (Yakunlangan qatori yo'q yig'indi katak yaratmaydi)."""
+    acc: dict[CellKey, Cell] = defaultdict(Cell)
+    first, last = period.start, period.end
+
+    for key, t in totals:
+        if not first <= key[0] <= last or t.lines == 0:
+            continue
+        a = acc[key]
+        a.revenue += t.revenue
+        a.commission += t.commission
+        a.logistics += t.logistics
+        a.cogs += t.cogs
+        a.covered_revenue += t.revenue_costed
+        a.covered_payout += t.payout_costed
+        a.units += t.units
+        a.covered_units += t.units_costed
+        a.lines += t.lines
+        a.uncovered_lines += t.uncovered_lines
 
     for line in completed(x for x in lines if x.order_date in period):
         a = acc[CellKey(line.order_date, line.shop, line.sku)]
-        rev = line.revenue
+        rev = _cents(line.revenue)
+        fee = _cents(to_decimal(line.commission))
+        logistic = _cents(to_decimal(line.logistics))
         a.revenue += rev
-        a.commission += line.commission
-        a.logistics += line.logistics
+        a.commission += fee
+        a.logistics += logistic
         a.units += line.amount
         a.lines += 1
         cost = line.cogs
         if cost is None:
             a.uncovered_lines += 1
         else:
-            a.cogs += cost
+            a.cogs += _cents(cost)
+            a.covered_units += line.amount
             a.covered_revenue += rev
-            a.covered_payout += rev - line.commission - line.logistics
+            a.covered_payout += rev - fee - logistic
 
     # Kun × do'kon bo'yicha SKU tushumlari — taqsimot og'irliklari (kataklar yaratilishidan oldin olinadi).
     sales_by_day: dict[date, list[CellKey]] = defaultdict(list)
+    sales_by_shop: dict[tuple[date, str], list[CellKey]] = defaultdict(list)
     for key in sorted(acc, key=CellKey.order):
         sales_by_day[key.day].append(key)
+        sales_by_shop[key.day, key.shop].append(key)
+    weights_of: dict[tuple[date, str | None], tuple[list[CellKey], list[Decimal]] | None] = {}
 
-    def spread(
-        day: date,
-        shops: Sequence[str] | None,
-        put: Callable[[_Acc, Money, bool], None],
-        amount: Money,
-    ) -> None:
+    def targets(day: date, shop: str | None) -> tuple[list[CellKey], list[Decimal]] | None:
+        """Taqsimot kataklari va og'irliklari (tushumlar) — keshda: kataklar tushumi keyin o'zgarmaydi."""
+        if (day, shop) not in weights_of:
+            keys = sales_by_day.get(day, []) if shop is None else sales_by_shop.get((day, shop), [])
+            weights = [acc[k].revenue for k in keys]
+            ok = keys and any(w > 0 for w in weights)
+            weights_of[day, shop] = (keys, weights) if ok else None
+        return weights_of[day, shop]
+
+    def spread(day: date, shop: str | None, own: bool, category: str, amount: Money) -> None:
         """Summani kun bo'yicha SKU kataklariga tushum ulushida ("taqsimlangan"); tushum yo'q —
-        do'kon / tashkilot darajasidagi taqsimlanmagan katakka (o'z darajasida, taqsimlanmagan)."""
-        keys = [k for k in sales_by_day.get(day, ()) if shops is None or k.shop in shops]
-        weights = [acc[k].revenue for k in keys]
-        if keys and any(w > 0 for w in weights):
-            for k, part in zip(keys, allocate(amount, weights), strict=True):
-                put(acc[k], part, True)
-        else:
-            put(
-                acc[CellKey(day, shops[0] if shops and len(shops) == 1 else "", None)],
-                amount,
-                False,
-            )
+        do'kon / tashkilot darajasidagi taqsimlanmagan katakka (o'z darajasida, taqsimlanmagan).
+        ``own`` — o'z xarajati (F10), aks holda Uzum xarajati (F9; ``category`` — ``ExpenseCategory``)."""
+        found = targets(day, shop)
+        if found is None:
+            _put(acc[CellKey(day, shop or "", None)], own, category, amount.amount)
+            return
+        keys, weights = found
+        for k, part in zip(keys, split(amount.amount, weights, UZS.places), strict=True):
+            a = acc[k]  # taqsimlangan qism: ichma-ich (ko'p chaqiriladi)
+            if own:
+                if a.own is None:
+                    a.own, a.own_alloc = {}, {}
+                elif a.own_alloc is None:
+                    a.own_alloc = {}
+                a.own[category] = a.own.get(category, _D0) + part
+                a.own_alloc[category] = a.own_alloc.get(category, _D0) + part
+            else:
+                c = cast(ExpenseCategory, category)
+                if a.uzum is None:
+                    a.uzum, a.uzum_alloc = {}, {}
+                elif a.uzum_alloc is None:
+                    a.uzum_alloc = {}
+                a.uzum[c] = a.uzum.get(c, _D0) + part
+                a.uzum_alloc[c] = a.uzum_alloc.get(c, _D0) + part
 
     for e in expenses:
         if e.day not in period:
             continue
-
-        def put_uzum(a: _Acc, m: Money, allocated: bool, c: ExpenseCategory = e.category) -> None:
-            _add(a.uzum, c, m.amount)
-            if allocated:
-                _add(a.uzum_alloc, c, m.amount)
-
         if e.sku is not None:
-            put_uzum(acc[CellKey(e.day, e.shop, e.sku)], e.amount, False)
+            _put(acc[CellKey(e.day, e.shop, e.sku)], False, e.category, e.amount.amount)
         else:
-            spread(e.day, [e.shop], put_uzum, e.amount)
+            spread(e.day, e.shop, False, e.category, e.amount)
 
     for oe in own_expenses:
-
-        def put_own(a: _Acc, m: Money, allocated: bool, c: str = oe.category) -> None:
-            _add(a.own, c, m.amount)
-            if allocated:
-                _add(a.own_alloc, c, m.amount)
-
         for day in _days(period):
             part = own_expense_in_period(oe.expense, Period(day, day))
             if part.is_zero():
                 continue
             if oe.sku is not None:
-                put_own(acc[CellKey(day, oe.shop or "", oe.sku)], part, False)
+                _put(acc[CellKey(day, oe.shop or "", oe.sku)], True, oe.category, part.amount)
             else:
-                spread(day, None if oe.shop is None else [oe.shop], put_own, part)
+                spread(day, oe.shop, True, oe.category, part)
 
-    items: dict[CellKey, Statement] = {}
-    for key in sorted(acc, key=CellKey.order):
-        a = acc[key]
-        revenue = Money(a.revenue, UZS)
-        payout = Money(a.revenue - a.commission - a.logistics, UZS)
-        rule = tax(key.day) if callable(tax) else tax  # F11 profili sana bo'yicha (upcore.tax)
-        tax_amount = rule.on(revenue, payout) if rule else ZERO
-        uzum, own = _money_map(a.uzum), _money_map(a.own)
-        overhead = sum((m.amount for m in (*uzum.values(), *own.values())), tax_amount.amount)
-        if a.revenue == 0:
-            deducted = Money(overhead, UZS)
+    rules: dict[date, TaxRule | None] = {}
+    for key, a in acc.items():
+        day = key[0]
+        if callable(tax):  # F11 profili sana bo'yicha (upcore.tax), kun bo'yicha keshda
+            rule = rules[day] if day in rules else rules.setdefault(day, tax(day))
         else:
-            deducted = Money(overhead * a.covered_revenue / a.revenue, UZS)
-        items[key] = Statement(
-            revenue=revenue,
-            commission=Money(a.commission, UZS),
-            logistics=Money(a.logistics, UZS),
-            cogs=Money(a.cogs, UZS),
-            covered_revenue=Money(a.covered_revenue, UZS),
-            covered_payout=Money(a.covered_payout, UZS),
-            uzum_expenses=uzum,
-            own_expenses=own,
-            tax=tax_amount,
-            expenses_deducted=deducted,
-            units=a.units,
-            lines=a.lines,
-            uncovered_lines=a.uncovered_lines,
-            uzum_allocated=_money_map(a.uzum_alloc),
-            own_allocated=_money_map(a.own_alloc),
-        )
-    return Cells(period, items)
+            rule = tax
+        if rule is not None:
+            a.tax = rule.amount_on(a.revenue, a.revenue - a.commission - a.logistics)
+        overhead = a.tax
+        if a.uzum:
+            overhead += sum(a.uzum.values(), _D0)
+        if a.own:
+            overhead += sum(a.own.values(), _D0)
+        if a.revenue == 0:
+            a.deducted = _cents(overhead)
+        elif overhead:
+            a.deducted = _cents(overhead * a.covered_revenue / a.revenue)
+    return Cells(period, dict(acc))
+
+
+# --- Unit-iqtisod (M6) ----------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class UnitEconomics:
+    """M6 jadvali ustunlari bitta kesim (SKU) uchun; maxraj nol bo'lsa ``None``.
+
+    Tannarx/dona va foyda/dona — tannarxi ma'lum dona bo'yicha (F15: sof foyda faqat shu qism uchun)."""
+
+    avg_price: Money | None  # F3 / dona
+    commission_share: Decimal | None  # F4 / F3
+    logistics_per_unit: Money | None  # F5 / dona
+    cogs_per_unit: Money | None  # F7 / tannarxi ma'lum dona
+    ads_per_unit: Money | None  # F19 reklamasi (bog'langan + taqsimlangan) / dona
+    acos: Decimal | None  # F19 = reklama / F3
+    profit_per_unit: Money | None  # F12 / tannarxi ma'lum dona
+
+
+def _per(amount: Money, n: int) -> Money | None:
+    return None if n == 0 else Money(amount.amount / n, amount.currency)
+
+
+def unit_economics(s: Statement) -> UnitEconomics:
+    """M6 unit-iqtisod kesim hisobotidan (``Cells.by_sku``): reklama — F9 ning reklama turi (F19 qoidasi bilan
+    SKU'ga bog'langan va tushum ulushida taqsimlangan)."""
+    ads = s.uzum_expenses.get(ExpenseCategory.ADVERTISING, ZERO)
+    return UnitEconomics(
+        avg_price=_per(s.revenue, s.units),
+        commission_share=ratio(s.commission.amount, s.revenue.amount),
+        logistics_per_unit=_per(s.logistics, s.units),
+        cogs_per_unit=_per(s.cogs, s.covered_units),
+        ads_per_unit=_per(ads, s.units),
+        acos=ratio(ads.amount, s.revenue.amount),
+        profit_per_unit=_per(s.net_profit, s.covered_units),
+    )
 
 
 # --- Kutilayotgan foyda va solishtirish -----------------------------------------------------

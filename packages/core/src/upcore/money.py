@@ -91,6 +91,12 @@ class Money:
         return obj
 
     @classmethod
+    def rounded(cls, amount: Decimal, currency: Currency) -> Money:
+        """Tez yo'l: tayyor ``Decimal`` (chekli) va ``Currency`` — faqat yaxlitlanadi (ko'p sonli natijalar uchun,
+        masalan P&L kataklari)."""
+        return cls._exact(quantize(amount, currency.places), currency)
+
+    @classmethod
     def of(cls, amount: DecimalLike, currency: Currency | str) -> Money:
         return cls(to_decimal(amount), Currency(currency))
 
@@ -160,11 +166,19 @@ def allocate(amount: Money, weights: Sequence[DecimalLike]) -> list[Money]:
         raise MoneyError("taqsimot uchun kamida bitta qator kerak")
     if any(w < 0 for w in ws):
         raise MoneyError("og'irlik manfiy bo'lmasligi kerak")
-    weight_sum = sum(ws, Decimal(0))
-    if weight_sum == 0:
+    if sum(ws, Decimal(0)) == 0:
         raise MoneyError("og'irliklar yig'indisi nol")
-    parts = [Money(amount.amount * w / weight_sum, amount.currency) for w in ws]
-    remainder = amount - total(parts, amount.currency)
-    largest = max(range(len(ws)), key=lambda i: (ws[i], -i))
+    cur = amount.currency
+    return [Money._exact(p, cur) for p in split(amount.amount, ws, cur.places)]
+
+
+def split(amount: Decimal, weights: Sequence[Decimal], places: int) -> list[Decimal]:
+    """``allocate`` ning xom ``Decimal`` ko'rinishi (tez yo'l, natija bir xil): ``amount`` — ``places`` xonaga
+    yaxlitlangan, og'irliklar manfiy emas va yig'indisi musbat (chaqiruvchi tekshiradi)."""
+    weight_sum = sum(weights, Decimal(0))
+    exp = _EXPONENTS.get(places) or Decimal(1).scaleb(-places)
+    parts = [(amount * w / weight_sum).quantize(exp, rounding=ROUND_HALF_UP) for w in weights]
+    remainder = amount - sum(parts, Decimal(0))
+    largest = max(range(len(weights)), key=lambda i: (weights[i], -i))
     parts[largest] += remainder
     return parts

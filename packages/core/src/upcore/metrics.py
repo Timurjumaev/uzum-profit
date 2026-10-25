@@ -99,6 +99,11 @@ def status_group(status: str) -> StatusGroup:
     return _STATUS_GROUPS.get(status.strip().upper(), StatusGroup.UNKNOWN)
 
 
+def statuses(group: StatusGroup) -> frozenset[str]:
+    """F2. Guruhdagi Uzum holatlari (katta harf) — bazadan filtrlash uchun (``UNKNOWN`` — bo'sh to'plam)."""
+    return frozenset(s for s, g in _STATUS_GROUPS.items() if g is group)
+
+
 @dataclass(frozen=True, slots=True)
 class SaleLine:
     """``finance/orders`` qatori (so'mda). ``commission`` va ``logistics`` — qator bo'yicha jami.
@@ -137,6 +142,12 @@ class SaleLine:
     def cogs(self) -> Decimal | None:
         """F7 qator bo'yicha; tannarx noma'lum bo'lsa ``None``."""
         return None if self.unit_cost is None else to_decimal(self.unit_cost) * self.amount
+
+    @property
+    def gross_profit(self) -> Decimal | None:
+        """F8 qator bo'yicha: F6 − F7; tannarx noma'lum bo'lsa ``None``."""
+        cost = self.cogs
+        return None if cost is None else self.payout - cost
 
 
 def _in_group(lines: Iterable[SaleLine], group: StatusGroup) -> list[SaleLine]:
@@ -218,6 +229,9 @@ class SaleTotals:
     cogs_estimated: Money  # F22: taxminiy belgili qatorlar tannarxi (F7 ning qismi)
     returns: int  # F18 surati: Σ ``amountReturns``
     canceled: int  # F17 surati: Bekor dona
+    lines: int = 0  # Yakunlangan qatorlar soni
+    uncovered_lines: int = 0  # shundan tannarxsiz (F15 "N ta sotuv tannarxsiz")
+    units_costed: int = 0  # tannarxi ma'lum Yakunlangan dona (tannarx/dona, foyda/dona — M6)
 
 
 def sale_totals(lines: Iterable[SaleLine]) -> SaleTotals:
@@ -236,6 +250,9 @@ def sale_totals(lines: Iterable[SaleLine]) -> SaleTotals:
         cogs_estimated=cogs([line for line in covered if line.estimated]),
         returns=sum(line.amount_returns for line in items),
         canceled=_units(items, StatusGroup.CANCELED),
+        lines=len(done),
+        uncovered_lines=len(done) - len(covered),
+        units_costed=_units(covered, StatusGroup.COMPLETED),
     )
 
 
@@ -388,8 +405,14 @@ def realization_rate(window: Iterable[SaleLine], min_units: int = 50) -> Decimal
     ``min_units`` dan kam bo'lsa ``None`` (R ko'rsatilmaydi).
     """
     items = list(window)
-    done = _units(items, StatusGroup.COMPLETED)
-    final = done + _units(items, StatusGroup.CANCELED)
+    return realization_rate_units(
+        _units(items, StatusGroup.COMPLETED), _units(items, StatusGroup.CANCELED), min_units
+    )
+
+
+def realization_rate_units(done: int, canceled: int, min_units: int = 50) -> Decimal | None:
+    """F16. R dona yig'indilaridan (masalan, ``daily_sku_metrics``: ``units`` va ``canceled``)."""
+    final = done + canceled
     if final < min_units:
         return None
     return ratio(done, final)
@@ -421,8 +444,12 @@ def expected_profit(lines: Iterable[SaleLine], rate: Decimal | None) -> Expected
 def cancel_share(lines: Iterable[SaleLine]) -> Decimal | None:
     """F17. Bekor ulushi = Bekor / (Yakunlangan + Bekor), dona bo'yicha."""
     items = list(lines)
-    canceled = _units(items, StatusGroup.CANCELED)
-    return ratio(canceled, _units(items, StatusGroup.COMPLETED) + canceled)
+    return cancel_rate(_units(items, StatusGroup.COMPLETED), _units(items, StatusGroup.CANCELED))
+
+
+def cancel_rate(done: int, canceled: int) -> Decimal | None:
+    """F17 dona yig'indilaridan: Bekor / (Yakunlangan + Bekor)."""
+    return ratio(canceled, done + canceled)
 
 
 def return_share(sold: int, returned: int) -> Decimal | None:
@@ -484,6 +511,40 @@ def sku_acos(
             acos=ratio((linked + share).amount, sku_revenue.get(sku, zero).amount),
         )
     return result, zero if can_split else unlinked_ads
+
+
+# --- M4, M6: oy prognozi va SKU holat belgisi -------------------------------------------------
+
+
+def run_rate(value: DecimalLike, elapsed_days: int, total_days: int) -> Decimal | None:
+    """M4 "Oy prognozi" (run-rate): davrning o'tgan kunlaridagi qiymat × jami kunlar / o'tgan kunlar, 2 xona
+    (summa yoki dona). Masalan, oyning 10 kunida 1 mln → 30 kunlik oyga 3 mln. O'tgan kun 0 bo'lsa ``None``."""
+    if elapsed_days <= 0:
+        return None
+    return quantize(to_decimal(value) * total_days / elapsed_days, 2)
+
+
+class ProfitLabel(StrEnum):
+    """M6 SKU holat belgisi."""
+
+    LOSS = "loss"  # Zarar: F12 < 0
+    BORDERLINE = "borderline"  # Chegarada: F13 < 5%
+    PROFITABLE = "profitable"  # Foydali
+    NO_DATA = "no_data"  # Ma'lumot yo'q: tannarxi ma'lum tushum yo'q (F13 hisoblanmaydi)
+
+
+def profit_label(
+    net_profit: Money, margin: Decimal | None, borderline: DecimalLike = Decimal("0.05")
+) -> ProfitLabel:
+    """M6 holat belgisi F12 va F13 dan: Zarar (F12 < 0, masalan sotuvsiz reklama ham) / Chegarada
+    (F13 < ``borderline``) / Foydali; marja yo'q (tannarxi ma'lum tushum 0) — Ma'lumot yo'q."""
+    if net_profit.amount < 0:
+        return ProfitLabel.LOSS
+    if margin is None:
+        return ProfitLabel.NO_DATA
+    if margin < to_decimal(borderline):
+        return ProfitLabel.BORDERLINE
+    return ProfitLabel.PROFITABLE
 
 
 # --- F35–F36 --------------------------------------------------------------------------------

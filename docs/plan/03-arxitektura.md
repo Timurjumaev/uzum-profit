@@ -238,6 +238,13 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
   `calculator`, `reports`, `notifications`, `settings`, `billing`, `admin`.
 - Har javobda `meta.freshness` (tegishli ma'lumot turlari bo'yicha oxirgi sinxron vaqti).
 - Cheklov: foydalanuvchi bo'yicha 120 so'rov/daq; OTP: raqam bo'yicha 5 ta/soat.
+- **O'qish API'lari (B2.9, `upapi.reports`):** `GET /orgs/{id}/{dashboard,pnl,skus,sales,expenses,inventory}`;
+  davr `start`/`end` (Toshkent kunlari, standart — oxirgi 30 kun), `shop` (bir necha marta). P&L kataklari butun
+  tashkilot bo'yicha `daily_sku_metrics` + `mp_expenses` + `manual_expenses` + `tax_profiles` dan bir marta quriladi
+  (`upcore.pnl.build_cells`), do'kon filtri keyin — tashkilot xarajati hamma do'konlarga taqsimlanadi. Bosh sahifa, P&L
+  va SKU jadvali shu bitta hisobdan. Ruxsat: moliya — `view_finance`, xarajatlar — `view_settings`, ombor —
+  `view_purchases` (summalar `view_purchase_amounts` bilan). Og'ir hisobot paytida GC to'xtatiladi
+  (`reports.common.paused_gc`). OpenAPI → `apps/api/openapi.json` → `apps/web/src/lib/api/schema.d.ts`.
 
 ## 9. Frontend arxitekturasi
 
