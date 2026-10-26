@@ -1,0 +1,313 @@
+/* Kirish, onboarding, "Ma'lumotlar holati" sahifalari (B3.7) — faqat tokenlar orqali. */
+
+/* --- Kirish va taklif --- */
+.auth {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-block-size: 100dvh;
+  max-inline-size: none;
+  margin: 0;
+  padding: var(--space-16) var(--gutter) var(--space-8);
+}
+
+.auth__lang {
+  position: absolute;
+  inset-block-start: var(--space-4);
+  inset-inline-end: var(--gutter);
+  inline-size: 11rem;
+}
+
+.auth__card {
+  inline-size: min(26rem, 100%);
+  padding: var(--space-8);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-panel);
+  background: var(--bg-surface);
+}
+
+.auth__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-end: var(--space-6);
+  font: var(--type-h3);
+}
+
+.auth__card h1 {
+  margin-block-end: var(--space-2);
+}
+
+.auth__form {
+  display: grid;
+  gap: var(--space-4);
+  margin-block-start: var(--space-4);
+}
+
+.auth__code {
+  font: var(--type-kpi);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.3em;
+  text-align: center;
+}
+
+.auth__links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+@media (max-width: 639px) {
+  .auth {
+    place-items: start center;
+    padding-block-start: var(--space-16);
+  }
+
+  .auth__card {
+    padding: var(--space-5);
+  }
+}
+
+/* --- Onboarding --- */
+.onb {
+  min-block-size: 100dvh;
+}
+
+.onb__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--gutter);
+  border-block-end: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+}
+
+.onb__bar .auth__brand {
+  margin: 0;
+}
+
+.onb__body {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  gap: var(--space-8);
+  max-inline-size: 60rem;
+}
+
+.onb__steps .ui-stepper {
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.onb__progress {
+  display: none;
+}
+
+.onb__main {
+  max-inline-size: 40rem;
+}
+
+.onb__form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.onb__form h2,
+.onb__form p {
+  margin: 0;
+}
+
+.onb__howto {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding-inline-start: var(--space-6);
+}
+
+.onb__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.onb__shops,
+.onb__history {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.onb__shop,
+.onb__history > li {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-panel);
+  background: var(--bg-surface);
+}
+
+.onb__shop-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-block-size: 36px;
+  cursor: pointer;
+}
+
+.onb__shop-check input {
+  inline-size: 18px;
+  block-size: 18px;
+  accent-color: var(--accent);
+}
+
+.onb__shop-fields {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.onb__history h3 {
+  margin: 0;
+}
+
+.onb__history-kinds {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.onb__history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.colorpicker {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.colorpicker__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-block-start: var(--space-1);
+}
+
+.colorpicker__item {
+  position: relative;
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.colorpicker__item input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.colorpicker__swatch {
+  inline-size: 24px;
+  block-size: 24px;
+  border-radius: 50%;
+}
+
+/* Tanlangan: halqa + ichida belgi (rang yolg'iz emas). */
+.colorpicker__item.is-checked {
+  box-shadow: 0 0 0 2px var(--text-primary);
+}
+
+.colorpicker__item.is-checked .colorpicker__swatch::after {
+  content: "✓";
+  display: grid;
+  place-items: center;
+  block-size: 100%;
+  color: #fff;
+  font: var(--type-label);
+}
+
+.colorpicker__item:has(input:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (min-width: 640px) {
+  .onb__shop-fields {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .onb__body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  .onb__steps {
+    display: none;
+  }
+
+  .onb__progress {
+    display: block;
+  }
+}
+
+/* --- Ma'lumotlar holati --- */
+.status {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.status__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.status__head h1,
+.status__head p {
+  margin: 0;
+}
+
+.status-accounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.status-accounts li {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.status-shop {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.status-shop__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.status-shop__head h2 {
+  margin: 0;
+}

@@ -247,3 +247,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   "Grafik | Jadval" ko'rinishi, legenda, matnli tavsif, bo'sh holat, annotatsiyalar (bepul logistika, uzilgan kunlar),
   qorong'i rejim va `prefers-reduced-motion`. `/ui-kit` da "Grafiklar". Testlar: sof quruvchilar, ramka va hayot sikli,
   axe-core, haqiqiy ECharts jsdom'da. Boshlang'ich JS 147,8 KB gzip.
+- B3.7 Kirish, onboarding, "Ma'lumotlar holati" (`apps/web/src/features/{auth,onboarding,status}`): `/login` (telefon +
+  Telegram kodi, 6 raqamda avtoyuborish, qayta yuborish 30 s), `/invite`, profil tili bilan bog'lash; `/onboarding`
+  (tashkilot → Uzum kaliti → do'konlar: nom va rang → tarix yuklanishi progressi; serverdan holat, istalgan joydan
+  davom etish); "Ma'lumotlar holati" (do'kon × ma'lumot turi, akkaunt va kvota, "Hozir yangilash"). Tashkilotsiz
+  foydalanuvchi onboarding'ga yo'naltiriladi. Xavfsizlik: xom URL qidiruvidagi qaytish manzili ishlatishdan oldin qayta
+  tekshiriladi (ochiq qayta yo'naltirish). Testlar (axe-core bilan), `lib/phone`. Boshlang'ich JS 154 KB gzip.

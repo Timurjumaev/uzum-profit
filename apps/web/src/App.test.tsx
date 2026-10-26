@@ -40,7 +40,7 @@ describe("ilova karkasi (B3.1)", () => {
   it("kirmagan (401) — /login ga, qaytish manzili bilan", async () => {
     serve(() => problem(401, "unauthorized"));
     const { history } = renderAt("/status?x=1");
-    expect(await screen.findByText(/Kirish sahifasi qurilmoqda/)).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Kirish" })).toBeTruthy();
     expect(history.location.pathname).toBe("/login");
     expect(new URLSearchParams(history.location.search).get("redirect")).toBe("/status?x=1");
   });
@@ -81,7 +81,7 @@ describe("ilova karkasi (B3.1)", () => {
     expect(await screen.findByRole("heading", { name: "Maʼlumotlar holati" })).toBeTruthy();
     // Boshqa qurilmadan chiqildi — keyingi so'rov 401.
     await state.queryClient.refetchQueries({ queryKey: meQuery.queryKey }).catch(() => undefined);
-    expect(await screen.findByText(/Kirish sahifasi qurilmoqda/)).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Kirish" })).toBeTruthy();
     expect(history.location.pathname).toBe("/login");
     expect(new URLSearchParams(history.location.search).get("redirect")).toBe("/status");
     expect(state.queryClient.getQueryData(meQuery.queryKey)).toBeUndefined();

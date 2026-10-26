@@ -14,7 +14,11 @@ import {
 import { AppShell } from "../components/shell";
 import { ApiError } from "../lib/api/client";
 import { NotFound, Pending, RouteError } from "./errors";
+import { AuthRoute } from "../features/auth/AuthRoute";
 import { filterSearch } from "./filters";
+import { inviteSearch, loginSearch, onboardingSearch } from "./search";
+
+export { inviteSearch, loginSearch };
 import { meQuery } from "./query";
 
 export type RouterContext = { queryClient: QueryClient };
@@ -23,12 +27,10 @@ const root = createRootRouteWithContext<RouterContext>()({
   component: Outlet,
 });
 
-/** Kirish talab qiladigan sahifalar: foydalanuvchi va tashkilotlari kontekstga. */
-const app = createRoute({
+/** Kirish talab qiladigan hamma sahifalar: foydalanuvchi va tashkilotlari kontekstga; sessiya yo'q (401) — /login. */
+const auth = createRoute({
   getParentRoute: () => root,
-  id: "app",
-  // Umumiy filtrlar (do'kon, davr, solishtirish) — URL'da, hamma sahifada (app/filters).
-  validateSearch: filterSearch,
+  id: "auth",
   beforeLoad: async ({ context, location }) => {
     try {
       return { me: await context.queryClient.ensureQueryData(meQuery) };
@@ -38,6 +40,18 @@ const app = createRoute({
       }
       throw error;
     }
+  },
+  component: AuthRoute,
+});
+
+/** Karkas ostidagi sahifalar. Tashkilotsiz foydalanuvchi — avval onboarding (M2). */
+const app = createRoute({
+  getParentRoute: () => auth,
+  id: "app",
+  // Umumiy filtrlar (do'kon, davr, solishtirish) — URL'da, hamma sahifada (app/filters).
+  validateSearch: filterSearch,
+  beforeLoad: ({ context }) => {
+    if (context.me.orgs.length === 0) throw redirect({ to: "/onboarding" });
   },
   component: AppShell,
 });
@@ -71,19 +85,26 @@ const cash = soon("/cash", "Cash");
 const reports = soon("/reports", "Reports");
 const settings = soon("/settings", "Settings");
 
-export type LoginSearch = { redirect?: string };
-
-/** Kirishdan keyin qaytish manzili — faqat o'z saytimiz ichidagi yo'l (ochiq qayta yo'naltirish yo'q). */
-export function loginSearch(search: Record<string, unknown>): LoginSearch {
-  const target = search.redirect;
-  return typeof target === "string" && /^\/(?![/\\])/.test(target) ? { redirect: target } : {};
-}
-
 const login = createRoute({
   getParentRoute: () => root,
   path: "/login",
   validateSearch: loginSearch,
   component: lazyRouteComponent(() => import("../routes/login"), "Login"),
+});
+
+/** Birinchi ulanish (M2): markazda bitta ustun, karkassiz. */
+const onboarding = createRoute({
+  getParentRoute: () => auth,
+  path: "/onboarding",
+  validateSearch: onboardingSearch,
+  component: lazyRouteComponent(() => import("../routes/onboarding"), "Onboarding"),
+});
+
+const invite = createRoute({
+  getParentRoute: () => auth,
+  path: "/invite",
+  validateSearch: inviteSearch,
+  component: lazyRouteComponent(() => import("../routes/invite"), "Invite"),
 });
 
 // Komponentlar katalogi (04 §5) — kirishsiz, ma'lumotsiz (sintetik namunalar).
@@ -94,7 +115,11 @@ const uiKit = createRoute({
 });
 
 export const routeTree = root.addChildren([
-  app.addChildren([home, status, pnl, products, orders, expenses, purchases, inventory, cash, reports, settings]),
+  auth.addChildren([
+    app.addChildren([home, status, pnl, products, orders, expenses, purchases, inventory, cash, reports, settings]),
+    onboarding,
+    invite,
+  ]),
   login,
   uiKit,
 ]);

@@ -176,7 +176,21 @@ dona legacy bilan 1 so'mgacha bir xil.
   tor ekranda sharshara yorliqlari qiya. `/ui-kit` da "Grafiklar" bo'limi. Testlar: `options.test.ts` (sof quruvchilar),
   `charts.test.tsx` (ramka, hayot sikli, axe), `echarts.smoke.test.tsx` (haqiqiy ECharts jsdom'da, ogohlantirishsiz —
   ECharts 6 da `containLabel` va `api.style` eskirganini shu test ushladi).
-- [ ] B3.7 Kirish sahifalari, onboarding wizard (M2), "Ma'lumotlar holati" sahifasi.
+- [x] B3.7 Kirish sahifalari, onboarding wizard (M2), "Ma'lumotlar holati" sahifasi.
+  ✓ 2026-10-26: `features/auth` — `/login` (telefon → Telegram kodi; raqam har ko'rinishda — `lib/phone`; 6 raqamda o'zi
+  yuboriladi; qayta yuborish 30 s; xato matni API `code` bo'yicha), `/invite?token=` (M1 taklifi), profil tili
+  (`user.language`: qo'lda tanlangan til kirishda profilga yoziladi, tanlanmagan bo'lsa — profil tili qo'llanadi,
+  menyudan almashsa profilga ham yoziladi). `features/onboarding` — `/onboarding` (karkassiz, chapda qadamlar / mobilda
+  progress; holat serverdan: tashkilot → kalit → do'konlar → tarix, istalgan joyda to'xtab davom etish): tashkilot
+  (nom, STIR), Uzum kaliti (parol maydoni; kalit URL'ga, matnga, holatga tushmaydi; egasidan boshqasiga o'chirilgan),
+  do'konlar (tanlash, qisqa nom, 8 rang — 1-do'kon 1-rang), tarix yuklanishi (do'kon × tur bo'yicha progress, har 5 s;
+  kutmasdan o'tish mumkin). `features/status` — "Ma'lumotlar holati" (M3): do'kon × tur jadvali, akkaunt va kvota.
+  Tashkilotsiz foydalanuvchi `app` marshrutida onboarding'ga yo'naltiriladi. **Qoldi / o'zgardi:** M2 4–6-qadamlar (soliq,
+  tannarx, Telegram) tegishli endpointlar bilan (B4.8, B5, B6); yo'riqnomada rasm yo'q (matn); "taxminiy qolgan vaqt" yo'q
+  — API bermaydi. **Topilgan va tuzatilgan:** TanStack Router bola marshrutga ota marshrutning xom qidiruvini ham beradi
+  — `useSearch` tekshirilmagan `redirect` qaytarardi (ochiq qayta yo'naltirish); endi qiymat ishlatilgan joyda qayta
+  tekshiriladi (`app/search.ts`, testi bor). Testlar: `auth.test.tsx`, `onboarding.test.tsx`, `status.test.tsx` (hammasida
+  axe: jiddiy xato 0), `phone.test.ts`; boshlang'ich JS 154 KB gzip.
 - [ ] B3.8 Playwright: e2e (kirish, onboarding), vizual skrinshotlar, axe.
 - T: `/ui-kit` va onboarding skrinshotlarini ko'rib fikr bildirish; Q1 — brend nomini tanlash.
   ✓ 2026-10-25 `/ui-kit` skrinshotlari (yorug'/qorong'i, 1440/390 px) Temur tomonidan ma'qullandi (B3.4 komponentlari
