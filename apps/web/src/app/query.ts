@@ -82,3 +82,34 @@ export const connectAccount = (orgId: string, token: string) =>
 
 export const updateShop = (orgId: string, shopId: string, body: { active?: boolean; alias?: string | null; color?: string | null }) =>
   unwrap(api.PATCH("/api/v1/orgs/{org_id}/shops/{shop_id}", { params: { path: { org_id: orgId, shop_id: shopId } }, body }));
+
+// --- Hisobotlar (B4): davr + do'konlar filtri bilan -----------------------------------------------------------------
+
+/** Hisobot so'rovi parametrlari: `app/filters` dan (bo'sh `shops` — hamma do'kon). */
+export type ReportParams = { shops: string[]; start: string; end: string };
+
+const reportQuery = (p: ReportParams) => ({ start: p.start, end: p.end, shop: p.shops.length > 0 ? p.shops : undefined });
+
+/** Bosh sahifa (M4): hisob varag'i, davr chizig'i, kunlik grafik, TOP/zarar SKU, ko'rsatkichlar, "Diqqat talab qiladi". */
+export const dashboardQuery = (orgId: string, p: ReportParams) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "dashboard", p],
+    queryFn: () =>
+      unwrap(api.GET("/api/v1/orgs/{org_id}/dashboard", { params: { path: { org_id: orgId }, query: reportQuery(p) } })),
+  });
+
+/** Drill-down: Yakunlangan sotuv qatorlari (P&L qatorlari yig'indisi shulardan), kursor bilan sahifalanadi. */
+export const salesPage = (orgId: string, p: ReportParams, cursor: string | null) =>
+  unwrap(
+    api.GET("/api/v1/orgs/{org_id}/sales", {
+      params: { path: { org_id: orgId }, query: { ...reportQuery(p), group: "completed", limit: 50, cursor } },
+    }),
+  );
+
+/** Drill-down: bitta Uzum toifasi xarajatlari va o'z xarajatlari (`own_items` — hamma toifa, mijozda saralanadi). */
+export const expensesPage = (orgId: string, p: ReportParams, category: string | null, cursor: string | null) =>
+  unwrap(
+    api.GET("/api/v1/orgs/{org_id}/expenses", {
+      params: { path: { org_id: orgId }, query: { ...reportQuery(p), category, limit: 50, cursor } },
+    }),
+  );

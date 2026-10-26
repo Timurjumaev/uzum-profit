@@ -3,6 +3,8 @@
 // va "Shu oy" skrinshotlarda barqaror. So'rovlar `requests` da — kalit/kod to'g'ri yuborilganini tekshirish uchun.
 import type { Page, Route } from "@playwright/test";
 
+import { dashboardData } from "../../src/test/dashboard";
+
 /** Qotirilgan vaqt (Toshkent). */
 export const NOW = new Date("2026-10-26T14:00:00+05:00");
 export const ago = (minutes: number) => new Date(NOW.getTime() - minutes * 60_000).toISOString();
@@ -95,6 +97,41 @@ export function healthySync(shops: Shop[] = SHOPS) {
   };
 }
 
+/** Drill-down namunasi: bir sahifa yakunlangan sotuvlar (kursorsiz). */
+const SALES = {
+  meta: dashboardData({}, ago).meta,
+  items: [
+    ["s1", "2026-10-25", "Sumka qora M", 2, "200000.00", "40000.00", "10000.00", "150000.00", "80000.00"],
+    ["s2", "2026-10-24", "Hamyon", 1, "120000.00", "24000.00", "9000.00", "87000.00", "50000.00"],
+  ].map(([id, day, title, amount, revenue, commission, logistics, payout, cogs]) => ({
+    id,
+    shop_id: SHOP_A,
+    sku_id: "d1",
+    sku_title: title,
+    order_id: 1,
+    external_id: 1,
+    ordered_at: `${day}T10:00:00Z`,
+    day,
+    status: "TO_WITHDRAW",
+    group: "completed",
+    amount,
+    amount_returns: 0,
+    return_cause: null,
+    sell_price: "100000.00",
+    revenue,
+    commission,
+    logistics,
+    payout,
+    cogs,
+    gross_profit: "70000.00",
+    cost_flags: [],
+    recalculated_at: null,
+    previous_cogs: null,
+  })),
+  next_cursor: null,
+  summary: { units: 3, canceled: 0, returns: 0, cancel_share: null, return_share: null },
+};
+
 export type ApiState = {
   /** Kirgan foydalanuvchi (`null` — sessiya yo'q). */
   me: { user: User; orgs: Org[] } | null;
@@ -185,6 +222,8 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
     }
     if (key === `GET /orgs/${ORG_ID}/shops`) return json(route, 200, state.shops);
     if (key === `GET /orgs/${ORG_ID}/sync`) return json(route, 200, state.sync);
+    if (key === `GET /orgs/${ORG_ID}/dashboard`) return json(route, 200, dashboardData({}, ago));
+    if (key === `GET /orgs/${ORG_ID}/sales`) return json(route, 200, SALES);
     if (key === `POST /orgs/${ORG_ID}/sync/refresh`) return json(route, 202, { queued: 3 });
     if (key === `POST /orgs/${ORG_ID}/accounts`) {
       if (body?.token !== GOOD_KEY) return problem(route, 422, "mp_token_invalid");

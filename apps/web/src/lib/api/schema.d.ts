@@ -1236,7 +1236,7 @@ export interface components {
         /**
          * RowOut
          * @description M5 hisob varag'i qatori: ``code`` (``revenue``, ``uzum:fine``, ``own:ijara``, ``net_profit`` ...), joriy summa,
-         *     tushumga nisbatan, oldingi davr va farq (``upcore.pnl.compare``).
+         *     tushumga nisbatan, oldingi davr, farq va o'zgarish ulushi (``upcore.pnl.compare``).
          */
         RowOut: {
             /** Code */
@@ -1249,6 +1249,8 @@ export interface components {
             previous: string;
             /** Diff */
             diff: string;
+            /** Change */
+            change: string | null;
         };
         /** SaleOut */
         SaleOut: {

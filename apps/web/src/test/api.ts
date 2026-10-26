@@ -3,6 +3,9 @@
 import { vi } from "vitest";
 
 import type { components } from "../lib/api/schema";
+import { dashboardData } from "./dashboard";
+
+export { dashboardData };
 
 export const ORG_ID = "11111111-1111-4111-8111-111111111111";
 export const SHOP_A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
@@ -64,6 +67,9 @@ export type Routes = Record<string, Reply | Reply[]>;
 export const ME_ROUTE = "GET /api/v1/auth/me";
 export const SHOPS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/shops`;
 export const SYNC_ROUTE = `GET /api/v1/orgs/${ORG_ID}/sync`;
+export const DASHBOARD_ROUTE = `GET /api/v1/orgs/${ORG_ID}/dashboard`;
+export const SALES_ROUTE = `GET /api/v1/orgs/${ORG_ID}/sales`;
+export const EXPENSES_ROUTE = `GET /api/v1/orgs/${ORG_ID}/expenses`;
 export const REFRESH_ROUTE = `POST /api/v1/orgs/${ORG_ID}/sync/refresh`;
 export const LOGOUT_ROUTE = "POST /api/v1/auth/logout";
 export const OTP_ROUTE = "POST /api/v1/auth/otp";
@@ -80,6 +86,7 @@ export function mockApi(routes: Routes = {}) {
     [ME_ROUTE]: () => json(200, ME),
     [SHOPS_ROUTE]: () => json(200, SHOPS),
     [SYNC_ROUTE]: () => json(200, syncStatus()),
+    [DASHBOARD_ROUTE]: () => json(200, dashboardData()),
     [REFRESH_ROUTE]: () => json(202, { queued: 3 }),
     [LOGOUT_ROUTE]: () => new Response(null, { status: 204 }),
     [PROFILE_ROUTE]: () => json(200, ME.user),

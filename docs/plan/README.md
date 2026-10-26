@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B2 chiqishi:** 24 soat xatosiz tekshiruvi kutilmoqda (2026-10-26). **B3 tugadi** (2026-10-26; B2 kutish vaqtida, Temur roziligi bilan) |
-| Keyingi vazifa | B2.11 yakuni (Temur sinovi, quyida) → B2 yopiladi; keyin **B4.1 Bosh sahifa**. B3 qoldig'i: Temur Q1 tovar belgisi tekshiruvi (ADR-030), `sellermax.uz` domenini ro'yxatdan o'tkazish |
+| Keyingi vazifa | **B4.2 Foyda va zarar (M5)** (B4.1 tugadi, PR kutilmoqda). B2.11 yakuni (Temur sinovi, quyida) → B2 yopiladi. B3 qoldig'i: Temur Q1 tovar belgisi tekshiruvi (ADR-030), `sellermax.uz` domenini ro'yxatdan o'tkazish |
 | Temurdan kutilmoqda | **2026-10-26 ~21:55 (Toshkent) eslatma:** loyiha papkasida `python3 -m uzum_profit sync`, so'ng `docs/staging.md` "Real sinov" 2–3-qadamlari (realcheck → compare) va yangi `staging_farqlari.md` ni chatga yuklash (B2 chiqishi: 24 soat xatosiz); ixtiyoriy: partiya qatorlariga SKU biriktirish |
-| Oxirgi yangilanish | 2026-10-26 (B3.8: Playwright e2e, vizual testlar, axe — B3 yopildi) |
+| Oxirgi yangilanish | 2026-10-26 (B4.1: Bosh sahifa — hisob varag'i, drill-down, davr chizig'i, grafik, diqqat, SKU, ko'rsatkichlar) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

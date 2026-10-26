@@ -655,26 +655,35 @@ def pending_profit(
 
 @dataclass(frozen=True, slots=True)
 class CompareRow:
-    """M5 ustunlari: joriy, tushumga nisbatan %, oldingi davr, farq."""
+    """M5 ustunlari: joriy, tushumga nisbatan %, oldingi davr, farq va o'zgarish ulushi.
+
+    ``change`` = farq / |oldingi davr| (ishorali qiymat bo'yicha: yuqori — yaxshi); oldingi davr nol bo'lsa ``None``.
+    """
 
     code: str
     current: Money
     share_of_revenue: Decimal | None
     previous: Money
     diff: Money
+    change: Decimal | None
 
 
 def compare(current: Statement, previous: Statement) -> list[CompareRow]:
     """Ikki davr hisobot qatorlari: joriy davrda yo'q qator oldingisida bo'lsa ham ko'rsatiladi."""
     cur, prev = dict(current.rows()), dict(previous.rows())
     codes = [c for c, _ in current.rows()] + [c for c, _ in previous.rows() if c not in cur]
-    return [
-        CompareRow(
-            code,
-            cur.get(code, ZERO),
-            ratio(cur.get(code, ZERO).amount, current.revenue.amount),
-            prev.get(code, ZERO),
-            cur.get(code, ZERO) - prev.get(code, ZERO),
+    rows = []
+    for code in codes:
+        now, before = cur.get(code, ZERO), prev.get(code, ZERO)
+        diff = now - before
+        rows.append(
+            CompareRow(
+                code,
+                now,
+                ratio(now.amount, current.revenue.amount),
+                before,
+                diff,
+                ratio(diff.amount, abs(before.amount)),
+            )
         )
-        for code in codes
-    ]
+    return rows

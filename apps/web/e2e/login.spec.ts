@@ -12,7 +12,7 @@ test("telefon → kod → bosh sahifa; raqam yagona ko'rinishda, kod to'g'ri yub
   await expect(page.getByRole("heading", { name: "Kodni kiriting" })).toBeVisible();
   await expect(page.getByText(/\+998 90 123 45 67 raqamiga/)).toBeVisible();
   await page.getByLabel("Telegramʼdagi kod").fill(GOOD_CODE); // 6 raqamda o'zi yuboriladi
-  await expect(page.getByRole("heading", { level: 1, name: "SellerMax" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /^Sof foyda/ })).toBeVisible();
   await expect(page).toHaveURL("/");
   expect(api.bodies("POST", "/auth/otp")).toEqual([{ phone: PHONE }]);
   expect(api.bodies("POST", "/auth/login")).toEqual([{ phone: PHONE, code: GOOD_CODE }]);

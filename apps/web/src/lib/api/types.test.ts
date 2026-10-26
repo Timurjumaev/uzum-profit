@@ -9,6 +9,7 @@ describe("API tiplari", () => {
       share_of_revenue: "1.000000",
       previous: "400000.00",
       diff: "1400000.00",
+      change: "3.500000",
     };
     const revenue: Statement["revenue"] = row.amount;
     expect(revenue).toBe("1800000.00");

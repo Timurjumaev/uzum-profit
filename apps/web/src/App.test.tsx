@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App, createAppState } from "./App";
 import { AppErrorBoundary, errorText } from "./app/errors";
+import { formatterFor } from "./lib/format";
 import { createI18n } from "./lib/i18n";
 import { I18nextProvider } from "react-i18next";
 import { makeQueryClient, meQuery, shouldRetry, STALE_MS } from "./app/query";
@@ -32,8 +33,8 @@ describe("ilova karkasi (B3.1)", () => {
   it("kirgan foydalanuvchi — bosh sahifa, tashkilotlar bilan", async () => {
     const api = serve(() => json(200, ME));
     renderAt("/");
-    expect(await screen.findByRole("heading", { name: "SellerMax" })).toBeTruthy();
-    expect(await screen.findByText("byDurii")).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: /^Sof foyda/ })).toBeTruthy();
+    expect((await screen.findByTestId("net-profit")).textContent).toBe(formatterFor("uz-Latn").money("48393000.00"));
     expect(api.unmocked).toEqual([]);
   });
 
@@ -58,7 +59,7 @@ describe("ilova karkasi (B3.1)", () => {
     expect(alert.textContent).toContain("Soʻrov ID: req-42");
     expect(api.count(ME_ROUTE)).toBe(3); // 1 + 2 qayta urinish
     fireEvent.click(screen.getByRole("button", { name: "Qayta urinish" }));
-    expect(await screen.findByText("byDurii")).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: /^Sof foyda/ })).toBeTruthy();
   });
 
   it("noma'lum manzil — 404 sahifasi", async () => {

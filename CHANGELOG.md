@@ -261,3 +261,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   brauzerda **kontrast bilan** (9 sahifa × yorug'/qorong'i × 1440/390 px, ochiq qatlamlar); vizual regressiya — 40
   skrinshot asosi (`e2e/__screenshots__`, `pnpm --filter web e2e:update`). Topildi va tuzatildi: qidiruv tugmasining
   ko'rinadigan matni nomiga kirmagan (WCAG 2.5.3). B3 yopildi.
+- B4.1 Bosh sahifa (M4, `apps/web/src/features/home`): hisob varag'i (hero sof foyda, tushumdan sof foydagacha qatorlar,
+  har qatorda oldingi davrga nisbatan o'zgarish va FormulaPopover, mobilda 3 qatorli yig'ilgan ko'rinish),
+  drill-down drawer (sotuv qatorlari, Uzum toifasi va o'z xarajatlari; kursor bilan "Yana yuklash"), davr chizig'i
+  (Bugun, Kecha, Shu oy, Oy prognozi, O'tgan oy), kunlik tushum + sof foyda grafigi, "Diqqat talab qiladi", eng foydali
+  5 / zarar 5 SKU, qo'shimcha ko'rsatkichlar (marja + tannarxsiz qism, ROI, bekor, qaytish, DRR, muzlagan pul, yo'ldagi
+  tovar, kutilayotgan foyda). Davr, do'kon va solishtirish URL'da. API: `RowOut.change` (farq / |oldingi|, `upcore.pnl.compare`)
+  — o'zgarish foizi UI'da hisoblanmaydi. `LedgerTable` ga `trailing` / `compactHidden`, `Kpi` ga `note`. Testlar: model,
+  sahifa (jsdom + axe), e2e (drill-down, mobil, 360 px gorizontal skrollsiz), vizual asoslar (home, palette).

@@ -338,7 +338,7 @@ describe("3-qadam: tarix yuklanmoqda", () => {
     const { history } = await renderOnboarding("/onboarding?step=history", { [SYNC_ROUTE]: () => withKinds(LOADING) }, "Tarix yuklanmoqda");
     expect(screen.queryByText("Tarix yuklandi")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Kutmasdan bosh sahifaga oʻtish" }));
-    expect(await screen.findByRole("heading", { name: "SellerMax" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: /^Sof foyda/ })).toBeTruthy();
     expect(history.location.pathname).toBe("/");
   });
 
