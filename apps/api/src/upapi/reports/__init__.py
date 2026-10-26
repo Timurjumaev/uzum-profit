@@ -6,6 +6,7 @@ Bazadan faqat faktlar o'qiladi (``daily_sku_metrics``, ``sale_items`` + ``sale_c
 
 - :mod:`upapi.reports.common` — davr va do'kon filtri, ``meta.freshness``, sahifalash kursori;
 - :mod:`upapi.reports.cells` — P&L kataklari (ADR-026), F16 bloki, "qayta hisoblandi" belgisi;
+- :mod:`upapi.reports.free` — bepul logistika kunlari va standart tarif bo'yicha foyda (F40);
 - :mod:`upapi.reports.stock` — ombor ko'rsatkichlari (F23–F30);
 - :mod:`upapi.reports.schemas` — javob modellari (pul — satr, nisbat — kasr satr).
 """

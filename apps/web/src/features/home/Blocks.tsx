@@ -91,6 +91,7 @@ export function DailyChart({ data }: { data: Dashboard }) {
         { key: "revenue", name: t("home.chart.revenue"), color: 1, values: data.daily.map((d) => d.revenue) },
         { key: "net", name: t("home.chart.netProfit"), color: "ink", kind: "line", values: data.daily.map((d) => d.net_profit) },
       ]}
+      bands={data.free_periods.map((p) => ({ from: p.start, to: p.end, kind: "shade" as const, label: t("home.chart.free") }))}
     />
   );
 }

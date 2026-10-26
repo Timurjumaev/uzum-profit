@@ -661,6 +661,10 @@ export interface components {
             /** Key */
             key: string | null;
             statement: components["schemas"]["StatementOut"];
+            /** Title */
+            title?: string | null;
+            /** Shop Id */
+            shop_id?: string | null;
         };
         /** DashboardOut */
         DashboardOut: {
@@ -679,6 +683,8 @@ export interface components {
             bottom: components["schemas"]["SkuBriefOut"][];
             kpis: components["schemas"]["KpiOut"];
             attention: components["schemas"]["AttentionOut"];
+            /** Free Periods */
+            free_periods: components["schemas"]["PeriodOut"][];
         };
         /** DayOut */
         DayOut: {
@@ -1160,6 +1166,8 @@ export interface components {
             pending_shops: components["schemas"]["PendingShopOut"][];
             /** Recalculated */
             recalculated: number;
+            /** Free Periods */
+            free_periods: components["schemas"]["PeriodOut"][];
         };
         /** PriceOut */
         PriceOut: {
@@ -1553,10 +1561,14 @@ export interface components {
             uzum_expenses: {
                 [key: string]: string;
             };
+            /** Uzum Total */
+            uzum_total: string;
             /** Own Expenses */
             own_expenses: {
                 [key: string]: string;
             };
+            /** Own Total */
+            own_total: string;
             /** Tax */
             tax: string;
             /** Expenses Deducted */
@@ -1588,6 +1600,14 @@ export interface components {
             own_allocated: {
                 [key: string]: string;
             };
+            /** Uzum Direct */
+            uzum_direct: string;
+            /** Uzum Allocated Total */
+            uzum_allocated_total: string;
+            /** Own Direct */
+            own_direct: string;
+            /** Own Allocated Total */
+            own_allocated_total: string;
         };
         /**
          * StatusGroup

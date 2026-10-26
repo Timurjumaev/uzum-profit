@@ -4,6 +4,7 @@
 import type { Page, Route } from "@playwright/test";
 
 import { dashboardData } from "../../src/test/dashboard";
+import { pnlData, skuColumns } from "../../src/test/pnl";
 
 /** Qotirilgan vaqt (Toshkent). */
 export const NOW = new Date("2026-10-26T14:00:00+05:00");
@@ -177,6 +178,10 @@ export function loadingSync(shops: Shop[]) {
 }
 
 /** Marshrutlarni o'rnatadi va holat/so'rovlarga havola qaytaradi. `page.clock` shu yerda qotiriladi. */
+const PNL_EXTRA = {
+  free_periods: [{ start: "2026-10-10", end: "2026-10-31", days: 22 }], // Uzum bonusi (ADR-031)
+};
+
 export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
   const state: ApiState = {
     me: { user: { ...USER }, orgs: [ORG] },
@@ -223,6 +228,11 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
     if (key === `GET /orgs/${ORG_ID}/shops`) return json(route, 200, state.shops);
     if (key === `GET /orgs/${ORG_ID}/sync`) return json(route, 200, state.sync);
     if (key === `GET /orgs/${ORG_ID}/dashboard`) return json(route, 200, dashboardData({}, ago));
+    if (key === `GET /orgs/${ORG_ID}/pnl`) {
+      // Uzum bonusi davri bilan (haqiqiy hisob o'zgarmaydi); SKU kesimi — aralash tartibdagi ustunlar.
+      const sku = url.searchParams.get("view") === "sku";
+      return json(route, 200, pnlData({ ...PNL_EXTRA, ...(sku ? { columns: skuColumns() } : {}) }));
+    }
     if (key === `GET /orgs/${ORG_ID}/sales`) return json(route, 200, SALES);
     if (key === `POST /orgs/${ORG_ID}/sync/refresh`) return json(route, 202, { queued: 3 });
     if (key === `POST /orgs/${ORG_ID}/accounts`) {

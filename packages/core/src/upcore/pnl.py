@@ -240,6 +240,26 @@ class Statement:
         return total([*self.uzum_allocated.values(), *self.own_allocated.values()], UZS)
 
     @property
+    def uzum_allocated_total(self) -> Money:
+        """ADR-026: F9 ning tushum ulushida taqsimlangan qismi (do'kon xarajatidan SKU'larga)."""
+        return total(list(self.uzum_allocated.values()), UZS)
+
+    @property
+    def uzum_direct(self) -> Money:
+        """ADR-026: F9 ning to'g'ridan-to'g'ri qismi (SKU'ga bog'langan yoki o'z darajasida, taqsimlanmagan)."""
+        return self.uzum_total - self.uzum_allocated_total
+
+    @property
+    def own_allocated_total(self) -> Money:
+        """ADR-026: F10 ning tushum ulushida taqsimlangan qismi."""
+        return total(list(self.own_allocated.values()), UZS)
+
+    @property
+    def own_direct(self) -> Money:
+        """ADR-026: F10 ning to'g'ridan-to'g'ri qismi."""
+        return self.own_total - self.own_allocated_total
+
+    @property
     def direct_total(self) -> Money:
         """To'g'ridan-to'g'ri xarajatlar (F9 + F10): shu SKU'ga bog'langan yoki o'z darajasidagi."""
         return self.uzum_total + self.own_total - self.allocated_total
@@ -469,6 +489,39 @@ def _put(a: Cell, own: bool, category: str, amount: Decimal) -> None:
         a.uzum[c] = a.uzum.get(c, _D0) + amount
 
 
+def _rules(
+    tax: TaxRule | Callable[[date], TaxRule | None] | None,
+) -> Callable[[date], TaxRule | None]:
+    """Kun → F11 qoidasi (profil sana bo'yicha bo'lsa — kun bo'yicha keshda)."""
+    if not callable(tax):
+        return lambda _day: tax
+    cache: dict[date, TaxRule | None] = {}
+
+    def rule(day: date) -> TaxRule | None:
+        if day not in cache:
+            cache[day] = tax(day)
+        return cache[day]
+
+    return rule
+
+
+def _finish(a: Cell, rule: TaxRule | None) -> None:
+    """Katak soliq (F11) va F15 bo'yicha ayriladigan xarajati: katak xarajati × qamrov (tushum 0 bo'lsa hammasi)."""
+    a.tax = _D0
+    if rule is not None:
+        a.tax = rule.amount_on(a.revenue, a.revenue - a.commission - a.logistics)
+    overhead = a.tax
+    if a.uzum:
+        overhead += sum(a.uzum.values(), _D0)
+    if a.own:
+        overhead += sum(a.own.values(), _D0)
+    a.deducted = _D0
+    if a.revenue == 0:
+        a.deducted = _cents(overhead)
+    elif overhead:
+        a.deducted = _cents(overhead * a.covered_revenue / a.revenue)
+
+
 def _days(period: Period) -> list[date]:
     return [period.start + timedelta(days=i) for i in range(period.days)]
 
@@ -584,24 +637,9 @@ def build_cells(
             else:
                 spread(day, oe.shop, True, oe.category, part)
 
-    rules: dict[date, TaxRule | None] = {}
+    rule_of = _rules(tax)  # F11 profili sana bo'yicha (upcore.tax), kun bo'yicha keshda
     for key, a in acc.items():
-        day = key[0]
-        if callable(tax):  # F11 profili sana bo'yicha (upcore.tax), kun bo'yicha keshda
-            rule = rules[day] if day in rules else rules.setdefault(day, tax(day))
-        else:
-            rule = tax
-        if rule is not None:
-            a.tax = rule.amount_on(a.revenue, a.revenue - a.commission - a.logistics)
-        overhead = a.tax
-        if a.uzum:
-            overhead += sum(a.uzum.values(), _D0)
-        if a.own:
-            overhead += sum(a.own.values(), _D0)
-        if a.revenue == 0:
-            a.deducted = _cents(overhead)
-        elif overhead:
-            a.deducted = _cents(overhead * a.covered_revenue / a.revenue)
+        _finish(a, rule_of(key[0]))
     return Cells(period, dict(acc))
 
 

@@ -27,6 +27,8 @@ const CASES: Case[] = [
   { name: "onboarding: do'konlar", path: "/onboarding?step=shops", state: { shops: fresh, sync: loadingSync(fresh) } },
   { name: "onboarding: tarix", path: "/onboarding?step=history", state: { shops: fresh, sync: loadingSync(fresh) } },
   { name: "bosh sahifa (karkas)", path: "/" },
+  { name: "Foyda va zarar", path: "/pnl" },
+  { name: "Foyda va zarar: SKU", path: "/pnl?view=sku" },
   { name: "Maʼlumotlar holati", path: "/status" },
   { name: "UI-kit", path: "/ui-kit" },
 ];

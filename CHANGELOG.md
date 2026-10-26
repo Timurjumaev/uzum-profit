@@ -269,3 +269,17 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   tovar, kutilayotgan foyda). Davr, do'kon va solishtirish URL'da. API: `RowOut.change` (farq / |oldingi|, `upcore.pnl.compare`)
   — o'zgarish foizi UI'da hisoblanmaydi. `LedgerTable` ga `trailing` / `compactHidden`, `Kpi` ga `note`. Testlar: model,
   sahifa (jsdom + axe), e2e (drill-down, mobil, 360 px gorizontal skrollsiz), vizual asoslar (home, palette).
+- B4.2 Foyda va zarar (M5, `apps/web/src/features/pnl`): to'liq hisob varag'i (yalpi foyda, Uzum xarajatlari turlari,
+  o'z xarajatlari toifalari; tannarxsiz sotuvlar to'lovi yalpi foydadan oldin — har oraliq summa zanjirda to'g'ri) va
+  ustunlar: joriy davr, tushumga nisbatan, oldingi davr, farq, o'zgarish (tor ekranda — joriy va o'zgarish);
+  sharshara (tushumdan sof foydagacha); kutilayotgan blok (F16, R do'kon bo'yicha, R yo'q bo'lsa sababi); tannarx
+  qamrovi sariq banneri (F15); "qayta hisoblandi" banneri; drill-down (bosh sahifa `Drill`); kesimlar — oylar,
+  do'konlar, SKU (`?view=` URL'da), do'kon va SKU kesimida F9/F10 to'g'ridan-to'g'ri va taqsimlangan, "Taqsimlanmagan"
+  (ADR-026). Bepul logistika kunlari (`upapi.reports.free`: ma'lumotdan, do'kon × kun ≥ 90%, + jadval) — `/pnl` va
+  `/dashboard` `free_periods`, kunlik grafikda soya; haqiqiy hisobga ta'sir qilmaydi. `/pnl`: SKU ustuni nomi;
+  `StatementOut`: `uzum_total`, `own_total`, F9/F10 to'g'ridan-to'g'ri va taqsimlangan jami. `upcore.tariffs`:
+  `is_free_day`, `typical_fee`, `standard_fee_of` (me'yoriy tarif uchun, B4.3). ADR-031 (Temur tasdiqladi): Uzum
+  bonuslari — vaqtinchalik ma'lumot; P&L'dagi "standart tarif bo'yicha foyda" qatori olib tashlandi, F40 — me'yoriy
+  (bonussiz) foyda/dona, faqat SKU baholash va narx uchun (B4.2a, B4.3). Testlar: core, API (bonus kunlari haqiqiy
+  P&L'ni o'zgartirmaydi, SKU nomlari, ADR-026 yig'indilari), model, sahifa (jsdom + axe), e2e (kesimlar URL'da,
+  360 px), haqiqiy brauzerda axe, vizual asos.

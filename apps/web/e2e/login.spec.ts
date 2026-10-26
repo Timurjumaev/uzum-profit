@@ -39,7 +39,7 @@ test("kirmagan foydalanuvchi himoyalangan sahifaga: kirgach o'sha sahifaga qayta
   await page.getByLabel(/^Telefon raqami/).fill(PHONE);
   await page.getByRole("button", { name: "Kod yuborish" }).click();
   await page.getByLabel("Telegramʼdagi kod").fill(GOOD_CODE);
-  await expect(page.getByRole("heading", { level: 1, name: "Foyda" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /^Foyda va zarar/ })).toBeVisible();
   await expect(page).toHaveURL(/\/pnl\?cmp=previous/);
 });
 

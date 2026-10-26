@@ -3,7 +3,8 @@
 Hisob varag'i tanlangan davr va oldingi xuddi shu uzunlikdagi davr bilan solishtiriladi (``rows``: joriy, tushumga
 nisbatan, oldingi, farq). Ko'rinishlar (``view``): oylar, kunlar, do'konlar, SKU bo'yicha ustunlar — kataklar
 yig'indisi (ustunlar yig'indisi = jami). SKU ko'rinishida ``unlinked`` — SKU'ga bog'lanmagan sotuvlar, ``null`` —
-taqsimlanmagan (sotuvsiz kun) xarajatlar. Kutilayotgan foyda (F16) va "qayta hisoblandi" soni alohida.
+taqsimlanmagan (sotuvsiz kun) xarajatlar. Kutilayotgan foyda (F16) va "qayta hisoblandi" soni alohida. Bepul logistika kunlari (``free_periods``, Uzum bonusi —
+ADR-031) haqiqiy foydaga ta'sir qilmaydi, faqat belgilash uchun; SKU ko'rinishida ustun nomi.
 Drill-down: sotuvlar — ``/sales``, xarajatlar — ``/expenses`` (shu filtrlar bilan).
 """
 
@@ -21,7 +22,17 @@ from upcore.pnl import CellKey, Cells, Statement, compare
 from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission
 from upapi.reports import cells as rc
-from upapi.reports.common import Filters, Heavy, Meta, db_now, filters, meta
+from upapi.reports import free
+from upapi.reports.common import (
+    Filters,
+    Heavy,
+    Meta,
+    PeriodOut,
+    db_now,
+    filters,
+    meta,
+    sku_catalog,
+)
 from upapi.reports.schemas import PendingOut, RowOut, StatementOut
 
 router = APIRouter(tags=["reports"])
@@ -41,6 +52,8 @@ class View(StrEnum):
 class ColumnOut(BaseModel):
     key: str | None  # oy/kun (ISO), do'kon yoki SKU id, ``unlinked``; ``null`` — taqsimlanmagan
     statement: StatementOut
+    title: str | None = None  # SKU ko'rinishida: SKU nomi (``skuFullTitle``)
+    shop_id: UUID | None = None  # SKU ko'rinishida: SKU do'koni
 
 
 class PendingShopOut(PendingOut):
@@ -56,6 +69,9 @@ class PnlOut(BaseModel):
     pending: PendingOut
     pending_shops: list[PendingShopOut]
     recalculated: int  # davr sotuvlaridan oxirgi 7 kunda tannarxi o'zgarganlari (03 §7)
+    free_periods: list[
+        PeriodOut
+    ]  # Uzum bonusi — bepul logistika kunlari (ADR-031; tanlangan davr ichida)
 
 
 def columns(cells: Cells, view: View) -> tuple[list[ColumnOut], Statement]:
@@ -82,7 +98,10 @@ async def pnl(ctx: Finance, f: Filter, _: Heavy, view: View = View.TOTAL) -> Pnl
     book = await rc.load_book(ctx.conn, rc.span(previous, f.period))
     cur, before = book.scoped(f, f.period), book.scoped(f, previous)
     cols, s = columns(cur, view)
+    if view is View.SKU:
+        await _titles(ctx, cols)
     p = before.statement()
+    days = await free.free_days(ctx.conn, f)
     pend = await rc.pending(ctx.conn, f)
     now = await db_now(ctx.conn)
     return PnlOut(
@@ -97,4 +116,17 @@ async def pnl(ctx: Finance, f: Filter, _: Heavy, view: View = View.TOTAL) -> Pnl
             for shop, e in sorted(pend.shops.items(), key=lambda kv: str(kv[0]))
         ],
         recalculated=await rc.recalculated(ctx.conn, f, now),
+        free_periods=[PeriodOut.of(x) for x in days.periods()],
     )
+
+
+async def _titles(ctx: OrgContext, cols: list[ColumnOut]) -> None:
+    ids = []
+    for c in cols:
+        if c.key is not None and c.key != rc.UNLINKED:
+            ids.append(UUID(c.key))
+    catalog = await sku_catalog(ctx.conn, ids=ids) if ids else {}
+    for c in cols:
+        info = catalog.get(UUID(c.key)) if c.key is not None and c.key != rc.UNLINKED else None
+        if info is not None:
+            c.title, c.shop_id = info.title, info.shop_id

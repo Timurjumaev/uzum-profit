@@ -20,11 +20,15 @@ from upcore.tariffs import (
     LogisticsTariff,
     TariffError,
     detect_free_days,
+    is_free_day,
     last_paid_logistics,
     liters,
     logistics_fee,
+    paid_unit_fee,
+    standard_fee_of,
     tariff_on,
     to_periods,
+    typical_fee,
     with_standard_logistics,
 )
 from upcore.tax import (
@@ -124,6 +128,18 @@ def test_standard_tariff_profit_and_free_days() -> None:
     assert actual.net_profit - standard.net_profit == uzs(120_000)
     unchanged = with_standard_logistics(lines, lambda x: None)
     assert unchanged == lines
+
+
+def test_free_day_and_fallback_fees() -> None:
+    assert is_free_day(10, 9) and not is_free_day(10, 8) and not is_free_day(0, 0)
+    assert paid_unit_fee(D(10_001), 3) == uzs("3333.67")
+    assert typical_fee({}) is None
+    assert typical_fee({D(5_250): 3, D(6_000): 1}) == uzs(5_250)
+    assert typical_fee({D(5_250): 2, D(6_000): 2}) == uzs(6_000)  # teng — kattasi
+    fee = standard_fee_of({"A": uzs(7_000)}, {"S": uzs(5_250)})
+    assert fee("S", "A") == uzs(7_000)
+    assert fee("S", "B") == uzs(5_250)
+    assert fee("Q", "B") is None
 
 
 # F11 ------------------------------------------------------------------------------------------

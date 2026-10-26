@@ -25,3 +25,11 @@ export type OnboardingSearch = { step?: OnboardingStep };
 export function onboardingSearch(search: Record<string, unknown>): OnboardingSearch {
   return (ONBOARDING_STEPS as readonly unknown[]).includes(search.step) ? { step: search.step as OnboardingStep } : {};
 }
+
+export const PNL_VIEWS = ["month", "shop", "sku"] as const;
+export type PnlSearch = { view?: (typeof PNL_VIEWS)[number] };
+
+/** P&L kesimi (M5): oylar (standart — URL'da yozilmaydi), do'konlar, SKU. */
+export function pnlSearch(search: Record<string, unknown>): PnlSearch {
+  return search.view === "shop" || search.view === "sku" ? { view: search.view } : {};
+}

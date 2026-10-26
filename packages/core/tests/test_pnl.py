@@ -266,6 +266,9 @@ def test_additivity_property(raw_sales: list, raw_exp: list, raw_own: list) -> N
     # Hamma xarajat yo yerda ayrilgan, yo tannarxsiz qismda — yo'qolmaydi.
     assert whole.expenses_deducted + whole.uncovered_expenses == whole.overhead
     assert whole.direct_total + whole.allocated_total + whole.tax == whole.overhead
+    assert whole.uzum_direct + whole.uzum_allocated_total == whole.uzum_total
+    assert whole.own_direct + whole.own_allocated_total == whole.own_total
+    assert whole.uzum_allocated_total + whole.own_allocated_total == whole.allocated_total
     assert total([s.allocated_total for s in cells.items.values()], "UZS") == whole.allocated_total
     assert whole.uzum_total == total([e.amount for e in exp], "UZS")
     in_oct = total([own_expense_in_oct(o) for o in own], "UZS")
