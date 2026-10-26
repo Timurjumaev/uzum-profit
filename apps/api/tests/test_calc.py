@@ -474,8 +474,16 @@ def test_queue_merges_requests(org: Org) -> None:
     assert org.queue() == []
 
 
-def test_sync_writes_requests_and_job_runs_calc(db: dict[str, str]) -> None:
-    """Sinxron sotuv/xarajat yozsa — shu tranzaksiyada so'rov; akkaunt ishi hisob ishini navbatga qo'yadi."""
+def test_sync_writes_requests_and_job_runs_calc(
+    db: dict[str, str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Sinxron sotuv/xarajat yozsa — shu tranzaksiyada so'rov; akkaunt ishi hisob ishini navbatga qo'yadi.
+
+    Ishchi davriy ishlarni ham ishga tushiradi: kurs (``FX_CRON``) va tungi hisob (``CALC_CRON``) vaqti kelgan bo'lsa
+    (UTC 04:05, 11:05, 22:40 dan keyingi bir necha daqiqa) ular ham navbatga tushadi. Test devor soatiga bog'liq
+    bo'lmasligi uchun ikkalasi doim "vaqti kelgan" deb olinadi va tekshiruv faqat shu testning ishlariga qaraydi."""
+    monkeypatch.setattr(jobs, "FX_CRON", "* * * * *")
+    monkeypatch.setattr(jobs, "CALC_CRON", "* * * * *")
     fake = seller()
     app = jobs.build_app(InMemoryConnector())
     with runtime(db, fake) as run:
@@ -513,10 +521,15 @@ def test_sync_writes_requests_and_job_runs_calc(db: dict[str, str]) -> None:
                     install_signal_handlers=False,
                     additional_context={"runtime": rt},
                 )
-                return [j["status"] for j in app.connector.jobs.values()]
+                # Davriy ishlar (kurs: soxta sotuvchida cbu.uz yo'q — qayta urinishga qoladi) bu testning predmeti emas.
+                return [
+                    j["status"]
+                    for j in app.connector.jobs.values()
+                    if j["task_name"] in {jobs.ACCOUNT, jobs.CALC}
+                ]
 
         statuses = run(main)
-    assert set(statuses) == {"succeeded"}
+    assert statuses and set(statuses) == {"succeeded"}
     assert admin(db, "SELECT count(*) FROM recalc_queue WHERE org_id = %s", [account.org_id]) == [
         (0,)
     ]

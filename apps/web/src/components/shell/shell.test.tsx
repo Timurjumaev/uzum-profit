@@ -499,8 +499,9 @@ describe("foydalanuvchi menyusi", () => {
     fireEvent.click(within(account()).getByRole("button", { name: "Chiqish" }));
     await waitFor(() => expect(history.location.pathname).toBe("/login"));
     expect(api.count(LOGOUT_ROUTE)).toBe(1);
+    // Kesh /login ga o'tilgandan KEYIN tozalanadi (useSignOut) — manzil o'zgargan zahoti emas, shuning uchun kutamiz.
+    await waitFor(() => expect(state.queryClient.getQueryCache().getAll()).toHaveLength(0));
     expect(state.queryClient.getQueryData(meQuery.queryKey)).toBeUndefined();
-    expect(state.queryClient.getQueryCache().getAll()).toHaveLength(0);
   });
 
   it("chiqish muvaffaqiyatsiz — xabar, foydalanuvchi sahifada qoladi", async () => {
