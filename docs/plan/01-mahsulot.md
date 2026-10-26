@@ -5,7 +5,7 @@
 **Uzum sotuvchisi uchun haqiqiy sof foyda: Xitoyga buyurtma bergan kundan Uzum pulni o'tkazgan kungacha har bir
 so'm hisobda — va qachon, nimani, qanchaga qayta buyurtma qilish kerakligi.**
 
-Ishchi nom: "uzum-profit" (ichki). Brend nomi Q1 da tanlanadi; nomda "Uzum" so'zi bo'lmaydi.
+Brend nomi: **SellerMax** (ADR-030, `sellermax.uz`); ishchi nom "uzum-profit" faqat ichkarida (repo, paketlar). Nomda "Uzum" so'zi bo'lmaydi.
 
 ## 2. Kim uchun (personalar)
 

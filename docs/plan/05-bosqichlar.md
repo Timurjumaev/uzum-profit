@@ -194,7 +194,8 @@ dona legacy bilan 1 so'mgacha bir xil.
 - [ ] B3.8 Playwright: e2e (kirish, onboarding), vizual skrinshotlar, axe.
 - T: `/ui-kit` va onboarding skrinshotlarini ko'rib fikr bildirish; Q1 — brend nomini tanlash.
   ✓ 2026-10-25 `/ui-kit` skrinshotlari (yorug'/qorong'i, 1440/390 px) Temur tomonidan ma'qullandi (B3.4 komponentlari
-  o'zgarishsiz qoladi). Qoldi: onboarding skrinshotlari (B3.7) va Q1 (brend nomi).
+  o'zgarishsiz qoladi). ✓ 2026-10-26 onboarding va "Ma'lumotlar holati" skrinshotlari (1280/390 px, yorug'/qorong'i)
+  Temur tomonidan ma'qullandi. ✓ 2026-10-26 Q1: brend nomi **SellerMax** (ADR-030); qoldi — tovar belgisi tekshiruvi (Temur).
 
 **Chiqish:** UI-kit skrinshotlari (yorug'/qorong'i, 1440/390 px) Temur tomonidan ma'qullangan ✓ 2026-10-25; axe — jiddiy
 xato 0 (B3.4 dan CI'da; karkas va yangi sahifalar qo'shilgach ham). Onboarding skrinshotlari (B3.7) ma'qullanishi — B3 yopilishi uchun.

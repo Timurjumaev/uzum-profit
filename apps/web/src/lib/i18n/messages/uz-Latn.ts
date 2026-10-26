@@ -2,7 +2,7 @@
 // (`translit.ts` + `uz-Cyrl.fixes.ts`), ru — qo'lda (`ru.ts`, kalitlar tip bilan majburiy).
 export const uzLatn = {
   app: {
-    name: "Uzum Profit",
+    name: "SellerMax",
     building: "Ilova qurilmoqda. Hozircha eski dasturdan foydalaning.",
   },
   common: {

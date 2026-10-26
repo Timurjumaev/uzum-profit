@@ -2,7 +2,7 @@ import type { Messages } from "./uz-Latn";
 
 export const ru: Messages = {
   app: {
-    name: "Uzum Profit",
+    name: "SellerMax",
     building: "Приложение в разработке. Пока пользуйтесь прежней программой.",
   },
   common: {

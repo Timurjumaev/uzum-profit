@@ -253,3 +253,6 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   davom etish); "Ma'lumotlar holati" (do'kon × ma'lumot turi, akkaunt va kvota, "Hozir yangilash"). Tashkilotsiz
   foydalanuvchi onboarding'ga yo'naltiriladi. Xavfsizlik: xom URL qidiruvidagi qaytish manzili ishlatishdan oldin qayta
   tekshiriladi (ochiq qayta yo'naltirish). Testlar (axe-core bilan), `lib/phone`. Boshlang'ich JS 154 KB gzip.
+- Q1 Brend nomi **SellerMax** (ADR-030, `sellermax.uz`): UI (`app.name`, hamma tillarda lotinda), sahifa sarlavhasi va
+  API sarlavhasi ("SellerMax API", `openapi.json`) yangilandi; repo va paket nomlari o'zgarmaydi. Tovar belgisi
+  tekshiruvi ochiq (06 §6).

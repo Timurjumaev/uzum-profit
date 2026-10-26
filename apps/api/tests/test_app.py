@@ -30,7 +30,7 @@ def test_request_id_generated_and_propagated(client: TestClient) -> None:
 
 def test_openapi_under_api_prefix(client: TestClient) -> None:
     spec = client.get("/api/v1/openapi.json").json()
-    assert spec["info"]["title"] == "Uzum Profit API"
+    assert spec["info"]["title"] == "SellerMax API"
     assert "/api/v1/health" in spec["paths"]
     assert client.get("/openapi.json").status_code == 404
 
