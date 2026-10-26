@@ -43,7 +43,50 @@ tegishli fayllar yangilanadi. Eski qaror o'chirilmaydi, "almashtirildi: ADR-0XX"
 | ADR-028 | 2026-10-24 | (Temur tasdiqladi, 2026-10-24.) ADR-027 usuli: **Telegram Gateway** (`sendVerificationMessage`) — foydalanuvchi telefon raqamini kiritadi, kod uning Telegram'iga ("Verification Codes") keladi, bot ochish shart emas. Kodni ilova o'zi yaratadi va tekshiradi (HMAC xesh, 5 daqiqa, 5 urinish → 15 daqiqa blok, raqam bo'yicha 5 ta/soat), Gateway faqat yetkazadi — SMS zaxirasi xuddi shu interfeys bilan (`CodeSender`). Raqam Telegram'da bo'lmasa — `telegram_not_found` (SMS kelguncha). O'z bot (B2.10) — admin ogohlantirishlari va B6 xulosalari uchun qoladi. Ta'sir: M1, B2.3, B2.10, 08 §10 | kirishda ortiqcha qadam yo'q (bot ochish, kontakt ulashish kerak emas); narx ≈ $0.01 / kod, o'z raqamiga bepul (staging'da Temur bepul sinaydi); kod va urinishlar bizda — provayder almashsa xavfsizlik qoidalari o'zgarmaydi. Kamchilik: balans Fragment orqali TON bilan to'ldiriladi (≈ $100 minimal, uchinchi tomon ma'lumoti) — production oldidan (B8) | o'z bot (bepul, lekin har kirishda botga o'tish va kontakt ulashish; yangi foydalanuvchi uchun 3–4 qadam ortiq) |
 | ADR-029 | 2026-10-25 | Q2 (staging, **vaqtincha**): **AWS EC2, eu-north-1 (Stokgolm)** — Ubuntu 26.04 LTS, 2 GB RAM, Elastic IP 16.170.178.179, domen `16-170-178-179.sslip.io`. Avval Uztelecom Cloud sinaldi: akkaunt Sandbox/tasdiqlanmagan holatida VM'ga tashqaridan (ping, SSH) kirib bo'lmadi. Uzum API AWS'dan javob beradi (401, WAF to'smaydi). Bu ADR-010 (ma'lumot O'zbekistonda) dan vaqtinchalik chetlanish: staging'da faqat Temurning o'z do'konlari; **production (B8.8) — faqat O'zbekistondagi provayder**, mijoz ma'lumoti chet elga chiqmaydi. Ta'sir: B2.10, B2.11, 06 §1 | Temur tanladi; staging'ni kutmasdan ishga tushirish, AWS barqaror | Uztelecom akkauntini tasdiqlatishni kutish; Servercore.uz |
 | ADR-030 | 2026-10-26 | Q1: brend nomi — **SellerMax** (domen `sellermax.uz`, Telegram va Instagram `sellermaxuz`). Temur tanladi; domen, Telegram va Instagram nomi bo'shligini u o'zi tekshirdi. Nomda "Uzum" so'zi yo'q (tovar belgisi xavfi — 04 §12). Repo, Python/JS paket nomlari va ichki ishchi nom (`uzum-profit`) o'zgarmaydi; UI, API sarlavhasi (`SellerMax API`) va hujjat nomi o'zgaradi. **Ochiq xavf:** "SellerMax" tovar belgisi sifatida band emasligi hali tasdiqlanmagan (Temur tekshiradi: ipa.gov.uz va WIPO Global Brand Database). Band chiqsa — nom yoki domen almashtiriladi; nom bitta joyda (`app.name`), shuning uchun tuzatish arzon. Ta'sir: 01, 04 §12, 06 §6 (tovar belgisi), Q7 | Temur tanladi; ma'no ("seller" — sotuvchi, "max" — maksimal foyda), bo'sh domen va hisoblar | Foyda, Ledgo, Hisobchi, Barkod, Tannarx.uz |
-| ADR-031 | 2026-10-26 | **Taklif (Temur tasdig'i kutilmoqda).** F40 standart tarifi: SKU'ning oxirgi pullik logistikasi (bir dona), bo'lmasa do'konning eng ko'p uchraydigan pullik tarifi (legacy `std_fee_map`); ikkalasi ham yo'q qator "tarifi noma'lum" — qo'shilmaydi, soni ko'rsatiladi. Bepul kunlar — ma'lumotdan (do'kon × kun, Yakunlangan qatorlarning ≥ 90% ida logistika 0) + `free_logistics_periods`; admin tasdiqlashi B8 da. Ta'sir: `upcore.tariffs`, `upcore.pnl` (F40), `upapi.reports.free` | F37 hajm bo'yicha tarif uchun SKU o'lchamlari bazada yo'q; o'lchamsiz F37 (50 000/dona) foydani haddan tashqari kamaytirardi | F37 birinchi (o'lchamlar yo'q); doimiy 5 250 so'm (biznes doimiysi kodda — ADR-015 ga zid) |
+| ADR-031 | 2026-10-26 | **Taklif (Temur ko'rib chiqadi; 1-variant rad etildi).** Uzum bonuslari (bepul logistika, saqlash va h.k.) — **vaqtinchalik ma'lumot**, qoida emas: `fee_waivers` jadvali (do'kon yoki hammasi, sanalar, bepul xarajat turlari, sabab), foydalanuvchi o'zi qo'shadi. Haqiqiy P&L'da bepul xarajat 0 qoladi, hech narsa qo'shilmaydi; bonus davridagi buyurtmalar "bonus davri" deb belgilanadi; me'yoriy (bonussiz) tarif — faqat SKU rentabelligi va narx uchun alohida ko'rsatkich. Tafsilot — quyida "ADR-031 tafsiloti" | Uzum bepul logistika/saqlashni texnik nosozlik uchun kompensatsiya sifatida 2026-10 oxirigacha berdi; keyingi bonuslar boshqa shaklda bo'lishi mumkin (Temur, 2026-10-26). 1-variant (P&L'da "standart tarif bo'yicha foyda" qatori, bepul kunni faqat ma'lumotdan aniqlash) bonusni doimiy holat deb qarardi va haqiqiy foyda yonida o'ylab topilgan summani ko'rsatardi | 1-variant; bonus turlarini kodda qotirish (`.env` yoki enum); bonusni faqat ma'lumotdan aniqlash (tasdiqsiz) |
+
+
+### ADR-031 tafsiloti (taklif, 2026-10-26)
+
+**1. Ma'lumot: `fee_waivers` (bonus davrlari).** `free_logistics_periods` o'rniga (u bo'sh, hech kim yozmagan):
+`shop_id` (NULL — tashkilotning hamma do'koni), `start_on`, `end_on` (ikkalasi ham kiradi, F1), `kinds` — bepul
+xarajat turlari ro'yxati (`sale_logistics` — sotuv logistikasi F5; qolganlari `upcore.expenses.ExpenseCategory`
+nomlari: `storage`, `return_storage`, `fine`, ... — Uzum keyin nima bersa, kod o'zgarmasdan qo'shiladi), `reason`
+(matn, masalan "Uzum nosozligi uchun kompensatsiya"), `source` (`manual` | `detected`), `confirmed_at`, `created_by`.
+Hech qanday sana yoki tur kodda yo'q (ADR-015).
+
+**2. Kim qo'shadi.** Foydalanuvchi (egasi, menejer) — Sozlamalar → "Uzum bonuslari": qo'shish, tahrirlash, o'chirish
+(audit jurnaliga yoziladi). Tizim **taklif** qiladi: kunlik Yakunlangan qatorlarning ≥ 90% ida logistika 0 yoki
+odatda bor saqlash xarajati yo'q bo'lsa — "Uzum logistikani olmagan ko'rinadi: bonus davrimi?" (`source = detected`,
+tasdiqlanmaguncha hech narsaga ta'sir qilmaydi). Temurning oktabr bonusi — migratsiya bilan emas, u o'zi kiritadi
+(yoki taklifni tasdiqlaydi).
+
+**3. Haqiqiy foyda (F3–F16) o'zgarmaydi.** Uzum nima olgan bo'lsa — shu. Bonus davrida bepul xarajat 0 bo'lib qoladi,
+o'ylab topilgan summa qo'shilmaydi. P&L va bosh sahifada "standart tarif bo'yicha foyda" qatori **yo'q**. P&L'da
+faqat ma'lumot banneri: "Davrda Uzum bonusi bor: [sabab], [turlar], [sanalar] — shu xarajatlar 0. Bonussiz baho —
+Mahsulotlar sahifasida". Kunlik grafikda bonus davri — soya (04 §5.1).
+
+**4. "Bonus davri" belgisi.** Buyurtma bonus davrida (sana va do'kon mos, tasdiqlangan davr) bo'lsa — ro'yxatlarda,
+drill-down'da, SKU sahifasida `Bonus davri` belgisi (ikon + matn) va bosilganda sabab. API: sotuv qatorida
+`waiver_id`.
+
+**5. Me'yoriy (bonussiz) ko'rsatkich — faqat SKU baholash va narx uchun.** F40 qayta yoziladi: "Me'yoriy foyda/dona"
+= foyda/dona − bonus bilan tejalgan xarajatlarning me'yoriy qiymati/dona. Me'yoriy qiymat tur bo'yicha:
+`sale_logistics` — SKU'ning bonus davridan tashqaridagi oxirgi pullik logistikasi, bo'lmasa do'konning odatiy tarifi,
+o'lchamlar bazaga kelgach — F37; `storage` — SKU `storage_price` (Uzum beradi) × kunlar; boshqa tur uchun baholovchi
+yo'q bo'lsa — "me'yoriy baho yo'q" (taxmin yashirilmaydi, tamoyil 9). Ishlatiladigan joylar: Mahsulotlar jadvali
+ustuni (M6), SKU unit kalkulyatori, zararsizlik va maqsadli narx (F35, F36), xariddan oldingi kalkulyator (M13).
+P&L va hisob varag'iga hech qachon qo'shilmaydi.
+
+**6. Ta'sir.** 02: F40 matni, M4 3-band (soya), M5 ("standart tarif" qatori o'rniga banner), M6 (me'yoriy ustun),
+M7 (belgi), M16 (Sozlamalar → Uzum bonuslari); 03 §5 (`fee_waivers`); 05: B4.2 (#45 dan F40 qatori olib
+tashlanadi), B4.3, B4.4, B4.8. Kod: #45 dagi `upcore.pnl.standard_logistics` / `Cells.with_logistics` P&L'dan
+olinadi — SKU me'yoriy bahosi (B4.3) uchun qayta ko'rib chiqiladi.
+
+**7. Bosqichlar (taklif).** (a) #45 da: P&L'dan "standart tarif bo'yicha foyda" qatori va `/pnl.standard` olib
+tashlanadi, grafik soyasi qoladi (hozircha aniqlangan kunlar). (b) B4.2a: `fee_waivers` migratsiyasi, CRUD API,
+aniqlash takliflari, "bonus davri" belgisi API'da, P&L banneri. (c) B4.8: Sozlamalar → "Uzum bonuslari" sahifasi
+(B4.2a da vaqtincha P&L bannerida "Qo'shish" shakli). (d) B4.3: me'yoriy foyda/dona va narx (F35/F36).
 
 ## Ochiq qarorlar (Temur hal qiladi)
 

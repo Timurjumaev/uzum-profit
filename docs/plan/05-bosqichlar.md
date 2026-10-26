@@ -237,7 +237,7 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   to'g'ridan-to'g'ri va taqsimlangan, "Taqsimlanmagan" va "SKU bog'lanmagan" alohida. F40: `upcore.pnl.standard_logistics`
   + `Cells.with_logistics` (faqat o'zgargan kataklar, soliq va F15 qayta) — `upapi.reports.free`; bepul kunlar ma'lumotdan
   (do'kon × kun, ≥ 90%) va `free_logistics_periods` jadvalidan; bosh sahifa grafigida soya (B4.1 qoldig'i). **Qarorlar:**
-  (1) standart tarif (ADR-031, Temur tasdig'i kutilmoqda) — SKU'ning oxirgi pullik logistikasi, bo'lmasa do'konning odatiy (eng ko'p) tarifi (legacy
+  (1) **ADR-031 qayta yozilmoqda** (Temur: bonus — vaqtinchalik, ma'lumot sifatida; P&L'dagi F40 qatori tasdiqdan keyin olib tashlanadi) — eski taklif: standart tarif SKU'ning oxirgi pullik logistikasi, bo'lmasa do'konning odatiy (eng ko'p) tarifi (legacy
   `std_fee_map` kabi); F37 hajm bo'yicha — SKU o'lchamlari bazada yo'q, o'lchamsiz F37 (50 000) foydani haddan tashqari
   kamaytirardi; ikkalasi ham yo'q qator — "tarifi noma'lum", qo'shilmaydi va soni ko'rsatiladi; (2) bepul davrlarni
   admin tasdiqlashi — B8 (M17), hozir aniqlangan + jadvaldagi davrlar; (3) "toifa bo'yicha" kesim — tovar toifalari
