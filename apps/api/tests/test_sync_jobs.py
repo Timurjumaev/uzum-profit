@@ -142,9 +142,15 @@ def test_worker_refuses_unsafe_settings(fresh: dict[str, str]) -> None:
         asyncio.run(worker.run(broken))
 
 
-def test_worker_starts_and_stops() -> None:
+def test_worker_starts_and_stops(monkeypatch: pytest.MonkeyPatch) -> None:
     """Haqiqiy navbat bazasi bilan ishga tushadi (rol tekshiruvi, ``up_app``), bekor qilinganda yopiladi. Alohida
-    bo'sh baza: rejalashtiruvchi hech qanday akkauntni (va tashqi tarmoqni) ko'rmaydi."""
+    bo'sh baza: rejalashtiruvchi hech qanday akkauntni (va tashqi tarmoqni) ko'rmaydi.
+
+    Rejalashtiruvchi vaqti kelgan hamma davriy ishni ishga tushishda navbatga qo'yadi: ``tick`` har daqiqada, kurs va
+    tungi hisob esa faqat o'z soatidan keyingi bir necha daqiqada (UTC 04:05, 11:05, 22:40). Test devor soatiga
+    bog'liq bo'lmasligi uchun uchalasi doim "vaqti kelgan" deb olinadi."""
+    monkeypatch.setattr(jobs, "FX_CRON", "* * * * *")
+    monkeypatch.setattr(jobs, "CALC_CRON", "* * * * *")
     with dbtools.migrated_database() as urls:
         settings = sf.settings_for(urls)
 
@@ -157,8 +163,16 @@ def test_worker_starts_and_stops() -> None:
                 await task
 
         asyncio.run(main())
-        ticks = admin(urls, "SELECT count(*) FROM procrastinate_periodic_defers")
-    assert ticks[0][0] == 1  # davriy rejalashtiruvchi ishladi: sync.tick navbatga qo'yildi
+        defers = dict(
+            admin(
+                urls,
+                "SELECT periodic_id, count(*) FROM procrastinate_periodic_defers GROUP BY periodic_id",
+            )
+        )
+    # Davriy rejalashtiruvchi ishladi: sync.tick (har daqiqa — 1.5 s ichida daqiqa chegarasi o'tsa ikkinchisi ham)
+    # va qolgan davriy ishlar navbatga qo'yildi.
+    assert defers.keys() == {"tick", "fx", "calc"}
+    assert defers["tick"] >= 1
 
 
 def test_worker_waits_for_migrations() -> None:
