@@ -19,6 +19,9 @@ export default defineConfig({
     timezoneId: "Asia/Tashkent",
     reducedMotion: "reduce", // animatsiyasiz: grafiklar va o'tishlar skrinshotda barqaror
     trace: "retain-on-failure",
+    // Mashinalar orasida bir xil matn shakllanishi: hinting va LCD antialiasing o'chiq (aks holda runner va lokal
+    // skrinshotlar matnda 2–4% farq qiladi). Asoslarni (baseline) ham shu rejimda olish shart.
+    launchOptions: { args: ["--font-render-hinting=none", "--disable-lcd-text", "--disable-font-subpixel-positioning"] },
   },
   expect: {
     // Shrift antialiasing farqlari uchun kichik bag'ishlash; haqiqiy o'zgarish (rang, joylashuv) undan katta.
