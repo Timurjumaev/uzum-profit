@@ -72,7 +72,7 @@ def create_app(
             await app.state.engine.dispose()
 
     app = FastAPI(
-        title="Uzum Profit API",
+        title="SellerMax API",
         version=__version__,
         openapi_url=f"{API_PREFIX}/openapi.json",
         docs_url=f"{API_PREFIX}/docs",

@@ -107,7 +107,7 @@ describe("kod bosqichi", () => {
     fireEvent.change(codeInput(), { target: { value: "12ab34" } });
     expect(api.count(LOGIN_ROUTE)).toBe(0); // 4 raqam — hali yetmaydi
     fireEvent.change(codeInput(), { target: { value: "123 456" } });
-    expect(await screen.findByRole("heading", { name: "Uzum Profit" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "SellerMax" })).toBeTruthy();
     expect(api.bodiesOf(LOGIN_ROUTE)).toEqual([{ phone: PHONE, code: "123456" }]);
     expect(history.location.pathname).toBe("/");
     expect(state.queryClient.getQueryData(meQuery.queryKey)).toEqual({ user: ME.user, orgs: ME.orgs });
@@ -127,7 +127,7 @@ describe("kod bosqichi", () => {
     fireEvent.submit(codeInput().closest("form")!);
     expect(api.count(LOGIN_ROUTE)).toBe(1);
     await act(async () => release());
-    await screen.findByRole("heading", { name: "Uzum Profit" });
+    await screen.findByRole("heading", { name: "SellerMax" });
   });
 
   it("qaytish manzili (faqat ichki yo'l) hurmat qilinadi", async () => {
@@ -143,7 +143,7 @@ describe("kod bosqichi", () => {
     const { history } = await renderLogin("/login?redirect=%2F%2Fevil.example");
     await sendCode();
     fireEvent.change(codeInput(), { target: { value: "123456" } });
-    expect(await screen.findByRole("heading", { name: "Uzum Profit" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "SellerMax" })).toBeTruthy();
     expect(history.location.pathname).toBe("/");
   });
 
@@ -167,7 +167,7 @@ describe("kod bosqichi", () => {
     await waitFor(() => expect(codeInput().value).toBe(""));
     expect(document.activeElement).toBe(codeInput());
     expect(api.count(LOGIN_ROUTE)).toBe(1);
-    expect(screen.queryByRole("heading", { name: "Uzum Profit" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "SellerMax" })).toBeNull();
   });
 
   it("qayta yuborish 30 soniyadan keyin; 'Raqamni o'zgartirish' telefon bosqichiga qaytaradi", async () => {
@@ -277,7 +277,7 @@ describe("taklif (M1)", () => {
     const history = createMemoryHistory({ initialEntries: [`/invite?token=${TOKEN}`] });
     render(<App state={createAppState(history, "uz-Latn")} />);
     fireEvent.click(await screen.findByRole("button", { name: "Taklifni qabul qilish" }));
-    expect(await screen.findByRole("heading", { name: "Uzum Profit" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "SellerMax" })).toBeTruthy();
     expect(api.bodiesOf(INVITE_ROUTE)).toEqual([{ token: TOKEN }]);
     expect(api.count(ME_ROUTE)).toBeGreaterThanOrEqual(2); // yangi tashkilot ro'yxatga tushsin
     expect(history.location.pathname).toBe("/");

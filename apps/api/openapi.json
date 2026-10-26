@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Uzum Profit API",
+    "title": "SellerMax API",
     "version": "0.0.0"
   },
   "paths": {

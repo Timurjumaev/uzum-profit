@@ -32,7 +32,7 @@ describe("ilova karkasi (B3.1)", () => {
   it("kirgan foydalanuvchi — bosh sahifa, tashkilotlar bilan", async () => {
     const api = serve(() => json(200, ME));
     renderAt("/");
-    expect(await screen.findByRole("heading", { name: "Uzum Profit" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "SellerMax" })).toBeTruthy();
     expect(await screen.findByText("byDurii")).toBeTruthy();
     expect(api.unmocked).toEqual([]);
   });

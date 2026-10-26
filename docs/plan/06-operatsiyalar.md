@@ -53,7 +53,7 @@
 - [ ] Ma'lumotlar O'zbekistondagi serverlarda (asosiy va zaxira); GlitchTip va boshqa vositalar ham shu yerda.
 - [ ] Uzum Seller API foydalanish shartlari: uchinchi tomon xizmati sotuvchi kalitini ishlatishi mumkinligini
   tekshirish (raqobatchilar ochiq ishlaydi, lekin yozma tasdiq olinadi yoki shartlar o'qiladi).
-- [ ] Tovar belgisi: nomda "Uzum" yo'q; o'z brendimizni ro'yxatdan o'tkazish (keyinroq).
+- [ ] Tovar belgisi: nomda "Uzum" yo'q; **"SellerMax" band emasligini tekshirish** (ipa.gov.uz, WIPO Global Brand Database — Temur, ADR-030); keyin o'z brendimizni ro'yxatdan o'tkazish.
 - [ ] To'lovlar uchun fiskal chek: xizmat uchun MXIK (IKPU) kodi (tasnif.soliq.uz), to'lov provayderi orqali
   fiskalizatsiya.
 - [ ] Ma'lumotni o'chirish tartibi: tashkilot o'chirilsa 30 kundan keyin butunlay o'chiriladi (zaxiralardan

@@ -371,9 +371,9 @@ Kontrast §4.4 bo'yicha tekshirilgan; fokus halqasi 2 px aksent + 2 px oraliq; h
 mobil bosish maydoni ≥ 44 px; har grafikda jadval ko'rinishi va `aria` tavsifi; holat hech qachon faqat rang bilan
 emas (ikon + matn, +/− ishorasi); `lang` atributi tilga mos; axe-core testi CI'da.
 
-## 12. Brend (Q1 qaroridan keyin)
+## 12. Brend
 
-- Nom: Temur tanlaydi (07-qarorlar.md Q1). "Uzum" so'zi nomda ishlatilmaydi (tovar belgisi xavfi).
+- Nom: **SellerMax** (07-qarorlar.md ADR-030); har tilda lotinda yoziladi (brend nomi tarjima/transliteratsiya qilinmaydi). "Uzum" so'zi nomda ishlatilmaydi (tovar belgisi xavfi).
 - Logo yo'nalishi: so'z belgisi (Inter Display 600) + belgi: **o'sib boruvchi shtrix-kod chiziqlari**
   (sotuvchining kundalik ishi + o'sish), ko'k siyoh rangida. Binafsha va uzum motivlari yo'q.
 - Favicon: 3 ta chiziqli soddalashtirilgan belgi. OG rasm: hisob varag'i parchasi.
