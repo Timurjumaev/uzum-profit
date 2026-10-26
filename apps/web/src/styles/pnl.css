@@ -69,6 +69,15 @@
   .pnl-wide {
     display: none; /* tor ekranda: joriy summa va o'zgarish */
   }
+
+  .pnl-ledger-box {
+    padding: var(--space-3);
+  }
+
+  .pnl-ledger th,
+  .pnl-ledger td {
+    padding-inline: var(--space-1);
+  }
 }
 
 /* --- Kutilayotgan (F16) --- */
