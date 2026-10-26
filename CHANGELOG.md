@@ -293,3 +293,15 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   grafigida bonus davri soyasi; mobilda P&L banner tugmalari matn ostida. Haqiqiy foyda o'zgarmaydi. Testlar: core
   (100%), API (CRUD, ruxsatlar, tekshiruvlar, audit, taklif → tasdiqlash/rad etish, sotuv belgisi, tashkilotlarni
   ajratish, RLS), sahifa (jsdom + axe), e2e, vizual asos.
+- B4.3 Mahsulotlar (M6). Core: `upcore.unit.unit_calc` (narxdagi foyda/dona, zararsizlik narxi F35, maqsadli marja
+  narxi F36 — bitta tenglamadan), `upcore.waivers.normative_profit` (F40: foyda/dona − bonus bilan tejalgan xarajatning
+  me'yoriy qiymati; baho yo'q — taxmin qilinmaydi). API: `/skus` — yangi ustunlar (to'g'ridan-to'g'ri va taqsimlangan
+  xarajat, me'yoriy foyda/dona va holati), filtrlar (`label`, `abc`), saralash kalitlari, `bonus` (davr bonuslari va
+  baholanmaydigan turlar); `/skus/{id}` — SKU sahifasi (kunlik tarix, lotlar, qaytish sabablari, bog'langan tovar,
+  kalkulyator boshlang'ich qiymatlari manbasi bilan, Uzum havolasi); `/unit-calc`; `/items`, `PUT /skus/{id}/item`
+  (tovarga bog'lash / yangi tovar / ajratish; `manage_purchases`, audit, qayta hisob navbati). Me'yoriy logistika —
+  SKU'ning bonusdan tashqari oxirgi pullik tarifi, bo'lmasa do'konning odatiy tarifi (oxirgi 90 kun); saqlash — SKU
+  `storage_price` × bonus kunlaridagi qoldiq-kunlar. Web: `/products` (qidiruv, filtrlar, saralash URL'da, ustun
+  tanlash va saqlangan ko'rinishlar brauzerda, har ustunda formula, virtual skroll, bonus banneri, jadvaldan tashqari
+  qatorlar) va `/products/:skuId` (KPI, tarix grafiklari, lotlar, qaytishlar, tovarga bog'lash, unit kalkulyator);
+  `DataTable` — saralanadigan sarlavha va virtual skroll. Testlar: core, API (haqiqiy PostgreSQL), sahifalar (jsdom + axe).

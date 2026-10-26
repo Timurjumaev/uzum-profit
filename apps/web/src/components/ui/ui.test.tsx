@@ -360,6 +360,55 @@ describe("raqamli komponentlar", () => {
     );
     expect(screen.getByText("Hali sotuv yoʻq")).toBeTruthy();
   });
+
+  it("DataTable: saralanadigan sarlavha — aria-sort, yo'nalish matni, bosilsa kalit; yonidagi '?' alohida", () => {
+    type Row = { n: string; v: string };
+    const columns = [
+      { key: "name", header: "Mahsulot", render: (r: Row) => r.n, sortKey: "title" },
+      { key: "v", header: "Tushum", numeric: true, render: (r: Row) => r.v, sortKey: "revenue", help: <span data-testid="help">?</span> },
+      { key: "plain", header: "Izoh", render: () => "-" },
+    ];
+    const onSort = vi.fn();
+    const props = { caption: "SKU", columns, rows: [{ n: "A", v: "1" }], rowKey: (r: Row) => r.n, onSort };
+    const { rerender } = wrap(<DataTable {...props} sort={{ key: "revenue", desc: true }} />);
+    expect(screen.getByRole("columnheader", { name: /^Tushum/ }).getAttribute("aria-sort")).toBe("descending");
+    expect(screen.getByRole("columnheader", { name: /^Mahsulot/ }).getAttribute("aria-sort")).toBe("none");
+    expect(screen.getByRole("columnheader", { name: "Izoh" }).getAttribute("aria-sort")).toBeNull(); // saralanmaydi
+    expect(screen.getByLabelText("kamayish tartibida")).toBeTruthy();
+    expect(screen.getByTestId("help").closest("button")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Mahsulot/ }));
+    expect(onSort).toHaveBeenCalledWith("title");
+    rerender(
+      <I18nextProvider i18n={i18n}>
+        <DataTable {...props} sort={{ key: "revenue", desc: false }} />
+      </I18nextProvider>,
+    );
+    expect(screen.getByLabelText("oʻsish tartibida")).toBeTruthy();
+  });
+
+  it("DataTable: 500+ qatorda faqat ko'rinadigan qatorlar chiziladi, skrollda almashadi, qator tartibi aria-rowindex'da", () => {
+    type Row = { n: string };
+    const rows = Array.from({ length: 2000 }, (_, i) => ({ n: `Q${i}` }));
+    const columns = [{ key: "name", header: "Nom", render: (r: Row) => r.n }];
+    const { container } = wrap(<DataTable caption="SKU" columns={columns} rows={rows} rowKey={(r) => r.n} />);
+    const drawn = () => container.querySelectorAll("tbody tr:not(.ui-table__spacer)").length;
+    expect(drawn()).toBeLessThan(60);
+    expect(screen.getByRole("rowheader", { name: "Q0" })).toBeTruthy();
+    expect(container.querySelector("table")!.getAttribute("aria-rowcount")).toBe("2001");
+    const region = screen.getByRole("region", { name: "SKU" });
+    act(() => {
+      region.scrollTop = 36 * 1000;
+      fireEvent.scroll(region);
+    });
+    expect(screen.queryByRole("rowheader", { name: "Q0" })).toBeNull();
+    expect(screen.getByRole("rowheader", { name: "Q1000" }).closest("tr")!.getAttribute("aria-rowindex")).toBe("1002");
+    expect(container.querySelectorAll(".ui-table__spacer").length).toBe(2);
+    // 500 va undan kam qator — oddiy jadval.
+    cleanup();
+    const small = wrap(<DataTable caption="SKU" columns={columns} rows={rows.slice(0, 500)} rowKey={(r) => r.n} />);
+    expect(small.container.querySelectorAll("tbody tr").length).toBe(500);
+    expect(small.container.querySelector(".ui-table-wrap--virtual")).toBeNull();
+  });
 });
 
 describe("holat va qolganlari", () => {

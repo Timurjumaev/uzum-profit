@@ -4,7 +4,7 @@ export { Banner } from "./Banner";
 export { Button } from "./Button";
 export { Combobox, filterOptions, type ComboOption } from "./Combobox";
 export { CompareToggle, type CompareMode } from "./CompareToggle";
-export { DataTable, type Column } from "./DataTable";
+export { DataTable, type Column, type SortState } from "./DataTable";
 export { DateRangePicker } from "./DateRangePicker";
 export { EmptyState, ProgressBar, Skeleton, useDelayed } from "./Feedback";
 export { Field } from "./Field";

@@ -16,7 +16,7 @@ import { ApiError } from "../lib/api/client";
 import { NotFound, Pending, RouteError } from "./errors";
 import { AuthRoute } from "../features/auth/AuthRoute";
 import { filterSearch } from "./filters";
-import { inviteSearch, loginSearch, onboardingSearch, pnlSearch } from "./search";
+import { inviteSearch, loginSearch, onboardingSearch, pnlSearch, productsSearch } from "./search";
 
 export { inviteSearch, loginSearch };
 import { meQuery } from "./query";
@@ -70,6 +70,20 @@ const pnl = createRoute({
   component: lazyRouteComponent(() => import("../routes/pnl"), "Pnl"),
 });
 
+/** Mahsulotlar (M6, B4.3): jadval (qidiruv, saralash, filtrlar — URL'da) va SKU sahifasi. */
+const products = createRoute({
+  getParentRoute: () => app,
+  path: "/products",
+  validateSearch: productsSearch,
+  component: lazyRouteComponent(() => import("../routes/products"), "Products"),
+});
+
+const product = createRoute({
+  getParentRoute: () => app,
+  path: "/products/$skuId",
+  component: lazyRouteComponent(() => import("../routes/products"), "SkuPage"),
+});
+
 const status = createRoute({
   getParentRoute: () => app,
   path: "/status",
@@ -83,7 +97,6 @@ const soon = <const P extends string>(path: P, name: keyof typeof import("../rou
     path,
     component: lazyRouteComponent(() => import("../routes/soon"), name),
   });
-const products = soon("/products", "Products");
 const orders = soon("/orders", "Orders");
 const expenses = soon("/expenses", "Expenses");
 const purchases = soon("/purchases", "Purchases");
@@ -123,7 +136,7 @@ const uiKit = createRoute({
 
 export const routeTree = root.addChildren([
   auth.addChildren([
-    app.addChildren([home, status, pnl, products, orders, expenses, purchases, inventory, cash, reports, settings]),
+    app.addChildren([home, status, pnl, products, product, orders, expenses, purchases, inventory, cash, reports, settings]),
     onboarding,
     invite,
   ]),

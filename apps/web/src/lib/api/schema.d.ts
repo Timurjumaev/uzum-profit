@@ -493,6 +493,43 @@ export interface paths {
         patch: operations["update_waiver_api_v1_orgs__org_id__fee_waivers__waiver_id__patch"];
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Items
+         * @description Tovarlar (bog'lash tanlovi uchun): nom bo'yicha qidiruv (lotin/kirill, tutuq turidan qat'i nazar).
+         */
+        get: operations["list_items_api_v1_orgs__org_id__items_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/skus/{sku_id}/item": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Link Item */
+        put: operations["link_item_api_v1_orgs__org_id__skus__sku_id__item_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/dashboard": {
         parameters: {
             query?: never;
@@ -536,6 +573,40 @@ export interface paths {
         };
         /** Skus */
         get: operations["skus_api_v1_orgs__org_id__skus_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/skus/{sku_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sku Detail */
+        get: operations["sku_detail_api_v1_orgs__org_id__skus__sku_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/unit-calc": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Unit Calculator */
+        get: operations["unit_calculator_api_v1_orgs__org_id__unit_calc_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -684,6 +755,44 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /**
+         * BonusOut
+         * @description Davrga tushgan Uzum bonuslari (ADR-031) va ularning me'yoriy bahosi (F40).
+         */
+        BonusOut: {
+            /** Waivers */
+            waivers: components["schemas"]["WaiverOut"][];
+            /** Unestimated Kinds */
+            unestimated_kinds: string[];
+        };
+        /**
+         * CalcDefaultsOut
+         * @description Unit kalkulyator boshlang'ich qiymatlari (F35, F36) va ularning manbasi; ``null`` — qiymat yo'q (UI so'raydi).
+         *
+         *     Manbalar: ``price`` — ``period`` (davr o'rtachasi) | ``catalog``; ``unit_cost`` — ``period`` | ``last_lot``;
+         *     ``logistics`` — ``last_paid`` | ``shop_typical`` (me'yoriy, bonussiz — F40); ``commission_pct`` — ``period`` |
+         *     ``snapshot`` | ``catalog``; ``tax_pct`` va ``ads_pct`` — ``period``.
+         */
+        CalcDefaultsOut: {
+            /** Price */
+            price: string | null;
+            /** Unit Cost */
+            unit_cost: string | null;
+            /** Logistics */
+            logistics: string | null;
+            /** Packaging */
+            packaging: string;
+            /** Commission Pct */
+            commission_pct: string | null;
+            /** Tax Pct */
+            tax_pct: string | null;
+            /** Ads Pct */
+            ads_pct: string | null;
+            /** Sources */
+            sources: {
+                [key: string]: string;
+            };
         };
         /** CategoryOut */
         CategoryOut: {
@@ -894,6 +1003,41 @@ export interface components {
              */
             expires_at: string;
         };
+        /**
+         * ItemLinkIn
+         * @description ``existing`` — mavjud tovarga (``item_id``); ``new`` — SKU nomi (yoki ``name``) bilan yangi tovar; ``none`` —
+         *     tovardan ajratish (tovar o'zi saqlanadi).
+         */
+        ItemLinkIn: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "existing" | "new" | "none";
+            /** Item Id */
+            item_id?: string | null;
+            /** Name */
+            name?: string | null;
+        };
+        /** ItemOut */
+        ItemOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Image Url */
+            image_url: string | null;
+            /** Sku Count */
+            sku_count: number;
+        };
+        /** ItemsOut */
+        ItemsOut: {
+            /** Items */
+            items: components["schemas"]["ItemOut"][];
+        };
         /** KindStatus */
         KindStatus: {
             /** Kind */
@@ -954,6 +1098,36 @@ export interface components {
             /** Learned */
             learned: string[];
         };
+        /**
+         * LinkedItemOut
+         * @description Tovar (item) va u bilan bog'langan SKU'lar (M6: bitta jismoniy tovar — bir necha SKU).
+         */
+        LinkedItemOut: {
+            /**
+             * Item Id
+             * Format: uuid
+             */
+            item_id: string;
+            /** Name */
+            name: string;
+            /** Skus */
+            skus: components["schemas"]["LinkedSkuOut"][];
+        };
+        /** LinkedSkuOut */
+        LinkedSkuOut: {
+            /**
+             * Sku Id
+             * Format: uuid
+             */
+            sku_id: string;
+            /**
+             * Shop Id
+             * Format: uuid
+             */
+            shop_id: string;
+            /** Title */
+            title: string | null;
+        };
         /** LoginRequest */
         LoginRequest: {
             /** Phone */
@@ -968,6 +1142,27 @@ export interface components {
             orgs: components["schemas"]["OrgSummary"][];
             /** Created */
             created: boolean;
+        };
+        /**
+         * LotOut
+         * @description Tannarx tarixi: tovarning bitta lot'i (F20) — tayyor sanasi, soni va tannarxi/dona.
+         */
+        LotOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Ready On */
+            ready_on: string | null;
+            /** Qty */
+            qty: number;
+            /** Unit Cost */
+            unit_cost: string;
+            /** Total */
+            total: string;
+            /** Flags */
+            flags: string[];
         };
         /** Me */
         Me: {
@@ -1272,6 +1467,13 @@ export interface components {
             /** Budget */
             budget: components["schemas"]["PriceOut"][] | null;
         };
+        /** ReturnCauseOut */
+        ReturnCauseOut: {
+            /** Cause */
+            cause: string | null;
+            /** Units */
+            units: number;
+        };
         /** Revoked */
         Revoked: {
             /** Revoked */
@@ -1503,6 +1705,50 @@ export interface components {
             /** Margin */
             margin: string | null;
         };
+        /**
+         * SkuDayOut
+         * @description Kun kesimi: sotuv (``daily_sku_metrics`` kataklari) va snapshot (narx, komissiya, qoldiq); ikkalasidan biri
+         *     bo'lmasligi mumkin.
+         */
+        SkuDayOut: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Units */
+            units: number;
+            /** Revenue */
+            revenue: string;
+            /** Net Profit */
+            net_profit: string;
+            /** Profit Per Unit */
+            profit_per_unit: string | null;
+            /** Price */
+            price: string | null;
+            /** Commission Pct */
+            commission_pct: string | null;
+            /** Stock */
+            stock: number | null;
+        };
+        /** SkuDetailOut */
+        SkuDetailOut: {
+            meta: components["schemas"]["Meta"];
+            sku: components["schemas"]["SkuRowOut"];
+            statement: components["schemas"]["StatementOut"];
+            /** Uzum Url */
+            uzum_url: string | null;
+            /** History */
+            history: components["schemas"]["SkuDayOut"][];
+            /** Lots */
+            lots: components["schemas"]["LotOut"][];
+            /** Returns */
+            returns: components["schemas"]["ReturnCauseOut"][];
+            stock_detail: components["schemas"]["StockDetailOut"] | null;
+            linked: components["schemas"]["LinkedItemOut"] | null;
+            bonus: components["schemas"]["BonusOut"];
+            calc: components["schemas"]["CalcDefaultsOut"];
+        };
         /** SkuRowOut */
         SkuRowOut: {
             /**
@@ -1549,8 +1795,21 @@ export interface components {
             acos: string | null;
             /** Profit Per Unit */
             profit_per_unit: string | null;
+            /** Normative Profit Per Unit */
+            normative_profit_per_unit: string | null;
+            /** Saved Per Unit */
+            saved_per_unit: string | null;
+            /**
+             * Normative State
+             * @enum {string}
+             */
+            normative_state: "none" | "adjusted" | "unavailable";
             /** Net Profit */
             net_profit: string;
+            /** Expenses Direct */
+            expenses_direct: string;
+            /** Expenses Allocated */
+            expenses_allocated: string;
             /** Margin */
             margin: string | null;
             /** Uncovered Share */
@@ -1586,6 +1845,7 @@ export interface components {
             next_cursor: string | null;
             unlinked: components["schemas"]["StatementOut"];
             unallocated: components["schemas"]["StatementOut"];
+            bonus: components["schemas"]["BonusOut"];
         };
         /**
          * StatementOut
@@ -1662,6 +1922,21 @@ export interface components {
          * @enum {string}
          */
         StatusGroup: "completed" | "processing" | "canceled" | "unknown";
+        /** StockDetailOut */
+        StockDetailOut: {
+            /** Active */
+            active: number;
+            /** Fbs */
+            fbs: number;
+            /** Defected */
+            defected: number;
+            /** Pending */
+            pending: number;
+            /** In Transit */
+            in_transit: number;
+            /** Status */
+            status: string | null;
+        };
         /** StockRowOut */
         StockRowOut: {
             /**
@@ -1800,6 +2075,35 @@ export interface components {
             expenses: string;
             /** Share */
             share: string;
+        };
+        /**
+         * UnitCalcOut
+         * @description Bir dona iqtisodi berilgan narxda; ``breakeven`` (F35) va ``target_price`` (F36) — ``null`` bo'lsa ulush
+         *     100% dan oshgan: hech qanday narx foyda bermaydi.
+         */
+        UnitCalcOut: {
+            /** Price */
+            price: string;
+            /** Fixed */
+            fixed: string;
+            /** Share Pct */
+            share_pct: string;
+            /** Commission */
+            commission: string;
+            /** Tax */
+            tax: string;
+            /** Ads */
+            ads: string;
+            /** Profit */
+            profit: string;
+            /** Margin */
+            margin: string | null;
+            /** Roi */
+            roi: string | null;
+            /** Breakeven */
+            breakeven: string | null;
+            /** Target Price */
+            target_price: string | null;
         };
         /** UserOut */
         UserOut: {
@@ -3353,6 +3657,93 @@ export interface operations {
             };
         };
     };
+    list_items_api_v1_orgs__org_id__items_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemsOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    link_item_api_v1_orgs__org_id__skus__sku_id__item_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sku_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemLinkIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkedItemOut"] | null;
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     dashboard_api_v1_orgs__org_id__dashboard_get: {
         parameters: {
             query?: {
@@ -3452,6 +3843,10 @@ export interface operations {
         parameters: {
             query?: {
                 q?: string | null;
+                /** @description Holat belgisi bo'yicha */
+                label?: components["schemas"]["ProfitLabel"] | null;
+                /** @description ABC (F28) */
+                abc?: ("A" | "B" | "C") | null;
                 sort?: string;
                 limit?: number;
                 /** @description Oldingi javobdagi ``next_cursor`` */
@@ -3478,6 +3873,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SkusOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    sku_detail_api_v1_orgs__org_id__skus__sku_id__get: {
+        parameters: {
+            query?: {
+                /** @description Davr boshi (Toshkent kuni) */
+                start?: string | null;
+                /** @description Davr oxiri, kiradi; standart — bugun */
+                end?: string | null;
+                /** @description Do'konlar (bir necha marta) */
+                shop?: string[] | null;
+            };
+            header?: never;
+            path: {
+                sku_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkuDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    unit_calculator_api_v1_orgs__org_id__unit_calc_get: {
+        parameters: {
+            query: {
+                price: number | string;
+                unit_cost: number | string;
+                commission_pct: number | string;
+                logistics?: number | string;
+                packaging?: number | string;
+                tax_pct?: number | string;
+                ads_pct?: number | string;
+                target_margin_pct?: number | string | null;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitCalcOut"];
                 };
             };
             /** @description Validatsiya xatosi */

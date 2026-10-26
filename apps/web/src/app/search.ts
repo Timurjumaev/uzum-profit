@@ -33,3 +33,51 @@ export type PnlSearch = { view?: (typeof PNL_VIEWS)[number] };
 export function pnlSearch(search: Record<string, unknown>): PnlSearch {
   return search.view === "shop" || search.view === "sku" ? { view: search.view } : {};
 }
+
+export const PRODUCT_SORTS = [
+  "revenue",
+  "net_profit",
+  "units",
+  "margin",
+  "title",
+  "stock",
+  "days_of_stock",
+  "avg_price",
+  "profit_per_unit",
+  "normative_profit_per_unit",
+  "roi",
+  "return_share",
+  "cancel_share",
+  "expenses_direct",
+  "expenses_allocated",
+] as const;
+export type ProductSort = (typeof PRODUCT_SORTS)[number];
+export const PRODUCT_LABELS = ["loss", "borderline", "profitable", "no_data"] as const;
+export type ProductLabel = (typeof PRODUCT_LABELS)[number];
+export const PRODUCT_ABC = ["A", "B", "C"] as const;
+export type ProductAbc = (typeof PRODUCT_ABC)[number];
+
+/** Standart saralash: tushum kamayish tartibida (URL'da yozilmaydi). */
+export const DEFAULT_PRODUCT_SORT = { key: "revenue", desc: true } as const;
+
+export type ProductsSearch = { q?: string; sort?: string; label?: ProductLabel; abc?: ProductAbc };
+
+/** Mahsulotlar jadvali (M6): qidiruv, saralash (`-` — kamayish), holat va ABC filtrlari — havola bilan ulashiladi. */
+export function productsSearch(search: Record<string, unknown>): ProductsSearch {
+  const out: ProductsSearch = {};
+  if (typeof search.q === "string" && search.q.trim() !== "") out.q = search.q.slice(0, 100);
+  if (typeof search.sort === "string") {
+    const key = search.sort.replace(/^-/, "");
+    if ((PRODUCT_SORTS as readonly string[]).includes(key) && search.sort !== `-${DEFAULT_PRODUCT_SORT.key}`) out.sort = search.sort;
+  }
+  if ((PRODUCT_LABELS as readonly unknown[]).includes(search.label)) out.label = search.label as ProductLabel;
+  if ((PRODUCT_ABC as readonly unknown[]).includes(search.abc)) out.abc = search.abc as ProductAbc;
+  return out;
+}
+
+/** `sort` qiymati → kalit va yo'nalish (`title` — o'sish, qolganlari — kamayish: eng kattasi tepada). */
+export function parseSort(sort: string | undefined): { key: ProductSort; desc: boolean } {
+  const key = (sort ?? "").replace(/^-/, "");
+  if (!(PRODUCT_SORTS as readonly string[]).includes(key)) return { ...DEFAULT_PRODUCT_SORT };
+  return { key: key as ProductSort, desc: (sort ?? "").startsWith("-") };
+}

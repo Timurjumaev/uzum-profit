@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B2 chiqishi:** 24 soat xatosiz tekshiruvi kutilmoqda (2026-10-26). **B3 tugadi** (2026-10-26; B2 kutish vaqtida, Temur roziligi bilan) |
-| Keyingi vazifa | **B4.3 Mahsulotlar (M6)** (B4.2a Uzum bonuslari tugadi, PR kutilmoqda). B2.11 yakuni (Temur sinovi, quyida) → B2 yopiladi. B3 qoldig'i: Temur Q1 tovar belgisi tekshiruvi (ADR-030), `sellermax.uz` domenini ro'yxatdan o'tkazish |
+| Keyingi vazifa | **B4.4 Buyurtmalar (M7)** (B4.3 Mahsulotlar tugadi, PR kutilmoqda). B2.11 yakuni (Temur sinovi, quyida) → B2 yopiladi. B3 qoldig'i: Temur Q1 tovar belgisi tekshiruvi (ADR-030), `sellermax.uz` domenini ro'yxatdan o'tkazish |
 | Temurdan kutilmoqda | **2026-10-26 ~21:55 (Toshkent) eslatma:** loyiha papkasida `python3 -m uzum_profit sync`, so'ng `docs/staging.md` "Real sinov" 2–3-qadamlari (realcheck → compare) va yangi `staging_farqlari.md` ni chatga yuklash (B2 chiqishi: 24 soat xatosiz); ixtiyoriy: partiya qatorlariga SKU biriktirish; B4.2a merge bo'lgach — staging'da oktabr Uzum bonusini kiritish (P&L → taklif → "Bonus deb belgilash") |
-| Oxirgi yangilanish | 2026-10-26 (B4.2a: Uzum bonuslari — `fee_waivers`, takliflar, "Bonus davri" belgisi; ADR-031) |
+| Oxirgi yangilanish | 2026-10-26 (B4.3: Mahsulotlar — jadval, SKU sahifasi, unit kalkulyator F35/F36, me'yoriy foyda F40, tovar ↔ SKU bog'lash) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

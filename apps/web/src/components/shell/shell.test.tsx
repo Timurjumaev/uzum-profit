@@ -74,13 +74,13 @@ describe("menyu", () => {
       "Sozlamalar",
     ]);
     expect(sidebar().getByRole("link", { name: "Asosiy" }).getAttribute("aria-current")).toBe("page");
-    expect(sidebar().getByRole("link", { name: "Mahsulotlar" }).getAttribute("aria-current")).toBeNull();
+    expect(sidebar().getByRole("link", { name: "Buyurtmalar" }).getAttribute("aria-current")).toBeNull();
 
-    fireEvent.click(sidebar().getByRole("link", { name: "Mahsulotlar" }));
-    expect(await screen.findByRole("heading", { name: "Mahsulotlar" })).toBeTruthy();
+    fireEvent.click(sidebar().getByRole("link", { name: "Buyurtmalar" }));
+    expect(await screen.findByRole("heading", { name: "Buyurtmalar" })).toBeTruthy();
     expect(screen.getByText("Sahifa qurilmoqda. Hozircha eski dasturdan foydalaning.")).toBeTruthy();
-    expect(history.location.pathname).toBe("/products");
-    expect(sidebar().getByRole("link", { name: "Mahsulotlar" }).getAttribute("aria-current")).toBe("page");
+    expect(history.location.pathname).toBe("/orders");
+    expect(sidebar().getByRole("link", { name: "Buyurtmalar" }).getAttribute("aria-current")).toBe("page");
     expect(sidebar().getByRole("link", { name: "Asosiy" }).getAttribute("aria-current")).toBeNull();
   });
 

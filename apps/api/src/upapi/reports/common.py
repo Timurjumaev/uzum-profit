@@ -250,6 +250,11 @@ class SkuInfo:
     price: Any
     rank: str | None
     status: str | None
+    commission_pct: Any = None  # Uzum katalogidagi komissiya, %
+    storage_price: Any = (
+        None  # Uzum ``paidStoragePriceItem`` (F40: saqlash bonusining me'yoriy qiymati)
+    )
+    product_external_id: int | None = None  # Uzum mahsulot id (sahifaga havola)
 
     def haystack(self) -> str:
         return fold(
@@ -262,7 +267,12 @@ async def sku_catalog(
 ) -> dict[UUID, SkuInfo]:
     k, p, i = m.mp_skus, m.mp_products, m.items
     query = (
-        select(k, p.c.title.label("product_title"), i.c.image_url)
+        select(
+            k,
+            p.c.title.label("product_title"),
+            p.c.external_id.label("product_external_id"),
+            i.c.image_url,
+        )
         .outerjoin(p, p.c.id == k.c.product_id)
         .outerjoin(i, i.c.id == k.c.item_id)
         .order_by(k.c.shop_id, k.c.external_id)
@@ -285,6 +295,9 @@ async def sku_catalog(
             price=r.price,
             rank=r.rank,
             status=r.status,
+            commission_pct=r.commission_pct,
+            storage_price=r.storage_price,
+            product_external_id=r.product_external_id,
         )
         for r in await conn.execute(query)
     }

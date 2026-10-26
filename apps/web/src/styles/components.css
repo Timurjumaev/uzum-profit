@@ -941,3 +941,46 @@
     gap: var(--space-3);
   }
 }
+
+/* Saralanadigan sarlavha va virtual skroll (jadval, B4.3). */
+.ui-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-block-size: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ui-sort:hover {
+  color: var(--text-primary);
+}
+
+.ui-table th[aria-sort="ascending"],
+.ui-table th[aria-sort="descending"] {
+  color: var(--text-primary);
+}
+
+.ui-table-wrap--virtual {
+  max-block-size: min(70vh, 720px);
+  overflow-y: auto;
+}
+
+.ui-table-wrap--virtual thead th {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+}
+
+.ui-table-wrap--virtual thead th:first-child {
+  z-index: 3;
+}
+
+.ui-table__spacer > td {
+  padding: 0;
+  border: 0;
+}

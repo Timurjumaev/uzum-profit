@@ -16,9 +16,11 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
+from enum import StrEnum
 
 from upcore.expenses import ExpenseCategory
 from upcore.metrics import Period
+from upcore.money import Money, total
 from upcore.tariffs import to_periods
 
 SALE_LOGISTICS = "sale_logistics"  # sotuv qatoridagi logistika (F5)
@@ -109,3 +111,51 @@ def suggestions(
         days = [d for d in free_days[shop] if not any(w.covers(shop, d) for w in known)]
         out += [Suggestion(shop, p) for p in to_periods(days)]
     return out
+
+
+# --- F40: me'yoriy (bonussiz) foyda/dona -----------------------------------------------------
+
+STORAGE = "storage"  # saqlash: SKU ``storage_price`` × qoldiq-kunlar (baholovchisi bor tur)
+
+
+class NormativeState(StrEnum):
+    NONE = "none"  # bonus SKU'ga ta'sir qilmagan — me'yoriy foyda = haqiqiy foyda
+    ADJUSTED = "adjusted"  # bonus bilan tejalgan xarajat me'yoriy qiymat bilan ayirildi
+    UNAVAILABLE = "unavailable"  # bonus ta'sir qilgan, lekin me'yoriy baho yo'q (tamoyil 9: taxmin yashirilmaydi)
+
+
+@dataclass(frozen=True, slots=True)
+class Normative:
+    """F40 natijasi bitta SKU uchun: ``missing`` — bonus ta'sir qilgan, baholovchisi yo'q xarajat turlari."""
+
+    state: NormativeState
+    profit_per_unit: Money | None
+    saved_per_unit: Money | None
+    missing: tuple[str, ...] = ()
+
+
+def logistics_saving(covered_units: int, fee: Money | None) -> Money | None:
+    """F40: bonus davrida logistikasi 0 bo'lgan (tannarxi ma'lum) dona × me'yoriy bir dona logistika;
+    tarif noma'lum — ``None`` (baho yo'q)."""
+    return None if fee is None else fee * covered_units
+
+
+def storage_saving(storage_price: Money | None, stock_days: int) -> Money | None:
+    """F40: bonus kunlarida omborda turgan dona-kunlar × SKU ``storage_price``; narx noma'lum — ``None``."""
+    return None if storage_price is None else storage_price * stock_days
+
+
+def normative_profit(
+    profit_per_unit: Money | None, covered_units: int, savings: Mapping[str, Money | None]
+) -> Normative:
+    """F40. Me'yoriy foyda/dona = foyda/dona − Σ bonus bilan tejalgan xarajatning me'yoriy qiymati / tannarxi ma'lum
+    dona. ``savings`` — bonus ta'sir qilgan turlar (tur → me'yoriy qiymat yoki ``None``); bo'sh — bonus ta'sir
+    qilmagan. Birorta tur baholanmagan bo'lsa natija yo'q (``UNAVAILABLE``), qisman baho berilmaydi."""
+    if not savings:
+        return Normative(NormativeState.NONE, profit_per_unit, None)
+    missing = tuple(sorted(k for k, v in savings.items() if v is None))
+    if missing or profit_per_unit is None or covered_units <= 0:
+        return Normative(NormativeState.UNAVAILABLE, None, None, missing)
+    saved = total([v for v in savings.values() if v is not None], profit_per_unit.currency)
+    per_unit = Money(saved.amount / covered_units, saved.currency)
+    return Normative(NormativeState.ADJUSTED, profit_per_unit - per_unit, per_unit)
