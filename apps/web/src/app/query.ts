@@ -60,3 +60,25 @@ export const refreshSync = (orgId: string) =>
   unwrap(api.POST("/api/v1/orgs/{org_id}/sync/refresh", { params: { path: { org_id: orgId } } }));
 
 export const logout = () => unwrap(api.POST("/api/v1/auth/logout"));
+
+// --- Kirish, tashkilot, ulanish (B3.7) ----------------------------------------------------------------------------
+
+/** Kodni Telegram'ga yuborish (M1). `phone` — `+998XXXXXXXXX`. */
+export const requestOtp = (phone: string) => unwrap(api.POST("/api/v1/auth/otp", { body: { phone } }));
+
+/** Kod bilan kirish: sessiya cookie'si o'rnatiladi, foydalanuvchi va tashkilotlari qaytadi. */
+export const loginWithCode = (phone: string, code: string) => unwrap(api.POST("/api/v1/auth/login", { body: { phone, code } }));
+
+export const updateProfile = (body: { name?: string | null; language?: "uz-Latn" | "uz-Cyrl" | "ru" | null }) =>
+  unwrap(api.PATCH("/api/v1/auth/me", { body }));
+
+export const acceptInvite = (token: string) => unwrap(api.POST("/api/v1/invites/accept", { body: { token } }));
+
+export const createOrg = (body: { name: string; inn?: string | null }) => unwrap(api.POST("/api/v1/orgs", { body }));
+
+/** Uzum kaliti: tekshiriladi va shifrlanadi; javobda kalit yo'q (faqat oxirgi 4 belgi). */
+export const connectAccount = (orgId: string, token: string) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/accounts", { params: { path: { org_id: orgId } }, body: { token } }));
+
+export const updateShop = (orgId: string, shopId: string, body: { active?: boolean; alias?: string | null; color?: string | null }) =>
+  unwrap(api.PATCH("/api/v1/orgs/{org_id}/shops/{shop_id}", { params: { path: { org_id: orgId, shop_id: shopId } }, body }));

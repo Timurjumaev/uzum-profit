@@ -594,13 +594,13 @@ describe("mobil tab bar", () => {
 });
 
 describe("tashkilotsiz foydalanuvchi", () => {
-  it("do'kon, solishtirish va sinxron ko'rsatilmaydi, API'ga tegishli so'rov ketmaydi", async () => {
-    const { api } = await renderShell("/", { [ME_ROUTE]: () => json(200, { ...ME, orgs: [] }) });
-    expect(topbar().queryByRole("button", { name: /^Doʻkon:/ })).toBeNull();
-    expect(topbar().queryByRole("button", { name: /^Solishtirish/ })).toBeNull();
-    expect(topbar().queryByRole("button", { name: /^Maʼlumot yangiligi:/ })).toBeNull();
-    expect(topbar().getByRole("button", { name: /^Davr:/ })).toBeTruthy();
-    expect(topbar().getByRole("button", { name: "Tez oʻtish" })).toBeTruthy();
+  it("karkas o'rniga onboarding; tashkilotga tegishli so'rov ketmaydi", async () => {
+    const api = mockApi({ [ME_ROUTE]: () => json(200, { ...ME, orgs: [] }) });
+    const history = createMemoryHistory({ initialEntries: ["/pnl"] });
+    render(<App state={createAppState(history, "uz-Latn")} />);
+    expect(await screen.findByRole("heading", { name: "Biznesingiz nomi" })).toBeTruthy();
+    expect(history.location.pathname).toBe("/onboarding");
+    expect(screen.queryByRole("navigation", { name: "Asosiy menyu" })).toBeNull();
     expect(api.calls).toEqual([ME_ROUTE]);
   });
 });

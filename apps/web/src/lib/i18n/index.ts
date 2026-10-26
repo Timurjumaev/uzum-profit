@@ -42,6 +42,16 @@ export function isLang(value: unknown): value is Lang {
   return typeof value === "string" && (LANGS as readonly string[]).includes(value);
 }
 
+/** Foydalanuvchi qo'lda tanlagan til (`null` — hali tanlamagan). */
+export function storedLang(): Lang | null {
+  try {
+    const saved = globalThis.localStorage?.getItem(STORAGE_KEY);
+    return isLang(saved) ? saved : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Saqlangan tanlov → brauzer tili (ru*) → uz-Latn. `localStorage` yopiq bo'lishi mumkin (maxfiy oyna). */
 export function detectLang(): Lang {
   try {
@@ -74,13 +84,15 @@ function syncDocument(lang: Lang) {
 }
 
 export async function setLanguage(instance: I18n, lang: Lang): Promise<void> {
-  await instance.changeLanguage(lang);
-  syncDocument(lang);
+  // Tanlov avval yoziladi, keyin til almashadi: almashuv davomida boshqa kod (profil tilini qo'llash) "tanlov yo'q"
+  // deb o'ylab, uni ustidan yozib yubormasin.
   try {
     globalThis.localStorage?.setItem(STORAGE_KEY, lang);
   } catch {
     // saqlanmasa — faqat shu sessiyada
   }
+  await instance.changeLanguage(lang);
+  syncDocument(lang);
 }
 
 export function currentLang(instance: I18n): Lang {

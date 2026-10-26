@@ -1,17 +1,18 @@
 // SyncIndicator (04 §5; M3 "Ma'lumot yangiligi"): "Yangilandi: 3 daqiqa oldin" + holat belgisi (ikon + matn, rang
 // yolg'iz emas). Bosilsa — ma'lumot turlari bo'yicha oxirgi sinxron, "Hozir yangilash" va "Ma'lumotlar holati".
 // Uzilish banneri ham shu so'rovdan (`OutageBanner`).
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
-import { refreshSync, syncQuery } from "../../app/query";
+import { syncQuery } from "../../app/query";
+import { useRefreshSync } from "../../app/useRefreshSync";
 import { useFormat } from "../../lib/i18n";
 import { syncSummary, type SyncState } from "../../lib/sync";
 import { TONE_ICON } from "../ui/Badge";
-import { Banner, Button, Popover, useToast } from "../ui";
+import { Banner, Button, Popover } from "../ui";
 import { cx } from "../ui/cx";
 
 const STATE_TEXT: Record<SyncState, string> = {
@@ -32,17 +33,8 @@ const STATE_HELP: Partial<Record<SyncState, string>> = {
 export function SyncIndicator({ orgId }: { orgId: string }) {
   const { t } = useTranslation();
   const f = useFormat();
-  const toast = useToast();
-  const client = useQueryClient();
   const query = useQuery(syncQuery(orgId));
-  const refresh = useMutation({
-    mutationFn: () => refreshSync(orgId),
-    onSuccess: () => {
-      toast.show(t("sync.refreshStarted"));
-      void client.invalidateQueries({ queryKey: syncQuery(orgId).queryKey });
-    },
-    onError: (error) => toast.show(errorText(error, t), "negative"),
-  });
+  const refresh = useRefreshSync(orgId);
   const status = query.data;
   const summary = status ? syncSummary(status) : null;
   const tone = summary?.tone ?? "warning";

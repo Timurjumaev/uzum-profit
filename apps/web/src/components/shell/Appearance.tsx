@@ -1,8 +1,9 @@
-// Ko'rinish sozlamalari: mavzu (tizim / yorug' / qorong'i, B3.3) va til (B3.2). Foydalanuvchi menyusida va mobil
-// "Yana" panelida. Tilni profil (`user.language`) bilan bog'lash — B3.7.
+// Ko'rinish sozlamalari: mavzu (tizim / yorug' / qorong'i, B3.3) va til (B3.2; tanlov profilga ham yoziladi, B3.7).
+// Foydalanuvchi menyusida va mobil "Yana" panelida.
 import { useTranslation } from "react-i18next";
 
-import { LANGS, setLanguage, type Lang } from "../../lib/i18n";
+import { changeLanguage } from "../../features/auth/language";
+import { LANGS, type Lang } from "../../lib/i18n";
 import { useTheme, type ThemeChoice } from "../../lib/theme";
 import { Select } from "../ui";
 
@@ -22,7 +23,7 @@ export function Appearance() {
       <Select
         label={t("common.language")}
         value={i18n.language}
-        onValueChange={(v) => void setLanguage(i18n, v as Lang)}
+        onValueChange={(v) => void changeLanguage(i18n, v as Lang)}
         options={LANGS.map((value) => ({ value, label: t(`languages.${value}`) }))}
       />
     </div>

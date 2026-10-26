@@ -5,7 +5,8 @@ import { Languages, Moon, Palette } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import { LANGS, setLanguage } from "../../lib/i18n";
+import { changeLanguage } from "../../features/auth/language";
+import { LANGS } from "../../lib/i18n";
 import { useTheme, type ThemeChoice } from "../../lib/theme";
 import type { PaletteItem } from "./CommandPalette";
 import { NAV_ALL } from "./nav";
@@ -36,7 +37,7 @@ export function usePaletteItems(): PaletteItem[] {
       group: "action",
       label: t("shell.setLanguage", { language: t(`languages.${lang}`) }),
       icon: Languages,
-      run: () => void setLanguage(i18n, lang),
+      run: () => void changeLanguage(i18n, lang),
     }));
     return [...pages, ...themes, ...languages];
     // i18n.language — til almashganda yorliqlar qayta tuziladi.

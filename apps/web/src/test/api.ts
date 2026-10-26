@@ -58,7 +58,7 @@ export function json(status: number, body: unknown, headers: Record<string, stri
 export const problem = (status: number, code: string, extra: Record<string, unknown> = {}) =>
   json(status, { type: "x", title: "x", status, code, ...extra }, { "Content-Type": "application/problem+json" });
 
-type Reply = () => Response | Promise<Response>;
+type Reply = (request: Request) => Response | Promise<Response>;
 export type Routes = Record<string, Reply | Reply[]>;
 
 export const ME_ROUTE = "GET /api/v1/auth/me";
@@ -66,6 +66,13 @@ export const SHOPS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/shops`;
 export const SYNC_ROUTE = `GET /api/v1/orgs/${ORG_ID}/sync`;
 export const REFRESH_ROUTE = `POST /api/v1/orgs/${ORG_ID}/sync/refresh`;
 export const LOGOUT_ROUTE = "POST /api/v1/auth/logout";
+export const OTP_ROUTE = "POST /api/v1/auth/otp";
+export const LOGIN_ROUTE = "POST /api/v1/auth/login";
+export const PROFILE_ROUTE = "PATCH /api/v1/auth/me";
+export const ORGS_ROUTE = "POST /api/v1/orgs";
+export const CONNECT_ROUTE = `POST /api/v1/orgs/${ORG_ID}/accounts`;
+export const INVITE_ROUTE = "POST /api/v1/invites/accept";
+export const shopRoute = (shopId: string) => `PATCH /api/v1/orgs/${ORG_ID}/shops/${shopId}`;
 
 /** Standart: kirgan foydalanuvchi, ikki do'kon, sog'lom sinxron. `routes` ularni almashtiradi yoki to'ldiradi. */
 export function mockApi(routes: Routes = {}) {
@@ -75,21 +82,33 @@ export function mockApi(routes: Routes = {}) {
     [SYNC_ROUTE]: () => json(200, syncStatus()),
     [REFRESH_ROUTE]: () => json(202, { queued: 3 }),
     [LOGOUT_ROUTE]: () => new Response(null, { status: 204 }),
+    [PROFILE_ROUTE]: () => json(200, ME.user),
     ...routes,
   };
   const calls: string[] = [];
   const unmocked: string[] = [];
+  /** So'rov tanalari (JSON) — kalit, kod va h.k. to'g'ri yuborilganini tekshirish uchun. */
+  const bodies: Array<{ key: string; body: unknown }> = [];
   const fetch = vi.fn(async (request: Request) => {
     const key = `${request.method} ${new URL(request.url).pathname}`;
     calls.push(key);
+    const text = request.method === "GET" ? "" : await request.clone().text();
+    if (text) bodies.push({ key, body: JSON.parse(text) });
     const entry = table[key];
     if (!entry) {
       unmocked.push(key);
       throw new Error(`mockApi: ${key} ro'yxatda yo'q`);
     }
     const reply = Array.isArray(entry) ? (entry.length > 1 ? entry.shift()! : entry[0]) : entry;
-    return reply();
+    return reply(request);
   });
   vi.stubGlobal("fetch", fetch);
-  return { fetch, calls, unmocked, count: (key: string) => calls.filter((c) => c === key).length };
+  return {
+    fetch,
+    calls,
+    unmocked,
+    bodies,
+    count: (key: string) => calls.filter((c) => c === key).length,
+    bodiesOf: (key: string) => bodies.filter((b) => b.key === key).map((b) => b.body),
+  };
 }

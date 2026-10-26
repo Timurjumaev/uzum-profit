@@ -73,7 +73,7 @@ describe("tarjimalar", () => {
   });
 
   it("uz-Cyrl: lotin harflari faqat nomlarda va o'zgaruvchilarda", () => {
-    const allowed = /\{\{[^}]*\}\}|Uzum|Profit|Telegram|ROI|DRR|SKU|ID|X+|Oʻzbekcha/g;
+    const allowed = /\{\{[^}]*\}\}|seller\.uzum\.uz|Uzum|Profit|Telegram|ROI|DRR|SKU|API|ID|X+|Oʻzbekcha/g;
     for (const [key, text] of cyr) {
       if (key === "languages.uz-Latn") continue;
       expect(text.replace(allowed, ""), key).not.toMatch(/[A-Za-zʻ]/);
