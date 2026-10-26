@@ -1,4 +1,5 @@
 import time
+from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
@@ -12,6 +13,7 @@ from upcore.pnl import (
     CellKey,
     CellSales,
     ExpenseItem,
+    FreeSale,
     OwnExpense,
     TaxBase,
     TaxRule,
@@ -19,7 +21,9 @@ from upcore.pnl import (
     compare,
     expense_items,
     pending_profit,
+    standard_logistics,
 )
+from upcore.tariffs import standard_fee_of, with_standard_logistics
 
 D = Decimal
 C = ExpenseCategory
@@ -266,6 +270,9 @@ def test_additivity_property(raw_sales: list, raw_exp: list, raw_own: list) -> N
     # Hamma xarajat yo yerda ayrilgan, yo tannarxsiz qismda — yo'qolmaydi.
     assert whole.expenses_deducted + whole.uncovered_expenses == whole.overhead
     assert whole.direct_total + whole.allocated_total + whole.tax == whole.overhead
+    assert whole.uzum_direct + whole.uzum_allocated_total == whole.uzum_total
+    assert whole.own_direct + whole.own_allocated_total == whole.own_total
+    assert whole.uzum_allocated_total + whole.own_allocated_total == whole.allocated_total
     assert total([s.allocated_total for s in cells.items.values()], "UZS") == whole.allocated_total
     assert whole.uzum_total == total([e.amount for e in exp], "UZS")
     in_oct = total([own_expense_in_oct(o) for o in own], "UZS")
@@ -392,3 +399,75 @@ def test_tax_rule_money_and_raw() -> None:
     rule = TaxRule(D("1.5"), TaxBase.PAYOUT)
     assert rule.on(uzs(100_000), uzs(70_001)) == uzs("1050.02")
     assert rule.amount_on(D(100_000), D(70_001)) == D("1050.02")
+
+
+# --- F40 ---------------------------------------------------------------------------------------
+
+
+@settings(max_examples=60, deadline=None)
+@given(
+    st.lists(
+        st.tuples(
+            st.integers(1, 31),
+            st.sampled_from(["A", "B", "C"]),
+            st.sampled_from(["S1", "S2"]),
+            st.integers(1, 3),
+            st.booleans(),  # tannarx ma'lum
+            st.booleans(),  # logistika 0
+        ),
+        max_size=25,
+    ),
+    st.lists(st.tuples(st.integers(1, 31), st.sampled_from(["S1", "S2"])), max_size=6),
+    st.sampled_from([TaxBase.REVENUE, TaxBase.PAYOUT]),
+    st.booleans(),
+)
+def test_with_logistics_equals_rebuilt_lines(
+    raw: list, raw_exp: list, base: TaxBase, daily: bool
+) -> None:
+    lines = []
+    for dd, sku, shop, qty, known, free in raw:
+        line = sale(dd, sku, shop, qty=qty, cost=40_000 if known else None)
+        lines.append(replace(line, logistics=D(0)) if free else line)
+    exp = [ExpenseItem(d(dd), shop, C.STORAGE, uzs(7_001), None) for dd, shop in raw_exp]
+    rule = TaxRule(D(4), base)
+    tax = (lambda day: rule if day.day % 2 else None) if daily else rule
+    fee = standard_fee_of({"A": uzs(6_000)}, {"S1": uzs("5250.50")})  # S2 + B/C — noma'lum
+
+    cells = build_cells(OCT, lines, exp, tax=tax)
+    free_sales = [
+        FreeSale(CellKey(x.order_date, x.shop, x.sku), x.amount, x.unit_cost is not None)
+        for x in lines
+        if x.logistics == 0
+    ]
+    std = standard_logistics(free_sales, lambda f: fee(f.key.shop, f.key.sku))
+    standard = cells.with_logistics(std.extra).statement()
+
+    rebuilt = build_cells(
+        OCT, with_standard_logistics(lines, lambda x: fee(x.shop, x.sku)), exp, tax=tax
+    ).statement()
+    assert standard == rebuilt
+    assert std.lines + std.unpriced_lines == len(free_sales)
+    assert standard.logistics - cells.statement().logistics == std.total
+    # Kesimdan keyin ham (do'kon filtri) bir xil: tax qoidasi ``within`` da saqlanadi.
+    s1 = cells.within(OCT, lambda k: k.shop == "S1")
+    assert s1.with_logistics(std.extra).statement() == cells.with_logistics(std.extra).statement(
+        lambda k: k.shop == "S1"
+    )
+
+
+def test_standard_logistics_counts_and_untouched_cells() -> None:
+    key = CellKey(d(3), "S1", "A")
+    std = standard_logistics(
+        [
+            FreeSale(key, 2, True),
+            FreeSale(key, 1, False),
+            FreeSale(CellKey(d(3), "S9", "Z"), 1, True),
+        ],
+        lambda f: None if f.key.shop == "S9" else uzs("5250.50"),
+    )
+    assert std.extra == {key: (D("15751.50"), D("10501.00"))}
+    assert std.total == uzs("15751.50") and std.lines == 2 and std.unpriced_lines == 1
+    cells = build_cells(OCT, [sale(5)])
+    # Kataklarda yo'q kalit (davr yoki filtrdan tashqari) — e'tiborsiz; bo'sh qo'shimcha — o'zgarishsiz.
+    assert cells.with_logistics(std.extra).statement() == cells.statement()
+    assert cells.with_logistics({CellKey(d(5), "S1", "A"): (D(0), D(0))}).cells == cells.cells

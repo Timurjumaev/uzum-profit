@@ -96,6 +96,7 @@ class Org:
         amount: int = 1,
         status: str = "TO_WITHDRAW",
         price: int = 200_000,
+        logistics: int | None = None,  # standart — 5 000 × dona
         **extra: Any,
     ) -> uuid.UUID:
         self._ext += 1
@@ -109,7 +110,7 @@ class Org:
             sell_price=D(price),
             amount=amount,
             commission=D(price * amount // 5),
-            logistics_fee=D(5_000 * amount),
+            logistics_fee=D(5_000 * amount if logistics is None else logistics),
             sku_id=sku,
             **extra,
         )

@@ -39,6 +39,12 @@ const statement = (): Dashboard["statement"] => ({
   allocated_total: "0.00",
   uzum_allocated: {},
   own_allocated: {},
+  uzum_total: "11631000.00",
+  own_total: "0.00",
+  uzum_direct: "11631000.00",
+  uzum_allocated_total: "0.00",
+  own_direct: "0.00",
+  own_allocated_total: "0.00",
 });
 
 /** Namunaviy `/dashboard` javobi: 2026-10-01..2026-10-26, hammasi tannarxli (override bilan o'zgartiriladi). */
@@ -92,6 +98,7 @@ export function dashboardData(over: Partial<Dashboard> = {}, ago: (minutes: numb
       in_transit_value: "31000000.00",
       average_days_to_sell: "41.50",
     },
+    free_periods: [],
     attention: { uncosted_lines: 0, uncosted_revenue: "0.00", loss_skus: 1, stock_critical: 2, stock_high: 3, recalculated: 0 },
     ...over,
   };

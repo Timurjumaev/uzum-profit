@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
@@ -30,6 +30,7 @@ from upcore.inventory import DayStat, StockStatus, velocity
 from upcore.metrics import TASHKENT, ManualExpense, Period, SaleLine, business_date
 from upcore.money import Money
 from upcore.pnl import ExpenseItem, OwnExpense, TaxRule, build_cells
+from upcore.tariffs import with_standard_logistics
 
 D = Decimal
 OCT = {"start": "2026-10-01", "end": "2026-10-20"}
@@ -155,6 +156,25 @@ def _populate(w: World) -> None:
     today = datetime.now(TASHKENT).date()
     b.sale(w.ids["zb"], today, 1, price=100_000)  # bosh sahifa "Bugun"
 
+    # F40 (avgust — boshqa testlar davridan tashqari): bepul logistika kunlari.
+    # B: 10-avgust ikkala qator logistikasi 0 (bepul kun), 11-avgustda pullik (7 000) — lampaning oxirgi pullik tarifi.
+    # A: 10-avgust y SKU va bog'lanmagan qator 0 (bepul kun); 12-avgust 50% — aniqlanmaydi, jadvaldagi davr bilan bepul.
+    lamp = b.insert("items", name="Lampa")
+    w.ids["lb"] = b.insert(
+        "mp_skus", shop_id=b.shop_id, external_id=22, sku_code="Lampa", item_id=lamp
+    )
+    p4 = b.purchase(d(8, 1))
+    b.line(p4, lamp, 10)
+    b.component(p4, "goods", 300_000)
+    b.sale(w.ids["lb"], d(8, 10), 2, price=100_000, logistics=0)
+    b.sale(w.ids["lb"], d(8, 10), 1, price=100_000, logistics=0)
+    b.sale(w.ids["lb"], d(8, 11), 1, price=100_000, logistics=7_000)
+    a.sale(ya, d(8, 10), 1, price=150_000, logistics=0)
+    a.sale(None, d(8, 10), 1, price=50_000, logistics=0)
+    a.sale(ya, d(8, 12), 1, price=150_000, logistics=0)
+    a.sale(ya, d(8, 12), 1, price=150_000)
+    a.insert("free_logistics_periods", shop_id=a.shop_id, start_on=d(8, 12), end_on=d(8, 12))
+
     # Uzum xarajatlari (A): do'kon darajasi, sotuvga bog'langan reklama, kompensatsiya, jarimalar, chiqarilganlar.
     w.expense(a, d(10, 1), "storage", 12_000)  # 1-oktabr — sotuvsiz kun: taqsimlanmagan
     w.expense(a, d(10, 2), "storage", 30_000)
@@ -232,8 +252,11 @@ def money(x: Any) -> Decimal:
 # --- P&L ------------------------------------------------------------------------------------------
 
 
-def _reference(w: World, period: Period) -> Any:
-    """Mustaqil yo'l: sotuv qatorlari (``sale_items`` + ``sale_costs``) va xarajatlardan ``upcore`` P&L'i."""
+def _reference(
+    w: World, period: Period, adjust: Callable[[list[SaleLine]], list[SaleLine]] | None = None
+) -> Any:
+    """Mustaqil yo'l: sotuv qatorlari (``sale_items`` + ``sale_costs``) va xarajatlardan ``upcore`` P&L'i
+    (``adjust`` — qatorlarni o'zgartirish, masalan F40 standart tarifi)."""
     rows = w.a.sql(
         "SELECT s.shop_id, s.sku_id, s.ordered_at, s.status, s.sell_price, s.amount, s.commission, "
         "s.logistics_fee, c.cogs FROM sale_items s LEFT JOIN sale_costs c ON c.sale_item_id = s.id "
@@ -287,6 +310,8 @@ def _reference(w: World, period: Period) -> Any:
             str(w.ids["xa"]),
         ),
     ]
+    if adjust is not None:
+        lines = adjust(lines)
     return build_cells(period, lines, expenses, own, TaxRule(D(4)))
 
 
@@ -360,6 +385,77 @@ def test_pnl_shop_filter_equals_shop_column(world: World) -> None:
     both = world.get("pnl", shop=[str(world.a.shop_id), str(world.b.shop_id)], **OCT)
     assert money(both["statement"]["revenue"]) == D(1_800_000)
     assert both["meta"]["shops"] == sorted([str(world.a.shop_id), str(world.b.shop_id)])
+
+
+AUG = {"start": "2026-08-10", "end": "2026-08-12"}
+AUG_FREE = [
+    {"start": "2026-08-10", "end": "2026-08-10", "days": 1},
+    {"start": "2026-08-12", "end": "2026-08-12", "days": 1},
+]
+
+
+def test_pnl_standard_tariff_profit(world: World) -> None:
+    body = world.get("pnl", **AUG)
+    std = body["standard"]
+    # Lampa 3 dona × 7 000 (oxirgi pullik), y 2 × 5 000 (oxirgi pullik — 3-oktabr), bog'lanmagan — do'kon tarifi.
+    assert money(std["logistics"]) == D(36_000)
+    assert std["lines"] == 5 and std["unpriced_lines"] == 0
+    # Faqat tannarxi ma'lum (lampa) qatorlar foydaga kiradi; soliq bazasi — tushum (o'zgarmaydi).
+    assert money(std["net_profit"]) == money(body["statement"]["net_profit"]) - D(21_000)
+    assert body["free_periods"] == AUG_FREE
+
+    lamp_only = world.get("pnl", shop=str(world.b.shop_id), **AUG)
+    assert money(lamp_only["standard"]["logistics"]) == D(21_000)
+    assert lamp_only["free_periods"] == AUG_FREE[:1]  # 12-avgust — faqat A do'koni (jadval)
+    assert world.get("dashboard", **AUG)["free_periods"] == AUG_FREE
+
+    october = world.get("pnl", **OCT)
+    assert october["standard"] is None and october["free_periods"] == []
+    assert world.get("dashboard", **OCT)["free_periods"] == []
+
+
+def test_pnl_standard_matches_rebuilt_lines(world: World) -> None:
+    """F40 kataklar ustida = qatorlarga standart tarif qo'shib qayta qurilgan P&L (``upcore``)."""
+    fees = {
+        str(world.ids["lb"]): Money.of(7_000, "UZS"),
+        str(world.ids["ya"]): Money.of(5_000, "UZS"),
+    }
+
+    def adjust(lines: list[SaleLine]) -> list[SaleLine]:
+        return with_standard_logistics(
+            lines, lambda x: fees.get(x.sku, Money.of(5_000, "UZS")), [d(8, 10), d(8, 12)]
+        )
+
+    period = Period(d(8, 10), d(8, 12))
+    ref = _reference(world, period, adjust).statement()
+    body = world.get("pnl", **AUG)
+    assert money(body["standard"]["net_profit"]) == ref.net_profit.amount
+    assert (
+        money(body["statement"]["net_profit"])
+        == _reference(world, period).statement().net_profit.amount
+    )
+
+
+def test_pnl_sku_columns_have_titles(world: World) -> None:
+    cols = {c["key"]: c for c in world.get("pnl", view="sku", **AUG)["columns"]}
+    assert cols[str(world.ids["lb"])]["title"] == "Lampa"
+    assert cols[str(world.ids["lb"])]["shop_id"] == str(world.b.shop_id)
+    assert cols["unlinked"]["title"] is None
+    body = world.get("pnl", **OCT)
+    s = body["statement"]
+    assert money(s["uzum_total"]) == sum(map(money, s["uzum_expenses"].values()))
+    assert money(s["own_total"]) == sum(map(money, s["own_expenses"].values()))
+    # ADR-026: do'kon kesimida to'g'ridan-to'g'ri + taqsimlangan = jami; SKU kesimida — xuddi shunday.
+    for view in ("shop", "sku"):
+        for col in world.get("pnl", view=view, **OCT)["columns"]:
+            c = col["statement"]
+            assert money(c["uzum_direct"]) + money(c["uzum_allocated_total"]) == money(
+                c["uzum_total"]
+            )
+            assert money(c["own_direct"]) + money(c["own_allocated_total"]) == money(c["own_total"])
+    assert money(s["uzum_allocated_total"]) + money(s["own_allocated_total"]) == money(
+        s["allocated_total"]
+    )
 
 
 def test_pnl_pending_profit(world: World) -> None:
@@ -442,7 +538,9 @@ def test_dashboard_blocks(world: World) -> None:
 def test_skus_table(world: World) -> None:
     body = world.get("skus", **OCT)
     rows = {r["sku_id"]: r for r in body["items"]}
-    assert set(rows) == {str(world.ids[k]) for k in ("xa", "ya", "zb")}
+    # Lampa (F40, avgust) — oktabrda sotuvsiz, jadvalda bor.
+    assert set(rows) == {str(world.ids[k]) for k in ("xa", "ya", "zb", "lb")}
+    assert rows[str(world.ids["lb"])]["units"] == 0
     xa = rows[str(world.ids["xa"])]
     assert xa["units"] == 6 and money(xa["revenue"]) == D(1_200_000)
     assert money(xa["avg_price"]) == D(200_000)
@@ -456,7 +554,7 @@ def test_skus_table(world: World) -> None:
     assert xa["label"] in ("profitable", "borderline", "loss")
     ya = rows[str(world.ids["ya"])]
     assert ya["label"] == "no_data" and ya["cogs_per_unit"] is None and ya["uncovered_lines"] == 1
-    assert body["total"] == 3 and body["next_cursor"] is None
+    assert body["total"] == 4 and body["next_cursor"] is None
     assert money(body["unlinked"]["revenue"]) == D(50_000)
 
 
@@ -471,9 +569,9 @@ def test_skus_search_sort_and_cursor(world: World) -> None:
     first = world.get("skus", limit=2, **OCT)
     assert len(first["items"]) == 2 and first["next_cursor"]
     rest = world.get("skus", limit=2, cursor=first["next_cursor"], **OCT)
-    assert len(rest["items"]) == 1 and rest["next_cursor"] is None
+    assert len(rest["items"]) == 2 and rest["next_cursor"] is None
     ids = {r["sku_id"] for r in first["items"] + rest["items"]}
-    assert len(ids) == 3
+    assert len(ids) == 4
     assert world.call("skus", sort="nope", **OCT).status_code == 422
     assert world.call("skus", cursor="!!", **OCT).status_code == 422
     margin = world.get("skus", sort="-margin", **OCT)["items"]
@@ -628,7 +726,7 @@ def test_inventory(world: World) -> None:
     }
     assert money(totals["frozen_total"]) == D(13_100_000)
     assert totals["statuses"] == {"dead": 1, "good": 1}
-    assert body["as_of"] == "2026-10-20" and body["total"] == 3
+    assert body["as_of"] == "2026-10-20" and body["total"] == 4  # lampa — qoldiqsiz
     order = [r["sku_id"] for r in body["items"]]
     assert order[0] == str(world.ids["xa"])  # holati borlari birinchi
 
@@ -644,7 +742,7 @@ def test_inventory_filters_and_warehouse_amounts(world: World) -> None:
     good = world.get("inventory", status="good", as_of=AS_OF.isoformat())["items"]
     assert [r["sku_id"] for r in good] == [str(world.ids["xa"])]
     b_only = world.get("inventory", shop=str(world.b.shop_id), as_of=AS_OF.isoformat())
-    assert [r["sku_id"] for r in b_only["items"]] == [str(world.ids["zb"])]
+    assert {r["sku_id"] for r in b_only["items"]} == {str(world.ids["zb"]), str(world.ids["lb"])}
     found = world.get("inventory", q="chiroq", as_of=AS_OF.isoformat())["items"]
     assert [r["sku_id"] for r in found] == [str(world.ids["zb"])]
     page = world.get("inventory", limit=1, as_of=AS_OF.isoformat())

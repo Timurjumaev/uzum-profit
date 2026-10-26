@@ -16,7 +16,7 @@ import { ApiError } from "../lib/api/client";
 import { NotFound, Pending, RouteError } from "./errors";
 import { AuthRoute } from "../features/auth/AuthRoute";
 import { filterSearch } from "./filters";
-import { inviteSearch, loginSearch, onboardingSearch } from "./search";
+import { inviteSearch, loginSearch, onboardingSearch, pnlSearch } from "./search";
 
 export { inviteSearch, loginSearch };
 import { meQuery } from "./query";
@@ -62,6 +62,14 @@ const home = createRoute({
   component: lazyRouteComponent(() => import("../routes/home"), "Home"),
 });
 
+/** Foyda va zarar (M5, B4.2): kesim (`view`) — URL'da. */
+const pnl = createRoute({
+  getParentRoute: () => app,
+  path: "/pnl",
+  validateSearch: pnlSearch,
+  component: lazyRouteComponent(() => import("../routes/pnl"), "Pnl"),
+});
+
 const status = createRoute({
   getParentRoute: () => app,
   path: "/status",
@@ -75,7 +83,6 @@ const soon = <const P extends string>(path: P, name: keyof typeof import("../rou
     path,
     component: lazyRouteComponent(() => import("../routes/soon"), name),
   });
-const pnl = soon("/pnl", "Pnl");
 const products = soon("/products", "Products");
 const orders = soon("/orders", "Orders");
 const expenses = soon("/expenses", "Expenses");

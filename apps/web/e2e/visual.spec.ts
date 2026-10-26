@@ -27,6 +27,14 @@ const SHOTS: Shot[] = [
   { name: "onboarding-shops", path: "/onboarding?step=shops", state: { shops: fresh, sync: loadingSync(fresh) } },
   { name: "onboarding-history", path: "/onboarding?step=history", state: { shops: fresh, sync: loadingSync(fresh) } },
   { name: "home", path: "/" },
+  {
+    name: "pnl",
+    path: "/pnl",
+    prepare: async (page) => {
+      await page.waitForSelector(".chart__canvas svg path", { state: "attached" }); // sharshara chizildi
+      await page.waitForTimeout(300);
+    },
+  },
   { name: "status", path: "/status" },
   {
     name: "palette",

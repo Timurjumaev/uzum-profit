@@ -10,6 +10,7 @@ import "./styles/shell.css";
 import "./styles/charts.css";
 import "./styles/pages.css";
 import "./styles/home.css";
+import "./styles/pnl.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

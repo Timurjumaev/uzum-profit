@@ -74,13 +74,13 @@ describe("menyu", () => {
       "Sozlamalar",
     ]);
     expect(sidebar().getByRole("link", { name: "Asosiy" }).getAttribute("aria-current")).toBe("page");
-    expect(sidebar().getByRole("link", { name: "Foyda" }).getAttribute("aria-current")).toBeNull();
+    expect(sidebar().getByRole("link", { name: "Mahsulotlar" }).getAttribute("aria-current")).toBeNull();
 
-    fireEvent.click(sidebar().getByRole("link", { name: "Foyda" }));
-    expect(await screen.findByRole("heading", { name: "Foyda" })).toBeTruthy();
+    fireEvent.click(sidebar().getByRole("link", { name: "Mahsulotlar" }));
+    expect(await screen.findByRole("heading", { name: "Mahsulotlar" })).toBeTruthy();
     expect(screen.getByText("Sahifa qurilmoqda. Hozircha eski dasturdan foydalaning.")).toBeTruthy();
-    expect(history.location.pathname).toBe("/pnl");
-    expect(sidebar().getByRole("link", { name: "Foyda" }).getAttribute("aria-current")).toBe("page");
+    expect(history.location.pathname).toBe("/products");
+    expect(sidebar().getByRole("link", { name: "Mahsulotlar" }).getAttribute("aria-current")).toBe("page");
     expect(sidebar().getByRole("link", { name: "Asosiy" }).getAttribute("aria-current")).toBeNull();
   });
 
@@ -384,7 +384,7 @@ describe("Ctrl+K", () => {
     expect(options()).toEqual(["FoydaSahifa"]);
     fireEvent.keyDown(input(), { key: "Enter" });
     expect(screen.queryByRole("dialog", { name: "Tez oʻtish" })).toBeNull();
-    await screen.findByRole("heading", { name: "Foyda" });
+    await screen.findByRole("heading", { level: 1, name: /^Foyda va zarar/ });
     expect(history.location.pathname).toBe("/pnl");
     expect(params(history).get("cmp")).toBe("previous");
   });

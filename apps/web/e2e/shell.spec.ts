@@ -12,7 +12,7 @@ test("menyu: sahifaga o'tish, faol bo'lim belgilanadi", async ({ page }, info) =
   await expect(page.getByRole("navigation", { name: isMobile(info.project.name) ? "Asosiy menyu" : "Pastki menyu" })).toBeHidden();
   await menu.getByRole("link", { name: "Foyda" }).click();
   await expect(page).toHaveURL(/\/pnl$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Foyda" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /^Foyda va zarar/ })).toBeVisible();
   await expect(menu.getByRole("link", { name: "Foyda" })).toHaveAttribute("aria-current", "page");
 });
 

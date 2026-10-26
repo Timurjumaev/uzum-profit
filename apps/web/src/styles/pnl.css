@@ -1,0 +1,165 @@
+/* Foyda va zarar (M5, B4.2): maket 04 §7.4 — faqat tokenlar orqali. Hisob varag'i va jadvallarda radius yo'q (04 §3). */
+
+.pnl {
+  display: grid;
+  gap: var(--space-6);
+  min-inline-size: 0;
+}
+
+.pnl > *,
+.pnl__row > * {
+  min-inline-size: 0; /* grid ichida keng bola (jadval) sahifani kengaytirmasin — 360 px'da gorizontal skroll yo'q */
+}
+
+.pnl__head > * {
+  margin: 0;
+}
+
+.pnl__head .caption {
+  margin-block-start: var(--space-1);
+}
+
+.pnl__row {
+  display: grid;
+  gap: var(--space-6);
+}
+
+@media (min-width: 1024px) {
+  .pnl__row {
+    grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
+    align-items: start;
+  }
+}
+
+/* --- Hisob varag'i (to'liq, ustunlar bilan) --- */
+.pnl-ledger-box {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+}
+
+.pnl-ledger thead th {
+  font: var(--type-label);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.pnl-ledger .num {
+  white-space: nowrap;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.pnl-ledger th,
+.pnl-ledger td {
+  padding-inline: var(--space-2);
+}
+
+.pnl-ledger .ui-ledger__label {
+  white-space: normal;
+}
+
+.pnl-standard > * {
+  color: var(--text-secondary);
+}
+
+@media (max-width: 639px) {
+  .pnl-wide {
+    display: none; /* tor ekranda: joriy summa va o'zgarish */
+  }
+}
+
+/* --- Kutilayotgan (F16) --- */
+.pnl-pending {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  padding: var(--space-4);
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+}
+
+.pnl-pending > * {
+  margin: 0;
+}
+
+.pnl-pending h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* --- Kesimlar --- */
+.pnl-views {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.pnl-views > h2,
+.pnl-views .caption {
+  margin: 0;
+}
+
+.pnl-tabs {
+  display: flex;
+  gap: var(--space-1);
+  border-block-end: 1px solid var(--border-hairline);
+}
+
+.pnl-tab {
+  min-block-size: 44px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-block-end: 2px solid transparent;
+  background: none;
+  color: var(--text-secondary);
+  font: var(--type-body-strong);
+  cursor: pointer;
+}
+
+.pnl-tab.is-active {
+  border-block-end-color: var(--accent-text);
+  color: var(--text-primary);
+}
+
+#pnl-view-panel {
+  display: grid;
+  gap: var(--space-3);
+  min-inline-size: 0;
+}
+
+.pnl-lines tbody th,
+.pnl-skus tbody th {
+  white-space: nowrap;
+}
+
+.pnl-op {
+  display: inline-block;
+  inline-size: 1ch;
+  color: var(--text-secondary);
+}
+
+.pnl-lines tr.is-subtotal > * {
+  border-block-start: 1px solid var(--border-rule);
+  font-weight: 500;
+}
+
+.pnl-lines tr.is-total > * {
+  border-block-start: 1px solid var(--border-rule);
+  border-block-end: 3px double var(--border-rule);
+  font-weight: 600;
+}
+
+.pnl-lines tr.is-part > * {
+  color: var(--text-secondary);
+}
+
+.pnl-lines tr.is-part > th {
+  padding-inline-start: var(--space-6);
+}
+
+.pnl-total {
+  font-weight: 500;
+}

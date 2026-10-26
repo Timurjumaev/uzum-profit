@@ -2888,6 +2888,29 @@
           },
           "statement": {
             "$ref": "#/components/schemas/StatementOut"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "shop_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shop Id"
           }
         },
         "type": "object",
@@ -2948,6 +2971,13 @@
           },
           "attention": {
             "$ref": "#/components/schemas/AttentionOut"
+          },
+          "free_periods": {
+            "items": {
+              "$ref": "#/components/schemas/PeriodOut"
+            },
+            "type": "array",
+            "title": "Free Periods"
           }
         },
         "type": "object",
@@ -2961,7 +2991,8 @@
           "top",
           "bottom",
           "kpis",
-          "attention"
+          "attention",
+          "free_periods"
         ],
         "title": "DashboardOut"
       },
@@ -4457,6 +4488,23 @@
           "recalculated": {
             "type": "integer",
             "title": "Recalculated"
+          },
+          "standard": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StandardOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "free_periods": {
+            "items": {
+              "$ref": "#/components/schemas/PeriodOut"
+            },
+            "type": "array",
+            "title": "Free Periods"
           }
         },
         "type": "object",
@@ -4468,7 +4516,9 @@
           "columns",
           "pending",
           "pending_shops",
-          "recalculated"
+          "recalculated",
+          "standard",
+          "free_periods"
         ],
         "title": "PnlOut"
       },
@@ -5714,6 +5764,35 @@
         ],
         "title": "SkusOut"
       },
+      "StandardOut": {
+        "properties": {
+          "net_profit": {
+            "type": "string",
+            "title": "Net Profit"
+          },
+          "logistics": {
+            "type": "string",
+            "title": "Logistics"
+          },
+          "lines": {
+            "type": "integer",
+            "title": "Lines"
+          },
+          "unpriced_lines": {
+            "type": "integer",
+            "title": "Unpriced Lines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "net_profit",
+          "logistics",
+          "lines",
+          "unpriced_lines"
+        ],
+        "title": "StandardOut",
+        "description": "F40: bepul logistika kunlarida standart tarif qo'shilgan sof foyda."
+      },
       "StatementOut": {
         "properties": {
           "revenue": {
@@ -5747,12 +5826,20 @@
             "type": "object",
             "title": "Uzum Expenses"
           },
+          "uzum_total": {
+            "type": "string",
+            "title": "Uzum Total"
+          },
           "own_expenses": {
             "additionalProperties": {
               "type": "string"
             },
             "type": "object",
             "title": "Own Expenses"
+          },
+          "own_total": {
+            "type": "string",
+            "title": "Own Total"
           },
           "tax": {
             "type": "string",
@@ -5828,6 +5915,22 @@
             },
             "type": "object",
             "title": "Own Allocated"
+          },
+          "uzum_direct": {
+            "type": "string",
+            "title": "Uzum Direct"
+          },
+          "uzum_allocated_total": {
+            "type": "string",
+            "title": "Uzum Allocated Total"
+          },
+          "own_direct": {
+            "type": "string",
+            "title": "Own Direct"
+          },
+          "own_allocated_total": {
+            "type": "string",
+            "title": "Own Allocated Total"
           }
         },
         "type": "object",
@@ -5839,7 +5942,9 @@
           "cogs",
           "gross_profit",
           "uzum_expenses",
+          "uzum_total",
           "own_expenses",
+          "own_total",
           "tax",
           "expenses_deducted",
           "net_profit",
@@ -5853,7 +5958,11 @@
           "direct_total",
           "allocated_total",
           "uzum_allocated",
-          "own_allocated"
+          "own_allocated",
+          "uzum_direct",
+          "uzum_allocated_total",
+          "own_direct",
+          "own_allocated_total"
         ],
         "title": "StatementOut",
         "description": "Hisob varag'i (F3–F15) bitta kesim uchun — ``upcore.pnl.Statement``."

@@ -98,6 +98,14 @@ export const dashboardQuery = (orgId: string, p: ReportParams) =>
       unwrap(api.GET("/api/v1/orgs/{org_id}/dashboard", { params: { path: { org_id: orgId }, query: reportQuery(p) } })),
   });
 
+/** Foyda va zarar (M5): hisob varag'i (oldingi davr bilan), kesim ustunlari (`view`), F16, F40. */
+export const pnlQuery = (orgId: string, p: ReportParams, view: "month" | "shop" | "sku") =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "pnl", view, p],
+    queryFn: () =>
+      unwrap(api.GET("/api/v1/orgs/{org_id}/pnl", { params: { path: { org_id: orgId }, query: { ...reportQuery(p), view } } })),
+  });
+
 /** Drill-down: Yakunlangan sotuv qatorlari (P&L qatorlari yig'indisi shulardan), kursor bilan sahifalanadi. */
 export const salesPage = (orgId: string, p: ReportParams, cursor: string | null) =>
   unwrap(

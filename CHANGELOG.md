@@ -269,3 +269,17 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   tovar, kutilayotgan foyda). Davr, do'kon va solishtirish URL'da. API: `RowOut.change` (farq / |oldingi|, `upcore.pnl.compare`)
   — o'zgarish foizi UI'da hisoblanmaydi. `LedgerTable` ga `trailing` / `compactHidden`, `Kpi` ga `note`. Testlar: model,
   sahifa (jsdom + axe), e2e (drill-down, mobil, 360 px gorizontal skrollsiz), vizual asoslar (home, palette).
+- B4.2 Foyda va zarar (M5, `apps/web/src/features/pnl`): to'liq hisob varag'i (yalpi foyda, Uzum xarajatlari turlari,
+  o'z xarajatlari toifalari; tannarxsiz sotuvlar to'lovi yalpi foydadan oldin — har oraliq summa zanjirda to'g'ri) va
+  ustunlar: joriy davr, tushumga nisbatan, oldingi davr, farq, o'zgarish (tor ekranda — joriy va o'zgarish);
+  sharshara (tushumdan sof foydagacha); kutilayotgan blok (F16, R do'kon bo'yicha, R yo'q bo'lsa sababi); tannarx
+  qamrovi sariq banneri (F15); "qayta hisoblandi" banneri; drill-down (bosh sahifa `Drill`); kesimlar — oylar,
+  do'konlar, SKU (`?view=` URL'da), do'kon va SKU kesimida F9/F10 to'g'ridan-to'g'ri va taqsimlangan, "Taqsimlanmagan"
+  (ADR-026). F40 "Standart tarif bo'yicha foyda": `upcore.pnl.standard_logistics` + `Cells.with_logistics` (o'zgargan
+  kataklar soliq va F15 bilan qayta hisoblanadi — qatorlardan qayta qurish bilan bir xil, hypothesis testi),
+  `upcore.tariffs` (`is_free_day`, `typical_fee`, `standard_fee_of`); API `upapi.reports.free` — bepul kunlar
+  ma'lumotdan (do'kon × kun, ≥ 90%) + `free_logistics_periods`, tarif: SKU'ning oxirgi pullik logistikasi, bo'lmasa
+  do'konning odatiy tarifi. `/pnl`: `standard`, `free_periods`, SKU ustuni nomi; `StatementOut`: `uzum_total`,
+  `own_total`, F9/F10 to'g'ridan-to'g'ri va taqsimlangan jami; `/dashboard`: `free_periods` — kunlik grafikda soya.
+  Testlar: core (F40 tengligi, fallback), API (F40 summalari, qatorlardan qayta qurilgan P&L bilan tenglik, SKU nomlari,
+  ADR-026 yig'indilari), model, sahifa (jsdom + axe), e2e (kesimlar URL'da, 360 px), haqiqiy brauzerda axe, vizual asos.

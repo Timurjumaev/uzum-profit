@@ -661,6 +661,10 @@ export interface components {
             /** Key */
             key: string | null;
             statement: components["schemas"]["StatementOut"];
+            /** Title */
+            title?: string | null;
+            /** Shop Id */
+            shop_id?: string | null;
         };
         /** DashboardOut */
         DashboardOut: {
@@ -679,6 +683,8 @@ export interface components {
             bottom: components["schemas"]["SkuBriefOut"][];
             kpis: components["schemas"]["KpiOut"];
             attention: components["schemas"]["AttentionOut"];
+            /** Free Periods */
+            free_periods: components["schemas"]["PeriodOut"][];
         };
         /** DayOut */
         DayOut: {
@@ -1160,6 +1166,9 @@ export interface components {
             pending_shops: components["schemas"]["PendingShopOut"][];
             /** Recalculated */
             recalculated: number;
+            standard: components["schemas"]["StandardOut"] | null;
+            /** Free Periods */
+            free_periods: components["schemas"]["PeriodOut"][];
         };
         /** PriceOut */
         PriceOut: {
@@ -1533,6 +1542,20 @@ export interface components {
             unallocated: components["schemas"]["StatementOut"];
         };
         /**
+         * StandardOut
+         * @description F40: bepul logistika kunlarida standart tarif qo'shilgan sof foyda.
+         */
+        StandardOut: {
+            /** Net Profit */
+            net_profit: string;
+            /** Logistics */
+            logistics: string;
+            /** Lines */
+            lines: number;
+            /** Unpriced Lines */
+            unpriced_lines: number;
+        };
+        /**
          * StatementOut
          * @description Hisob varag'i (F3–F15) bitta kesim uchun — ``upcore.pnl.Statement``.
          */
@@ -1553,10 +1576,14 @@ export interface components {
             uzum_expenses: {
                 [key: string]: string;
             };
+            /** Uzum Total */
+            uzum_total: string;
             /** Own Expenses */
             own_expenses: {
                 [key: string]: string;
             };
+            /** Own Total */
+            own_total: string;
             /** Tax */
             tax: string;
             /** Expenses Deducted */
@@ -1588,6 +1615,14 @@ export interface components {
             own_allocated: {
                 [key: string]: string;
             };
+            /** Uzum Direct */
+            uzum_direct: string;
+            /** Uzum Allocated Total */
+            uzum_allocated_total: string;
+            /** Own Direct */
+            own_direct: string;
+            /** Own Allocated Total */
+            own_allocated_total: string;
         };
         /**
          * StatusGroup

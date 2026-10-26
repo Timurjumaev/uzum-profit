@@ -228,8 +228,20 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   drawer'da xato matni. **Topildi va tuzatildi:** davr chizig'i `grid` ichida sahifani 655 px kengaytirardi (360 px'da
   gorizontal skroll). **Qoldi:** M4 tezlik mezoni (p95 < 700 ms) staging'da Temur ma'lumotida o'lchanadi; yetmasa —
   natija keshi yoki oylik agregat; standart muddatlar (F25) sozlamasi — B4.8.
-- [ ] B4.2 Foyda va zarar (M5) — drill-down, sharshara, oylar, kutilayotgan, qamrov banneri, F40;
+- [x] B4.2 Foyda va zarar (M5) — drill-down, sharshara, oylar, kutilayotgan, qamrov banneri, F40;
   F9/F10 qatorlarida to'g'ridan-to'g'ri va taqsimlangan xarajatlar alohida (ADR-026).
+  ✓ 2026-10-26: `features/pnl` — hisob varag'i to'liq (yalpi foyda bilan; tannarxsiz sotuvlar to'lovi yalpi foydadan
+  oldin ayriladi — har oraliq summa zanjirga mos) va ustunlar: joriy, tushumga nisbatan, oldingi davr, farq, o'zgarish
+  (< 640 px da joriy + o'zgarish); sharshara; kutilayotgan blok (F16, do'konlar bo'yicha); qamrov sariq banneri;
+  drill-down (bosh sahifa `Drill`); kesimlar oylar / do'konlar / SKU (`?view=`), do'kon va SKU kesimida F9/F10
+  to'g'ridan-to'g'ri va taqsimlangan, "Taqsimlanmagan" va "SKU bog'lanmagan" alohida. F40: `upcore.pnl.standard_logistics`
+  + `Cells.with_logistics` (faqat o'zgargan kataklar, soliq va F15 qayta) — `upapi.reports.free`; bepul kunlar ma'lumotdan
+  (do'kon × kun, ≥ 90%) va `free_logistics_periods` jadvalidan; bosh sahifa grafigida soya (B4.1 qoldig'i). **Qarorlar:**
+  (1) standart tarif (ADR-031, Temur tasdig'i kutilmoqda) — SKU'ning oxirgi pullik logistikasi, bo'lmasa do'konning odatiy (eng ko'p) tarifi (legacy
+  `std_fee_map` kabi); F37 hajm bo'yicha — SKU o'lchamlari bazada yo'q, o'lchamsiz F37 (50 000) foydani haddan tashqari
+  kamaytirardi; ikkalasi ham yo'q qator — "tarifi noma'lum", qo'shilmaydi va soni ko'rsatiladi; (2) bepul davrlarni
+  admin tasdiqlashi — B8 (M17), hozir aniqlangan + jadvaldagi davrlar; (3) "toifa bo'yicha" kesim — tovar toifalari
+  B4.3 da (Mahsulotlar); (4) drill-down eksporti va Excel/PDF — B4.10 / M14 (B7); (5) "o'tgan yil" — B5.6 (banner).
 - [ ] B4.3 Mahsulotlar (M6) — jadval, SKU sahifasi, unit kalkulyator, tovar ↔ SKU bog'lash; SKU xarajatlari
   "to'g'ridan-to'g'ri" va "taqsimlangan" ustunlarda, "Taqsimlanmagan" qatori alohida (ADR-026).
 - [ ] B4.4 Buyurtmalar (M7) — ro'yxat, bekor va qaytish tahlili.

@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Callable, Hashable, Iterable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date, timedelta
 from decimal import Decimal
 from enum import StrEnum
@@ -240,6 +240,26 @@ class Statement:
         return total([*self.uzum_allocated.values(), *self.own_allocated.values()], UZS)
 
     @property
+    def uzum_allocated_total(self) -> Money:
+        """ADR-026: F9 ning tushum ulushida taqsimlangan qismi (do'kon xarajatidan SKU'larga)."""
+        return total(list(self.uzum_allocated.values()), UZS)
+
+    @property
+    def uzum_direct(self) -> Money:
+        """ADR-026: F9 ning to'g'ridan-to'g'ri qismi (SKU'ga bog'langan yoki o'z darajasida, taqsimlanmagan)."""
+        return self.uzum_total - self.uzum_allocated_total
+
+    @property
+    def own_allocated_total(self) -> Money:
+        """ADR-026: F10 ning tushum ulushida taqsimlangan qismi."""
+        return total(list(self.own_allocated.values()), UZS)
+
+    @property
+    def own_direct(self) -> Money:
+        """ADR-026: F10 ning to'g'ridan-to'g'ri qismi."""
+        return self.own_total - self.own_allocated_total
+
+    @property
     def direct_total(self) -> Money:
         """To'g'ridan-to'g'ri xarajatlar (F9 + F10): shu SKU'ga bog'langan yoki o'z darajasidagi."""
         return self.uzum_total + self.own_total - self.allocated_total
@@ -314,6 +334,8 @@ class Cells:
 
     period: Period
     cells: Mapping[CellKey, Cell]
+    # F11 qoidasi (``build_cells`` dagi) — kataklar o'zgartirilganda soliqni qayta hisoblash uchun (F40).
+    tax: TaxRule | Callable[[date], TaxRule | None] | None = None
 
     @property
     def items(self) -> dict[CellKey, Statement]:
@@ -330,6 +352,7 @@ class Cells:
                 for k, c in self.cells.items()
                 if first <= k[0] <= last and (where is None or where(k))
             },
+            self.tax,
         )
 
     def statement(self, where: Callable[[CellKey], bool] | None = None) -> Statement:
@@ -374,6 +397,23 @@ class Cells:
 
     def by_sku(self) -> dict[str | None, Statement]:
         return self.by(lambda k: k.sku)
+
+    def with_logistics(self, extra: Mapping[CellKey, tuple[Decimal, Decimal]]) -> Cells:
+        """F40: kataklarga qo'shimcha logistika — ``(jami, tannarxi ma'lum qatorlardagi qismi)``. Faqat o'zgargan
+        kataklar nusxalanadi; ularning soliq (F11, baza Uzum to'lovi bo'lsa) va F15 ayrilgan qismi qayta hisoblanadi.
+        Natija ``build_cells`` ga logistikasi o'zgartirilgan qatorlarni berish bilan bir xil. Kataklarda yo'q kalit
+        (davrdan tashqari yoki filtrlangan) e'tiborga olinmaydi."""
+        cells = dict(self.cells)
+        rule_of = _rules(self.tax)
+        for key, (added, covered) in extra.items():
+            old = cells.get(key)
+            if old is None or not (added or covered):
+                continue
+            new = replace(old, logistics=old.logistics + added)
+            new.covered_payout = old.covered_payout - covered
+            _finish(new, rule_of(key.day))
+            cells[key] = new
+        return Cells(self.period, cells, self.tax)
 
 
 def _roll(cells: Iterable[Cell]) -> Cell:
@@ -467,6 +507,39 @@ def _put(a: Cell, own: bool, category: str, amount: Decimal) -> None:
         if a.uzum is None:
             a.uzum = {}
         a.uzum[c] = a.uzum.get(c, _D0) + amount
+
+
+def _rules(
+    tax: TaxRule | Callable[[date], TaxRule | None] | None,
+) -> Callable[[date], TaxRule | None]:
+    """Kun → F11 qoidasi (profil sana bo'yicha bo'lsa — kun bo'yicha keshda)."""
+    if not callable(tax):
+        return lambda _day: tax
+    cache: dict[date, TaxRule | None] = {}
+
+    def rule(day: date) -> TaxRule | None:
+        if day not in cache:
+            cache[day] = tax(day)
+        return cache[day]
+
+    return rule
+
+
+def _finish(a: Cell, rule: TaxRule | None) -> None:
+    """Katak soliq (F11) va F15 bo'yicha ayriladigan xarajati: katak xarajati × qamrov (tushum 0 bo'lsa hammasi)."""
+    a.tax = _D0
+    if rule is not None:
+        a.tax = rule.amount_on(a.revenue, a.revenue - a.commission - a.logistics)
+    overhead = a.tax
+    if a.uzum:
+        overhead += sum(a.uzum.values(), _D0)
+    if a.own:
+        overhead += sum(a.own.values(), _D0)
+    a.deducted = _D0
+    if a.revenue == 0:
+        a.deducted = _cents(overhead)
+    elif overhead:
+        a.deducted = _cents(overhead * a.covered_revenue / a.revenue)
 
 
 def _days(period: Period) -> list[date]:
@@ -584,25 +657,53 @@ def build_cells(
             else:
                 spread(day, oe.shop, True, oe.category, part)
 
-    rules: dict[date, TaxRule | None] = {}
+    rule_of = _rules(tax)  # F11 profili sana bo'yicha (upcore.tax), kun bo'yicha keshda
     for key, a in acc.items():
-        day = key[0]
-        if callable(tax):  # F11 profili sana bo'yicha (upcore.tax), kun bo'yicha keshda
-            rule = rules[day] if day in rules else rules.setdefault(day, tax(day))
-        else:
-            rule = tax
-        if rule is not None:
-            a.tax = rule.amount_on(a.revenue, a.revenue - a.commission - a.logistics)
-        overhead = a.tax
-        if a.uzum:
-            overhead += sum(a.uzum.values(), _D0)
-        if a.own:
-            overhead += sum(a.own.values(), _D0)
-        if a.revenue == 0:
-            a.deducted = _cents(overhead)
-        elif overhead:
-            a.deducted = _cents(overhead * a.covered_revenue / a.revenue)
-    return Cells(period, dict(acc))
+        _finish(a, rule_of(key[0]))
+    return Cells(period, dict(acc), tax)
+
+
+# --- F40: standart tarif bo'yicha foyda ---------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class FreeSale:
+    """F40: bepul logistika kunidagi, logistikasi 0 bo'lgan Yakunlangan sotuv qatori (katak kaliti bilan)."""
+
+    key: CellKey
+    amount: int
+    costed: bool  # tannarxi ma'lum (F15: foydaga kiradi)
+
+
+@dataclass(frozen=True, slots=True)
+class StandardLogistics:
+    """F40 qo'shimcha logistikasi: kataklar bo'yicha ``(jami, tannarxi ma'lum qatorlardagi qismi)``."""
+
+    extra: Mapping[CellKey, tuple[Decimal, Decimal]]
+    total: Money  # hamma qatorlar bo'yicha (tannarxsizlari ham) — "tejalgan logistika"
+    lines: int  # standart tarif qo'shilgan qatorlar
+    unpriced_lines: int  # standart tarifi noma'lum qatorlar — qo'shilmadi (taxmin yashirilmaydi)
+
+
+def standard_logistics(
+    sales: Iterable[FreeSale], fee_of: Callable[[FreeSale], Money | None]
+) -> StandardLogistics:
+    """F40: har qatorga standart tarif (bir dona, ``fee_of`` — ``upcore.tariffs.standard_fee_of``) × dona.
+    Natija ``Cells.with_logistics`` ga beriladi: "standart tarif bo'yicha foyda" = shu kataklarning F12."""
+    extra: dict[CellKey, tuple[Decimal, Decimal]] = {}
+    added = _D0
+    lines = unpriced = 0
+    for sale in sales:
+        fee = fee_of(sale)
+        if fee is None:
+            unpriced += 1
+            continue
+        amount = _cents(fee.amount * sale.amount)
+        old, old_covered = extra.get(sale.key, (_D0, _D0))
+        extra[sale.key] = (old + amount, old_covered + (amount if sale.costed else _D0))
+        added += amount
+        lines += 1
+    return StandardLogistics(extra, _uzs(added), lines, unpriced)
 
 
 # --- Unit-iqtisod (M6) ----------------------------------------------------------------------

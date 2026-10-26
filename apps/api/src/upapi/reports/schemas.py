@@ -37,7 +37,9 @@ class StatementOut(BaseModel):
     cogs: Decimal  # F7
     gross_profit: Decimal  # F8
     uzum_expenses: dict[str, Decimal]  # F9 turlari
+    uzum_total: Decimal  # F9 jami (sharshara qadami)
     own_expenses: dict[str, Decimal]  # F10 toifalari
+    own_total: Decimal  # F10 jami
     tax: Decimal  # F11
     expenses_deducted: Decimal  # F15 bo'yicha ayrilgan
     net_profit: Decimal  # F12
@@ -52,6 +54,10 @@ class StatementOut(BaseModel):
     allocated_total: Decimal
     uzum_allocated: dict[str, Decimal]
     own_allocated: dict[str, Decimal]
+    uzum_direct: Decimal  # ADR-026: F9 to'g'ridan-to'g'ri / taqsimlangan (jami)
+    uzum_allocated_total: Decimal
+    own_direct: Decimal  # F10 to'g'ridan-to'g'ri / taqsimlangan (jami)
+    own_allocated_total: Decimal
 
     @classmethod
     def of(cls, s: Statement) -> StatementOut:
@@ -63,7 +69,9 @@ class StatementOut(BaseModel):
             cogs=s.cogs.amount,
             gross_profit=s.gross_profit.amount,
             uzum_expenses={c.value: a.amount for c, a in sorted(s.uzum_expenses.items())},
+            uzum_total=s.uzum_total.amount,
             own_expenses={c: a.amount for c, a in sorted(s.own_expenses.items())},
+            own_total=s.own_total.amount,
             tax=s.tax.amount,
             expenses_deducted=s.expenses_deducted.amount,
             net_profit=s.net_profit.amount,
@@ -84,6 +92,10 @@ class StatementOut(BaseModel):
             allocated_total=s.allocated_total.amount,
             uzum_allocated={c.value: a.amount for c, a in sorted(s.uzum_allocated.items())},
             own_allocated={c: a.amount for c, a in sorted(s.own_allocated.items())},
+            uzum_direct=s.uzum_direct.amount,
+            uzum_allocated_total=s.uzum_allocated_total.amount,
+            own_direct=s.own_direct.amount,
+            own_allocated_total=s.own_allocated_total.amount,
         )
 
 

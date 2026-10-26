@@ -6,7 +6,7 @@ Tariflar biznes ma'lumoti (ADR-015): ishlash vaqtida bazadagi ``ref_logistics_ta
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal
@@ -83,12 +83,22 @@ def logistics_fee(
 # --- F40 ------------------------------------------------------------------------------------
 
 
+FREE_SHARE = Decimal(
+    "0.9"
+)  # F40: kunlik Yakunlangan qatorlarning shu ulushida logistika 0 — bepul kun
+
+
+def paid_unit_fee(logistics: Decimal, amount: int) -> Money:
+    """F40: pullik qatorning bir dona logistikasi (so'm, tiyinga yaxlitlangan)."""
+    return Money(logistics / amount, UZS)
+
+
 def last_paid_logistics(lines: Iterable[SaleLine]) -> dict[str, Money]:
     """F40 uchun: har SKU'ning oxirgi pullik logistikasi (bir dona uchun, buyurtma sanasi bo'yicha)."""
     best: dict[str, tuple[date, Money]] = {}
     for line in completed(lines):
         if line.logistics > 0 and line.amount > 0:
-            per_unit = Money(line.logistics / line.amount, UZS)
+            per_unit = paid_unit_fee(line.logistics, line.amount)
             if line.sku not in best or line.order_date >= best[line.sku][0]:
                 best[line.sku] = (line.order_date, per_unit)
     return {sku: fee for sku, (_, fee) in best.items()}
@@ -119,7 +129,7 @@ def with_standard_logistics(
     return result
 
 
-def detect_free_days(lines: Iterable[SaleLine], threshold: Decimal = Decimal("0.9")) -> list[date]:
+def detect_free_days(lines: Iterable[SaleLine], threshold: Decimal = FREE_SHARE) -> list[date]:
     """F40. Bepul logistika kunlari: kunlik Yakunlangan sotuv qatorlarining ≥ 90% ida logistika 0.
 
     Natija — taklif; admin jadvalida tasdiqlanadi (``free_logistics_periods``)."""
@@ -128,7 +138,34 @@ def detect_free_days(lines: Iterable[SaleLine], threshold: Decimal = Decimal("0.
         counts = per_day.setdefault(line.order_date, [0, 0])
         counts[0] += 1
         counts[1] += 1 if line.logistics == 0 else 0
-    return sorted(d for d, (n, free) in per_day.items() if Decimal(free) / n >= threshold)
+    return sorted(d for d, (n, free) in per_day.items() if is_free_day(n, free, threshold))
+
+
+def is_free_day(lines: int, free_lines: int, threshold: Decimal = FREE_SHARE) -> bool:
+    """F40: kun bepul — Yakunlangan qatorlarning ≥ 90% ida logistika 0 (qator yo'q kun — bepul emas)."""
+    return lines > 0 and Decimal(free_lines) / lines >= threshold
+
+
+def typical_fee(counts: Mapping[Decimal, int]) -> Money | None:
+    """F40 zaxira tarifi: do'konning eng ko'p uchraydigan bir dona pullik logistikasi (legacy ``std_fee_map``);
+    teng bo'lsa — kattasi (foyda oshirib ko'rsatilmasin). Pullik qator yo'q — ``None``."""
+    if not counts:
+        return None
+    fee, _ = max(counts.items(), key=lambda kv: (kv[1], kv[0]))
+    return Money(fee, UZS)
+
+
+def standard_fee_of(
+    last_by_sku: Mapping[str, Money], typical_by_shop: Mapping[str, Money]
+) -> Callable[[str, str], Money | None]:
+    """F40 standart tarifi (bir dona): SKU'ning oxirgi pullik logistikasi, bo'lmasa do'konning odatiy tarifi
+    (``typical_fee``). F37 hajm bo'yicha tarif SKU o'lchamlari bazada bo'lgandan keyin (hozir yo'q) — o'lchamsiz
+    F37 (50 000) foydani haddan tashqari kamaytirardi. Ikkalasi ham yo'q — ``None`` (qator "tarifi noma'lum")."""
+
+    def fee(shop: str, sku: str) -> Money | None:
+        return last_by_sku.get(sku) or typical_by_shop.get(shop)
+
+    return fee
 
 
 def to_periods(days: Sequence[date]) -> list[Period]:
