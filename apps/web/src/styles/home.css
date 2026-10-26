@@ -1,0 +1,246 @@
+/* Bosh sahifa (M4, B4.1): maket 04 §7.2 (desktop) / §7.3 (mobil) — faqat tokenlar orqali. Hisob varag'i va jadvallarda radius yo'q (04 §3). */
+
+.home {
+  display: grid;
+  gap: var(--space-6);
+  min-inline-size: 0;
+}
+
+.home__top {
+  display: grid;
+  gap: var(--space-6);
+  min-inline-size: 0;
+}
+
+.home > *,
+.home__top > *,
+.home__side > * {
+  min-inline-size: 0; /* grid ichida keng bola (gorizontal skrollli ro'yxat, jadval) sahifani kengaytirmasin */
+}
+
+.home__side {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+  min-inline-size: 0;
+}
+
+@media (min-width: 1024px) {
+  .home__top {
+    grid-template-columns: minmax(22rem, 5fr) minmax(0, 7fr);
+    align-items: start;
+  }
+}
+
+/* --- Hisob varag'i --- */
+.home-ledger {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+  min-inline-size: 0;
+}
+
+.home-ledger__head > * {
+  margin: 0;
+}
+
+.home-ledger__head .hero {
+  margin-block-start: var(--space-1);
+}
+
+.home-ledger__vs {
+  margin-block-start: var(--space-1);
+}
+
+.home-ledger .ui-ledger th,
+.home-ledger .ui-ledger td {
+  padding-inline: var(--space-2);
+}
+
+.home-ledger .ui-ledger__label {
+  white-space: normal;
+}
+
+.home-ledger__toggle {
+  display: none;
+  justify-self: start;
+}
+
+@media (max-width: 639px) {
+  .home-ledger__toggle {
+    display: inline-flex;
+  }
+}
+
+.home-change {
+  font: var(--type-label);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* --- Davr chizig'i --- */
+.home-periods ul {
+  display: flex;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0 0 var(--space-1);
+  list-style: none;
+  overflow-x: auto; /* mobil: gorizontal skroll (04 §7.3) */
+  scroll-snap-type: x proximity;
+}
+
+@media (min-width: 640px) {
+  .home-periods ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    overflow: visible;
+  }
+}
+
+.home-period {
+  flex: 1 0 11rem;
+  padding: var(--space-3);
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+  scroll-snap-align: start;
+}
+
+.home-period h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-2);
+  color: var(--text-secondary);
+}
+
+.home-period dl {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.home-period dl > div {
+  display: grid;
+  gap: 0;
+}
+
+.home-period dd {
+  margin: 0;
+  text-align: start;
+  font: var(--type-body-strong);
+}
+
+/* --- Diqqat talab qiladi --- */
+.home-attention h2,
+.home-kpis h2 {
+  margin: 0 0 var(--space-2);
+}
+
+.home-attention ul {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+  list-style: none;
+}
+
+.home-attention li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-2) var(--space-3);
+}
+
+.home-attention li + li {
+  border-block-start: 1px solid var(--border-hairline);
+}
+
+.home-attention__link {
+  color: var(--accent-text);
+}
+
+/* --- Eng foydali / zarar SKU --- */
+.home-skus {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.home-skus__title {
+  margin: 0 0 var(--space-2);
+}
+
+.home-skus__panel {
+  min-inline-size: 0;
+}
+
+.home-skus__tabs {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .home-skus {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .home-skus__tabs {
+    display: flex;
+    gap: var(--space-1);
+    border-block-end: 1px solid var(--border-hairline);
+  }
+
+  .home-skus__tab {
+    min-block-size: 44px;
+    padding: 0 var(--space-3);
+    border: 0;
+    border-block-end: 2px solid transparent;
+    background: none;
+    color: var(--text-secondary);
+    font: var(--type-body-strong);
+    cursor: pointer;
+  }
+
+  .home-skus__tab.is-active {
+    border-block-end-color: var(--accent-text);
+    color: var(--text-primary);
+  }
+
+  .home-skus__title {
+    display: none;
+  }
+
+  .home-skus[data-tab="top"] [data-panel="bottom"],
+  .home-skus[data-tab="bottom"] [data-panel="top"] {
+    display: none;
+  }
+}
+
+/* --- Qo'shimcha ko'rsatkichlar --- */
+.home-kpis__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--space-3);
+}
+
+.ui-kpi__note {
+  color: var(--text-secondary);
+}
+
+/* --- Drill-down --- */
+.home-drill {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.home-drill__total {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+}

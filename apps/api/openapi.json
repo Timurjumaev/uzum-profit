@@ -4718,6 +4718,17 @@
           "diff": {
             "type": "string",
             "title": "Diff"
+          },
+          "change": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change"
           }
         },
         "type": "object",
@@ -4726,10 +4737,11 @@
           "amount",
           "share_of_revenue",
           "previous",
-          "diff"
+          "diff",
+          "change"
         ],
         "title": "RowOut",
-        "description": "M5 hisob varag'i qatori: ``code`` (``revenue``, ``uzum:fine``, ``own:ijara``, ``net_profit`` ...), joriy summa,\ntushumga nisbatan, oldingi davr va farq (``upcore.pnl.compare``)."
+        "description": "M5 hisob varag'i qatori: ``code`` (``revenue``, ``uzum:fine``, ``own:ijara``, ``net_profit`` ...), joriy summa,\ntushumga nisbatan, oldingi davr, farq va o'zgarish ulushi (``upcore.pnl.compare``)."
       },
       "SaleOut": {
         "properties": {

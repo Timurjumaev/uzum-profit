@@ -17,6 +17,8 @@ export type KpiProps = {
   good?: "up" | "down";
   spark?: number[];
   help?: ReactNode;
+  /** Qiymat ostidagi izoh (masalan, marja yonida tannarxsiz qism ulushi). */
+  note?: string;
 };
 
 export function changeTone(change: string, good: "up" | "down"): "positive" | "negative" | "neutral" {
@@ -38,7 +40,7 @@ export function Sparkline({ points, width = 96, height = 28 }: { points: number[
   );
 }
 
-export function Kpi({ label, value, change, changeLabel, good = "up", spark, help }: KpiProps) {
+export function Kpi({ label, value, change, changeLabel, good = "up", spark, help, note }: KpiProps) {
   const f = useFormat();
   const tone = change != null ? changeTone(change, good) : null;
   return (
@@ -48,6 +50,7 @@ export function Kpi({ label, value, change, changeLabel, good = "up", spark, hel
         {help}
       </div>
       <div className="kpi">{value}</div>
+      {note && <div className="caption ui-kpi__note">{note}</div>}
       {change != null && (
         <div className={cx("ui-kpi__change", `ui-text--${tone}`)}>
           {f.change(change)}

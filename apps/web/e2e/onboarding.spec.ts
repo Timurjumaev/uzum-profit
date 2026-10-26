@@ -45,7 +45,7 @@ test("yangi foydalanuvchining to'liq yo'li", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 2, name: "Tarix yuklanmoqda" })).toBeVisible();
   await expect(page.getByRole("progressbar", { name: "Sotuvlar" }).first()).toHaveAttribute("aria-valuenow", "1830");
   await page.getByRole("button", { name: "Kutmasdan bosh sahifaga oʻtish" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "SellerMax" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /^Sof foyda/ })).toBeVisible();
   await expect(page).toHaveURL("/");
 
   expect(api.bodies("POST", "/orgs")).toEqual([{ name: "byDurii", inn: null }]);

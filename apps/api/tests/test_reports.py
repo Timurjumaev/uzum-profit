@@ -328,6 +328,7 @@ def test_pnl_rows_and_previous(world: World) -> None:
     assert money(rows["revenue"]["previous"]) == D(400_000)  # 20-sentabr, 2 dona
     assert money(rows["revenue"]["diff"]) == D(1_400_000)
     assert D(rows["revenue"]["share_of_revenue"]) == D(1)
+    assert D(rows["revenue"]["change"]) == D("3.5")  # 1 400 000 / 400 000
     assert money(rows["net_profit"]["amount"]) == money(body["statement"]["net_profit"])
     assert money(body["previous"]["revenue"]) == D(400_000)
     assert "uzum:fine" in rows and "own:ijara" in rows and "uncovered_payout" in rows

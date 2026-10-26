@@ -762,6 +762,19 @@
   font-weight: 600;
 }
 
+.ui-ledger .ui-ledger__change {
+  inline-size: 1%;
+  padding-inline-start: 0;
+  white-space: nowrap;
+  text-align: end;
+}
+
+@media (max-width: 639px) {
+  .ui-ledger[data-compact] tr.is-compact-hidden {
+    display: none;
+  }
+}
+
 .ui-ledger__link {
   padding: 0;
   border: 0;

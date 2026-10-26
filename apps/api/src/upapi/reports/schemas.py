@@ -89,13 +89,14 @@ class StatementOut(BaseModel):
 
 class RowOut(BaseModel):
     """M5 hisob varag'i qatori: ``code`` (``revenue``, ``uzum:fine``, ``own:ijara``, ``net_profit`` ...), joriy summa,
-    tushumga nisbatan, oldingi davr va farq (``upcore.pnl.compare``)."""
+    tushumga nisbatan, oldingi davr, farq va o'zgarish ulushi (``upcore.pnl.compare``)."""
 
     code: str
     amount: Decimal
     share_of_revenue: Decimal | None
     previous: Decimal
     diff: Decimal
+    change: Decimal | None  # farq / |oldingi|; oldingi 0 bo'lsa yo'q
 
     @classmethod
     def of(cls, r: CompareRow) -> RowOut:
@@ -105,6 +106,7 @@ class RowOut(BaseModel):
             share_of_revenue=r.share_of_revenue,
             previous=r.previous.amount,
             diff=r.diff.amount,
+            change=r.change,
         )
 
 

@@ -213,9 +213,21 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
 
 ## B4. Asosiy ekranlar — Temur yangi dasturga o'tadi — 10–15 kun
 
-- [ ] B4.1 Bosh sahifa (M4) — hisob varag'i, davr chizig'i, grafik, "Diqqat talab qiladi", TOP/zarar SKU.
-  B2.9 dan: M4 tezlik mezoni (p95 < 700 ms) staging'da o'lchanadi; yetmasa — tashkilot × davr bo'yicha natija keshi
-  (hisob ishi tugaganda bekor qilinadi) yoki oylik agregat. Standart muddatlar (F25) sozlamasi — B4.8.
+- [x] B4.1 Bosh sahifa (M4) — hisob varag'i, davr chizig'i, grafik, "Diqqat talab qiladi", TOP/zarar SKU.
+  ✓ 2026-10-26: `features/home` — hisob varag'i (hero + qatorlar API tartibida: tushum → komissiya → logistika → = Uzum
+  to'lovi → tannarx → Uzum xarajatlari toifa bo'yicha → o'z xarajatlari → soliq → tannarxsiz qism → = sof foyda;
+  yalpi foyda P&L sahifasida; xarajat yo'q bo'lsa nol qator), har qatorda o'zgarish (xarajatda kattalik bo'yicha, rang =
+  yo'nalish × yaxshimi) va FormulaPopover (F-raqam); drill-down drawer: sotuv qatorlari (`/sales?group=completed`),
+  Uzum toifasi (`/expenses?category=`), o'z xarajatlari; hisoblanadigan qatorlar (soliq, sof foyda) — faqat formula.
+  Davr chizig'i (prognoz — "Taxminiy"), kunlik grafik, "Diqqat talab qiladi", TOP/zarar SKU (mobilda tab),
+  ko'rsatkichlar (marja yonida tannarxsiz qism, kutilayotgan foyda R'siz sababi bilan). Sotuv yo'q + sinxron muammoli —
+  "sotuv yo'q" deyilmaydi (tamoyil 8). **Reja o'zgarishlari:** (1) API'ga `RowOut.change` qo'shildi (core `compare`) — tamoyil 4;
+  (2) "O'tgan yil" solishtirish dashboard API'da yo'q — hozir oldingi davr bilan, banner aytadi (B5.6); (3) "Diqqat talab
+  qiladi" da jarima, kechikayotgan kargo, Uzum to'lovi — B5 (ma'lumot yo'q); (4) bepul logistika soyasi — B4.2/F40;
+  (5) drill-down'da Uzum toifasi xarajatlari `VIEW_SETTINGS` ruxsatini talab qiladi (API shunday) — ruxsat yo'q bo'lsa
+  drawer'da xato matni. **Topildi va tuzatildi:** davr chizig'i `grid` ichida sahifani 655 px kengaytirardi (360 px'da
+  gorizontal skroll). **Qoldi:** M4 tezlik mezoni (p95 < 700 ms) staging'da Temur ma'lumotida o'lchanadi; yetmasa —
+  natija keshi yoki oylik agregat; standart muddatlar (F25) sozlamasi — B4.8.
 - [ ] B4.2 Foyda va zarar (M5) — drill-down, sharshara, oylar, kutilayotgan, qamrov banneri, F40;
   F9/F10 qatorlarida to'g'ridan-to'g'ri va taqsimlangan xarajatlar alohida (ADR-026).
 - [ ] B4.3 Mahsulotlar (M6) — jadval, SKU sahifasi, unit kalkulyator, tovar ↔ SKU bog'lash; SKU xarajatlari

@@ -180,6 +180,11 @@ def test_rows_and_compare() -> None:
     assert rows["revenue"].diff == uzs(120_000) and rows["revenue"].share_of_revenue == D(1)
     assert rows["uzum:fine"].current == uzs(0) and rows["uzum:fine"].previous == uzs(-500)
     assert rows["net_profit"].current == cur.net_profit
+    # O'zgarish = farq / |oldingi| (ishorali): tushum 80 000 → 200 000 = +150%; jarima −500 → 0 = +100%
+    # (xarajat yo'qolishi — yaxshi); oldingi nol bo'lsa yo'q.
+    assert rows["revenue"].change == D("1.5")
+    assert rows["uzum:fine"].change == D("1")
+    assert rows["uzum:advertising"].change is None
     assert "uncovered_payout" not in dict(prev.rows())
 
 
