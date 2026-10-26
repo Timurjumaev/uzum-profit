@@ -242,3 +242,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   qidiruvi), foydalanuvchi menyusi (mavzu, til, chiqish). Umumiy filtrlar URL'da (`shop`, `from`, `to`, `cmp`;
   `app/filters`) va bo'limdan bo'limga o'tganda saqlanadi. Sahifalari yo'q bo'limlar "qurilmoqda" sahifasida.
   Testlar: karkas (axe-core bilan), filtrlar, sinxron holati; soxta API `src/test/api.ts`. Boshlang'ich JS 146,8 KB gzip.
+- B3.6 Grafik komponentlari (`apps/web/src/components/charts`, 04 §5.1): LineBarChart, StackedBarChart, WaterfallChart,
+  HeatmapChart, CalendarHeatmap — Apache ECharts 6 (SVG, alohida bo'lak ~84 KB gzip), ranglar tokenlardan, tooltip,
+  "Grafik | Jadval" ko'rinishi, legenda, matnli tavsif, bo'sh holat, annotatsiyalar (bepul logistika, uzilgan kunlar),
+  qorong'i rejim va `prefers-reduced-motion`. `/ui-kit` da "Grafiklar". Testlar: sof quruvchilar, ramka va hayot sikli,
+  axe-core, haqiqiy ECharts jsdom'da. Boshlang'ich JS 147,8 KB gzip.

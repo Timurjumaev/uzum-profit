@@ -1,0 +1,112 @@
+/* Grafik ramkasi (04 §5, §5.1) — faqat tokenlar orqali. Grafikning o'zi (ECharts) ranglarini `components/charts/palette`
+   dan oladi; legenda belgilari CSS o'zgaruvchilari bilan (`--chart-N`), shuning uchun mavzu almashganda o'zi yangilanadi. */
+
+.chart-frame {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-panel);
+  background: var(--bg-surface);
+}
+
+.chart-frame__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.chart-frame__head h3 {
+  margin: 0;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-secondary);
+  font: var(--type-caption);
+}
+
+.chart-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.chart-legend__mark {
+  flex: none;
+  display: inline-block;
+}
+
+.chart-legend__mark--bar {
+  inline-size: 10px;
+  block-size: 10px;
+  border-radius: 2px;
+}
+
+.chart-legend__mark--line {
+  inline-size: 14px;
+  block-size: 2px;
+}
+
+.chart-legend__mark--shade,
+.chart-legend__mark--hatch {
+  inline-size: 14px;
+  block-size: 10px;
+}
+
+.chart-legend__mark--shade {
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-raised) !important;
+}
+
+.chart-legend__mark--hatch {
+  border: 1px dashed var(--text-muted);
+  background: transparent !important;
+}
+
+.chart {
+  position: relative;
+  inline-size: 100%;
+}
+
+.chart__canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.chart__overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: var(--space-2);
+  justify-items: center;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+}
+
+.chart__overlay p {
+  margin: 0;
+}
+
+.chart-scale {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  font: var(--type-caption);
+}
+
+.chart-scale i {
+  inline-size: 120px;
+  block-size: 8px;
+  border-radius: 4px;
+}
