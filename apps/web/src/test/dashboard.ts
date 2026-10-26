@@ -98,7 +98,7 @@ export function dashboardData(over: Partial<Dashboard> = {}, ago: (minutes: numb
       in_transit_value: "31000000.00",
       average_days_to_sell: "41.50",
     },
-    free_periods: [],
+    waivers: [],
     attention: { uncosted_lines: 0, uncosted_revenue: "0.00", loss_skus: 1, stock_critical: 2, stock_high: 3, recalculated: 0 },
     ...over,
   };

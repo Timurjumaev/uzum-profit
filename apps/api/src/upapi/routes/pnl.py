@@ -3,8 +3,9 @@
 Hisob varag'i tanlangan davr va oldingi xuddi shu uzunlikdagi davr bilan solishtiriladi (``rows``: joriy, tushumga
 nisbatan, oldingi, farq). Ko'rinishlar (``view``): oylar, kunlar, do'konlar, SKU bo'yicha ustunlar — kataklar
 yig'indisi (ustunlar yig'indisi = jami). SKU ko'rinishida ``unlinked`` — SKU'ga bog'lanmagan sotuvlar, ``null`` —
-taqsimlanmagan (sotuvsiz kun) xarajatlar. Kutilayotgan foyda (F16) va "qayta hisoblandi" soni alohida. Bepul logistika kunlari (``free_periods``, Uzum bonusi —
-ADR-031) haqiqiy foydaga ta'sir qilmaydi, faqat belgilash uchun; SKU ko'rinishida ustun nomi.
+taqsimlanmagan (sotuvsiz kun) xarajatlar. Kutilayotgan foyda (F16) va "qayta hisoblandi" soni alohida. Uzum bonuslari (ADR-031): davrga tushgan
+faol davrlar (``waivers``) va tizim takliflari (``waiver_suggestions``) — haqiqiy foydaga ta'sir qilmaydi, faqat
+belgilash uchun; SKU ko'rinishida ustun nomi.
 Drill-down: sotuvlar — ``/sales``, xarajatlar — ``/expenses`` (shu filtrlar bilan).
 """
 
@@ -22,12 +23,11 @@ from upcore.pnl import CellKey, Cells, Statement, compare
 from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission
 from upapi.reports import cells as rc
-from upapi.reports import free
+from upapi.reports import waivers as rw
 from upapi.reports.common import (
     Filters,
     Heavy,
     Meta,
-    PeriodOut,
     db_now,
     filters,
     meta,
@@ -69,9 +69,10 @@ class PnlOut(BaseModel):
     pending: PendingOut
     pending_shops: list[PendingShopOut]
     recalculated: int  # davr sotuvlaridan oxirgi 7 kunda tannarxi o'zgarganlari (03 §7)
-    free_periods: list[
-        PeriodOut
-    ]  # Uzum bonusi — bepul logistika kunlari (ADR-031; tanlangan davr ichida)
+    waivers: list[
+        rw.WaiverOut
+    ]  # Uzum bonuslari (ADR-031): davr va do'konlarga tushgan faol davrlar
+    waiver_suggestions: list[rw.SuggestionOut]  # tizim takliflari (tasdiqlanmagan — ta'sirsiz)
 
 
 def columns(cells: Cells, view: View) -> tuple[list[ColumnOut], Statement]:
@@ -101,7 +102,7 @@ async def pnl(ctx: Finance, f: Filter, _: Heavy, view: View = View.TOTAL) -> Pnl
     if view is View.SKU:
         await _titles(ctx, cols)
     p = before.statement()
-    days = await free.free_days(ctx.conn, f)
+    found = await rw.rows(ctx.conn)
     pend = await rc.pending(ctx.conn, f)
     now = await db_now(ctx.conn)
     return PnlOut(
@@ -116,7 +117,8 @@ async def pnl(ctx: Finance, f: Filter, _: Heavy, view: View = View.TOTAL) -> Pnl
             for shop, e in sorted(pend.shops.items(), key=lambda kv: str(kv[0]))
         ],
         recalculated=await rc.recalculated(ctx.conn, f, now),
-        free_periods=[PeriodOut.of(x) for x in days.periods()],
+        waivers=rw.in_report(found, f),
+        waiver_suggestions=await rw.suggested(ctx.conn, f, found),
     )
 
 

@@ -3,6 +3,7 @@
 import { MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
+import type { WaiverIn } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -105,6 +106,21 @@ export const pnlQuery = (orgId: string, p: ReportParams, view: "month" | "shop" 
     queryFn: () =>
       unwrap(api.GET("/api/v1/orgs/{org_id}/pnl", { params: { path: { org_id: orgId }, query: { ...reportQuery(p), view } } })),
   });
+
+// --- Uzum bonuslari (ADR-031) -------------------------------------------------------------------------------------
+
+/** Bonus davrlari (faol va rad etilgan) va tanlash mumkin bo'lgan bepul xarajat turlari. */
+export const feeWaiversQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "fee-waivers"],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/fee-waivers", { params: { path: { org_id: orgId } } })),
+  });
+
+export const createWaiver = (orgId: string, body: WaiverIn) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/fee-waivers", { params: { path: { org_id: orgId } }, body }));
+
+export const deleteWaiver = (orgId: string, waiverId: string) =>
+  unwrap(api.DELETE("/api/v1/orgs/{org_id}/fee-waivers/{waiver_id}", { params: { path: { org_id: orgId, waiver_id: waiverId } } }));
 
 /** Drill-down: Yakunlangan sotuv qatorlari (P&L qatorlari yig'indisi shulardan), kursor bilan sahifalanadi. */
 export const salesPage = (orgId: string, p: ReportParams, cursor: string | null) =>

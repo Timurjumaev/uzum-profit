@@ -1,7 +1,8 @@
 """``/sales``: sotuv qatorlari (M7; P&L drill-down). Ruxsat — ``view_finance``.
 
 Qator: sana (F1), holat va guruh (F2), SKU, dona, narx, tushum, komissiya, logistika, Uzum to'lovi (F6), tannarx
-(F21, belgilari bilan: taxminiy, lot yetmadi ...), yalpi foyda (F8), "qayta hisoblandi" (oxirgi 7 kun). Tartib —
+(F21, belgilari bilan: taxminiy, lot yetmadi ...), yalpi foyda (F8), "qayta hisoblandi" (oxirgi 7 kun), Uzum bonusi
+davri (``waiver_id``, ADR-031). Tartib —
 eng yangisidan; sahifalash kursor bilan. ``summary`` — filtr (davr, do'kon, SKU) bo'yicha bekor va qaytish ulushi
 (F17, F18, ``daily_sku_metrics`` dan; holat filtri unga ta'sir qilmaydi).
 
@@ -20,12 +21,14 @@ from pydantic import BaseModel
 from sqlalchemy import and_, func, or_, select
 from upcore.metrics import StatusGroup, cancel_rate, return_share, status_group, statuses
 from upcore.money import Currency, Money
+from upcore.waivers import waiver_for
 
 from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission
 from upapi.calc.costs import day_start
 from upapi.db import models as m
 from upapi.reports import cells as rc
+from upapi.reports import waivers as rw
 from upapi.reports.common import (
     Cursor,
     Filters,
@@ -69,6 +72,9 @@ class SaleOut(BaseModel):
     cost_flags: list[str]  # F22: taxminiy, lot yetmadi, lot yo'q, tovar yo'q ...
     recalculated_at: datetime | None  # 03 §7: oxirgi 7 kunda tannarx o'zgargan bo'lsa
     previous_cogs: Decimal | None
+    waiver_id: (
+        UUID | None
+    )  # Uzum bonusi davri (ADR-031) — "Bonus davri" belgisi; hisobga ta'sir qilmaydi
 
 
 class SalesSummaryOut(BaseModel):
@@ -128,9 +134,11 @@ async def sales(
     more = len(rows) > limit
     rows = rows[:limit]
     recent = now - timedelta(days=rc.RECALC_DAYS)
+    waivers = await rw.active_waivers(ctx.conn) if rows else []
     items = []
     for r in rows:
         line = rc.sale_line(r)
+        waiver = waiver_for(waivers, str(r.shop_id), line.order_date)
         profit = line.gross_profit
         changed = r.changed_at if r.changed_at is not None and r.changed_at >= recent else None
         items.append(
@@ -158,6 +166,7 @@ async def sales(
                 cost_flags=sorted(r.flags or []),
                 recalculated_at=changed,
                 previous_cogs=r.previous_cogs if changed else None,
+                waiver_id=None if waiver is None else UUID(waiver.id),
             )
         )
 

@@ -707,14 +707,25 @@ ref_tax_rates = global_table(
     Column("note", Text),
     UniqueConstraint("code", "valid_from"),
 )
-free_logistics_periods = tenant(
-    "free_logistics_periods",
+# Uzum bonuslari (ADR-031): vaqtinchalik bepul xarajat davrlari — ma'lumot, qoida emas. ``shop_id`` NULL — hamma
+# do'kon; ``kinds`` — ``upcore.waivers.waiver_kinds()`` dan; ``source`` — qo'lda yoki tizim taklifidan;
+# ``dismissed_at`` — rad etilgan taklif (faqat qayta taklif qilinmasligi uchun, hech narsaga ta'sir qilmaydi).
+FEE_WAIVER_SOURCES = ("manual", "detected")
+fee_waivers = tenant(
+    "fee_waivers",
     Column("start_on", Date, nullable=False),
     Column("end_on", Date, nullable=False),
-    Column("detected", Boolean, nullable=False, server_default="true"),
-    Column("confirmed_at", TS),
-    refs={"shop_id": ("shops", False)},
+    Column("kinds", ARRAY(Text), nullable=False),
+    Column("reason", Text, nullable=False, server_default=""),
+    Column("source", Text, nullable=False, server_default="manual"),
+    Column("dismissed_at", TS),
+    Column("created_by", UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")),
+    check_in("source", FEE_WAIVER_SOURCES),
+    CheckConstraint("end_on >= start_on", name="period"),
+    CheckConstraint("cardinality(kinds) > 0", name="kinds"),
+    refs={"shop_id": ("shops", True)},
 )
+Index(None, fee_waivers.c.org_id, fee_waivers.c.start_on, fee_waivers.c.end_on)
 
 # --- Bildirishnoma ----------------------------------------------------------------------------
 

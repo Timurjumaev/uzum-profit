@@ -38,5 +38,8 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     exclude: ["e2e/**", "node_modules/**", "dist/**"], // e2e — Playwright (`pnpm e2e`), vitest emas
+    // Sahifa testlari butun ilovani (marshrutlovchi, lazy bo'laklar, so'rovlar) jsdom'da ishga tushiradi: lokal 2–4 s,
+    // CI runner'da parallel fayllar bilan standart 5 s dan oshib ketdi — chegara 15 s.
+    testTimeout: 15_000,
   },
 });

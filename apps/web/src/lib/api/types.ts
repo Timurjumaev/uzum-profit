@@ -17,3 +17,7 @@ export type Expenses = Schemas["ExpensesOut"];
 export type Inventory = Schemas["InventoryOut"];
 export type StockRow = Schemas["StockRowOut"];
 export type Meta = Schemas["Meta"];
+export type Waiver = Schemas["WaiverOut"];
+export type WaiverSuggestion = Schemas["SuggestionOut"];
+export type FeeWaivers = Schemas["FeeWaiversOut"];
+export type WaiverIn = Schemas["WaiverIn"];

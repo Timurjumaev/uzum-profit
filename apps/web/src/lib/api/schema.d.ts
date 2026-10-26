@@ -457,6 +457,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/fee-waivers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Waivers */
+        get: operations["list_waivers_api_v1_orgs__org_id__fee_waivers_get"];
+        put?: never;
+        /** Create Waiver */
+        post: operations["create_waiver_api_v1_orgs__org_id__fee_waivers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/fee-waivers/{waiver_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Waiver */
+        delete: operations["delete_waiver_api_v1_orgs__org_id__fee_waivers__waiver_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Waiver */
+        patch: operations["update_waiver_api_v1_orgs__org_id__fee_waivers__waiver_id__patch"];
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/dashboard": {
         parameters: {
             query?: never;
@@ -683,8 +719,8 @@ export interface components {
             bottom: components["schemas"]["SkuBriefOut"][];
             kpis: components["schemas"]["KpiOut"];
             attention: components["schemas"]["AttentionOut"];
-            /** Free Periods */
-            free_periods: components["schemas"]["PeriodOut"][];
+            /** Waivers */
+            waivers: components["schemas"]["WaiverOut"][];
         };
         /** DayOut */
         DayOut: {
@@ -768,6 +804,13 @@ export interface components {
             items: components["schemas"]["ExpenseOut"][];
             /** Next Cursor */
             next_cursor: string | null;
+        };
+        /** FeeWaiversOut */
+        FeeWaiversOut: {
+            /** Items */
+            items: components["schemas"]["WaiverOut"][];
+            /** Kinds */
+            kinds: string[];
         };
         /**
          * ForecastOut
@@ -1166,8 +1209,10 @@ export interface components {
             pending_shops: components["schemas"]["PendingShopOut"][];
             /** Recalculated */
             recalculated: number;
-            /** Free Periods */
-            free_periods: components["schemas"]["PeriodOut"][];
+            /** Waivers */
+            waivers: components["schemas"]["WaiverOut"][];
+            /** Waiver Suggestions */
+            waiver_suggestions: components["schemas"]["SuggestionOut"][];
         };
         /** PriceOut */
         PriceOut: {
@@ -1319,6 +1364,8 @@ export interface components {
             recalculated_at: string | null;
             /** Previous Cogs */
             previous_cogs: string | null;
+            /** Waiver Id */
+            waiver_id: string | null;
         };
         /** SalesOut */
         SalesOut: {
@@ -1690,6 +1737,29 @@ export interface components {
                 [key: string]: number;
             };
         };
+        /**
+         * SuggestionOut
+         * @description Taklif: do'konda Uzum logistikani olmagan kunlar — "bonus davrimi?" (tasdiqlanmagan).
+         */
+        SuggestionOut: {
+            /**
+             * Shop Id
+             * Format: uuid
+             */
+            shop_id: string;
+            /**
+             * Start On
+             * Format: date
+             */
+            start_on: string;
+            /**
+             * End On
+             * Format: date
+             */
+            end_on: string;
+            /** Kinds */
+            kinds: string[];
+        };
         /** SyncStatusOut */
         SyncStatusOut: {
             /** Healthy */
@@ -1765,6 +1835,88 @@ export interface components {
          * @enum {string}
          */
         View: "total" | "month" | "day" | "shop" | "sku";
+        /** WaiverIn */
+        WaiverIn: {
+            /** Shop Id */
+            shop_id?: string | null;
+            /**
+             * Start On
+             * Format: date
+             */
+            start_on: string;
+            /**
+             * End On
+             * Format: date
+             */
+            end_on: string;
+            /** Kinds */
+            kinds: string[];
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
+            /**
+             * Source
+             * @default manual
+             * @enum {string}
+             */
+            source: "manual" | "detected";
+            /**
+             * Dismissed
+             * @default false
+             */
+            dismissed: boolean;
+        };
+        /**
+         * WaiverOut
+         * @description Bonus davri (ADR-031): ``shop_id`` ``null`` — hamma do'kon; ``dismissed`` — rad etilgan taklif.
+         */
+        WaiverOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Shop Id */
+            shop_id: string | null;
+            /**
+             * Start On
+             * Format: date
+             */
+            start_on: string;
+            /**
+             * End On
+             * Format: date
+             */
+            end_on: string;
+            /** Kinds */
+            kinds: string[];
+            /** Reason */
+            reason: string;
+            /** Source */
+            source: string;
+            /** Dismissed */
+            dismissed: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** WaiverPatch */
+        WaiverPatch: {
+            /** Shop Id */
+            shop_id?: string | null;
+            /** Start On */
+            start_on?: string | null;
+            /** End On */
+            end_on?: string | null;
+            /** Kinds */
+            kinds?: string[] | null;
+            /** Reason */
+            reason?: string | null;
+        };
     };
     responses: never;
     parameters: never;
@@ -3011,6 +3163,174 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RefreshOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_waivers_api_v1_orgs__org_id__fee_waivers_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeeWaiversOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_waiver_api_v1_orgs__org_id__fee_waivers_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WaiverIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WaiverOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    delete_waiver_api_v1_orgs__org_id__fee_waivers__waiver_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                waiver_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    update_waiver_api_v1_orgs__org_id__fee_waivers__waiver_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                waiver_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WaiverPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WaiverOut"];
                 };
             };
             /** @description Validatsiya xatosi */

@@ -132,7 +132,7 @@ def with_standard_logistics(
 def detect_free_days(lines: Iterable[SaleLine], threshold: Decimal = FREE_SHARE) -> list[date]:
     """F40. Bepul logistika kunlari: kunlik Yakunlangan sotuv qatorlarining ≥ 90% ida logistika 0.
 
-    Natija — taklif; admin jadvalida tasdiqlanadi (``free_logistics_periods``)."""
+    Natija — taklif; foydalanuvchi tasdiqlaydi (``fee_waivers``, ``upcore.waivers.suggestions``, ADR-031)."""
     per_day: dict[date, list[int]] = {}
     for line in completed(lines):
         counts = per_day.setdefault(line.order_date, [0, 0])

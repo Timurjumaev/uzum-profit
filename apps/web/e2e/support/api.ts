@@ -4,7 +4,7 @@
 import type { Page, Route } from "@playwright/test";
 
 import { dashboardData } from "../../src/test/dashboard";
-import { pnlData, skuColumns } from "../../src/test/pnl";
+import { pnlData, skuColumns, waiver } from "../../src/test/pnl";
 
 /** Qotirilgan vaqt (Toshkent). */
 export const NOW = new Date("2026-10-26T14:00:00+05:00");
@@ -179,7 +179,8 @@ export function loadingSync(shops: Shop[]) {
 
 /** Marshrutlarni o'rnatadi va holat/so'rovlarga havola qaytaradi. `page.clock` shu yerda qotiriladi. */
 const PNL_EXTRA = {
-  free_periods: [{ start: "2026-10-10", end: "2026-10-31", days: 22 }], // Uzum bonusi (ADR-031)
+  waivers: [waiver()], // Uzum bonusi (ADR-031): banner, haqiqiy hisob o'zgarmaydi
+  waiver_suggestions: [{ shop_id: SHOPS[1]!.id, start_on: "2026-10-05", end_on: "2026-10-06", kinds: ["sale_logistics"] }],
 };
 
 export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
@@ -233,6 +234,8 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
       const sku = url.searchParams.get("view") === "sku";
       return json(route, 200, pnlData({ ...PNL_EXTRA, ...(sku ? { columns: skuColumns() } : {}) }));
     }
+    if (key === `GET /orgs/${ORG_ID}/fee-waivers`)
+      return json(route, 200, { items: [waiver()], kinds: ["sale_logistics", "advertising", "storage", "return_storage"] });
     if (key === `GET /orgs/${ORG_ID}/sales`) return json(route, 200, SALES);
     if (key === `POST /orgs/${ORG_ID}/sync/refresh`) return json(route, 202, { queued: 3 });
     if (key === `POST /orgs/${ORG_ID}/accounts`) {
