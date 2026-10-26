@@ -275,11 +275,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   sharshara (tushumdan sof foydagacha); kutilayotgan blok (F16, R do'kon bo'yicha, R yo'q bo'lsa sababi); tannarx
   qamrovi sariq banneri (F15); "qayta hisoblandi" banneri; drill-down (bosh sahifa `Drill`); kesimlar — oylar,
   do'konlar, SKU (`?view=` URL'da), do'kon va SKU kesimida F9/F10 to'g'ridan-to'g'ri va taqsimlangan, "Taqsimlanmagan"
-  (ADR-026). F40 "Standart tarif bo'yicha foyda": `upcore.pnl.standard_logistics` + `Cells.with_logistics` (o'zgargan
-  kataklar soliq va F15 bilan qayta hisoblanadi — qatorlardan qayta qurish bilan bir xil, hypothesis testi),
-  `upcore.tariffs` (`is_free_day`, `typical_fee`, `standard_fee_of`); API `upapi.reports.free` — bepul kunlar
-  ma'lumotdan (do'kon × kun, ≥ 90%) + `free_logistics_periods`, tarif: SKU'ning oxirgi pullik logistikasi, bo'lmasa
-  do'konning odatiy tarifi. `/pnl`: `standard`, `free_periods`, SKU ustuni nomi; `StatementOut`: `uzum_total`,
-  `own_total`, F9/F10 to'g'ridan-to'g'ri va taqsimlangan jami; `/dashboard`: `free_periods` — kunlik grafikda soya.
-  Testlar: core (F40 tengligi, fallback), API (F40 summalari, qatorlardan qayta qurilgan P&L bilan tenglik, SKU nomlari,
-  ADR-026 yig'indilari), model, sahifa (jsdom + axe), e2e (kesimlar URL'da, 360 px), haqiqiy brauzerda axe, vizual asos.
+  (ADR-026). Bepul logistika kunlari (`upapi.reports.free`: ma'lumotdan, do'kon × kun ≥ 90%, + jadval) — `/pnl` va
+  `/dashboard` `free_periods`, kunlik grafikda soya; haqiqiy hisobga ta'sir qilmaydi. `/pnl`: SKU ustuni nomi;
+  `StatementOut`: `uzum_total`, `own_total`, F9/F10 to'g'ridan-to'g'ri va taqsimlangan jami. `upcore.tariffs`:
+  `is_free_day`, `typical_fee`, `standard_fee_of` (me'yoriy tarif uchun, B4.3). ADR-031 (Temur tasdiqladi): Uzum
+  bonuslari — vaqtinchalik ma'lumot; P&L'dagi "standart tarif bo'yicha foyda" qatori olib tashlandi, F40 — me'yoriy
+  (bonussiz) foyda/dona, faqat SKU baholash va narx uchun (B4.2a, B4.3). Testlar: core, API (bonus kunlari haqiqiy
+  P&L'ni o'zgartirmaydi, SKU nomlari, ADR-026 yig'indilari), model, sahifa (jsdom + axe), e2e (kesimlar URL'da,
+  360 px), haqiqiy brauzerda axe, vizual asos.

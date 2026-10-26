@@ -1,4 +1,4 @@
-// Foyda va zarar sahifasi (M5, B4.2): hisob varag'i ustunlari, qamrov banneri, F40, sharshara, F16, kesimlar
+// Foyda va zarar sahifasi (M5, B4.2): hisob varag'i ustunlari, qamrov banneri, sharshara, F16, kesimlar
 // (URL'dagi `view`), drill-down, holatlar va kirish imkoniyati. Butun ilova soxta API ustida — `test/api.ts`.
 import { createMemoryHistory } from "@tanstack/react-router";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
@@ -63,6 +63,8 @@ describe("hisob varag'i", () => {
     expect(revenue).toEqual([n("10000000.00"), norm(f.percent("1.000000")), n("8000000.00"), n("2000000.00"), norm(f.change("0.250000"))]);
     expect(row("Yalpi foyda").className).toContain("is-subtotal");
     expect(row("Sof foyda").className).toContain("is-total");
+    // Uzum bonusi uchun o'ylab topilgan qator yo'q (ADR-031).
+    expect(screen.queryByText(/Standart tarif/)).toBeNull();
     // Tannarxsiz to'lov — ayiriluvchi (zanjir to'g'ri chiqsin).
     expect(within(row("Tannarxsiz sotuvlar")).getByText(n("-750000.00"))).toBeTruthy();
   });
@@ -80,21 +82,6 @@ describe("hisob varag'i", () => {
     await renderPnl(PATH, { [PNL_ROUTE]: () => json(200, pnlData({ statement: full, recalculated: 3 })) });
     expect(screen.queryByText(/tannarxsiz — foydaga kirmadi/)).toBeNull();
     expect(screen.getByText(/3 ta sotuvning tannarxi oxirgi 7 kunda qayta hisoblandi/)).toBeTruthy();
-  });
-
-  it("F40: bepul logistika davrida 'Standart tarif bo'yicha foyda' (taxminiy) va tejalgan logistika; yo'q bo'lsa qator yo'q", async () => {
-    await renderPnl(PATH, {
-      [PNL_ROUTE]: () => json(200, pnlData({ standard: { net_profit: "3050000.00", logistics: "180000.00", lines: 30, unpriced_lines: 2 } })),
-    });
-    const std = screen.getByTestId("standard-profit");
-    expect(within(std).getByText("Standart tarif boʻyicha foyda")).toBeTruthy();
-    expect(within(std).getByText("Taxminiy", { selector: ".ui-badge" })).toBeTruthy();
-    expect(within(std).getByText(n("3050000.00"))).toBeTruthy();
-    expect(norm(screen.getByText(/logistika .* koʻproq boʻlardi/).textContent!)).toContain(norm(f.money("180000.00")));
-    expect(screen.getByText(/2 ta sotuvda standart tarif nomaʼlum/)).toBeTruthy();
-    cleanup();
-    await renderPnl();
-    expect(screen.queryByTestId("standard-profit")).toBeNull();
   });
 });
 

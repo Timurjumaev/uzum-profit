@@ -1,23 +1,21 @@
 // Foyda va zarar hisob varag'i (M5, 04 §6.1 + §7.4): to'liq qatorlar (Uzum xarajatlari turlari, o'z xarajatlari
 // toifalari, yalpi foyda) va ustunlar: joriy davr, tushumga nisbatan, oldingi davr, farq, o'zgarish. Qator bosilsa —
-// drill-down. Bepul logistika davri bo'lsa sof foyda ostida "Standart tarif bo'yicha foyda" (F40, taxminiy).
+// drill-down. Uzum bonusi (bepul logistika) haqiqiy hisobga hech narsa qo'shmaydi — ADR-031.
 // Tor ekranda (< 640 px) faqat joriy summa va o'zgarish qoladi (gorizontal skroll yo'q).
 import { useTranslation } from "react-i18next";
 
-import { Badge, FormulaPopover } from "../../components/ui";
+import { FormulaPopover } from "../../components/ui";
 import { cx } from "../../components/ui/cx";
-import type { Pnl } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { Change } from "../home/Change";
 import type { PnlLine } from "./model";
 
-type Props = { data: Pnl; lines: PnlLine[]; onRow: (line: PnlLine) => void };
+type Props = { lines: PnlLine[]; onRow: (line: PnlLine) => void };
 
-export function PnlLedger({ data, lines, onRow }: Props) {
+export function PnlLedger({ lines, onRow }: Props) {
   const { t } = useTranslation();
   const f = useFormat();
   const percent = (v: string | null) => (v === null ? "—" : f.percent(v));
-  const std = data.standard;
   return (
     <table className="ui-ledger pnl-ledger">
       <caption className="ui-visually-hidden">{t("pnl.caption")}</caption>
@@ -68,27 +66,6 @@ export function PnlLedger({ data, lines, onRow }: Props) {
             </td>
           </tr>
         ))}
-        {std && (
-          <tr className="pnl-standard" data-testid="standard-profit">
-            <td className="ui-ledger__op" aria-hidden />
-            <th scope="row" className="ui-ledger__label">
-              {t("pnl.standard.label")}{" "}
-              <FormulaPopover
-                metric={t("pnl.standard.label")}
-                code="F40"
-                formula={t("pnl.standard.formula")}
-                source={t("pnl.standard.source")}
-                estimatedReason={t("pnl.standard.estimated")}
-              />{" "}
-              <Badge tone="warning">{t("terms.estimated")}</Badge>
-            </th>
-            <td className="ui-ledger__amount num">{f.money(std.net_profit, { unit: false })}</td>
-            <td className="num pnl-wide">—</td>
-            <td className="num pnl-wide">—</td>
-            <td className="num pnl-wide">—</td>
-            <td />
-          </tr>
-        )}
       </tbody>
     </table>
   );

@@ -3,15 +3,14 @@
 Hisob varag'i tanlangan davr va oldingi xuddi shu uzunlikdagi davr bilan solishtiriladi (``rows``: joriy, tushumga
 nisbatan, oldingi, farq). Ko'rinishlar (``view``): oylar, kunlar, do'konlar, SKU bo'yicha ustunlar — kataklar
 yig'indisi (ustunlar yig'indisi = jami). SKU ko'rinishida ``unlinked`` — SKU'ga bog'lanmagan sotuvlar, ``null`` —
-taqsimlanmagan (sotuvsiz kun) xarajatlar. Kutilayotgan foyda (F16) va "qayta hisoblandi" soni alohida. Bepul logistika kunlari bo'lsa — standart tarif
-bo'yicha foyda (F40, ``standard``) va davrlar (``free_periods``, grafik soyasi uchun); SKU ko'rinishida ustun nomi.
+taqsimlanmagan (sotuvsiz kun) xarajatlar. Kutilayotgan foyda (F16) va "qayta hisoblandi" soni alohida. Bepul logistika kunlari (``free_periods``, Uzum bonusi —
+ADR-031) haqiqiy foydaga ta'sir qilmaydi, faqat belgilash uchun; SKU ko'rinishida ustun nomi.
 Drill-down: sotuvlar — ``/sales``, xarajatlar — ``/expenses`` (shu filtrlar bilan).
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable
-from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Any
 from uuid import UUID
@@ -57,19 +56,6 @@ class ColumnOut(BaseModel):
     shop_id: UUID | None = None  # SKU ko'rinishida: SKU do'koni
 
 
-class StandardOut(BaseModel):
-    """F40: bepul logistika kunlarida standart tarif qo'shilgan sof foyda."""
-
-    net_profit: Decimal  # F12, standart tarif bilan
-    logistics: (
-        Decimal  # qo'shilgan standart logistika (tannarxsiz qatorlar bilan) — "tejalgan logistika"
-    )
-    lines: int
-    unpriced_lines: (
-        int  # standart tarifi noma'lum (SKU va do'konda pullik logistika yo'q) — qo'shilmadi
-    )
-
-
 class PendingShopOut(PendingOut):
     shop_id: UUID
 
@@ -83,8 +69,9 @@ class PnlOut(BaseModel):
     pending: PendingOut
     pending_shops: list[PendingShopOut]
     recalculated: int  # davr sotuvlaridan oxirgi 7 kunda tannarxi o'zgarganlari (03 §7)
-    standard: StandardOut | None  # F40; bepul logistika qatori yo'q bo'lsa ``null``
-    free_periods: list[PeriodOut]  # F40 bepul logistika davrlari (tanlangan davr ichida)
+    free_periods: list[
+        PeriodOut
+    ]  # Uzum bonusi — bepul logistika kunlari (ADR-031; tanlangan davr ichida)
 
 
 def columns(cells: Cells, view: View) -> tuple[list[ColumnOut], Statement]:
@@ -115,7 +102,6 @@ async def pnl(ctx: Finance, f: Filter, _: Heavy, view: View = View.TOTAL) -> Pnl
         await _titles(ctx, cols)
     p = before.statement()
     days = await free.free_days(ctx.conn, f)
-    std = await free.standard(ctx.conn, f, cur, days)
     pend = await rc.pending(ctx.conn, f)
     now = await db_now(ctx.conn)
     return PnlOut(
@@ -130,14 +116,6 @@ async def pnl(ctx: Finance, f: Filter, _: Heavy, view: View = View.TOTAL) -> Pnl
             for shop, e in sorted(pend.shops.items(), key=lambda kv: str(kv[0]))
         ],
         recalculated=await rc.recalculated(ctx.conn, f, now),
-        standard=None
-        if std is None
-        else StandardOut(
-            net_profit=std[0].net_profit.amount,
-            logistics=std[1].total.amount,
-            lines=std[1].lines,
-            unpriced_lines=std[1].unpriced_lines,
-        ),
         free_periods=[PeriodOut.of(x) for x in days.periods()],
     )
 

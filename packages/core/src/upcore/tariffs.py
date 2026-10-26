@@ -1,4 +1,4 @@
-"""Uzum logistika tarifi — F37, standart tarif bo'yicha foyda va bepul davrlar — F40.
+"""Uzum logistika tarifi — F37; bepul (bonus) davrlar va me'yoriy (bonussiz) tarif — F40 (ADR-031).
 
 Tariflar biznes ma'lumoti (ADR-015): ishlash vaqtida bazadagi ``ref_logistics_tariffs`` dan, sana bo'yicha.
 ``SEED_LOGISTICS`` — boshlang'ich yozuv (08-tadqiqot.md §5, 01.06.2026 dan).
@@ -112,8 +112,8 @@ def with_standard_logistics(
     """F40. Logistikasi 0 bo'lgan Yakunlangan sotuvlarga standart tarif (bir dona × ``amount``) qo'shiladi.
 
     ``fee_of`` — F37 yoki SKU'ning oxirgi pullik logistikasi; ``None`` qaytarsa qator o'zgarmaydi.
-    ``free_days`` berilsa, faqat shu (tasdiqlangan bepul) kunlardagi qatorlar. Natija P&L'ga beriladi —
-    "standart tarif bo'yicha foyda" qatori."""
+    ``free_days`` berilsa, faqat shu (tasdiqlangan bepul) kunlardagi qatorlar. Natija faqat me'yoriy (bonussiz)
+    baholash uchun (SKU, narx — ADR-031); haqiqiy P&L'ga berilmaydi."""
     days = None if free_days is None else set(free_days)
     result = []
     for line in lines:

@@ -4489,16 +4489,6 @@
             "type": "integer",
             "title": "Recalculated"
           },
-          "standard": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/StandardOut"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "free_periods": {
             "items": {
               "$ref": "#/components/schemas/PeriodOut"
@@ -4517,7 +4507,6 @@
           "pending",
           "pending_shops",
           "recalculated",
-          "standard",
           "free_periods"
         ],
         "title": "PnlOut"
@@ -5763,35 +5752,6 @@
           "unallocated"
         ],
         "title": "SkusOut"
-      },
-      "StandardOut": {
-        "properties": {
-          "net_profit": {
-            "type": "string",
-            "title": "Net Profit"
-          },
-          "logistics": {
-            "type": "string",
-            "title": "Logistics"
-          },
-          "lines": {
-            "type": "integer",
-            "title": "Lines"
-          },
-          "unpriced_lines": {
-            "type": "integer",
-            "title": "Unpriced Lines"
-          }
-        },
-        "type": "object",
-        "required": [
-          "net_profit",
-          "logistics",
-          "lines",
-          "unpriced_lines"
-        ],
-        "title": "StandardOut",
-        "description": "F40: bepul logistika kunlarida standart tarif qo'shilgan sof foyda."
       },
       "StatementOut": {
         "properties": {

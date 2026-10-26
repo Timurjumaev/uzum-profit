@@ -179,8 +179,7 @@ export function loadingSync(shops: Shop[]) {
 
 /** Marshrutlarni o'rnatadi va holat/so'rovlarga havola qaytaradi. `page.clock` shu yerda qotiriladi. */
 const PNL_EXTRA = {
-  standard: { net_profit: "3050000.00", logistics: "180000.00", lines: 30, unpriced_lines: 0 },
-  free_periods: [{ start: "2026-10-10", end: "2026-10-31", days: 22 }],
+  free_periods: [{ start: "2026-10-10", end: "2026-10-31", days: 22 }], // Uzum bonusi (ADR-031)
 };
 
 export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
@@ -230,7 +229,7 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
     if (key === `GET /orgs/${ORG_ID}/sync`) return json(route, 200, state.sync);
     if (key === `GET /orgs/${ORG_ID}/dashboard`) return json(route, 200, dashboardData({}, ago));
     if (key === `GET /orgs/${ORG_ID}/pnl`) {
-      // Bepul logistika davri bilan (F40 qatori ko'rinadi); SKU kesimi — aralash tartibdagi ustunlar.
+      // Uzum bonusi davri bilan (haqiqiy hisob o'zgarmaydi); SKU kesimi — aralash tartibdagi ustunlar.
       const sku = url.searchParams.get("view") === "sku";
       return json(route, 200, pnlData({ ...PNL_EXTRA, ...(sku ? { columns: skuColumns() } : {}) }));
     }

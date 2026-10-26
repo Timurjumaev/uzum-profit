@@ -1,4 +1,4 @@
-// Namunaviy `/pnl` javobi (M5): tannarxsiz qism (qamrov 90%), kompensatsiya, o'z xarajati, F16 ikki do'konda, F40.
+// Namunaviy `/pnl` javobi (M5): tannarxsiz qism (qamrov 90%), kompensatsiya, o'z xarajati, F16 ikki do'konda.
 // Zanjir: 7 500 000 − 750 000 (tannarxsiz) − 3 000 000 = 3 750 000 yalpi; − 400 000 + 100 000 − 200 000 − 100 000
 // + 60 000 = 3 210 000 sof foyda. Vitest'ga bog'liq emas (e2e ham ishlatishi mumkin).
 import type { components } from "../lib/api/schema";
@@ -88,7 +88,6 @@ export function pnlData(over: Partial<Pnl> = {}): Pnl {
       { shop_id: SHOP_B, amount: null, rate: null, raw: "300000.00", uncovered_lines: 0 },
     ],
     recalculated: 0,
-    standard: null,
     free_periods: [],
     ...over,
   };

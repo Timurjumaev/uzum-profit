@@ -99,7 +99,8 @@ Bloklar (joylashuvi 04-dizayn.md §7.2 desktop, §7.3 mobil):
    oldingi davrga nisbatan o'zgarish. Har qator bosilsa — manba yozuvlar ro'yxati (drill-down).
 2. **Davr chizig'i:** Bugun, Kecha, Shu oy, Oy prognozi (run-rate), O'tgan oy — har birida tushum, sof foyda,
    buyurtma (dona).
-3. **Kunlik grafik:** tushum (ustun) va sof foyda (chiziq) bir o'qda; Uzum bepul logistika davrlari soya bilan.
+3. **Kunlik grafik:** tushum (ustun) va sof foyda (chiziq) bir o'qda; Uzum bonus davrlari (bepul logistika va h.k.,
+   ADR-031) soya bilan.
 4. **Diqqat talab qiladi** (ustuvorlik bo'yicha): tannarxsiz sotuvlar, tugayotgan tovar, zarar bilan sotilayotgan
    SKU, yangi jarimalar, kechikayotgan kargo, sinxron xatosi, Uzum to'lovi kutilmoqda.
 5. **Eng foydali 5 / zarar 5 SKU.**
@@ -121,7 +122,8 @@ Qabul mezonlari: 1 yillik, 50 000 sotuv qatori bilan javob p95 < 700 ms; davr va
 - **Kutilayotgan** (Jarayondagi) sotuvlar alohida blok (F16), realizatsiya darajasi ko'rsatiladi.
 - **Tannarx qamrovi** (F15) < 100% bo'lsa, qizil emas, sariq banner: "N ta sotuv (X so'm) tannarxsiz — foydaga
   kirmadi. [Tannarx kiritish]".
-- Bepul logistika davri bo'lsa: "Standart tarif bo'yicha foyda" (F40) qo'shimcha qatori.
+- Davrda Uzum bonusi bo'lsa (ADR-031): ma'lumot banneri — sabab, bepul turlar, sanalar; haqiqiy hisob o'zgarmaydi
+  (bepul xarajat 0), "standart tarif bo'yicha foyda" qatori yo'q. Bonussiz baho — M6 (F40).
 - Har qator → drill-down: shu summani tashkil qilgan sotuv / xarajat qatorlari (eksport bilan).
 - Excel va PDF eksport.
 
@@ -131,14 +133,15 @@ oylar yig'indisi = butun davr; har drill-down yig'indisi qator summasiga teng (a
 ## M6. Mahsulotlar (SKU va unit-iqtisod) [B4]
 
 - Jadval: rasm, SKU, nom, do'kon, sotilgan dona, tushum, o'rtacha narx, komissiya %, logistika/dona,
-  tannarx/dona (lot ma'lumoti bilan), reklama/dona, foyda/dona, marja, ROI, qaytish %, qoldiq, zaxira kunlari,
+  tannarx/dona (lot ma'lumoti bilan), reklama/dona, foyda/dona, me'yoriy (bonussiz) foyda/dona (F40, ADR-031),
+  marja, ROI, qaytish %, qoldiq, zaxira kunlari,
   ABC (bizniki + Uzum `rankInfo`), holat belgisi (Zarar / Chegarada < 5% / Foydali / Ma'lumot yo'q).
 - Qidiruv (lotin/kirill, apostrof turidan qat'i nazar), filtrlar, ustunlarni tanlash, saqlangan ko'rinishlar,
   Excel eksport.
 - **SKU sahifasi:** sarlavha (rasm, nom, Uzum'dagi sahifaga havola), KPI'lar; narx va foyda tarixi; tannarx tarixi
   (lotlar vaqt chizig'ida); kunlik sotuv; qoldiq tarixi (snapshotlardan); qaytishlar va sabablari;
   **unit kalkulyator** (narx, reklama %, tannarx o'zgarsa nima bo'ladi) + zararsizlik narxi (F35) + maqsadli
-  marja narxi (F36); izohlar.
+  marja narxi (F36) — me'yoriy (bonussiz) tariflar bilan (F40); izohlar.
 - **Tovar (item) va SKU:** bitta jismoniy tovar bir necha do'kon/marketplace SKU'siga bog'lanishi mumkin.
   Tannarx va ombor tovar darajasida yuritiladi. Standart: har SKU = alohida tovar; birlashtirish qo'lda.
 
@@ -146,7 +149,8 @@ Qabul mezonlari: 2 000 SKU'li jadval virtual skroll bilan silliq; har raqam yoni
 
 ## M7. Buyurtmalar, bekor va qaytishlar [B4; FBS B5]
 
-- Sotuv qatorlari ro'yxati: sana, holat, SKU, dona, narx, komissiya, logistika, Uzum to'lovi, tannarx, foyda.
+- Sotuv qatorlari ro'yxati: sana, holat, SKU, dona, narx, komissiya, logistika, Uzum to'lovi, tannarx, foyda;
+  Uzum bonus davridagi buyurtma — "Bonus davri" belgisi (ADR-031).
 - Bekor tahlili: ulush (F17), topshirilgandan keyin bekor, SKU bo'yicha, trend.
 - Qaytish tahlili: ulush (F18), sabab (`returnCause`), SKU bo'yicha, qaytish xarajati (qaytim saqlash C000004).
 - FBS (do'konda bo'lsa): faol buyurtmalar, `acceptUntil` / `deliverUntil` muddatlari, kechikish xavfi [B5].
@@ -268,7 +272,8 @@ xabari yuborilmaydi; bitta hodisa takror yuborilmaydi (idempotent).
 ## M16. Sozlamalar [B4]
 
 Tashkilot, do'konlar (nom, rang, hisobga olish/olmaslik), soliq profili (F11), tannarx usuli (FIFO / o'rtacha),
-valyutalar va kurs manbasi, Uzum to'lov jadvali (F38), standart yetkazish muddatlari, ABC qamrov kunlari,
+valyutalar va kurs manbasi, Uzum to'lov jadvali (F38), **Uzum bonuslari** (bepul xarajat davrlari: do'kon yoki
+hammasi, sanalar, turlar, sabab; tizim takliflarini tasdiqlash — ADR-031), standart yetkazish muddatlari, ABC qamrov kunlari,
 ogohlantirish chegaralari, Telegram, til, tarif va to'lovlar [B8], API kalitlar (Pro) [B10], to'liq eksport,
 tashkilotni o'chirish (30 kunlik kutish bilan).
 
@@ -442,6 +447,10 @@ ish kuni), oraliq + 4 ish kuni (Uzum kechiktirishi mumkin). Summa = shu davrda Y
 **F39. Kassa prognozi** (90 kun) = boshlang'ich qoldiq + kutilgan kirimlar (F38) − rejalashtirilgan chiqimlar
 (xarid to'lovlari, takroriy xarajatlar). Istalgan kunda < 0 → "kassa uzilishi" ogohlantirishi.
 
-**F40. Standart tarif bo'yicha foyda** (bepul logistika davrlarida): logistika 0 bo'lgan sotuvlarga F37 (yoki shu
-SKU'ning oxirgi pullik logistikasi) qo'shib hisoblangan foyda. Bepul davrlar ma'lumotdan aniqlanadi (kunlik
-sotuvlarning ≥ 90% ida logistika 0) va admin jadvalida tasdiqlanadi (legacy `.env` sanalari o'rniga).
+**F40. Me'yoriy (bonussiz) foyda/dona** (ADR-031; faqat SKU baholash va narx — M6, F35/F36, M13; P&L va hisob
+varag'iga hech qachon qo'shilmaydi): foyda/dona − Uzum bonusi bilan tejalgan xarajatlarning me'yoriy qiymati/dona.
+Bonus davrlari — `fee_waivers` (do'kon yoki hammasi, sanalar, bepul turlar, sabab; foydalanuvchi kiritadi yoki
+tizim taklifini tasdiqlaydi; taklif: kunlik Yakunlangan qatorlarning ≥ 90% ida logistika 0). Me'yoriy qiymat tur
+bo'yicha: sotuv logistikasi — SKU'ning bonus davridan tashqaridagi oxirgi pullik logistikasi, bo'lmasa do'konning
+odatiy (eng ko'p) tarifi, SKU o'lchamlari bo'lsa — F37; saqlash — SKU `storage_price` × kunlar; baholovchisi yo'q tur —
+"me'yoriy baho yo'q". Haqiqiy foyda (F3–F16) o'zgarmaydi: bonus davrida bepul xarajat 0.

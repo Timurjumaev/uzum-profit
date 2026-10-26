@@ -1,6 +1,6 @@
 // Foyda va zarar (M5, B4.2). Maket — 04 §7.4: yuqorida hisob varag'i to'liq (ustunlar: joriy, tushumga nisbatan,
 // oldingi davr, farq), ostida sharshara va kutilayotgan blok (F16), keyin kesimlar (oylar / do'konlar / SKU).
-// Tannarx qamrovi < 100% — sariq banner (F15); bepul logistika davri — "Standart tarif bo'yicha foyda" (F40).
+// Tannarx qamrovi < 100% — sariq banner (F15). Uzum bonusi haqiqiy foydaga ta'sir qilmaydi (ADR-031).
 // Hamma raqam API'dan (`/pnl`), drill-down — bosh sahifadagi `Drill` (sotuvlar, Uzum toifasi, o'z xarajatlari).
 import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useSearch } from "@tanstack/react-router";
@@ -62,7 +62,6 @@ export function Pnl() {
   const summary = sync.data ? syncSummary(sync.data) : null;
   const emptyState = summary?.state === "never" ? "never" : summary && summary.state !== "fresh" ? "partial" : "none";
   const { period: current, previous } = data.meta;
-  const std = data.standard;
   return (
     <section className="pnl" aria-busy={query.isPlaceholderData || undefined}>
       <header className="pnl__head">
@@ -99,13 +98,7 @@ export function Pnl() {
       {data.recalculated > 0 && <Banner tone="info" title={t("pnl.recalculated", { value: f.number(data.recalculated) })} />}
 
       <div className="pnl-ledger-box">
-        <PnlLedger data={data} lines={lines} onRow={setDrill} />
-        {std && (
-          <p className="caption">
-            {t("pnl.standard.note", { amount: f.money(std.logistics), lines: f.number(std.lines) })}
-            {std.unpriced_lines > 0 && <> {t("pnl.standard.unpriced", { value: f.number(std.unpriced_lines) })}</>}
-          </p>
-        )}
+        <PnlLedger lines={lines} onRow={setDrill} />
       </div>
 
       <div className="pnl__row">

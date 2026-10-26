@@ -1166,7 +1166,6 @@ export interface components {
             pending_shops: components["schemas"]["PendingShopOut"][];
             /** Recalculated */
             recalculated: number;
-            standard: components["schemas"]["StandardOut"] | null;
             /** Free Periods */
             free_periods: components["schemas"]["PeriodOut"][];
         };
@@ -1540,20 +1539,6 @@ export interface components {
             next_cursor: string | null;
             unlinked: components["schemas"]["StatementOut"];
             unallocated: components["schemas"]["StatementOut"];
-        };
-        /**
-         * StandardOut
-         * @description F40: bepul logistika kunlarida standart tarif qo'shilgan sof foyda.
-         */
-        StandardOut: {
-            /** Net Profit */
-            net_profit: string;
-            /** Logistics */
-            logistics: string;
-            /** Lines */
-            lines: number;
-            /** Unpriced Lines */
-            unpriced_lines: number;
         };
         /**
          * StatementOut

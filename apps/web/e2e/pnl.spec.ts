@@ -1,16 +1,16 @@
-// Foyda va zarar (M5, B4.2): hisob varag'i ustunlari, F40, drill-down, kesimlar URL'da, gorizontal skrollsiz (360 px).
+// Foyda va zarar (M5, B4.2): hisob varag'i ustunlari, drill-down, kesimlar URL'da, gorizontal skrollsiz (360 px).
 import { expect, test } from "@playwright/test";
 
 import { mockApi } from "./support/api";
 import { isMobile, open } from "./support/page";
 
-test("hisob varag'i: yalpi foyda, ustunlar, standart tarif bo'yicha foyda; drill-down", async ({ page }, info) => {
+test("hisob varag'i: yalpi foyda, ustunlar; drill-down", async ({ page }, info) => {
   await mockApi(page);
   await open(page, "/pnl");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^Foyda va zarar, /);
   const ledger = page.getByRole("table", { name: "Foyda va zarar: tushumdan sof foydagacha" });
   await expect(ledger.getByRole("row", { name: /^Yalpi foyda/ })).toBeVisible();
-  await expect(page.getByTestId("standard-profit")).toContainText("Standart tarif boʻyicha foyda");
+  await expect(page.getByText(/Standart tarif/)).toHaveCount(0); // ADR-031: o'ylab topilgan qator yo'q
   // Tor ekranda faqat joriy summa — qo'shimcha ustunlar yashirin.
   const previous = ledger.getByRole("columnheader", { name: "Oldingi davr" });
   if (isMobile(info.project.name)) await expect(previous).toBeHidden();

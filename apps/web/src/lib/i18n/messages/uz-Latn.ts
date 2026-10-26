@@ -458,14 +458,6 @@ export const uzLatn = {
     grossProfit: "Yalpi foyda",
     uncoveredPayout: "Tannarxsiz sotuvlar (hisobga kirmadi)",
     uncoveredExpenses: "Tannarxsiz qismga toʻgʻri kelgan xarajat",
-    standard: {
-      label: "Standart tarif boʻyicha foyda",
-      note: "Bepul logistika davrida Uzum standart tarifni olganda: logistika {{amount}} koʻproq boʻlardi ({{lines}} ta sotuv).",
-      unpriced: "{{value}} ta sotuvda standart tarif nomaʼlum (pullik logistika tarixi yoʻq) — qoʻshilmadi.",
-      formula: "Sof foyda, bepul logistika kunlaridagi logistikasi 0 sotuvlarga standart tarif qoʻshilganda",
-      source: "Tarif: SKUʼning oxirgi pullik logistikasi, boʻlmasa doʻkonning odatiy tarifi",
-      estimated: "Uzum tarifi taxminan tiklanadi",
-    },
     waterfall: {
       title: "Tushumdan sof foydagacha",
       revenue: "Tushum",

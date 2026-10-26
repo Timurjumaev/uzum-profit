@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Callable, Hashable, Iterable, Mapping
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import Decimal
 from enum import StrEnum
@@ -334,8 +334,6 @@ class Cells:
 
     period: Period
     cells: Mapping[CellKey, Cell]
-    # F11 qoidasi (``build_cells`` dagi) — kataklar o'zgartirilganda soliqni qayta hisoblash uchun (F40).
-    tax: TaxRule | Callable[[date], TaxRule | None] | None = None
 
     @property
     def items(self) -> dict[CellKey, Statement]:
@@ -352,7 +350,6 @@ class Cells:
                 for k, c in self.cells.items()
                 if first <= k[0] <= last and (where is None or where(k))
             },
-            self.tax,
         )
 
     def statement(self, where: Callable[[CellKey], bool] | None = None) -> Statement:
@@ -397,23 +394,6 @@ class Cells:
 
     def by_sku(self) -> dict[str | None, Statement]:
         return self.by(lambda k: k.sku)
-
-    def with_logistics(self, extra: Mapping[CellKey, tuple[Decimal, Decimal]]) -> Cells:
-        """F40: kataklarga qo'shimcha logistika — ``(jami, tannarxi ma'lum qatorlardagi qismi)``. Faqat o'zgargan
-        kataklar nusxalanadi; ularning soliq (F11, baza Uzum to'lovi bo'lsa) va F15 ayrilgan qismi qayta hisoblanadi.
-        Natija ``build_cells`` ga logistikasi o'zgartirilgan qatorlarni berish bilan bir xil. Kataklarda yo'q kalit
-        (davrdan tashqari yoki filtrlangan) e'tiborga olinmaydi."""
-        cells = dict(self.cells)
-        rule_of = _rules(self.tax)
-        for key, (added, covered) in extra.items():
-            old = cells.get(key)
-            if old is None or not (added or covered):
-                continue
-            new = replace(old, logistics=old.logistics + added)
-            new.covered_payout = old.covered_payout - covered
-            _finish(new, rule_of(key.day))
-            cells[key] = new
-        return Cells(self.period, cells, self.tax)
 
 
 def _roll(cells: Iterable[Cell]) -> Cell:
@@ -660,50 +640,7 @@ def build_cells(
     rule_of = _rules(tax)  # F11 profili sana bo'yicha (upcore.tax), kun bo'yicha keshda
     for key, a in acc.items():
         _finish(a, rule_of(key[0]))
-    return Cells(period, dict(acc), tax)
-
-
-# --- F40: standart tarif bo'yicha foyda ---------------------------------------------------------
-
-
-@dataclass(frozen=True, slots=True)
-class FreeSale:
-    """F40: bepul logistika kunidagi, logistikasi 0 bo'lgan Yakunlangan sotuv qatori (katak kaliti bilan)."""
-
-    key: CellKey
-    amount: int
-    costed: bool  # tannarxi ma'lum (F15: foydaga kiradi)
-
-
-@dataclass(frozen=True, slots=True)
-class StandardLogistics:
-    """F40 qo'shimcha logistikasi: kataklar bo'yicha ``(jami, tannarxi ma'lum qatorlardagi qismi)``."""
-
-    extra: Mapping[CellKey, tuple[Decimal, Decimal]]
-    total: Money  # hamma qatorlar bo'yicha (tannarxsizlari ham) — "tejalgan logistika"
-    lines: int  # standart tarif qo'shilgan qatorlar
-    unpriced_lines: int  # standart tarifi noma'lum qatorlar — qo'shilmadi (taxmin yashirilmaydi)
-
-
-def standard_logistics(
-    sales: Iterable[FreeSale], fee_of: Callable[[FreeSale], Money | None]
-) -> StandardLogistics:
-    """F40: har qatorga standart tarif (bir dona, ``fee_of`` — ``upcore.tariffs.standard_fee_of``) × dona.
-    Natija ``Cells.with_logistics`` ga beriladi: "standart tarif bo'yicha foyda" = shu kataklarning F12."""
-    extra: dict[CellKey, tuple[Decimal, Decimal]] = {}
-    added = _D0
-    lines = unpriced = 0
-    for sale in sales:
-        fee = fee_of(sale)
-        if fee is None:
-            unpriced += 1
-            continue
-        amount = _cents(fee.amount * sale.amount)
-        old, old_covered = extra.get(sale.key, (_D0, _D0))
-        extra[sale.key] = (old + amount, old_covered + (amount if sale.costed else _D0))
-        added += amount
-        lines += 1
-    return StandardLogistics(extra, _uzs(added), lines, unpriced)
+    return Cells(period, dict(acc))
 
 
 # --- Unit-iqtisod (M6) ----------------------------------------------------------------------

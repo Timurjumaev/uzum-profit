@@ -223,7 +223,7 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   ko'rsatkichlar (marja yonida tannarxsiz qism, kutilayotgan foyda R'siz sababi bilan). Sotuv yo'q + sinxron muammoli —
   "sotuv yo'q" deyilmaydi (tamoyil 8). **Reja o'zgarishlari:** (1) API'ga `RowOut.change` qo'shildi (core `compare`) — tamoyil 4;
   (2) "O'tgan yil" solishtirish dashboard API'da yo'q — hozir oldingi davr bilan, banner aytadi (B5.6); (3) "Diqqat talab
-  qiladi" da jarima, kechikayotgan kargo, Uzum to'lovi — B5 (ma'lumot yo'q); (4) bepul logistika soyasi — B4.2/F40;
+  qiladi" da jarima, kechikayotgan kargo, Uzum to'lovi — B5 (ma'lumot yo'q); (4) bepul logistika soyasi — B4.2 (ADR-031);
   (5) drill-down'da Uzum toifasi xarajatlari `VIEW_SETTINGS` ruxsatini talab qiladi (API shunday) — ruxsat yo'q bo'lsa
   drawer'da xato matni. **Topildi va tuzatildi:** davr chizig'i `grid` ichida sahifani 655 px kengaytirardi (360 px'da
   gorizontal skroll). **Qoldi:** M4 tezlik mezoni (p95 < 700 ms) staging'da Temur ma'lumotida o'lchanadi; yetmasa —
@@ -234,22 +234,26 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   oldin ayriladi — har oraliq summa zanjirga mos) va ustunlar: joriy, tushumga nisbatan, oldingi davr, farq, o'zgarish
   (< 640 px da joriy + o'zgarish); sharshara; kutilayotgan blok (F16, do'konlar bo'yicha); qamrov sariq banneri;
   drill-down (bosh sahifa `Drill`); kesimlar oylar / do'konlar / SKU (`?view=`), do'kon va SKU kesimida F9/F10
-  to'g'ridan-to'g'ri va taqsimlangan, "Taqsimlanmagan" va "SKU bog'lanmagan" alohida. F40: `upcore.pnl.standard_logistics`
-  + `Cells.with_logistics` (faqat o'zgargan kataklar, soliq va F15 qayta) — `upapi.reports.free`; bepul kunlar ma'lumotdan
-  (do'kon × kun, ≥ 90%) va `free_logistics_periods` jadvalidan; bosh sahifa grafigida soya (B4.1 qoldig'i). **Qarorlar:**
-  (1) **ADR-031 qayta yozilmoqda** (Temur: bonus — vaqtinchalik, ma'lumot sifatida; P&L'dagi F40 qatori tasdiqdan keyin olib tashlanadi) — eski taklif: standart tarif SKU'ning oxirgi pullik logistikasi, bo'lmasa do'konning odatiy (eng ko'p) tarifi (legacy
-  `std_fee_map` kabi); F37 hajm bo'yicha — SKU o'lchamlari bazada yo'q, o'lchamsiz F37 (50 000) foydani haddan tashqari
-  kamaytirardi; ikkalasi ham yo'q qator — "tarifi noma'lum", qo'shilmaydi va soni ko'rsatiladi; (2) bepul davrlarni
-  admin tasdiqlashi — B8 (M17), hozir aniqlangan + jadvaldagi davrlar; (3) "toifa bo'yicha" kesim — tovar toifalari
-  B4.3 da (Mahsulotlar); (4) drill-down eksporti va Excel/PDF — B4.10 / M14 (B7); (5) "o'tgan yil" — B5.6 (banner).
-- [ ] B4.3 Mahsulotlar (M6) — jadval, SKU sahifasi, unit kalkulyator, tovar ↔ SKU bog'lash; SKU xarajatlari
+  to'g'ridan-to'g'ri va taqsimlangan, "Taqsimlanmagan" va "SKU bog'lanmagan" alohida. Bepul logistika kunlari
+  (`upapi.reports.free`: ma'lumotdan, do'kon × kun ≥ 90%, + `free_logistics_periods`) — bosh sahifa grafigida soya
+  (B4.1 qoldig'i), haqiqiy hisobga ta'sir qilmaydi. **Reja o'zgarishi (ADR-031, Temur tasdiqladi):** Uzum bonusi —
+  vaqtinchalik ma'lumot; P&L'da "standart tarif bo'yicha foyda" (eski F40) qatori yo'q — avval qilingan, olib
+  tashlandi; F40 endi me'yoriy (bonussiz) foyda/dona — B4.3. **Qoldi:** "toifa bo'yicha" kesim — B4.3; drill-down
+  eksporti va Excel/PDF — B4.10 / M14 (B7); "o'tgan yil" — B5.6 (banner).
+- [ ] B4.2a Uzum bonuslari (ADR-031): `fee_waivers` migratsiyasi (`free_logistics_periods` o'rniga; do'kon yoki
+  hammasi, sanalar, bepul turlar, sabab, manba), CRUD API (audit bilan), aniqlash takliflari (tasdiqlanmaguncha
+  ta'sirsiz), sotuv qatorida `waiver_id` va UI'da "Bonus davri" belgisi, P&L banneri (sabab, turlar, sanalar) va
+  vaqtincha shu yerda qo'shish shakli; grafik soyasi tasdiqlangan davrlardan.
+- [ ] B4.3 Mahsulotlar (M6) — jadval, SKU sahifasi, unit kalkulyator (F35/F36 me'yoriy tariflar bilan), me'yoriy
+  (bonussiz) foyda/dona (F40, ADR-031), tovar ↔ SKU bog'lash; SKU xarajatlari
   "to'g'ridan-to'g'ri" va "taqsimlangan" ustunlarda, "Taqsimlanmagan" qatori alohida (ADR-026).
-- [ ] B4.4 Buyurtmalar (M7) — ro'yxat, bekor va qaytish tahlili.
+- [ ] B4.4 Buyurtmalar (M7) — ro'yxat ("Bonus davri" belgisi bilan), bekor va qaytish tahlili.
 - [ ] B4.5 Xarajatlar (M8) — Uzum xarajatlari, o'z xarajatlarim (takroriy, amortizatsiya).
 - [ ] B4.6 Xaridlar (M9) — yangi model: xarid hayoti, qatorlar, komponentlar, kurs rejimlari, taqsimot,
   Partiya yo'li, kech kiritilgan xarajatda qayta hisob.
 - [ ] B4.7 Ombor (M10 asos) — joylar, qoldiq, zaxira kunlari, holat, buyurtma sanasi.
-- [ ] B4.8 Sozlamalar (M16) — soliq profili, tannarx usuli, to'lov jadvali, muddatlar, do'konlar.
+- [ ] B4.8 Sozlamalar (M16) — soliq profili, tannarx usuli, to'lov jadvali, muddatlar, do'konlar, Uzum bonuslari
+  (ADR-031: davrlar ro'yxati, qo'shish/tahrirlash, tizim takliflarini tasdiqlash).
 - [ ] B4.9 Legacy import: `uzum.db` yuklash → xaridlar; solishtirma hisobot.
 - [ ] B4.10 Excel eksport har jadvalda.
 - [ ] B4.11 Yordam: har ko'rsatkichda FormulaPopover, asosiy sahifalar uchun qisqa yordam matnlari.

@@ -61,10 +61,6 @@
   white-space: normal;
 }
 
-.pnl-standard > * {
-  color: var(--text-secondary);
-}
-
 @media (max-width: 639px) {
   .pnl-wide {
     display: none; /* tor ekranda: joriy summa va o'zgarish */
