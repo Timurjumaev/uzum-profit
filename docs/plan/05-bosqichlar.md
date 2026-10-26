@@ -162,7 +162,20 @@ dona legacy bilan 1 so'mgacha bir xil.
   `/cash`, `/reports`, `/settings`) "qurilmoqda" sahifasiga olib boradi. Testlar: `shell.test.tsx` (menyu, filtrlar,
   sinxron holatlari, Ctrl+K, chiqish, tab bar, axe: jiddiy xato 0), `filters.test.ts`, `sync.test.ts`; umumiy soxta API
   `src/test/api.ts` (App.test unga o'tkazildi). Boshlang'ich JS 146,8 KB gzip. Qoldi (B3.8): vizual skrinshotlar.
-- [ ] B3.6 Grafik komponentlari (ECharts temasi, tooltip, jadval ko'rinishi).
+- [x] B3.6 Grafik komponentlari (ECharts temasi, tooltip, jadval ko'rinishi).
+  ✓ 2026-10-26: `components/charts` — LineBarChart (ustun + chiziq, bitta o'q, annotatsiyalar), StackedBarChart,
+  WaterfallChart (qo'shiluvchi slot 1, ayriluvchi slot 8, yakuniy — siyoh; nol chizig'idan o'tadi), HeatmapChart (hafta
+  kuni × soat), CalendarHeatmap; Sparkline B3.4 da. Har birida: tooltip (hamma seriya qiymati asl satrdan, nomlar
+  escape), "Grafik | Jadval" almashtirgich, legenda (≥ 2 seriya), `role="img"` + matnli tavsif (eng yuqori/past), bo'sh
+  holat, yuklanmasa "Qayta urinish". 04 §5.1 qoidalari `options.ts` da (ustun ≤ 24 px, uchi 4 px, 2 px oraliq; chiziq
+  2 px, marker ≥ 8 px; hairline to'r; ≤ 4 chiziqda to'g'ridan-to'g'ri yorliq). Ranglar — `styles/tokens.ts` dan
+  (`palette.ts`); `prefers-reduced-motion` — animatsiyasiz. ECharts 6 (`echarts/core` + SVG renderer) alohida bo'lak
+  (~84 KB gzip, birinchi grafikda yuklanadi); boshlang'ich JS 147,8 KB. Grafik hisoblamaydi: jami va qadam summalari
+  API'dan (tamoyil 4); songa aylantirish faqat joylashuv uchun. Qarorlar: qorong'i rejimda ketma-ket shkala teskari
+  (04 §4.3 ga yozildi), sinxron uzilgan kunlar — punktir ramkali maydon (ECharts markArea shtrixni qo'llamaydi),
+  tor ekranda sharshara yorliqlari qiya. `/ui-kit` da "Grafiklar" bo'limi. Testlar: `options.test.ts` (sof quruvchilar),
+  `charts.test.tsx` (ramka, hayot sikli, axe), `echarts.smoke.test.tsx` (haqiqiy ECharts jsdom'da, ogohlantirishsiz —
+  ECharts 6 da `containLabel` va `api.style` eskirganini shu test ushladi).
 - [ ] B3.7 Kirish sahifalari, onboarding wizard (M2), "Ma'lumotlar holati" sahifasi.
 - [ ] B3.8 Playwright: e2e (kirish, onboarding), vizual skrinshotlar, axe.
 - T: `/ui-kit` va onboarding skrinshotlarini ko'rib fikr bildirish; Q1 — brend nomini tanlash.

@@ -34,7 +34,8 @@ import {
   type CompareMode,
   type LedgerRow,
 } from "../components/ui";
-import type { Range } from "../lib/dates";
+import { CalendarHeatmap, HeatmapChart, LineBarChart, StackedBarChart, WaterfallChart, type WaterfallStep } from "../components/charts";
+import { addDays, type Range } from "../lib/dates";
 import { LANGS, setLanguage, useFormat, type Lang } from "../lib/i18n";
 import { useTheme, type ThemeChoice } from "../lib/theme";
 import "./ui-kit.css";
@@ -66,6 +67,72 @@ const OPTIONS: ComboOption[] = [
   { value: "3", label: "Shaharcha ryukzak", hint: "SKU-103" },
   { value: "4", label: "Чарм ҳамён", hint: "SKU-104" },
 ];
+
+// Grafiklar uchun sintetik, deterministik ma'lumot (tasodifiy emas — vizual testlar barqaror bo'lsin).
+const wave = (i: number, base: number, amp: number, phase = 0) => String(Math.round(base + amp * Math.sin(i * 0.7 + phase) + (i % 7 === 5 ? amp * 0.6 : 0)));
+const DAYS = Array.from({ length: 30 }, (_, i) => addDays("2026-09-26", i));
+const REVENUE = DAYS.map((_, i) => wave(i, 5_200_000, 1_400_000));
+const PROFIT = DAYS.map((_, i) => wave(i, 1_300_000, 420_000, 1.2));
+const MONTHS = ["2026-05-01", "2026-06-01", "2026-07-01", "2026-08-01", "2026-09-01", "2026-10-01"];
+const COSTS: Array<[string, string, number, number]> = [
+  ["commission", "Uzum komissiyasi", 2, 3_700_000],
+  ["logistics", "Logistika", 3, 1_900_000],
+  ["cogs", "Tannarx", 4, 7_800_000],
+  ["ads", "Reklama", 5, 1_100_000],
+  ["storage", "Saqlash", 6, 380_000],
+  ["fines", "Jarima", 7, 120_000],
+];
+const WATERFALL: WaterfallStep[] = [
+  { key: "revenue", label: "Tushum", amount: "186420000.00", kind: "total" },
+  { key: "commission", label: "Uzum komissiyasi", amount: "-37284000.00", kind: "subtract" },
+  { key: "logistics", label: "Logistika", amount: "-9135750.00", kind: "subtract" },
+  { key: "payout", label: "Uzum toʻlovi", amount: "140000250.00", kind: "total" },
+  { key: "cogs", label: "Tannarx", amount: "-78112050.00", kind: "subtract" },
+  { key: "uzum", label: "Reklama, saqlash", amount: "-11631000.00", kind: "subtract" },
+  { key: "tax", label: "Soliq", amount: "-1864200.00", kind: "subtract" },
+  { key: "net", label: "Sof foyda", amount: "48357200.00", kind: "total" },
+];
+const HEAT = Array.from({ length: 7 }, (_, d) =>
+  Array.from({ length: 24 }, (_, h) => (h < 7 ? null : String(Math.max(0, Math.round(14 * Math.exp(-(((h - (d > 4 ? 15 : 20)) / 5) ** 2)) * (1 + d / 12))))))
+);
+const CALENDAR = Array.from({ length: 112 }, (_, i) => ({ date: addDays("2026-07-06", i), value: wave(i, 4_800_000, 2_000_000, 0.4) }));
+
+function ChartsKit() {
+  return (
+    <div className="kit-stack">
+      <LineBarChart
+        title="Kunlik tushum va sof foyda"
+        x={DAYS}
+        series={[
+          { key: "revenue", name: "Tushum", color: 1, values: REVENUE },
+          { key: "profit", name: "Sof foyda", color: "ink", kind: "line", values: PROFIT },
+        ]}
+        bands={[
+          { from: "2026-10-01", to: "2026-10-07", kind: "shade", label: "Uzum bepul logistika" },
+          { from: "2026-10-08", to: "2026-10-09", kind: "hatch", label: "Sinxron uzilgan" },
+        ]}
+      />
+      <LineBarChart
+        title="Doʻkonlar boʻyicha tushum"
+        x={MONTHS}
+        xKind="month"
+        series={[
+          { key: "a", name: "byDurii", color: 1, kind: "line", values: ["31200000", "35400000", "33100000", "40200000", "44800000", "38900000"] },
+          { key: "b", name: "EL-ONE", color: 2, kind: "line", values: ["8100000", "9400000", "12300000", "11800000", "15200000", "14100000"] },
+        ]}
+      />
+      <StackedBarChart
+        title="Xarajatlar tarkibi"
+        x={MONTHS}
+        series={COSTS.map(([key, name, color, base], c) => ({ key, name, color, values: MONTHS.map((_, i) => wave(i, base, base * 0.18, c)) }))}
+      />
+      <WaterfallChart title="Sharshara: tushumdan sof foydagacha" steps={WATERFALL} />
+      <HeatmapChart title="Buyurtmalar: hafta kuni va soat" values={HEAT} valueLabel="Buyurtmalar" />
+      <CalendarHeatmap title="Kunlik tushum kalendari" days={CALENDAR} valueLabel="Tushum" />
+      <LineBarChart title="Maʼlumot yoʻq" x={[]} series={[]} />
+    </div>
+  );
+}
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -341,6 +408,10 @@ export function UiKit() {
             <ProgressBar label="EL-ONE · xarajatlar" value={203} max={203} detail={t("ui.progress", { done: 203, total: 203 })} />
           </div>
         </div>
+      </Section>
+
+      <Section title="Grafiklar">
+        <ChartsKit />
       </Section>
 
       <Section title="ProductThumb, FileDrop">

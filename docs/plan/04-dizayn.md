@@ -138,6 +138,8 @@ qo'lda tanlay oladi (`data-theme`).
 | 8 qizil | `#E34948` | `#E66767` |
 
 - **Ketma-ket (miqdor):** bitta ko'k shkala `#CDE2FB` → `#0D366B` (issiqlik xaritasi, kalendar).
+  Qorong'i rejimda shkala teskari (eng ko'p qiymat — `#CDE2FB`, eng kam — `#0D366B`): qorong'i fonda "ko'p" yorug' ko'rinadi
+  (B3.6; `#0D366B` `bg-surface` bilan deyarli bir xil bo'lgani uchun eng kam qiymat ham ko'rinadigan chegarada qoladi).
 - **Ikki qutbli (+/−):** ko'k ↔ qizil, o'rtasi kulrang (yorug' `#F0EFEC`, qorong'i `#383835`) — sharshara
   grafigidagi qo'shiluvchi va ayriluvchi qadamlar.
 - **Holat ranglari (faqat holat uchun, hech qachon "4-seriya" emas):** yaxshi `#0CA30C`, ogohlantirish `#FAB219`,
