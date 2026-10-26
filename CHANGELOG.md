@@ -283,3 +283,13 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   (bonussiz) foyda/dona, faqat SKU baholash va narx uchun (B4.2a, B4.3). Testlar: core, API (bonus kunlari haqiqiy
   P&L'ni o'zgartirmaydi, SKU nomlari, ADR-026 yig'indilari), model, sahifa (jsdom + axe), e2e (kesimlar URL'da,
   360 px), haqiqiy brauzerda axe, vizual asos.
+- B4.2a Uzum bonuslari (ADR-031): vaqtinchalik bepul xarajat davrlari — ma'lumot, qoida emas. `upcore.waivers`
+  (turlar: sotuv logistikasi + P&L'ga kiradigan Uzum toifalari; tekshiruv; `waiver_for`; takliflar — aniqlangan bepul
+  kunlardan, mavjud yozuvlar qoplamaganlari). Migratsiya 0008: `fee_waivers` (do'kon yoki hammasi, sanalar, turlar,
+  sabab, manba, `dismissed_at`; RLS) — `free_logistics_periods` o'rniga. API: `/fee-waivers` (GET — `view_finance`;
+  POST/PATCH/DELETE — `manage_settings`, audit jurnali), `/pnl` `waivers` va `waiver_suggestions`, `/dashboard`
+  `waivers`, `/sales` `waiver_id`; `upapi.reports.free` o'rniga `upapi.reports.waivers`. Web: P&L'da bonus banneri,
+  taklifni belgilash yoki rad etish, qo'shish shakli (Dialog), drill-down'da "Bonus davri" belgisi, bosh sahifa
+  grafigida bonus davri soyasi; mobilda P&L banner tugmalari matn ostida. Haqiqiy foyda o'zgarmaydi. Testlar: core
+  (100%), API (CRUD, ruxsatlar, tekshiruvlar, audit, taklif → tasdiqlash/rad etish, sotuv belgisi, tashkilotlarni
+  ajratish, RLS), sahifa (jsdom + axe), e2e, vizual asos.

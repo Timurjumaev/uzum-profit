@@ -149,7 +149,7 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
 
 **Sozlama va ma'lumotnoma:** `tax_profiles` (org, rejim, stavka, baza, sanadan), `ref_logistics_tariffs`
 (sanadan, qoidalar jsonb), `ref_tax_rates`, `fee_waivers` — Uzum bonus davrlari (do'kon yoki NULL — hammasi, sanalar, bepul turlar, sabab,
-manba: qo'lda / aniqlangan, tasdiqlangan; ADR-031; B4.2a da `free_logistics_periods` o'rniga).
+manba: qo'lda / taklifdan, rad etilgan taklif `dismissed_at`; ADR-031; 0008 da `free_logistics_periods` o'rniga).
 
 **Bildirishnoma:** `notification_channels` (telegram chat_id, push endpoint), `notification_rules`
 (hodisa, yoqilgan, parametrlar, tinch soatlar), `notifications` (`dedupe_key` unikal, holat).

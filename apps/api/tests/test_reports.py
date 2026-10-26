@@ -157,7 +157,8 @@ def _populate(w: World) -> None:
 
     # Uzum bonusi (avgust — boshqa testlar davridan tashqari): bepul logistika kunlari (ADR-031).
     # B: 10-avgust ikkala qator logistikasi 0 (bepul kun), 11-avgustda pullik (7 000).
-    # A: 10-avgust y SKU va bog'lanmagan qator 0 (bepul kun); 12-avgust 50% — aniqlanmaydi, jadvaldagi davr bilan bepul.
+    # A: 10-avgust y SKU va bog'lanmagan qator 0 (bepul kun); 12-avgust 50% — aniqlanmaydi; A uchun 12-avgust
+    # kiritilgan bonus davri (saqlash va logistika). 10-avgust — ikkala do'konda tizim taklifi.
     lamp = b.insert("items", name="Lampa")
     w.ids["lb"] = b.insert(
         "mp_skus", shop_id=b.shop_id, external_id=22, sku_code="Lampa", item_id=lamp
@@ -172,7 +173,14 @@ def _populate(w: World) -> None:
     a.sale(None, d(8, 10), 1, price=50_000, logistics=0)
     a.sale(ya, d(8, 12), 1, price=150_000, logistics=0)
     a.sale(ya, d(8, 12), 1, price=150_000)
-    a.insert("free_logistics_periods", shop_id=a.shop_id, start_on=d(8, 12), end_on=d(8, 12))
+    w.ids["waiver"] = a.insert(
+        "fee_waivers",
+        shop_id=a.shop_id,
+        start_on=d(8, 12),
+        end_on=d(8, 12),
+        kinds=["sale_logistics", "storage"],
+        reason="Test bonusi",
+    )
 
     # Uzum xarajatlari (A): do'kon darajasi, sotuvga bog'langan reklama, kompensatsiya, jarimalar, chiqarilganlar.
     w.expense(a, d(10, 1), "storage", 12_000)  # 1-oktabr — sotuvsiz kun: taqsimlanmagan
@@ -382,28 +390,35 @@ def test_pnl_shop_filter_equals_shop_column(world: World) -> None:
 
 
 AUG = {"start": "2026-08-10", "end": "2026-08-12"}
-AUG_FREE = [
-    {"start": "2026-08-10", "end": "2026-08-10", "days": 1},
-    {"start": "2026-08-12", "end": "2026-08-12", "days": 1},
-]
 
 
-def test_free_periods_do_not_change_actual_profit(world: World) -> None:
-    """ADR-031: bonus (bepul logistika) kunlari faqat belgilanadi — haqiqiy P&L o'zgarmaydi, hech narsa qo'shilmaydi."""
+def suggestion(shop: Org, day: date) -> dict[str, Any]:
+    on = day.isoformat()
+    return {"shop_id": str(shop.shop_id), "start_on": on, "end_on": on, "kinds": ["sale_logistics"]}
+
+
+def test_waivers_do_not_change_actual_profit(world: World) -> None:
+    """ADR-031: Uzum bonusi faqat belgilanadi — haqiqiy P&L o'zgarmaydi, hech narsa qo'shilmaydi."""
     body = world.get("pnl", **AUG)
-    assert body["free_periods"] == AUG_FREE
-    assert "standard" not in body
+    assert [(x["id"], x["start_on"], x["kinds"], x["reason"]) for x in body["waivers"]] == [
+        (str(world.ids["waiver"]), "2026-08-12", ["sale_logistics", "storage"], "Test bonusi")
+    ]
+    # Taklif: 10-avgust ikkala do'konda (12-avgust kiritilgan davr bilan qoplangan va 50% — aniqlanmaydi).
+    assert body["waiver_suggestions"] == sorted(
+        [suggestion(world.a, d(8, 10)), suggestion(world.b, d(8, 10))], key=lambda x: x["shop_id"]
+    )
     ref = _reference(world, Period(d(8, 10), d(8, 12))).statement()
     assert money(body["statement"]["net_profit"]) == ref.net_profit.amount
     assert money(body["statement"]["logistics"]) == D(7_000) + D(5_000)  # faqat Uzum olgani
 
     lamp_only = world.get("pnl", shop=str(world.b.shop_id), **AUG)
-    assert lamp_only["free_periods"] == AUG_FREE[:1]  # 12-avgust — faqat A do'koni (jadval)
-    assert world.get("dashboard", **AUG)["free_periods"] == AUG_FREE
+    assert lamp_only["waivers"] == []  # A do'konining davri
+    assert lamp_only["waiver_suggestions"] == [suggestion(world.b, d(8, 10))]
+    assert world.get("dashboard", **AUG)["waivers"] == body["waivers"]
 
     october = world.get("pnl", **OCT)
-    assert october["free_periods"] == []
-    assert world.get("dashboard", **OCT)["free_periods"] == []
+    assert october["waivers"] == [] and october["waiver_suggestions"] == []
+    assert world.get("dashboard", **OCT)["waivers"] == []
 
 
 def test_pnl_sku_columns_have_titles(world: World) -> None:

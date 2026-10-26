@@ -167,13 +167,15 @@ def _value(table: Table, col: Any, allowed: dict[str, str]) -> Any:
     if isinstance(t, LargeBinary):
         return os.urandom(16)
     if isinstance(t, ARRAY):
-        return []
+        return [f"{col.name}-1"] if col.name in NONEMPTY.get(table.name, ()) else []
     if isinstance(t, Text):
         return f"{table.name}-{col.name}"
     raise TypeError(f"{table.name}.{col.name}: {t!r}")
 
 
 SKIP = {"id", "org_id", "created_at", "updated_at"}
+# Bo'sh bo'lmasligi CHECK bilan talab qilinadigan massivlar (``cardinality(kinds) > 0``).
+NONEMPTY = {"fee_waivers": {"kinds"}}
 # NULL bo'lishi mumkin, lekin CHECK bilan holatga bog'langan ustunlar (``token_state``: faol akkauntda kalit bor).
 FILLED = {"mp_accounts": {"token_encrypted", "key_version", "token_last4"}}
 

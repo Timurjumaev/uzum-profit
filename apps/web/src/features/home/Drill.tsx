@@ -46,7 +46,23 @@ function SalesBody({ orgId, params, field }: { orgId: string; params: ReportPara
   const items = query.data.pages.flatMap((p) => p.items);
   const columns: Column<Sale>[] = [
     { key: "day", header: t("home.drill.day"), render: (r) => f.date(r.day) },
-    { key: "sku", header: t("home.drill.sku"), render: (r) => r.sku_title ?? t("home.drill.unlinked") },
+    {
+      key: "sku",
+      header: t("home.drill.sku"),
+      render: (r) => (
+        <>
+          {r.sku_title ?? t("home.drill.unlinked")}
+          {r.waiver_id && (
+            <>
+              {" "}
+              <span title={t("pnl.waivers.badgeTitle")}>
+                <Badge tone="info">{t("pnl.waivers.badge")}</Badge>
+              </span>
+            </>
+          )}
+        </>
+      ),
+    },
     { key: "units", header: t("home.drill.units"), numeric: true, render: (r) => f.number(r.amount) },
     {
       key: "value",

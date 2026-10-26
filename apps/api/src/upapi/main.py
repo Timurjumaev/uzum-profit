@@ -26,6 +26,7 @@ from upapi.routes import (
     sales,
     skus,
     sync,
+    waivers,
 )
 from upapi.settings import Settings, get_settings
 from upapi.startup import UnsafeConfiguration, check_role, check_settings
@@ -97,6 +98,7 @@ def create_app(
     app.include_router(orgs.router, prefix=API_PREFIX)
     app.include_router(accounts.router, prefix=API_PREFIX)
     app.include_router(sync.router, prefix=API_PREFIX)
+    app.include_router(waivers.router, prefix=API_PREFIX)  # Uzum bonuslari (ADR-031)
     for reports in (dashboard, pnl, skus, sales, expenses, inventory):  # B2.9 o'qish API'lari
         app.include_router(reports.router, prefix=API_PREFIX)
     return app

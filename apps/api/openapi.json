@@ -1686,6 +1686,247 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/fee-waivers": {
+      "get": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "List Waivers",
+        "operationId": "list_waivers_api_v1_orgs__org_id__fee_waivers_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeeWaiversOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Create Waiver",
+        "operationId": "create_waiver_api_v1_orgs__org_id__fee_waivers_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WaiverIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaiverOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/fee-waivers/{waiver_id}": {
+      "patch": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Update Waiver",
+        "operationId": "update_waiver_api_v1_orgs__org_id__fee_waivers__waiver_id__patch",
+        "parameters": [
+          {
+            "name": "waiver_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Waiver Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WaiverPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaiverOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Delete Waiver",
+        "operationId": "delete_waiver_api_v1_orgs__org_id__fee_waivers__waiver_id__delete",
+        "parameters": [
+          {
+            "name": "waiver_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Waiver Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/dashboard": {
       "get": {
         "tags": [
@@ -2972,12 +3213,12 @@
           "attention": {
             "$ref": "#/components/schemas/AttentionOut"
           },
-          "free_periods": {
+          "waivers": {
             "items": {
-              "$ref": "#/components/schemas/PeriodOut"
+              "$ref": "#/components/schemas/WaiverOut"
             },
             "type": "array",
-            "title": "Free Periods"
+            "title": "Waivers"
           }
         },
         "type": "object",
@@ -2992,7 +3233,7 @@
           "bottom",
           "kpis",
           "attention",
-          "free_periods"
+          "waivers"
         ],
         "title": "DashboardOut"
       },
@@ -3248,6 +3489,30 @@
           "next_cursor"
         ],
         "title": "ExpensesOut"
+      },
+      "FeeWaiversOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WaiverOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "kinds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Kinds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "kinds"
+        ],
+        "title": "FeeWaiversOut"
       },
       "ForecastOut": {
         "properties": {
@@ -4489,12 +4754,19 @@
             "type": "integer",
             "title": "Recalculated"
           },
-          "free_periods": {
+          "waivers": {
             "items": {
-              "$ref": "#/components/schemas/PeriodOut"
+              "$ref": "#/components/schemas/WaiverOut"
             },
             "type": "array",
-            "title": "Free Periods"
+            "title": "Waivers"
+          },
+          "waiver_suggestions": {
+            "items": {
+              "$ref": "#/components/schemas/SuggestionOut"
+            },
+            "type": "array",
+            "title": "Waiver Suggestions"
           }
         },
         "type": "object",
@@ -4507,7 +4779,8 @@
           "pending",
           "pending_shops",
           "recalculated",
-          "free_periods"
+          "waivers",
+          "waiver_suggestions"
         ],
         "title": "PnlOut"
       },
@@ -4932,6 +5205,18 @@
               }
             ],
             "title": "Previous Cogs"
+          },
+          "waiver_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Waiver Id"
           }
         },
         "type": "object",
@@ -4958,7 +5243,8 @@
           "gross_profit",
           "cost_flags",
           "recalculated_at",
-          "previous_cogs"
+          "previous_cogs",
+          "waiver_id"
         ],
         "title": "SaleOut"
       },
@@ -6236,6 +6522,41 @@
         ],
         "title": "StockTotalsOut"
       },
+      "SuggestionOut": {
+        "properties": {
+          "shop_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Shop Id"
+          },
+          "start_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Start On"
+          },
+          "end_on": {
+            "type": "string",
+            "format": "date",
+            "title": "End On"
+          },
+          "kinds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Kinds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "shop_id",
+          "start_on",
+          "end_on",
+          "kinds"
+        ],
+        "title": "SuggestionOut",
+        "description": "Taklif: do'konda Uzum logistikani olmagan kunlar — \"bonus davrimi?\" (tasdiqlanmagan)."
+      },
       "SyncStatusOut": {
         "properties": {
           "healthy": {
@@ -6426,6 +6747,203 @@
           "sku"
         ],
         "title": "View"
+      },
+      "WaiverIn": {
+        "properties": {
+          "shop_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shop Id"
+          },
+          "start_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Start On"
+          },
+          "end_on": {
+            "type": "string",
+            "format": "date",
+            "title": "End On"
+          },
+          "kinds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Kinds"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Reason",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "detected"
+            ],
+            "title": "Source",
+            "default": "manual"
+          },
+          "dismissed": {
+            "type": "boolean",
+            "title": "Dismissed",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_on",
+          "end_on",
+          "kinds"
+        ],
+        "title": "WaiverIn"
+      },
+      "WaiverOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "shop_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shop Id"
+          },
+          "start_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Start On"
+          },
+          "end_on": {
+            "type": "string",
+            "format": "date",
+            "title": "End On"
+          },
+          "kinds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Kinds"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "dismissed": {
+            "type": "boolean",
+            "title": "Dismissed"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "shop_id",
+          "start_on",
+          "end_on",
+          "kinds",
+          "reason",
+          "source",
+          "dismissed",
+          "created_at"
+        ],
+        "title": "WaiverOut",
+        "description": "Bonus davri (ADR-031): ``shop_id`` ``null`` — hamma do'kon; ``dismissed`` — rad etilgan taklif."
+      },
+      "WaiverPatch": {
+        "properties": {
+          "shop_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shop Id"
+          },
+          "start_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start On"
+          },
+          "end_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End On"
+          },
+          "kinds": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kinds"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "title": "WaiverPatch"
       }
     }
   }

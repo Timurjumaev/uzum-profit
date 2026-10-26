@@ -240,10 +240,19 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   vaqtinchalik ma'lumot; P&L'da "standart tarif bo'yicha foyda" (eski F40) qatori yo'q — avval qilingan, olib
   tashlandi; F40 endi me'yoriy (bonussiz) foyda/dona — B4.3. **Qoldi:** "toifa bo'yicha" kesim — B4.3; drill-down
   eksporti va Excel/PDF — B4.10 / M14 (B7); "o'tgan yil" — B5.6 (banner).
-- [ ] B4.2a Uzum bonuslari (ADR-031): `fee_waivers` migratsiyasi (`free_logistics_periods` o'rniga; do'kon yoki
+- [x] B4.2a Uzum bonuslari (ADR-031): `fee_waivers` migratsiyasi (`free_logistics_periods` o'rniga; do'kon yoki
   hammasi, sanalar, bepul turlar, sabab, manba), CRUD API (audit bilan), aniqlash takliflari (tasdiqlanmaguncha
   ta'sirsiz), sotuv qatorida `waiver_id` va UI'da "Bonus davri" belgisi, P&L banneri (sabab, turlar, sanalar) va
   vaqtincha shu yerda qo'shish shakli; grafik soyasi tasdiqlangan davrlardan.
+  ✓ 2026-10-26: `upcore.waivers` (turlar — sotuv logistikasi + P&L'ga kiradigan Uzum toifalari, kodda sana yo'q;
+  tekshiruv, `waiver_for`, takliflar), migratsiya 0008 (`fee_waivers`, RLS), `/fee-waivers` (o'qish — `view_finance`,
+  o'zgartirish — `manage_settings`, audit: create/update/delete/dismiss), `/pnl` `waivers` + `waiver_suggestions`,
+  `/dashboard` `waivers` (grafik soyasi), `/sales` `waiver_id`. UI: P&L'da bonus banneri (o'chirish), taklif —
+  "Bonus deb belgilash" (shakl taklif bilan to'ladi, `source = detected`) yoki "Yo'q, bonus emas" (`dismissed` —
+  qayta so'ralmaydi), "Uzum bonusini qo'shish" shakli (do'kon yoki hammasi, sanalar, turlar API'dan, sabab);
+  drill-down'da "Bonus davri" belgisi. **Qarorlar:** taklifni har qanday yozuv (boshqa tur bo'lsa ham) qoplasa — shu
+  kunlar qayta taklif qilinmaydi; tahrirlash UI'si — B4.8 (API'da PATCH bor). **T:** oktabr bonusini kiritish
+  (P&L → taklif → "Bonus deb belgilash", sabab va turlar: sotuv logistikasi, saqlash).
 - [ ] B4.3 Mahsulotlar (M6) — jadval, SKU sahifasi, unit kalkulyator (F35/F36 me'yoriy tariflar bilan), me'yoriy
   (bonussiz) foyda/dona (F40, ADR-031), tovar ↔ SKU bog'lash; SKU xarajatlari
   "to'g'ridan-to'g'ri" va "taqsimlangan" ustunlarda, "Taqsimlanmagan" qatori alohida (ADR-026).

@@ -3,7 +3,7 @@
 Bloklar: hisob varag'i (P&L bilan bitta funksiya — ``upapi.reports.cells``, oldingi davr bilan), davr chizig'i
 (bugun, kecha, shu oy, oy prognozi, o'tgan oy — tanlangan davrdan qat'i nazar, do'kon filtri bilan), kunlik grafik,
 eng foydali 5 va zarar 5 SKU, qo'shimcha ko'rsatkichlar (F13–F19, F16, F29) va "Diqqat talab qiladi" sanoqlari.
-Bepul logistika davrlari (F40) — kunlik grafik soyasi uchun; to'lov kutilmoqda (F38) — B5 da.
+Uzum bonuslari (ADR-031) — kunlik grafik soyasi uchun; to'lov kutilmoqda (F38) — B5 da.
 """
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ from upcore.pnl import CellKey, Cells, Statement, compare
 from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission
 from upapi.reports import cells as rc
-from upapi.reports import free
+from upapi.reports import waivers as rw
 from upapi.reports.common import (
     Filters,
     Heavy,
@@ -125,7 +125,7 @@ class DashboardOut(BaseModel):
     bottom: list[SkuBriefOut]
     kpis: KpiOut
     attention: AttentionOut
-    free_periods: list[PeriodOut]  # F40 bepul logistika davrlari (grafikda soya)
+    waivers: list[rw.WaiverOut]  # Uzum bonuslari (ADR-031) — kunlik grafikda soya
 
 
 def _days(period: Period) -> Callable[[CellKey], bool]:
@@ -251,5 +251,5 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
             stock_high=statuses.count(StockStatus.HIGH),
             recalculated=await rc.recalculated(conn, f, now),
         ),
-        free_periods=[PeriodOut.of(x) for x in (await free.free_days(conn, f)).periods()],
+        waivers=rw.in_report(await rw.rows(conn), f),
     )
