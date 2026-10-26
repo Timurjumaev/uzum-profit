@@ -346,7 +346,7 @@ describe("Ctrl+K", () => {
 
   it("ochiladi (fokus qidiruvda), Ctrl+K yana bossa yopiladi, Esc yopib fokusni qaytaradi", async () => {
     await renderShell("/");
-    const launcher = topbar().getByRole("button", { name: "Tez oʻtish" });
+    const launcher = topbar().getByRole("button", { name: /^Tez oʻtish/ });
     launcher.focus();
     keyK();
     expect(document.activeElement).toBe(input());
@@ -362,7 +362,7 @@ describe("Ctrl+K", () => {
 
   it("topbar tugmasi ham ochadi; fon bosilsa yopiladi", async () => {
     await renderShell("/");
-    fireEvent.click(topbar().getByRole("button", { name: "Tez oʻtish" }));
+    fireEvent.click(topbar().getByRole("button", { name: /^Tez oʻtish/ }));
     expect(palette()).toBeTruthy();
     fireEvent.click(document.querySelector(".palette .ui-layer__backdrop")!);
     expect(screen.queryByRole("dialog", { name: "Tez oʻtish" })).toBeNull();

@@ -39,8 +39,9 @@ export function TopBar({ orgId, account, onSearch }: TopBarProps) {
       </div>
       <div className="topbar__tools">
         {orgId && <SyncIndicator orgId={orgId} />}
-        <button type="button" className="ui-btn ui-btn--ghost ui-btn--md topbar__search" onClick={onSearch} aria-haspopup="dialog" aria-label={t("shell.search")}>
+        <button type="button" className="ui-btn ui-btn--ghost ui-btn--md topbar__search" onClick={onSearch} aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K">
           <Search size={16} aria-hidden />
+          <span className="ui-visually-hidden">{t("shell.search")}</span>
           <kbd className="topbar__kbd">{shortcutLabel()}</kbd>
         </button>
         <span className="topbar__account">

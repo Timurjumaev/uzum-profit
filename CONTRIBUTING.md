@@ -17,6 +17,8 @@ uv run ruff check && uv run ruff format --check && uv run mypy && uv run pytest
 uv run pytest -m benchmark                 # tezlik testlari (coverage'siz)
 python3 -m unittest tests.test_all        # legacy (Python 3.8 bilan ham mos bo'lishi shart)
 pnpm --filter web lint && pnpm --filter web typecheck && pnpm --filter web test && pnpm --filter web build
+pnpm --filter web exec playwright install chromium   # bir marta
+pnpm --filter web e2e                                   # e2e + axe + vizual (skrinshot asosini yangilash: e2e:update)
 ```
 
 ## Commit va PR

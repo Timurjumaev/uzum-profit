@@ -11,7 +11,9 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "api:types": "openapi-typescript ../api/openapi.json -o src/lib/api/schema.d.ts",
-    "size": "node scripts/check-size.mjs"
+    "size": "node scripts/check-size.mjs",
+    "e2e": "playwright test",
+    "e2e:update": "playwright test --update-snapshots"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.3.0",
@@ -27,6 +29,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "1.63.0",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",

@@ -256,3 +256,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 - Q1 Brend nomi **SellerMax** (ADR-030, `sellermax.uz`): UI (`app.name`, hamma tillarda lotinda), sahifa sarlavhasi va
   API sarlavhasi ("SellerMax API", `openapi.json`) yangilandi; repo va paket nomlari o'zgarmaydi. Tovar belgisi
   tekshiruvi ochiq (06 §6).
+- B3.8 Playwright (`apps/web/e2e`, `playwright.config.ts`, CI'da `E2E va vizual` job'i): production build brauzerda,
+  holatli soxta API (`e2e/support/api.ts`, vaqt qotirilgan). E2E: kirish, to'liq onboarding, karkas; axe haqiqiy
+  brauzerda **kontrast bilan** (9 sahifa × yorug'/qorong'i × 1440/390 px, ochiq qatlamlar); vizual regressiya — 40
+  skrinshot asosi (`e2e/__screenshots__`, `pnpm --filter web e2e:update`). Topildi va tuzatildi: qidiruv tugmasining
+  ko'rinadigan matni nomiga kirmagan (WCAG 2.5.3). B3 yopildi.
