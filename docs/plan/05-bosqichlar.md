@@ -191,14 +191,25 @@ dona legacy bilan 1 so'mgacha bir xil.
   — `useSearch` tekshirilmagan `redirect` qaytarardi (ochiq qayta yo'naltirish); endi qiymat ishlatilgan joyda qayta
   tekshiriladi (`app/search.ts`, testi bor). Testlar: `auth.test.tsx`, `onboarding.test.tsx`, `status.test.tsx` (hammasida
   axe: jiddiy xato 0), `phone.test.ts`; boshlang'ich JS 154 KB gzip.
-- [ ] B3.8 Playwright: e2e (kirish, onboarding), vizual skrinshotlar, axe.
+- [x] B3.8 Playwright: e2e (kirish, onboarding), vizual skrinshotlar, axe.
+  ✓ 2026-10-26: `apps/web/e2e` + `playwright.config.ts` (`pnpm --filter web e2e`; CI'da alohida `E2E va vizual` job'i).
+  Production build brauzerda (`vite preview`), API — marshrut darajasida holatli soxta (`e2e/support/api.ts`: kirish,
+  tashkilot, kalit, do'kon tahriri; vaqt qotirilgan Toshkent 2026-10-26 14:00) — backend va baza kerak emas, natija
+  deterministik. Ikki o'lcham (1440 va 390 px). **E2E** (28): kirish (kod, xato, qaytish manzili, ochiq qayta
+  yo'naltirish, til), to'liq onboarding (kirish → tashkilot → noto'g'ri/to'g'ri kalit → do'kon nomi va rangi → tarix
+  → bosh sahifa; kalit URL'da yo'q; yuborilgan so'rovlar tanasi tekshiriladi), karkas (menyu, Ctrl+K, filtrlar URL'da,
+  mavzu, chiqish, holat sahifasi). **axe — haqiqiy brauzerda, KONTRAST bilan** (jsdom'da o'lchanmaydi): 9 sahifa ×
+  yorug'/qorong'i × desktop/mobil + ochiq qatlamlar — jiddiy xato 0 (topildi va tuzatildi: qidiruv tugmasining
+  ko'rinadigan matni ("Ctrl K") nomiga kirmagan edi, WCAG 2.5.3). **Vizual**: 10 sahifa × yorug'/qorong'i × 2 o'lcham = 40
+  skrinshot asosi `e2e/__screenshots__` da (3,5 MB; sozlama: farq ≤ 1% piksel, animatsiyasiz); yangilash —
+  `pnpm --filter web e2e:update`, farqni ko'zdan kechirib commit. Haqiqiy backend bilan e2e (staging) — B8.
 - T: `/ui-kit` va onboarding skrinshotlarini ko'rib fikr bildirish; Q1 — brend nomini tanlash.
   ✓ 2026-10-25 `/ui-kit` skrinshotlari (yorug'/qorong'i, 1440/390 px) Temur tomonidan ma'qullandi (B3.4 komponentlari
   o'zgarishsiz qoladi). ✓ 2026-10-26 onboarding va "Ma'lumotlar holati" skrinshotlari (1280/390 px, yorug'/qorong'i)
   Temur tomonidan ma'qullandi. ✓ 2026-10-26 Q1: brend nomi **SellerMax** (ADR-030); qoldi — tovar belgisi tekshiruvi (Temur).
 
 **Chiqish:** UI-kit skrinshotlari (yorug'/qorong'i, 1440/390 px) Temur tomonidan ma'qullangan ✓ 2026-10-25; axe — jiddiy
-xato 0 (B3.4 dan CI'da; karkas va yangi sahifalar qo'shilgach ham). Onboarding skrinshotlari (B3.7) ma'qullanishi — B3 yopilishi uchun.
+xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy sahifada). Onboarding skrinshotlari ma'qullangan ✓ 2026-10-26 (B3.7). **B3 yopildi** — Temurning Q1 tovar belgisi tekshiruvi B4 ni to'xtatmaydi (ADR-030).
 
 ## B4. Asosiy ekranlar — Temur yangi dasturga o'tadi — 10–15 kun
 

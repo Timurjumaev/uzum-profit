@@ -37,5 +37,6 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
+    exclude: ["e2e/**", "node_modules/**", "dist/**"], // e2e — Playwright (`pnpm e2e`), vitest emas
   },
 });
