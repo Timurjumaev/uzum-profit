@@ -85,6 +85,7 @@ spetsifikatsiyasi, 2026-aprel asosida).
   SKU'ga bog'landi); logistika xarajati `externalId` = sotuv qatori id (1765/1765). `sellerProfit` = F3 − F4 − F5
   hamma qatorda `amount` bilan; **Bekor qator: `amount` = 0, komissiya/logistika/`sellerProfit` = 0, bekor dona
   `amountReturns` da** (905/905); Yakunlangan qatorlarda `amountReturns` > 0 yo'q, `PARTIALLY_CANCELLED` yo'q.
+  Qayta tekshiruv 2026-10-27: o'sha natija (postavka 561/561, logistika `externalId` 1845/1845), 24 soatda xato 0.
 - Endpointlar: shops; product (SKU: qoldiqlar `quantityActive`, `quantityFbs`, `quantityDefected`,
   `quantityPending`, sotilgan/qaytgan, `avgdsales`, `rankInfo.rank`, `paidStoragePriceItem`, IKPU, `purchasePrice`);
   `sendPriceData` (narx o'zgartirish); finance orders/expenses; FBS buyurtmalar, qoldiq, jo'natmalar; FBO postavkalar
