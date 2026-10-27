@@ -3043,6 +3043,119 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/orders/analysis": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Analysis",
+        "operationId": "analysis_api_v1_orgs__org_id__orders_analysis_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Davr boshi (Toshkent kuni)",
+              "title": "Start"
+            },
+            "description": "Davr boshi (Toshkent kuni)"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Davr oxiri, kiradi; standart — bugun",
+              "title": "End"
+            },
+            "description": "Davr oxiri, kiradi; standart — bugun"
+          },
+          {
+            "name": "shop",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Do'konlar (bir necha marta)",
+              "title": "Shop"
+            },
+            "description": "Do'konlar (bir necha marta)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrdersAnalysisOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/expenses": {
       "get": {
         "tags": [
@@ -5031,6 +5144,273 @@
           "categories"
         ],
         "title": "MonthOut"
+      },
+      "OrdersAnalysisOut": {
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/OrdersSummaryOut"
+          },
+          "daily": {
+            "items": {
+              "$ref": "#/components/schemas/OrdersDayOut"
+            },
+            "type": "array",
+            "title": "Daily"
+          },
+          "by_sku": {
+            "items": {
+              "$ref": "#/components/schemas/OrdersSkuOut"
+            },
+            "type": "array",
+            "title": "By Sku"
+          },
+          "return_causes": {
+            "items": {
+              "$ref": "#/components/schemas/OrdersCauseOut"
+            },
+            "type": "array",
+            "title": "Return Causes"
+          },
+          "cancel_causes": {
+            "items": {
+              "$ref": "#/components/schemas/OrdersCauseOut"
+            },
+            "type": "array",
+            "title": "Cancel Causes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "meta",
+          "summary",
+          "daily",
+          "by_sku",
+          "return_causes",
+          "cancel_causes"
+        ],
+        "title": "OrdersAnalysisOut"
+      },
+      "OrdersCauseOut": {
+        "properties": {
+          "cause": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cause"
+          },
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cause",
+          "units"
+        ],
+        "title": "OrdersCauseOut"
+      },
+      "OrdersDayOut": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date",
+            "title": "Day"
+          },
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          },
+          "canceled": {
+            "type": "integer",
+            "title": "Canceled"
+          },
+          "returns": {
+            "type": "integer",
+            "title": "Returns"
+          },
+          "cancel_share": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Share"
+          },
+          "return_share": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return Share"
+          }
+        },
+        "type": "object",
+        "required": [
+          "day",
+          "units",
+          "canceled",
+          "returns",
+          "cancel_share",
+          "return_share"
+        ],
+        "title": "OrdersDayOut"
+      },
+      "OrdersSkuOut": {
+        "properties": {
+          "sku_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          },
+          "canceled": {
+            "type": "integer",
+            "title": "Canceled"
+          },
+          "returns": {
+            "type": "integer",
+            "title": "Returns"
+          },
+          "cancel_share": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Share"
+          },
+          "return_share": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return Share"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku_id",
+          "title",
+          "units",
+          "canceled",
+          "returns",
+          "cancel_share",
+          "return_share"
+        ],
+        "title": "OrdersSkuOut"
+      },
+      "OrdersSummaryOut": {
+        "properties": {
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          },
+          "canceled": {
+            "type": "integer",
+            "title": "Canceled"
+          },
+          "returns": {
+            "type": "integer",
+            "title": "Returns"
+          },
+          "cancel_share": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Share"
+          },
+          "return_share": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return Share"
+          },
+          "canceled_after_issue": {
+            "type": "integer",
+            "title": "Canceled After Issue"
+          },
+          "after_issue_share": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After Issue Share"
+          },
+          "return_storage_cost": {
+            "type": "string",
+            "title": "Return Storage Cost"
+          }
+        },
+        "type": "object",
+        "required": [
+          "units",
+          "canceled",
+          "returns",
+          "cancel_share",
+          "return_share",
+          "canceled_after_issue",
+          "after_issue_share",
+          "return_storage_cost"
+        ],
+        "title": "OrdersSummaryOut"
       },
       "OrgCreate": {
         "properties": {

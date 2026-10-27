@@ -632,6 +632,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/orders/analysis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Analysis */
+        get: operations["analysis_api_v1_orgs__org_id__orders_analysis_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/expenses": {
         parameters: {
             query?: never;
@@ -1214,6 +1231,80 @@ export interface components {
             categories: {
                 [key: string]: string;
             };
+        };
+        /** OrdersAnalysisOut */
+        OrdersAnalysisOut: {
+            meta: components["schemas"]["Meta"];
+            summary: components["schemas"]["OrdersSummaryOut"];
+            /** Daily */
+            daily: components["schemas"]["OrdersDayOut"][];
+            /** By Sku */
+            by_sku: components["schemas"]["OrdersSkuOut"][];
+            /** Return Causes */
+            return_causes: components["schemas"]["OrdersCauseOut"][];
+            /** Cancel Causes */
+            cancel_causes: components["schemas"]["OrdersCauseOut"][];
+        };
+        /** OrdersCauseOut */
+        OrdersCauseOut: {
+            /** Cause */
+            cause: string | null;
+            /** Units */
+            units: number;
+        };
+        /** OrdersDayOut */
+        OrdersDayOut: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Units */
+            units: number;
+            /** Canceled */
+            canceled: number;
+            /** Returns */
+            returns: number;
+            /** Cancel Share */
+            cancel_share: string | null;
+            /** Return Share */
+            return_share: string | null;
+        };
+        /** OrdersSkuOut */
+        OrdersSkuOut: {
+            /** Sku Id */
+            sku_id: string | null;
+            /** Title */
+            title: string | null;
+            /** Units */
+            units: number;
+            /** Canceled */
+            canceled: number;
+            /** Returns */
+            returns: number;
+            /** Cancel Share */
+            cancel_share: string | null;
+            /** Return Share */
+            return_share: string | null;
+        };
+        /** OrdersSummaryOut */
+        OrdersSummaryOut: {
+            /** Units */
+            units: number;
+            /** Canceled */
+            canceled: number;
+            /** Returns */
+            returns: number;
+            /** Cancel Share */
+            cancel_share: string | null;
+            /** Return Share */
+            return_share: string | null;
+            /** Canceled After Issue */
+            canceled_after_issue: number;
+            /** After Issue Share */
+            after_issue_share: string | null;
+            /** Return Storage Cost */
+            return_storage_cost: string;
         };
         /** OrgCreate */
         OrgCreate: {
@@ -4025,6 +4116,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SalesOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    analysis_api_v1_orgs__org_id__orders_analysis_get: {
+        parameters: {
+            query?: {
+                /** @description Davr boshi (Toshkent kuni) */
+                start?: string | null;
+                /** @description Davr oxiri, kiradi; standart — bugun */
+                end?: string | null;
+                /** @description Do'konlar (bir necha marta) */
+                shop?: string[] | null;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrdersAnalysisOut"];
                 };
             };
             /** @description Validatsiya xatosi */

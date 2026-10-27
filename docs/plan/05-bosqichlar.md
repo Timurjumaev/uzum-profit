@@ -269,7 +269,12 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   bo'yicha" kesim va ABC bo'yicha Uzum `rankInfo` ustuni; saqlangan ko'rinishlar hozircha qurilma bo'yicha; vizual
   e2e asoslari; Uzum mahsulot havolasi formati (`uzum_product_url`) real sahifada tekshirilmagan (Temur bir marta
   ochib ko'radi); saqlash bonusining `storage_price` ma'nosi (dona/kun) real ma'lumotda tasdiqlanadi.
-- [ ] B4.4 Buyurtmalar (M7) — ro'yxat ("Bonus davri" belgisi bilan), bekor va qaytish tahlili.
+- [x] B4.4 Buyurtmalar (M7) — ro'yxat ("Bonus davri" belgisi bilan), bekor va qaytish tahlili.
+  ✓ 2026-10-27: `/orders/analysis` (F17 va F18 ulushi, topshirilgandan keyin bekor — `issued_at`, kunlik trend, bekor va
+  qaytish sabablari, SKU bo'yicha, qaytim saqlash xarajati — C000004, kompensatsiya ayirilgan; `upcore.metrics.late_cancel_share`).
+  UI `/orders`: bo'limlar "Ro'yxat / Bekor bo'lish / Qaytarilish" va ro'yxat holati filtri URL'da; ro'yxat — mavjud
+  `/sales` (kursor bilan sahifalanadi, "Bonus davri", "Taxminiy", tannarxsiz qator "—"). **Qoldi:** FBS faol buyurtmalar va
+  muddatlar — B5; bekor ulushi trendi (foizli grafik) — grafik komponentiga "foiz" birligi qo'shilgach; eksport — B4.10.
 - [ ] B4.5 Xarajatlar (M8) — Uzum xarajatlari, o'z xarajatlarim (takroriy, amortizatsiya).
 - [ ] B4.6 Xaridlar (M9) — yangi model: xarid hayoti, qatorlar, komponentlar, kurs rejimlari, taqsimot,
   Partiya yo'li, kech kiritilgan xarajatda qayta hisob.

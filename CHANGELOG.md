@@ -307,3 +307,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   tanlash va saqlangan ko'rinishlar brauzerda, har ustunda formula, virtual skroll, bonus banneri, jadvaldan tashqari
   qatorlar) va `/products/:skuId` (KPI, tarix grafiklari, lotlar, qaytishlar, tovarga bog'lash, unit kalkulyator);
   `DataTable` — saralanadigan sarlavha va virtual skroll. Testlar: core, API (haqiqiy PostgreSQL), sahifalar (jsdom + axe).
+- B4.4 Buyurtmalar (M7). Core: `upcore.metrics.late_cancel_share` (F17 qismi — topshirilgandan keyin bekor ulushi).
+  API: `/orders/analysis` — bekor (F17) va qaytish (F18) ulushi, topshirilgandan keyin bekor (`issued_at`), kunlik trend,
+  bekor va qaytish sabablari (`returnCause`), SKU bo'yicha jadval, qaytim saqlash xarajati (C000004, kompensatsiya
+  ayirilgan, chiqarilgani hisobga kirmaydi). Web: `/orders` — bo'limlar "Ro'yxat / Bekor bo'lish / Qaytarilish" va
+  ro'yxat holati filtri URL'da; ro'yxat (`/sales`, kursor bilan): holat belgisi, "Bonus davri", "Taxminiy", tannarxsiz
+  qator tire bilan; tahlil: KPI (formula "?" bilan), kunlik grafik, sabablar va SKU jadvali. Testlar: core, API
+  (haqiqiy PostgreSQL: ulushlar, sabablar, do'kon va davr filtri, ruxsatlar, boshqa tashkilot), sahifalar (jsdom + axe).

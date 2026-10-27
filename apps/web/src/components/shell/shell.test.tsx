@@ -74,13 +74,13 @@ describe("menyu", () => {
       "Sozlamalar",
     ]);
     expect(sidebar().getByRole("link", { name: "Asosiy" }).getAttribute("aria-current")).toBe("page");
-    expect(sidebar().getByRole("link", { name: "Buyurtmalar" }).getAttribute("aria-current")).toBeNull();
+    expect(sidebar().getByRole("link", { name: "Xarajatlar" }).getAttribute("aria-current")).toBeNull();
 
-    fireEvent.click(sidebar().getByRole("link", { name: "Buyurtmalar" }));
-    expect(await screen.findByRole("heading", { name: "Buyurtmalar" })).toBeTruthy();
+    fireEvent.click(sidebar().getByRole("link", { name: "Xarajatlar" }));
+    expect(await screen.findByRole("heading", { name: "Xarajatlar" })).toBeTruthy();
     expect(screen.getByText("Sahifa qurilmoqda. Hozircha eski dasturdan foydalaning.")).toBeTruthy();
-    expect(history.location.pathname).toBe("/orders");
-    expect(sidebar().getByRole("link", { name: "Buyurtmalar" }).getAttribute("aria-current")).toBe("page");
+    expect(history.location.pathname).toBe("/expenses");
+    expect(sidebar().getByRole("link", { name: "Xarajatlar" }).getAttribute("aria-current")).toBe("page");
     expect(sidebar().getByRole("link", { name: "Asosiy" }).getAttribute("aria-current")).toBeNull();
   });
 
@@ -574,9 +574,9 @@ describe("mobil tab bar", () => {
       "Maʼlumotlar holati",
       "Sozlamalar",
     ]);
-    fireEvent.click(drawer.getByRole("link", { name: "Buyurtmalar" }));
-    await screen.findByRole("heading", { name: "Buyurtmalar" });
-    expect(history.location.pathname).toBe("/orders");
+    fireEvent.click(drawer.getByRole("link", { name: "Xarajatlar" }));
+    await screen.findByRole("heading", { name: "Xarajatlar" });
+    expect(history.location.pathname).toBe("/expenses");
     expect(screen.queryByRole("dialog", { name: "Yana" })).toBeNull();
     expect(tabbar().getByRole("button", { name: "Yana" }).className).toContain("is-active");
   });

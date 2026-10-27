@@ -476,3 +476,12 @@ def test_line_gross_profit() -> None:
         unit_cost=Decimal(50),
     )
     assert costed.gross_profit == Decimal(70)  # 200 − 20 − 10 − 100
+
+
+def test_late_cancel_share() -> None:
+    """F17 qismi: topshirilgandan keyin bekor ulushi (Bekor dona ichida)."""
+    from upcore.metrics import late_cancel_share
+
+    assert late_cancel_share(40, 10) == Decimal("0.25")
+    assert late_cancel_share(5, 5) == Decimal("1")
+    assert late_cancel_share(0, 0) is None

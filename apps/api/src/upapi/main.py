@@ -22,6 +22,7 @@ from upapi.routes import (
     health,
     inventory,
     items,
+    orders,
     orgs,
     pnl,
     sales,
@@ -101,7 +102,15 @@ def create_app(
     app.include_router(sync.router, prefix=API_PREFIX)
     app.include_router(waivers.router, prefix=API_PREFIX)  # Uzum bonuslari (ADR-031)
     app.include_router(items.router, prefix=API_PREFIX)  # tovar ↔ SKU bog'lash (M6)
-    for reports in (dashboard, pnl, skus, sales, expenses, inventory):  # B2.9 o'qish API'lari
+    for reports in (
+        dashboard,
+        pnl,
+        skus,
+        sales,
+        orders,
+        expenses,
+        inventory,
+    ):  # B2.9 o'qish API'lari
         app.include_router(reports.router, prefix=API_PREFIX)
     return app
 

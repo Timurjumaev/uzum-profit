@@ -1,0 +1,81 @@
+/* Buyurtmalar (M7, B4.4): faqat tokenlar orqali; 360 px'da gorizontal skroll yo'q (jadval o'z konteynerida skrollanadi). */
+
+.orders {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.orders > *,
+.orders-list > *,
+.orders-analysis > * {
+  min-inline-size: 0;
+}
+
+.orders__head > * {
+  margin: 0;
+}
+
+.orders-tabs {
+  display: flex;
+  gap: var(--space-1);
+  border-block-end: 1px solid var(--border-hairline);
+  overflow-x: auto;
+}
+
+.orders-tab {
+  min-block-size: 44px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-block-end: 2px solid transparent;
+  background: none;
+  color: var(--text-secondary);
+  font: var(--type-body-strong);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.orders-tab.is-active {
+  border-block-end-color: var(--accent-text);
+  color: var(--text-primary);
+}
+
+#orders-panel,
+.orders-list,
+.orders-analysis {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.orders-summary {
+  margin: 0;
+}
+
+.orders-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.orders-kpis {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.orders-analysis__tables {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.orders-analysis__tables h2 {
+  margin-block-end: var(--space-2);
+}
+
+@media (min-width: 1024px) {
+  .orders-analysis__tables {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    align-items: start;
+  }
+}

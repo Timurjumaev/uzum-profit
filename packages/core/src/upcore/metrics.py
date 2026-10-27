@@ -462,6 +462,11 @@ def cancel_rate(done: int, canceled: int) -> Decimal | None:
     return ratio(canceled, done + canceled)
 
 
+def late_cancel_share(canceled: int, after_issue: int) -> Decimal | None:
+    """F17 qismi. Topshirilgandan keyin bekor ulushi = (``dateIssued`` bor Bekor dona) / Bekor dona."""
+    return ratio(after_issue, canceled)
+
+
 def return_share(sold: int, returned: int) -> Decimal | None:
     """F18. Qaytish ulushi = qaytgan / (sotilgan + qaytgan) — Uzum ta'rifi (SKU ``quantityReturned``)."""
     return ratio(returned, sold + returned)

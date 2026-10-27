@@ -210,3 +210,32 @@ export const itemsQuery = (orgId: string, q: string) =>
 /** SKU ↔ tovar: mavjud tovarga, yangi tovar sifatida yoki ajratish (`mode: none`). */
 export const linkItem = (orgId: string, skuId: string, body: ItemLinkIn) =>
   unwrap(api.PUT("/api/v1/orgs/{org_id}/skus/{sku_id}/item", { params: { path: { org_id: orgId, sku_id: skuId } }, body }));
+
+// --- Buyurtmalar (M7, B4.4) ---------------------------------------------------------------------------------------
+
+export const ORDERS_PAGE = 50;
+
+/** Sotuv qatorlari ro'yxati (holat filtri bilan), kursor bilan sahifalanadi; `summary` — davr bo'yicha F17, F18. */
+export const ordersQuery = (orgId: string, p: ReportParams, group: string | undefined) =>
+  infiniteQueryOptions({
+    queryKey: ["orgs", orgId, "orders", p, group ?? null],
+    initialPageParam: null as string | null,
+    queryFn: ({ pageParam }) =>
+      unwrap(
+        api.GET("/api/v1/orgs/{org_id}/sales", {
+          params: {
+            path: { org_id: orgId },
+            query: { ...reportQuery(p), group: group as "completed" | undefined, limit: ORDERS_PAGE, cursor: pageParam },
+          },
+        }),
+      ),
+    getNextPageParam: (last) => last.next_cursor,
+  });
+
+/** Bekor va qaytish tahlili: ulushlar (F17, F18), kunlik trend, sabablar, SKU bo'yicha, qaytim saqlash xarajati. */
+export const ordersAnalysisQuery = (orgId: string, p: ReportParams) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "orders-analysis", p],
+    queryFn: () =>
+      unwrap(api.GET("/api/v1/orgs/{org_id}/orders/analysis", { params: { path: { org_id: orgId }, query: reportQuery(p) } })),
+  });
