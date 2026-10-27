@@ -1927,6 +1927,158 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/items": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "List Items",
+        "description": "Tovarlar (bog'lash tanlovi uchun): nom bo'yicha qidiruv (lotin/kirill, tutuq turidan qat'i nazar).",
+        "operationId": "list_items_api_v1_orgs__org_id__items_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/skus/{sku_id}/item": {
+      "put": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Link Item",
+        "operationId": "link_item_api_v1_orgs__org_id__skus__sku_id__item_put",
+        "parameters": [
+          {
+            "name": "sku_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Sku Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemLinkIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/LinkedItemOut"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Link Item Api V1 Orgs  Org Id  Skus  Sku Id  Item Put"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/dashboard": {
       "get": {
         "tags": [
@@ -2198,6 +2350,47 @@
             }
           },
           {
+            "name": "label",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ProfitLabel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Holat belgisi bo'yicha",
+              "title": "Label"
+            },
+            "description": "Holat belgisi bo'yicha"
+          },
+          {
+            "name": "abc",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "A",
+                    "B",
+                    "C"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ABC (F28)",
+              "title": "Abc"
+            },
+            "description": "ABC (F28)"
+          },
+          {
             "name": "sort",
             "in": "query",
             "required": false,
@@ -2306,6 +2499,333 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SkusOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/skus/{sku_id}": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Sku Detail",
+        "operationId": "sku_detail_api_v1_orgs__org_id__skus__sku_id__get",
+        "parameters": [
+          {
+            "name": "sku_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Sku Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Davr boshi (Toshkent kuni)",
+              "title": "Start"
+            },
+            "description": "Davr boshi (Toshkent kuni)"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Davr oxiri, kiradi; standart — bugun",
+              "title": "End"
+            },
+            "description": "Davr oxiri, kiradi; standart — bugun"
+          },
+          {
+            "name": "shop",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Do'konlar (bir necha marta)",
+              "title": "Shop"
+            },
+            "description": "Do'konlar (bir necha marta)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkuDetailOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/unit-calc": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Unit Calculator",
+        "operationId": "unit_calculator_api_v1_orgs__org_id__unit_calc_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "price",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 1000000000000.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "title": "Price"
+            }
+          },
+          {
+            "name": "unit_cost",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 1000000000000.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "title": "Unit Cost"
+            }
+          },
+          {
+            "name": "commission_pct",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 100.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "title": "Commission Pct"
+            }
+          },
+          {
+            "name": "logistics",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 1000000000000.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "default": "0",
+              "title": "Logistics"
+            }
+          },
+          {
+            "name": "packaging",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 1000000000000.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "default": "0",
+              "title": "Packaging"
+            }
+          },
+          {
+            "name": "tax_pct",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 100.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "default": "0",
+              "title": "Tax Pct"
+            }
+          },
+          {
+            "name": "ads_pct",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 100.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "default": "0",
+              "title": "Ads Pct"
+            }
+          },
+          {
+            "name": "target_margin_pct",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 100.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Target Margin Pct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnitCalcOut"
                 }
               }
             }
@@ -3096,6 +3616,125 @@
         ],
         "title": "AuditOut"
       },
+      "BonusOut": {
+        "properties": {
+          "waivers": {
+            "items": {
+              "$ref": "#/components/schemas/WaiverOut"
+            },
+            "type": "array",
+            "title": "Waivers"
+          },
+          "unestimated_kinds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unestimated Kinds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "waivers",
+          "unestimated_kinds"
+        ],
+        "title": "BonusOut",
+        "description": "Davrga tushgan Uzum bonuslari (ADR-031) va ularning me'yoriy bahosi (F40)."
+      },
+      "CalcDefaultsOut": {
+        "properties": {
+          "price": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          },
+          "unit_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Cost"
+          },
+          "logistics": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logistics"
+          },
+          "packaging": {
+            "type": "string",
+            "title": "Packaging"
+          },
+          "commission_pct": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commission Pct"
+          },
+          "tax_pct": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Pct"
+          },
+          "ads_pct": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ads Pct"
+          },
+          "sources": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "price",
+          "unit_cost",
+          "logistics",
+          "packaging",
+          "commission_pct",
+          "tax_pct",
+          "ads_pct",
+          "sources"
+        ],
+        "title": "CalcDefaultsOut",
+        "description": "Unit kalkulyator boshlang'ich qiymatlari (F35, F36) va ularning manbasi; ``null`` — qiymat yo'q (UI so'raydi).\n\nManbalar: ``price`` — ``period`` (davr o'rtachasi) | ``catalog``; ``unit_cost`` — ``period`` | ``last_lot``;\n``logistics`` — ``last_paid`` | ``shop_typical`` (me'yoriy, bonussiz — F40); ``commission_pct`` — ``period`` |\n``snapshot`` | ``catalog``; ``tax_pct`` va ``ads_pct`` — ``period``."
+      },
       "CategoryOut": {
         "properties": {
           "category": {
@@ -3726,6 +4365,101 @@
         ],
         "title": "InviteOut"
       },
+      "ItemLinkIn": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "existing",
+              "new",
+              "none"
+            ],
+            "title": "Mode"
+          },
+          "item_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mode"
+        ],
+        "title": "ItemLinkIn",
+        "description": "``existing`` — mavjud tovarga (``item_id``); ``new`` — SKU nomi (yoki ``name``) bilan yangi tovar; ``none`` —\ntovardan ajratish (tovar o'zi saqlanadi)."
+      },
+      "ItemOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "sku_count": {
+            "type": "integer",
+            "title": "Sku Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "image_url",
+          "sku_count"
+        ],
+        "title": "ItemOut"
+      },
+      "ItemsOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "ItemsOut"
+      },
       "KindStatus": {
         "properties": {
           "kind": {
@@ -4003,6 +4737,66 @@
         ],
         "title": "LeadOut"
       },
+      "LinkedItemOut": {
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Item Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "skus": {
+            "items": {
+              "$ref": "#/components/schemas/LinkedSkuOut"
+            },
+            "type": "array",
+            "title": "Skus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_id",
+          "name",
+          "skus"
+        ],
+        "title": "LinkedItemOut",
+        "description": "Tovar (item) va u bilan bog'langan SKU'lar (M6: bitta jismoniy tovar — bir necha SKU)."
+      },
+      "LinkedSkuOut": {
+        "properties": {
+          "sku_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sku Id"
+          },
+          "shop_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Shop Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku_id",
+          "shop_id",
+          "title"
+        ],
+        "title": "LinkedSkuOut"
+      },
       "LoginRequest": {
         "properties": {
           "phone": {
@@ -4048,6 +4842,57 @@
           "created"
         ],
         "title": "LoginResult"
+      },
+      "LotOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "ready_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ready On"
+          },
+          "qty": {
+            "type": "integer",
+            "title": "Qty"
+          },
+          "unit_cost": {
+            "type": "string",
+            "title": "Unit Cost"
+          },
+          "total": {
+            "type": "string",
+            "title": "Total"
+          },
+          "flags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Flags"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "ready_on",
+          "qty",
+          "unit_cost",
+          "total",
+          "flags"
+        ],
+        "title": "LotOut",
+        "description": "Tannarx tarixi: tovarning bitta lot'i (F20) — tayyor sanasi, soni va tannarxi/dona."
       },
       "Me": {
         "properties": {
@@ -4967,6 +5812,31 @@
         ],
         "title": "ReorderOut"
       },
+      "ReturnCauseOut": {
+        "properties": {
+          "cause": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cause"
+          },
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cause",
+          "units"
+        ],
+        "title": "ReturnCauseOut"
+      },
       "Revoked": {
         "properties": {
           "revoked": {
@@ -5669,6 +6539,170 @@
         ],
         "title": "SkuBriefOut"
       },
+      "SkuDayOut": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date",
+            "title": "Day"
+          },
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          },
+          "revenue": {
+            "type": "string",
+            "title": "Revenue"
+          },
+          "net_profit": {
+            "type": "string",
+            "title": "Net Profit"
+          },
+          "profit_per_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profit Per Unit"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          },
+          "commission_pct": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commission Pct"
+          },
+          "stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stock"
+          }
+        },
+        "type": "object",
+        "required": [
+          "day",
+          "units",
+          "revenue",
+          "net_profit",
+          "profit_per_unit",
+          "price",
+          "commission_pct",
+          "stock"
+        ],
+        "title": "SkuDayOut",
+        "description": "Kun kesimi: sotuv (``daily_sku_metrics`` kataklari) va snapshot (narx, komissiya, qoldiq); ikkalasidan biri\nbo'lmasligi mumkin."
+      },
+      "SkuDetailOut": {
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          },
+          "sku": {
+            "$ref": "#/components/schemas/SkuRowOut"
+          },
+          "statement": {
+            "$ref": "#/components/schemas/StatementOut"
+          },
+          "uzum_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uzum Url"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/SkuDayOut"
+            },
+            "type": "array",
+            "title": "History"
+          },
+          "lots": {
+            "items": {
+              "$ref": "#/components/schemas/LotOut"
+            },
+            "type": "array",
+            "title": "Lots"
+          },
+          "returns": {
+            "items": {
+              "$ref": "#/components/schemas/ReturnCauseOut"
+            },
+            "type": "array",
+            "title": "Returns"
+          },
+          "stock_detail": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StockDetailOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "linked": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LinkedItemOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "bonus": {
+            "$ref": "#/components/schemas/BonusOut"
+          },
+          "calc": {
+            "$ref": "#/components/schemas/CalcDefaultsOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "meta",
+          "sku",
+          "statement",
+          "uzum_url",
+          "history",
+          "lots",
+          "returns",
+          "stock_detail",
+          "linked",
+          "bonus",
+          "calc"
+        ],
+        "title": "SkuDetailOut"
+      },
       "SkuRowOut": {
         "properties": {
           "sku_id": {
@@ -5856,9 +6890,48 @@
             ],
             "title": "Profit Per Unit"
           },
+          "normative_profit_per_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Normative Profit Per Unit"
+          },
+          "saved_per_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Saved Per Unit"
+          },
+          "normative_state": {
+            "type": "string",
+            "enum": [
+              "none",
+              "adjusted",
+              "unavailable"
+            ],
+            "title": "Normative State"
+          },
           "net_profit": {
             "type": "string",
             "title": "Net Profit"
+          },
+          "expenses_direct": {
+            "type": "string",
+            "title": "Expenses Direct"
+          },
+          "expenses_allocated": {
+            "type": "string",
+            "title": "Expenses Allocated"
           },
           "margin": {
             "anyOf": [
@@ -5978,7 +7051,12 @@
           "ads_per_unit",
           "acos",
           "profit_per_unit",
+          "normative_profit_per_unit",
+          "saved_per_unit",
+          "normative_state",
           "net_profit",
+          "expenses_direct",
+          "expenses_allocated",
           "margin",
           "uncovered_share",
           "uncovered_lines",
@@ -6026,6 +7104,9 @@
           },
           "unallocated": {
             "$ref": "#/components/schemas/StatementOut"
+          },
+          "bonus": {
+            "$ref": "#/components/schemas/BonusOut"
           }
         },
         "type": "object",
@@ -6035,7 +7116,8 @@
           "total",
           "next_cursor",
           "unlinked",
-          "unallocated"
+          "unallocated",
+          "bonus"
         ],
         "title": "SkusOut"
       },
@@ -6223,6 +7305,51 @@
         ],
         "title": "StatusGroup",
         "description": "F2. Sotuv qatori holat guruhlari."
+      },
+      "StockDetailOut": {
+        "properties": {
+          "active": {
+            "type": "integer",
+            "title": "Active"
+          },
+          "fbs": {
+            "type": "integer",
+            "title": "Fbs"
+          },
+          "defected": {
+            "type": "integer",
+            "title": "Defected"
+          },
+          "pending": {
+            "type": "integer",
+            "title": "Pending"
+          },
+          "in_transit": {
+            "type": "integer",
+            "title": "In Transit"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "active",
+          "fbs",
+          "defected",
+          "pending",
+          "in_transit",
+          "status"
+        ],
+        "title": "StockDetailOut"
       },
       "StockRowOut": {
         "properties": {
@@ -6655,6 +7782,98 @@
         ],
         "title": "UncoveredOut",
         "description": "F15 \"tannarxsiz qism\" (sariq banner: \"N ta sotuv (X so'm) tannarxsiz — foydaga kirmadi\")."
+      },
+      "UnitCalcOut": {
+        "properties": {
+          "price": {
+            "type": "string",
+            "title": "Price"
+          },
+          "fixed": {
+            "type": "string",
+            "title": "Fixed"
+          },
+          "share_pct": {
+            "type": "string",
+            "title": "Share Pct"
+          },
+          "commission": {
+            "type": "string",
+            "title": "Commission"
+          },
+          "tax": {
+            "type": "string",
+            "title": "Tax"
+          },
+          "ads": {
+            "type": "string",
+            "title": "Ads"
+          },
+          "profit": {
+            "type": "string",
+            "title": "Profit"
+          },
+          "margin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Margin"
+          },
+          "roi": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roi"
+          },
+          "breakeven": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Breakeven"
+          },
+          "target_price": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Price"
+          }
+        },
+        "type": "object",
+        "required": [
+          "price",
+          "fixed",
+          "share_pct",
+          "commission",
+          "tax",
+          "ads",
+          "profit",
+          "margin",
+          "roi",
+          "breakeven",
+          "target_price"
+        ],
+        "title": "UnitCalcOut",
+        "description": "Bir dona iqtisodi berilgan narxda; ``breakeven`` (F35) va ``target_price`` (F36) — ``null`` bo'lsa ulush\n100% dan oshgan: hech qanday narx foyda bermaydi."
       },
       "UserOut": {
         "properties": {

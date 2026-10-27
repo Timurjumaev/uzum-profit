@@ -1,0 +1,308 @@
+/* Mahsulotlar (M6, B4.3): jadval sahifasi va SKU sahifasi — faqat tokenlar orqali; jadvallarda radius yo'q (04 §3). */
+
+.products,
+.sku {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.products > *,
+.sku > * {
+  min-inline-size: 0; /* grid ichida keng bola (jadval) sahifani kengaytirmasin — 360 px'da gorizontal skroll yo'q */
+}
+
+.products__head > *,
+.sku__head h1 {
+  margin: 0;
+}
+
+.products__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3);
+}
+
+.products__search {
+  flex: 1 1 14rem;
+  min-inline-size: 0;
+}
+
+.products__more {
+  display: flex;
+  justify-content: center;
+}
+
+.products-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 12rem;
+}
+
+.products-cell__text {
+  display: grid;
+  min-inline-size: 0;
+}
+
+.products-cell__name {
+  color: var(--text-primary);
+  font: var(--type-body-strong);
+  text-decoration: none;
+}
+
+.products-cell__name:hover {
+  color: var(--accent-text);
+  text-decoration: underline;
+}
+
+.products-cell .caption {
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-inline-size: 18rem;
+}
+
+.products .ui-table tbody th {
+  white-space: nowrap;
+  font-weight: 400;
+}
+
+.products .ui-badge {
+  margin-inline-start: var(--space-1);
+}
+
+.products-menu {
+  display: grid;
+  gap: var(--space-2);
+  min-inline-size: 15rem;
+  max-block-size: 60vh;
+  margin: 0;
+  padding: var(--space-3);
+  border: 0;
+  overflow-y: auto;
+}
+
+.products-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-block-size: 28px;
+  font: var(--type-body);
+}
+
+.products-views {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.products-views li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.products-views__save {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.products-outside {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+}
+
+.products-outside h2,
+.products-outside p {
+  margin: 0;
+}
+
+.products-outside dl {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.products-outside dt {
+  font: var(--type-label);
+  color: var(--text-secondary);
+}
+
+.products-outside dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- SKU sahifasi --- */
+.sku__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  inline-size: fit-content;
+  color: var(--accent-text);
+  font: var(--type-body-strong);
+}
+
+.sku__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.sku__title {
+  display: grid;
+  gap: var(--space-1);
+  min-inline-size: 0;
+}
+
+.sku__title p {
+  margin: 0;
+}
+
+.sku__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sku__ext {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--accent-text);
+}
+
+.sku__kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: var(--space-4);
+}
+
+.sku__charts {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 1024px) {
+  .sku__charts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sku__charts > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.sku__block,
+.sku-link,
+.sku-calc {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+}
+
+.sku__block h2,
+.sku-link h2,
+.sku-calc h2,
+.sku-link p,
+.sku-calc p {
+  margin: 0;
+}
+
+.sku-link__skus {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding-inline-start: var(--space-4);
+}
+
+.sku-link__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.sku-link__modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  border: 0;
+}
+
+.sku-calc__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.sku-calc__grid {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.sku-calc__inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.sku-calc__list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.sku-calc__list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block-end: var(--space-2);
+  border-block-end: 1px solid var(--border-hairline);
+}
+
+.sku-calc__list dt {
+  color: var(--text-secondary);
+}
+
+.sku-calc__list dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.sku-calc__main dt,
+.sku-calc__main dd {
+  font: var(--type-h2);
+  color: var(--text-primary);
+}
+
+.sku-calc__parts {
+  flex-direction: column;
+}
+
+.sku-calc__parts dd {
+  text-align: start;
+  color: var(--text-secondary);
+}
+
+@media (min-width: 1024px) {
+  .sku-calc__grid {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
+  }
+}

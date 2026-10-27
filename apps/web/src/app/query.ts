@@ -1,9 +1,9 @@
 // Server holati (03 §9): TanStack Query, staleTime 60 s. 4xx qayta so'ralmaydi (ruxsat yoki kiritish masalasi),
 // tarmoq/5xx/429 — 2 marta. Sessiya tugasa (401) — kirish sahifasiga (`onUnauthorized`).
-import { MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
+import { infiniteQueryOptions, MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
-import type { WaiverIn } from "../lib/api/types";
+import type { ItemLinkIn, WaiverIn } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -137,3 +137,76 @@ export const expensesPage = (orgId: string, p: ReportParams, category: string | 
       params: { path: { org_id: orgId }, query: { ...reportQuery(p), category, limit: 50, cursor } },
     }),
   );
+
+// --- Mahsulotlar (M6, B4.3) ---------------------------------------------------------------------------------------
+
+export const SKU_PAGE = 200;
+
+export type SkuListParams = { q?: string; sort?: string; label?: string; abc?: string };
+
+/** SKU jadvali: kursor bilan sahifalanadi (`next_cursor`); `placeholderData` bilan filtr o'zgarganda jadval yo'qolmaydi. */
+export const skusQuery = (orgId: string, p: ReportParams, l: SkuListParams) =>
+  infiniteQueryOptions({
+    queryKey: ["orgs", orgId, "skus", p, l],
+    initialPageParam: null as string | null,
+    queryFn: ({ pageParam }) =>
+      unwrap(
+        api.GET("/api/v1/orgs/{org_id}/skus", {
+          params: {
+            path: { org_id: orgId },
+            query: {
+              ...reportQuery(p),
+              q: l.q || undefined,
+              sort: l.sort,
+              label: l.label as "loss" | undefined,
+              abc: l.abc as "A" | undefined,
+              limit: SKU_PAGE,
+              cursor: pageParam,
+            },
+          },
+        }),
+      ),
+    getNextPageParam: (last) => last.next_cursor,
+  });
+
+/** SKU sahifasi: shu davr hisobi, kunlik tarix, lotlar, qaytish sabablari, kalkulyator boshlang'ich qiymatlari. */
+export const skuQuery = (orgId: string, skuId: string, p: ReportParams) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "sku", skuId, p],
+    queryFn: () =>
+      unwrap(api.GET("/api/v1/orgs/{org_id}/skus/{sku_id}", { params: { path: { org_id: orgId, sku_id: skuId }, query: reportQuery(p) } })),
+  });
+
+export type UnitCalcInput = {
+  price: string;
+  unit_cost: string;
+  logistics: string;
+  packaging: string;
+  commission_pct: string;
+  tax_pct: string;
+  ads_pct: string;
+  target_margin_pct: string | null;
+};
+
+/** Unit kalkulyator (F35, F36): hisob serverda (tamoyil 4); kiritish o'zgargan sayin qayta so'raladi. */
+export const unitCalcQuery = (orgId: string, input: UnitCalcInput) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "unit-calc", input],
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/v1/orgs/{org_id}/unit-calc", {
+          params: { path: { org_id: orgId }, query: { ...input, target_margin_pct: input.target_margin_pct ?? undefined } },
+        }),
+      ),
+  });
+
+/** Bog'lash uchun tovarlar (nom bo'yicha qidiruv). */
+export const itemsQuery = (orgId: string, q: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "items", q],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/items", { params: { path: { org_id: orgId }, query: { q: q || undefined } } })),
+  });
+
+/** SKU ↔ tovar: mavjud tovarga, yangi tovar sifatida yoki ajratish (`mode: none`). */
+export const linkItem = (orgId: string, skuId: string, body: ItemLinkIn) =>
+  unwrap(api.PUT("/api/v1/orgs/{org_id}/skus/{sku_id}/item", { params: { path: { org_id: orgId, sku_id: skuId } }, body }));

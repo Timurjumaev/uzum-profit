@@ -253,9 +253,20 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   drill-down'da "Bonus davri" belgisi. **Qarorlar:** taklifni har qanday yozuv (boshqa tur bo'lsa ham) qoplasa — shu
   kunlar qayta taklif qilinmaydi; tahrirlash UI'si — B4.8 (API'da PATCH bor). **T:** oktabr bonusini kiritish
   (P&L → taklif → "Bonus deb belgilash", sabab va turlar: sotuv logistikasi, saqlash).
-- [ ] B4.3 Mahsulotlar (M6) — jadval, SKU sahifasi, unit kalkulyator (F35/F36 me'yoriy tariflar bilan), me'yoriy
+- [x] B4.3 Mahsulotlar (M6) — jadval, SKU sahifasi, unit kalkulyator (F35/F36 me'yoriy tariflar bilan), me'yoriy
   (bonussiz) foyda/dona (F40, ADR-031), tovar ↔ SKU bog'lash; SKU xarajatlari
   "to'g'ridan-to'g'ri" va "taqsimlangan" ustunlarda, "Taqsimlanmagan" qatori alohida (ADR-026).
+  ✓ 2026-10-26: `/skus` (xarajat ustunlari ikki qismda, me'yoriy foyda/dona, `label`/`abc` filtrlari, saralash kalitlari,
+  `bonus`), `/skus/{id}`, `/unit-calc` (`upcore.unit`, F35/F36), `/items` va `PUT /skus/{id}/item` (audit, qayta hisob).
+  F40: `upcore.waivers.normative_profit` — sotuv logistikasi (SKU'ning bonusdan tashqari oxirgi pullik tarifi, bo'lmasa
+  do'konning odatiy tarifi, oxirgi 90 kun) va saqlash (`storage_price` × qoldiq-kunlar); boshqa tur baholanmaydi va
+  ochiq aytiladi (`unestimated_kinds`), baho yo'q SKU'da "Baho yo'q". UI: jadval (qidiruv, filtrlar, saralash URL'da,
+  ustun tanlash va ko'rinishlar — brauzerda, formula "?", virtual skroll), SKU sahifasi (KPI, tarix grafiklari, lotlar,
+  qaytish sabablari, bog'lash, kalkulyator — boshlang'ich qiymatlar manbasi bilan). **Qoldi:** SKU izohlari (jadval
+  kerak — keyingi migratsiya bilan); F37 (hajm bo'yicha tarif) — tovar o'lchamlarini tahrirlash (B4.6) bilan; "toifa
+  bo'yicha" kesim va ABC bo'yicha Uzum `rankInfo` ustuni; saqlangan ko'rinishlar hozircha qurilma bo'yicha; vizual
+  e2e asoslari; Uzum mahsulot havolasi formati (`uzum_product_url`) real sahifada tekshirilmagan (Temur bir marta
+  ochib ko'radi); saqlash bonusining `storage_price` ma'nosi (dona/kun) real ma'lumotda tasdiqlanadi.
 - [ ] B4.4 Buyurtmalar (M7) — ro'yxat ("Bonus davri" belgisi bilan), bekor va qaytish tahlili.
 - [ ] B4.5 Xarajatlar (M8) — Uzum xarajatlari, o'z xarajatlarim (takroriy, amortizatsiya).
 - [ ] B4.6 Xaridlar (M9) — yangi model: xarid hayoti, qatorlar, komponentlar, kurs rejimlari, taqsimot,

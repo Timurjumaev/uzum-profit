@@ -435,6 +435,8 @@ o'rtacha foyda/dona (oxirgi 90 kun). Faqat snapshot bor kunlar uchun.
 ulush = komissiya% + soliq% + reklama%. Ulush ≥ 100% → "hech qanday narx foyda bermaydi".
 
 **F36. Maqsadli marja narxi** = qat'iy / (1 − (ulush + m)/100).
+Narx `p` dagi foyda/dona = p × (1 − ulush/100) − qat'iy; F35 (foyda 0) va F36 (foyda = p × m/100) shu tenglamaning
+ildizi — unit kalkulyator (`upcore.unit`) shuni ishlatadi.
 
 **F37. Uzum logistika tarifi** (01.06.2026 dan, bazadagi jadval, sana bo'yicha): litr = (uzunlik × eni × balandlik,
 mm) / 1 000 000, butun songa yaxlitlanadi; ≤ 1 l: 5 250 so'm; har qo'shimcha litr +250; maksimal 50 000;
@@ -452,5 +454,5 @@ varag'iga hech qachon qo'shilmaydi): foyda/dona − Uzum bonusi bilan tejalgan x
 Bonus davrlari — `fee_waivers` (do'kon yoki hammasi, sanalar, bepul turlar, sabab; foydalanuvchi kiritadi yoki
 tizim taklifini tasdiqlaydi; taklif: kunlik Yakunlangan qatorlarning ≥ 90% ida logistika 0). Me'yoriy qiymat tur
 bo'yicha: sotuv logistikasi — SKU'ning bonus davridan tashqaridagi oxirgi pullik logistikasi, bo'lmasa do'konning
-odatiy (eng ko'p) tarifi, SKU o'lchamlari bo'lsa — F37; saqlash — SKU `storage_price` × kunlar; baholovchisi yo'q tur —
+odatiy (eng ko'p) tarifi, SKU o'lchamlari bazada bo'lsa (tovar o'lchamlarini tahrirlash — B4.6) — F37 (SKU'ning o'z tarifidan keyin, do'kon tarifidan oldin; kodda hozircha qo'llanmaydi); saqlash — SKU `storage_price` × kunlar; baholovchisi yo'q tur —
 "me'yoriy baho yo'q". Haqiqiy foyda (F3–F16) o'zgarmaydi: bonus davrida bepul xarajat 0.
