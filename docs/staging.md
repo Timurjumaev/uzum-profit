@@ -86,6 +86,10 @@ python3 scripts/compare_staging.py --staging ~/realcheck.json --db uzum.db
   `amount`/`amountReturns`), oxirgi 24 soat sinxron xatolari. Kalit va sirlar o'qilmaydi.
 - `compare_staging.py` — legacy `uzum.db` bilan har oy TO_WITHDRAW dona/tushum/komissiya/logistika (1 so'mgacha),
   qator darajasida farqlar, taxminlar hukmi (✓ / ✗ — kodni tuzatish kerak / ≈ — qo'lda ko'rish).
+- Qator darajasidagi "holat boshqa" (masalan CANCELED ↔ PROCESSING) oylik yig'indilar ✓ bo'lsa — odatda sinxron vaqti
+  farqi: staging holatni oxirgi `UP_SYNC_RECENT_DAYS` (3) kun uchun har inkremental sinxronda, `UP_SYNC_DEEP_DAYS`
+  (45) kun uchun kuniga bir marta qayta oladi, legacy esa o'zi sinxron qilingan paytdagi holatni ko'rsatadi.
+  Staging kechikkan bo'lsa, bir kundan keyin qayta solishtirilganda farq yo'qoladi.
 
 ## Xavfsizlik
 

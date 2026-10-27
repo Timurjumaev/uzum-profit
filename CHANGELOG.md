@@ -194,6 +194,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   (`daily_sku_metrics.returns`) bekor qilinganni qaytish deb sanardi. Endi Bekor dona = `amount` + `amountReturns`,
   F18 — faqat Yakunlangan qatorlardan. Mavjud agregatlar tungi `calc.nightly` da qayta quriladi. Testlar: haqiqiy
   shakldagi Bekor qator (`test_metrics.py`, `test_calc.py`).
+- B2.11 yakuni (2026-10-27, Temurning qayta tekshiruvi): 24 soatda xato ishlar 0, iyul–oktabr har oy 0 so'm farq,
+  taxminlar ✓ — **B2 yopildi**. `docs/staging.md`: qator darajasidagi holat farqlari (sinxron vaqti) qanday o'qiladi.
 - B3.1 Web karkasi (`apps/web`): `lib/api/client.ts` — openapi-fetch (generatsiya qilingan sxema), cookie bilan,
   `X-Requested-With` (CSRF), RFC 9457 → `ApiError` (`code`, `detail`, so'rov ID, `retryable`), 204 va tarmoq xatosi;
   `app/query.ts` — TanStack Query (staleTime 60 s, 4xx qayta so'ralmaydi, tarmoq/5xx/429 — 2 marta, 401 → kesh

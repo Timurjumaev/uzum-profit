@@ -92,7 +92,7 @@ Ochiq: F21 real ma'lumotda — partiyalarga SKU biriktirilgach (yoki B2.11).
   POSTGRES_USER (superuser), ilova — `up_app`. Kirish kodi IP bo'yicha soatiga 20 ta (`upapi.ratelimit`, Caddy
   `X-Forwarded-For` ni almashtiradi — soxtalashtirib bo'lmaydi). CI `staging` ishi: shu oqimning o'zi (strict staging
   tekshiruvlari, HTTPS, zaxira → tiklash, qayta deploy); skriptlar testi `infra/tests/` (qaytish, migratsiya xatosi).
-- [ ] B2.11 Real sinov: Temur staging'da o'z kalitini kiritadi → to'liq sinxron → legacy raqamlari bilan solishtirish;
+- [x] B2.11 Real sinov: Temur staging'da o'z kalitini kiritadi → to'liq sinxron → legacy raqamlari bilan solishtirish;
   `PARTIALLY_CANCELLED`, `amountReturns`, qaytishlar semantikasi tasdiqlanadi va testga yoziladi. B2.6 dan
   tekshiriladigan taxminlar: postavka tarkibida `skuForInvoiceDtoList[].id` = SKU id, faktura `dateCreated` matn
   formati, `/v1/return` sahifalash (`dateFrom` qo'llanmaydi) va hajmi, logistika xarajati `externalId` = sotuv qatori id.
@@ -101,8 +101,10 @@ Ochiq: F21 real ma'lumotda — partiyalarga SKU biriktirilgach (yoki B2.11).
   "Real sinov". ✓ 2026-10-25 natija: ikkala do'kon to'liq tarix, legacy bilan har oy 0 so'm farq, to'rt taxmin
   tasdiqlandi (08 §4). Topildi va tuzatildi: Bekor qatorda `amount` = 0, dona `amountReturns` da — F17/F16 bekor
   donani yo'qotardi, F18 va ombor tezligi bekorni qaytish deb sanardi (02 F2, F17, F18; testlar). `PARTIALLY_CANCELLED`
-  real ma'lumotda yo'q — taxmin qoladi. **Qoldi: 24 soat xatosiz** — 2026-10-26 ~21:55 (Toshkent) Temur realcheck +
-  compare'ni qayta ishga tushiradi; ✓ bo'lsa B2.11 va B2 yopiladi.
+  real ma'lumotda yo'q — taxmin qoladi. ✓ 2026-10-27 qayta tekshiruv (Temur, realcheck + compare): ikkala do'konda
+  24 soatda xato ishlar 0, iyul–oktabr har oy 0 so'm farq, taxminlar ✓. 7 ta buyurtmada holat farqi (CANCELED ↔
+  PROCESSING, TO_WITHDRAW emas) — sinxron vaqti farqi: staging holatni oxirgi 3 kun uchun tez-tez, 45 kun uchun kuniga
+  bir marta qayta oladi (`docs/staging.md`).
 - T: Q2 — provayder tanlash, akkaunt ochish va staging VPS uchun to'lash (taxminan 210–260 ming so'm/oy).
 - T: GitHub Actions uchun SSH kirishini qo'shish (men qadam-baqadam yo'riqnoma beraman).
 - T: @BotFather'da bot yaratish (admin ogohlantirishlari, keyin B6 xulosalari uchun) va tokenni staging sozlamasiga
@@ -115,7 +117,7 @@ Ochiq: F21 real ma'lumotda — partiyalarga SKU biriktirilgach (yoki B2.11).
 egasi yoki boshqa rol a'zosi bo'lgan rol bilan, yoki xavfli sozlama bilan (dev OTP siri/yuboruvchisi, HTTPS'siz
 cookie) API ishga tushmaydi — xato beradi; deploy'da `python -m upapi.db.guard` yashil. Temurning 2 do'koni staging'da
 to'liq sinxronlangan; 24 soat xatosiz; tushum, komissiya, logistika,
-dona legacy bilan 1 so'mgacha bir xil.
+dona legacy bilan 1 so'mgacha bir xil. ✓ 2026-10-27 — B2 yopildi.
 
 ## B3. Frontend poydevori va dizayn tizimi — 6–9 kun
 
