@@ -275,7 +275,14 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   UI `/orders`: bo'limlar "Ro'yxat / Bekor bo'lish / Qaytarilish" va ro'yxat holati filtri URL'da; ro'yxat — mavjud
   `/sales` (kursor bilan sahifalanadi, "Bonus davri", "Taxminiy", tannarxsiz qator "—"). **Qoldi:** FBS faol buyurtmalar va
   muddatlar — B5; bekor ulushi trendi (foizli grafik) — grafik komponentiga "foiz" birligi qo'shilgach; eksport — B4.10.
-- [ ] B4.5 Xarajatlar (M8) — Uzum xarajatlari, o'z xarajatlarim (takroriy, amortizatsiya).
+- [x] B4.5 Xarajatlar (M8) — Uzum xarajatlari, o'z xarajatlarim (takroriy, amortizatsiya).
+  ✓ 2026-10-27: `/expenses` — "Uzum xarajatlari" (toifalar F9, oylar trendi, eng katta jarimalar, ro'yxat toifa filtri bilan;
+  P&L'ga kirmaganlari belgilanadi) va "O'z xarajatlarim" (F10: jami, toifalar, ro'yxat). API: `POST/PATCH/DELETE
+  /own-expenses` (`manage_settings`, audit), `GET /own-expense-categories` (mavjud + tavsiya etilgan toifalar; yangi toifa
+  nomi bilan yaratiladi). Bir martalik, davr (amortizatsiya — summa kunlarga teng) va takroriy (`repeat_months`: har oy
+  uchun alohida bir kunlik yozuv, oy kuni qisqartiriladi). P&L jadvalni to'g'ridan-to'g'ri o'qiydi — qayta hisob kerak
+  emas. **Qoldi:** cheksiz takrorlash va seriyani birga tahrirlash (ochiq muddatli ijara); toifani qayta nomlash/o'chirish;
+  xarajatni tovar bo'yicha taqsimlash va tushum ulushi (02 M8) — B4.8 bilan; chek rasmi va Excel import — B7; eksport — B4.10.
 - [ ] B4.6 Xaridlar (M9) — yangi model: xarid hayoti, qatorlar, komponentlar, kurs rejimlari, taqsimot,
   Partiya yo'li, kech kiritilgan xarajatda qayta hisob.
 - [ ] B4.7 Ombor (M10 asos) — joylar, qoldiq, zaxira kunlari, holat, buyurtma sanasi.

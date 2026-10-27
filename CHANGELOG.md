@@ -314,3 +314,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   ro'yxat holati filtri URL'da; ro'yxat (`/sales`, kursor bilan): holat belgisi, "Bonus davri", "Taxminiy", tannarxsiz
   qator tire bilan; tahlil: KPI (formula "?" bilan), kunlik grafik, sabablar va SKU jadvali. Testlar: core, API
   (haqiqiy PostgreSQL: ulushlar, sabablar, do'kon va davr filtri, ruxsatlar, boshqa tashkilot), sahifalar (jsdom + axe).
+- B4.5 Xarajatlar (M8). API: `POST/PATCH/DELETE /own-expenses` (o'z xarajatlari: bir martalik, davr — amortizatsiya,
+  takroriy — `repeat_months`, har oy alohida yozuv; toifa nomi bilan, yo'q bo'lsa yaratiladi; do'kon yoki butun
+  tashkilot; `manage_settings`, audit jurnali), `GET /own-expense-categories`. Web: `/expenses` — "Uzum xarajatlari"
+  (toifalar F9, oylar grafigi, eng katta jarimalar, ro'yxat; P&L'ga kirmaganlari belgilanadi) va "O'z xarajatlarim"
+  (F10 jami, toifalar, ro'yxat, qo'shish/tahrirlash/o'chirish — egasi va menejer, buxgalter ko'radi). Testlar: API
+  (haqiqiy PostgreSQL: CRUD, takroriy qisqartirish, tekshiruvlar, ruxsatlar, audit, P&L bilan mosligi, boshqa tashkilot),
+  sahifalar (jsdom + axe).

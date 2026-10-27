@@ -493,6 +493,58 @@ export interface paths {
         patch: operations["update_waiver_api_v1_orgs__org_id__fee_waivers__waiver_id__patch"];
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/own-expense-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Categories */
+        get: operations["categories_api_v1_orgs__org_id__own_expense_categories_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/own-expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create */
+        post: operations["create_api_v1_orgs__org_id__own_expenses_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/own-expenses/{expense_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Expense */
+        delete: operations["delete_expense_api_v1_orgs__org_id__own_expenses__expense_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Expense */
+        patch: operations["update_expense_api_v1_orgs__org_id__own_expenses__expense_id__patch"];
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/items": {
         parameters: {
             query?: never;
@@ -810,6 +862,11 @@ export interface components {
             sources: {
                 [key: string]: string;
             };
+        };
+        /** CategoriesOut */
+        CategoriesOut: {
+            /** Items */
+            items: string[];
         };
         /** CategoryOut */
         CategoryOut: {
@@ -1385,6 +1442,31 @@ export interface components {
             /** Recovered At */
             recovered_at: string | null;
         };
+        /** OwnExpenseIn */
+        OwnExpenseIn: {
+            /** Category */
+            category: string;
+            /** Amount */
+            amount: number | string;
+            /**
+             * Start On
+             * Format: date
+             */
+            start_on: string;
+            /** End On */
+            end_on?: string | null;
+            /** Shop Id */
+            shop_id?: string | null;
+            /** Item Id */
+            item_id?: string | null;
+            /** Note */
+            note?: string | null;
+            /**
+             * Repeat Months
+             * @default 1
+             */
+            repeat_months: number;
+        };
         /** OwnExpenseOut */
         OwnExpenseOut: {
             /**
@@ -1414,6 +1496,53 @@ export interface components {
             amount: string;
             /** In Period */
             in_period: string;
+            /** Recurrence */
+            recurrence: string | null;
+            /** Note */
+            note: string | null;
+        };
+        /** OwnExpensePatch */
+        OwnExpensePatch: {
+            /** Category */
+            category?: string | null;
+            /** Amount */
+            amount?: number | string | null;
+            /** Start On */
+            start_on?: string | null;
+            /** End On */
+            end_on?: string | null;
+            /** Shop Id */
+            shop_id?: string | null;
+            /** Item Id */
+            item_id?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** OwnRowOut */
+        OwnRowOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Category */
+            category: string;
+            /** Shop Id */
+            shop_id: string | null;
+            /** Item Id */
+            item_id: string | null;
+            /**
+             * Start On
+             * Format: date
+             */
+            start_on: string;
+            /**
+             * End On
+             * Format: date
+             */
+            end_on: string;
+            /** Amount */
+            amount: string;
             /** Recurrence */
             recurrence: string | null;
             /** Note */
@@ -3726,6 +3855,174 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WaiverOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    categories_api_v1_orgs__org_id__own_expense_categories_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoriesOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_api_v1_orgs__org_id__own_expenses_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OwnExpenseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnRowOut"][];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    delete_expense_api_v1_orgs__org_id__own_expenses__expense_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                expense_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    update_expense_api_v1_orgs__org_id__own_expenses__expense_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                expense_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OwnExpensePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnRowOut"];
                 };
             };
             /** @description Validatsiya xatosi */

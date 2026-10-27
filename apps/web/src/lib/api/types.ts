@@ -34,3 +34,7 @@ export type OrdersSummary = Schemas["OrdersSummaryOut"];
 export type OrdersDay = Schemas["OrdersDayOut"];
 export type OrdersSkuShare = Schemas["OrdersSkuOut"];
 export type OrdersCause = Schemas["OrdersCauseOut"];
+export type OwnExpenseIn = Schemas["OwnExpenseIn"];
+export type OwnExpensePatch = Schemas["OwnExpensePatch"];
+export type OwnExpenseItem = Schemas["OwnExpenseOut"];
+export type UzumExpenseItem = Schemas["ExpenseOut"];

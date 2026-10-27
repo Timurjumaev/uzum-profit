@@ -96,3 +96,10 @@ export function ordersSearch(search: Record<string, unknown>): OrdersSearch {
   if ((ORDER_GROUPS as readonly unknown[]).includes(search.group)) out.group = search.group as OrderGroup;
   return out;
 }
+
+export type ExpensesSearch = { section?: "own" };
+
+/** Xarajatlar (M8): bo'lim (`section`) — Uzum xarajatlari (standart, URL'da yo'q) yoki o'z xarajatlarim. */
+export function expensesSearch(search: Record<string, unknown>): ExpensesSearch {
+  return search.section === "own" ? { section: "own" } : {};
+}

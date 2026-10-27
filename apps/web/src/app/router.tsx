@@ -16,7 +16,7 @@ import { ApiError } from "../lib/api/client";
 import { NotFound, Pending, RouteError } from "./errors";
 import { AuthRoute } from "../features/auth/AuthRoute";
 import { filterSearch } from "./filters";
-import { inviteSearch, loginSearch, onboardingSearch, ordersSearch, pnlSearch, productsSearch } from "./search";
+import { expensesSearch, inviteSearch, loginSearch, onboardingSearch, ordersSearch, pnlSearch, productsSearch } from "./search";
 
 export { inviteSearch, loginSearch };
 import { meQuery } from "./query";
@@ -92,6 +92,14 @@ const orders = createRoute({
   component: lazyRouteComponent(() => import("../routes/orders"), "Orders"),
 });
 
+/** Xarajatlar (M8, B4.5): Uzum xarajatlari / o'z xarajatlarim — bo'lim URL'da. */
+const expenses = createRoute({
+  getParentRoute: () => app,
+  path: "/expenses",
+  validateSearch: expensesSearch,
+  component: lazyRouteComponent(() => import("../routes/expenses"), "Expenses"),
+});
+
 const status = createRoute({
   getParentRoute: () => app,
   path: "/status",
@@ -105,7 +113,6 @@ const soon = <const P extends string>(path: P, name: keyof typeof import("../rou
     path,
     component: lazyRouteComponent(() => import("../routes/soon"), name),
   });
-const expenses = soon("/expenses", "Expenses");
 const purchases = soon("/purchases", "Purchases");
 const inventory = soon("/inventory", "Inventory");
 const cash = soon("/cash", "Cash");
