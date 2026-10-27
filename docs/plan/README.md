@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B4. Asosiy ekranlar.** **B2 tugadi** (2026-10-27: B2.11 real sinov, 24 soat xatosiz), **B3 tugadi** (2026-10-26) |
-| Keyingi vazifa | **B4.4 Buyurtmalar (M7)** (B4.3 Mahsulotlar tugadi). B3 qoldig'i: Temur Q1 tovar belgisi tekshiruvi (ADR-030), `sellermax.uz` domenini ro'yxatdan o'tkazish |
+| Keyingi vazifa | **B4.5 Xarajatlar (M8)** (B4.4 Buyurtmalar tugadi, PR kutilmoqda). B3 qoldig'i: Temur Q1 tovar belgisi tekshiruvi (ADR-030), `sellermax.uz` domenini ro'yxatdan o'tkazish |
 | Temurdan kutilmoqda | Ixtiyoriy: partiya qatorlariga SKU biriktirish; staging'da oktabr Uzum bonusini kiritish (P&L → taklif → "Bonus deb belgilash") |
-| Oxirgi yangilanish | 2026-10-27 (B2 yopildi: B2.11 qayta tekshiruvi — 24 soat xatosiz, legacy bilan 0 so'm farq) |
+| Oxirgi yangilanish | 2026-10-27 (B4.4: Buyurtmalar — ro'yxat, bekor va qaytish tahlili F17/F18, sabablar, qaytim saqlash xarajati) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

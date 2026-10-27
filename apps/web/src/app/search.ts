@@ -81,3 +81,18 @@ export function parseSort(sort: string | undefined): { key: ProductSort; desc: b
   if (!(PRODUCT_SORTS as readonly string[]).includes(key)) return { ...DEFAULT_PRODUCT_SORT };
   return { key: key as ProductSort, desc: (sort ?? "").startsWith("-") };
 }
+
+export const ORDER_TABS = ["list", "cancel", "returns"] as const;
+export type OrderTab = (typeof ORDER_TABS)[number];
+export const ORDER_GROUPS = ["completed", "processing", "canceled"] as const;
+export type OrderGroup = (typeof ORDER_GROUPS)[number];
+
+export type OrdersSearch = { tab?: Exclude<OrderTab, "list">; group?: OrderGroup };
+
+/** Buyurtmalar (M7): bo'lim (ro'yxat — standart, URL'da yo'q) va ro'yxat holati filtri — havola bilan ulashiladi. */
+export function ordersSearch(search: Record<string, unknown>): OrdersSearch {
+  const out: OrdersSearch = {};
+  if (search.tab === "cancel" || search.tab === "returns") out.tab = search.tab;
+  if ((ORDER_GROUPS as readonly unknown[]).includes(search.group)) out.group = search.group as OrderGroup;
+  return out;
+}

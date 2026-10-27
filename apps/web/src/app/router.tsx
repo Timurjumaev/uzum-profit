@@ -16,7 +16,7 @@ import { ApiError } from "../lib/api/client";
 import { NotFound, Pending, RouteError } from "./errors";
 import { AuthRoute } from "../features/auth/AuthRoute";
 import { filterSearch } from "./filters";
-import { inviteSearch, loginSearch, onboardingSearch, pnlSearch, productsSearch } from "./search";
+import { inviteSearch, loginSearch, onboardingSearch, ordersSearch, pnlSearch, productsSearch } from "./search";
 
 export { inviteSearch, loginSearch };
 import { meQuery } from "./query";
@@ -84,6 +84,14 @@ const product = createRoute({
   component: lazyRouteComponent(() => import("../routes/products"), "SkuPage"),
 });
 
+/** Buyurtmalar (M7, B4.4): ro'yxat, bekor va qaytish tahlili — bo'lim va holat filtri URL'da. */
+const orders = createRoute({
+  getParentRoute: () => app,
+  path: "/orders",
+  validateSearch: ordersSearch,
+  component: lazyRouteComponent(() => import("../routes/orders"), "Orders"),
+});
+
 const status = createRoute({
   getParentRoute: () => app,
   path: "/status",
@@ -97,7 +105,6 @@ const soon = <const P extends string>(path: P, name: keyof typeof import("../rou
     path,
     component: lazyRouteComponent(() => import("../routes/soon"), name),
   });
-const orders = soon("/orders", "Orders");
 const expenses = soon("/expenses", "Expenses");
 const purchases = soon("/purchases", "Purchases");
 const inventory = soon("/inventory", "Inventory");

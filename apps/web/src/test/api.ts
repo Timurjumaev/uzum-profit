@@ -79,6 +79,7 @@ export const UNIT_CALC_ROUTE = `GET /api/v1/orgs/${ORG_ID}/unit-calc`;
 export const ITEMS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/items`;
 export const linkRoute = (skuId: string) => `PUT /api/v1/orgs/${ORG_ID}/skus/${skuId}/item`;
 export const SALES_ROUTE = `GET /api/v1/orgs/${ORG_ID}/sales`;
+export const ORDERS_ANALYSIS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/orders/analysis`;
 export const EXPENSES_ROUTE = `GET /api/v1/orgs/${ORG_ID}/expenses`;
 export const REFRESH_ROUTE = `POST /api/v1/orgs/${ORG_ID}/sync/refresh`;
 export const LOGOUT_ROUTE = "POST /api/v1/auth/logout";
