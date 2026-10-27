@@ -79,3 +79,43 @@
     align-items: start;
   }
 }
+
+/* Xarajatlar (M8, B4.5): bo'limlar `orders-*` bilan bir xil; shakl va amallar. */
+.expenses {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.expenses__panel,
+.expenses-uzum,
+.expenses-own,
+.expenses-list {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.expenses-actions {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+.expenses-form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.expenses-form__modes {
+  display: grid;
+  gap: var(--space-2);
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.expenses-form__dates {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}

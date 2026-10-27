@@ -3,7 +3,7 @@
 import { infiniteQueryOptions, MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
-import type { ItemLinkIn, WaiverIn } from "../lib/api/types";
+import type { ItemLinkIn, OwnExpenseIn, OwnExpensePatch, WaiverIn } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -239,3 +239,25 @@ export const ordersAnalysisQuery = (orgId: string, p: ReportParams) =>
     queryFn: () =>
       unwrap(api.GET("/api/v1/orgs/{org_id}/orders/analysis", { params: { path: { org_id: orgId }, query: reportQuery(p) } })),
   });
+
+// --- Xarajatlar (M8, B4.5) ----------------------------------------------------------------------------------------
+
+/** Xarajatlar sahifasi: Uzum toifalari (F9), oylar, jarimalar, o'z xarajatlarim (F10) — bitta so'rov. */
+export const expensesQuery = (orgId: string, p: ReportParams) =>
+  queryOptions({ queryKey: ["orgs", orgId, "expenses", "summary", p], queryFn: () => expensesPage(orgId, p, null, null) });
+
+/** O'z xarajat toifalari: mavjudlari va tavsiya etilgan boshlang'ichlar. */
+export const ownCategoriesQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "expenses", "categories"],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/own-expense-categories", { params: { path: { org_id: orgId } } })),
+  });
+
+export const createOwnExpense = (orgId: string, body: OwnExpenseIn) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/own-expenses", { params: { path: { org_id: orgId } }, body }));
+
+export const updateOwnExpense = (orgId: string, id: string, body: OwnExpensePatch) =>
+  unwrap(api.PATCH("/api/v1/orgs/{org_id}/own-expenses/{expense_id}", { params: { path: { org_id: orgId, expense_id: id } }, body }));
+
+export const deleteOwnExpense = (orgId: string, id: string) =>
+  unwrap(api.DELETE("/api/v1/orgs/{org_id}/own-expenses/{expense_id}", { params: { path: { org_id: orgId, expense_id: id } } }));

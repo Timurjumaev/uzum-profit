@@ -81,6 +81,9 @@ export const linkRoute = (skuId: string) => `PUT /api/v1/orgs/${ORG_ID}/skus/${s
 export const SALES_ROUTE = `GET /api/v1/orgs/${ORG_ID}/sales`;
 export const ORDERS_ANALYSIS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/orders/analysis`;
 export const EXPENSES_ROUTE = `GET /api/v1/orgs/${ORG_ID}/expenses`;
+export const OWN_CATEGORIES_ROUTE = `GET /api/v1/orgs/${ORG_ID}/own-expense-categories`;
+export const OWN_CREATE_ROUTE = `POST /api/v1/orgs/${ORG_ID}/own-expenses`;
+export const ownRoute = (method: "PATCH" | "DELETE", id: string) => `${method} /api/v1/orgs/${ORG_ID}/own-expenses/${id}`;
 export const REFRESH_ROUTE = `POST /api/v1/orgs/${ORG_ID}/sync/refresh`;
 export const LOGOUT_ROUTE = "POST /api/v1/auth/logout";
 export const OTP_ROUTE = "POST /api/v1/auth/otp";
