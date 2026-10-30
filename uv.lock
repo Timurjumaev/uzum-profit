@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = "==3.13.*"
 
 [manifest]
@@ -1019,7 +1019,7 @@ requires-dist = [
     { name = "procrastinate", specifier = ">=3" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.2" },
     { name = "pydantic-settings", specifier = ">=2.6" },
-    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.40" },
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.1.6" },
     { name = "structlog", specifier = ">=24.4" },
     { name = "upcore", editable = "packages/core" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
