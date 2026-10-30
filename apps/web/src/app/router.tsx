@@ -16,7 +16,7 @@ import { ApiError } from "../lib/api/client";
 import { NotFound, Pending, RouteError } from "./errors";
 import { AuthRoute } from "../features/auth/AuthRoute";
 import { filterSearch } from "./filters";
-import { expensesSearch, inviteSearch, loginSearch, onboardingSearch, ordersSearch, pnlSearch, productsSearch } from "./search";
+import { expensesSearch, inviteSearch, loginSearch, onboardingSearch, ordersSearch, pnlSearch, productsSearch, purchasesSearch } from "./search";
 
 export { inviteSearch, loginSearch };
 import { meQuery } from "./query";
@@ -100,6 +100,20 @@ const expenses = createRoute({
   component: lazyRouteComponent(() => import("../routes/expenses"), "Expenses"),
 });
 
+/** Xaridlar (M9, B4.6): ro'yxat (bosqich guruhi URL'da) va xarid sahifasi (Partiya yo'li, qatorlar, xarajatlar). */
+const purchases = createRoute({
+  getParentRoute: () => app,
+  path: "/purchases",
+  validateSearch: purchasesSearch,
+  component: lazyRouteComponent(() => import("../routes/purchases"), "Purchases"),
+});
+
+const purchase = createRoute({
+  getParentRoute: () => app,
+  path: "/purchases/$purchaseId",
+  component: lazyRouteComponent(() => import("../routes/purchases"), "PurchasePage"),
+});
+
 const status = createRoute({
   getParentRoute: () => app,
   path: "/status",
@@ -113,7 +127,6 @@ const soon = <const P extends string>(path: P, name: keyof typeof import("../rou
     path,
     component: lazyRouteComponent(() => import("../routes/soon"), name),
   });
-const purchases = soon("/purchases", "Purchases");
 const inventory = soon("/inventory", "Inventory");
 const cash = soon("/cash", "Cash");
 const reports = soon("/reports", "Reports");
@@ -150,7 +163,7 @@ const uiKit = createRoute({
 
 export const routeTree = root.addChildren([
   auth.addChildren([
-    app.addChildren([home, status, pnl, products, product, orders, expenses, purchases, inventory, cash, reports, settings]),
+    app.addChildren([home, status, pnl, products, product, orders, expenses, purchases, purchase, inventory, cash, reports, settings]),
     onboarding,
     invite,
   ]),

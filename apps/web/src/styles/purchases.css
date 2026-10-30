@@ -1,0 +1,209 @@
+/* Xaridlar (M9, B4.6): ro'yxat va xarid sahifasi — faqat tokenlar orqali; 360 px'da gorizontal skroll yo'q
+   (jadval va Partiya yo'li o'z konteynerida skrollanadi). Tannarx tarkibi desktopda o'ngda, skrollda ham ko'rinadi. */
+
+.purchases,
+.purchase,
+.purchases__panel,
+.purchase__main,
+.purchase__block,
+.purchase__path {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.purchases > *,
+.purchase > *,
+.purchase__main > * {
+  min-inline-size: 0;
+}
+
+.purchases__head,
+.purchase__head,
+.purchase__section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.purchases__head > *,
+.purchase__head h1,
+.purchase__head p,
+.purchase__section-head h2 {
+  margin: 0;
+}
+
+.purchase__head > div:first-child {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.purchase__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.purchase__back {
+  justify-self: start;
+  color: var(--accent-text);
+}
+
+.purchase__timeline {
+  overflow-x: auto;
+  padding-block-end: var(--space-1);
+}
+
+.purchase__timeline .ui-timeline li {
+  align-content: start; /* joriy bosqichda qator ko'p — nomlar bir chiziqda qolsin */
+}
+
+.purchase__layout {
+  display: grid;
+  gap: var(--space-6);
+  min-inline-size: 0;
+}
+
+@media (min-width: 1024px) {
+  .purchase__layout {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    align-items: start;
+  }
+
+  .purchase__cost {
+    position: sticky;
+    inset-block-start: var(--space-4);
+  }
+}
+
+.purchase__cost {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-panel);
+  background: var(--bg-surface);
+  min-inline-size: 0;
+}
+
+.purchase__cost h2,
+.purchase__sub {
+  margin: 0;
+}
+
+.purchase__sub {
+  font: var(--type-body-strong);
+}
+
+.purchase__dl {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.purchase__dl > div,
+.purchase__lines-cost li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+}
+
+.purchase__dl dt {
+  color: var(--text-secondary);
+}
+
+.purchase__dl dd {
+  margin: 0;
+}
+
+.purchase__dl .is-total {
+  padding-block-start: var(--space-2);
+  border-block-start: 1px solid var(--border-hairline);
+  font: var(--type-body-strong);
+}
+
+.purchase__dl .is-total dt {
+  color: var(--text-primary);
+}
+
+.purchase__flags,
+.purchase__lines-cost {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.purchase__lines-cost .caption {
+  flex-basis: 100%;
+}
+
+.purchase-cell {
+  display: grid;
+  gap: 2px;
+}
+
+.purchase-cell__title {
+  font: var(--type-body-strong);
+}
+
+.purchase-path {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.purchase-path__dots {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.purchase-path__dot {
+  inline-size: 8px;
+  block-size: 8px;
+  border: 1.5px solid var(--border-input);
+  border-radius: 50%;
+}
+
+.purchase-path__dot.is-done {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.purchase-path__dot.is-current {
+  border-color: var(--accent);
+  background: linear-gradient(90deg, var(--accent) 50%, transparent 50%);
+}
+
+.purchase-path__dot.is-delayed {
+  border-color: var(--warning-text);
+}
+
+.purchase-form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.purchase-form__row,
+.purchase-form__dates {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+
+.purchase-form__modes,
+.purchase-form__lines,
+.purchase-form__shares {
+  display: grid;
+  gap: var(--space-2);
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.purchase-form__lines label {
+  min-block-size: 32px;
+}

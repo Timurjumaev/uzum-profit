@@ -283,8 +283,21 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   uchun alohida bir kunlik yozuv, oy kuni qisqartiriladi). P&L jadvalni to'g'ridan-to'g'ri o'qiydi — qayta hisob kerak
   emas. **Qoldi:** cheksiz takrorlash va seriyani birga tahrirlash (ochiq muddatli ijara); toifani qayta nomlash/o'chirish;
   xarajatni tovar bo'yicha taqsimlash va tushum ulushi (02 M8) — B4.8 bilan; chek rasmi va Excel import — B7; eksport — B4.10.
-- [ ] B4.6 Xaridlar (M9) — yangi model: xarid hayoti, qatorlar, komponentlar, kurs rejimlari, taqsimot,
+- [x] B4.6 Xaridlar (M9) — yangi model: xarid hayoti, qatorlar, komponentlar, kurs rejimlari, taqsimot,
   Partiya yo'li, kech kiritilgan xarajatda qayta hisob.
+  ✓ 2026-10-30: `/purchases` CRUD (bosqich sanalari tartib bilan, joriy bosqich — sanasi bor eng oxirgisi), qatorlar
+  (mavjud tovar yoki "yangi tovar": nom, havola, rasm; variant; buyurtma/qabul donasi, kamomad; narx valyutada; vazn,
+  hajm), komponentlar (9 tur; CBU — to'lov sanasi, qo'lda, kartadan yechilgan summa; dona/vazn/hajm/qiymat/qo'lda
+  ulush; tegishli qatorlar), "qayta buyurtma" (nusxa — sanalar, qabul va komponentlarsiz), minimal yetkazib beruvchi va
+  kargo (nomi bilan). Birlik tannarx (F20) javobda jonli — lotlarni quradigan yo'l bilan bir xil (`calc.lots.evaluate`),
+  kurs o'zgarsa darhol. Partiya yo'li — `upcore.purchasing.timeline` (kutilgan sana — tashkilot tarixidagi F25 bosqich
+  medianasi; tarix yo'q bo'lsa yo'q). Kech kiritilgan xarajat: so'rov yozuv bilan bir tranzaksiyada, `calc.org` commitdan
+  keyin navbatga (avval faqat sinxron yoki tungi ish olardi) → o'tgan sotuvlar tannarxi va P&L "qayta hisoblandi".
+  Omborchi — summasiz (narx va komponentlar 403). **Qarorlar:** komponentda alohida tanlangan qatorni o'chirib bo'lmaydi
+  (409 — sotuvchi kiritgani jim o'zgarmaydi); bosqich sanalari tartibi API'da tekshiriladi. **Qoldi:** qabulda brak/kamomadni
+  hisobdan chiqarish yoki da'vo (`stock_moves`) — B4.7 bilan; yetkazib beruvchi va kargo kartochkasi, muddatlarni
+  o'rganish — B5.1; standart muddatlar (F25) sozlamasi — B4.8; tovar o'lchamlari va F37 — keyinga; "yangi tovar"ni SKU'ga
+  bog'lash (qator `item_id` ni tahrirlash bor, tovar yaratish — SKU sahifasida); Excel import — B7; vizual e2e asoslari.
 - [ ] B4.7 Ombor (M10 asos) — joylar, qoldiq, zaxira kunlari, holat, buyurtma sanasi.
 - [ ] B4.8 Sozlamalar (M16) — soliq profili, tannarx usuli, to'lov jadvali, muddatlar, do'konlar, Uzum bonuslari
   (ADR-031: davrlar ro'yxati, qo'shish/tahrirlash, tizim takliflarini tasdiqlash).

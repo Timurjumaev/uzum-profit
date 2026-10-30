@@ -49,13 +49,15 @@ from upcore.inventory import (
     xyz_class,
 )
 from upcore.money import Currency, Money
+from upcore.purchasing import LEAD_STAGES, stage_days
 
 from upapi.db import models as m
+from upapi.reports.purchases import stage_dates
 
 UZS = Currency.UZS
 WINDOW_DAYS = 56  # F28 XYZ: 8 hafta (F23 uchun 30 kun ham shu ichida)
 ABC_DAYS = 30
-STAGES = ("prep", "china", "cargo", "receive", "handover")
+STAGES = tuple(name for name, _, _ in LEAD_STAGES)
 LOCATIONS = ("fbo", "fbs", "defected", "in_transit")
 
 
@@ -99,20 +101,8 @@ class StockBook:
 
 
 def _stages(p: Any) -> dict[str, int]:
-    """Xarid sanalari → bosqich kunlari (ikkala sana bor va tartib to'g'ri bo'lsa)."""
-    marks = [
-        p.paid_on or p.ordered_on,
-        p.cn_warehouse_on,
-        p.shipped_on,
-        p.arrived_on,
-        p.received_on,
-        p.sent_to_uzum_on,
-    ]
-    out = {}
-    for stage, a, b in zip(STAGES, marks, marks[1:], strict=False):
-        if a is not None and b is not None and b >= a:
-            out[stage] = (b - a).days
-    return out
+    """Xarid sanalari → F25 bosqich kunlari (``upcore.purchasing.stage_days``)."""
+    return stage_days(stage_dates(p))
 
 
 async def _lead_history(

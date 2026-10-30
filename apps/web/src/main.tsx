@@ -13,6 +13,7 @@ import "./styles/home.css";
 import "./styles/pnl.css";
 import "./styles/products.css";
 import "./styles/orders.css";
+import "./styles/purchases.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

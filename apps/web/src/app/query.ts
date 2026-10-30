@@ -3,7 +3,7 @@
 import { infiniteQueryOptions, MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
-import type { ItemLinkIn, OwnExpenseIn, OwnExpensePatch, WaiverIn } from "../lib/api/types";
+import type { ComponentIn, ComponentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, WaiverIn } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -261,3 +261,94 @@ export const updateOwnExpense = (orgId: string, id: string, body: OwnExpensePatc
 
 export const deleteOwnExpense = (orgId: string, id: string) =>
   unwrap(api.DELETE("/api/v1/orgs/{org_id}/own-expenses/{expense_id}", { params: { path: { org_id: orgId, expense_id: id } } }));
+
+// --- Xaridlar (M9, B4.6) ------------------------------------------------------------------------------------------
+
+/** Xaridlar ro'yxati (Partiya yo'li va jonli tannarx bilan); `stages` — joriy bosqich filtri (bo'sh — hammasi). */
+export const purchasesQuery = (orgId: string, stages: PurchaseStage[]) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "purchases", "list", stages],
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/v1/orgs/{org_id}/purchases", {
+          params: { path: { org_id: orgId }, query: { stage: stages.length > 0 ? stages : undefined } },
+        }),
+      ),
+  });
+
+/** Xarid sahifasi: qatorlar, komponentlar (kurs bilan), jonli birlik tannarx (F20), Partiya yo'li. */
+export const purchaseQuery = (orgId: string, purchaseId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "purchases", "one", purchaseId],
+    queryFn: () =>
+      unwrap(api.GET("/api/v1/orgs/{org_id}/purchases/{purchase_id}", { params: { path: { org_id: orgId, purchase_id: purchaseId } } })),
+  });
+
+export const suppliersQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "suppliers"],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/suppliers", { params: { path: { org_id: orgId } } })),
+  });
+
+export const carriersQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "carriers"],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/carriers", { params: { path: { org_id: orgId } } })),
+  });
+
+export const createSupplier = (orgId: string, name: string) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/suppliers", { params: { path: { org_id: orgId } }, body: { name } }));
+
+export const createCarrier = (orgId: string, name: string) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/carriers", { params: { path: { org_id: orgId } }, body: { name } }));
+
+const purchasePath = (orgId: string, purchaseId: string) => ({ path: { org_id: orgId, purchase_id: purchaseId } });
+
+export const createPurchase = (orgId: string, body: PurchaseIn) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/purchases", { params: { path: { org_id: orgId } }, body }));
+
+export const updatePurchase = (orgId: string, purchaseId: string, body: PurchasePatch) =>
+  unwrap(api.PATCH("/api/v1/orgs/{org_id}/purchases/{purchase_id}", { params: purchasePath(orgId, purchaseId), body }));
+
+export const deletePurchase = (orgId: string, purchaseId: string) =>
+  unwrap(api.DELETE("/api/v1/orgs/{org_id}/purchases/{purchase_id}", { params: purchasePath(orgId, purchaseId) }));
+
+/** "Qayta buyurtma": qatorlar yangi qoralamaga (sanalar, qabul va komponentlarsiz). */
+export const copyPurchase = (orgId: string, purchaseId: string) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/purchases/{purchase_id}/copy", { params: purchasePath(orgId, purchaseId) }));
+
+export const createLine = (orgId: string, purchaseId: string, body: LineIn) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/purchases/{purchase_id}/lines", { params: purchasePath(orgId, purchaseId), body }));
+
+export const updateLine = (orgId: string, purchaseId: string, lineId: string, body: LinePatch) =>
+  unwrap(
+    api.PATCH("/api/v1/orgs/{org_id}/purchases/{purchase_id}/lines/{line_id}", {
+      params: { path: { org_id: orgId, purchase_id: purchaseId, line_id: lineId } },
+      body,
+    }),
+  );
+
+export const deleteLine = (orgId: string, purchaseId: string, lineId: string) =>
+  unwrap(
+    api.DELETE("/api/v1/orgs/{org_id}/purchases/{purchase_id}/lines/{line_id}", {
+      params: { path: { org_id: orgId, purchase_id: purchaseId, line_id: lineId } },
+    }),
+  );
+
+export const createComponent = (orgId: string, purchaseId: string, body: ComponentIn) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/purchases/{purchase_id}/components", { params: purchasePath(orgId, purchaseId), body }));
+
+export const updateComponent = (orgId: string, purchaseId: string, componentId: string, body: ComponentPatch) =>
+  unwrap(
+    api.PATCH("/api/v1/orgs/{org_id}/purchases/{purchase_id}/components/{component_id}", {
+      params: { path: { org_id: orgId, purchase_id: purchaseId, component_id: componentId } },
+      body,
+    }),
+  );
+
+export const deleteComponent = (orgId: string, purchaseId: string, componentId: string) =>
+  unwrap(
+    api.DELETE("/api/v1/orgs/{org_id}/purchases/{purchase_id}/components/{component_id}", {
+      params: { path: { org_id: orgId, purchase_id: purchaseId, component_id: componentId } },
+    }),
+  );

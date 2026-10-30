@@ -735,6 +735,176 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/purchases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Purchases
+         * @description Xaridlar (yangisi birinchi), joriy bosqich filtri bilan; har birida Partiya yo'li va jonli tannarx.
+         */
+        get: operations["list_purchases_api_v1_orgs__org_id__purchases_get"];
+        put?: never;
+        /** Create Purchase */
+        post: operations["create_purchase_api_v1_orgs__org_id__purchases_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/purchases/{purchase_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Purchase */
+        get: operations["get_purchase_api_v1_orgs__org_id__purchases__purchase_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Purchase */
+        delete: operations["delete_purchase_api_v1_orgs__org_id__purchases__purchase_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Purchase */
+        patch: operations["update_purchase_api_v1_orgs__org_id__purchases__purchase_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/suppliers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Suppliers */
+        get: operations["list_suppliers_api_v1_orgs__org_id__suppliers_get"];
+        put?: never;
+        /** Create Supplier */
+        post: operations["create_supplier_api_v1_orgs__org_id__suppliers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/carriers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Carriers */
+        get: operations["list_carriers_api_v1_orgs__org_id__carriers_get"];
+        put?: never;
+        /** Create Carrier */
+        post: operations["create_carrier_api_v1_orgs__org_id__carriers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/purchases/{purchase_id}/copy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Copy Purchase
+         * @description "Qayta buyurtma" (M9): sarlavha, yetkazib beruvchi, kargo va qatorlar (buyurtma donasi, narx, vazn, hajm)
+         *     yangi qoralamaga nusxalanadi; sanalar, qabul donasi va xarajat komponentlari — yo'q (har partiyada boshqa).
+         */
+        post: operations["copy_purchase_api_v1_orgs__org_id__purchases__purchase_id__copy_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/purchases/{purchase_id}/lines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Line */
+        post: operations["create_line_api_v1_orgs__org_id__purchases__purchase_id__lines_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/purchases/{purchase_id}/lines/{line_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Line
+         * @description Qator komponentlarda alohida tanlangan bo'lsa — 409 (sotuvchi kiritgani jim o'zgartirilmaydi).
+         */
+        delete: operations["delete_line_api_v1_orgs__org_id__purchases__purchase_id__lines__line_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Line */
+        patch: operations["update_line_api_v1_orgs__org_id__purchases__purchase_id__lines__line_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/purchases/{purchase_id}/components": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Component */
+        post: operations["create_component_api_v1_orgs__org_id__purchases__purchase_id__components_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/purchases/{purchase_id}/components/{component_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Component */
+        delete: operations["delete_component_api_v1_orgs__org_id__purchases__purchase_id__components__component_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Component */
+        patch: operations["update_component_api_v1_orgs__org_id__purchases__purchase_id__components__component_id__patch"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -778,6 +948,12 @@ export interface components {
             /** Checked At */
             checked_at: string | null;
         };
+        /**
+         * AllocationBase
+         * @description Taqsimot asosi (M9). Kargo uchun standart — vazn.
+         * @enum {string}
+         */
+        AllocationBase: "units" | "weight" | "volume" | "value" | "manual";
         /**
          * AttentionOut
          * @description M4 "Diqqat talab qiladi" — sanoqlar; ro'yxatlar tegishli sahifalarda.
@@ -863,6 +1039,25 @@ export interface components {
                 [key: string]: string;
             };
         };
+        /** CarrierIn */
+        CarrierIn: {
+            /** Name */
+            name: string;
+            /** Pricing */
+            pricing?: string | null;
+        };
+        /** CarrierOut */
+        CarrierOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Pricing */
+            pricing: string | null;
+        };
         /** CategoriesOut */
         CategoriesOut: {
             /** Items */
@@ -885,6 +1080,116 @@ export interface components {
             /** Shop Id */
             shop_id?: string | null;
         };
+        /**
+         * ComponentIn
+         * @description Xarajat komponenti. Kurs: ``cbu`` (to'lov sanasi), ``manual`` (``rate``), ``effective`` (kartadan yechilgan
+         *     ``charged_amount`` ``charged_currency`` da). ``allocation`` bo'lmasa — tur standarti (kargo — vazn, tovar — qiymat,
+         *     qolganlari — dona). ``lines`` — tegishli qatorlar (``null`` — hammasi), ``shares`` — qo'lda ulushlar.
+         */
+        ComponentIn: {
+            kind: components["schemas"]["ComponentKind"];
+            /** Amount */
+            amount: number | string;
+            currency: components["schemas"]["Currency"];
+            /** Paid On */
+            paid_on?: string | null;
+            /**
+             * Rate Mode
+             * @default cbu
+             */
+            rate_mode: string;
+            /** Rate */
+            rate?: number | string | null;
+            /** Charged Amount */
+            charged_amount?: number | string | null;
+            charged_currency?: components["schemas"]["Currency"] | null;
+            allocation?: components["schemas"]["AllocationBase"] | null;
+            /** Lines */
+            lines?: string[] | null;
+            /** Shares */
+            shares?: {
+                [key: string]: number | string;
+            };
+        };
+        /**
+         * ComponentKind
+         * @description Xarajat komponenti turlari (M9).
+         * @enum {string}
+         */
+        ComponentKind: "goods" | "cn_delivery" | "agent_fee" | "cargo" | "customs" | "packaging" | "labeling" | "uzum_delivery" | "other";
+        /**
+         * ComponentOut
+         * @description Xarajat komponenti. ``applied_rate`` — hisobda ishlatilgan kurs (so'mda ``null``), ``rate_day`` — uning sanasi
+         *     (CBU dam olish kunida — oxirgi ish kuni); kursni aniqlab bo'lmasa ``error``.
+         */
+        ComponentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Amount */
+            amount: string;
+            /** Currency */
+            currency: string;
+            /** Paid On */
+            paid_on: string | null;
+            /** Rate Mode */
+            rate_mode: string;
+            /** Rate */
+            rate: string | null;
+            /** Charged Amount */
+            charged_amount: string | null;
+            /** Charged Currency */
+            charged_currency: string | null;
+            /** Allocation */
+            allocation: string;
+            /** Lines */
+            lines: string[] | null;
+            /** Shares */
+            shares: {
+                [key: string]: string;
+            };
+            /** Applied Rate */
+            applied_rate: string | null;
+            /** Rate Day */
+            rate_day: string | null;
+            /** Amount Uzs */
+            amount_uzs: string | null;
+            /** Error */
+            error: string | null;
+        };
+        /** ComponentPatch */
+        ComponentPatch: {
+            kind?: components["schemas"]["ComponentKind"] | null;
+            /** Amount */
+            amount?: number | string | null;
+            currency?: components["schemas"]["Currency"] | null;
+            /** Paid On */
+            paid_on?: string | null;
+            /** Rate Mode */
+            rate_mode?: string | null;
+            /** Rate */
+            rate?: number | string | null;
+            /** Charged Amount */
+            charged_amount?: number | string | null;
+            charged_currency?: components["schemas"]["Currency"] | null;
+            allocation?: components["schemas"]["AllocationBase"] | null;
+            /** Lines */
+            lines?: string[] | null;
+            /** Shares */
+            shares?: {
+                [key: string]: number | string;
+            } | null;
+        };
+        /**
+         * Currency
+         * @description ISO 4217 kodlari. Yangi valyuta qo'shish uchun shu ro'yxatga yoziladi.
+         * @enum {string}
+         */
+        Currency: "UZS" | "USD" | "CNY" | "RUB" | "EUR";
         /** DashboardOut */
         DashboardOut: {
             meta: components["schemas"]["Meta"];
@@ -1171,6 +1476,110 @@ export interface components {
             };
             /** Learned */
             learned: string[];
+        };
+        /**
+         * LineCostOut
+         * @description Qator (lot) tannarxi, F20: komponentlar bo'yicha tarkib. ``unit_cost`` — dona 0 bo'lsa ``null``.
+         */
+        LineCostOut: {
+            /** Total */
+            total: string;
+            /** Unit Cost */
+            unit_cost: string | null;
+            /** Breakdown */
+            breakdown: {
+                [key: string]: string;
+            };
+        };
+        /**
+         * LineIn
+         * @description Qator: mavjud tovar (``item_id``) yoki "yangi tovar" (``temp_name``, havola, rasm).
+         */
+        LineIn: {
+            /** Item Id */
+            item_id?: string | null;
+            /** Temp Name */
+            temp_name?: string | null;
+            /** Url */
+            url?: string | null;
+            /** Image Url */
+            image_url?: string | null;
+            /** Variant */
+            variant?: string | null;
+            /** Ordered Qty */
+            ordered_qty: number;
+            /** Received Qty */
+            received_qty?: number | null;
+            /** Unit Price */
+            unit_price?: number | string | null;
+            currency?: components["schemas"]["Currency"] | null;
+            /** Unit Weight */
+            unit_weight?: number | string | null;
+            /** Unit Volume */
+            unit_volume?: number | string | null;
+        };
+        /** LineOut */
+        LineOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Item Id */
+            item_id: string | null;
+            /** Item Name */
+            item_name: string | null;
+            /** Item Image */
+            item_image: string | null;
+            /** Temp Name */
+            temp_name: string | null;
+            /** Url */
+            url: string | null;
+            /** Image Url */
+            image_url: string | null;
+            /** Variant */
+            variant: string | null;
+            /** Ordered Qty */
+            ordered_qty: number;
+            /** Received Qty */
+            received_qty: number | null;
+            /** Shortage */
+            shortage: number;
+            /** Unit Price */
+            unit_price: string | null;
+            /** Currency */
+            currency: string | null;
+            /** Unit Weight */
+            unit_weight: string | null;
+            /** Unit Volume */
+            unit_volume: string | null;
+            /** Flags */
+            flags: string[];
+            cost: components["schemas"]["LineCostOut"] | null;
+        };
+        /** LinePatch */
+        LinePatch: {
+            /** Item Id */
+            item_id?: string | null;
+            /** Temp Name */
+            temp_name?: string | null;
+            /** Url */
+            url?: string | null;
+            /** Image Url */
+            image_url?: string | null;
+            /** Variant */
+            variant?: string | null;
+            /** Ordered Qty */
+            ordered_qty?: number | null;
+            /** Received Qty */
+            received_qty?: number | null;
+            /** Unit Price */
+            unit_price?: number | string | null;
+            currency?: components["schemas"]["Currency"] | null;
+            /** Unit Weight */
+            unit_weight?: number | string | null;
+            /** Unit Volume */
+            unit_volume?: number | string | null;
         };
         /**
          * LinkedItemOut
@@ -1673,6 +2082,110 @@ export interface components {
          * @enum {string}
          */
         ProfitLabel: "loss" | "borderline" | "profitable" | "no_data";
+        /** PurchaseDetailOut */
+        PurchaseDetailOut: {
+            purchase: components["schemas"]["PurchaseOut"];
+            /** Amounts */
+            amounts: boolean;
+            /** Lines */
+            lines: components["schemas"]["LineOut"][];
+            /** Components */
+            components: components["schemas"]["ComponentOut"][];
+            /** By Kind */
+            by_kind: {
+                [key: string]: string;
+            };
+            /** Recalc Pending */
+            recalc_pending: boolean;
+        };
+        /** PurchaseIn */
+        PurchaseIn: {
+            /** Title */
+            title?: string | null;
+            /** Supplier Id */
+            supplier_id?: string | null;
+            /** Carrier Id */
+            carrier_id?: string | null;
+            /** Note */
+            note?: string | null;
+            /** Dates */
+            dates?: {
+                [key: string]: string | null;
+            };
+        };
+        /**
+         * PurchaseOut
+         * @description Ro'yxat qatori. ``total`` / ``unit_cost`` — so'mda (F20; summalar ruxsati va hisob bo'lsa).
+         */
+        PurchaseOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string | null;
+            stage: components["schemas"]["Stage"];
+            /** Supplier Id */
+            supplier_id: string | null;
+            /** Supplier Name */
+            supplier_name: string | null;
+            /** Carrier Id */
+            carrier_id: string | null;
+            /** Carrier Name */
+            carrier_name: string | null;
+            /** Dates */
+            dates: {
+                [key: string]: string | null;
+            };
+            /** Timeline */
+            timeline: components["schemas"]["StageOut"][];
+            /** Line Count */
+            line_count: number;
+            /** Items */
+            items: string[];
+            /** Units Ordered */
+            units_ordered: number;
+            /** Units Received */
+            units_received: number | null;
+            /** Total */
+            total: string | null;
+            /** Unit Cost */
+            unit_cost: string | null;
+            /** Flags */
+            flags: string[];
+            /** Error */
+            error: string | null;
+            /** Note */
+            note: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** PurchasePatch */
+        PurchasePatch: {
+            /** Title */
+            title?: string | null;
+            /** Supplier Id */
+            supplier_id?: string | null;
+            /** Carrier Id */
+            carrier_id?: string | null;
+            /** Note */
+            note?: string | null;
+            /** Dates */
+            dates?: {
+                [key: string]: string | null;
+            } | null;
+        };
+        /** PurchasesOut */
+        PurchasesOut: {
+            /** Items */
+            items: components["schemas"]["PurchaseOut"][];
+            /** Amounts */
+            amounts: boolean;
+        };
         /** RefreshOut */
         RefreshOut: {
             /** Queued */
@@ -2068,6 +2581,29 @@ export interface components {
             bonus: components["schemas"]["BonusOut"];
         };
         /**
+         * Stage
+         * @description Xarid hayoti bosqichlari tartib bilan (M9). ``DRAFT`` dan boshqa har birining sanasi bor.
+         * @enum {string}
+         */
+        Stage: "draft" | "ordered" | "paid" | "cn_warehouse" | "shipped" | "arrived" | "received" | "sent_to_uzum" | "closed";
+        /**
+         * StageOut
+         * @description Partiya yo'li nuqtasi (04 §6.2): ``done`` / ``current`` / ``upcoming``.
+         */
+        StageOut: {
+            stage: components["schemas"]["Stage"];
+            /** State */
+            state: string;
+            /** On */
+            on: string | null;
+            /** Days */
+            days: number | null;
+            /** Expected */
+            expected: string | null;
+            /** Delayed */
+            delayed: boolean;
+        };
+        /**
          * StatementOut
          * @description Hisob varag'i (F3–F15) bitta kesim uchun — ``upcore.pnl.Statement``.
          */
@@ -2254,6 +2790,25 @@ export interface components {
             end_on: string;
             /** Kinds */
             kinds: string[];
+        };
+        /** SupplierIn */
+        SupplierIn: {
+            /** Name */
+            name: string;
+            /** Platform */
+            platform?: string | null;
+        };
+        /** SupplierOut */
+        SupplierOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Platform */
+            platform: string | null;
         };
         /** SyncStatusOut */
         SyncStatusOut: {
@@ -4564,6 +5119,692 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InventoryOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_purchases_api_v1_orgs__org_id__purchases_get: {
+        parameters: {
+            query?: {
+                stage?: components["schemas"]["Stage"][] | null;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasesOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_purchase_api_v1_orgs__org_id__purchases_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurchaseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_purchase_api_v1_orgs__org_id__purchases__purchase_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                purchase_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    delete_purchase_api_v1_orgs__org_id__purchases__purchase_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                purchase_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    update_purchase_api_v1_orgs__org_id__purchases__purchase_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                purchase_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurchasePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_suppliers_api_v1_orgs__org_id__suppliers_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierOut"][];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_supplier_api_v1_orgs__org_id__suppliers_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SupplierIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_carriers_api_v1_orgs__org_id__carriers_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CarrierOut"][];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_carrier_api_v1_orgs__org_id__carriers_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CarrierIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CarrierOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    copy_purchase_api_v1_orgs__org_id__purchases__purchase_id__copy_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                purchase_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_line_api_v1_orgs__org_id__purchases__purchase_id__lines_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                purchase_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LineIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    delete_line_api_v1_orgs__org_id__purchases__purchase_id__lines__line_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                purchase_id: string;
+                line_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    update_line_api_v1_orgs__org_id__purchases__purchase_id__lines__line_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                purchase_id: string;
+                line_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_component_api_v1_orgs__org_id__purchases__purchase_id__components_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                purchase_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ComponentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    delete_component_api_v1_orgs__org_id__purchases__purchase_id__components__component_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                purchase_id: string;
+                component_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    update_component_api_v1_orgs__org_id__purchases__purchase_id__components__component_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                purchase_id: string;
+                component_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ComponentPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseDetailOut"];
                 };
             };
             /** @description Validatsiya xatosi */

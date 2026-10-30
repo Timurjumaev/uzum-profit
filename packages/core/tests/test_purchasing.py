@@ -9,6 +9,7 @@ from hypothesis import strategies as st
 from upcore.fx import FxRate, RateSource, effective_fx_rate, manual_rate
 from upcore.money import Currency, Money, total
 from upcore.purchasing import (
+    DATED_STAGES,
     AllocationBase,
     ComponentKind,
     CostComponent,
@@ -17,10 +18,15 @@ from upcore.purchasing import (
     Purchase,
     PurchaseError,
     PurchaseLine,
+    Stage,
     average_unit_cost,
     compute_lots,
+    current_stage,
+    default_base,
     purchase_total,
     residual_goods,
+    stage_days,
+    timeline,
 )
 
 D = Decimal
@@ -277,3 +283,59 @@ def test_allocation_sums_exactly(
     for lot in lots:
         if lot.qty == 0:
             assert lot.total == uzs(0) and lot.unit_cost is None
+
+
+# --- Partiya yo'li (M9, 04 §6.2) -------------------------------------------------------------
+
+S = Stage
+
+
+def oct_(day: int) -> date:
+    return date(2026, 10, day)
+
+
+def test_default_base_cargo_weight_goods_value_rest_units() -> None:
+    assert default_base(K.CARGO) is B.WEIGHT
+    assert default_base(K.GOODS) is B.VALUE
+    assert {default_base(k) for k in K if k not in (K.CARGO, K.GOODS)} == {B.UNITS}
+
+
+def test_current_stage_is_latest_dated() -> None:
+    assert current_stage({}) is S.DRAFT
+    assert current_stage({S.ORDERED: oct_(2), S.SHIPPED: oct_(12)}) is S.SHIPPED  # oraliq ixtiyoriy
+    assert current_stage({s: oct_(1) for s in DATED_STAGES}) is S.CLOSED
+
+
+def test_stage_days_prep_from_paid_or_ordered() -> None:
+    dates = {S.ORDERED: oct_(1), S.PAID: oct_(3), S.CN_WAREHOUSE: oct_(9), S.SHIPPED: oct_(12)}
+    assert stage_days(dates) == {"prep": 6, "china": 3}
+    assert stage_days({S.ORDERED: oct_(1), S.CN_WAREHOUSE: oct_(9)}) == {"prep": 8}
+    assert (
+        stage_days({S.SHIPPED: oct_(12), S.ARRIVED: oct_(10)}) == {}
+    )  # tartib buzilgan — o'rganilmaydi
+
+
+def test_timeline_mockup() -> None:
+    """04 §6.2: Buyurtma ● To'landi ● Xitoy ombori ● Yo'lda ◐ (11 kun) — Toshkent kutilmoqda ~28.10."""
+    dates = {S.ORDERED: oct_(2), S.PAID: oct_(3), S.CN_WAREHOUSE: oct_(9), S.SHIPPED: oct_(12)}
+    marks = timeline(dates, oct_(23), {"cargo": D("15.5")})
+    states = {m.stage: m.state for m in marks}
+    assert [states[s] for s in DATED_STAGES] == ["done"] * 3 + ["current"] + ["upcoming"] * 4
+    cur = next(m for m in marks if m.state == "current")
+    assert (cur.on, cur.days, cur.expected, cur.delayed) == (oct_(12), 11, oct_(28), False)
+    late = next(m for m in timeline(dates, oct_(29), {"cargo": D(16)}) if m.state == "current")
+    assert late.expected == oct_(28) and late.delayed
+
+
+def test_timeline_without_history_has_no_expected_and_closed_is_done() -> None:
+    cur = next(m for m in timeline({S.ORDERED: oct_(2)}, oct_(5)) if m.state == "current")
+    assert cur.expected is None and not cur.delayed and cur.days == 3
+    skipped = timeline({S.ORDERED: oct_(2), S.RECEIVED: oct_(20)}, oct_(25))
+    assert {m.stage: (m.state, m.on) for m in skipped}[S.PAID] == (
+        "done",
+        None,
+    )  # o'tkazib yuborilgan
+    closed = timeline({S.ORDERED: oct_(2), S.CLOSED: oct_(30)}, oct_(31))
+    assert all(m.state == "done" for m in closed)
+    draft = timeline({}, oct_(5), {"prep": D(5)})
+    assert all(m.state == "upcoming" for m in draft)
