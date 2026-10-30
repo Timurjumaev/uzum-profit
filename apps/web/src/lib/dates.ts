@@ -60,9 +60,13 @@ export function presetRange(preset: Preset, today: IsoDate, first?: IsoDate): Ra
   }
 }
 
+// Bir nechta tayyor davr bir xil kunlarga tushsa (30 kunlik oyning 30-kunida "30 kun" = "Shu oy", 1-yanvarda
+// "Bugun" = "Shu oy" = "Shu yil") — taqvim davri nomi ustun: standart davr "Shu oy" shunday ko'rinadi.
+const MATCH_ORDER: readonly Preset[] = ["today", "yesterday", "thisMonth", "lastMonth", "thisYear", "last7", "last30", "all"];
+
 /** Davr tayyor davrlardan biriga teng bo'lsa — uning nomi. */
 export function matchPreset(range: Range, today: IsoDate, first?: IsoDate): Preset | null {
-  return PRESETS.find((p) => {
+  return MATCH_ORDER.find((p) => {
     const r = presetRange(p, today, first);
     return r.start === range.start && r.end === range.end;
   }) ?? null;
