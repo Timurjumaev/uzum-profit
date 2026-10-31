@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B4. Asosiy ekranlar.** **B2 tugadi** (2026-10-27: B2.11 real sinov, 24 soat xatosiz), **B3 tugadi** (2026-10-26) |
-| Keyingi vazifa | **B4.10 Excel eksport** (B4.9 Legacy import tugadi, PR kutilmoqda). B3 qoldig'i: Temur Q1 tovar belgisi tekshiruvi (ADR-030), `sellermax.uz` domenini ro'yxatdan o'tkazish |
-| Temurdan kutilmoqda | **B4.9:** staging'da Sozlamalar → "Eski dasturdan koʻchirish" ga legacy `uzum.db` ni yuklash, hisobotdagi tannarxlarni ko'rib "Import qilish". Ixtiyoriy: staging'da Ombor sahifasini ochib "Omborimda" sonlarini tekshirish (Uzumga yuborilgan xaridlarga "Uzumga yuborildi" sanasi qo'yilgan bo'lishi kerak); staging'da bitta yangi xaridni bosqichma-bosqich kiritib ko'rish (Xaridlar → Yangi xarid); partiya qatorlariga SKU biriktirish; staging'da oktabr Uzum bonusini kiritish (P&L → taklif → "Bonus deb belgilash") |
-| Oxirgi yangilanish | 2026-10-31 (B4.9: Legacy import — `uzum.db` → xaridlar, solishtirma hisobot) |
+| Keyingi vazifa | **B4.9 Legacy import** (B4.8 Sozlamalar tugadi, PR kutilmoqda; legacy `uzum.db` kerak bo'ladi — Temurdan buyruq so'raladi). B3 qoldig'i: Temur Q1 tovar belgisi tekshiruvi (ADR-030), `sellermax.uz` domenini ro'yxatdan o'tkazish |
+| Temurdan kutilmoqda | Ixtiyoriy: staging'da Ombor sahifasini ochib "Omborimda" sonlarini tekshirish (Uzumga yuborilgan xaridlarga "Uzumga yuborildi" sanasi qo'yilgan bo'lishi kerak); staging'da bitta yangi xaridni bosqichma-bosqich kiritib ko'rish (Xaridlar → Yangi xarid); partiya qatorlariga SKU biriktirish; staging'da oktabr Uzum bonusini kiritish (P&L → taklif → "Bonus deb belgilash") |
+| Oxirgi yangilanish | 2026-10-31 (B4.8: Sozlamalar — tannarx usuli, soliq profili, to'lov jadvali, muddatlar va qamrov, do'konlar, Uzum bonuslari) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

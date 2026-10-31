@@ -362,22 +362,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   o'chirish; `WaiverForm` P&L bilan umumiy). Testlar: API (haqiqiy PostgreSQL: usul almashishi va qayta hisob, soliq
   profili CRUD va tekshiruvlar, to'lov jadvali, muddat/qamrovning hisobotlarga ta'siri, ruxsatlar, RLS, audit),
   sahifalar (jsdom + axe), e2e (kontrast bilan axe, 360 px).
-- B4.9 Legacy import (03 §16). `upcore.legacy`: legacy partiyasi → yangi xarid modeli (ko'chirish qoidasi — tovar
-  narxli qatorlarga o'z narxida, qolgani narxsizlarga dona bo'yicha; kargo va qo'shimchalar dona bo'yicha; partiyadagi
-  kurslar qo'lda kurs; tayyor sana — kargo sanasi) va legacy formulasi (solishtirma hisobot uchun); hypothesis testi
-  haqiqiy legacy kodi (`uzum_profit.costs`) bilan. `scripts/compare_legacy.py` shu qoidaning o'zidan foydalanadi.
-  API: `POST /imports/legacy?dry_run=` — `uzum.db` xom bayt bilan (SQLite, faqat o'qish), `batches` → `purchases`
-  (`legacy_batch_id`), qatorlar SKU kodi bo'yicha tovarga (tovarsiz SKU'ga yangi tovar, topilmasa — "yangi tovar"),
-  tovar/kargo/qo'shimcha → `cost_components`; ko'rib chiqish savepoint ichida haqiqiy hisob yo'li bilan (keyin bekor);
-  qayta yuklashda ko'chirilgan partiya tegilmaydi; `manage_settings`, audit, hisob ishi navbatga. Hisobot: har partiya
-  legacy ↔ yangi birlik tannarx (1 tiyin yoki yaxlitlash qoldig'i), ulanmagan do'kon, topilmagan SKU, ogohlantirishlar.
-  Web: Sozlamalar → "Eski dasturdan ko'chirish" (fayl tanlash → ko'rib chiqish jadvali → "Import qilish").
-  Testlar: core (100%), API (haqiqiy PostgreSQL: ko'rib chiqish yozmaydi, import, lotlar, qayta yuklash, eski fayl
-  ustunlarsiz, buzilgan qator, noto'g'ri fayl, ruxsatlar, audit, boshqa tashkilot), sahifa (jsdom), e2e.
 
 ### Tuzatildi
-
-- Shell testlari soatga bog'liq edi (oyning 1-kunida standart "Shu oy" davri "Bugun" deb nomlanadi) — soat qotirildi.
 
 - Davr nomi: 30 kunlik oyning 30-kunida (va 1-yanvarda) standart "Shu oy" davri "30 kun" ("Bugun") deb ko'rinardi —
   bir xil kunlarga tushgan tayyor davrlarda taqvim nomi ustun (`matchPreset`).

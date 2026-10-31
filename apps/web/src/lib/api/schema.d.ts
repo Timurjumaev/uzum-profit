@@ -1085,26 +1085,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/orgs/{org_id}/imports/legacy": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Import Legacy
-         * @description Legacy ``uzum.db`` ni o'qib partiyalarni xarid qiladi (``dry_run`` — faqat hisobot) va solishtiradi.
-         */
-        post: operations["import_legacy_api_v1_orgs__org_id__imports_legacy_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1715,87 +1695,6 @@ export interface components {
             };
             /** Learned */
             learned: string[];
-        };
-        /**
-         * LegacyBatchOut
-         * @description Bitta partiya: ``status`` — ``created`` (yaratildi / yaratiladi), ``exists`` (oldin ko'chirilgan — tegilmadi),
-         *     ``error`` (o'qib yoki hisoblab bo'lmadi). ``match`` — hamma qator birlik tannarxi 1 tiyingacha bir xil
-         *     (``null`` — solishtiradigan dona yo'q).
-         */
-        LegacyBatchOut: {
-            /** Legacy Id */
-            legacy_id: number;
-            /** Title */
-            title: string;
-            /** Day */
-            day: string | null;
-            /** Shop */
-            shop: string | null;
-            /** Status */
-            status: string;
-            /** Purchase Id */
-            purchase_id: string | null;
-            /** Stage */
-            stage: string | null;
-            /** Units */
-            units: number;
-            /** Total Legacy */
-            total_legacy: string | null;
-            /** Total New */
-            total_new: string | null;
-            /** Worst Difference */
-            worst_difference: string | null;
-            /** Match */
-            match: boolean | null;
-            /** New Items */
-            new_items: number;
-            /** Unmatched */
-            unmatched: string[];
-            /** Warnings */
-            warnings: string[];
-            /** Lines */
-            lines: components["schemas"]["LegacyLineOut"][];
-        };
-        /** LegacyImportOut */
-        LegacyImportOut: {
-            /** Dry Run */
-            dry_run: boolean;
-            /** Shops */
-            shops: components["schemas"]["LegacyShopOut"][];
-            /** Created */
-            created: number;
-            /** Existing */
-            existing: number;
-            /** Errors */
-            errors: number;
-            /** Mismatched */
-            mismatched: number;
-            /** Batches */
-            batches: components["schemas"]["LegacyBatchOut"][];
-        };
-        /** LegacyLineOut */
-        LegacyLineOut: {
-            /** Name */
-            name: string;
-            /** Qty */
-            qty: number;
-            /** Item Name */
-            item_name: string | null;
-            /** Legacy Unit Cost */
-            legacy_unit_cost: string | null;
-            /** New Unit Cost */
-            new_unit_cost: string | null;
-            /** Difference */
-            difference: string | null;
-        };
-        /** LegacyShopOut */
-        LegacyShopOut: {
-            /** Legacy Id */
-            legacy_id: number;
-            /** Name */
-            name: string;
-            /** Connected */
-            connected: boolean;
         };
         /**
          * LineCostOut
@@ -6834,52 +6733,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-            /** @description Validatsiya xatosi */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Ichki xato */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    import_legacy_api_v1_orgs__org_id__imports_legacy_post: {
-        parameters: {
-            query?: {
-                dry_run?: boolean;
-            };
-            header?: never;
-            path: {
-                org_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/octet-stream": string;
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LegacyImportOut"];
-                };
             };
             /** @description Validatsiya xatosi */
             422: {

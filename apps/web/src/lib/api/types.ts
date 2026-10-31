@@ -68,5 +68,3 @@ export type PayoutScheduleIn = Schemas["PayoutScheduleIn"];
 export type ScheduleKind = Schemas["ScheduleKind"];
 export type InventorySettingsIn = Schemas["InventorySettingsIn"];
 export type WaiverPatch = Schemas["WaiverPatch"];
-export type LegacyImport = Schemas["LegacyImportOut"];
-export type LegacyBatchReport = Schemas["LegacyBatchOut"];

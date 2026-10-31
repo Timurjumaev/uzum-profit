@@ -13,7 +13,6 @@ import {
   INVENTORY_SETTINGS_ROUTE,
   json,
   ME,
-  ORG_ID,
   ME_ROUTE,
   mockApi,
   PAYOUT_CREATE_ROUTE,
@@ -33,7 +32,7 @@ import {
   type Routes,
 } from "../../test/api";
 import { waiver } from "../../test/pnl";
-import { legacyReport, PAY_1, settingsData, TAX_1, TAX_2 } from "../../test/settings";
+import { PAY_1, settingsData, TAX_1, TAX_2 } from "../../test/settings";
 
 const norm = (text: string) => text.replace(/[\u00A0\u202F]/g, " ");
 const KINDS = ["sale_logistics", "advertising", "storage", "return_storage"];
@@ -327,65 +326,6 @@ describe("Uzum bonuslari", () => {
   });
 });
 
-describe("Legacy import", () => {
-  const ROUTE = `POST /api/v1/orgs/${ORG_ID}/imports/legacy`;
-  const pick = (name = "uzum.db") => {
-    const input = section("Eski dasturdan koʻchirish").querySelector("input[type=file]") as HTMLInputElement;
-    fireEvent.change(input, { target: { files: [new File(["SQLite format 3"], name, { type: "application/octet-stream" })] } });
-  };
-  const legacyRows = () => within(within(section("Eski dasturdan koʻchirish")).getByRole("table", { name: "Eski dastur partiyalari" })).getAllByRole("row").slice(1);
-  const urls = (api: ReturnType<typeof mockApi>) =>
-    api.fetch.mock.calls.map(([r]) => new URL((r as Request).url)).filter((u) => u.pathname.endsWith("/imports/legacy"));
-
-  it("fayl tanlansa ko'rib chiqish (dry run), keyin import; hisobot jadvali va eslatmalar", async () => {
-    const { api } = await renderSettings({
-      [ROUTE]: [
-        () => json(200, legacyReport()),
-        () => json(200, legacyReport({ dry_run: false, batches: [legacyReport().batches[0]!, legacyReport().batches[1]!].map((b, i) => (i === 0 ? { ...b, purchase_id: "94444444-4444-4444-8444-444444444444" } : b)) })),
-      ],
-    });
-    await ready();
-    pick();
-    await waitFor(() => expect(api.calls.filter((c) => c === ROUTE)).toHaveLength(1));
-    const rows = await waitFor(() => legacyRows());
-    expect(rows).toHaveLength(2);
-    const first = norm(rows[0]!.textContent ?? "");
-    expect(first).toContain("Iyul partiyasi");
-    expect(first).toContain("#1");
-    expect(first).toContain("Yangi");
-    expect(first).toContain("Bir xil");
-    expect(norm(rows[1]!.textContent ?? "")).toContain("Farq bor");
-    expect(within(rows[1]!).getByRole("link", { name: "Legacy #2" })).toBeTruthy();
-    const sec = section("Eski dasturdan koʻchirish");
-    expect(within(sec).getByText(/Koʻrib chiqish: uzum.db/)).toBeTruthy();
-    expect(within(sec).getByText(/Ulanmagan doʻkon: EL-ONE \(135204\)/)).toBeTruthy();
-    expect(within(sec).getByText(/#1: SKU topilmadi — «yangi tovar» boʻlib qoldi: Yoʻq-SKU/)).toBeTruthy();
-    expect(within(sec).getByText(/#1: 1 ta SKU tovarga bogʻlanmagan edi/)).toBeTruthy();
-    expect(urls(api).map((u) => u.searchParams.get("dry_run"))).toEqual(["true"]);
-    const req = api.fetch.mock.calls.map(([r]) => r as Request).find((r) => r.url.includes("/imports/legacy"))!;
-    expect(req.headers.get("Content-Type")).toBe("application/octet-stream");
-    expect(req.headers.get("X-Requested-With")).toBe("web");
-
-    fireEvent.click(within(sec).getByRole("button", { name: "Import qilish (1)" }));
-    await waitFor(() => expect(within(section("Eski dasturdan koʻchirish")).getAllByText("1 ta xarid yaratildi").length).toBeGreaterThan(0));
-    expect(urls(api).map((u) => u.searchParams.get("dry_run"))).toEqual(["true", "false"]);
-    expect(within(section("Eski dasturdan koʻchirish")).getByRole("link", { name: "Xaridlarga oʻtish" })).toBeTruthy();
-    expect(within(legacyRows()[0]!).getByRole("link", { name: "Iyul partiyasi" })).toBeTruthy();
-  });
-
-  it("yangi partiya yo'q — import tugmasi o'chiq; noto'g'ri fayl — xato xabari", async () => {
-    await renderSettings({
-      [ROUTE]: [() => json(200, legacyReport({ created: 0, mismatched: 0, batches: [] })), () => problem(422, "bad_legacy_file")],
-    });
-    await ready();
-    pick();
-    expect(await screen.findByText("Faylda partiya yoʻq")).toBeTruthy();
-    expect((within(section("Eski dasturdan koʻchirish")).getByRole("button", { name: "Import qilish (0)" }) as HTMLButtonElement).disabled).toBe(true);
-    pick("rasm.png");
-    expect(await screen.findByText(/Fayl eski dastur bazasi emas yoki buzilgan/)).toBeTruthy();
-  });
-});
-
 describe("rollar", () => {
   it("buxgalter faqat ko'radi: o'zgartirish tugmalari yo'q, izoh bor", async () => {
     await renderSettings({}, "accountant");
@@ -395,7 +335,6 @@ describe("rollar", () => {
     for (const name of ["Profil qoʻshish", "Jadval qoʻshish", "Bonus qoʻshish", "Tahrirlash", "Oʻchirish", "Saqlash", "Standartga qaytarish"]) {
       expect(screen.queryByRole("button", { name })).toBeNull();
     }
-    expect(screen.queryByRole("heading", { level: 2, name: "Eski dasturdan koʻchirish" })).toBeNull();
   });
 
   it("menejer sozlaydi, lekin do'kon tahrirlash — faqat egasi", async () => {

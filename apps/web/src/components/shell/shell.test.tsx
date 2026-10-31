@@ -139,8 +139,6 @@ describe("nav.ts", () => {
 
 describe("topbar: filtrlar (URL'da)", () => {
   it("tanlanmagan davr — Shu oy", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] }); // oyning 1-kunida "Shu oy" = "Bugun" (nomi "Bugun") — soat qotiriladi
-    vi.setSystemTime(new Date("2026-10-25T09:00:00Z"));
     await renderShell("/");
     expect(topbar().getByRole("button", { name: /^Davr: Shu oy/ })).toBeTruthy();
   });
@@ -213,8 +211,6 @@ describe("topbar: filtrlar (URL'da)", () => {
   });
 
   it("noto'g'ri URL qiymatlari sahifani buzmaydi", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] }); // oyning 1-kunida "Shu oy" = "Bugun" (nomi "Bugun") — soat qotiriladi
-    vi.setSystemTime(new Date("2026-10-25T09:00:00Z"));
     await renderShell("/?from=kecha&to=bugun&cmp=x&shop=1");
     expect(topbar().getByRole("button", { name: /^Davr: Shu oy/ })).toBeTruthy();
     expect(topbar().getByRole("button", { name: "Doʻkon: Hammasi" })).toBeTruthy();

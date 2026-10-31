@@ -51,11 +51,3 @@ real natija kelgach har bandga summa qo'shiladi.
 - `PARTIALLY_CANCELLED` — real ma'lumotda hali 0 qator (taxmin qoladi). `amountReturns` — B2.11 da aniqlandi: Bekor
   qatorda bekor qilingan dona (`amount` = 0); F17/F16 Bekor donaga, F18 faqat Yakunlangan qatorlarga (02 F2, F17, F18).
   Staging ↔ legacy (B2.11): har oy 0 so'm farq (`scripts/compare_staging.py`).
-
-## Ko'chirish (B4.9)
-
-Legacy `uzum.db` partiyalari Sozlamalar → "Eski dasturdan koʻchirish" orqali xaridlarga ko'chiriladi. Qoida —
-`upcore.legacy.to_purchase` (shu skript ham undan foydalanadi), shuning uchun yuqoridagi "Partiya birlik tannarxi"
-tekshiruvi ko'chirilgan xaridlarga ham tegishli. Import hisoboti har partiya va qator uchun legacy ↔ yangi birlik
-tannarxni ko'rsatadi; ruxsat — 1 tiyin yoki yaxlitlash qoldig'i (har komponent qatorlarga tiyingacha bo'linadi,
-qoldiq eng katta qatorga — F20).

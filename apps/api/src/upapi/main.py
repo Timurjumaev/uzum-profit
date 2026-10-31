@@ -22,7 +22,6 @@ from upapi.routes import (
     health,
     inventory,
     items,
-    legacy_import,
     orders,
     orgs,
     own_expenses,
@@ -121,7 +120,6 @@ def create_app(
     app.include_router(purchases.router, prefix=API_PREFIX)  # xaridlar (M9)
     app.include_router(settings_routes.router, prefix=API_PREFIX)  # sozlamalar (M16)
     app.include_router(stock_moves.router, prefix=API_PREFIX)  # hisobdan chiqarish, tuzatish (M10)
-    app.include_router(legacy_import.router, prefix=API_PREFIX)  # legacy uzum.db import (B4.9)
     return app
 
 

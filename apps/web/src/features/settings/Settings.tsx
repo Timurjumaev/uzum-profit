@@ -1,5 +1,5 @@
 // Sozlamalar (M16, B4.8): bo'limlar ketma-ket — tannarx usuli, soliq profili, Uzum to'lov jadvali, muddatlar va qamrov,
-// do'konlar, Uzum bonuslari, legacy import (B4.9, faqat egasi va menejer). O'qish — egasi, menejer, buxgalter; yozish — egasi va menejer (do'konlar — faqat egasi).
+// do'konlar, Uzum bonuslari. O'qish — egasi, menejer, buxgalter; yozish — egasi va menejer (do'konlar — faqat egasi).
 // Hamma raqam va qoida serverdan (`/settings`); bu yerda faqat kiritish (tamoyil 4).
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -10,7 +10,6 @@ import { Banner, Button, Skeleton } from "../../components/ui";
 import { CostMethod } from "./CostMethod";
 import { FeeWaivers } from "./FeeWaivers";
 import { InventorySettings } from "./InventorySettings";
-import { LegacyImport } from "./LegacyImport";
 import { Payouts } from "./Payouts";
 import { Shops } from "./Shops";
 import { TaxProfiles } from "./TaxProfiles";
@@ -46,7 +45,6 @@ export function Settings() {
           <InventorySettings orgId={org.id} data={data.inventory} canManage={canManage} />
           <Shops orgId={org.id} canEdit={org.role === "owner"} />
           <FeeWaivers orgId={org.id} canManage={canManage} />
-          {canManage && <LegacyImport orgId={org.id} />}
         </>
       )}
     </section>

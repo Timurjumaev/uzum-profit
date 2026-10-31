@@ -406,17 +406,6 @@ const orgPath = (orgId: string) => ({ path: { org_id: orgId } });
 export const setCostMethod = (orgId: string, cost_method: "fifo" | "average") =>
   unwrap(api.PUT("/api/v1/orgs/{org_id}/settings/cost-method", { params: orgPath(orgId), body: { cost_method } }));
 
-/** Legacy `uzum.db` (B4.9): fayl xom bayt sifatida; `dryRun` — faqat solishtirma hisobot, hech narsa yozilmaydi. */
-export const importLegacy = (orgId: string, file: Blob, dryRun: boolean) =>
-  unwrap(
-    api.POST("/api/v1/orgs/{org_id}/imports/legacy", {
-      params: { path: { org_id: orgId }, query: { dry_run: dryRun } },
-      body: file as unknown as string,
-      bodySerializer: (body) => body as unknown as BodyInit,
-      headers: { "Content-Type": "application/octet-stream" },
-    }),
-  );
-
 export const createTaxProfile = (orgId: string, body: TaxProfileIn) =>
   unwrap(api.POST("/api/v1/orgs/{org_id}/tax-profiles", { params: orgPath(orgId), body }));
 

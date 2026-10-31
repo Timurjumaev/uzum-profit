@@ -1,4 +1,4 @@
-// Sozlamalar (M16, B4.8; legacy import — B4.9): bo'limlar ko'rinadi, gorizontal skrollsiz (360 px).
+// Sozlamalar (M16, B4.8): bo'limlar ko'rinadi, gorizontal skrollsiz (360 px).
 import { expect, test } from "@playwright/test";
 
 import { mockApi } from "./support/api";
@@ -8,7 +8,7 @@ test("sozlamalar: hamma bo'lim ko'rinadi", async ({ page }) => {
   await mockApi(page);
   await open(page, "/settings");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Sozlamalar");
-  for (const title of ["Tannarx usuli", "Soliq profili", "Uzum toʻlov jadvali", "Muddatlar va qamrov", "Doʻkonlar", "Uzum bonuslari", "Eski dasturdan koʻchirish"]) {
+  for (const title of ["Tannarx usuli", "Soliq profili", "Uzum toʻlov jadvali", "Muddatlar va qamrov", "Doʻkonlar", "Uzum bonuslari"]) {
     await expect(page.getByRole("heading", { level: 2, name: title })).toBeVisible();
   }
   await expect(page.getByRole("table", { name: "Soliq profili" })).toContainText("Amalda");
