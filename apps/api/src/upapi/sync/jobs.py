@@ -11,6 +11,8 @@
   bitta tranzaksiyada yozilgan). ``calc.nightly`` — Toshkent 03:40 da har tashkilot uchun to'liq qayta qurish
   (masalan, CBU arxivi keyinroq kelib, kurslar o'zgargan bo'lsa).
 
+Sotuvchi tahrirlari (xaridlar, B4.6) ham ``calc.org`` ni API'dan navbatga qo'yadi (:meth:`JobQueue.defer_calc`).
+
 Ish argumentlarida faqat id'lar (kalit yo'q). Ishchi — ``python -m upapi.worker``; API navbatga :class:`JobQueue`
 orqali qo'yadi.
 """
@@ -200,10 +202,19 @@ class JobQueue:
         trigger: Trigger,
         kinds: Sequence[Kind] | None = None,
     ) -> bool:
+        await self._ensure_open()
+        return await defer_account(self.app, org_id, account_id, trigger, kinds)
+
+    async def defer_calc(self, org_id: UUID) -> bool:
+        """Sotuvchi tahriridan keyin (xarid, B4.6) qayta hisob — tranzaksiya commit bo'lgach chaqiriladi, aks holda
+        ishchi so'rovni ko'rmay "bo'sh navbat" deb tugatishi mumkin."""
+        await self._ensure_open()
+        return await defer_calc(self.app, org_id)
+
+    async def _ensure_open(self) -> None:
         if not self._open:
             await self.app.open_async()
             self._open = True
-        return await defer_account(self.app, org_id, account_id, trigger, kinds)
 
     async def aclose(self) -> None:
         if self._open:

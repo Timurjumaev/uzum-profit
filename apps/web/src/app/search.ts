@@ -103,3 +103,12 @@ export type ExpensesSearch = { section?: "own" };
 export function expensesSearch(search: Record<string, unknown>): ExpensesSearch {
   return search.section === "own" ? { section: "own" } : {};
 }
+
+export const PURCHASE_GROUPS = ["active", "draft", "transit", "closed"] as const;
+export type PurchaseGroup = (typeof PURCHASE_GROUPS)[number];
+export type PurchasesSearch = { group?: PurchaseGroup };
+
+/** Xaridlar (M9): bosqich guruhi (`group`) — standart "hammasi" (URL'da yo'q). */
+export function purchasesSearch(search: Record<string, unknown>): PurchasesSearch {
+  return (PURCHASE_GROUPS as readonly unknown[]).includes(search.group) ? { group: search.group as PurchaseGroup } : {};
+}

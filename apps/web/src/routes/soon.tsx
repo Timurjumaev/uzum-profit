@@ -14,7 +14,6 @@ function Soon({ page }: { page: NavKey }) {
   );
 }
 
-export const Purchases = () => <Soon page="purchases" />;
 export const Inventory = () => <Soon page="inventory" />;
 export const Cash = () => <Soon page="cash" />;
 export const Reports = () => <Soon page="reports" />;

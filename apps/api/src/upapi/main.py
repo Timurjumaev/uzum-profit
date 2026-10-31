@@ -26,6 +26,7 @@ from upapi.routes import (
     orgs,
     own_expenses,
     pnl,
+    purchases,
     sales,
     skus,
     sync,
@@ -114,6 +115,7 @@ def create_app(
         inventory,
     ):  # B2.9 o'qish API'lari
         app.include_router(reports.router, prefix=API_PREFIX)
+    app.include_router(purchases.router, prefix=API_PREFIX)  # xaridlar (M9)
     return app
 
 

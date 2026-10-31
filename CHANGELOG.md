@@ -321,3 +321,22 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   (F10 jami, toifalar, ro'yxat, qo'shish/tahrirlash/o'chirish — egasi va menejer, buxgalter ko'radi). Testlar: API
   (haqiqiy PostgreSQL: CRUD, takroriy qisqartirish, tekshiruvlar, ruxsatlar, audit, P&L bilan mosligi, boshqa tashkilot),
   sahifalar (jsdom + axe).
+- B4.6 Xaridlar (M9). Core: `upcore.purchasing` — Partiya yo'li (`Stage`, `timeline`: joriy bosqich, o'tgan kunlar,
+  keyingi bosqich kutilgan sanasi F25 medianasidan, kechikish), `stage_days` (F25 o'rganish — `reports.stock` ham shundan),
+  komponent turi standart taqsimoti (kargo — vazn, tovar — qiymat). API: `GET/POST/PATCH/DELETE /purchases`, `POST
+  /purchases/{id}/copy` ("qayta buyurtma"), qatorlar va xarajat komponentlari CRUD (kurs: CBU, qo'lda, kartadan
+  yechilgan summa), `GET/POST /suppliers`, `/carriers`; birlik tannarx (F20) javobda jonli (`calc.lots.evaluate` —
+  lotlar bilan bitta yo'l), har komponentda ishlatilgan kurs va sanasi; hisoblab bo'lmasa — sababi bilan, summasiz.
+  Ruxsat: o'qish `view_purchases`, yozish `manage_purchases`; omborchi summalarni ko'rmaydi va o'zgartirmaydi; audit.
+  Kech kiritilgan xarajat: yozuv bilan bir tranzaksiyada qayta hisob so'rovi, commitdan keyin `calc.org` navbatga
+  (`JobQueue.defer_calc`) → o'tgan sotuvlar tannarxi va P&L "qayta hisoblandi". Web: `/purchases` (bosqich guruhlari
+  URL'da, ixcham Partiya yo'li, "~" taxminiy), `/purchases/:id` (Partiya yo'li va bosqich sanalari, qatorlar — mavjud
+  yoki yangi tovar, kamomad; xarajatlar; o'ngda tannarx tarkibi va F22 belgilari; qayta buyurtma, o'chirish). Testlar:
+  core (Partiya yo'li), API (haqiqiy PostgreSQL: bosqichma-bosqich xarid, kech kargo → qayta hisob, kurs rejimlari,
+  taqsimot va ulushlar, tekshiruvlar, ruxsatlar, F25 kutilgan sana, nusxa va o'chirish), sahifalar (jsdom + axe), e2e
+  (haqiqiy brauzerda kontrast bilan axe, 360 px).
+
+### Tuzatildi
+
+- Davr nomi: 30 kunlik oyning 30-kunida (va 1-yanvarda) standart "Shu oy" davri "30 kun" ("Bugun") deb ko'rinardi —
+  bir xil kunlarga tushgan tayyor davrlarda taqvim nomi ustun (`matchPreset`).

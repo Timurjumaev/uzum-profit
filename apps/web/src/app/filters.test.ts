@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { matchPreset, presetRange } from "../lib/dates";
 import { filterSearch, resolveFilters, toSearch } from "./filters";
 
 const A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
@@ -72,5 +73,15 @@ describe("toSearch", () => {
   it("filterSearch bilan o'zaro mos", () => {
     const search = toSearch({ shops: [A, B], range: { start: "2026-01-01", end: "2026-10-25" }, compare: "lastYear" });
     expect(filterSearch(search)).toEqual(search);
+  });
+});
+
+describe("matchPreset", () => {
+  it("bir xil kunlarga tushgan davrlarda taqvim nomi ustun (30-oktabr: 30 kun = Shu oy)", () => {
+    const today = "2026-10-30";
+    expect(matchPreset(presetRange("thisMonth", today), today)).toBe("thisMonth");
+    expect(matchPreset(presetRange("last30", "2026-10-29"), "2026-10-29")).toBe("last30");
+    expect(matchPreset({ start: "2026-01-01", end: "2026-01-01" }, "2026-01-01")).toBe("today");
+    expect(matchPreset({ start: "2026-10-02", end: "2026-10-30" }, today)).toBeNull();
   });
 });

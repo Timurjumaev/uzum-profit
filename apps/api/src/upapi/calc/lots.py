@@ -35,6 +35,7 @@ from upcore.purchasing import (
     AllocationBase,
     ComponentKind,
     CostComponent,
+    LotCost,
     Purchase,
     PurchaseError,
     PurchaseLine,
@@ -45,7 +46,7 @@ from upapi.db import models as m
 from upapi.logs import get_logger
 
 _log = get_logger("upapi.calc")
-_CALC_ERRORS = (PurchaseError, FxError, MoneyError, ValueError, TypeError, KeyError)
+CALC_ERRORS = (PurchaseError, FxError, MoneyError, ValueError, TypeError, KeyError)
 
 
 class Rates:
@@ -80,7 +81,7 @@ class LotsResult:
     errors: dict[UUID, str] = field(default_factory=dict)  # xarid → sabab
 
 
-def _currency(value: str | None) -> Currency:
+def currency_of(value: str | None) -> Currency:
     if not value:
         raise PurchaseError("valyuta ko'rsatilmagan")
     return Currency(value.strip().upper())
@@ -89,7 +90,7 @@ def _currency(value: str | None) -> Currency:
 def _line(row: Row[Any]) -> PurchaseLine:
     price = None
     if row.unit_price is not None:
-        price = Money(to_decimal(row.unit_price), _currency(row.currency))
+        price = Money(to_decimal(row.unit_price), currency_of(row.currency))
     return PurchaseLine(
         id=str(row.id),
         ordered_qty=row.ordered_qty,
@@ -100,8 +101,9 @@ def _line(row: Row[Any]) -> PurchaseLine:
     )
 
 
-def _component_rate(row: Row[Any], purchase: Row[Any], rates: Rates) -> FxRate | None:
-    currency = _currency(row.currency)
+def component_rate(row: Row[Any], purchase: Row[Any], rates: Rates) -> FxRate | None:
+    """Komponent kursi (so'mda — ``None``); kiritilmagan qo'lda kurs va h.k. — ``PurchaseError``."""
+    currency = currency_of(row.currency)
     if currency is Currency.UZS:
         return None
     day = row.paid_on or purchase.paid_on or purchase.ordered_on
@@ -112,7 +114,7 @@ def _component_rate(row: Row[Any], purchase: Row[Any], rates: Rates) -> FxRate |
     if row.rate_mode == "effective":
         if row.charged_amount is None:
             raise PurchaseError(f"{row.kind}: kartadan yechilgan summa kiritilmagan")
-        charged = Money(to_decimal(row.charged_amount), _currency(row.charged_currency))
+        charged = Money(to_decimal(row.charged_amount), currency_of(row.charged_currency))
         charged_rate = (
             None if charged.currency is Currency.UZS else rates.cbu(charged.currency, day)
         )
@@ -122,7 +124,7 @@ def _component_rate(row: Row[Any], purchase: Row[Any], rates: Rates) -> FxRate |
     return rates.cbu(currency, day)
 
 
-def _targets(raw: Mapping[str, Any] | None) -> tuple[tuple[str, ...] | None, dict[str, Decimal]]:
+def targets_of(raw: Mapping[str, Any] | None) -> tuple[tuple[str, ...] | None, dict[str, Decimal]]:
     raw = raw or {}
     lines = raw.get("lines")
     shares = {str(k): to_decimal(str(v)) for k, v in (raw.get("shares") or {}).items()}
@@ -135,18 +137,18 @@ def build_purchase(
     """Baza qatorlari → ``upcore`` xaridi (kurslar shu yerda tanlanadi)."""
     parsed = []
     for c in components:
-        line_ids, shares = _targets(c.targets)
+        line_ids, shares = targets_of(c.targets)
         parsed.append(
             CostComponent(
                 kind=ComponentKind(c.kind),
-                amount=Money(to_decimal(c.amount), _currency(c.currency)),
-                rate=_component_rate(c, purchase, rates),
+                amount=Money(to_decimal(c.amount), currency_of(c.currency)),
+                rate=component_rate(c, purchase, rates),
                 base=AllocationBase(c.allocation),
                 line_ids=line_ids,
                 manual_shares=shares,
             )
         )
-    line_currencies = {_currency(x.currency) for x in lines if x.unit_price is not None}
+    line_currencies = {currency_of(x.currency) for x in lines if x.unit_price is not None}
     goods_rate = None
     ccy = line_currencies.pop() if len(line_currencies) == 1 else Currency.UZS
     if ccy is not Currency.UZS:
@@ -170,6 +172,38 @@ def build_purchase(
         cargo_paid_date=max(cargo_paid) if cargo_paid else None,
         received_date=purchase.received_on,
     )
+
+
+@dataclass
+class Evaluation:
+    """Bitta xaridning jonli hisobi (xarid sahifasi, M9): model, lotlar yoki hisoblab bo'lmagan sabab."""
+
+    model: Purchase | None = None
+    lots: list[LotCost] = field(default_factory=list)
+    error: str | None = None
+
+
+def evaluate(
+    purchase: Row[Any], lines: Sequence[Row[Any]], components: Sequence[Row[Any]], rates: Rates
+) -> Evaluation:
+    """F20 — ``rebuild_lots`` bilan bir xil yo'l (kurslar :class:`Rates` ga oldindan yuklangan bo'lishi kerak)."""
+    if not lines:
+        return Evaluation()
+    try:
+        model = build_purchase(purchase, lines, components, rates)
+        return Evaluation(model, compute_lots(model))
+    except CALC_ERRORS as exc:
+        return Evaluation(error=str(exc) or type(exc).__name__)
+
+
+def currencies_of(rows: Iterable[Row[Any]]) -> set[Currency]:
+    """Qator va komponentlardagi valyutalar (kurslarni oldindan yuklash uchun); noto'g'ri qiymat o'tkaziladi."""
+    out: set[Currency] = set()
+    for r in rows:
+        for value in (getattr(r, "currency", None), getattr(r, "charged_currency", None)):
+            with contextlib.suppress(PurchaseError, ValueError):
+                out.add(currency_of(value))
+    return out
 
 
 async def rebuild_lots(
@@ -205,28 +239,23 @@ async def rebuild_lots(
     }
 
     rates = Rates(conn, today)
-    currencies: set[Currency] = set()
-    for rows in (*lines_by.values(), *comps_by.values()):
-        for r in rows:
-            for value in (r.currency, getattr(r, "charged_currency", None)):
-                with contextlib.suppress(PurchaseError, ValueError):
-                    currencies.add(_currency(value))
-    await rates.load(currencies)
+    await rates.load(
+        currencies_of([r for rows in (*lines_by.values(), *comps_by.values()) for r in rows])
+    )
 
     new_rows: list[dict[str, Any]] = []
     for purchase in purchases:
         lines = lines_by.get(purchase.id, [])
-        if not lines:
+        ev = evaluate(purchase, lines, comps_by.get(purchase.id, []), rates)
+        if ev.error is not None:
+            result.errors[purchase.id] = ev.error
+            _log.warning("calc_purchase_failed", purchase_id=str(purchase.id), reason=ev.error)
             continue
-        try:
-            model = build_purchase(purchase, lines, comps_by.get(purchase.id, []), rates)
-            costs = compute_lots(model)
-        except _CALC_ERRORS as exc:
-            result.errors[purchase.id] = str(exc) or type(exc).__name__
-            _log.warning("calc_purchase_failed", purchase_id=str(purchase.id), reason=str(exc))
+        if ev.model is None:
             continue
+        model = ev.model
         item_of = {str(x.id): x.item_id for x in lines}
-        for cost in costs:
+        for cost in ev.lots:
             if cost.qty == 0:
                 continue
             new_rows.append(

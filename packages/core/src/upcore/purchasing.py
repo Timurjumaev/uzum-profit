@@ -7,13 +7,17 @@ yig'indisi komponent summasiga tiyinigacha teng (qoldiq eng katta qatorga, ``upc
 
 Qatorning birlik tannarxi = qatorga tushgan komponentlar / qabul qilingan dona (hali qabul qilinmagan bo'lsa
 buyurtma qilingan dona, "taxminiy").
+
+Xarid hayoti — "Partiya yo'li" (M9, 04 §6.2): har bosqich ixtiyoriy, sanasi yoziladi; joriy bosqich — sanasi bor eng
+oxirgisi. Joriy bosqichda necha kun o'tgani va keyingi bosqichning kutilgan sanasi (F25 bosqichi medianasi).
 """
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from enum import StrEnum
 
@@ -45,6 +49,19 @@ class AllocationBase(StrEnum):
     VOLUME = "volume"
     VALUE = "value"  # qatorning tovar qiymati (narx × dona) bo'yicha
     MANUAL = "manual"  # qo'lda ulushlar
+
+
+# Standart taqsimot asosi (M9): kargo — vazn (vazn yo'q bo'lsa dona, ``BASE_FALLBACK``), tovar — qiymat (narx × dona;
+# narx yo'q bo'lsa dona), qolganlari — dona.
+DEFAULT_BASE: Mapping[ComponentKind, AllocationBase] = {
+    ComponentKind.CARGO: AllocationBase.WEIGHT,
+    ComponentKind.GOODS: AllocationBase.VALUE,
+}
+
+
+def default_base(kind: ComponentKind) -> AllocationBase:
+    """Komponent turi uchun standart taqsimot asosi (M9)."""
+    return DEFAULT_BASE.get(kind, AllocationBase.UNITS)
 
 
 class Flag(StrEnum):
@@ -252,3 +269,99 @@ def average_unit_cost(lots: Sequence[LotCost]) -> Money | None:
     if units == 0:
         return None
     return Money(total([lot.total for lot in lots], UZS).amount / units, UZS)
+
+
+# --- Partiya yo'li (xarid hayoti, M9) ---------------------------------------------------------
+
+
+class Stage(StrEnum):
+    """Xarid hayoti bosqichlari tartib bilan (M9). ``DRAFT`` dan boshqa har birining sanasi bor."""
+
+    DRAFT = "draft"
+    ORDERED = "ordered"  # buyurtma berildi
+    PAID = "paid"
+    CN_WAREHOUSE = "cn_warehouse"  # Xitoy omborida
+    SHIPPED = "shipped"  # yo'lda
+    ARRIVED = "arrived"  # Toshkentga keldi
+    RECEIVED = "received"  # qabul qilindi
+    SENT_TO_UZUM = "sent_to_uzum"
+    CLOSED = "closed"
+
+
+DATED_STAGES: tuple[Stage, ...] = tuple(s for s in Stage if s is not Stage.DRAFT)
+
+# F25 bosqichlari: (bosqich nomi, boshlanish — birinchi sanasi bor, tugash). Tayyorlash to'lovdan (yo'q bo'lsa
+# buyurtmadan) boshlanadi.
+LEAD_STAGES: tuple[tuple[str, tuple[Stage, ...], Stage], ...] = (
+    ("prep", (Stage.PAID, Stage.ORDERED), Stage.CN_WAREHOUSE),
+    ("china", (Stage.CN_WAREHOUSE,), Stage.SHIPPED),
+    ("cargo", (Stage.SHIPPED,), Stage.ARRIVED),
+    ("receive", (Stage.ARRIVED,), Stage.RECEIVED),
+    ("handover", (Stage.RECEIVED,), Stage.SENT_TO_UZUM),
+)
+
+
+def _first(dates: Mapping[Stage, date | None], stages: Sequence[Stage]) -> date | None:
+    return next((d for d in (dates.get(s) for s in stages) if d is not None), None)
+
+
+def stage_days(dates: Mapping[Stage, date | None]) -> dict[str, int]:
+    """F25 o'rganish: xarid sanalari → bosqich kunlari (ikkala sana bor va tartib to'g'ri bo'lsa)."""
+    out = {}
+    for name, starts, end in LEAD_STAGES:
+        a, b = _first(dates, starts), dates.get(end)
+        if a is not None and b is not None and b >= a:
+            out[name] = (b - a).days
+    return out
+
+
+def current_stage(dates: Mapping[Stage, date | None]) -> Stage:
+    """Joriy bosqich — sanasi bor eng oxirgi bosqich; hech biri yo'q — qoralama."""
+    return next((s for s in reversed(DATED_STAGES) if dates.get(s) is not None), Stage.DRAFT)
+
+
+@dataclass(frozen=True, slots=True)
+class StageMark:
+    """Partiya yo'li nuqtasi. ``state``: ``done`` (o'tilgan; sanasiz bo'lsa — o'tkazib yuborilgan), ``current``
+    (joriy: ``days`` o'tdi, keyingi bosqich ``expected`` da kutiladi), ``upcoming``."""
+
+    stage: Stage
+    state: str
+    on: date | None
+    days: int | None = None
+    expected: date | None = None
+    delayed: bool = False
+
+
+def timeline(
+    dates: Mapping[Stage, date | None], today: date, lead: Mapping[str, Decimal] | None = None
+) -> list[StageMark]:
+    """Partiya yo'li (M9, 04 §6.2). ``lead`` — F25 bosqich kunlari (tashkilot tarixidan median); joriy bosqichdan
+    keyingisiga muddat ma'lum bo'lsa kutilgan sana = joriy bosqich sanasi + muddat (yuqoriga yaxlitlab), bugun undan
+    keyin bo'lsa — kechikish. Muddat noma'lum bo'lsa kutilgan sana yo'q (raqam o'ylab topilmaydi). Yopilgan xaridda
+    hamma bosqich o'tilgan."""
+    current = current_stage(dates)
+    index = DATED_STAGES.index(current) if current is not Stage.DRAFT else -1
+    marks = []
+    for i, stage in enumerate(DATED_STAGES):
+        on = dates.get(stage)
+        if i < index or (i == index and stage is Stage.CLOSED):
+            marks.append(StageMark(stage, "done", on))
+        elif i == index and on is not None:
+            expected = None
+            for name, starts, end in LEAD_STAGES:
+                if stage in starts and dates.get(end) is None and lead and name in lead:
+                    expected = on + timedelta(days=math.ceil(lead[name]))
+            marks.append(
+                StageMark(
+                    stage,
+                    "current",
+                    on,
+                    days=max((today - on).days, 0),
+                    expected=expected,
+                    delayed=expected is not None and today > expected,
+                )
+            )
+        else:
+            marks.append(StageMark(stage, "upcoming", on))
+    return marks
