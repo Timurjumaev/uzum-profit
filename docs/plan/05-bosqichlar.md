@@ -298,7 +298,19 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   hisobdan chiqarish yoki da'vo (`stock_moves`) — B4.7 bilan; yetkazib beruvchi va kargo kartochkasi, muddatlarni
   o'rganish — B5.1; standart muddatlar (F25) sozlamasi — B4.8; tovar o'lchamlari va F37 — keyinga; "yangi tovar"ni SKU'ga
   bog'lash (qator `item_id` ni tahrirlash bor, tovar yaratish — SKU sahifasida); Excel import — B7; vizual e2e asoslari.
-- [ ] B4.7 Ombor (M10 asos) — joylar, qoldiq, zaxira kunlari, holat, buyurtma sanasi.
+- [x] B4.7 Ombor (M10 asos) — joylar, qoldiq, zaxira kunlari, holat, buyurtma sanasi.
+  ✓ 2026-10-31: `/inventory` sahifasi — KPI (muzlagan pul, yo'ldagi tovar, o'z omborim, o'rtacha sotilish muddati),
+  holat guruhlari (F26) va qidiruv URL'da, jadval: Uzumda (FBO/FBS), boshqa joylar (Xitoyda / yo'lda / omborimda /
+  brak), tezlik (F23), zaxira kunlari (F24), buyurtma sanasi va tavsiya miqdor + byudjet (F27), qiymat; har ustunda
+  formula; "Xarid yaratish" (tavsiya miqdorli qoralama xarid); omborchi summasiz. Joylar xarid bosqichidan hisoblanadi;
+  o'z omborim — qabul qilingan, Uzumga yuborilmagan xaridlar (+ tuzatish − hisobdan chiqarish) — F27 va F29 ga
+  kiradi. B4.6 qoldig'i: `stock_moves` — hisobdan chiqarish (brak, yo'qotish, kamomad) va inventarizatsiya
+  tuzatishi (API + oyna, o'chirib qaytarish), tannarxda lotdan chiqim va qayta hisob. **Qarorlar:** o'z omborim
+  qoldig'i xarid bosqichidan olinadi — "Uzumga yuborildi" sanasi qo'yilmagan eski xarid o'z omborimda turib qoladi
+  (muzlagan pulni oshiradi, tavsiyani kamaytiradi): sanani qo'yish yoki tuzatish yozuvi kerak; hisobdan chiqarish
+  faqat o'z omborim hisobiga ta'sir qiladi (Uzum qoldig'i Uzumdan). **Qoldi:** FBO yuborish rejasi va Excel,
+  postavkalar, yo'qolgan tovar (F31–F34), nelikvid va muzlagan pul bo'limlari, qoldiq tarixi grafigi — B5; standart
+  muddatlar (F25) sozlamasi — B4.8; Excel eksport — B4.10; vizual e2e asoslari.
 - [ ] B4.8 Sozlamalar (M16) — soliq profili, tannarx usuli, to'lov jadvali, muddatlar, do'konlar, Uzum bonuslari
   (ADR-031: davrlar ro'yxati, qo'shish/tahrirlash, tizim takliflarini tasdiqlash).
 - [ ] B4.9 Legacy import: `uzum.db` yuklash → xaridlar; solishtirma hisobot.

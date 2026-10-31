@@ -98,8 +98,8 @@ class KpiOut(BaseModel):
     return_share: Decimal | None  # F18
     drr: Decimal | None  # F19
     expected_profit: PendingOut  # F16
-    frozen_money: Decimal  # F29 (Uzum FBO + FBS + brak, lot narxida)
-    in_transit_value: Decimal  # F29 "yo'lda"
+    frozen_money: Decimal  # F29 (Uzum FBO + FBS + brak + o'z omborim, lot narxida)
+    in_transit_value: Decimal  # F29 "yo'lda" (Xitoyda buyurtma qilingan + yo'lda)
     average_days_to_sell: Decimal | None  # F29
 
 
@@ -208,8 +208,8 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
     stock = await load_stock(conn, sorted(f.shops, key=str) if f.shops else None, today)
     statuses = [x.status for x in stock.skus.values()]
     now = await db_now(conn)
-    in_transit = stock.frozen["in_transit"]
-    on_hand = total([v for k, v in stock.frozen.items() if k != "in_transit"], UZS)
+    in_transit = total([stock.frozen["china"], stock.frozen["road"]], UZS)
+    on_hand = total([v for k, v in stock.frozen.items() if k not in ("china", "road")], UZS)
 
     def forecast(value: Decimal | int) -> Decimal | None:
         return run_rate(value, today.day, days_in_month)

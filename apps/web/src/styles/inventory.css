@@ -1,0 +1,99 @@
+/* Ombor (M10, B4.7): jadval sahifasi — faqat tokenlar orqali; 360 px'da gorizontal skroll yo'q (jadval o'z
+   konteynerida skrollanadi), jadvallarda radius yo'q (04 §3). */
+
+.inventory,
+.inventory__panel {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.inventory > * {
+  min-inline-size: 0;
+}
+
+.inventory__head > * {
+  margin: 0;
+}
+
+.inventory__kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-3);
+}
+
+.inventory__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.inventory__search {
+  flex: 1 1 14rem;
+  min-inline-size: 0;
+}
+
+.inventory__more {
+  display: flex;
+  justify-content: center;
+}
+
+.inventory-cell {
+  display: grid;
+  gap: var(--space-1);
+  min-inline-size: 8rem;
+}
+
+.inventory-cell--num {
+  justify-items: end;
+}
+
+.inventory-cell__name {
+  color: var(--text-primary);
+  font: var(--type-body-strong);
+  text-decoration: none;
+}
+
+.inventory-cell__name:hover {
+  color: var(--accent-text);
+  text-decoration: underline;
+}
+
+.inventory-places {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  white-space: nowrap;
+}
+
+.inventory-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.inventory-move {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.inventory-move__history-title {
+  margin: var(--space-4) 0 var(--space-2);
+}
+
+.inventory-move__history {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.inventory-move__history li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}

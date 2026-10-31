@@ -4,6 +4,7 @@
 import type { Page, Route } from "@playwright/test";
 
 import { dashboardData } from "../../src/test/dashboard";
+import { inventoryData } from "../../src/test/inventory";
 import { pnlData, skuColumns, waiver } from "../../src/test/pnl";
 import { PURCHASE_1, purchaseDetail, purchaseRow } from "../../src/test/purchases";
 
@@ -238,6 +239,7 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
     if (key === `GET /orgs/${ORG_ID}/fee-waivers`)
       return json(route, 200, { items: [waiver()], kinds: ["sale_logistics", "advertising", "storage", "return_storage"] });
     if (key === `GET /orgs/${ORG_ID}/sales`) return json(route, 200, SALES);
+    if (key === `GET /orgs/${ORG_ID}/inventory`) return json(route, 200, inventoryData());
     if (key === `GET /orgs/${ORG_ID}/purchases`) return json(route, 200, { items: [purchaseRow()], amounts: true });
     if (key === `GET /orgs/${ORG_ID}/purchases/${PURCHASE_1}`) return json(route, 200, purchaseDetail());
     if (key === `GET /orgs/${ORG_ID}/suppliers` || key === `GET /orgs/${ORG_ID}/carriers`) return json(route, 200, []);

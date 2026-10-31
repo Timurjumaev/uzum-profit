@@ -409,6 +409,10 @@ yetkazib beruvchi va kargo tarixidan o'rganiladi (oxirgi 5 xarid medianasi), yo'
 
 **F27. Tavsiya miqdor** = max(0, F23 × (F25 + qamrov) − (qoldiq + yo'lda + buyurtma qilingan)), qamrov ABC bo'yicha
 (A 60, B 30, C 14 kun, sozlanadi), odatiy partiya hajmiga yaxlitlanadi. Byudjet = miqdor × oxirgi lot narxi (CNY va so'm).
+**Buyurtma sanasi** = bugun + (zaxira kunlari F24 − to'liq muddat F25), butun kunga pastga yaxlitlanadi; farq ≤ 0 (F26
+"Kritik") bo'lsa — "hozir" (kechikkan). Tezlik 0 yoki muddat noma'lum bo'lsa sana yo'q. Qoldiq tarkibi (F27, F29):
+Xitoyda (buyurtma, to'landi, Xitoy omborida), yo'lda (yo'lda, Toshkentga keldi), o'z omborim (qabul qilindi, Uzumga
+yuborilmadi; inventarizatsiya tuzatishi va hisobdan chiqarish bilan) — xarid bosqichidan; Uzumga yuborilgani FBO'da.
 
 **F28. ABC / XYZ.** ABC: oxirgi 30 kun tushumi (yoki foydasi — tanlanadi) kamayish tartibida, jamlangan ulush
 0–80% A, 80–95% B, 95–100% C. XYZ: oxirgi 8 hafta haftalik sotuvlarning variatsiya koeffitsiyenti: ≤ 0,25 X,

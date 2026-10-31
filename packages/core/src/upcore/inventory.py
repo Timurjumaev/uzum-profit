@@ -284,6 +284,41 @@ def reorder(
     return Reorder(qty, quantize(raw, 2), tuple(p * qty for p in last_unit_prices))
 
 
+@dataclass(frozen=True, slots=True)
+class OrderBy:
+    """F27 buyurtma sanasi: ``day`` — shu kungacha buyurtma berilsa tovar tugamasdan keladi."""
+
+    day: date
+    overdue: bool  # zaxira muddatdan oldin tugaydi — buyurtma berish kechikkan (sana — bugun)
+
+
+def order_by(
+    as_of: date, cover_days: DecimalLike | None, lead: DecimalLike | None
+) -> OrderBy | None:
+    """F27 buyurtma sanasi = bugun + (zaxira kunlari F24 − to'liq muddat F25), butun kunga pastga yaxlitlanadi.
+
+    Zaxira kunlari ``cover_days`` (F24) tovar tugaydigan kungacha; ``lead`` (F25) — buyurtma kelgunicha o'tadigan
+    muddat. Farq 0 yoki manfiy (F26 "Kritik") bo'lsa buyurtma kechikkan: sana — bugun, ``overdue``. Tezlik 0
+    (zaxira kunlari yo'q) yoki muddat noma'lum bo'lsa — ``None`` (sana o'ylab topilmaydi)."""
+    if cover_days is None or lead is None:
+        return None
+    slack = to_decimal(cover_days) - to_decimal(lead)
+    if slack <= 0:
+        return OrderBy(as_of, True)
+    return OrderBy(as_of + timedelta(days=int(slack)), False)
+
+
+# --- M10 joylar: yo'ldagi, buyurtma qilingan va o'z omboridagi tovar -------------------------
+
+
+def own_warehouse_qty(received: int, adjustments: int = 0, writeoffs: int = 0) -> int:
+    """M10 "O'z omborim": qabul qilingan, hali Uzumga yuborilmagan xarid qatorlari + inventarizatsiya tuzatishlari
+    (``adjustments`` — ishorali) − hisobdan chiqarilgan (``writeoffs`` — musbat dona). Manfiy bo'lmaydi.
+
+    F27 da bu tovar qoldiqqa qo'shiladi (Uzumga yuborilishi kutilmoqda), F29 da alohida joy."""
+    return max(0, received + adjustments - abs(writeoffs))
+
+
 # --- F28. ABC / XYZ -------------------------------------------------------------------------
 
 
