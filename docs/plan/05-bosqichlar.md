@@ -338,7 +338,11 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   `#,##0`, foiz, sana; `SUM` jami; `=`/`+`/`-`/`@` bilan boshlanadigan matn formulaga aylanmaydi. **Qoldi:** drill-down
   va P&L eksporti, oylik PDF, buxgalter paketi va to'liq eksport (ZIP) — M14 / B7; xaridlar eksporti hozircha guruh
   tabi filtrisiz (hamma xarid).
-- [ ] B4.11 Yordam: har ko'rsatkichda FormulaPopover, asosiy sahifalar uchun qisqa yordam matnlari.
+- [x] B4.11 Yordam: `PageHelp` — 8 asosiy sahifada (Asosiy, Foyda, Mahsulotlar, Buyurtmalar, Xarajatlar, Xaridlar, Ombor,
+  Sozlamalar) sarlavha yonidagi "?" (3 qisqa satr, ≤ 75 belgi; uz-Latn/uz-Cyrl/ru). FormulaPopover yetishmagan
+  ko'rsatkichlarga qo'shildi: Buyurtmalar qatorlari (F4–F8), qaytim saqlash (F9), Ombor (tavsiya miqdor F27, qiymat va
+  yo'ldagi F29). Testlar: PageHelp (ochilish, Esc, matnlar to'liqligi va uzunligi), Buyurtmalar sahifasi. **Qoldi:** yordam
+  maqolalari, videolar, "Yangiliklar" sahifasi — M18 / B8.
 - T: legacy partiyalarini Xaridlar sahifasida qo'lda kiritish (ADR-032); 14 kun faqat yangi dasturda ishlash; topilgan har noqulaylikni yozib yuborish.
 
 **Chiqish:** Temur 14 kun faqat yangi dasturdan foydalangan; kritik xato yo'q; legacy `legacy/` papkaga ko'chirildi.

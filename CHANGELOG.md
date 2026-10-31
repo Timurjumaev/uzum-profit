@@ -367,6 +367,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   `ExportButton` (Buyurtmalar, Mahsulotlar, Xarajatlar, Xaridlar, Ombor). Testlar: fayl qatorlari va yig'indilari
   ro'yxat API'si bilan bir xil (haqiqiy PostgreSQL), rollar, boshqa tashkilot ma'lumoti yo'qligi, formula
   in'ektsiyasidan himoya, tugma (URL, yuklash, xato toast'i).
+- B4.11 Yordam: `PageHelp` (8 asosiy sahifada "?" — qisqa tushuntirish, uz-Latn/uz-Cyrl/ru) va yetishmagan FormulaPopover'lar
+  (Buyurtmalar qatorlari F4–F8, qaytim saqlash F9, Ombor F27/F29). Testlar: PageHelp, Buyurtmalar sahifasi, matnlar to'liqligi.
 
 ### Tuzatildi
 
