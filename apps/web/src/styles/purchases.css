@@ -207,3 +207,9 @@
 .purchase-form__lines label {
   min-block-size: 32px;
 }
+
+.purchases__actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}

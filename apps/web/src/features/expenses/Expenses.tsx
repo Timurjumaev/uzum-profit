@@ -61,7 +61,7 @@ export function Expenses() {
         ) : tab === "uzum" ? (
           <UzumExpenses orgId={org.id} params={params} data={query.data} />
         ) : (
-          <OwnExpenses orgId={org.id} data={query.data} canManage={org.role === "owner" || org.role === "manager"} />
+          <OwnExpenses orgId={org.id} params={params} data={query.data} canManage={org.role === "owner" || org.role === "manager"} />
         )}
       </div>
     </section>

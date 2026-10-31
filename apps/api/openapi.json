@@ -3733,6 +3733,686 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/exports/sales.xlsx": {
+      "get": {
+        "tags": [
+          "exports"
+        ],
+        "summary": "Export Sales",
+        "operationId": "export_sales_api_v1_orgs__org_id__exports_sales_xlsx_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/StatusGroup"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group"
+            }
+          },
+          {
+            "name": "sku",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "SKU id",
+              "title": "Sku"
+            },
+            "description": "SKU id"
+          },
+          {
+            "name": "unlinked",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Unlinked"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Davr boshi (Toshkent kuni)",
+              "title": "Start"
+            },
+            "description": "Davr boshi (Toshkent kuni)"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Davr oxiri, kiradi; standart — bugun",
+              "title": "End"
+            },
+            "description": "Davr oxiri, kiradi; standart — bugun"
+          },
+          {
+            "name": "shop",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Do'konlar (bir necha marta)",
+              "title": "Shop"
+            },
+            "description": "Do'konlar (bir necha marta)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/exports/skus.xlsx": {
+      "get": {
+        "tags": [
+          "exports"
+        ],
+        "summary": "Export Skus",
+        "operationId": "export_skus_api_v1_orgs__org_id__exports_skus_xlsx_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "label",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ProfitLabel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Label"
+            }
+          },
+          {
+            "name": "abc",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "A",
+                    "B",
+                    "C"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Abc"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^-?[a-z_]+$",
+              "default": "-revenue",
+              "title": "Sort"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Davr boshi (Toshkent kuni)",
+              "title": "Start"
+            },
+            "description": "Davr boshi (Toshkent kuni)"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Davr oxiri, kiradi; standart — bugun",
+              "title": "End"
+            },
+            "description": "Davr oxiri, kiradi; standart — bugun"
+          },
+          {
+            "name": "shop",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Do'konlar (bir necha marta)",
+              "title": "Shop"
+            },
+            "description": "Do'konlar (bir necha marta)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/exports/expenses.xlsx": {
+      "get": {
+        "tags": [
+          "exports"
+        ],
+        "summary": "Export Expenses",
+        "operationId": "export_expenses_api_v1_orgs__org_id__exports_expenses_xlsx_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "uzum",
+                "own"
+              ],
+              "type": "string",
+              "default": "uzum",
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Uzum toifasi",
+              "title": "Category"
+            },
+            "description": "Uzum toifasi"
+          },
+          {
+            "name": "include_excluded",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Excluded"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Davr boshi (Toshkent kuni)",
+              "title": "Start"
+            },
+            "description": "Davr boshi (Toshkent kuni)"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Davr oxiri, kiradi; standart — bugun",
+              "title": "End"
+            },
+            "description": "Davr oxiri, kiradi; standart — bugun"
+          },
+          {
+            "name": "shop",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Do'konlar (bir necha marta)",
+              "title": "Shop"
+            },
+            "description": "Do'konlar (bir necha marta)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/exports/purchases.xlsx": {
+      "get": {
+        "tags": [
+          "exports"
+        ],
+        "summary": "Export Purchases",
+        "operationId": "export_purchases_api_v1_orgs__org_id__exports_purchases_xlsx_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "stage",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Stage"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stage"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/exports/inventory.xlsx": {
+      "get": {
+        "tags": [
+          "exports"
+        ],
+        "summary": "Export Inventory",
+        "operationId": "export_inventory_api_v1_orgs__org_id__exports_inventory_xlsx_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "shop",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Do'konlar",
+              "title": "Shop"
+            },
+            "description": "Do'konlar"
+          },
+          {
+            "name": "as_of",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Qaysi kun holatiga",
+              "title": "As Of"
+            },
+            "description": "Qaysi kun holatiga"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/StockStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/purchases": {
       "get": {
         "tags": [

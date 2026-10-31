@@ -6,6 +6,8 @@ export const uzCyrlFixes: Record<string, string> = {
   // Til nomi o'z yozuvida qoladi.
   "languages.uz-Latn": "Oʻzbekcha",
   "languages.ru": "Русский",
+  // Dastur nomi lotinda qoladi.
+  "ui.exportExcel": "Excel юклаб олиш",
   // Sayt manzili lotinda qoladi.
   "onboarding.key.howto.1": "seller.uzum.uz кабинетига киринг.",
 };

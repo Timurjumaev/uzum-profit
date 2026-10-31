@@ -735,6 +735,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/exports/sales.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Sales */
+        get: operations["export_sales_api_v1_orgs__org_id__exports_sales_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/exports/skus.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Skus */
+        get: operations["export_skus_api_v1_orgs__org_id__exports_skus_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/exports/expenses.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Expenses */
+        get: operations["export_expenses_api_v1_orgs__org_id__exports_expenses_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/exports/purchases.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Purchases */
+        get: operations["export_purchases_api_v1_orgs__org_id__exports_purchases_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/exports/inventory.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Inventory */
+        get: operations["export_inventory_api_v1_orgs__org_id__exports_inventory_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/purchases": {
         parameters: {
             query?: never;
@@ -5579,6 +5664,248 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InventoryOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    export_sales_api_v1_orgs__org_id__exports_sales_xlsx_get: {
+        parameters: {
+            query?: {
+                group?: components["schemas"]["StatusGroup"] | null;
+                /** @description SKU id */
+                sku?: string | null;
+                unlinked?: boolean;
+                /** @description Davr boshi (Toshkent kuni) */
+                start?: string | null;
+                /** @description Davr oxiri, kiradi; standart — bugun */
+                end?: string | null;
+                /** @description Do'konlar (bir necha marta) */
+                shop?: string[] | null;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    export_skus_api_v1_orgs__org_id__exports_skus_xlsx_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+                label?: components["schemas"]["ProfitLabel"] | null;
+                abc?: ("A" | "B" | "C") | null;
+                sort?: string;
+                /** @description Davr boshi (Toshkent kuni) */
+                start?: string | null;
+                /** @description Davr oxiri, kiradi; standart — bugun */
+                end?: string | null;
+                /** @description Do'konlar (bir necha marta) */
+                shop?: string[] | null;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    export_expenses_api_v1_orgs__org_id__exports_expenses_xlsx_get: {
+        parameters: {
+            query?: {
+                kind?: "uzum" | "own";
+                /** @description Uzum toifasi */
+                category?: string | null;
+                include_excluded?: boolean;
+                /** @description Davr boshi (Toshkent kuni) */
+                start?: string | null;
+                /** @description Davr oxiri, kiradi; standart — bugun */
+                end?: string | null;
+                /** @description Do'konlar (bir necha marta) */
+                shop?: string[] | null;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    export_purchases_api_v1_orgs__org_id__exports_purchases_xlsx_get: {
+        parameters: {
+            query?: {
+                stage?: components["schemas"]["Stage"][] | null;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    export_inventory_api_v1_orgs__org_id__exports_inventory_xlsx_get: {
+        parameters: {
+            query?: {
+                /** @description Do'konlar */
+                shop?: string[] | null;
+                /** @description Qaysi kun holatiga */
+                as_of?: string | null;
+                status?: components["schemas"]["StockStatus"] | null;
+                q?: string | null;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validatsiya xatosi */

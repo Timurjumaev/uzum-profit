@@ -331,7 +331,13 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   — keyingi bosqichlar (B5–B8); to'lov jadvali shartlarini tahrirlash — B5 (Pul oqimi); vizual e2e asoslari.
 - [x] ~~B4.9 Legacy import: `uzum.db` yuklash → xaridlar; solishtirma hisobot.~~ Bekor (ADR-032, 2026-10-31): Temur
   2 ta legacy partiyani Xaridlar sahifasida qo'lda kiritadi.
-- [ ] B4.10 Excel eksport har jadvalda.
+- [x] B4.10 Excel eksport: server tomonda `openpyxl` (`GET /orgs/{id}/exports/{sales,skus,expenses,purchases,inventory}.xlsx`),
+  tugma — Buyurtmalar, Mahsulotlar, Xarajatlar (Uzum va o'z), Xaridlar, Ombor. Eksport ro'yxat endpoint'ining o'zini
+  sahifalab chaqiradi (filtr, tartib, rol bo'yicha yashirish ro'yxat bilan bir xil); ruxsat `export` / `export_inventory`
+  (omborchi faqat ombor va xaridlar, summasiz). Formatlangan fayl: nom va davr, qotirilgan sarlavha, avtofiltr, so'm
+  `#,##0`, foiz, sana; `SUM` jami; `=`/`+`/`-`/`@` bilan boshlanadigan matn formulaga aylanmaydi. **Qoldi:** drill-down
+  va P&L eksporti, oylik PDF, buxgalter paketi va to'liq eksport (ZIP) — M14 / B7; xaridlar eksporti hozircha guruh
+  tabi filtrisiz (hamma xarid).
 - [ ] B4.11 Yordam: har ko'rsatkichda FormulaPopover, asosiy sahifalar uchun qisqa yordam matnlari.
 - T: legacy partiyalarini Xaridlar sahifasida qo'lda kiritish (ADR-032); 14 kun faqat yangi dasturda ishlash; topilgan har noqulaylikni yozib yuborish.
 

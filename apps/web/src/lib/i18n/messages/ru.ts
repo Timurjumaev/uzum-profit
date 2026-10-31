@@ -29,6 +29,8 @@ export const ru: Messages = {
     fileChoose: "Выбрать файл",
     fileTemplate: "Скачать шаблон",
     progress: "{{done}} / {{total}}",
+    exportExcel: "Скачать Excel",
+    exportFailed: "Не удалось скачать файл. Повторите попытку.",
     sortBy: "Сортировать по: {{name}}",
     ascending: "по возрастанию",
     descending: "по убыванию",

@@ -362,6 +362,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   o'chirish; `WaiverForm` P&L bilan umumiy). Testlar: API (haqiqiy PostgreSQL: usul almashishi va qayta hisob, soliq
   profili CRUD va tekshiruvlar, to'lov jadvali, muddat/qamrovning hisobotlarga ta'siri, ruxsatlar, RLS, audit),
   sahifalar (jsdom + axe), e2e (kontrast bilan axe, 360 px).
+- B4.10 Excel eksport: `upapi.reports.xlsx` (formatlangan ish daftari) va `/orgs/{id}/exports/{sales,skus,expenses,purchases,inventory}.xlsx`
+  (ro'yxat endpoint'ini sahifalab chaqiradi; `export` / `export_inventory` ruxsati; omborchiga summasiz), web'da
+  `ExportButton` (Buyurtmalar, Mahsulotlar, Xarajatlar, Xaridlar, Ombor). Testlar: fayl qatorlari va yig'indilari
+  ro'yxat API'si bilan bir xil (haqiqiy PostgreSQL), rollar, boshqa tashkilot ma'lumoti yo'qligi, formula
+  in'ektsiyasidan himoya, tugma (URL, yuklash, xato toast'i).
 
 ### Tuzatildi
 

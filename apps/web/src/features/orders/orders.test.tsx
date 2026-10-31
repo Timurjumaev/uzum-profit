@@ -35,6 +35,22 @@ async function renderAt(path: string, routes: Routes = {}) {
 const urls = (api: ReturnType<typeof mockApi>, route: string) =>
   api.fetch.mock.calls.map(([r]) => new URL((r as Request).url)).filter((u) => u.pathname === route.split(" ")[1]);
 
+describe("Excel eksport", () => {
+  it("tugma davr, do'kon va holat filtri bilan eksport endpoint'iga boradi", async () => {
+    const exportRoute = `GET /api/v1/orgs/${ORG_ID}/exports/sales.xlsx`;
+    const bytes = vi.fn(() => new Response("x", { status: 200, headers: { "Content-Disposition": 'attachment; filename="sotuvlar.xlsx"' } }));
+    const api = await renderAt(PATH + "&group=completed", { [exportRoute]: bytes });
+    vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: () => "blob:1", revokeObjectURL: () => undefined }));
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+    fireEvent.click(await screen.findByRole("button", { name: "Excel yuklab olish" }));
+    await waitFor(() => expect(bytes).toHaveBeenCalled());
+    const [u] = urls(api.api, exportRoute);
+    expect(u!.searchParams.get("start")).toBe("2026-10-01");
+    expect(u!.searchParams.get("end")).toBe("2026-10-20");
+    expect(u!.searchParams.get("group")).toBe("completed");
+  });
+});
+
 describe("roʻyxat", () => {
   it("qatorlar: holat belgisi, bonus davri, tannarxsiz va taxminiy belgilar; yuqorida F17/F18 ulushi", async () => {
     await renderAt(PATH);

@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { errorText } from "../../app/errors";
 import { expensesPage, type ReportParams } from "../../app/query";
 import { StackedBarChart, type SeriesInput } from "../../components/charts";
-import { Badge, Banner, Button, DataTable, EmptyState, FormulaPopover, Kpi, Select, type Column } from "../../components/ui";
+import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, FormulaPopover, Kpi, Select, type Column } from "../../components/ui";
 import type { Expenses, UzumExpenseItem } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 
@@ -102,6 +102,7 @@ export function UzumExpenses({ orgId, params, data }: { orgId: string; params: R
           onValueChange={setCategory}
           options={[{ value: "", label: t("orders.group.all") }, ...keys.map((k) => ({ value: k, label: label(k) }))]}
         />
+        <ExportButton orgId={orgId} table="expenses" query={{ start: params.start, end: params.end, shop: params.shops, category }} />
         {list.isError ? (
           <Banner tone="negative" title={errorText(list.error, t)} />
         ) : (
