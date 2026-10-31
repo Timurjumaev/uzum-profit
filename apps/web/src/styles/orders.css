@@ -119,3 +119,9 @@
   gap: var(--space-3);
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
 }
+
+.expenses-own__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}

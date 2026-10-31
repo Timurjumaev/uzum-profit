@@ -6,8 +6,8 @@ import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
-import { createOwnExpense, deleteOwnExpense, ownCategoriesQuery, shopsQuery, updateOwnExpense } from "../../app/query";
-import { Badge, Banner, Button, DataTable, Dialog, EmptyState, FormulaPopover, Kpi, MoneyInput, NumberInput, Select, TextInput, useToast, type Column } from "../../components/ui";
+import { createOwnExpense, deleteOwnExpense, ownCategoriesQuery, shopsQuery, updateOwnExpense, type ReportParams } from "../../app/query";
+import { Badge, Banner, Button, DataTable, Dialog, EmptyState, ExportButton, FormulaPopover, Kpi, MoneyInput, NumberInput, Select, TextInput, useToast, type Column } from "../../components/ui";
 import type { Expenses, OwnExpenseItem } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 
@@ -37,9 +37,9 @@ function draftOf(row: OwnExpenseItem | null): Draft {
   };
 }
 
-type Props = { orgId: string; data: Expenses; canManage: boolean };
+type Props = { orgId: string; params: ReportParams; data: Expenses; canManage: boolean };
 
-export function OwnExpenses({ orgId, data, canManage }: Props) {
+export function OwnExpenses({ orgId, params, data, canManage }: Props) {
   const { t } = useTranslation();
   const f = useFormat();
   const toast = useToast();
@@ -106,11 +106,10 @@ export function OwnExpenses({ orgId, data, canManage }: Props) {
       <div className="orders-kpis">
         <Kpi label={t("terms.ownExpenses")} value={f.money(data.own_total)} good="down" help={help} note={t("expenses.own.totalNote")} />
       </div>
-      {canManage && (
-        <div>
-          <Button onClick={() => setEditing("new")}>{t("expenses.own.add")}</Button>
-        </div>
-      )}
+      <div className="expenses-own__actions">
+        {canManage && <Button onClick={() => setEditing("new")}>{t("expenses.own.add")}</Button>}
+        <ExportButton orgId={orgId} table="expenses" query={{ kind: "own", start: params.start, end: params.end, shop: params.shops }} disabled={data.own_items.length === 0} />
+      </div>
       {data.own_items.length === 0 ? (
         <EmptyState title={t("expenses.own.empty")} text={t("expenses.own.emptyText")} />
       ) : (

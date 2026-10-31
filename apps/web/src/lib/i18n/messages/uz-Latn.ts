@@ -29,6 +29,8 @@ export const uzLatn = {
     fileChoose: "Fayl tanlash",
     fileTemplate: "Shablonni yuklab olish",
     progress: "{{done}} / {{total}}",
+    exportExcel: "Excel yuklab olish",
+    exportFailed: "Faylni yuklab boʻlmadi. Qayta urinib koʻring.",
     sortBy: "{{name}} boʻyicha saralash",
     ascending: "oʻsish tartibida",
     descending: "kamayish tartibida",

@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { errorText } from "../../app/errors";
 import { ordersQuery, type ReportParams } from "../../app/query";
 import { ORDER_GROUPS, ordersSearch, type OrderGroup } from "../../app/search";
-import { Badge, Banner, Button, DataTable, EmptyState, FormulaPopover, Select, Skeleton, type Column, type Tone } from "../../components/ui";
+import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, FormulaPopover, Select, Skeleton, type Column, type Tone } from "../../components/ui";
 import type { Sale } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 
@@ -91,6 +91,7 @@ export function OrdersList({ orgId, params, group }: Props) {
           onValueChange={(v) => void navigate({ to: "/orders", search: (prev) => ({ ...prev, group: ordersSearch({ group: v }).group }), replace: true })}
           options={[{ value: "", label: t("orders.group.all") }, ...ORDER_GROUPS.map((g) => ({ value: g, label: t(`orders.group.${g}`) }))]}
         />
+        <ExportButton orgId={orgId} table="sales" query={{ start: params.start, end: params.end, shop: params.shops, group }} disabled={rows.length === 0} />
       </div>
       {rows.length === 0 ? (
         <EmptyState title={t("orders.empty")} text={t("orders.emptyText")} />

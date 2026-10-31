@@ -12,7 +12,7 @@ import { errorText } from "../../app/errors";
 import { useFilters } from "../../app/filters";
 import { currentOrg, meQuery, shopsQuery, skusQuery, syncQuery } from "../../app/query";
 import { DEFAULT_PRODUCT_SORT, parseSort, productsSearch, PRODUCT_ABC, PRODUCT_LABELS, type ProductSort } from "../../app/search";
-import { Badge, Banner, Button, DataTable, EmptyState, FormulaPopover, Popover, ProductThumb, Select, Skeleton, StatusPill, type Column } from "../../components/ui";
+import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, FormulaPopover, Popover, ProductThumb, Select, Skeleton, StatusPill, type Column } from "../../components/ui";
 import { cx } from "../../components/ui/cx";
 import type { SkuRow, Skus } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
@@ -157,6 +157,7 @@ export function Products() {
         />
         <ColumnsMenu chosen={chosen} onChange={setColumns} />
         <ViewsMenu views={views} onApply={apply} onSave={saveView} onRemove={removeView} />
+        <ExportButton orgId={org.id} table="skus" query={{ start: params.start, end: params.end, shop: params.shops, q: search.q, label: search.label, abc: search.abc, sort: search.sort }} />
       </div>
 
       {rows.length === 0 ? (

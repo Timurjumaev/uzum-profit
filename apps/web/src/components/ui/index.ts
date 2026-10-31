@@ -6,6 +6,7 @@ export { Combobox, filterOptions, type ComboOption } from "./Combobox";
 export { CompareToggle, type CompareMode } from "./CompareToggle";
 export { DataTable, type Column, type SortState } from "./DataTable";
 export { DateRangePicker } from "./DateRangePicker";
+export { ExportButton, exportUrl, fileName, type ExportQuery } from "./ExportButton";
 export { EmptyState, ProgressBar, Skeleton, useDelayed } from "./Feedback";
 export { Field } from "./Field";
 export { FileDrop } from "./FileDrop";

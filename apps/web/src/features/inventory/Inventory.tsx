@@ -11,7 +11,7 @@ import { errorText } from "../../app/errors";
 import { useFilters } from "../../app/filters";
 import { createLine, createPurchase, currentOrg, deletePurchase, inventoryQuery, meQuery } from "../../app/query";
 import { inventorySearch, STOCK_STATUSES } from "../../app/search";
-import { Badge, Banner, Button, DataTable, EmptyState, FormulaPopover, Kpi, Skeleton, StatusPill, useToast, type Column } from "../../components/ui";
+import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, FormulaPopover, Kpi, Skeleton, StatusPill, useToast, type Column } from "../../components/ui";
 import { cx } from "../../components/ui/cx";
 import type { StockRow } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
@@ -139,6 +139,7 @@ export function Inventory() {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
         />
+        <ExportButton orgId={org.id} table="inventory" query={{ shop: filters.shops, status: search.status, q: search.q }} />
       </div>
 
       <div id="inventory-panel" role="tabpanel" aria-label={t("inventory.list")} className="inventory__panel">
