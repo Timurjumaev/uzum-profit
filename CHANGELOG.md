@@ -351,6 +351,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   omborchi summasiz. Testlar: core (F27 sana, o'z omborim), API (haqiqiy PostgreSQL: joylar xarid bosqichidan, qiymat,
   hisobdan chiqarish va tuzatish qoldiqqa ta'siri, lotdan chiqim, tekshiruvlar, ruxsatlar, audit), sahifalar (jsdom +
   axe), e2e (kontrast bilan axe, 360 px).
+- B4.8a Sozlamalar sahifasi (M16 asos): `/settings` haqiqiy sahifaga aylantirildi ("Qurilmoqda" o'rniga);
+  birinchi bo'lim — Uzum bonus davrlari (ADR-031): to'liq ro'yxat (boshlanish sanasi bo'yicha yangisi tepada),
+  qo'shish (POST), tahrirlash (PATCH), o'chirish (tasdiqlash bilan DELETE); egasi va menejer o'zgartiradi, boshqalar
+  faqat ko'radi; rad etilgan taklif belgisi. Web testlari (jsdom + axe).
 
 ### Tuzatildi
 

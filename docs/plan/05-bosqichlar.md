@@ -313,6 +313,7 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   muddatlar (F25) sozlamasi — B4.8; Excel eksport — B4.10; vizual e2e asoslari.
 - [ ] B4.8 Sozlamalar (M16) — soliq profili, tannarx usuli, to'lov jadvali, muddatlar, do'konlar, Uzum bonuslari
   (ADR-031: davrlar ro'yxati, qo'shish/tahrirlash, tizim takliflarini tasdiqlash).
+  B4.8a ✓ 2026-10-31: Sozlamalar sahifasi va Uzum bonuslari bo'limi (ro'yxat, qo'shish, tahrirlash, o'chirish).
 - [ ] B4.9 Legacy import: `uzum.db` yuklash → xaridlar; solishtirma hisobot.
 - [ ] B4.10 Excel eksport har jadvalda.
 - [ ] B4.11 Yordam: har ko'rsatkichda FormulaPopover, asosiy sahifalar uchun qisqa yordam matnlari.
