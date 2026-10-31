@@ -9,6 +9,7 @@ import { errorText } from "../../app/errors";
 import { deleteWaiver, feeWaiversQuery } from "../../app/query";
 import { Badge, Banner, Button, DataTable, Dialog, EmptyState, useToast, type Column } from "../../components/ui";
 import type { Waiver as WaiverOut } from "../../lib/api/types";
+import { todayTashkent } from "../../lib/dates";
 import { useFormat } from "../../lib/i18n";
 import { useKindLabel, useRefresh, useShopName, WaiverForm, type WaiverDraft } from "../pnl/Waivers";
 
@@ -41,7 +42,7 @@ export function FeeWaivers({ orgId, canManage }: Props) {
     return list.sort((a, b) => b.start_on.localeCompare(a.start_on) || b.created_at.localeCompare(a.created_at));
   }, [waivers.data?.items]);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayTashkent();
   const emptyDraft = (): WaiverDraft => ({
     shop: "",
     start: today,

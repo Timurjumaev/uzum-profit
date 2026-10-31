@@ -85,6 +85,7 @@ async function renderSettings(routes: Routes = {}, role = "owner") {
 describe("Sozlamalar sahifasi: Uzum bonuslari", () => {
   it("ro'yxat chiqadi (faol va rad etilgan), tartib to'g'ri (boshlanish sanasi bo'yicha yangisi tepada)", async () => {
     await renderSettings();
+    expect(screen.getByText("Bonus haqiqiy foyda va xarajatlarni oʻzgartirmaydi — faqat shu davrdagi buyurtmalarni “Bonus davri” deb belgilaydi.")).toBeTruthy();
     const table = await screen.findByRole("table", { name: "Uzum bonus davrlari" });
     const rows = within(table).getAllByRole("row").slice(1);
     expect(rows).toHaveLength(3);
@@ -206,6 +207,7 @@ describe("Sozlamalar sahifasi: Uzum bonuslari", () => {
 
     const confirmDlg = await screen.findByRole("dialog", { name: "Bonus davrini oʻchirish" });
     expect(confirmDlg.textContent).toContain("Haqiqatan ham bu bonus davrini oʻchirmoqchimisiz?");
+    expect(confirmDlg.textContent).toContain("Buyurtmalardan “Bonus davri” belgisi olib tashlanadi, haqiqiy hisob-kitoblar oʻzgarmaydi.");
 
     // Bekor qilish bosilsa so'rov yuborilmaydi
     fireEvent.click(within(confirmDlg).getByRole("button", { name: "Bekor qilish" }));

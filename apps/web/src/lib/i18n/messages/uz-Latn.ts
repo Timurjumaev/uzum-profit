@@ -1041,7 +1041,7 @@ export const uzLatn = {
     title: "Sozlamalar",
     waivers: {
       title: "Uzum bonuslari",
-      lead: "Bonus haqiqiy foydani oʻzgartirmaydi, faqat xarajatlarni nol deb belgilaydi.",
+      lead: "Bonus haqiqiy foyda va xarajatlarni oʻzgartirmaydi — faqat shu davrdagi buyurtmalarni “Bonus davri” deb belgilaydi.",
       add: "Bonus qoʻshish",
       edit: "Tahrirlash",
       caption: "Uzum bonus davrlari",
@@ -1065,7 +1065,7 @@ export const uzLatn = {
       },
       deleteDialog: {
         title: "Bonus davrini oʻchirish",
-        text: "Haqiqatan ham bu bonus davrini oʻchirmoqchimisiz? Shu davrdagi buyurtmalar uchun xarajatlar qayta hisoblanadi.",
+        text: "Haqiqatan ham bu bonus davrini oʻchirmoqchimisiz? Buyurtmalardan “Bonus davri” belgisi olib tashlanadi, haqiqiy hisob-kitoblar oʻzgarmaydi.",
         confirm: "Oʻchirish",
         cancel: "Bekor qilish",
       },
