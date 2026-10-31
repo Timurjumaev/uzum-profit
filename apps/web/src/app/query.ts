@@ -3,7 +3,7 @@
 import { infiniteQueryOptions, MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
-import type { ComponentIn, ComponentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, StockMoveIn, WaiverIn } from "../lib/api/types";
+import type { ComponentIn, ComponentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, StockMoveIn, WaiverIn, WaiverPatch } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -118,6 +118,9 @@ export const feeWaiversQuery = (orgId: string) =>
 
 export const createWaiver = (orgId: string, body: WaiverIn) =>
   unwrap(api.POST("/api/v1/orgs/{org_id}/fee-waivers", { params: { path: { org_id: orgId } }, body }));
+
+export const updateWaiver = (orgId: string, waiverId: string, body: WaiverPatch) =>
+  unwrap(api.PATCH("/api/v1/orgs/{org_id}/fee-waivers/{waiver_id}", { params: { path: { org_id: orgId, waiver_id: waiverId } }, body }));
 
 export const deleteWaiver = (orgId: string, waiverId: string) =>
   unwrap(api.DELETE("/api/v1/orgs/{org_id}/fee-waivers/{waiver_id}", { params: { path: { org_id: orgId, waiver_id: waiverId } } }));
