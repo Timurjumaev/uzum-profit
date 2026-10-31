@@ -7,12 +7,13 @@ import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
-import { createWaiver, deleteWaiver, feeWaiversQuery, shopsQuery } from "../../app/query";
+import { createWaiver, deleteWaiver, feeWaiversQuery, shopsQuery, updateWaiver } from "../../app/query";
 import { Banner, Button, Dialog, Select, TextInput, useToast } from "../../components/ui";
 import type { Pnl, WaiverIn, WaiverSuggestion } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 
-type Draft = { shop: string; start: string; end: string; kinds: string[]; reason: string; source: WaiverIn["source"] };
+export type WaiverDraft = { shop: string; start: string; end: string; kinds: string[]; reason: string; source: WaiverIn["source"] };
+type Draft = WaiverDraft;
 
 const ALL = "";
 
@@ -22,7 +23,7 @@ export function useKindLabel() {
   return (kind: string) => (kind === "sale_logistics" ? t("pnl.waivers.kind.sale_logistics") : t(`home.expense.${kind}`, { defaultValue: kind }));
 }
 
-function useShopName(orgId: string) {
+export function useShopName(orgId: string) {
   const { t } = useTranslation();
   const shops = useQuery(shopsQuery(orgId));
   return (id: string | null) => {
@@ -33,7 +34,7 @@ function useShopName(orgId: string) {
 }
 
 /** Bonus o'zgarsa — hisobotlar (banner, grafik, belgi) va ro'yxat qayta so'raladi. */
-function useRefresh(orgId: string) {
+export function useRefresh(orgId: string) {
   const client = useQueryClient();
   return () =>
     Promise.all(
@@ -123,7 +124,7 @@ export function Waivers({ orgId, data, canManage }: Props) {
   );
 }
 
-function WaiverForm({ orgId, initial, onClose }: { orgId: string; initial: Draft; onClose: () => void }) {
+export function WaiverForm({ orgId, id, initial, onClose }: { orgId: string; id?: string; initial: Draft; onClose: () => void }) {
   const { t } = useTranslation();
   const toast = useToast();
   const kindLabel = useKindLabel();
@@ -134,15 +135,23 @@ function WaiverForm({ orgId, initial, onClose }: { orgId: string; initial: Draft
   const patch = (p: Partial<Draft>) => setDraft((d) => ({ ...d, ...p }));
   const save = useMutation({
     mutationFn: () =>
-      createWaiver(orgId, {
-        shop_id: draft.shop === ALL ? null : draft.shop,
-        start_on: draft.start,
-        end_on: draft.end,
-        kinds: draft.kinds,
-        reason: draft.reason,
-        source: draft.source,
-        dismissed: false,
-      }),
+      id
+        ? updateWaiver(orgId, id, {
+            shop_id: draft.shop === ALL ? null : draft.shop,
+            start_on: draft.start,
+            end_on: draft.end,
+            kinds: draft.kinds,
+            reason: draft.reason,
+          })
+        : createWaiver(orgId, {
+            shop_id: draft.shop === ALL ? null : draft.shop,
+            start_on: draft.start,
+            end_on: draft.end,
+            kinds: draft.kinds,
+            reason: draft.reason,
+            source: draft.source,
+            dismissed: false,
+          }),
     onSuccess: async () => {
       await refresh();
       toast.show(t("pnl.waivers.saved"), "positive");

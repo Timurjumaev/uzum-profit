@@ -23,6 +23,7 @@ export type Waiver = Schemas["WaiverOut"];
 export type WaiverSuggestion = Schemas["SuggestionOut"];
 export type FeeWaivers = Schemas["FeeWaiversOut"];
 export type WaiverIn = Schemas["WaiverIn"];
+export type WaiverPatch = Schemas["WaiverPatch"];
 export type SkuDetail = Schemas["SkuDetailOut"];
 export type SkuDay = Schemas["SkuDayOut"];
 export type SkuLot = Schemas["LotOut"];

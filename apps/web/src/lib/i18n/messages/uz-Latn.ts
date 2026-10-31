@@ -1037,6 +1037,40 @@ export const uzLatn = {
       formula: { code: "F20", formula: "Σ (komponent summasi × kurs, taqsimot asosi boʻyicha qatorga) / qabul qilingan dona", source: "Xarid komponentlari va qatorlari" },
     },
   },
+  settings: {
+    title: "Sozlamalar",
+    waivers: {
+      title: "Uzum bonuslari",
+      lead: "Bonus haqiqiy foyda va xarajatlarni oʻzgartirmaydi — faqat shu davrdagi buyurtmalarni “Bonus davri” deb belgilaydi.",
+      add: "Bonus qoʻshish",
+      edit: "Tahrirlash",
+      caption: "Uzum bonus davrlari",
+      col: {
+        period: "Davr",
+        shop: "Doʻkon",
+        kinds: "Bepul xarajatlar",
+        reason: "Sabab",
+        source: "Manba",
+        status: "Holat",
+        actions: "Amallar",
+      },
+      source: {
+        manual: "Qoʻlda",
+        detected: "Tizim taklifi tasdiqlangan",
+      },
+      dismissed: "Rad etilgan",
+      empty: {
+        title: "Bonus davrlari yoʻq",
+        text: "Uzum vaqtincha logistika yoki saqlashni bepul qilganda, shu yerda bonus davrini belgilang.",
+      },
+      deleteDialog: {
+        title: "Bonus davrini oʻchirish",
+        text: "Haqiqatan ham bu bonus davrini oʻchirmoqchimisiz? Buyurtmalardan “Bonus davri” belgisi olib tashlanadi, haqiqiy hisob-kitoblar oʻzgarmaydi.",
+        confirm: "Oʻchirish",
+        cancel: "Bekor qilish",
+      },
+    },
+  },
   terms: {
     revenue: "Tushum",
     commission: "Uzum komissiyasi",

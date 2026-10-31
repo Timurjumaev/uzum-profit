@@ -311,3 +311,48 @@
 .status-shop__head h2 {
   margin: 0;
 }
+
+/* --- Sozlamalar (M16, B4.8) --- */
+.settings {
+  display: grid;
+  gap: var(--space-6);
+  min-inline-size: 0;
+}
+
+.settings > * {
+  min-inline-size: 0;
+}
+
+.settings__head h1 {
+  margin: 0;
+}
+
+.settings-section {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.settings-section > * {
+  min-inline-size: 0;
+}
+
+.settings-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.settings-section__head h2,
+.settings-section__head p {
+  margin: 0;
+}
+
+.settings-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+

@@ -72,6 +72,7 @@ export const DASHBOARD_ROUTE = `GET /api/v1/orgs/${ORG_ID}/dashboard`;
 export const PNL_ROUTE = `GET /api/v1/orgs/${ORG_ID}/pnl`;
 export const WAIVERS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/fee-waivers`;
 export const WAIVER_CREATE_ROUTE = `POST /api/v1/orgs/${ORG_ID}/fee-waivers`;
+export const waiverPatchRoute = (id: string) => `PATCH /api/v1/orgs/${ORG_ID}/fee-waivers/${id}`;
 export const waiverDeleteRoute = (id: string) => `DELETE /api/v1/orgs/${ORG_ID}/fee-waivers/${id}`;
 export const SKUS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/skus`;
 export const skuRoute = (skuId: string) => `GET /api/v1/orgs/${ORG_ID}/skus/${skuId}`;

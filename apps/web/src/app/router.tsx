@@ -137,7 +137,13 @@ const soon = <const P extends string>(path: P, name: keyof typeof import("../rou
   });
 const cash = soon("/cash", "Cash");
 const reports = soon("/reports", "Reports");
-const settings = soon("/settings", "Settings");
+
+/** Sozlamalar (M16, B4.8). */
+const settings = createRoute({
+  getParentRoute: () => app,
+  path: "/settings",
+  component: lazyRouteComponent(() => import("../routes/settings"), "Settings"),
+});
 
 const login = createRoute({
   getParentRoute: () => root,
