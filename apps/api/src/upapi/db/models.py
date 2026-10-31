@@ -142,6 +142,8 @@ orgs = Table(
     Column("language", Text, nullable=False, server_default="uz-Latn"),
     Column("timezone", Text, nullable=False, server_default="Asia/Tashkent"),
     Column("cost_method", Text, nullable=False, server_default="fifo"),
+    # Sozlamalar (B4.8): ``lead_days`` (F25 standart muddatlar), ``cover_days`` (F27 qamrov) — ``upapi.orgsettings``.
+    Column("settings", JSONB, nullable=False, server_default=text("'{}'::jsonb")),
     Column("deleted_at", TS),
     *_times(),
     check_in("cost_method", ("fifo", "average")),

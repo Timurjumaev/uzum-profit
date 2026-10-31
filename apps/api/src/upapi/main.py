@@ -33,6 +33,7 @@ from upapi.routes import (
     sync,
     waivers,
 )
+from upapi.routes import settings as settings_routes
 from upapi.settings import Settings, get_settings
 from upapi.startup import UnsafeConfiguration, check_role, check_settings
 from upapi.sync.jobs import JobQueue
@@ -117,6 +118,7 @@ def create_app(
     ):  # B2.9 o'qish API'lari
         app.include_router(reports.router, prefix=API_PREFIX)
     app.include_router(purchases.router, prefix=API_PREFIX)  # xaridlar (M9)
+    app.include_router(settings_routes.router, prefix=API_PREFIX)  # sozlamalar (M16)
     app.include_router(stock_moves.router, prefix=API_PREFIX)  # hisobdan chiqarish, tuzatish (M10)
     return app
 
