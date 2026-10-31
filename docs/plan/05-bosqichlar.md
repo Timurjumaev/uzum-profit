@@ -329,7 +329,21 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   ma'lumotnoma (`upcore.cash` seed) dan, har do'kon uchun faqat jadval turi tanlanadi. **Qoldi:** tashkilot nomi/INN/til
   tahriri, valyuta va kurs manbasi, ogohlantirish chegaralari, Telegram, to'liq eksport, tashkilotni o'chirish (30 kun)
   — keyingi bosqichlar (B5–B8); to'lov jadvali shartlarini tahrirlash — B5 (Pul oqimi); vizual e2e asoslari.
-- [ ] B4.9 Legacy import: `uzum.db` yuklash → xaridlar; solishtirma hisobot.
+- [x] B4.9 Legacy import: `uzum.db` yuklash → xaridlar; solishtirma hisobot.
+  ✓ 2026-10-31: Sozlamalar → "Eski dasturdan koʻchirish": fayl tanlanadi → ko'rib chiqish (hech narsa yozilmaydi,
+  hisobot haqiqiy hisob yo'li bilan — savepoint) → "Import qilish". API `POST /imports/legacy?dry_run=` (fayl xom
+  bayt, SQLite faqat o'qish; `manage_settings`, audit). Ko'chirish qoidasi `upcore.legacy` da (bitta joy;
+  `compare_legacy.py` ham shundan): `batches` → `purchases` (`legacy_batch_id`), `batch_lines` → `purchase_lines`
+  (SKU kodi shu do'kon SKU'siga, katta-kichik harfsiz; tovarsiz SKU'ga yangi tovar yaratilib bog'lanadi; topilmasa —
+  "yangi tovar" va hisobotda), tovar (narxli qator — o'z narxida, qolgani narxsizlarga), kargo, qo'shimchalar →
+  `cost_components` (dona bo'yicha, partiyadagi kurs — qo'lda kurs). Solishtirma hisobot: har partiya va qator legacy
+  ↔ yangi birlik tannarx (1 tiyin yoki yaxlitlash qoldig'i — M9), ulanmagan do'kon, ogohlantirishlar.
+  **Qarorlar:** kargo kiritilgan partiya — "Uzumga yuborildi" (kargo sanasi): legacy faqat Uzum qoldig'ini yuritgan,
+  aks holda o'z omborimda turib qolardi (B4.7); kargo kiritilmagan — "To'landi"; bosqich sanalari F25 o'rganishiga
+  kirmaydi (tugallangan bosqich yo'q). Qayta yuklash xavfsiz — ko'chirilgan partiya qayta yaratilmaydi va
+  o'zgartirilmaydi (tamoyil 7), hisobotda joriy xarid bilan solishtiriladi. Qo'shimcha chiqim nomlari — xarid
+  izohida (komponentda nom ustuni yo'q). Kursi yo'q summa (legacy 0 deb olgan) — ko'chirilmaydi, ogohlantirish.
+  **T:** staging'da Sozlamalar → "Eski dasturdan koʻchirish" ga `uzum.db` ni yuklash, hisobotni ko'rib "Import qilish".
 - [ ] B4.10 Excel eksport har jadvalda.
 - [ ] B4.11 Yordam: har ko'rsatkichda FormulaPopover, asosiy sahifalar uchun qisqa yordam matnlari.
 - T: legacy `uzum.db` ni yuklash; 14 kun faqat yangi dasturda ishlash; topilgan har noqulaylikni yozib yuborish.

@@ -134,7 +134,7 @@ export function mockApi(routes: Routes = {}) {
     const key = `${request.method} ${new URL(request.url).pathname}`;
     calls.push(key);
     const text = request.method === "GET" ? "" : await request.clone().text();
-    if (text) bodies.push({ key, body: JSON.parse(text) });
+    if (text) bodies.push({ key, body: (request.headers.get("Content-Type") ?? "").includes("json") || !request.headers.get("Content-Type") ? JSON.parse(text) : text });
     const entry = table[key];
     if (!entry) {
       unmocked.push(key);

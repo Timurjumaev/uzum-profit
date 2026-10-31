@@ -8,4 +8,11 @@ export const uzCyrlFixes: Record<string, string> = {
   "languages.ru": "Русский",
   // Sayt manzili lotinda qoladi.
   "onboarding.key.howto.1": "seller.uzum.uz кабинетига киринг.",
+  // Fayl nomi (uzum.db) va kompyuter (Mac) lotinda qoladi (B4.9).
+  "errors.codes.bad_legacy_file":
+    "Файл эски дастур базаси эмас ёки бузилган. Эски дастур папкасидаги uzum.db файлини танланг.",
+  "settings.legacy.lead":
+    "Локал дастурдаги партиялар (uzum.db) харид бўлиб кўчирилади: қаторлар, товар суммаси, карго ва қўшимча чиқимлар курслари билан. Сотувлар Uzumʼдан қайта олинади. Аввал кўриб чиқилади — ҳеч нарса ёзилмайди.",
+  "settings.legacy.hint":
+    "Macʼда: эски дастур папкасидаги uzum.db файли. Қайта юклаш хавфсиз — кўчирилган партия қайта яратилмайди.",
 };

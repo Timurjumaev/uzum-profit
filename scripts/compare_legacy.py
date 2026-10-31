@@ -33,18 +33,11 @@ sys.path[:0] = [str(ROOT / "packages" / "core" / "src"), str(ROOT)]
 
 from upcore.costing import CostMethod, Sale, compute_costs, lots_from_purchase  # noqa: E402
 from upcore.expenses import ExpenseCategory, classify_expenses  # noqa: E402
-from upcore.fx import manual_rate  # noqa: E402
+from upcore.legacy import LegacyBatch, LegacyExtra, LegacyLine, decimal_of, to_purchase  # noqa: E402
 from upcore.metrics import Period, SaleLine, StatusGroup, status_group  # noqa: E402
 from upcore.money import Money  # noqa: E402
 from upcore.pnl import ExpenseItem, build_cells, expense_items  # noqa: E402
-from upcore.purchasing import (  # noqa: E402
-    ComponentKind,
-    CostComponent,
-    Purchase,
-    PurchaseLine,
-    compute_lots,
-    residual_goods,
-)
+from upcore.purchasing import Purchase, compute_lots  # noqa: E402
 
 from uzum_profit import costs as legacy_costs  # noqa: E402
 from uzum_profit import report as legacy_report  # noqa: E402
@@ -94,47 +87,40 @@ def months(start: date, end: date) -> list[Period]:
 # --- Partiyalar (F20) -----------------------------------------------------------------------
 
 
-def legacy_as_purchase(batch: dict) -> Purchase:
-    """Legacy partiyasi → yangi model (B4.9 ko'chirish qoidasi bilan bir xil):
-    tovar — narxli qatorlar o'z narxida, qolgani narxsiz qatorlarga dona bo'yicha; kargo va qo'shimchalar —
-    dona bo'yicha; kurslar — partiyadagi qo'lda kurs. Sotuvga tayyor sana: kargo sanasi; kargo kiritilgan,
-    sanasi yo'q — buyurtma sanasi (legacy ``effective_date``); kargo kiritilmagan — "yo'lda"."""
-    day = date.fromisoformat(batch["date"])
-    cny = manual_rate(day, "CNY", d(batch.get("cny_rate") or 0) or D(1))
-    usd = manual_rate(day, "USD", d(batch.get("usd_rate") or 0) or D(1))
-    lines = tuple(
-        PurchaseLine(
-            str(i),
-            int(ln["qty"]),
-            int(ln["qty"]),
-            None if ln["cny_unit"] is None else Money.of(d(ln["cny_unit"]), "CNY"),
-        )
-        for i, ln in enumerate(batch["lines"])
-    )
-    comps: list[CostComponent] = []
-    if batch.get("cny_rate"):
-        rest, unpriced = residual_goods(Money.of(d(batch.get("goods_cny")), "CNY"), lines)
-        comps += [
-            CostComponent(ComponentKind.GOODS, ln.unit_price * ln.qty, cny, line_ids=(ln.id,))
-            for ln in lines
-            if ln.unit_price is not None and ln.qty > 0
-        ]
-        if unpriced and not rest.is_zero():
-            comps.append(CostComponent(ComponentKind.GOODS, rest, cny, line_ids=unpriced))
-    if batch.get("cargo_usd") is not None and batch.get("usd_rate"):
-        comps.append(
-            CostComponent(ComponentKind.CARGO, Money.of(d(batch["cargo_usd"]), "USD"), usd)
-        )
-    comps += [
-        CostComponent(ComponentKind.OTHER, Money.of(d(e["amount"]), "UZS")) for e in batch["extras"]
-    ]
+def legacy_batch(batch: dict) -> LegacyBatch:
+    """Legacy ``load_batches`` lug'ati → ``upcore.legacy.LegacyBatch`` (float — matn orqali Decimal)."""
     cargo_day = batch.get("cargo_date")
-    ready = (
-        date.fromisoformat(cargo_day)
-        if cargo_day
-        else (day if batch.get("cargo_usd") is not None else None)
+    return LegacyBatch(
+        id=int(batch["id"]),
+        shop_id=batch.get("shop_id"),
+        day=date.fromisoformat(batch["date"]),
+        goods_cny=decimal_of(batch.get("goods_cny")),
+        cny_rate=decimal_of(batch.get("cny_rate")),
+        cargo_usd=decimal_of(batch.get("cargo_usd")),
+        usd_rate=decimal_of(batch.get("usd_rate")),
+        cargo_day=date.fromisoformat(cargo_day) if cargo_day else None,
+        title=batch.get("title"),
+        lines=tuple(
+            LegacyLine(
+                int(ln["id"]),
+                int(ln["qty"]),
+                ln.get("sku"),
+                ln.get("label"),
+                decimal_of(ln["cny_unit"]),
+            )
+            for ln in batch["lines"]
+        ),
+        extras=tuple(
+            LegacyExtra(int(e["id"]), e.get("name") or "", decimal_of(e["amount"]) or D(0))
+            for e in batch["extras"]
+        ),
     )
-    return Purchase(f"B{batch['id']}", lines, tuple(comps), order_date=day, cargo_paid_date=ready)
+
+
+def legacy_as_purchase(batch: dict) -> Purchase:
+    """Legacy partiyasi → yangi model: B4.9 ko'chirish qoidasining o'zi (``upcore.legacy.to_purchase``) — qator id
+    = legacy qator id."""
+    return to_purchase(legacy_batch(batch)).purchase
 
 
 def compare_batches(batches: list[dict]) -> tuple[list[str], bool]:
@@ -206,9 +192,7 @@ def with_costs(
         if not legacy_costs.compute_batch(b):  # donasiz partiya — legacy ham hisobga olmaydi
             continue
         p = legacy_as_purchase(b)
-        item_of = {
-            str(i): (ln["sku"] or "").lower() for i, ln in enumerate(b["lines"]) if ln.get("sku")
-        }
+        item_of = {str(ln["id"]): ln["sku"].lower() for ln in b["lines"] if ln.get("sku")}
         for sku, items in lots_from_purchase(p, compute_lots(p), item_of).items():
             lots[sku] += items
     events: dict[str, list[Sale]] = defaultdict(list)
