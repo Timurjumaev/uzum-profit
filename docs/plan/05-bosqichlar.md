@@ -311,8 +311,24 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   faqat o'z omborim hisobiga ta'sir qiladi (Uzum qoldig'i Uzumdan). **Qoldi:** FBO yuborish rejasi va Excel,
   postavkalar, yo'qolgan tovar (F31–F34), nelikvid va muzlagan pul bo'limlari, qoldiq tarixi grafigi — B5; standart
   muddatlar (F25) sozlamasi — B4.8; Excel eksport — B4.10; vizual e2e asoslari.
-- [ ] B4.8 Sozlamalar (M16) — soliq profili, tannarx usuli, to'lov jadvali, muddatlar, do'konlar, Uzum bonuslari
+- [x] B4.8 Sozlamalar (M16) — soliq profili, tannarx usuli, to'lov jadvali, muddatlar, do'konlar, Uzum bonuslari
   (ADR-031: davrlar ro'yxati, qo'shish/tahrirlash, tizim takliflarini tasdiqlash).
+  ✓ 2026-10-31: `/settings` sahifasi, bo'limlar ketma-ket: **tannarx usuli** (FIFO / o'rtacha; almashsa tasdiq so'raladi va
+  hamma sotuv tannarxi navbat orqali qayta hisoblanadi), **soliq profili** (F11: sana bo'yicha ro'yxat, qo'shish /
+  tahrirlash / o'chirish; rejimga mos maydonlar — aylanma stavka va baza, QQS + foyda, agent, yo'q; ma'lumotnoma
+  stavkasi tavsiya), **Uzum to'lov jadvali** (F38: har do'kon uchun sana bo'yicha, oy kunlari va yechish foizi
+  ko'rsatiladi), **muddatlar va qamrov** (F25 standart yetkazish muddati — tarix yo'q bosqich uchun; ABC qamrov kunlari
+  F27), **do'konlar** (nom, rang, hisobga olish — faqat egasi), **Uzum bonuslari** (to'liq ro'yxat, qo'shish, tahrirlash
+  — `WaiverForm` P&L bilan umumiy, rad etilgan belgisi, o'chirish tasdiq bilan). API: `GET /settings`, `PUT
+  /settings/cost-method`, `PUT /settings/inventory`, `POST/PATCH/DELETE /tax-profiles`, `POST/DELETE /payout-schedules`;
+  migratsiya 0009 (`orgs.settings` JSONB — muddat va qamrov bazada, tamoyil 2); o'qish `view_settings`, yozish
+  `manage_settings`, audit. Standart muddatlar B4.6/B4.7 qoldig'ini yopdi: tarix yo'q tovarda ham holat (F26), buyurtma
+  sanasi va tavsiya (F27) chiqadi, xarid sahifasida kutilgan sana (F25) ham shundan. **Qarorlar:** soliq profili va
+  to'lov jadvali sana bo'yicha — eski davr hisobi o'zgarmaydi, bir sanada bitta qator (409); muddat sozlamasi yoki
+  hamma 5 bosqich, yoki hech biri (qisman — taxmin); to'lov jadvali shartlari (oy kunlari, yechish foizi) hozircha
+  ma'lumotnoma (`upcore.cash` seed) dan, har do'kon uchun faqat jadval turi tanlanadi. **Qoldi:** tashkilot nomi/INN/til
+  tahriri, valyuta va kurs manbasi, ogohlantirish chegaralari, Telegram, to'liq eksport, tashkilotni o'chirish (30 kun)
+  — keyingi bosqichlar (B5–B8); to'lov jadvali shartlarini tahrirlash — B5 (Pul oqimi); vizual e2e asoslari.
 - [ ] B4.9 Legacy import: `uzum.db` yuklash → xaridlar; solishtirma hisobot.
 - [ ] B4.10 Excel eksport har jadvalda.
 - [ ] B4.11 Yordam: har ko'rsatkichda FormulaPopover, asosiy sahifalar uchun qisqa yordam matnlari.

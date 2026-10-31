@@ -31,6 +31,7 @@ const CASES: Case[] = [
   { name: "Foyda va zarar: SKU", path: "/pnl?view=sku" },
   { name: "Maʼlumotlar holati", path: "/status" },
   { name: "Ombor", path: "/inventory" },
+  { name: "Sozlamalar", path: "/settings" },
   { name: "Xaridlar", path: "/purchases" },
   { name: "Xarid sahifasi", path: "/purchases/91111111-1111-4111-8111-111111111111" },
   { name: "UI-kit", path: "/ui-kit" },
