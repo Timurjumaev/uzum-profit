@@ -329,10 +329,11 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   ma'lumotnoma (`upcore.cash` seed) dan, har do'kon uchun faqat jadval turi tanlanadi. **Qoldi:** tashkilot nomi/INN/til
   tahriri, valyuta va kurs manbasi, ogohlantirish chegaralari, Telegram, to'liq eksport, tashkilotni o'chirish (30 kun)
   — keyingi bosqichlar (B5–B8); to'lov jadvali shartlarini tahrirlash — B5 (Pul oqimi); vizual e2e asoslari.
-- [ ] B4.9 Legacy import: `uzum.db` yuklash → xaridlar; solishtirma hisobot.
+- [x] ~~B4.9 Legacy import: `uzum.db` yuklash → xaridlar; solishtirma hisobot.~~ Bekor (ADR-032, 2026-10-31): Temur
+  2 ta legacy partiyani Xaridlar sahifasida qo'lda kiritadi.
 - [ ] B4.10 Excel eksport har jadvalda.
 - [ ] B4.11 Yordam: har ko'rsatkichda FormulaPopover, asosiy sahifalar uchun qisqa yordam matnlari.
-- T: legacy `uzum.db` ni yuklash; 14 kun faqat yangi dasturda ishlash; topilgan har noqulaylikni yozib yuborish.
+- T: legacy partiyalarini Xaridlar sahifasida qo'lda kiritish (ADR-032); 14 kun faqat yangi dasturda ishlash; topilgan har noqulaylikni yozib yuborish.
 
 **Chiqish:** Temur 14 kun faqat yangi dasturdan foydalangan; kritik xato yo'q; legacy `legacy/` papkaga ko'chirildi.
 

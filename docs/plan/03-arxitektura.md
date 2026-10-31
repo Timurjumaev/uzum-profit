@@ -351,10 +351,8 @@ legacy'dagi `UZUM_TEST_HISTORY` kabi).
 
 - Legacy (`uzum_profit/`, Python 3.8, SQLite) B4 oxirigacha Temurning Mac'ida ishlaydi; faqat kritik xatolar
   tuzatiladi (ADR-014).
-- B4.9: ko'chirish vositasi — Temur `uzum.db` faylini yangi ilovaga yuklaydi (sozlamalar → import):
-  `batches` → `purchases`, `batch_lines` → `purchase_lines`, `batch_extras` → `cost_components`
-  (kurslar saqlanadi). Sotuvlar Uzum'dan qayta olinadi. Natija: legacy va yangi tizimning partiya tannarxlari
-  solishtirma hisoboti.
+- ~~B4.9: `uzum.db` ko'chirish vositasi~~ — bekor (ADR-032): legacy partiyalari Xaridlar sahifasida qo'lda
+  kiritiladi, sotuvlar Uzum'dan olinadi.
 - Legacy'dan olinadigan saboqlar: xarajat kodining faqat bir varianti (У→U) qamralgan, `PENDING_REALIZATION`
   doimiysi, bepul logistika sanalari `.env` da, FBO qoldig'i faqat `fbo` maydonidan, xarajat statuslari
   filtrlanmagan, tannarxsiz qism bo'lsa hamma xarajat ayiriladi, sotuv tannarxi "sanagacha kelgan hamma partiyalar
