@@ -7,6 +7,7 @@ export const uzCyrlFixes: Record<string, string> = {
   "languages.uz-Latn": "Oʻzbekcha",
   "languages.ru": "Русский",
   // Dastur nomi lotinda qoladi.
+  "help.pages.expenses.c": "Excel тугмаси жорий фильтр бўйича файл беради.",
   "ui.exportExcel": "Excel юклаб олиш",
   // Sayt manzili lotinda qoladi.
   "onboarding.key.howto.1": "seller.uzum.uz кабинетига киринг.",

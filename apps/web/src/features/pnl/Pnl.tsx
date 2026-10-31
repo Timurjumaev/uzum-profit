@@ -13,7 +13,7 @@ import { useFilters } from "../../app/filters";
 import { currentOrg, meQuery, pnlQuery, syncQuery } from "../../app/query";
 import { pnlSearch } from "../../app/search";
 import { WaterfallChart } from "../../components/charts";
-import { Banner, Button, EmptyState, Skeleton } from "../../components/ui";
+import { Banner, Button, EmptyState, Skeleton, PageHelp } from "../../components/ui";
 import { useFormat } from "../../lib/i18n";
 import { syncSummary } from "../../lib/sync";
 import { Drill } from "../home/Drill";
@@ -67,7 +67,10 @@ export function Pnl() {
   return (
     <section className="pnl" aria-busy={query.isPlaceholderData || undefined}>
       <header className="pnl__head">
-        <h1 className="h2">{t("pnl.title", { period: f.period(current.start, current.end) })}</h1>
+        <div className="page-title">
+          <h1 className="h2">{t("pnl.title", { period: f.period(current.start, current.end) })}</h1>
+          <PageHelp page="pnl" />
+        </div>
         {previous && <p className="caption">{t("pnl.previousNote", { period: f.period(previous.start, previous.end) })}</p>}
       </header>
       {filters.compare === "lastYear" && <Banner tone="info" title={t("home.lastYearSoon")} />}

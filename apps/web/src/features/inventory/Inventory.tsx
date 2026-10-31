@@ -11,7 +11,7 @@ import { errorText } from "../../app/errors";
 import { useFilters } from "../../app/filters";
 import { createLine, createPurchase, currentOrg, deletePurchase, inventoryQuery, meQuery } from "../../app/query";
 import { inventorySearch, STOCK_STATUSES } from "../../app/search";
-import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, FormulaPopover, Kpi, Skeleton, StatusPill, useToast, type Column } from "../../components/ui";
+import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, FormulaPopover, Kpi, Skeleton, StatusPill, useToast, type Column, PageHelp } from "../../components/ui";
 import { cx } from "../../components/ui/cx";
 import type { StockRow } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
@@ -76,7 +76,10 @@ export function Inventory() {
   return (
     <section className="inventory" aria-busy={query.isPlaceholderData || undefined}>
       <header className="inventory__head">
-        <h1 className="h2">{t("inventory.title")}</h1>
+        <div className="page-title">
+          <h1 className="h2">{t("inventory.title")}</h1>
+          <PageHelp page="inventory" />
+        </div>
         <p className="caption">{t("inventory.asOf", { date: f.date(first.as_of) })}</p>
       </header>
 
@@ -93,6 +96,7 @@ export function Inventory() {
           label={t("inventory.kpi.transit")}
           value={t("inventory.kpiUnits", { count: f.number(totals.units.china + totals.units.road) })}
           note={amounts ? f.money(Number(totals.frozen_money!.china) + Number(totals.frozen_money!.road)) : undefined}
+          help={<Help id="f29" metric={t("inventory.kpi.transit")} />}
         />
         <Kpi label={t("inventory.kpi.own")} value={t("inventory.kpiUnits", { count: f.number(totals.units.own) })} note={amounts ? f.money(totals.frozen_money!.own) : undefined} />
         {amounts && (
@@ -244,12 +248,14 @@ function buildColumns({ t, f, canManage, onMove }: Ctx): Column<StockRow>[] {
     {
       key: "reorder",
       header: t("inventory.col.reorder"),
+      help: <Help id="f27" metric={t("inventory.col.reorder")} />,
       numeric: true,
       render: (r) => <Reorder row={r} />,
     },
     {
       key: "value",
       header: t("inventory.col.value"),
+      help: <Help id="f29" metric={t("inventory.col.value")} />,
       numeric: true,
       render: (r) => (r.stock_value === null ? dash : f.money(r.stock_value, { unit: false })),
     },

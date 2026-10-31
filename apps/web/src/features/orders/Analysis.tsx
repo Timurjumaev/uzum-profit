@@ -74,7 +74,13 @@ export function Analysis({ orgId, params, kind }: Props) {
             note={s.after_issue_share === null ? undefined : t("orders.cancel.afterIssueNote", { share: f.percent(s.after_issue_share) })}
           />
         ) : (
-          <Kpi label={t("orders.returns.storageCost")} value={f.money(s.return_storage_cost)} good="down" note={t("orders.returns.storageNote")} />
+          <Kpi
+            label={t("orders.returns.storageCost")}
+            value={f.money(s.return_storage_cost)}
+            good="down"
+            note={t("orders.returns.storageNote")}
+            help={<FormulaPopover metric={t("orders.returns.storageCost")} code={t("home.formula.returnStorage.code")} formula={t("home.formula.returnStorage.formula")} source={t("home.formula.returnStorage.source")} />}
+          />
         )}
       </div>
       <LineBarChart title={t(`orders.${kind}.trend`)} x={x} unit="count" series={[{ key: kind, name: t(`orders.${kind}.units`), color: cancel ? 2 : 3, values }]} />

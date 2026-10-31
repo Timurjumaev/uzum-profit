@@ -12,7 +12,7 @@ import { errorText } from "../../app/errors";
 import { useFilters } from "../../app/filters";
 import { currentOrg, meQuery, shopsQuery, skusQuery, syncQuery } from "../../app/query";
 import { DEFAULT_PRODUCT_SORT, parseSort, productsSearch, PRODUCT_ABC, PRODUCT_LABELS, type ProductSort } from "../../app/search";
-import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, FormulaPopover, Popover, ProductThumb, Select, Skeleton, StatusPill, type Column } from "../../components/ui";
+import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, FormulaPopover, Popover, ProductThumb, Select, Skeleton, StatusPill, type Column, PageHelp } from "../../components/ui";
 import { cx } from "../../components/ui/cx";
 import type { SkuRow, Skus } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
@@ -129,7 +129,10 @@ export function Products() {
   return (
     <section className="products" aria-busy={query.isPlaceholderData || undefined}>
       <header className="products__head">
-        <h1 className="h2">{t("products.title", { period: f.period(period.start, period.end) })}</h1>
+        <div className="page-title">
+          <h1 className="h2">{t("products.title", { period: f.period(period.start, period.end) })}</h1>
+          <PageHelp page="products" />
+        </div>
         <p className="caption">{t("products.count", { shown: f.number(rows.length), total: f.number(first.total) })}</p>
       </header>
       {hasBonus && <BonusNote data={first} />}

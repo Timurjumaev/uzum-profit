@@ -448,6 +448,7 @@ export const uzLatn = {
       payout: { code: "F6", formula: "Tushum − komissiya − logistika", source: "Uzum sotuvlari" },
       grossProfit: { code: "F8", formula: "Uzum toʻlovi − tannarx (tannarxi maʼlum sotuvlar)", source: "Yuqoridagi qatorlar" },
       cogs: { code: "F7", formula: "Σ birlik tannarxi × dona (tannarxi maʼlum sotuvlar)", source: "Xaridlar va partiyalar" },
+      returnStorage: { code: "F9", formula: "«Qaytim saqlash» toifasi: chiqim − kompensatsiya", source: "Uzum xarajatlari" },
       uzumExpenses: { code: "F9", formula: "Reklama + saqlash + qaytim saqlash + jarimalar + fotostudiya + pul yechish + boshqa − kompensatsiya", source: "Uzum xarajatlari" },
       ownExpenses: { code: "F10", formula: "Qoʻlda kiritilgan xarajatlarning tanlangan davrga toʻgʻri keladigan qismi", source: "Oʻz xarajatlarim" },
       tax: { code: "F11", formula: "Soliq profili boʻyicha", source: "Sozlamalar" },
@@ -1159,6 +1160,19 @@ export const uzLatn = {
       },
       formula: { code: "F20", formula: "Σ (komponent summasi × kurs, taqsimot asosi boʻyicha qatorga) / qabul qilingan dona", source: "Xarid komponentlari va qatorlari" },
     },
+  },
+  help: {
+    label: "Sahifa haqida: {{page}}",
+    pages: {
+      home: { title: "Asosiy sahifa", a: "Tanlangan davr uchun sof foyda va asosiy koʻrsatkichlar.", b: "Raqam yonidagi «?» — formula va maʼlumot manbasi.", c: "«Diqqat talab qiladi» blokidan boshlang." },
+      pnl: { title: "Foyda va zarar", a: "Tushumdan sof foydagacha har bir qator.", b: "Qatorni bossangiz — uni tashkil qilgan sotuv yoki xarajatlar.", c: "Tannarxsiz sotuvlar sof foydaga kirmaydi, alohida koʻrsatiladi." },
+      products: { title: "Mahsulotlar", a: "Har SKU boʻyicha foyda, marja, ROI va qoldiq.", b: "Ustunlarni tanlash va koʻrinishni saqlash mumkin.", c: "SKUʼni bossangiz — kunlik tarix, lotlar va kalkulyator." },
+      orders: { title: "Buyurtmalar", a: "Sotuv qatorlari: komissiya, logistika, tannarx, foyda.", b: "Bekor va qaytish ulushi — dona boʻyicha, holat filtriga bogʻliq emas.", c: "«Taxminiy» belgisi — tannarx toʻliq emas." },
+      expenses: { title: "Xarajatlar", a: "Uzum xarajatlari toifalar boʻyicha va oʻz xarajatlaringiz.", b: "Oʻz xarajatingiz davrga proporsional taqsimlanadi.", c: "Excel tugmasi joriy filtr boʻyicha fayl beradi." },
+      purchases: { title: "Xaridlar", a: "Xitoydan partiyalar: buyurtmadan omborgacha yoʻl.", b: "Tannarx kargo va boshqa xarajatlar bilan hisoblanadi.", c: "Qabul qilingan dona sotuvlar tannarxiga kiradi." },
+      inventory: { title: "Ombor", a: "Qoldiq joylar boʻyicha: Uzum, yoʻlda, oʻz omborim.", b: "Zaxira kunlari va holat — sotuv tezligidan.", c: "Buyurtma sanasi — tovar tugamasdan kelishi uchun." },
+      settings: { title: "Sozlamalar", a: "Soliq, tannarx usuli, toʻlov jadvali va doʻkonlar.", b: "Oʻzgarish eski davr hisobiga taʼsir qilmaydi.", c: "Uzum bonuslari shu yerda kiritiladi." },
+  },
   },
   terms: {
     revenue: "Tushum",

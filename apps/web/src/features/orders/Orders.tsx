@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useFilters } from "../../app/filters";
 import { currentOrg, meQuery } from "../../app/query";
 import { ORDER_TABS, ordersSearch, type OrderTab } from "../../app/search";
+import { PageHelp } from "../../components/ui";
 import { cx } from "../../components/ui/cx";
 import { useFormat } from "../../lib/i18n";
 import { Analysis } from "./Analysis";
@@ -29,7 +30,10 @@ export function Orders() {
   return (
     <section className="orders">
       <header className="orders__head">
-        <h1 className="h2">{t("orders.title", { period: f.period(params.start, params.end) })}</h1>
+        <div className="page-title">
+          <h1 className="h2">{t("orders.title", { period: f.period(params.start, params.end) })}</h1>
+          <PageHelp page="orders" />
+        </div>
       </header>
       <div role="tablist" aria-label={t("orders.tabsLabel")} className="orders-tabs">
         {ORDER_TABS.map((id) => (

@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import { errorText } from "../../app/errors";
 import { currentOrg, meQuery, purchasesQuery } from "../../app/query";
 import { PURCHASE_GROUPS, purchasesSearch, type PurchaseGroup } from "../../app/search";
-import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, Skeleton, type Column } from "../../components/ui";
+import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, Skeleton, type Column, PageHelp } from "../../components/ui";
 import { cx } from "../../components/ui/cx";
 import type { PurchaseRow, StageMark } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
@@ -108,7 +108,10 @@ export function Purchases() {
   return (
     <section className="purchases">
       <header className="purchases__head">
-        <h1 className="h2">{t("purchases.title")}</h1>
+        <div className="page-title">
+          <h1 className="h2">{t("purchases.title")}</h1>
+          <PageHelp page="purchases" />
+        </div>
         <span className="purchases__actions">
           <ExportButton orgId={org.id} table="purchases" />
           {canManage && <Button onClick={() => setAdding(true)}>{t("purchases.add")}</Button>}

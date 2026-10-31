@@ -15,6 +15,7 @@ export { MoneyInput, NumberInput, TextInput } from "./Input";
 export { changeTone, Kpi, Sparkline } from "./Kpi";
 export { LedgerTable, type LedgerRow } from "./LedgerTable";
 export { Dialog, Drawer } from "./Overlay";
+export { PageHelp, HELP_PAGES, type HelpPage } from "./PageHelp";
 export { Popover, Tooltip } from "./Popover";
 export { ProductThumb } from "./ProductThumb";
 export { Select } from "./Select";

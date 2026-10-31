@@ -29,6 +29,9 @@ export function OrdersList({ orgId, params, group }: Props) {
   const first = query.data.pages[0]!;
   const rows = query.data.pages.flatMap((p) => p.items);
   const share = (value: string | null) => (value === null ? "—" : f.percent(value));
+  const help = (key: string, metric: string) => (
+    <FormulaPopover metric={metric} code={t(`home.formula.${key}.code`)} formula={t(`home.formula.${key}.formula`)} source={t(`home.formula.${key}.source`)} />
+  );
   const columns: Column<Sale>[] = [
     { key: "day", header: t("orders.col.day"), render: (r) => f.date(r.day) },
     {
@@ -55,12 +58,12 @@ export function OrdersList({ orgId, params, group }: Props) {
     },
     { key: "amount", header: t("orders.col.units"), numeric: true, render: (r) => f.number(r.amount) },
     { key: "price", header: t("orders.col.price"), numeric: true, render: (r) => f.money(r.sell_price, { unit: false }) },
-    { key: "commission", header: t("terms.commission"), numeric: true, render: (r) => f.money(r.commission, { unit: false }) },
-    { key: "logistics", header: t("terms.logistics"), numeric: true, render: (r) => f.money(r.logistics, { unit: false }) },
-    { key: "payout", header: t("terms.payout"), numeric: true, render: (r) => f.money(r.payout, { unit: false }) },
+    { key: "commission", header: t("terms.commission"), help: help("commission", t("terms.commission")), numeric: true, render: (r) => f.money(r.commission, { unit: false }) },
+    { key: "logistics", header: t("terms.logistics"), help: help("logistics", t("terms.logistics")), numeric: true, render: (r) => f.money(r.logistics, { unit: false }) },
+    { key: "payout", header: t("terms.payout"), help: help("payout", t("terms.payout")), numeric: true, render: (r) => f.money(r.payout, { unit: false }) },
     {
       key: "cogs",
-      header: t("terms.cogs"),
+      header: t("terms.cogs"), help: help("cogs", t("terms.cogs")),
       numeric: true,
       render: (r) => (
         <>
@@ -68,7 +71,7 @@ export function OrdersList({ orgId, params, group }: Props) {
         </>
       ),
     },
-    { key: "profit", header: t("terms.grossProfit"), numeric: true, render: (r) => (r.gross_profit === null ? "—" : f.money(r.gross_profit, { unit: false })) },
+    { key: "profit", header: t("terms.grossProfit"), help: help("grossProfit", t("terms.grossProfit")), numeric: true, render: (r) => (r.gross_profit === null ? "—" : f.money(r.gross_profit, { unit: false })) },
   ];
   const s = first.summary;
   return (
