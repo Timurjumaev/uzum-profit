@@ -190,7 +190,7 @@ xarajatni to'g'ri yig'ish va tovarlarga to'g'ri bo'lish.
 - "Qayta buyurtma" — eski xaridni nusxalash; zaxira rejasidan xarid yaratish [B5].
 - **Kech kiritilgan xarajat** (masalan, kargo narxi 20 kundan keyin) kiritilganda o'tgan sotuvlar tannarxi
   avtomatik qayta hisoblanadi va P&L'da "qayta hisoblandi" belgisi chiqadi.
-- Legacy partiyalarini ko'chirish (B4.9), Excel import [B7].
+- Excel import [B7]. (Legacy partiyalarini ko'chirish bekor — ADR-032: qo'lda kiritiladi.)
 
 Qabul mezonlari: legacy'dagi har partiya ko'chirilgach birlik tannarx legacy bilan bir xil (o'rtacha usulda);
 kargo vazn bo'yicha taqsimlanganda qatorlar yig'indisi kargo summasiga tiyinigacha teng (yaxlitlash qoldig'i

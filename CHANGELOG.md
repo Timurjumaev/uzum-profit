@@ -365,5 +365,6 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- Shell testlari soatga bog'liq edi (oyning 1-kunida standart "Shu oy" davri "Bugun" deb nomlanadi) — soat qotirildi.
 - Davr nomi: 30 kunlik oyning 30-kunida (va 1-yanvarda) standart "Shu oy" davri "30 kun" ("Bugun") deb ko'rinardi —
   bir xil kunlarga tushgan tayyor davrlarda taqvim nomi ustun (`matchPreset`).
