@@ -35,6 +35,17 @@ async function renderAt(path: string, routes: Routes = {}) {
 const urls = (api: ReturnType<typeof mockApi>, route: string) =>
   api.fetch.mock.calls.map(([r]) => new URL((r as Request).url)).filter((u) => u.pathname === route.split(" ")[1]);
 
+describe("Yordam", () => {
+  it("sahifa yordami va qator sarlavhalaridagi formulalar (F4–F8)", async () => {
+    await renderAt(PATH);
+    await screen.findByRole("table", { name: CAPTION });
+    expect(screen.getByRole("button", { name: "Sahifa haqida: Buyurtmalar" })).toBeTruthy();
+    for (const name of ["Uzum komissiyasi", "Logistika", "Uzum toʻlovi", "Tannarx", "Yalpi foyda"]) {
+      expect(screen.getByRole("button", { name: `Qanday hisoblanadi: ${name}` }), name).toBeTruthy();
+    }
+  });
+});
+
 describe("Excel eksport", () => {
   it("tugma davr, do'kon va holat filtri bilan eksport endpoint'iga boradi", async () => {
     const exportRoute = `GET /api/v1/orgs/${ORG_ID}/exports/sales.xlsx`;

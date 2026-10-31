@@ -3,7 +3,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Banner, Button, FormulaPopover, LedgerTable, type LedgerRow } from "../../components/ui";
+import { Banner, Button, FormulaPopover, LedgerTable, PageHelp, type LedgerRow } from "../../components/ui";
 import { cx } from "../../components/ui/cx";
 import type { Dashboard } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
@@ -43,9 +43,12 @@ export function Ledger({ data, onRow, costAction }: Props) {
   return (
     <section className="home-ledger" aria-labelledby="home-title">
       <div className="home-ledger__head">
-        <h1 id="home-title" className="h2">
-          {t("home.heroTitle", { period: f.period(current.start, current.end) })}
-        </h1>
+        <div className="page-title">
+          <h1 id="home-title" className="h2">
+            {t("home.heroTitle", { period: f.period(current.start, current.end) })}
+          </h1>
+          <PageHelp page="home" />
+        </div>
         <p className={cx("hero", `ui-text--${tone}`)} data-testid="net-profit">
           {net ? f.money(net.amount) : "—"}
         </p>

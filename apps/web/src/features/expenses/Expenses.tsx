@@ -9,7 +9,7 @@ import { errorText } from "../../app/errors";
 import { useFilters } from "../../app/filters";
 import { currentOrg, expensesQuery, meQuery } from "../../app/query";
 import { expensesSearch } from "../../app/search";
-import { Banner, Button, Skeleton } from "../../components/ui";
+import { Banner, Button, Skeleton, PageHelp } from "../../components/ui";
 import { cx } from "../../components/ui/cx";
 import { useFormat } from "../../lib/i18n";
 import { OwnExpenses } from "./OwnExpenses";
@@ -35,7 +35,10 @@ export function Expenses() {
   return (
     <section className="expenses">
       <header className="orders__head">
-        <h1 className="h2">{t("expenses.title", { period: f.period(params.start, params.end) })}</h1>
+        <div className="page-title">
+          <h1 className="h2">{t("expenses.title", { period: f.period(params.start, params.end) })}</h1>
+          <PageHelp page="expenses" />
+        </div>
       </header>
       <div role="tablist" aria-label={t("expenses.tabsLabel")} className="orders-tabs">
         {TABS.map((id) => (

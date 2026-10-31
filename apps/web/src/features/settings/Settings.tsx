@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
 import { currentOrg, meQuery, settingsQuery } from "../../app/query";
-import { Banner, Button, Skeleton } from "../../components/ui";
+import { Banner, Button, Skeleton, PageHelp } from "../../components/ui";
 import { CostMethod } from "./CostMethod";
 import { FeeWaivers } from "./FeeWaivers";
 import { InventorySettings } from "./InventorySettings";
@@ -26,7 +26,10 @@ export function Settings() {
   return (
     <section className="settings">
       <header className="settings__head">
-        <h1 className="h2">{t("nav.settings")}</h1>
+        <div className="page-title">
+          <h1 className="h2">{t("nav.settings")}</h1>
+          <PageHelp page="settings" />
+        </div>
       </header>
       {query.isError ? (
         <Banner tone="negative" title={errorText(query.error, t)} action={<Button onClick={() => void query.refetch()}>{t("common.retry")}</Button>} />
