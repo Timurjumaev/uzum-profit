@@ -69,7 +69,8 @@ def test_status_before_and_after_sync(api: MpApi, db: dict[str, str]) -> None:
     assert before["freshness"]["orders"] is None
 
     fake = seller()
-    clock = Clock(datetime.now(UTC))
+    # Kun soati qotirilgan: snapshot Toshkent vaqti bilan 23:50 dan keyin vaqti keladi — test shu oynada yiqilmasin.
+    clock = Clock(datetime.now(UTC).replace(hour=7, minute=0, second=0, microsecond=0))
     with runtime(db, fake, clock) as run:
         run(lambda rt: eng.sync_account(rt, UUID(org), UUID(account), trigger=eng.Trigger.CONNECT))
     after = status(api, org)
