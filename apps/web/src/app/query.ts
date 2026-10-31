@@ -3,7 +3,7 @@
 import { infiniteQueryOptions, MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
-import type { ComponentIn, ComponentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, StockMoveIn, WaiverIn } from "../lib/api/types";
+import type { ComponentIn, ComponentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, WaiverIn, WaiverPatch } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -118,6 +118,9 @@ export const feeWaiversQuery = (orgId: string) =>
 
 export const createWaiver = (orgId: string, body: WaiverIn) =>
   unwrap(api.POST("/api/v1/orgs/{org_id}/fee-waivers", { params: { path: { org_id: orgId } }, body }));
+
+export const updateWaiver = (orgId: string, waiverId: string, body: WaiverPatch) =>
+  unwrap(api.PATCH("/api/v1/orgs/{org_id}/fee-waivers/{waiver_id}", { params: { path: { org_id: orgId, waiver_id: waiverId } }, body }));
 
 export const deleteWaiver = (orgId: string, waiverId: string) =>
   unwrap(api.DELETE("/api/v1/orgs/{org_id}/fee-waivers/{waiver_id}", { params: { path: { org_id: orgId, waiver_id: waiverId } } }));
@@ -386,3 +389,37 @@ export const createStockMove = (orgId: string, body: StockMoveIn) =>
 
 export const deleteStockMove = (orgId: string, moveId: string) =>
   unwrap(api.DELETE("/api/v1/orgs/{org_id}/stock-moves/{move_id}", { params: { path: { org_id: orgId, move_id: moveId } } }));
+
+// --- Sozlamalar (M16, B4.8) ---------------------------------------------------------------------------------------
+
+export const settingsKey = (orgId: string) => ["orgs", orgId, "settings"] as const;
+
+/** Tannarx usuli, soliq profillari, to'lov jadvallari, standart muddatlar va qamrov (yozuvlar ham shu shaklni qaytaradi). */
+export const settingsQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: settingsKey(orgId),
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/settings", { params: { path: { org_id: orgId } } })),
+  });
+
+const orgPath = (orgId: string) => ({ path: { org_id: orgId } });
+
+export const setCostMethod = (orgId: string, cost_method: "fifo" | "average") =>
+  unwrap(api.PUT("/api/v1/orgs/{org_id}/settings/cost-method", { params: orgPath(orgId), body: { cost_method } }));
+
+export const createTaxProfile = (orgId: string, body: TaxProfileIn) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/tax-profiles", { params: orgPath(orgId), body }));
+
+export const updateTaxProfile = (orgId: string, id: string, body: TaxProfilePatch) =>
+  unwrap(api.PATCH("/api/v1/orgs/{org_id}/tax-profiles/{profile_id}", { params: { path: { org_id: orgId, profile_id: id } }, body }));
+
+export const deleteTaxProfile = (orgId: string, id: string) =>
+  unwrap(api.DELETE("/api/v1/orgs/{org_id}/tax-profiles/{profile_id}", { params: { path: { org_id: orgId, profile_id: id } } }));
+
+export const createPayoutSchedule = (orgId: string, body: PayoutScheduleIn) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/payout-schedules", { params: orgPath(orgId), body }));
+
+export const deletePayoutSchedule = (orgId: string, id: string) =>
+  unwrap(api.DELETE("/api/v1/orgs/{org_id}/payout-schedules/{schedule_id}", { params: { path: { org_id: orgId, schedule_id: id } } }));
+
+export const setInventorySettings = (orgId: string, body: InventorySettingsIn) =>
+  unwrap(api.PUT("/api/v1/orgs/{org_id}/settings/inventory", { params: orgPath(orgId), body }));

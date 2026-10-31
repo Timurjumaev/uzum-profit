@@ -4810,6 +4810,510 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/settings": {
+      "get": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Get Settings",
+        "operationId": "get_settings_api_v1_orgs__org_id__settings_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/settings/cost-method": {
+      "put": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Set Cost Method",
+        "description": "FIFO ↔ o'rtacha. O'zgarsa — hamma sotuv tannarxi qayta hisoblanadi (navbat orqali).",
+        "operationId": "set_cost_method_api_v1_orgs__org_id__settings_cost_method_put",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CostMethodIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/tax-profiles": {
+      "post": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Create Tax Profile",
+        "operationId": "create_tax_profile_api_v1_orgs__org_id__tax_profiles_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaxProfileIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/tax-profiles/{profile_id}": {
+      "patch": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Update Tax Profile",
+        "operationId": "update_tax_profile_api_v1_orgs__org_id__tax_profiles__profile_id__patch",
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Profile Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaxProfilePatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Delete Tax Profile",
+        "operationId": "delete_tax_profile_api_v1_orgs__org_id__tax_profiles__profile_id__delete",
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Profile Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/payout-schedules": {
+      "post": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Create Payout Schedule",
+        "operationId": "create_payout_schedule_api_v1_orgs__org_id__payout_schedules_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayoutScheduleIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/payout-schedules/{schedule_id}": {
+      "delete": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Delete Payout Schedule",
+        "operationId": "delete_payout_schedule_api_v1_orgs__org_id__payout_schedules__schedule_id__delete",
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Schedule Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/settings/inventory": {
+      "put": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Set Inventory",
+        "description": "Standart yetkazish muddatlari (F25; tarix yo'q bosqichda) va ABC qamrov kunlari (F27). Tozalash — ``null``.",
+        "operationId": "set_inventory_api_v1_orgs__org_id__settings_inventory_put",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventorySettingsIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/items/{item_id}/stock-moves": {
       "get": {
         "tags": [
@@ -5970,6 +6474,23 @@
         "type": "object",
         "title": "ComponentPatch"
       },
+      "CostMethodIn": {
+        "properties": {
+          "cost_method": {
+            "type": "string",
+            "enum": [
+              "fifo",
+              "average"
+            ],
+            "title": "Cost Method"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cost_method"
+        ],
+        "title": "CostMethodIn"
+      },
       "Currency": {
         "type": "string",
         "enum": [
@@ -6449,6 +6970,92 @@
           "totals"
         ],
         "title": "InventoryOut"
+      },
+      "InventorySettingsIn": {
+        "properties": {
+          "lead_days": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer",
+                  "maximum": 365.0,
+                  "minimum": 0.0
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Days"
+          },
+          "cover_days": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer",
+                  "maximum": 365.0,
+                  "minimum": 0.0
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Days"
+          }
+        },
+        "type": "object",
+        "title": "InventorySettingsIn",
+        "description": "``lead_days`` — hamma bosqich yoki ``null`` (tozalash); ``cover_days`` — A, B, C yoki ``null`` (standart)."
+      },
+      "InventorySettingsOut": {
+        "properties": {
+          "stages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Stages"
+          },
+          "lead_days": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Days"
+          },
+          "cover_days": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Cover Days"
+          },
+          "cover_defaults": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Cover Defaults"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stages",
+          "lead_days",
+          "cover_days",
+          "cover_defaults"
+        ],
+        "title": "InventorySettingsOut"
       },
       "InviteAccept": {
         "properties": {
@@ -8687,6 +9294,92 @@
         ],
         "title": "OwnRowOut"
       },
+      "PayoutScheduleIn": {
+        "properties": {
+          "shop_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Shop Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ScheduleKind"
+          },
+          "valid_from": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid From"
+          }
+        },
+        "type": "object",
+        "required": [
+          "shop_id",
+          "kind",
+          "valid_from"
+        ],
+        "title": "PayoutScheduleIn"
+      },
+      "PayoutScheduleOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "shop_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Shop Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ScheduleKind"
+          },
+          "valid_from": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid From"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "shop_id",
+          "kind",
+          "valid_from"
+        ],
+        "title": "PayoutScheduleOut"
+      },
+      "PayoutTermsOut": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/ScheduleKind"
+          },
+          "days_of_month": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days Of Month"
+          },
+          "fee_pct": {
+            "type": "string",
+            "title": "Fee Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "days_of_month",
+          "fee_pct"
+        ],
+        "title": "PayoutTermsOut"
+      },
       "PendingOut": {
         "properties": {
           "amount": {
@@ -9913,6 +10606,16 @@
         ],
         "title": "SalesSummaryOut"
       },
+      "ScheduleKind": {
+        "type": "string",
+        "enum": [
+          "daily",
+          "weekly",
+          "biweekly",
+          "monthly"
+        ],
+        "title": "ScheduleKind"
+      },
       "SessionOut": {
         "properties": {
           "id": {
@@ -9961,6 +10664,59 @@
           "current"
         ],
         "title": "SessionOut"
+      },
+      "SettingsOut": {
+        "properties": {
+          "cost_method": {
+            "type": "string",
+            "enum": [
+              "fifo",
+              "average"
+            ],
+            "title": "Cost Method"
+          },
+          "tax_profiles": {
+            "items": {
+              "$ref": "#/components/schemas/TaxProfileOut"
+            },
+            "type": "array",
+            "title": "Tax Profiles"
+          },
+          "tax_rates": {
+            "items": {
+              "$ref": "#/components/schemas/TaxRateOut"
+            },
+            "type": "array",
+            "title": "Tax Rates"
+          },
+          "payout_schedules": {
+            "items": {
+              "$ref": "#/components/schemas/PayoutScheduleOut"
+            },
+            "type": "array",
+            "title": "Payout Schedules"
+          },
+          "payout_terms": {
+            "items": {
+              "$ref": "#/components/schemas/PayoutTermsOut"
+            },
+            "type": "array",
+            "title": "Payout Terms"
+          },
+          "inventory": {
+            "$ref": "#/components/schemas/InventorySettingsOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cost_method",
+          "tax_profiles",
+          "tax_rates",
+          "payout_schedules",
+          "payout_terms",
+          "inventory"
+        ],
+        "title": "SettingsOut"
       },
       "ShopOut": {
         "properties": {
@@ -11745,6 +12501,248 @@
           "freshness"
         ],
         "title": "SyncStatusOut"
+      },
+      "TaxBase": {
+        "type": "string",
+        "enum": [
+          "revenue",
+          "payout"
+        ],
+        "title": "TaxBase"
+      },
+      "TaxProfileIn": {
+        "properties": {
+          "valid_from": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid From"
+          },
+          "regime": {
+            "$ref": "#/components/schemas/TaxRegime"
+          },
+          "rate_pct": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Rate Pct",
+            "default": "0"
+          },
+          "base": {
+            "$ref": "#/components/schemas/TaxBase",
+            "default": "revenue"
+          },
+          "vat_pct": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Vat Pct",
+            "default": "0"
+          },
+          "profit_pct": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Profit Pct",
+            "default": "0"
+          }
+        },
+        "type": "object",
+        "required": [
+          "valid_from",
+          "regime"
+        ],
+        "title": "TaxProfileIn"
+      },
+      "TaxProfileOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "valid_from": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid From"
+          },
+          "regime": {
+            "$ref": "#/components/schemas/TaxRegime"
+          },
+          "rate_pct": {
+            "type": "string",
+            "title": "Rate Pct"
+          },
+          "base": {
+            "$ref": "#/components/schemas/TaxBase"
+          },
+          "vat_pct": {
+            "type": "string",
+            "title": "Vat Pct"
+          },
+          "profit_pct": {
+            "type": "string",
+            "title": "Profit Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "valid_from",
+          "regime",
+          "rate_pct",
+          "base",
+          "vat_pct",
+          "profit_pct"
+        ],
+        "title": "TaxProfileOut"
+      },
+      "TaxProfilePatch": {
+        "properties": {
+          "valid_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid From"
+          },
+          "regime": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaxRegime"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rate_pct": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate Pct"
+          },
+          "base": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaxBase"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "vat_pct": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vat Pct"
+          },
+          "profit_pct": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profit Pct"
+          }
+        },
+        "type": "object",
+        "title": "TaxProfilePatch"
+      },
+      "TaxRateOut": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "rate_pct": {
+            "type": "string",
+            "title": "Rate Pct"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "rate_pct",
+          "note"
+        ],
+        "title": "TaxRateOut",
+        "description": "Ma'lumotnoma (``ref_tax_rates``): joriy stavka — profilni to'ldirishda tavsiya (buxgalter tasdiqlaydi)."
+      },
+      "TaxRegime": {
+        "type": "string",
+        "enum": [
+          "turnover",
+          "agent",
+          "vat_profit",
+          "none"
+        ],
+        "title": "TaxRegime"
       },
       "TokenIn": {
         "properties": {

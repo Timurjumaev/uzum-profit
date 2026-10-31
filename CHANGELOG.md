@@ -351,6 +351,17 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   omborchi summasiz. Testlar: core (F27 sana, o'z omborim), API (haqiqiy PostgreSQL: joylar xarid bosqichidan, qiymat,
   hisobdan chiqarish va tuzatish qoldiqqa ta'siri, lotdan chiqim, tekshiruvlar, ruxsatlar, audit), sahifalar (jsdom +
   axe), e2e (kontrast bilan axe, 360 px).
+- B4.8 Sozlamalar (M16). Migratsiya 0009: `orgs.settings` (JSONB) — standart yetkazish muddatlari (F25) va ABC qamrov
+  kunlari (F27) bazada. API: `GET /settings` (tannarx usuli, soliq profillari va ma'lumotnoma stavkalari, to'lov
+  jadvallari va shartlari, muddat va qamrov), `PUT /settings/cost-method` (almashsa hamma tovar/xarid/do'kon qayta
+  hisob so'rovi, commitdan keyin `calc.org`), `POST/PATCH/DELETE /tax-profiles` (sana bo'yicha; rejimga mos maydonlar,
+  bir sanada bitta profil — 409), `POST/DELETE /payout-schedules`, `PUT /settings/inventory`; o'qish `view_settings`,
+  yozish `manage_settings`, audit. Standart muddatlar ombor (holat, buyurtma sanasi, tavsiya) va xarid sahifasidagi
+  kutilgan sanaga ulangan, qamrov F27 va ABC ga. Web: `/settings` — tannarx usuli (tasdiq bilan), soliq profili,
+  Uzum to'lov jadvali, muddatlar va qamrov, do'konlar (faqat egasi), Uzum bonuslari ro'yxati (qo'shish, tahrirlash,
+  o'chirish; `WaiverForm` P&L bilan umumiy). Testlar: API (haqiqiy PostgreSQL: usul almashishi va qayta hisob, soliq
+  profili CRUD va tekshiruvlar, to'lov jadvali, muddat/qamrovning hisobotlarga ta'siri, ruxsatlar, RLS, audit),
+  sahifalar (jsdom + axe), e2e (kontrast bilan axe, 360 px).
 
 ### Tuzatildi
 

@@ -905,6 +905,132 @@ export interface paths {
         patch: operations["update_component_api_v1_orgs__org_id__purchases__purchase_id__components__component_id__patch"];
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Settings */
+        get: operations["get_settings_api_v1_orgs__org_id__settings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/settings/cost-method": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Cost Method
+         * @description FIFO ↔ o'rtacha. O'zgarsa — hamma sotuv tannarxi qayta hisoblanadi (navbat orqali).
+         */
+        put: operations["set_cost_method_api_v1_orgs__org_id__settings_cost_method_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/tax-profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Tax Profile */
+        post: operations["create_tax_profile_api_v1_orgs__org_id__tax_profiles_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/tax-profiles/{profile_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Tax Profile */
+        delete: operations["delete_tax_profile_api_v1_orgs__org_id__tax_profiles__profile_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Tax Profile */
+        patch: operations["update_tax_profile_api_v1_orgs__org_id__tax_profiles__profile_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/payout-schedules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Payout Schedule */
+        post: operations["create_payout_schedule_api_v1_orgs__org_id__payout_schedules_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/payout-schedules/{schedule_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Payout Schedule */
+        delete: operations["delete_payout_schedule_api_v1_orgs__org_id__payout_schedules__schedule_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/settings/inventory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Inventory
+         * @description Standart yetkazish muddatlari (F25; tarix yo'q bosqichda) va ABC qamrov kunlari (F27). Tozalash — ``null``.
+         */
+        put: operations["set_inventory_api_v1_orgs__org_id__settings_inventory_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/items/{item_id}/stock-moves": {
         parameters: {
             query?: never;
@@ -1238,6 +1364,14 @@ export interface components {
                 [key: string]: number | string;
             } | null;
         };
+        /** CostMethodIn */
+        CostMethodIn: {
+            /**
+             * Cost Method
+             * @enum {string}
+             */
+            cost_method: "fifo" | "average";
+        };
         /**
          * Currency
          * @description ISO 4217 kodlari. Yangi valyuta qo'shish uchun shu ro'yxatga yoziladi.
@@ -1390,6 +1524,37 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
             totals: components["schemas"]["StockTotalsOut"];
+        };
+        /**
+         * InventorySettingsIn
+         * @description ``lead_days`` — hamma bosqich yoki ``null`` (tozalash); ``cover_days`` — A, B, C yoki ``null`` (standart).
+         */
+        InventorySettingsIn: {
+            /** Lead Days */
+            lead_days?: {
+                [key: string]: number;
+            } | null;
+            /** Cover Days */
+            cover_days?: {
+                [key: string]: number;
+            } | null;
+        };
+        /** InventorySettingsOut */
+        InventorySettingsOut: {
+            /** Stages */
+            stages: string[];
+            /** Lead Days */
+            lead_days: {
+                [key: string]: number;
+            } | null;
+            /** Cover Days */
+            cover_days: {
+                [key: string]: number;
+            };
+            /** Cover Defaults */
+            cover_defaults: {
+                [key: string]: number;
+            };
         };
         /** InviteAccept */
         InviteAccept: {
@@ -2041,6 +2206,47 @@ export interface components {
             /** Note */
             note: string | null;
         };
+        /** PayoutScheduleIn */
+        PayoutScheduleIn: {
+            /**
+             * Shop Id
+             * Format: uuid
+             */
+            shop_id: string;
+            kind: components["schemas"]["ScheduleKind"];
+            /**
+             * Valid From
+             * Format: date
+             */
+            valid_from: string;
+        };
+        /** PayoutScheduleOut */
+        PayoutScheduleOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Shop Id
+             * Format: uuid
+             */
+            shop_id: string;
+            kind: components["schemas"]["ScheduleKind"];
+            /**
+             * Valid From
+             * Format: date
+             */
+            valid_from: string;
+        };
+        /** PayoutTermsOut */
+        PayoutTermsOut: {
+            kind: components["schemas"]["ScheduleKind"];
+            /** Days Of Month */
+            days_of_month: number[] | null;
+            /** Fee Pct */
+            fee_pct: string;
+        };
         /**
          * PendingOut
          * @description F16: Jarayondagi sotuvlardan kutilayotgan foyda (R qo'llangan) va R siz summa.
@@ -2408,6 +2614,11 @@ export interface components {
             /** Return Share */
             return_share: string | null;
         };
+        /**
+         * ScheduleKind
+         * @enum {string}
+         */
+        ScheduleKind: "daily" | "weekly" | "biweekly" | "monthly";
         /** SessionOut */
         SessionOut: {
             /**
@@ -2434,6 +2645,23 @@ export interface components {
             expires_at: string;
             /** Current */
             current: boolean;
+        };
+        /** SettingsOut */
+        SettingsOut: {
+            /**
+             * Cost Method
+             * @enum {string}
+             */
+            cost_method: "fifo" | "average";
+            /** Tax Profiles */
+            tax_profiles: components["schemas"]["TaxProfileOut"][];
+            /** Tax Rates */
+            tax_rates: components["schemas"]["TaxRateOut"][];
+            /** Payout Schedules */
+            payout_schedules: components["schemas"]["PayoutScheduleOut"][];
+            /** Payout Terms */
+            payout_terms: components["schemas"]["PayoutTermsOut"][];
+            inventory: components["schemas"]["InventorySettingsOut"];
         };
         /** ShopOut */
         ShopOut: {
@@ -2974,6 +3202,88 @@ export interface components {
                 [key: string]: string | null;
             };
         };
+        /**
+         * TaxBase
+         * @enum {string}
+         */
+        TaxBase: "revenue" | "payout";
+        /** TaxProfileIn */
+        TaxProfileIn: {
+            /**
+             * Valid From
+             * Format: date
+             */
+            valid_from: string;
+            regime: components["schemas"]["TaxRegime"];
+            /**
+             * Rate Pct
+             * @default 0
+             */
+            rate_pct: number | string;
+            /** @default revenue */
+            base: components["schemas"]["TaxBase"];
+            /**
+             * Vat Pct
+             * @default 0
+             */
+            vat_pct: number | string;
+            /**
+             * Profit Pct
+             * @default 0
+             */
+            profit_pct: number | string;
+        };
+        /** TaxProfileOut */
+        TaxProfileOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Valid From
+             * Format: date
+             */
+            valid_from: string;
+            regime: components["schemas"]["TaxRegime"];
+            /** Rate Pct */
+            rate_pct: string;
+            base: components["schemas"]["TaxBase"];
+            /** Vat Pct */
+            vat_pct: string;
+            /** Profit Pct */
+            profit_pct: string;
+        };
+        /** TaxProfilePatch */
+        TaxProfilePatch: {
+            /** Valid From */
+            valid_from?: string | null;
+            regime?: components["schemas"]["TaxRegime"] | null;
+            /** Rate Pct */
+            rate_pct?: number | string | null;
+            base?: components["schemas"]["TaxBase"] | null;
+            /** Vat Pct */
+            vat_pct?: number | string | null;
+            /** Profit Pct */
+            profit_pct?: number | string | null;
+        };
+        /**
+         * TaxRateOut
+         * @description Ma'lumotnoma (``ref_tax_rates``): joriy stavka — profilni to'ldirishda tavsiya (buxgalter tasdiqlaydi).
+         */
+        TaxRateOut: {
+            /** Code */
+            code: string;
+            /** Rate Pct */
+            rate_pct: string;
+            /** Note */
+            note: string | null;
+        };
+        /**
+         * TaxRegime
+         * @enum {string}
+         */
+        TaxRegime: "turnover" | "agent" | "vat_profit" | "none";
         /**
          * TokenIn
          * @description Uzum seller kabinetidagi API kalit. Javobda va xatoda qaytarilmaydi.
@@ -5955,6 +6265,349 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PurchaseDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_settings_api_v1_orgs__org_id__settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    set_cost_method_api_v1_orgs__org_id__settings_cost_method_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CostMethodIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_tax_profile_api_v1_orgs__org_id__tax_profiles_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaxProfileIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    delete_tax_profile_api_v1_orgs__org_id__tax_profiles__profile_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    update_tax_profile_api_v1_orgs__org_id__tax_profiles__profile_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaxProfilePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_payout_schedule_api_v1_orgs__org_id__payout_schedules_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayoutScheduleIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    delete_payout_schedule_api_v1_orgs__org_id__payout_schedules__schedule_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                schedule_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    set_inventory_api_v1_orgs__org_id__settings_inventory_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InventorySettingsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsOut"];
                 };
             };
             /** @description Validatsiya xatosi */

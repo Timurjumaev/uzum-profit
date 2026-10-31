@@ -59,6 +59,7 @@ from upcore.inventory import (
 from upcore.money import Currency, Money
 from upcore.purchasing import LEAD_STAGES, Stage, current_stage, stage_days
 
+from upapi import orgsettings
 from upapi.db import models as m
 from upapi.reports.purchases import stage_dates
 
@@ -305,10 +306,12 @@ async def load_stock(
         )
     }
     items = {r.item_id for r in skus if r.item_id is not None}
+    cfg = await orgsettings.load(conn)
+    inv = cfg.inventory()
     lots = await _lots(conn, items, as_of) if items else {}
     history = await _lead_history(conn, items) if items else {}
     places = await _places(conn, items) if items else {}
-    abc = abc_classes({str(r.id): revenue30.get(r.id, Money.zero(UZS)) for r in skus})
+    abc = abc_classes({str(r.id): revenue30.get(r.id, Money.zero(UZS)) for r in skus}, inv)
 
     out: dict[UUID, SkuStock] = {}
     holdings: list[Holding] = []
@@ -324,7 +327,7 @@ async def load_stock(
         stock = active + fbs
         lead = None
         if r.item_id is not None:
-            learned = lead_time(history.get(r.item_id, {}), {})
+            learned = lead_time(history.get(r.item_id, {}), cfg.lead_days, inv)
             lead = learned if set(learned.stages) >= set(STAGES) else None
         if lead is not None:
             status = stock_status(stock, v.value, lead.total)
@@ -356,6 +359,7 @@ async def load_stock(
                 in_transit=road + own,
                 ordered=china,
                 last_unit_prices=prices,
+                s=inv,
             )
         out[r.id] = SkuStock(
             sku_id=r.id,

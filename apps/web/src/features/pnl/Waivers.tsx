@@ -7,14 +7,15 @@ import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
-import { createWaiver, deleteWaiver, feeWaiversQuery, shopsQuery } from "../../app/query";
+import { createWaiver, deleteWaiver, feeWaiversQuery, shopsQuery, updateWaiver } from "../../app/query";
 import { Banner, Button, Dialog, Select, TextInput, useToast } from "../../components/ui";
 import type { Pnl, WaiverIn, WaiverSuggestion } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 
-type Draft = { shop: string; start: string; end: string; kinds: string[]; reason: string; source: WaiverIn["source"] };
+export type WaiverDraft = { shop: string; start: string; end: string; kinds: string[]; reason: string; source: WaiverIn["source"] };
 
-const ALL = "";
+export const ALL_SHOPS = "";
+const ALL = ALL_SHOPS;
 
 /** Bepul xarajat turi nomi: sotuv logistikasi — o'z matni, qolganlari — Uzum xarajat toifalari (bosh sahifadagi). */
 export function useKindLabel() {
@@ -22,7 +23,7 @@ export function useKindLabel() {
   return (kind: string) => (kind === "sale_logistics" ? t("pnl.waivers.kind.sale_logistics") : t(`home.expense.${kind}`, { defaultValue: kind }));
 }
 
-function useShopName(orgId: string) {
+export function useShopName(orgId: string) {
   const { t } = useTranslation();
   const shops = useQuery(shopsQuery(orgId));
   return (id: string | null) => {
@@ -33,7 +34,7 @@ function useShopName(orgId: string) {
 }
 
 /** Bonus o'zgarsa — hisobotlar (banner, grafik, belgi) va ro'yxat qayta so'raladi. */
-function useRefresh(orgId: string) {
+export function useRefresh(orgId: string) {
   const client = useQueryClient();
   return () =>
     Promise.all(
@@ -50,7 +51,7 @@ export function Waivers({ orgId, data, canManage }: Props) {
   const kindLabel = useKindLabel();
   const shopName = useShopName(orgId);
   const refresh = useRefresh(orgId);
-  const [draft, setDraft] = useState<Draft | null>(null);
+  const [draft, setWaiverDraft] = useState<WaiverDraft | null>(null);
 
   const remove = useMutation({
     mutationFn: (id: string) => deleteWaiver(orgId, id),
@@ -70,8 +71,8 @@ export function Waivers({ orgId, data, canManage }: Props) {
     onError: (error) => toast.show(errorText(error, t), "negative"),
   });
 
-  const empty = (): Draft => ({ shop: ALL, start: data.meta.period.start, end: data.meta.period.end, kinds: ["sale_logistics"], reason: "", source: "manual" });
-  const fromSuggestion = (s: WaiverSuggestion): Draft => ({ shop: s.shop_id, start: s.start_on, end: s.end_on, kinds: s.kinds, reason: "", source: "detected" });
+  const empty = (): WaiverDraft => ({ shop: ALL, start: data.meta.period.start, end: data.meta.period.end, kinds: ["sale_logistics"], reason: "", source: "manual" });
+  const fromSuggestion = (s: WaiverSuggestion): WaiverDraft => ({ shop: s.shop_id, start: s.start_on, end: s.end_on, kinds: s.kinds, reason: "", source: "detected" });
 
   if (data.waivers.length === 0 && data.waiver_suggestions.length === 0 && !canManage) return null;
   return (
@@ -100,7 +101,7 @@ export function Waivers({ orgId, data, canManage }: Props) {
           action={
             canManage ? (
               <span className="pnl-waivers__actions">
-                <Button variant="secondary" onClick={() => setDraft(fromSuggestion(s))}>
+                <Button variant="secondary" onClick={() => setWaiverDraft(fromSuggestion(s))}>
                   {t("pnl.waivers.confirm")}
                 </Button>
                 <Button variant="ghost" loading={dismiss.isPending && dismiss.variables === s} onClick={() => dismiss.mutate(s)}>
@@ -114,35 +115,38 @@ export function Waivers({ orgId, data, canManage }: Props) {
         </Banner>
       ))}
       {canManage && (
-        <Button variant="ghost" className="pnl-waivers__add" onClick={() => setDraft(empty())}>
+        <Button variant="ghost" className="pnl-waivers__add" onClick={() => setWaiverDraft(empty())}>
           {t("pnl.waivers.add")}
         </Button>
       )}
-      {draft && <WaiverForm orgId={orgId} initial={draft} onClose={() => setDraft(null)} />}
+      {draft && <WaiverForm orgId={orgId} initial={draft} onClose={() => setWaiverDraft(null)} />}
     </section>
   );
 }
 
-function WaiverForm({ orgId, initial, onClose }: { orgId: string; initial: Draft; onClose: () => void }) {
+/** `id` bor bo'lsa — tahrirlash (PATCH), yo'q bo'lsa — qo'shish (POST). */
+export function WaiverForm({ orgId, initial, id, onClose }: { orgId: string; initial: WaiverDraft; id?: string; onClose: () => void }) {
   const { t } = useTranslation();
   const toast = useToast();
   const kindLabel = useKindLabel();
   const shops = useQuery(shopsQuery(orgId));
   const kinds = useQuery(feeWaiversQuery(orgId));
   const refresh = useRefresh(orgId);
-  const [draft, setDraft] = useState(initial);
-  const patch = (p: Partial<Draft>) => setDraft((d) => ({ ...d, ...p }));
+  const [draft, setWaiverDraft] = useState(initial);
+  const patch = (p: Partial<WaiverDraft>) => setWaiverDraft((d) => ({ ...d, ...p }));
   const save = useMutation({
     mutationFn: () =>
-      createWaiver(orgId, {
-        shop_id: draft.shop === ALL ? null : draft.shop,
-        start_on: draft.start,
-        end_on: draft.end,
-        kinds: draft.kinds,
-        reason: draft.reason,
-        source: draft.source,
-        dismissed: false,
-      }),
+      id
+        ? updateWaiver(orgId, id, { shop_id: draft.shop === ALL ? null : draft.shop, start_on: draft.start, end_on: draft.end, kinds: draft.kinds, reason: draft.reason })
+        : createWaiver(orgId, {
+            shop_id: draft.shop === ALL ? null : draft.shop,
+            start_on: draft.start,
+            end_on: draft.end,
+            kinds: draft.kinds,
+            reason: draft.reason,
+            source: draft.source,
+            dismissed: false,
+          }),
     onSuccess: async () => {
       await refresh();
       toast.show(t("pnl.waivers.saved"), "positive");

@@ -1,0 +1,81 @@
+/* Sozlamalar (M16, B4.8): bo'limlar ketma-ket — faqat tokenlar orqali; 360 px'da gorizontal skroll yo'q (jadvallar o'z
+   konteynerida skrollanadi), jadvallarda radius yo'q (04 §3). */
+
+.settings,
+.settings-section,
+.settings-form {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.settings > *,
+.settings-section > * {
+  min-inline-size: 0;
+}
+
+.settings__head > *,
+.settings-section__head h2 {
+  margin: 0;
+}
+
+.settings-section {
+  padding-block-end: var(--space-5);
+  border-block-end: 1px solid var(--border-hairline);
+}
+
+.settings-section__head,
+.settings-section__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.settings-section__row {
+  justify-content: flex-start;
+}
+
+.settings-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.settings-form--grid {
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  align-items: start;
+}
+
+.settings-fieldset {
+  display: grid;
+  gap: var(--space-3);
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.settings-form--grid > :is(.ui-banner, .settings-section__row) {
+  grid-column: 1 / -1;
+}
+
+.settings-shop {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.settings-shop__swatch {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  border-radius: 50%;
+  border: 1px solid var(--border-hairline);
+}
+
+.settings-check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}

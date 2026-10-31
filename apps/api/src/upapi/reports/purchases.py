@@ -6,7 +6,7 @@ orqali (``recalc_pending``). Hisoblab bo'lmaydigan xarid (qo'lda kurs yo'q, ulus
 sababi bilan (``error``): raqam o'ylab topilmaydi.
 
 Partiya yo'li — :func:`upcore.purchasing.timeline`; kutilgan sana — tashkilot xaridlari tarixidan F25 bosqich
-medianasi (``upcore.inventory.lead_time``; standart muddatlar sozlamasi — B4.8). Summalar (narx, komponentlar,
+medianasi (``upcore.inventory.lead_time``); tarix yo'q bosqichda — sozlamadagi standart muddat (``orgs.settings``, B4.8). Summalar (narx, komponentlar,
 tannarx) faqat ``view_purchase_amounts`` bilan (omborchi — summasiz, 03 §10).
 """
 
@@ -35,6 +35,7 @@ from upcore.purchasing import (
     timeline,
 )
 
+from upapi import orgsettings
 from upapi.calc import lots as calc_lots
 from upapi.db import models as m
 
@@ -159,7 +160,7 @@ async def org_lead(conn: AsyncConnection) -> dict[str, Decimal]:
     for row in await conn.execute(select(p).order_by(p.c.ordered_on.nulls_first(), p.c.created_at)):
         for stage, days in stage_days(stage_dates(row)).items():
             history.setdefault(stage, []).append(days)
-    return dict(lead_time(history, {}).stages)
+    return dict(lead_time(history, (await orgsettings.load(conn)).lead_days).stages)
 
 
 def _timeline(row: Any, today: date, lead: dict[str, Decimal]) -> list[StageOut]:
