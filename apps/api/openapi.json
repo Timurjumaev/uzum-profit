@@ -4809,6 +4809,189 @@
           }
         }
       }
+    },
+    "/api/v1/orgs/{org_id}/items/{item_id}/stock-moves": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "List Stock Moves",
+        "description": "Tovarning hisobdan chiqarish va tuzatish yozuvlari (yangisi birinchi).",
+        "operationId": "list_stock_moves_api_v1_orgs__org_id__items__item_id__stock_moves_get",
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockMovesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/stock-moves": {
+      "post": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Create Stock Move",
+        "operationId": "create_stock_move_api_v1_orgs__org_id__stock_moves_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockMoveIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockMoveOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/stock-moves/{move_id}": {
+      "delete": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Delete Stock Move",
+        "operationId": "delete_stock_move_api_v1_orgs__org_id__stock_moves__move_id__delete",
+        "parameters": [
+          {
+            "name": "move_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Move Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -7309,6 +7492,50 @@
         ],
         "title": "LinkedSkuOut"
       },
+      "LocationsOut": {
+        "properties": {
+          "fbo": {
+            "type": "integer",
+            "title": "Fbo"
+          },
+          "fbs": {
+            "type": "integer",
+            "title": "Fbs"
+          },
+          "defected": {
+            "type": "integer",
+            "title": "Defected"
+          },
+          "pending": {
+            "type": "integer",
+            "title": "Pending"
+          },
+          "china": {
+            "type": "integer",
+            "title": "China"
+          },
+          "road": {
+            "type": "integer",
+            "title": "Road"
+          },
+          "own": {
+            "type": "integer",
+            "title": "Own"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fbo",
+          "fbs",
+          "defected",
+          "pending",
+          "china",
+          "road",
+          "own"
+        ],
+        "title": "LocationsOut",
+        "description": "M10 joylar (dona): Uzum FBO/FBS/brak/kutilayotgan va Uzumdan tashqarida — Xitoyda, yo'lda, o'z omborimda."
+      },
       "LoginRequest": {
         "properties": {
           "phone": {
@@ -7543,6 +7770,25 @@
           "categories"
         ],
         "title": "MonthOut"
+      },
+      "OrderByOut": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date",
+            "title": "Day"
+          },
+          "overdue": {
+            "type": "boolean",
+            "title": "Overdue"
+          }
+        },
+        "type": "object",
+        "required": [
+          "day",
+          "overdue"
+        ],
+        "title": "OrderByOut"
       },
       "OrdersAnalysisOut": {
         "properties": {
@@ -10894,6 +11140,149 @@
         ],
         "title": "StockDetailOut"
       },
+      "StockMoveIn": {
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Item Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "writeoff",
+              "adjust"
+            ],
+            "title": "Kind"
+          },
+          "qty": {
+            "type": "integer",
+            "maximum": 10000000.0,
+            "minimum": -10000000.0,
+            "title": "Qty"
+          },
+          "day": {
+            "type": "string",
+            "format": "date",
+            "title": "Day"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "purchase_line_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Line Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_id",
+          "kind",
+          "qty",
+          "day"
+        ],
+        "title": "StockMoveIn"
+      },
+      "StockMoveOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "item_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Item Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "qty": {
+            "type": "integer",
+            "title": "Qty"
+          },
+          "day": {
+            "type": "string",
+            "format": "date",
+            "title": "Day"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "purchase_line_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Line Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "item_id",
+          "kind",
+          "qty",
+          "day",
+          "note",
+          "purchase_line_id",
+          "created_at"
+        ],
+        "title": "StockMoveOut"
+      },
+      "StockMovesOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StockMoveOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "StockMovesOut"
+      },
       "StockRowOut": {
         "properties": {
           "sku_id": {
@@ -10975,6 +11364,9 @@
           "in_transit": {
             "type": "integer",
             "title": "In Transit"
+          },
+          "locations": {
+            "$ref": "#/components/schemas/LocationsOut"
           },
           "velocity": {
             "$ref": "#/components/schemas/VelocityOut"
@@ -11058,6 +11450,16 @@
             ],
             "title": "Last Sale On"
           },
+          "order_by": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OrderByOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "reorder": {
             "anyOf": [
               {
@@ -11105,6 +11507,7 @@
           "qty_pending",
           "stock",
           "in_transit",
+          "locations",
           "velocity",
           "days_of_stock",
           "lead_time",
@@ -11114,6 +11517,7 @@
           "xyz",
           "liquidity",
           "last_sale_on",
+          "order_by",
           "reorder",
           "unit_cost",
           "stock_value"
@@ -11174,6 +11578,13 @@
             "type": "integer",
             "title": "Uncosted"
           },
+          "units": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Units"
+          },
           "statuses": {
             "additionalProperties": {
               "type": "integer"
@@ -11188,6 +11599,7 @@
           "frozen_total",
           "average_days_to_sell",
           "uncosted",
+          "units",
           "statuses"
         ],
         "title": "StockTotalsOut"

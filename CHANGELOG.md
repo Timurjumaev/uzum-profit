@@ -335,6 +335,22 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   core (Partiya yo'li), API (haqiqiy PostgreSQL: bosqichma-bosqich xarid, kech kargo → qayta hisob, kurs rejimlari,
   taqsimot va ulushlar, tekshiruvlar, ruxsatlar, F25 kutilgan sana, nusxa va o'chirish), sahifalar (jsdom + axe), e2e
   (haqiqiy brauzerda kontrast bilan axe, 360 px).
+- B4.7 Ombor (M10 asos). Core: `upcore.inventory.order_by` — F27 buyurtma sanasi (bugun + zaxira kunlari − to'liq
+  muddat; kechikkan — bugun va `overdue`; tezlik 0 yoki muddat noma'lum — sana yo'q), `own_warehouse_qty` — o'z omborim
+  (qabul qilingan, Uzumga yuborilmagan + tuzatish − hisobdan chiqarish, manfiy emas). API: `/inventory` joylari
+  (Xitoyda, yo'lda, o'z omborim — xarid bosqichidan; FBO, FBS, brak, kutilayotgan), `order_by`, jamlarda joylar bo'yicha
+  dona; F27 endi o'z omborimdagi tovarni ham hisobga oladi (Uzumga yuborilishi kutilmoqda — ortiqcha tavsiya yo'q), F29
+  muzlagan pulga o'z omborim qiymati qo'shildi (`frozen_money` kalitlari: china, road, own, fbo, fbs, defected;
+  bosh sahifada "yo'lda" = Xitoyda + yo'lda). Yangi `POST /stock-moves`, `GET /items/{id}/stock-moves`, `DELETE
+  /stock-moves/{id}`: hisobdan chiqarish (brak, yo'qotish, kamomad) va inventarizatsiya tuzatishi — tannarx dvigatelida
+  lotdan chiqim (F21), tovar bo'yicha qayta hisob so'rovi (B4.6 qoldig'i); omborchi ham yozadi, buxgalter faqat
+  o'qiydi; audit. Web: `/inventory` — KPI (muzlagan pul, yo'ldagi tovar, o'z omborim, o'rtacha sotilish muddati F29),
+  holat guruhlari sonlari bilan (F26) va qidiruv URL'da, jadval (holat, Uzumda FBO/FBS, boshqa joylar, tezlik F23,
+  zaxira kunlari F24, buyurtma sanasi va tavsiya miqdor F27, byudjet CNY va so'm, qiymat), "Xarid yaratish"
+  (tavsiya miqdorli qoralama xarid), "Hisobdan chiqarish" oynasi (yozuv, oxirgi yozuvlar, o'chirib qaytarish);
+  omborchi summasiz. Testlar: core (F27 sana, o'z omborim), API (haqiqiy PostgreSQL: joylar xarid bosqichidan, qiymat,
+  hisobdan chiqarish va tuzatish qoldiqqa ta'siri, lotdan chiqim, tekshiruvlar, ruxsatlar, audit), sahifalar (jsdom +
+  axe), e2e (kontrast bilan axe, 360 px).
 
 ### Tuzatildi
 

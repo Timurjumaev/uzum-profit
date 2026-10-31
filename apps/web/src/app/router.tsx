@@ -16,7 +16,7 @@ import { ApiError } from "../lib/api/client";
 import { NotFound, Pending, RouteError } from "./errors";
 import { AuthRoute } from "../features/auth/AuthRoute";
 import { filterSearch } from "./filters";
-import { expensesSearch, inviteSearch, loginSearch, onboardingSearch, ordersSearch, pnlSearch, productsSearch, purchasesSearch } from "./search";
+import { expensesSearch, inventorySearch, inviteSearch, loginSearch, onboardingSearch, ordersSearch, pnlSearch, productsSearch, purchasesSearch } from "./search";
 
 export { inviteSearch, loginSearch };
 import { meQuery } from "./query";
@@ -114,6 +114,14 @@ const purchase = createRoute({
   component: lazyRouteComponent(() => import("../routes/purchases"), "PurchasePage"),
 });
 
+/** Ombor (M10, B4.7): holat guruhi va qidiruv URL'da. */
+const inventory = createRoute({
+  getParentRoute: () => app,
+  path: "/inventory",
+  validateSearch: inventorySearch,
+  component: lazyRouteComponent(() => import("../routes/inventory"), "Inventory"),
+});
+
 const status = createRoute({
   getParentRoute: () => app,
   path: "/status",
@@ -127,7 +135,6 @@ const soon = <const P extends string>(path: P, name: keyof typeof import("../rou
     path,
     component: lazyRouteComponent(() => import("../routes/soon"), name),
   });
-const inventory = soon("/inventory", "Inventory");
 const cash = soon("/cash", "Cash");
 const reports = soon("/reports", "Reports");
 const settings = soon("/settings", "Settings");

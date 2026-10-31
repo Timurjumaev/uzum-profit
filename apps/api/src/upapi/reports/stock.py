@@ -8,16 +8,21 @@
   ichki (→ jo'natildi), kargo yo'li (→ keldi), qabul (→ qabul qilindi), Uzumga topshirish (→ Uzumga yuborildi).
   Standart muddatlar sozlamasi B4 da (M16); hozircha biror bosqich tarixi bo'lmasa muddat noma'lum — holat (F26)
   va tavsiya miqdor (F27) ko'rsatilmaydi (tamoyil 9, raqam o'ylab topilmaydi). Harakatsiz holat muddatsiz ham.
-- Lot narxi (F27, F29) — tovarning tayyor bo'lgan eng oxirgi loti; yo'ldagi (tayyor bo'lmagan) lotlar — "yo'lda"
-  (F27 ``in_transit``, F29 joyi). Tovarning bir necha SKU'si bo'lsa yo'ldagi dona har biriga to'liq hisoblanadi
-  (tavsiya kamroq chiqadi) — tovar darajasidagi to'liq reja B5 da.
+- Lot narxi (F27, F29) — tovarning tayyor bo'lgan eng oxirgi loti (lot tayyorligi — F21, tannarx uchun).
+- Joylar (M10, B4.7) — xarid bosqichidan (``current_stage``): ``china`` (buyurtma / to'langan / Xitoy omborida),
+  ``road`` (yo'lda / Toshkentga keldi), ``own`` (qabul qilindi, Uzumga yuborilmagan; ``stock_moves`` tuzatish va
+  hisobdan chiqarish bilan, ``upcore.inventory.own_warehouse_qty``). Uzumga yuborilgan xarid — FBO qoldig'ida. Qiymat —
+  qatorning lot tannarxi bilan. F27: yo'lda + o'z omborim — ``in_transit``, Xitoyda — ``ordered``. Tovarning bir necha
+  SKU'si bo'lsa joylar har biriga to'liq hisoblanadi (tavsiya kamroq chiqadi), F29 jamlari esa tovar bo'yicha bir
+  marta — tovar darajasidagi to'liq reja B5 da.
+- Buyurtma sanasi (F27) — ``upcore.inventory.order_by``: zaxira kunlari (F24) va to'liq muddat (F25) farqi.
 - ABC (F28) — oxirgi 30 kun tushumi, tanlangan do'konlar SKU'lari ichida; XYZ — oxirgi 8 hafta.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any
@@ -31,6 +36,7 @@ from upcore.inventory import (
     Holding,
     LeadTime,
     Liquidity,
+    OrderBy,
     Reorder,
     StockStatus,
     Velocity,
@@ -41,6 +47,8 @@ from upcore.inventory import (
     frozen_money,
     lead_time,
     liquidity,
+    order_by,
+    own_warehouse_qty,
     product_status,
     reorder,
     stock_status,
@@ -49,7 +57,7 @@ from upcore.inventory import (
     xyz_class,
 )
 from upcore.money import Currency, Money
-from upcore.purchasing import LEAD_STAGES, stage_days
+from upcore.purchasing import LEAD_STAGES, Stage, current_stage, stage_days
 
 from upapi.db import models as m
 from upapi.reports.purchases import stage_dates
@@ -58,7 +66,9 @@ UZS = Currency.UZS
 WINDOW_DAYS = 56  # F28 XYZ: 8 hafta (F23 uchun 30 kun ham shu ichida)
 ABC_DAYS = 30
 STAGES = tuple(name for name, _, _ in LEAD_STAGES)
-LOCATIONS = ("fbo", "fbs", "defected", "in_transit")
+LOCATIONS = ("china", "road", "own", "fbo", "fbs", "defected")
+CHINA_STAGES = frozenset({Stage.ORDERED, Stage.PAID, Stage.CN_WAREHOUSE})
+ROAD_STAGES = frozenset({Stage.SHIPPED, Stage.ARRIVED})
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,10 +90,18 @@ class SkuStock:
     liquidity: Liquidity | None
     last_sale: date | None
     sold_30d: int
-    in_transit: int
+    china: int  # buyurtma qilingan, Xitoyda
+    road: int  # yo'lda
+    own: int  # o'z omborimda (Uzumga yuborilmagan)
     unit_cost: Money | None
     stock_value: Money | None
     reorder: Reorder | None
+    order_by: OrderBy | None
+
+    @property
+    def in_transit(self) -> int:
+        """Xitoyda + yo'lda (hali Toshkentda qabul qilinmagan)."""
+        return self.china + self.road
 
     @property
     def stock(self) -> int:
@@ -98,6 +116,9 @@ class StockBook:
     frozen: dict[str, Money]  # F29 joylar bo'yicha
     average_days: Decimal | None  # F29 o'rtacha sotilish muddati
     uncosted: int  # qoldig'i bor, lot narxi yo'q SKU'lar (muzlagan pulga kirmadi)
+    units: dict[
+        str, int
+    ]  # joylar bo'yicha dona (Xitoyda, yo'lda, o'z omborim — tovar bo'yicha bir marta)
 
 
 def _stages(p: Any) -> dict[str, int]:
@@ -127,12 +148,7 @@ async def _lead_history(
 class _ItemLots:
     unit_cost: Money | None = None
     ready_on: date | None = None
-    transit: list[Holding] | None = None
     last_price: Money | None = None
-
-    @property
-    def in_transit(self) -> int:
-        return sum(h.qty for h in self.transit or [])
 
 
 async def _lots(conn: AsyncConnection, items: Iterable[UUID], as_of: date) -> dict[UUID, _ItemLots]:
@@ -142,7 +158,6 @@ async def _lots(conn: AsyncConnection, items: Iterable[UUID], as_of: date) -> di
         select(
             lt.c.item_id,
             lt.c.ready_on,
-            lt.c.qty,
             lt.c.unit_cost,
             pl.c.unit_price,
             pl.c.currency,
@@ -154,16 +169,75 @@ async def _lots(conn: AsyncConnection, items: Iterable[UUID], as_of: date) -> di
         .order_by(p.c.ordered_on.nulls_first(), lt.c.created_at)
     )
     for r in rows:
-        x = out.setdefault(r.item_id, _ItemLots(transit=[]))
-        cost = Money(r.unit_cost, UZS)
-        if r.ready_on is not None and r.ready_on <= as_of:
-            if x.ready_on is None or r.ready_on >= x.ready_on:
-                x.unit_cost, x.ready_on = cost, r.ready_on
-        else:
-            assert x.transit is not None
-            x.transit.append(Holding("in_transit", r.qty, cost))
+        x = out.setdefault(r.item_id, _ItemLots())
+        newer = x.ready_on is None or (r.ready_on is not None and r.ready_on >= x.ready_on)
+        if r.ready_on is not None and r.ready_on <= as_of and newer:
+            x.unit_cost, x.ready_on = Money(r.unit_cost, UZS), r.ready_on
         if r.unit_price is not None and r.currency in Currency.__members__:
             x.last_price = Money(r.unit_price, Currency(r.currency))
+    return out
+
+
+@dataclass
+class _Places:
+    """Tovarning Uzumdan tashqaridagi joylari (xarid bosqichi bo'yicha) va ularning qiymati (lot tannarxi)."""
+
+    china: int = 0
+    road: int = 0
+    received: int = 0  # qabul qilingan, Uzumga yuborilmagan (tuzatishsiz)
+    adjust: int = 0
+    writeoff: int = 0
+    # (dona, birlik tannarx) — tannarxi hisoblangan qatorlar bo'yicha
+    china_lots: list[tuple[int, Decimal]] = field(default_factory=list)
+    road_lots: list[tuple[int, Decimal]] = field(default_factory=list)
+    own_lots: list[tuple[int, Decimal]] = field(default_factory=list)
+
+    @property
+    def own(self) -> int:
+        return own_warehouse_qty(self.received, self.adjust, self.writeoff)
+
+    def own_unit_cost(self) -> Decimal | None:
+        """O'z omboridagi tovarning o'rtacha birlik tannarxi (qatorlar donasi bo'yicha vaznli)."""
+        qty = sum(q for q, _ in self.own_lots)
+        return sum((q * c for q, c in self.own_lots), Decimal(0)) / qty if qty else None
+
+
+async def _places(conn: AsyncConnection, items: Iterable[UUID]) -> dict[UUID, _Places]:
+    p, pl, lt, sm = m.purchases, m.purchase_lines, m.lots, m.stock_moves
+    out: dict[UUID, _Places] = {}
+    rows = await conn.execute(
+        select(pl.c.item_id, pl.c.ordered_qty, pl.c.received_qty, lt.c.unit_cost, p)
+        .join(p, p.c.id == pl.c.purchase_id)
+        .join(lt, lt.c.purchase_line_id == pl.c.id, isouter=True)
+        .where(pl.c.item_id.in_(list(items)))
+    )
+    for r in rows:
+        stage = current_stage(stage_dates(r))
+        x = out.setdefault(r.item_id, _Places())
+        cost = r.unit_cost
+        if stage in CHINA_STAGES:
+            x.china += r.ordered_qty
+            if cost is not None:
+                x.china_lots.append((r.ordered_qty, cost))
+        elif stage in ROAD_STAGES:
+            x.road += r.ordered_qty
+            if cost is not None:
+                x.road_lots.append((r.ordered_qty, cost))
+        elif stage is Stage.RECEIVED:
+            qty = r.received_qty if r.received_qty is not None else r.ordered_qty
+            x.received += qty
+            if cost is not None:
+                x.own_lots.append((qty, cost))
+    for mv in await conn.execute(
+        select(sm.c.item_id, sm.c.kind, func.sum(sm.c.qty).label("qty"))
+        .where(sm.c.item_id.in_(list(items)), sm.c.kind.in_(("adjust", "writeoff")))
+        .group_by(sm.c.item_id, sm.c.kind)
+    ):
+        x = out.setdefault(mv.item_id, _Places())
+        if mv.kind == "adjust":
+            x.adjust = int(mv.qty)
+        else:
+            x.writeoff = abs(int(mv.qty))
     return out
 
 
@@ -233,6 +307,7 @@ async def load_stock(
     items = {r.item_id for r in skus if r.item_id is not None}
     lots = await _lots(conn, items, as_of) if items else {}
     history = await _lead_history(conn, items) if items else {}
+    places = await _places(conn, items) if items else {}
     abc = abc_classes({str(r.id): revenue30.get(r.id, Money.zero(UZS)) for r in skus})
 
     out: dict[UUID, SkuStock] = {}
@@ -256,6 +331,8 @@ async def load_stock(
         else:  # muddatsiz faqat "Harakatsiz" aniq (tezlik 0)
             status = stock_status(stock, v.value, 0) if v.value <= 0 else None
         item = lots.get(r.item_id) if r.item_id is not None else None
+        place = places.get(r.item_id) if r.item_id is not None else None
+        china, road, own = (place.china, place.road, place.own) if place else (0, 0, 0)
         unit = item.unit_cost if item else None
         cover = days_of_stock(active, fbs, v.value)
         value = None
@@ -276,7 +353,8 @@ async def load_stock(
                 lead.total,
                 cls,
                 stock,
-                in_transit=item.in_transit if item else 0,
+                in_transit=road + own,
+                ordered=china,
                 last_unit_prices=prices,
             )
         out[r.id] = SkuStock(
@@ -297,13 +375,26 @@ async def load_stock(
             liquidity=liquidity(stock, v.value, last_sale, as_of),
             last_sale=last_sale,
             sold_30d=sum(x.sold for x in days if x.day >= as_of - timedelta(days=ABC_DAYS - 1)),
-            in_transit=item.in_transit if item else 0,
+            china=china,
+            road=road,
+            own=own,
             unit_cost=unit,
             stock_value=value,
             reorder=plan,
+            order_by=order_by(as_of, cover, lead.total) if lead is not None else None,
         )
-    for x in lots.values():
-        holdings += x.transit or []
+    units = {"china": 0, "road": 0, "own": 0}
+    for x in (
+        places.values()
+    ):  # F29: joylar tovar bo'yicha bir marta (bir necha SKU'da ikki marta sanalmaydi)
+        holdings += [Holding("china", q, Money(c, UZS)) for q, c in x.china_lots]
+        holdings += [Holding("road", q, Money(c, UZS)) for q, c in x.road_lots]
+        own_cost = x.own_unit_cost()
+        if own_cost is not None:
+            holdings.append(Holding("own", x.own, Money(own_cost, UZS)))
+        units["china"] += x.china
+        units["road"] += x.road
+        units["own"] += x.own
     variants: dict[UUID, list[tuple[StockStatus | None, int]]] = {}
     for s in out.values():
         if s.product_id is not None:
@@ -315,4 +406,10 @@ async def load_stock(
         frozen=frozen,
         average_days=average_days_to_sell(weighted),
         uncosted=uncosted,
+        units=units
+        | {
+            "fbo": sum(s.qty_active for s in out.values()),
+            "fbs": sum(s.qty_fbs for s in out.values()),
+            "defected": sum(s.qty_defected for s in out.values()),
+        },
     )

@@ -5,7 +5,9 @@ omborchi summasiz).
 Har SKU: Uzum qoldig'i (FBO, FBS, brak, kutilayotgan), sotuv tezligi (F23, tarkibi bilan), zaxira kunlari (F24),
 to'liq muddat (F25), holat (F26, mahsulot darajasida ham), tavsiya miqdor va byudjet (F27), ABC/XYZ (F28),
 nelikvid/sekin (F30), yo'ldagi dona. Jami: muzlagan pul joylar bo'yicha va o'rtacha sotilish muddati (F29).
-Hisob — :mod:`upapi.reports.stock`; FBO yuborish rejasi, postavkalar, yo'qolgan tovar (F31–F34) — B5.
+Joylar (B4.7): Xitoyda, yo'lda, o'z omborim (xarid bosqichidan; ``stock_moves`` tuzatishlari bilan), FBO, FBS, brak;
+buyurtma sanasi (F27: zaxira kunlari − to'liq muddat). Hisob — :mod:`upapi.reports.stock`; FBO yuborish rejasi,
+postavkalar, yo'qolgan tovar (F31–F34) — B5.
 """
 
 from __future__ import annotations
@@ -72,6 +74,23 @@ class ReorderOut(BaseModel):
     budget: list[PriceOut] | None  # summasiz rolda null
 
 
+class LocationsOut(BaseModel):
+    """M10 joylar (dona): Uzum FBO/FBS/brak/kutilayotgan va Uzumdan tashqarida — Xitoyda, yo'lda, o'z omborimda."""
+
+    fbo: int
+    fbs: int
+    defected: int
+    pending: int
+    china: int
+    road: int
+    own: int
+
+
+class OrderByOut(BaseModel):
+    day: date  # F27: shu kungacha buyurtma berilsa tovar tugamasdan keladi
+    overdue: bool  # kechikkan — sana bugun
+
+
 class StockRowOut(BaseModel):
     sku_id: UUID
     shop_id: UUID
@@ -84,7 +103,8 @@ class StockRowOut(BaseModel):
     qty_defected: int
     qty_pending: int
     stock: int
-    in_transit: int
+    in_transit: int  # Xitoyda + yo'lda
+    locations: LocationsOut
     velocity: VelocityOut
     days_of_stock: Decimal | None  # F24
     lead_time: LeadOut | None  # F25 (tarix yo'q — null)
@@ -94,16 +114,20 @@ class StockRowOut(BaseModel):
     xyz: str | None
     liquidity: str | None  # F30
     last_sale_on: date | None
+    order_by: OrderByOut | None  # F27 buyurtma sanasi (tezlik 0 yoki muddat noma'lum — null)
     reorder: ReorderOut | None
     unit_cost: Decimal | None  # lot narxi (so'm)
     stock_value: Decimal | None
 
 
 class StockTotalsOut(BaseModel):
-    frozen_money: dict[str, Decimal] | None  # F29 joylar bo'yicha
+    frozen_money: (
+        dict[str, Decimal] | None
+    )  # F29 joylar bo'yicha (china, road, own, fbo, fbs, defected)
     frozen_total: Decimal | None
     average_days_to_sell: Decimal | None  # F29
     uncosted: int  # qoldig'i bor, lot narxi yo'q SKU'lar
+    units: dict[str, int]  # joylar bo'yicha dona (summasiz rolda ham)
     statuses: dict[str, int]
 
 
@@ -177,6 +201,15 @@ async def inventory(
                 qty_pending=s.qty_pending,
                 stock=s.stock,
                 in_transit=s.in_transit,
+                locations=LocationsOut(
+                    fbo=s.qty_active,
+                    fbs=s.qty_fbs,
+                    defected=s.qty_defected,
+                    pending=s.qty_pending,
+                    china=s.china,
+                    road=s.road,
+                    own=s.own,
+                ),
                 velocity=VelocityOut(
                     value=s.velocity.value,
                     base=s.velocity.base,
@@ -197,6 +230,9 @@ async def inventory(
                 xyz=s.xyz.value if s.xyz else None,
                 liquidity=s.liquidity.value if s.liquidity else None,
                 last_sale_on=s.last_sale,
+                order_by=OrderByOut(day=s.order_by.day, overdue=s.order_by.overdue)
+                if s.order_by
+                else None,
                 reorder=plan,
                 unit_cost=amount(s.unit_cost) if amounts else None,
                 stock_value=amount(s.stock_value) if amounts else None,
@@ -218,6 +254,7 @@ async def inventory(
             frozen_total=total(list(book.frozen.values()), UZS).amount if amounts else None,
             average_days_to_sell=book.average_days,
             uncosted=book.uncosted,
+            units=book.units,
             statuses=dict(sorted(counts.items())),
         ),
     )

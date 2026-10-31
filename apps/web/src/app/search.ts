@@ -112,3 +112,15 @@ export type PurchasesSearch = { group?: PurchaseGroup };
 export function purchasesSearch(search: Record<string, unknown>): PurchasesSearch {
   return (PURCHASE_GROUPS as readonly unknown[]).includes(search.group) ? { group: search.group as PurchaseGroup } : {};
 }
+
+export const STOCK_STATUSES = ["critical", "high", "medium", "good", "dead"] as const;
+export type StockStatusId = (typeof STOCK_STATUSES)[number];
+export type InventorySearch = { status?: StockStatusId; q?: string };
+
+/** Ombor (M10): holat guruhi (`status`, standart "hammasi") va qidiruv (`q`) — havola bilan ulashiladi. */
+export function inventorySearch(search: Record<string, unknown>): InventorySearch {
+  const out: InventorySearch = {};
+  if ((STOCK_STATUSES as readonly unknown[]).includes(search.status)) out.status = search.status as StockStatusId;
+  if (typeof search.q === "string" && search.q.trim() !== "") out.q = search.q.slice(0, 100);
+  return out;
+}

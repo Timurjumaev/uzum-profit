@@ -3,7 +3,7 @@
 import { infiniteQueryOptions, MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
-import type { ComponentIn, ComponentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, WaiverIn } from "../lib/api/types";
+import type { ComponentIn, ComponentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, StockMoveIn, WaiverIn } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -352,3 +352,37 @@ export const deleteComponent = (orgId: string, purchaseId: string, componentId: 
       params: { path: { org_id: orgId, purchase_id: purchaseId, component_id: componentId } },
     }),
   );
+
+// --- Ombor (M10, B4.7) --------------------------------------------------------------------------------------------
+
+export const INVENTORY_PAGE = 100;
+
+/** Qoldiq jadvali: holat (server filtri), qidiruv, do'konlar; kursor bilan sahifalanadi. `totals` — butun tanlov bo'yicha. */
+export const inventoryQuery = (orgId: string, shops: string[], l: { status?: string; q?: string }) =>
+  infiniteQueryOptions({
+    queryKey: ["orgs", orgId, "inventory", shops, l.status ?? null, l.q ?? null],
+    initialPageParam: null as string | null,
+    queryFn: ({ pageParam }) =>
+      unwrap(
+        api.GET("/api/v1/orgs/{org_id}/inventory", {
+          params: {
+            path: { org_id: orgId },
+            query: { shop: shops.length > 0 ? shops : undefined, status: l.status as "critical" | undefined, q: l.q || undefined, limit: INVENTORY_PAGE, cursor: pageParam },
+          },
+        }),
+      ),
+    getNextPageParam: (last) => last.next_cursor,
+  });
+
+/** Tovarning hisobdan chiqarish va tuzatish yozuvlari (yangisi birinchi). */
+export const stockMovesQuery = (orgId: string, itemId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "stock-moves", itemId],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/items/{item_id}/stock-moves", { params: { path: { org_id: orgId, item_id: itemId } } })),
+  });
+
+export const createStockMove = (orgId: string, body: StockMoveIn) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/stock-moves", { params: { path: { org_id: orgId } }, body }));
+
+export const deleteStockMove = (orgId: string, moveId: string) =>
+  unwrap(api.DELETE("/api/v1/orgs/{org_id}/stock-moves/{move_id}", { params: { path: { org_id: orgId, move_id: moveId } } }));

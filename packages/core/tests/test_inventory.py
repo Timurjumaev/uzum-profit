@@ -23,6 +23,8 @@ from upcore.inventory import (
     lead_time,
     liquidity,
     lost_goods,
+    order_by,
+    own_warehouse_qty,
     product_status,
     reorder,
     stock_status,
@@ -311,6 +313,38 @@ def test_settings_are_configurable() -> None:
     assert reorder(D(1), D(10), AbcClass.A, stock=0, s=s).qty == 100
     assert liquidity(1, 0, day(200), AS_OF, s) is Liquidity.SLOW
     assert DEFAULT.cover_days[AbcClass.A] == 60
+
+
+def test_order_by_date() -> None:
+    # F27: zaxira 40 kun, muddat 32 kun → 8 kundan keyin buyurtma beriladi.
+    got = order_by(AS_OF, D("40.0"), D(32))
+    assert got is not None and got.day == AS_OF + timedelta(days=8) and not got.overdue
+    # Kasr kun pastga yaxlitlanadi (kechikmaslik uchun).
+    rounded = order_by(AS_OF, D("40.9"), D(32))
+    assert rounded is not None and rounded.day == AS_OF + timedelta(days=8)
+    # Zaxira muddatdan kam yoki teng — kechikkan (F26 "Kritik" bilan mos): sana — bugun.
+    assert order_by(AS_OF, D(32), D(32)) == order_by(AS_OF, D(10), D(32))
+    late = order_by(AS_OF, D(10), D(32))
+    assert late is not None and late.day == AS_OF and late.overdue
+    # Tezlik 0 (zaxira kunlari yo'q) yoki muddat noma'lum — sana o'ylab topilmaydi.
+    assert order_by(AS_OF, None, D(32)) is None
+    assert order_by(AS_OF, D(40), None) is None
+
+
+def test_order_by_matches_critical_status() -> None:
+    lead = D(30)
+    for stock, speed in [(60, D(2)), (30, D(1)), (31, D(1)), (100, D(1))]:
+        got = order_by(AS_OF, days_of_stock(stock, 0, speed), lead)
+        assert got is not None
+        assert got.overdue == (stock_status(stock, speed, lead) is StockStatus.CRITICAL)
+
+
+def test_own_warehouse_qty() -> None:
+    assert own_warehouse_qty(100) == 100
+    assert own_warehouse_qty(100, adjustments=-3, writeoffs=5) == 92
+    assert own_warehouse_qty(100, adjustments=4) == 104
+    assert own_warehouse_qty(10, writeoffs=-3) == 7  # hisobdan chiqarish ishorasi qat'iy emas
+    assert own_warehouse_qty(5, adjustments=-20) == 0  # manfiy bo'lmaydi
 
 
 @given(

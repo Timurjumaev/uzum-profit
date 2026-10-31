@@ -507,7 +507,9 @@ def test_dashboard_blocks(world: World) -> None:
     assert D(kpis["drr"]) == D("0.011111")
     assert money(kpis["expected_profit"]["raw"]) == D(55_000)
     # F29: X — 100 000 × (80 + 5 + 2), Z — 50 000 × 40; yo'lda 20 × 120 000.
-    assert money(kpis["frozen_money"]) == D(10_700_000)
+    assert money(kpis["frozen_money"]) == D(
+        13_500_000
+    )  # + o'z omborim: Chiroq 2 500 000, Lampa 300 000
     assert money(kpis["in_transit_value"]) == D(2_400_000)
     top = dash["top"]
     assert {x["sku_id"] for x in top} <= {str(world.ids["xa"]), str(world.ids["zb"])}
@@ -685,6 +687,16 @@ def test_inventory(world: World) -> None:
     assert D(xa["velocity"]["value"]) == expected.value
     assert xa["velocity"]["days_counted"] == expected.days_counted == 13
     assert (xa["stock"], xa["qty_defected"], xa["in_transit"]) == (85, 2, 20)
+    # M10 joylar: p3 — faqat buyurtma berilgan (Xitoyda), p1 Uzumga yuborilgan (FBO qoldig'ida).
+    assert xa["locations"] == {
+        "fbo": 80, "fbs": 5, "defected": 2, "pending": 0, "china": 20, "road": 0, "own": 0,
+    }  # fmt: skip
+    # F27 buyurtma sanasi = bugun + (zaxira kunlari − muddat 32 kun), kunga pastga yaxlitlanadi.
+    slack = D(xa["days_of_stock"]) - 32
+    assert xa["order_by"] == {
+        "day": (AS_OF + timedelta(days=int(slack))).isoformat(),
+        "overdue": False,
+    }
     assert D(xa["days_of_stock"]) == (D(85) / expected.value).quantize(D("0.1"))
     assert xa["lead_time"]["stages"] == {
         "cargo": "13",
@@ -698,18 +710,25 @@ def test_inventory(world: World) -> None:
     assert xa["reorder"]["qty"] == 0 and xa["last_sale_on"] == "2026-10-10"
     zb = rows[str(world.ids["zb"])]
     # Oxirgi sotuv 2-oktabr (14 kunlik oynadan tashqari): tezlik 0, qoldiq 40 — Harakatsiz (muddatsiz ham aniq).
-    assert zb["lead_time"] is None and zb["reorder"] is None
+    assert zb["lead_time"] is None and zb["reorder"] is None and zb["order_by"] is None
+    # p2 qabul qilingan, Uzumga yuborilmagan — 50 dona o'z omborida (Uzumda 40 ta turibdi).
+    assert zb["locations"]["own"] == 50 and zb["locations"]["china"] == zb["locations"]["road"] == 0
     assert zb["status"] == StockStatus.DEAD.value and zb["liquidity"] is None
     ya = rows[str(world.ids["ya"])]
     assert ya["status"] is None and ya["unit_cost"] is None  # qoldiq yo'q, sotuv oynadan tashqarida
     totals = body["totals"]
     assert {k: money(v) for k, v in totals["frozen_money"].items()} == {
+        "china": D(2_400_000),
+        "road": D(0),
+        "own": D(2_800_000),  # Chiroq 50 × 50 000 + Lampa 10 × 30 000
         "fbo": D(10_000_000),
         "fbs": D(500_000),
         "defected": D(200_000),
-        "in_transit": D(2_400_000),
     }
-    assert money(totals["frozen_total"]) == D(13_100_000)
+    assert money(totals["frozen_total"]) == D(15_900_000)
+    assert totals["units"] == {
+        "china": 20, "road": 0, "own": 60, "fbo": 120, "fbs": 5, "defected": 2,
+    }  # fmt: skip
     assert totals["statuses"] == {"dead": 1, "good": 1}
     assert body["as_of"] == "2026-10-20" and body["total"] == 4  # lampa — qoldiqsiz
     order = [r["sku_id"] for r in body["items"]]

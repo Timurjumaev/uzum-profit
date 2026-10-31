@@ -905,6 +905,60 @@ export interface paths {
         patch: operations["update_component_api_v1_orgs__org_id__purchases__purchase_id__components__component_id__patch"];
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/items/{item_id}/stock-moves": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Stock Moves
+         * @description Tovarning hisobdan chiqarish va tuzatish yozuvlari (yangisi birinchi).
+         */
+        get: operations["list_stock_moves_api_v1_orgs__org_id__items__item_id__stock_moves_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/stock-moves": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Stock Move */
+        post: operations["create_stock_move_api_v1_orgs__org_id__stock_moves_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/stock-moves/{move_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Stock Move */
+        delete: operations["delete_stock_move_api_v1_orgs__org_id__stock_moves__move_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1611,6 +1665,26 @@ export interface components {
             /** Title */
             title: string | null;
         };
+        /**
+         * LocationsOut
+         * @description M10 joylar (dona): Uzum FBO/FBS/brak/kutilayotgan va Uzumdan tashqarida — Xitoyda, yo'lda, o'z omborimda.
+         */
+        LocationsOut: {
+            /** Fbo */
+            fbo: number;
+            /** Fbs */
+            fbs: number;
+            /** Defected */
+            defected: number;
+            /** Pending */
+            pending: number;
+            /** China */
+            china: number;
+            /** Road */
+            road: number;
+            /** Own */
+            own: number;
+        };
         /** LoginRequest */
         LoginRequest: {
             /** Phone */
@@ -1697,6 +1771,16 @@ export interface components {
             categories: {
                 [key: string]: string;
             };
+        };
+        /** OrderByOut */
+        OrderByOut: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Overdue */
+            overdue: boolean;
         };
         /** OrdersAnalysisOut */
         OrdersAnalysisOut: {
@@ -2693,6 +2777,66 @@ export interface components {
             /** Status */
             status: string | null;
         };
+        /** StockMoveIn */
+        StockMoveIn: {
+            /**
+             * Item Id
+             * Format: uuid
+             */
+            item_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "writeoff" | "adjust";
+            /** Qty */
+            qty: number;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Note */
+            note?: string | null;
+            /** Purchase Line Id */
+            purchase_line_id?: string | null;
+        };
+        /** StockMoveOut */
+        StockMoveOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Item Id
+             * Format: uuid
+             */
+            item_id: string;
+            /** Kind */
+            kind: string;
+            /** Qty */
+            qty: number;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Note */
+            note: string | null;
+            /** Purchase Line Id */
+            purchase_line_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** StockMovesOut */
+        StockMovesOut: {
+            /** Items */
+            items: components["schemas"]["StockMoveOut"][];
+        };
         /** StockRowOut */
         StockRowOut: {
             /**
@@ -2725,6 +2869,7 @@ export interface components {
             stock: number;
             /** In Transit */
             in_transit: number;
+            locations: components["schemas"]["LocationsOut"];
             velocity: components["schemas"]["VelocityOut"];
             /** Days Of Stock */
             days_of_stock: string | null;
@@ -2739,6 +2884,7 @@ export interface components {
             liquidity: string | null;
             /** Last Sale On */
             last_sale_on: string | null;
+            order_by: components["schemas"]["OrderByOut"] | null;
             reorder: components["schemas"]["ReorderOut"] | null;
             /** Unit Cost */
             unit_cost: string | null;
@@ -2763,6 +2909,10 @@ export interface components {
             average_days_to_sell: string | null;
             /** Uncosted */
             uncosted: number;
+            /** Units */
+            units: {
+                [key: string]: number;
+            };
             /** Statuses */
             statuses: {
                 [key: string]: number;
@@ -5806,6 +5956,130 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["PurchaseDetailOut"];
                 };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_stock_moves_api_v1_orgs__org_id__items__item_id__stock_moves_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockMovesOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_stock_move_api_v1_orgs__org_id__stock_moves_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StockMoveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockMoveOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    delete_stock_move_api_v1_orgs__org_id__stock_moves__move_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                move_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validatsiya xatosi */
             422: {
