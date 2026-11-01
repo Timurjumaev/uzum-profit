@@ -44,6 +44,8 @@ Qadamlar (wizard, istalgan qadamdan keyin to'xtab, keyin davom etish mumkin):
    (FIFO / o'rtacha, standart FIFO — ADR-008).
 5. **Tannarx:** uchta yo'l: (a) tushum bo'yicha TOP-20 SKU uchun tezkor jadval (dona narxi so'mda yoki CNY + kurs);
    (b) Excel shablon yuklash [B7]; (c) birinchi xaridni (partiyani) to'liq kiritish. Ekranda: "Tushumning X% ida tannarx bor".
+   (a) — **Boshlang'ich holat** sahifasi (`/opening`, B4.12, F41, ADR-033): boshlash sanasi, har tovarga bitta tannarx,
+   qoldiq (Uzumdan taklif + o'z omborim); eski partiyalar shart emas.
 6. **Telegram'ni ulash** (QR kod / havola) — kunlik xulosa uchun.
 
 Bosh sahifada "Sozlash: 4/6" ro'yxati hamma qadam tugaguncha turadi.
@@ -191,6 +193,7 @@ xarajatni to'g'ri yig'ish va tovarlarga to'g'ri bo'lish.
 - **Kech kiritilgan xarajat** (masalan, kargo narxi 20 kundan keyin) kiritilganda o'tgan sotuvlar tannarxi
   avtomatik qayta hisoblanadi va P&L'da "qayta hisoblandi" belgisi chiqadi.
 - Excel import [B7]. (Legacy partiyalarini ko'chirish bekor — ADR-032: qo'lda kiritiladi.)
+- Eski partiyalar shart emas: boshlash sanasidan oldingisi — boshlang'ich holat (F41, ADR-033).
 
 Qabul mezonlari: legacy'dagi har partiya ko'chirilgach birlik tannarx legacy bilan bir xil (o'rtacha usulda);
 kargo vazn bo'yicha taqsimlanganda qatorlar yig'indisi kargo summasiga tiyinigacha teng (yaxlitlash qoldig'i
@@ -390,8 +393,10 @@ lot narxida), brak / yo'qotish (−).
 - Sotuv birinchi lotdan oldin bo'lsa — birinchi lot narxi, "erta sotuv" belgisi.
 - Hamma lot tugasa: oxirgi ma'lum lot narxi + "lot yetmadi"; tovarda lot umuman yo'q: tannarx yo'q.
 - Har o'zgarishda tovarning eng erta o'zgargan sanasidan qayta hisoblanadi.
+- Boshlang'ich holat (F41) bo'lsa — boshlash sanasigacha bo'lgan hodisalar lotlarga tegmaydi.
 
-**F22. Taxminiy belgilar:** "kargo kiritilmagan", "erta sotuv" (sotuv lotdan oldin), "lot yetmadi",
+**F22. Taxminiy belgilar:** "kargo kiritilmagan", "erta sotuv" (sotuv lotdan oldin), "lot yetmadi", "tarixiy"
+(boshlash sanasidan oldingi sotuv — F41),
 "kurs qo'lda emas, CBU". UI'da `~` va izoh.
 
 **F23. Sof sotuv tezligi** (dona/kun): oxirgi 14 kun, oxirgi 7 kun 2 barobar vazn bilan; qoldiq 0 bo'lgan kunlar
@@ -460,3 +465,14 @@ tizim taklifini tasdiqlaydi; taklif: kunlik Yakunlangan qatorlarning ≥ 90% ida
 bo'yicha: sotuv logistikasi — SKU'ning bonus davridan tashqaridagi oxirgi pullik logistikasi, bo'lmasa do'konning
 odatiy (eng ko'p) tarifi, SKU o'lchamlari bazada bo'lsa (tovar o'lchamlarini tahrirlash — B4.6) — F37 (SKU'ning o'z tarifidan keyin, do'kon tarifidan oldin; kodda hozircha qo'llanmaydi); saqlash — SKU `storage_price` × kunlar; baholovchisi yo'q tur —
 "me'yoriy baho yo'q". Haqiqiy foyda (F3–F16) o'zgarmaydi: bonus davrida bepul xarajat 0.
+
+**F41. Boshlang'ich holat** (ADR-033). Boshlash sanasi S (tashkilot sozlamasi, ixtiyoriy), tovar bo'yicha tarixiy
+narxlar {(sana dan, dona narxi)} (sana yo'q — boshidan) va S kunidagi qoldiq Q = Uzumda (FBO + FBS; taklif — S dan
+oldingi kun snapshoti, S bugun bo'lsa joriy qoldiq) + o'z omborimda (sotuvchi tasdiqlaydi, son qotadi).
+- Narx kun bo'yicha: `sana dan ≤ kun` bo'lgan eng oxirgi narx; kun hamma narxdan oldin bo'lsa — eng birinchisi.
+- Sotuv kuni < S: tannarx = shu kungi narx × dona, "tarixiy" belgisi (F22), lotlarga tegmaydi; narx yo'q — tannarxsiz.
+- S kunida "boshlang'ich qoldiq" loti: Q dona × S kungi narx; FIFO'da shu kungi partiyalardan ham oldin ishlatiladi,
+  o'rtachada hovuzning boshlang'ich qiymati. Q = 0 yoki narx yo'q — lot yo'q.
+- Tayyor sanasi < S bo'lgan partiyalar ishlatilmaydi (qoldiqqa kirgan); yo'ldagi (sanasiz) va S dan keyingilari — F21.
+- Ombor qiymati (F27, F29): S dan keyin tayyor partiya bo'lmasa — S kungi narx.
+- Unit kalkulyator (F35/F36) tannarxi: oxirgi tayyor partiya, bo'lmasa davr o'rtachasi (narx keyingi donalar uchun).
