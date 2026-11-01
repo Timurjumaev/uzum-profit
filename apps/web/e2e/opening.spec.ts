@@ -10,7 +10,7 @@ test("boshlang'ich holat: qatorlar va qamrov", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Boshlangʻich holat");
   await expect(page.getByText("Soat", { exact: true })).toBeVisible();
   await expect(page.getByText("Sumka", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Boshlash sanasi")).toHaveValue("2026-11-01");
+  await expect(page.getByLabel("Boshlash sanasi", { exact: true })).toHaveValue("2026-11-01");
 });
 
 test("gorizontal skroll yo'q (360 px) /opening", async ({ page }) => {
