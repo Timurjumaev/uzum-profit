@@ -8985,6 +8985,10 @@
           "own": {
             "type": "integer",
             "title": "Own"
+          },
+          "inbound": {
+            "type": "integer",
+            "title": "Inbound"
           }
         },
         "type": "object",
@@ -8995,7 +8999,8 @@
           "pending",
           "china",
           "road",
-          "own"
+          "own",
+          "inbound"
         ],
         "title": "LocationsOut",
         "description": "M10 joylar (dona): Uzum FBO/FBS/brak/kutilayotgan va Uzumdan tashqarida — Xitoyda, yo'lda, o'z omborimda."
@@ -9449,6 +9454,10 @@
             ],
             "title": "Uzum Suggested"
           },
+          "inbound": {
+            "type": "integer",
+            "title": "Inbound"
+          },
           "uzum_qty": {
             "anyOf": [
               {
@@ -9509,6 +9518,7 @@
           "product",
           "revenue",
           "uzum_suggested",
+          "inbound",
           "uzum_qty",
           "own_qty",
           "prices",

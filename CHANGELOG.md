@@ -385,6 +385,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   yig'indilari (SKU/mahsulot holati bo'yicha, munosabatlar, hujjatda yo'q maydonlar), postavka holatlari, qaytarish turi ×
   holati, 60 kunlik sotuv holatlari; faqat yig'indilar, nom va shaxsiy ma'lumotsiz.
 
+- B4.14 (ADR-034): "Postavkada" joyi — qabul qilinmagan FBO postavkalar SKU bo'yicha (Ombor sahifasi, Excel, F29
+  qiymati, F27 da yo'ldagi tovar); o'z omborimdan ayiriladi. Boshlang'ich holat qoldig'iga brak, kutilayotgan, fotostudiya
+  va postavkadagi tovar ham qo'shildi ("shundan postavkada N"). B4.13 natijalari 08 §4 da.
+
 ### Tuzatildi
 
 - Boshlang'ich holat soddalashtirildi (Temur bilan kelishildi): jadvalda odatda faqat **Tur (SKU)** va **Tannarx**. Tushum

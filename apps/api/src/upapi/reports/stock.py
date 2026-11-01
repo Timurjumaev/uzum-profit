@@ -10,6 +10,9 @@
   va tavsiya miqdor (F27) ko'rsatilmaydi (tamoyil 9, raqam o'ylab topilmaydi). Harakatsiz holat muddatsiz ham.
 - Lot narxi (F27, F29) — tovarning tayyor bo'lgan eng oxirgi loti (lot tayyorligi — F21, tannarx uchun).
   Boshlang'ich holat (F41) bo'lsa va boshlashdan keyin tayyor lot yo'q — boshlash sanasidagi tarixiy narx.
+- Postavkada (ADR-034, B4.14) — qabul qilinmagan FBO postavkalar (``fbo_invoices`` holati yopiq emas) tarkibi, SKU
+  bo'yicha: sotuvchida yoki Uzum logistikasi bilan omborga yo'lda. Qiymati lot narxida; F27 da yo'ldagi tovarga qo'shiladi;
+  o'z omborimdan ayiriladi (ikki marta sanalmaydi).
 - Joylar (M10, B4.7) — xarid bosqichidan (``current_stage``): ``china`` (buyurtma / to'langan / Xitoy omborida),
   ``road`` (yo'lda / Toshkentga keldi), ``own`` (qabul qilindi, Uzumga yuborilmagan; ``stock_moves`` tuzatish va
   hisobdan chiqarish bilan, ``upcore.inventory.own_warehouse_qty``). Uzumga yuborilgan xarid — FBO qoldig'ida. Qiymat —
@@ -69,7 +72,10 @@ UZS = Currency.UZS
 WINDOW_DAYS = 56  # F28 XYZ: 8 hafta (F23 uchun 30 kun ham shu ichida)
 ABC_DAYS = 30
 STAGES = tuple(name for name, _, _ in LEAD_STAGES)
-LOCATIONS = ("china", "road", "own", "fbo", "fbs", "defected")
+LOCATIONS = ("china", "road", "own", "inbound", "fbo", "fbs", "defected")
+# ADR-034: postavka (``fbo_invoices``) shu holatlarda yopiq; qolgani — "postavkada" (qabul qilinmagan: sotuvchida yoki
+# Uzum logistikasi bilan omborga yo'lda — ikkalasi ham Uzum qoldig'ida yo'q, o'z omborimda bo'sh emas).
+CLOSED_INVOICES = frozenset({"ACCEPTED", "CANCELED", "CANCELLED", "REJECTED", "DELETED"})
 CHINA_STAGES = frozenset({Stage.ORDERED, Stage.PAID, Stage.CN_WAREHOUSE})
 ROAD_STAGES = frozenset({Stage.SHIPPED, Stage.ARRIVED})
 
@@ -95,7 +101,8 @@ class SkuStock:
     sold_30d: int
     china: int  # buyurtma qilingan, Xitoyda
     road: int  # yo'lda
-    own: int  # o'z omborimda (Uzumga yuborilmagan)
+    own: int  # o'z omborimda (Uzumga yuborilmagan, postavkadagisi ayirilgan)
+    inbound: int  # postavkada — qabul qilinmagan (ADR-034)
     unit_cost: Money | None
     stock_value: Money | None
     reorder: Reorder | None
@@ -196,6 +203,9 @@ class _Places:
     china: int = 0
     road: int = 0
     received: int = 0  # qabul qilingan, Uzumga yuborilmagan (tuzatishsiz)
+    reserved: int = (
+        0  # ADR-034: qabul qilinmagan postavkalarga ajratilgan (o'z omborimdan ayiriladi)
+    )
     adjust: int = 0
     writeoff: int = 0
     # (dona, birlik tannarx) — tannarxi hisoblangan qatorlar bo'yicha
@@ -205,12 +215,27 @@ class _Places:
 
     @property
     def own(self) -> int:
-        return own_warehouse_qty(self.received, self.adjust, self.writeoff)
+        return max(0, own_warehouse_qty(self.received, self.adjust, self.writeoff) - self.reserved)
 
     def own_unit_cost(self) -> Decimal | None:
         """O'z omboridagi tovarning o'rtacha birlik tannarxi (qatorlar donasi bo'yicha vaznli)."""
         qty = sum(q for q, _ in self.own_lots)
         return sum((q * c for q, c in self.own_lots), Decimal(0)) / qty if qty else None
+
+
+async def inbound_by_sku(conn: AsyncConnection) -> dict[UUID, int]:
+    """ADR-034: SKU → qabul qilinmagan postavkalardagi dona (``quantityToStock``; yopiq holatdagilar — yo'q)."""
+    v, i = m.fbo_invoices, m.fbo_invoice_items
+    rows = await conn.execute(
+        select(i.c.sku_id, func.sum(i.c.quantity_to_stock).label("qty"))
+        .join(v, v.c.id == i.c.invoice_id)
+        .where(
+            i.c.sku_id.is_not(None),
+            func.upper(func.coalesce(v.c.status, "")).not_in(CLOSED_INVOICES),
+        )
+        .group_by(i.c.sku_id)
+    )
+    return {r.sku_id: int(r.qty or 0) for r in rows if r.qty}
 
 
 async def _places(conn: AsyncConnection, items: Iterable[UUID]) -> dict[UUID, _Places]:
@@ -321,6 +346,16 @@ async def load_stock(
     lots = await _lots(conn, items, as_of) if items else {}
     history = await _lead_history(conn, items) if items else {}
     places = await _places(conn, items) if items else {}
+    inbound = await inbound_by_sku(conn)
+    # O'z omborimdan postavkaga ajratilgani ayiriladi (xarid "Uzumga yuborildi" deb belgilanmagan bo'lsa ikki marta
+    # sanalmasin; belgilangan bo'lsa o'z omborim allaqachon 0 — manfiy bo'lmaydi).
+    inbound_item: dict[UUID, int] = {}
+    for r in skus:
+        if r.item_id is not None and inbound.get(r.id):
+            inbound_item[r.item_id] = inbound_item.get(r.item_id, 0) + inbound[r.id]
+    for item_id, qty in inbound_item.items():
+        if item_id in places:
+            places[item_id].reserved = qty
     abc = abc_classes({str(r.id): revenue30.get(r.id, Money.zero(UZS)) for r in skus}, inv)
 
     out: dict[UUID, SkuStock] = {}
@@ -346,16 +381,18 @@ async def load_stock(
         item = lots.get(r.item_id) if r.item_id is not None else None
         place = places.get(r.item_id) if r.item_id is not None else None
         china, road, own = (place.china, place.road, place.own) if place else (0, 0, 0)
+        sku_inbound = inbound.get(r.id, 0)
         unit = item.unit_cost if item else None
         cover = days_of_stock(active, fbs, v.value)
         value = None
         if unit is not None:
             parts = [Holding("fbo", active, unit), Holding("fbs", fbs, unit)]
             parts.append(Holding("defected", defected, unit))
+            parts.append(Holding("inbound", sku_inbound, unit))
             holdings += parts
             value = unit * stock
             weighted.append((cover, value))
-        elif stock + defected > 0:
+        elif stock + defected + sku_inbound > 0:
             uncosted += 1
         cls = abc[str(r.id)]
         plan = None
@@ -366,7 +403,7 @@ async def load_stock(
                 lead.total,
                 cls,
                 stock,
-                in_transit=road + own,
+                in_transit=road + own + sku_inbound,
                 ordered=china,
                 last_unit_prices=prices,
                 s=inv,
@@ -392,6 +429,7 @@ async def load_stock(
             china=china,
             road=road,
             own=own,
+            inbound=sku_inbound,
             unit_cost=unit,
             stock_value=value,
             reorder=plan,
@@ -425,5 +463,6 @@ async def load_stock(
             "fbo": sum(s.qty_active for s in out.values()),
             "fbs": sum(s.qty_fbs for s in out.values()),
             "defected": sum(s.qty_defected for s in out.values()),
+            "inbound": sum(s.inbound for s in out.values()),
         },
     )

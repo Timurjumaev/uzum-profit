@@ -12,6 +12,7 @@ export function openingRow(over: Partial<OpeningRow> = {}): OpeningRow {
     product: null,
     revenue: "1000000.00",
     uzum_suggested: 120,
+    inbound: 0,
     uzum_qty: null,
     own_qty: null,
     prices: [],

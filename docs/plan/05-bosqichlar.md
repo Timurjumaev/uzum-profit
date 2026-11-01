@@ -366,9 +366,13 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   ko'rinishi, maydonlar munosabatlari), postavka holatlari (e'lon qilingan / qabul qilingan), qaytarish turi × holati, oxirgi
   60 kun sotuv holatlari; faqat yig'indilar. ✓ 2026-11-01 vosita tayyor. **T:** merge'dan keyin staging'da `realcheck.sh` ni
   ishga tushirib natijani yuborish — maydonlar ma'nosi 08 §4 ga yoziladi.
-- [ ] B4.14 Tovar joylari — FBO (ADR-034, 2-qadam): "Uzumga yo'lda" (qabul qilinmagan postavkalar), "Uzumga qaytmoqda",
-  Uzumdagi holatlar (B4.13 natijasi bo'yicha), o'z omborim = qabul − postavkalar + qaytgan ± tuzatish; Ombor sahifasida
-  ustunlar; boshlang'ich holat qoldig'iga qo'shish (bitta son, ichida joylar).
+- [x] B4.14 Tovar joylari — FBO (ADR-034, 2-qadam): "postavkada" — qabul qilinmagan postavkalar (yopiq holat: qabul
+  qilingan, bekor) SKU bo'yicha; o'z omborimdan ayiriladi (ikki marta sanalmaydi), F27 da yo'ldagi tovarga qo'shiladi,
+  F29 qiymatida alohida joy; Ombor sahifasi va Excel'da "Postavkada"; boshlang'ich holat qoldig'i = sotuvda + FBS + brak +
+  kutilayotgan + fotostudiya + postavkada (sahifada "shundan postavkada N"). ✓ 2026-11-01. **Qoldi:** "Uzumga qaytmoqda"
+  (API son bermaydi — faqat taxmin, keyin), Uzum qaytarishlari (`ASSEMBLED` — olib ketish kutilmoqda; `UTILIZED` —
+  hisobdan chiqim), o'z omborimni xarid bosqichi o'rniga postavkalar bo'yicha hisoblash (boshlash sanasidan keyin; bo'lib
+  jo'natish) — B5.3 postavkalar bilan.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

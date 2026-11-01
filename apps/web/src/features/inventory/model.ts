@@ -7,7 +7,7 @@ import type { StockStatusId } from "../../app/search";
 export const STATUS_TONE: Record<StockStatusId, Tone> = { critical: "negative", high: "warning", medium: "info", good: "positive", dead: "neutral" };
 
 /** Uzumdan tashqari va yordamchi joylar (FBO/FBS — "Uzumda" ustunida), ko'rsatish tartibida. */
-export const EXTRA_PLACES = ["china", "road", "own", "defected", "pending"] as const;
+export const EXTRA_PLACES = ["china", "road", "own", "inbound", "defected", "pending"] as const;
 export type ExtraPlace = (typeof EXTRA_PLACES)[number];
 
 /** Nolmas joylar tartib bilan (hammasi nol — bo'sh). */

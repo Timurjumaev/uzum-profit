@@ -262,6 +262,7 @@ def _stock_cols(amounts: bool) -> list[xlsx.Col]:
         xlsx.Col("Xitoyda", lambda r: r.locations.china, "int", total=True),
         xlsx.Col("Yoʼlda", lambda r: r.locations.road, "int", total=True),
         xlsx.Col("Oʼz omborimda", lambda r: r.locations.own, "int", total=True),
+        xlsx.Col("Postavkada", lambda r: r.locations.inbound, "int", total=True),
         xlsx.Col("Sotuv tezligi (F23, dona/kun)", lambda r: r.velocity.value, "money"),
         xlsx.Col("Zaxira kunlari (F24)", lambda r: r.days_of_stock, "money"),
         xlsx.Col("Holat (F26)", lambda r: r.status.value if r.status else None),

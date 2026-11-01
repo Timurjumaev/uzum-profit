@@ -9,7 +9,7 @@ export const ITEM_CRIT = "e1111111-1111-4111-8111-111111111111";
 export const ITEM_DEAD = "e2222222-2222-4222-8222-222222222222";
 export const MOVE_1 = "f1111111-1111-4111-8111-111111111111";
 
-const LOCATIONS: S["LocationsOut"] = { fbo: 8, fbs: 2, defected: 1, pending: 0, china: 20, road: 30, own: 15 };
+const LOCATIONS: S["LocationsOut"] = { fbo: 8, fbs: 2, defected: 1, pending: 0, china: 20, road: 30, own: 15, inbound: 0 };
 
 /** Kritik SKU: tezlik 2/kun, zaxira 5 kun, muddat 32 kun — buyurtma kechikkan, tavsiya 90 dona. */
 export function stockRow(over: Partial<S["StockRowOut"]> = {}): S["StockRowOut"] {
@@ -56,7 +56,7 @@ export function deadRow(over: Partial<S["StockRowOut"]> = {}): S["StockRowOut"] 
     qty_defected: 0,
     stock: 40,
     in_transit: 0,
-    locations: { fbo: 40, fbs: 0, defected: 0, pending: 0, china: 0, road: 0, own: 0 },
+    locations: { fbo: 40, fbs: 0, defected: 0, pending: 0, china: 0, road: 0, own: 0, inbound: 0 },
     velocity: { value: "0.0000", base: "0.0000", return_rate: "0.0000", trend_ratio: null, trend_factor: "1.00", days_counted: 14 },
     days_of_stock: null,
     lead_time: null,
@@ -86,7 +86,7 @@ export function inventoryData(over: Partial<S["InventoryOut"]> = {}): S["Invento
       frozen_total: "8600000.00",
       average_days_to_sell: "12.5",
       uncosted: 0,
-      units: { china: 20, road: 30, own: 15, fbo: 48, fbs: 2, defected: 1 },
+      units: { china: 20, road: 30, own: 15, inbound: 0, fbo: 48, fbs: 2, defected: 1 },
       statuses: { critical: 1, dead: 1 },
     },
     ...over,

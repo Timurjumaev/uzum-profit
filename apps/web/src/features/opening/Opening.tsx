@@ -126,7 +126,9 @@ export function Opening() {
             <span className="opening-table__sku">{sku}</span>
             {r.uzum_suggested !== null && (
               <span className="caption">
-                {t("opening.inUzum", { n: r.uzum_suggested })}
+                {r.inbound > 0
+                  ? t("opening.inUzumInbound", { n: r.uzum_suggested, inbound: r.inbound })
+                  : t("opening.inUzum", { n: r.uzum_suggested })}
               </span>
             )}
             {r.shared && <span className="caption">{t("opening.shared")}</span>}

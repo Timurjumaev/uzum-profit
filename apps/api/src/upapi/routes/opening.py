@@ -38,6 +38,7 @@ from upapi.auth.permissions import Permission
 from upapi.db import models as m
 from upapi.errors import AppError
 from upapi.reports.common import sku_catalog, today
+from upapi.reports.stock import inbound_by_sku
 from upapi.routes.purchases import _kick
 
 router = APIRouter(tags=["costing"])
@@ -67,9 +68,10 @@ class OpeningRowOut(BaseModel):
     product_id: UUID | None
     product: str | None
     revenue: Decimal  # boshlash sanasigacha bo'lgan tushum (shu narx qo'llanadigan sotuvlar)
-    uzum_suggested: (
-        int | None
-    )  # boshlash sanasidagi Uzum qoldig'i (FBO + FBS); ``null`` — snapshot yo'q
+    # Boshlash sanasidagi Uzum tomonidagi qoldiq (ADR-034: sotuvda + FBS + brak + kutilayotgan + fotostudiya +
+    # qabul qilinmagan postavka); ``null`` — snapshot yo'q.
+    uzum_suggested: int | None
+    inbound: int  # shundan qabul qilinmagan postavkada
     uzum_qty: int | None  # saqlangan (``null`` — hali kiritilmagan)
     own_qty: int | None
     prices: list[PriceOut]
@@ -115,17 +117,45 @@ class OpeningIn(BaseModel):
     rows: Annotated[list[OpeningRowIn], Field(max_length=MAX_ROWS)] = []
 
 
-async def _stock(conn: Any, as_of: date) -> tuple[dict[UUID, int], str]:
-    """SKU → Uzum qoldig'i (FBO + FBS) boshlash kuni boshida."""
+def _photo(raw: Any) -> int:
+    value = raw.get("quantityOnPhotoStudio") if isinstance(raw, dict) else None
+    return int(value) if isinstance(value, int) and not isinstance(value, bool) else 0
+
+
+async def _stock(conn: Any, as_of: date) -> tuple[dict[UUID, int], dict[UUID, int], str]:
+    """SKU → boshlash kuni boshida sotuvchiga tegishli, Uzum tomonidagi qoldiq (ADR-034) va undagi postavka qismi.
+
+    Joriy (bugun): FBO sotuvda + FBS + brak + kutilayotgan + fotostudiyada + qabul qilinmagan postavkalar. O'tgan sana:
+    oldingi kun snapshoti (sotuvda + FBS + brak + kutilayotgan; postavka tarixi yo'q)."""
     k, d = m.mp_skus, m.sku_daily
     if as_of >= today():
-        rows = await conn.execute(select(k.c.id, k.c.qty_active, k.c.qty_fbs))
-        return {r.id: (r.qty_active or 0) + (r.qty_fbs or 0) for r in rows}, "current"
+        inbound = await inbound_by_sku(conn)
+        rows = await conn.execute(
+            select(k.c.id, k.c.qty_active, k.c.qty_fbs, k.c.qty_defected, k.c.qty_pending, k.c.raw)
+        )
+        out = {
+            r.id: (r.qty_active or 0)
+            + (r.qty_fbs or 0)
+            + (r.qty_defected or 0)
+            + (r.qty_pending or 0)
+            + _photo(r.raw)
+            + inbound.get(r.id, 0)
+            for r in rows
+        }
+        return out, inbound, "current"
     rows = await conn.execute(
-        select(d.c.sku_id, d.c.qty_active, d.c.qty_fbs).where(d.c.day == as_of - timedelta(days=1))
+        select(d.c.sku_id, d.c.qty_active, d.c.qty_fbs, d.c.qty_defected, d.c.qty_pending).where(
+            d.c.day == as_of - timedelta(days=1)
+        )
     )
-    out = {r.sku_id: (r.qty_active or 0) + (r.qty_fbs or 0) for r in rows}
-    return out, "snapshot" if out else "none"
+    out = {
+        r.sku_id: (r.qty_active or 0)
+        + (r.qty_fbs or 0)
+        + (r.qty_defected or 0)
+        + (r.qty_pending or 0)
+        for r in rows
+    }
+    return out, {}, "snapshot" if out else "none"
 
 
 async def _read(
@@ -135,7 +165,7 @@ async def _read(
     saved = await conn.scalar(select(m.orgs.c.cost_start_on).where(m.orgs.c.id == ctx.org_id))
     as_of = start or saved or today()
     catalog = await sku_catalog(conn)
-    stock, source = await _stock(conn, as_of)
+    stock, inbound, source = await _stock(conn, as_of)
     dm = m.daily_sku_metrics
     revenue = {
         r.sku_id: Decimal(r.revenue)
@@ -199,6 +229,7 @@ async def _read(
                 shared=any(catalog[s].shop_id not in (shops or catalog_shops) for s in skus),
                 revenue=sum((revenue.get(s, Decimal(0)) for s in skus), Decimal(0)),
                 uzum_suggested=stock_of(skus),
+                inbound=sum(inbound.get(x, 0) for x in skus),
                 uzum_qty=saved_row.uzum_qty if saved_row else None,
                 own_qty=saved_row.own_qty if saved_row else None,
                 prices=prices.get(item_id, []),
@@ -222,6 +253,7 @@ async def _read(
                 shared=False,
                 revenue=revenue.get(sku_id, Decimal(0)),
                 uzum_suggested=stock.get(sku_id, 0 if source == "current" else None),
+                inbound=inbound.get(sku_id, 0),
                 uzum_qty=None,
                 own_qty=None,
                 prices=[],
