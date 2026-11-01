@@ -153,7 +153,7 @@ def test_skus_export_matches_list(world: World) -> None:
     listed = world.get("skus", limit=500, **OCT)["items"]
     rows = table(sheet(r.content))
     assert [row[0] for row in rows] == [x["title"] for x in listed]
-    assert [D(str(row[14])) for row in rows] == [D(x["net_profit"]) for x in listed]
+    assert [D(str(row[13])) for row in rows] == [D(x["net_profit"]) for x in listed]
     bad = export(world, "skus", sort="yoq_ustun", **OCT)
     assert bad.status_code == 422
 

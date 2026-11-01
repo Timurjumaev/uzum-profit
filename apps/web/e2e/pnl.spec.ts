@@ -10,10 +10,9 @@ test("hisob varag'i: yalpi foyda, ustunlar; drill-down", async ({ page }, info) 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^Foyda va zarar, /);
   const ledger = page.getByRole("table", { name: "Foyda va zarar: tushumdan sof foydagacha" });
   await expect(ledger.getByRole("row", { name: /^Yalpi foyda/ })).toBeVisible();
-  await expect(page.getByText(/Standart tarif/)).toHaveCount(0); // ADR-031: o'ylab topilgan qator yo'q
-  // Uzum bonusi: ma'lumot banneri va tizim taklifi (haqiqiy hisob o'zgarmaydi).
-  await expect(page.getByText(/^Uzum bonusi: Uzum nosozligi uchun kompensatsiya/)).toBeVisible();
-  await expect(page.getByText("Uzum logistikani olmagan koʻrinadi")).toBeVisible();
+  await expect(page.getByText(/Standart tarif/)).toHaveCount(0); // o'ylab topilgan qator yo'q
+  // ADR-035: Uzum bonusi haqida savol va banner yo'q — API nima bersa, shu.
+  await expect(page.getByText("Uzum logistikani olmagan koʻrinadi")).toHaveCount(0);
   // Tor ekranda faqat joriy summa — qo'shimcha ustunlar yashirin.
   const previous = ledger.getByRole("columnheader", { name: "Oldingi davr" });
   if (isMobile(info.project.name)) await expect(previous).toBeHidden();
@@ -48,14 +47,3 @@ for (const view of ["", "?view=sku"]) {
     expect(overflow).toBeLessThanOrEqual(0);
   });
 }
-
-test("Uzum bonusini qo'shish: shakl ochiladi, Esc yopadi", async ({ page }) => {
-  await mockApi(page);
-  await open(page, "/pnl");
-  await page.getByRole("button", { name: "Bonus deb belgilash" }).click();
-  const dialog = page.getByRole("dialog", { name: "Uzum bonusi" });
-  await expect(dialog.getByLabel("Boshlanish")).toHaveValue("2026-10-05");
-  await expect(dialog.getByLabel("Sotuv logistikasi")).toBeChecked();
-  await page.keyboard.press("Escape");
-  await expect(dialog).toBeHidden();
-});

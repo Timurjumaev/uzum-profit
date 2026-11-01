@@ -81,17 +81,6 @@ export function PeriodStrip({ data }: { data: Dashboard }) {
 
 // --- Kunlik grafik -------------------------------------------------------------------------------------------------
 
-/** Uzum bonusi davrlari (ADR-031) grafikda soya: davr chegarasiga qisqartiriladi (ISO sana satrlari solishtiriladi). */
-export function bonusBands(data: Dashboard, fallback: string) {
-  const { start, end } = data.meta.period;
-  return data.waivers.map((w) => ({
-    from: w.start_on < start ? start : w.start_on,
-    to: w.end_on > end ? end : w.end_on,
-    kind: "shade" as const,
-    label: w.reason || fallback,
-  }));
-}
-
 export function DailyChart({ data }: { data: Dashboard }) {
   const { t } = useTranslation();
   return (
@@ -102,7 +91,6 @@ export function DailyChart({ data }: { data: Dashboard }) {
         { key: "revenue", name: t("home.chart.revenue"), color: 1, values: data.daily.map((d) => d.revenue) },
         { key: "net", name: t("home.chart.netProfit"), color: "ink", kind: "line", values: data.daily.map((d) => d.net_profit) },
       ]}
-      bands={bonusBands(data, t("home.chart.free"))}
     />
   );
 }

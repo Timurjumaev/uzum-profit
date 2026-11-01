@@ -33,7 +33,6 @@ from upapi.routes import (
     skus,
     stock_moves,
     sync,
-    waivers,
 )
 from upapi.routes import settings as settings_routes
 from upapi.settings import Settings, get_settings
@@ -106,7 +105,6 @@ def create_app(
     app.include_router(orgs.router, prefix=API_PREFIX)
     app.include_router(accounts.router, prefix=API_PREFIX)
     app.include_router(sync.router, prefix=API_PREFIX)
-    app.include_router(waivers.router, prefix=API_PREFIX)  # Uzum bonuslari (ADR-031)
     app.include_router(own_expenses.router, prefix=API_PREFIX)  # o'z xarajatlar (M8)
     app.include_router(items.router, prefix=API_PREFIX)  # tovar ↔ SKU bog'lash (M6)
     for reports in (

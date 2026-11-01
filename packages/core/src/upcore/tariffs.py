@@ -1,4 +1,4 @@
-"""Uzum logistika tarifi — F37; bepul (bonus) davrlar va me'yoriy (bonussiz) tarif — F40 (ADR-031).
+"""Uzum logistika tarifi — F37; kalkulyator uchun standart logistika/dona — F40 (ADR-035).
 
 Tariflar biznes ma'lumoti (ADR-015): ishlash vaqtida bazadagi ``ref_logistics_tariffs`` dan, sana bo'yicha.
 ``SEED_LOGISTICS`` — boshlang'ich yozuv (08-tadqiqot.md §5, 01.06.2026 dan).
@@ -6,12 +6,12 @@ Tariflar biznes ma'lumoti (ADR-015): ishlash vaqtida bazadagi ``ref_logistics_ta
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
-from dataclasses import dataclass, replace
-from datetime import date, timedelta
+from collections.abc import Callable, Iterable, Mapping
+from dataclasses import dataclass
+from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 
-from upcore.metrics import Period, SaleLine, StatusGroup, completed
+from upcore.metrics import SaleLine, completed
 from upcore.money import Currency, Money
 
 UZS = Currency.UZS
@@ -83,18 +83,13 @@ def logistics_fee(
 # --- F40 ------------------------------------------------------------------------------------
 
 
-FREE_SHARE = Decimal(
-    "0.9"
-)  # F40: kunlik Yakunlangan qatorlarning shu ulushida logistika 0 — bepul kun
-
-
 def paid_unit_fee(logistics: Decimal, amount: int) -> Money:
     """F40: pullik qatorning bir dona logistikasi (so'm, tiyinga yaxlitlangan)."""
     return Money(logistics / amount, UZS)
 
 
 def last_paid_logistics(lines: Iterable[SaleLine]) -> dict[str, Money]:
-    """F40 uchun: har SKU'ning oxirgi pullik logistikasi (bir dona uchun, buyurtma sanasi bo'yicha)."""
+    """F40: har SKU'ning oxirgi pullik (logistika > 0) Yakunlangan sotuvi bo'yicha bir dona logistika."""
     best: dict[str, tuple[date, Money]] = {}
     for line in completed(lines):
         if line.logistics > 0 and line.amount > 0:
@@ -102,48 +97,6 @@ def last_paid_logistics(lines: Iterable[SaleLine]) -> dict[str, Money]:
             if line.sku not in best or line.order_date >= best[line.sku][0]:
                 best[line.sku] = (line.order_date, per_unit)
     return {sku: fee for sku, (_, fee) in best.items()}
-
-
-def with_standard_logistics(
-    lines: Iterable[SaleLine],
-    fee_of: Callable[[SaleLine], Money | None],
-    free_days: Iterable[date] | None = None,
-) -> list[SaleLine]:
-    """F40. Logistikasi 0 bo'lgan Yakunlangan sotuvlarga standart tarif (bir dona × ``amount``) qo'shiladi.
-
-    ``fee_of`` — F37 yoki SKU'ning oxirgi pullik logistikasi; ``None`` qaytarsa qator o'zgarmaydi.
-    ``free_days`` berilsa, faqat shu (tasdiqlangan bepul) kunlardagi qatorlar. Natija faqat me'yoriy (bonussiz)
-    baholash uchun (SKU, narx — ADR-031); haqiqiy P&L'ga berilmaydi."""
-    days = None if free_days is None else set(free_days)
-    result = []
-    for line in lines:
-        if (
-            line.logistics == 0
-            and line.group is StatusGroup.COMPLETED
-            and (days is None or line.order_date in days)
-        ):
-            fee = fee_of(line)
-            if fee is not None:
-                line = replace(line, logistics=fee.amount * line.amount)
-        result.append(line)
-    return result
-
-
-def detect_free_days(lines: Iterable[SaleLine], threshold: Decimal = FREE_SHARE) -> list[date]:
-    """F40. Bepul logistika kunlari: kunlik Yakunlangan sotuv qatorlarining ≥ 90% ida logistika 0.
-
-    Natija — taklif; foydalanuvchi tasdiqlaydi (``fee_waivers``, ``upcore.waivers.suggestions``, ADR-031)."""
-    per_day: dict[date, list[int]] = {}
-    for line in completed(lines):
-        counts = per_day.setdefault(line.order_date, [0, 0])
-        counts[0] += 1
-        counts[1] += 1 if line.logistics == 0 else 0
-    return sorted(d for d, (n, free) in per_day.items() if is_free_day(n, free, threshold))
-
-
-def is_free_day(lines: int, free_lines: int, threshold: Decimal = FREE_SHARE) -> bool:
-    """F40: kun bepul — Yakunlangan qatorlarning ≥ 90% ida logistika 0 (qator yo'q kun — bepul emas)."""
-    return lines > 0 and Decimal(free_lines) / lines >= threshold
 
 
 def typical_fee(counts: Mapping[Decimal, int]) -> Money | None:
@@ -159,21 +112,11 @@ def standard_fee_of(
     last_by_sku: Mapping[str, Money], typical_by_shop: Mapping[str, Money]
 ) -> Callable[[str, str], Money | None]:
     """F40 standart tarifi (bir dona): SKU'ning oxirgi pullik logistikasi, bo'lmasa do'konning odatiy tarifi
-    (``typical_fee``). F37 hajm bo'yicha tarif SKU o'lchamlari bazada bo'lgandan keyin (hozir yo'q) — o'lchamsiz
-    F37 (50 000) foydani haddan tashqari kamaytirardi. Ikkalasi ham yo'q — ``None`` (qator "tarifi noma'lum")."""
+    (``typical_fee``). Logistikasi 0 qatorlar (sababi qanday bo'lmasin) hisobga olinmaydi. F37 hajm bo'yicha tarif
+    SKU o'lchamlari bazada bo'lgandan keyin (hozir yo'q) — o'lchamsiz F37 (50 000) foydani haddan tashqari
+    kamaytirardi. Ikkalasi ham yo'q — ``None`` (qator "tarifi noma'lum")."""
 
     def fee(shop: str, sku: str) -> Money | None:
         return last_by_sku.get(sku) or typical_by_shop.get(shop)
 
     return fee
-
-
-def to_periods(days: Sequence[date]) -> list[Period]:
-    """Ketma-ket kunlarni davrlarga birlashtiradi (bepul davrlar jadvali uchun)."""
-    result: list[Period] = []
-    for d in sorted(set(days)):
-        if result and result[-1].end + timedelta(days=1) == d:
-            result[-1] = Period(result[-1].start, d)
-        else:
-            result.append(Period(d, d))
-    return result

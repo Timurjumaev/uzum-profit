@@ -6,9 +6,8 @@ kunlari (F24), ABC (F28, bizniki) va Uzum ``rank``. SKU'ga bog'lanmagan sotuvlar
 alohida (``unlinked``, ``unallocated``): qatorlar + ikkalasi = P&L jami (M5 qabul mezoni).
 
 Xarajatlar ikki ustunda: ``expenses_direct`` (SKU'ga bog'langan) va ``expenses_allocated`` (do'kon / tashkilot
-xarajatining tushum ulushi, ADR-026); sotuvsiz kun xarajati — ``unallocated`` alohida. Me'yoriy (bonussiz) foyda/dona
-(F40, ADR-031) — ``normative_*``: davrda Uzum bonusi SKU'ga ta'sir qilmagan bo'lsa haqiqiy foydaga teng; ta'sir
-qilgan, lekin baholovchisi yo'q bo'lsa ``unavailable`` (``bonus.unestimated_kinds`` — qaysi turlar baholanmaydi).
+xarajatining tushum ulushi, ADR-026); sotuvsiz kun xarajati — ``unallocated`` alohida. Uzum xarajatlari
+API bergandek olinadi (ADR-035).
 
 Qidiruv (``q``) — SKU nomi, mahsulot nomi, artikul, shtrix-kod; lotin/kirill va tutuq turidan qat'i nazar.
 Filtrlar: ``label`` (holat belgisi), ``abc``, ``shop``. Saralash ``sort`` (``-`` — kamayish), sahifalash ``cursor`` bilan.
@@ -50,7 +49,6 @@ from upapi.db import models as m
 from upapi.errors import AppError
 from upapi.reports import cells as rc
 from upapi.reports import products as rp
-from upapi.reports import waivers as rw
 from upapi.reports.common import (
     Cursor,
     Filters,
@@ -86,7 +84,6 @@ class SkuSort(StrEnum):
     DAYS_OF_STOCK = "days_of_stock"
     AVG_PRICE = "avg_price"
     PROFIT_PER_UNIT = "profit_per_unit"
-    NORMATIVE_PROFIT_PER_UNIT = "normative_profit_per_unit"
     ROI = "roi"
     RETURN_SHARE = "return_share"
     CANCEL_SHARE = "cancel_share"
@@ -114,9 +111,6 @@ class SkuRowOut(BaseModel):
     ads_per_unit: Decimal | None
     acos: Decimal | None  # F19
     profit_per_unit: Decimal | None
-    normative_profit_per_unit: Decimal | None  # F40 (ADR-031); ``normative_state`` bilan o'qiladi
-    saved_per_unit: Decimal | None  # F40: bonus bilan tejalgan xarajatning me'yoriy qiymati / dona
-    normative_state: Literal["none", "adjusted", "unavailable"]
     net_profit: Decimal  # F12
     expenses_direct: Decimal  # F9 + F10 to'g'ridan-to'g'ri qismi (ADR-026)
     expenses_allocated: Decimal  # F9 + F10 tushum ulushida taqsimlangan qismi (ADR-026)
@@ -134,13 +128,6 @@ class SkuRowOut(BaseModel):
     status: str | None  # Uzum SKU holati
 
 
-class BonusOut(BaseModel):
-    """Davrga tushgan Uzum bonuslari (ADR-031) va ularning me'yoriy bahosi (F40)."""
-
-    waivers: list[rw.WaiverOut]
-    unestimated_kinds: list[str]  # baholovchisi yo'q turlar: foyda/dona ularni hisobga olmaydi
-
-
 class SkusOut(BaseModel):
     meta: Meta
     items: list[SkuRowOut]
@@ -148,7 +135,6 @@ class SkusOut(BaseModel):
     next_cursor: str | None
     unlinked: StatementOut  # SKU'ga bog'lanmagan sotuvlar
     unallocated: StatementOut  # sotuvsiz kun xarajatlari (taqsimlanmagan)
-    bonus: BonusOut
 
 
 def _value(row: SkuRowOut, sort: SkuSort) -> Any:
@@ -160,10 +146,8 @@ def _row(
     s: Statement,
     n: rc.SaleSums,
     st: SkuStock | None,
-    bonus: rp.BonusBook,
 ) -> SkuRowOut:
     u = unit_economics(s)
-    norm = bonus.normative(info.id, u.profit_per_unit, s.covered_units)
     return SkuRowOut(
         sku_id=info.id,
         shop_id=info.shop_id,
@@ -184,9 +168,6 @@ def _row(
         ads_per_unit=amount(u.ads_per_unit),
         acos=u.acos,
         profit_per_unit=amount(u.profit_per_unit),
-        normative_profit_per_unit=amount(norm.profit_per_unit),
-        saved_per_unit=amount(norm.saved_per_unit),
-        normative_state=norm.state.value,
         net_profit=s.net_profit.amount,
         expenses_direct=s.direct_total.amount,
         expenses_allocated=s.allocated_total.amount,
@@ -229,8 +210,6 @@ async def skus(
     sums = await rc.sale_sums(ctx.conn, f, by_sku=True)
     catalog = await sku_catalog(ctx.conn, f.shops)
     stock = await load_stock(ctx.conn, sorted(f.shops, key=str) if f.shops else None, f.today)
-    waivers = await rw.active_waivers(ctx.conn)
-    bonus = await rp.load_bonus(ctx.conn, f, waivers, catalog)
     empty = Cells(f.period, {}).statement()
     needle = fold(q).strip() if q else ""
 
@@ -243,7 +222,6 @@ async def skus(
             by_sku.get(str(info.id), empty),
             sums.get(str(info.id), rc.SaleSums()),
             stock.skus.get(info.id),
-            bonus,
         )
         if (label is None or row.label is label) and (abc is None or row.abc == abc):
             rows.append(row)
@@ -257,7 +235,6 @@ async def skus(
     ordered = known + nones  # qiymatsizlar doim oxirida
     page = ordered[offset : offset + limit]
     more = offset + limit < len(ordered)
-    found = await rw.rows(ctx.conn)
     return SkusOut(
         meta=await meta(ctx.conn, f, KINDS),
         items=page,
@@ -265,7 +242,6 @@ async def skus(
         next_cursor=encode_cursor([offset + limit]) if more else None,
         unlinked=StatementOut.of(by_sku.get(rc.UNLINKED, empty)),
         unallocated=StatementOut.of(by_sku.get(None, empty)),
-        bonus=BonusOut(waivers=rw.in_report(found, f), unestimated_kinds=bonus.unestimated),
     )
 
 
@@ -329,7 +305,7 @@ class CalcDefaultsOut(BaseModel):
     """Unit kalkulyator boshlang'ich qiymatlari (F35, F36) va ularning manbasi; ``null`` — qiymat yo'q (UI so'raydi).
 
     Manbalar: ``price`` — ``period`` (davr o'rtachasi) | ``catalog``; ``unit_cost`` — ``last_lot`` | ``period``;
-    ``logistics`` — ``last_paid`` | ``shop_typical`` (me'yoriy, bonussiz — F40); ``commission_pct`` — ``period`` |
+    ``logistics`` — ``last_paid`` | ``shop_typical`` (standart tarif — F40); ``commission_pct`` — ``period`` |
     ``snapshot`` | ``catalog``; ``tax_pct`` va ``ads_pct`` — ``period``."""
 
     price: Decimal | None
@@ -352,7 +328,6 @@ class SkuDetailOut(BaseModel):
     returns: list[ReturnCauseOut]
     stock_detail: StockDetailOut | None
     linked: LinkedItemOut | None
-    bonus: BonusOut
     calc: CalcDefaultsOut
 
 
@@ -376,9 +351,7 @@ async def sku_detail(
     n = (await rc.sale_sums(conn, f, sku=sku_id)).get(None, rc.SaleSums())
     stock = await load_stock(conn, [info.shop_id], f.today, {sku_id})
     st = stock.skus.get(sku_id)
-    waivers = await rw.active_waivers(conn)
-    bonus = await rp.load_bonus(conn, f, waivers, catalog)
-    row = _row(info, s, n, st, bonus)
+    row = _row(info, s, n, st)
 
     d = m.sku_daily
     snaps = {
@@ -444,7 +417,7 @@ async def sku_detail(
     ):
         causes[cause] += int(units)
 
-    fees = await rp.load_fees(conn, f.period.end, waivers, {sku_id: info.shop_id})
+    fees = await rp.load_fees(conn, f.period.end, {sku_id: info.shop_id})
     fee, fee_source = fees.of(info.shop_id, sku_id)
     u = unit_economics(s)
     org = book.cells.within(f.period).statement()
@@ -479,7 +452,6 @@ async def sku_detail(
         ads_pct=pick("ads_pct", ("period", _pct(u.acos))),
         sources=sources,
     )
-    found = await rw.rows(conn)
     url = None
     if info.product_external_id is not None:
         url = request.app.state.settings.uzum_product_url.format(id=info.product_external_id)
@@ -507,7 +479,6 @@ async def sku_detail(
             )
         ),
         linked=linked,
-        bonus=BonusOut(waivers=rw.in_report(found, f), unestimated_kinds=bonus.unestimated),
         calc=calc,
     )
 

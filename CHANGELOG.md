@@ -389,6 +389,15 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   qiymati, F27 da yo'ldagi tovar); o'z omborimdan ayiriladi. Boshlang'ich holat qoldig'iga brak, kutilayotgan, fotostudiya
   va postavkadagi tovar ham qo'shildi ("shundan postavkada N"). B4.13 natijalari 08 §4 da.
 
+### Olib tashlandi
+
+- B4.15 (ADR-035, ADR-031 almashtirildi): Uzum bonuslari funksiyasi — P&L'dagi "Uzum logistikani olmagan ko'rinadi /
+  Bonus deb belgilash" taklifi va banneri, Sozlamalar → Uzum bonuslari, "Bonus davri" belgisi (buyurtmalar, drill-down,
+  Excel), grafik soyasi, "Me'yoriy foyda/dona" (jadval, SKU sahifasi, Excel), `/fee-waivers` API va `upcore.waivers`;
+  migratsiya 0011 `fee_waivers` jadvalini o'chiradi. Uzum xarajatlari API bergandek olinadi (0 kelsa — 0). F40 endi
+  kalkulyator uchun standart logistika: oxirgi pullik tarif, bo'lmasa do'konning odatiy tarifi (0 qatorlar avtomatik
+  hisobga olinmaydi).
+
 ### Tuzatildi
 
 - Boshlang'ich holat: saqlagandan keyin keyingi qadam aniq emas edi (sahifa o'zgarmay qolardi, faqat toast) — endi

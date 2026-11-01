@@ -77,7 +77,7 @@
   o'qituvchilari bilan hamkorlik; ochiq kalkulyator (landing) — qidiruv orqali kelish.
 - **Kontent rejasi (birinchi 10 ta):** Uzum'da sof foydani hisoblash; kargo xarajatini tovarlarga to'g'ri bo'lish;
   CNY kursi va karta yechimi; qachon qayta buyurtma berish; Uzum to'lov jadvali va komissiya; yo'qolgan tovar va
-  kompensatsiya; reklama ulushi (DRR); bepul logistika davrida foyda; nelikvid tovar; FIFO va o'rtacha tannarx.
+  kompensatsiya; reklama ulushi (DRR); nelikvid tovar; FIFO va o'rtacha tannarx.
 - **Ishonch:** faqat haqiqiy mijoz fikrlari (ruxsati bilan), soxta sharh yo'q.
 - **Chiqish ro'yxati:** landing (uz/ru), narxlar, ochiq kalkulyator, yordam markazi, Telegram kanal, 3 ta video,
   referral, beta ishtirokchilari fikrlari.

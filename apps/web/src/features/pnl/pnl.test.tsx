@@ -63,7 +63,7 @@ describe("hisob varag'i", () => {
     expect(revenue).toEqual([n("10000000.00"), norm(f.percent("1.000000")), n("8000000.00"), n("2000000.00"), norm(f.change("0.250000"))]);
     expect(row("Yalpi foyda").className).toContain("is-subtotal");
     expect(row("Sof foyda").className).toContain("is-total");
-    // Uzum bonusi uchun o'ylab topilgan qator yo'q (ADR-031).
+    // O'ylab topilgan qator yo'q: Uzum xarajatlari API bergandek (ADR-035).
     expect(screen.queryByText(/Standart tarif/)).toBeNull();
     // Tannarxsiz to'lov — ayiriluvchi (zanjir to'g'ri chiqsin).
     expect(within(row("Tannarxsiz sotuvlar")).getByText(n("-750000.00"))).toBeTruthy();

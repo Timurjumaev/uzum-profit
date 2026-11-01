@@ -1686,247 +1686,6 @@
         }
       }
     },
-    "/api/v1/orgs/{org_id}/fee-waivers": {
-      "get": {
-        "tags": [
-          "settings"
-        ],
-        "summary": "List Waivers",
-        "operationId": "list_waivers_api_v1_orgs__org_id__fee_waivers_get",
-        "parameters": [
-          {
-            "name": "org_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Org Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FeeWaiversOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validatsiya xatosi",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Ichki xato",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "settings"
-        ],
-        "summary": "Create Waiver",
-        "operationId": "create_waiver_api_v1_orgs__org_id__fee_waivers_post",
-        "parameters": [
-          {
-            "name": "org_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Org Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/WaiverIn"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WaiverOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validatsiya xatosi",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Ichki xato",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/orgs/{org_id}/fee-waivers/{waiver_id}": {
-      "patch": {
-        "tags": [
-          "settings"
-        ],
-        "summary": "Update Waiver",
-        "operationId": "update_waiver_api_v1_orgs__org_id__fee_waivers__waiver_id__patch",
-        "parameters": [
-          {
-            "name": "waiver_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Waiver Id"
-            }
-          },
-          {
-            "name": "org_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Org Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/WaiverPatch"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WaiverOut"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validatsiya xatosi",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Ichki xato",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "settings"
-        ],
-        "summary": "Delete Waiver",
-        "operationId": "delete_waiver_api_v1_orgs__org_id__fee_waivers__waiver_id__delete",
-        "parameters": [
-          {
-            "name": "waiver_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Waiver Id"
-            }
-          },
-          {
-            "name": "org_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Org Id"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validatsiya xatosi",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Ichki xato",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/orgs/{org_id}/own-expense-categories": {
       "get": {
         "tags": [
@@ -6609,31 +6368,6 @@
         ],
         "title": "AuditOut"
       },
-      "BonusOut": {
-        "properties": {
-          "waivers": {
-            "items": {
-              "$ref": "#/components/schemas/WaiverOut"
-            },
-            "type": "array",
-            "title": "Waivers"
-          },
-          "unestimated_kinds": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Unestimated Kinds"
-          }
-        },
-        "type": "object",
-        "required": [
-          "waivers",
-          "unestimated_kinds"
-        ],
-        "title": "BonusOut",
-        "description": "Davrga tushgan Uzum bonuslari (ADR-031) va ularning me'yoriy bahosi (F40)."
-      },
       "CalcDefaultsOut": {
         "properties": {
           "price": {
@@ -6726,7 +6460,7 @@
           "sources"
         ],
         "title": "CalcDefaultsOut",
-        "description": "Unit kalkulyator boshlang'ich qiymatlari (F35, F36) va ularning manbasi; ``null`` — qiymat yo'q (UI so'raydi).\n\nManbalar: ``price`` — ``period`` (davr o'rtachasi) | ``catalog``; ``unit_cost`` — ``last_lot`` | ``period``;\n``logistics`` — ``last_paid`` | ``shop_typical`` (me'yoriy, bonussiz — F40); ``commission_pct`` — ``period`` |\n``snapshot`` | ``catalog``; ``tax_pct`` va ``ads_pct`` — ``period``."
+        "description": "Unit kalkulyator boshlang'ich qiymatlari (F35, F36) va ularning manbasi; ``null`` — qiymat yo'q (UI so'raydi).\n\nManbalar: ``price`` — ``period`` (davr o'rtachasi) | ``catalog``; ``unit_cost`` — ``last_lot`` | ``period``;\n``logistics`` — ``last_paid`` | ``shop_typical`` (standart tarif — F40); ``commission_pct`` — ``period`` |\n``snapshot`` | ``catalog``; ``tax_pct`` va ``ads_pct`` — ``period``."
       },
       "CarrierIn": {
         "properties": {
@@ -7411,13 +7145,6 @@
           },
           "attention": {
             "$ref": "#/components/schemas/AttentionOut"
-          },
-          "waivers": {
-            "items": {
-              "$ref": "#/components/schemas/WaiverOut"
-            },
-            "type": "array",
-            "title": "Waivers"
           }
         },
         "type": "object",
@@ -7431,8 +7158,7 @@
           "top",
           "bottom",
           "kpis",
-          "attention",
-          "waivers"
+          "attention"
         ],
         "title": "DashboardOut"
       },
@@ -7688,30 +7414,6 @@
           "next_cursor"
         ],
         "title": "ExpensesOut"
-      },
-      "FeeWaiversOut": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/WaiverOut"
-            },
-            "type": "array",
-            "title": "Items"
-          },
-          "kinds": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Kinds"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items",
-          "kinds"
-        ],
-        "title": "FeeWaiversOut"
       },
       "ForecastOut": {
         "properties": {
@@ -10736,20 +10438,6 @@
           "recalculated": {
             "type": "integer",
             "title": "Recalculated"
-          },
-          "waivers": {
-            "items": {
-              "$ref": "#/components/schemas/WaiverOut"
-            },
-            "type": "array",
-            "title": "Waivers"
-          },
-          "waiver_suggestions": {
-            "items": {
-              "$ref": "#/components/schemas/SuggestionOut"
-            },
-            "type": "array",
-            "title": "Waiver Suggestions"
           }
         },
         "type": "object",
@@ -10761,9 +10449,7 @@
           "columns",
           "pending",
           "pending_shops",
-          "recalculated",
-          "waivers",
-          "waiver_suggestions"
+          "recalculated"
         ],
         "title": "PnlOut"
       },
@@ -11647,18 +11333,6 @@
               }
             ],
             "title": "Previous Cogs"
-          },
-          "waiver_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Waiver Id"
           }
         },
         "type": "object",
@@ -11685,8 +11359,7 @@
           "gross_profit",
           "cost_flags",
           "recalculated_at",
-          "previous_cogs",
-          "waiver_id"
+          "previous_cogs"
         ],
         "title": "SaleOut"
       },
@@ -12315,9 +11988,6 @@
               }
             ]
           },
-          "bonus": {
-            "$ref": "#/components/schemas/BonusOut"
-          },
           "calc": {
             "$ref": "#/components/schemas/CalcDefaultsOut"
           }
@@ -12333,7 +12003,6 @@
           "returns",
           "stock_detail",
           "linked",
-          "bonus",
           "calc"
         ],
         "title": "SkuDetailOut"
@@ -12525,37 +12194,6 @@
             ],
             "title": "Profit Per Unit"
           },
-          "normative_profit_per_unit": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Normative Profit Per Unit"
-          },
-          "saved_per_unit": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Saved Per Unit"
-          },
-          "normative_state": {
-            "type": "string",
-            "enum": [
-              "none",
-              "adjusted",
-              "unavailable"
-            ],
-            "title": "Normative State"
-          },
           "net_profit": {
             "type": "string",
             "title": "Net Profit"
@@ -12686,9 +12324,6 @@
           "ads_per_unit",
           "acos",
           "profit_per_unit",
-          "normative_profit_per_unit",
-          "saved_per_unit",
-          "normative_state",
           "net_profit",
           "expenses_direct",
           "expenses_allocated",
@@ -12739,9 +12374,6 @@
           },
           "unallocated": {
             "$ref": "#/components/schemas/StatementOut"
-          },
-          "bonus": {
-            "$ref": "#/components/schemas/BonusOut"
           }
         },
         "type": "object",
@@ -12751,8 +12383,7 @@
           "total",
           "next_cursor",
           "unlinked",
-          "unallocated",
-          "bonus"
+          "unallocated"
         ],
         "title": "SkusOut"
       },
@@ -13527,41 +13158,6 @@
         ],
         "title": "StockTotalsOut"
       },
-      "SuggestionOut": {
-        "properties": {
-          "shop_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Shop Id"
-          },
-          "start_on": {
-            "type": "string",
-            "format": "date",
-            "title": "Start On"
-          },
-          "end_on": {
-            "type": "string",
-            "format": "date",
-            "title": "End On"
-          },
-          "kinds": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Kinds"
-          }
-        },
-        "type": "object",
-        "required": [
-          "shop_id",
-          "start_on",
-          "end_on",
-          "kinds"
-        ],
-        "title": "SuggestionOut",
-        "description": "Taklif: do'konda Uzum logistikani olmagan kunlar — \"bonus davrimi?\" (tasdiqlanmagan)."
-      },
       "SupplierIn": {
         "properties": {
           "name": {
@@ -14144,203 +13740,6 @@
           "sku"
         ],
         "title": "View"
-      },
-      "WaiverIn": {
-        "properties": {
-          "shop_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Shop Id"
-          },
-          "start_on": {
-            "type": "string",
-            "format": "date",
-            "title": "Start On"
-          },
-          "end_on": {
-            "type": "string",
-            "format": "date",
-            "title": "End On"
-          },
-          "kinds": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Kinds"
-          },
-          "reason": {
-            "type": "string",
-            "maxLength": 300,
-            "title": "Reason",
-            "default": ""
-          },
-          "source": {
-            "type": "string",
-            "enum": [
-              "manual",
-              "detected"
-            ],
-            "title": "Source",
-            "default": "manual"
-          },
-          "dismissed": {
-            "type": "boolean",
-            "title": "Dismissed",
-            "default": false
-          }
-        },
-        "type": "object",
-        "required": [
-          "start_on",
-          "end_on",
-          "kinds"
-        ],
-        "title": "WaiverIn"
-      },
-      "WaiverOut": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "shop_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Shop Id"
-          },
-          "start_on": {
-            "type": "string",
-            "format": "date",
-            "title": "Start On"
-          },
-          "end_on": {
-            "type": "string",
-            "format": "date",
-            "title": "End On"
-          },
-          "kinds": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Kinds"
-          },
-          "reason": {
-            "type": "string",
-            "title": "Reason"
-          },
-          "source": {
-            "type": "string",
-            "title": "Source"
-          },
-          "dismissed": {
-            "type": "boolean",
-            "title": "Dismissed"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "shop_id",
-          "start_on",
-          "end_on",
-          "kinds",
-          "reason",
-          "source",
-          "dismissed",
-          "created_at"
-        ],
-        "title": "WaiverOut",
-        "description": "Bonus davri (ADR-031): ``shop_id`` ``null`` — hamma do'kon; ``dismissed`` — rad etilgan taklif."
-      },
-      "WaiverPatch": {
-        "properties": {
-          "shop_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Shop Id"
-          },
-          "start_on": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Start On"
-          },
-          "end_on": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "End On"
-          },
-          "kinds": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Kinds"
-          },
-          "reason": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 300
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reason"
-          }
-        },
-        "type": "object",
-        "title": "WaiverPatch"
       },
       "upapi__routes__inventory__PriceOut": {
         "properties": {

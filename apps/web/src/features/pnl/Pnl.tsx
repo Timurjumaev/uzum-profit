@@ -1,7 +1,6 @@
 // Foyda va zarar (M5, B4.2). Maket — 04 §7.4: yuqorida hisob varag'i to'liq (ustunlar: joriy, tushumga nisbatan,
 // oldingi davr, farq), ostida sharshara va kutilayotgan blok (F16), keyin kesimlar (oylar / do'konlar / SKU).
-// Tannarx qamrovi < 100% — sariq banner (F15). Uzum bonusi (ADR-031) — ma'lumot banneri va tizim takliflari, haqiqiy
-// foydaga ta'sir qilmaydi (`Waivers`).
+// Tannarx qamrovi < 100% — sariq banner (F15). Uzum xarajatlari API bergandek (logistika 0 kelsa — 0, ADR-035).
 // Hamma raqam API'dan (`/pnl`), drill-down — bosh sahifadagi `Drill` (sotuvlar, Uzum toifasi, o'z xarajatlari).
 import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useSearch } from "@tanstack/react-router";
@@ -22,7 +21,6 @@ import { Breakdown } from "./Breakdown";
 import { pnlLines, waterfallSteps, type PnlLine, type View } from "./model";
 import { Pending } from "./Pending";
 import { PnlLedger } from "./PnlLedger";
-import { Waivers } from "./Waivers";
 
 export function Pnl() {
   const { t } = useTranslation();
@@ -101,7 +99,6 @@ export function Pnl() {
         </Banner>
       )}
       {data.recalculated > 0 && <Banner tone="info" title={t("pnl.recalculated", { value: f.number(data.recalculated) })} />}
-      <Waivers orgId={org.id} data={data} canManage={org.role === "owner" || org.role === "manager"} />
 
       <div className="pnl-ledger-box">
         <PnlLedger lines={lines} onRow={setDrill} />

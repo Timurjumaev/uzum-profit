@@ -1,4 +1,4 @@
-// Mahsulotlar (M6, B4.3): jadval (ustunlar, qidiruv, filtrlar, saralash URL'da, ustun tanlash, ko'rinishlar, bonus),
+// Mahsulotlar (M6, B4.3): jadval (ustunlar, qidiruv, filtrlar, saralash URL'da, ustun tanlash, ko'rinishlar),
 // SKU sahifasi (KPI, tarix, lotlar, qaytishlar), unit kalkulyator va tovarga bog'lash. Butun ilova soxta API ustida.
 import { createMemoryHistory } from "@tanstack/react-router";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
@@ -152,7 +152,7 @@ describe("ustunlar va ko'rinishlar", () => {
   });
 
   it("saqlangan ustunlar keyingi ochilishda tiklanadi", async () => {
-    localStorage.setItem(`up.products.columns.${ORG_ID}`, JSON.stringify(["product", "ads", "nonsense"]));
+    localStorage.setItem(`up.products.columns.${ORG_ID}`, JSON.stringify(["product", "ads", "normative", "nonsense"])); // "normative" — olib tashlangan ustun (ADR-035)
     await renderTable();
     expect(headers().map((h) => h!.replace(/Qanday hisoblanadi.*$/, "").trim())).toEqual(["Mahsulot", "Reklama/dona"]);
   });
@@ -175,34 +175,6 @@ describe("ustunlar va ko'rinishlar", () => {
   });
 });
 
-describe("bonus davri: me'yoriy foyda (F40)", () => {
-  const bonus = {
-    waivers: [{ id: "w1", shop_id: null, start_on: "2026-10-10", end_on: "2026-10-31", kinds: ["sale_logistics", "fine"], reason: "Nosozlik", source: "manual", dismissed: false, created_at: "2026-10-26T00:00:00Z" }],
-    unestimated_kinds: ["fine"],
-  };
-
-  it("banner (baholanmaydigan turlar aytiladi) va me'yoriy ustun o'zi paydo bo'ladi: tuzatilgan, baho yo'q, bonus ta'sir qilmagan", async () => {
-    await renderTable({
-      [SKUS_ROUTE]: () =>
-        json(200, skusData({ bonus, items: [skuRow({ normative_state: "adjusted", normative_profit_per_unit: "34750.00", saved_per_unit: "5250.00" }), skuRow({ sku_id: SKU_2, title: "Ikkinchi", normative_state: "unavailable", normative_profit_per_unit: null }), skuRow({ sku_id: "53333333-3333-4333-8333-333333333333", title: "Uchinchi" })] })),
-    });
-    expect(await screen.findByText("Davrda Uzum bonusi bor")).toBeTruthy();
-    expect(screen.getByText(/Baholab boʻlmaydigan turlar: Jarimalar/)).toBeTruthy();
-    expect(within(table()).getByRole("columnheader", { name: /^Meʼyoriy foyda\/dona/ })).toBeTruthy();
-    const rows = within(table()).getAllByRole("row").slice(1);
-    expect(within(rows[0]!).getByText(n("34750.00"))).toBeTruthy();
-    expect(within(rows[0]!).getByText("bonussiz")).toBeTruthy();
-    expect(within(rows[1]!).getByText("Baho yoʻq")).toBeTruthy();
-    expect(within(rows[2]!).queryByText("bonussiz")).toBeNull(); // bonus ta'sir qilmagan — haqiqiy foyda
-  });
-
-  it("bonus yo'q — banner va me'yoriy ustun yo'q", async () => {
-    await renderTable();
-    expect(screen.queryByText("Davrda Uzum bonusi bor")).toBeNull();
-    expect(headers().join(" ")).not.toContain("Meʼyoriy");
-  });
-});
-
 describe("SKU sahifasi", () => {
   async function renderSku(routes: Routes = {}, role = "owner") {
     const out = await renderAt(`/products/${SKU_1}?from=2026-09-01&to=2026-10-31`, routes, role);
@@ -219,7 +191,7 @@ describe("SKU sahifasi", () => {
     expect(screen.getByText("Foydali")).toBeTruthy();
     expect(screen.getByText("ABC: A")).toBeTruthy();
     expect(screen.getByText(norm(f.money("240000.00")))).toBeTruthy(); // sof foyda
-    expect(screen.queryByText("Meʼyoriy foyda/dona")).toBeNull(); // bonus ta'sir qilmagan
+    expect(screen.queryByText("Meʼyoriy foyda/dona")).toBeNull(); // bonus ko'rsatkichi yo'q (ADR-035)
     const lots = screen.getByRole("table", { name: "Tannarx tarixi (tovar partiyalari)" });
     expect(within(lots).getByText("Yoʻlda")).toBeTruthy();
     expect(within(lots).getByText("Markaziy bank kursi")).toBeTruthy();
@@ -231,16 +203,6 @@ describe("SKU sahifasi", () => {
     expect(linked).toContain("Mashina");
     expect(screen.getByRole("link", { name: "Кружка белая" }).getAttribute("href")).toContain(`/products/${SKU_2}`);
     expect(screen.getAllByRole("img", { name: /Tushum va sof foyda|Narx tarixi|Qoldiq tarixi/ }).length).toBeGreaterThan(0);
-  });
-
-  it("bonus davri: banner, me'yoriy foyda KPI'si tejalgan qiymat bilan; baho yo'q holati", async () => {
-    const waiver = { id: "w1", shop_id: null, start_on: "2026-10-10", end_on: "2026-10-12", kinds: ["sale_logistics"], reason: "Nosozlik", source: "manual", dismissed: false, created_at: "2026-10-26T00:00:00Z" };
-    await renderSku({
-      [skuRoute(SKU_1)]: () => json(200, skuDetail({ bonus: { waivers: [waiver], unestimated_kinds: [] }, sku: skuRow({ normative_state: "adjusted", normative_profit_per_unit: "34750.00", saved_per_unit: "5250.00" }) })),
-    });
-    expect(screen.getByText("Uzum bonusi: Nosozlik")).toBeTruthy();
-    expect(screen.getByText(norm(f.money("34750.00")))).toBeTruthy();
-    expect(norm(screen.getByText(/bonus bilan tejalgan/).textContent!)).toContain(norm(f.money("5250.00")));
   });
 
   it("tovarsiz SKU: lotlar o'rniga ogohlantirish, 'Tovarga bog'lash' tugmasi", async () => {
@@ -283,7 +245,7 @@ describe("unit kalkulyator", () => {
   it("boshlang'ich qiymatlar davr haqiqatidan (manbasi bilan), natija serverdan: foyda, zararsizlik narxi", async () => {
     const { api } = await renderCalc();
     expect(norm((screen.getByLabelText("Narx") as HTMLInputElement).value)).toBe("200 000,00");
-    expect(screen.getByText("Oxirgi pullik logistika (bonussiz)")).toBeTruthy();
+    expect(screen.getByText("Oxirgi pullik logistika")).toBeTruthy();
     expect(screen.getByText("Davr haqiqiy komissiyasi")).toBeTruthy();
     await waitFor(() => expect(screen.getByTestId("calc-profit").textContent).toBe(norm(f.money("43660.00")).replace(/ /g, " ")));
     expect(screen.getByTestId("calc-breakeven").textContent).toContain("141");

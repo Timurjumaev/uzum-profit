@@ -1,5 +1,5 @@
 """``/settings``: tashkilot sozlamalari (M16, B4.8) — tannarx usuli, soliq profili (F11), Uzum to'lov jadvali (F38),
-standart yetkazish muddatlari (F25) va ABC qamrov kunlari (F27). Uzum bonuslari — :mod:`upapi.routes.waivers`,
+standart yetkazish muddatlari (F25) va ABC qamrov kunlari (F27);
 do'konlar — :mod:`upapi.routes.accounts`.
 
 O'qish — ``view_settings`` (egasi, menejer, buxgalter); yozish — ``manage_settings`` (egasi, menejer), har o'zgarish

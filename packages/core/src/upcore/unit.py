@@ -1,8 +1,8 @@
 """M6 unit kalkulyator: bir dona uchun narx → foyda, zararsizlik narxi (F35), maqsadli marja narxi (F36).
 
 Narx ``p`` dagi foyda/dona = p × (1 − ulush/100) − qat'iy; F35 va F36 shu tenglamaning ildizi (foyda 0 yoki p × m/100).
-Ulush = komissiya% + soliq% + reklama%; qat'iy = tannarx + logistika + qadoq (F35). Logistika va komissiya — me'yoriy
-(bonussiz) tariflar bilan beriladi (F40, ADR-031): kalkulyator bonus davrini narx qarori uchun hisobga olmaydi.
+Ulush = komissiya% + soliq% + reklama%; qat'iy = tannarx + logistika + qadoq (F35). Logistika — standart tarif (F40:
+oxirgi pullik logistika, logistikasi 0 qatorlar hisobga olinmaydi).
 """
 
 from __future__ import annotations

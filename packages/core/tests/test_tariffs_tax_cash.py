@@ -19,17 +19,13 @@ from upcore.tariffs import (
     SEED_LOGISTICS,
     LogisticsTariff,
     TariffError,
-    detect_free_days,
-    is_free_day,
     last_paid_logistics,
     liters,
     logistics_fee,
     paid_unit_fee,
     standard_fee_of,
     tariff_on,
-    to_periods,
     typical_fee,
-    with_standard_logistics,
 )
 from upcore.tax import (
     SEED_RATES,
@@ -95,43 +91,22 @@ def test_liters_rounding_and_tariff_dates() -> None:
 # F40 ------------------------------------------------------------------------------------------
 
 
-def test_standard_tariff_profit_and_free_days() -> None:
+def test_last_paid_logistics_skips_zero_lines() -> None:
     d = [date(2026, 10, 8) + timedelta(days=i) for i in range(4)]
     lines = [
         sale(d[0], "A", log=6_000, qty=2),
         sale(d[1], "A", log=0, qty=3),
         sale(d[1], "B", log=0),
-        sale(d[2], "B", log=0),
-        sale(d[2], "A", log=0),
         sale(d[3], "A", log=5_000),
-        sale(d[2], "C", log=0, status="PROCESSING"),
+        sale(d[3], "C", log=7_000, status="PROCESSING"),
     ]
-    assert last_paid_logistics(lines) == {"A": uzs(5_000)}
-    free = detect_free_days(lines)
-    assert free == [d[1], d[2]]
-    assert to_periods(free) == [Period(d[1], d[2])]
-    assert to_periods([d[0], d[2], d[3]]) == [Period(d[0], d[0]), Period(d[2], d[3])]
-    paid = last_paid_logistics(lines)
-    std = with_standard_logistics(lines, lambda x: paid.get(x.sku) or logistics_fee(T, None), free)
-    assert [x.logistics for x in std] == [
-        D(6_000),
-        D(15_000),
-        D(50_000),
-        D(50_000),
-        D(5_000),
-        D(5_000),
-        D(0),
-    ]
-    period = Period(d[0], d[3])
-    actual = build_cells(period, lines).statement()
-    standard = build_cells(period, std).statement()
-    assert actual.net_profit - standard.net_profit == uzs(120_000)
-    unchanged = with_standard_logistics(lines, lambda x: None)
-    assert unchanged == lines
+    assert last_paid_logistics(lines) == {
+        "A": uzs(5_000)
+    }  # 0 va Yakunlanmagan qatorlar hisobga olinmaydi
+    assert last_paid_logistics(lines[:2]) == {"A": uzs(3_000)}
 
 
-def test_free_day_and_fallback_fees() -> None:
-    assert is_free_day(10, 9) and not is_free_day(10, 8) and not is_free_day(0, 0)
+def test_fallback_fees() -> None:
     assert paid_unit_fee(D(10_001), 3) == uzs("3333.67")
     assert typical_fee({}) is None
     assert typical_fee({D(5_250): 3, D(6_000): 1}) == uzs(5_250)

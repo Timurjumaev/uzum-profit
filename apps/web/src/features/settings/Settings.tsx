@@ -1,5 +1,5 @@
 // Sozlamalar (M16, B4.8): bo'limlar ketma-ket — tannarx usuli, soliq profili, Uzum to'lov jadvali, muddatlar va qamrov,
-// do'konlar, Uzum bonuslari. O'qish — egasi, menejer, buxgalter; yozish — egasi va menejer (do'konlar — faqat egasi).
+// do'konlar. O'qish — egasi, menejer, buxgalter; yozish — egasi va menejer (do'konlar — faqat egasi).
 // Hamma raqam va qoida serverdan (`/settings`); bu yerda faqat kiritish (tamoyil 4).
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -8,7 +8,6 @@ import { errorText } from "../../app/errors";
 import { currentOrg, meQuery, settingsQuery } from "../../app/query";
 import { Banner, Button, Skeleton, PageHelp } from "../../components/ui";
 import { CostMethod } from "./CostMethod";
-import { FeeWaivers } from "./FeeWaivers";
 import { InventorySettings } from "./InventorySettings";
 import { Payouts } from "./Payouts";
 import { Shops } from "./Shops";
@@ -47,7 +46,6 @@ export function Settings() {
           <Payouts orgId={org.id} data={data} canManage={canManage} />
           <InventorySettings orgId={org.id} data={data.inventory} canManage={canManage} />
           <Shops orgId={org.id} canEdit={org.role === "owner"} />
-          <FeeWaivers orgId={org.id} canManage={canManage} />
         </>
       )}
     </section>

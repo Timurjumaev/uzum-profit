@@ -40,7 +40,6 @@ export function sale(over: Partial<Sale> = {}): Sale {
     cost_flags: [],
     recalculated_at: null,
     previous_cogs: null,
-    waiver_id: null,
     ...over,
   };
 }
@@ -51,7 +50,7 @@ export function salesData(over: Partial<Sales> = {}): Sales {
     items: [
       sale(),
       sale({ id: "s2", day: "2026-10-03", status: "CANCELED", group: "canceled", amount: 0, amount_returns: 1, cogs: null, gross_profit: null, payout: "0.00", revenue: "0.00" }),
-      sale({ id: "s3", day: "2026-10-04", sku_id: null, sku_title: null, cogs: null, gross_profit: null, cost_flags: ["no_item"], waiver_id: "w1" }),
+      sale({ id: "s3", day: "2026-10-04", sku_id: null, sku_title: null, cogs: null, gross_profit: null, cost_flags: ["no_item"] }),
       sale({ id: "s4", day: "2026-10-05", status: "PROCESSING", group: "processing", cost_flags: ["estimated"] }),
     ],
     next_cursor: null,

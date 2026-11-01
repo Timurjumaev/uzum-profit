@@ -1,5 +1,5 @@
 // Unit kalkulyator (M6, F35/F36): narx, reklama %, tannarx o'zgarsa nima bo'ladi. Boshlang'ich qiymatlar SKU
-// sahifasi javobidan (davr haqiqati, manbasi ko'rsatiladi; logistika — me'yoriy, bonussiz, F40); hisob serverda
+// sahifasi javobidan (davr haqiqati, manbasi ko'rsatiladi; logistika — oxirgi pullik tarif, F40); hisob serverda
 // (`/unit-calc`, tamoyil 4) — bu yerda faqat kiritish va ko'rsatish. Qiymat yo'q bo'lsa taxmin qilinmaydi: maydon bo'sh.
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
