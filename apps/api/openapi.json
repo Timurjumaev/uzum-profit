@@ -6176,6 +6176,139 @@
           }
         }
       }
+    },
+    "/api/v1/orgs/{org_id}/opening": {
+      "get": {
+        "tags": [
+          "costing"
+        ],
+        "summary": "Get Opening",
+        "description": "Boshlang'ich holat jadvali (F41); ``start`` — boshqa boshlash sanasi uchun qoldiq taklifi.",
+        "operationId": "get_opening_api_v1_orgs__org_id__opening_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpeningOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "costing"
+        ],
+        "summary": "Put Opening",
+        "description": "Boshlash sanasi va qatorlar (F41). ``start_on: null`` — o'chirish (kiritilgan narxlar saqlanadi).",
+        "operationId": "put_opening_api_v1_orgs__org_id__opening_put",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpeningIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpeningOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -6549,7 +6682,7 @@
           "sources"
         ],
         "title": "CalcDefaultsOut",
-        "description": "Unit kalkulyator boshlang'ich qiymatlari (F35, F36) va ularning manbasi; ``null`` — qiymat yo'q (UI so'raydi).\n\nManbalar: ``price`` — ``period`` (davr o'rtachasi) | ``catalog``; ``unit_cost`` — ``period`` | ``last_lot``;\n``logistics`` — ``last_paid`` | ``shop_typical`` (me'yoriy, bonussiz — F40); ``commission_pct`` — ``period`` |\n``snapshot`` | ``catalog``; ``tax_pct`` va ``ads_pct`` — ``period``."
+        "description": "Unit kalkulyator boshlang'ich qiymatlari (F35, F36) va ularning manbasi; ``null`` — qiymat yo'q (UI so'raydi).\n\nManbalar: ``price`` — ``period`` (davr o'rtachasi) | ``catalog``; ``unit_cost`` — ``last_lot`` | ``period``;\n``logistics`` — ``last_paid`` | ``shop_typical`` (me'yoriy, bonussiz — F40); ``commission_pct`` — ``period`` |\n``snapshot`` | ``catalog``; ``tax_pct`` va ``ads_pct`` — ``period``."
       },
       "CarrierIn": {
         "properties": {
@@ -9058,6 +9191,260 @@
         ],
         "title": "MonthOut"
       },
+      "OpeningIn": {
+        "properties": {
+          "start_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start On"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/OpeningRowIn"
+            },
+            "type": "array",
+            "maxItems": 5000,
+            "title": "Rows",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_on"
+        ],
+        "title": "OpeningIn"
+      },
+      "OpeningOut": {
+        "properties": {
+          "start_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start On"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date",
+            "title": "As Of"
+          },
+          "stock_source": {
+            "type": "string",
+            "title": "Stock Source"
+          },
+          "coverage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coverage"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/OpeningRowOut"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_on",
+          "as_of",
+          "stock_source",
+          "coverage",
+          "rows"
+        ],
+        "title": "OpeningOut"
+      },
+      "OpeningRowIn": {
+        "properties": {
+          "item_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          },
+          "sku_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku Id"
+          },
+          "uzum_qty": {
+            "type": "integer",
+            "maximum": 10000000.0,
+            "minimum": 0.0,
+            "title": "Uzum Qty",
+            "default": 0
+          },
+          "own_qty": {
+            "type": "integer",
+            "maximum": 10000000.0,
+            "minimum": 0.0,
+            "title": "Own Qty",
+            "default": 0
+          },
+          "prices": {
+            "items": {
+              "$ref": "#/components/schemas/PriceIn"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Prices",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "OpeningRowIn"
+      },
+      "OpeningRowOut": {
+        "properties": {
+          "item_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          },
+          "sku_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "skus": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Skus"
+          },
+          "revenue": {
+            "type": "string",
+            "title": "Revenue"
+          },
+          "uzum_suggested": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uzum Suggested"
+          },
+          "uzum_qty": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uzum Qty"
+          },
+          "own_qty": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Own Qty"
+          },
+          "prices": {
+            "items": {
+              "$ref": "#/components/schemas/upapi__routes__opening__PriceOut"
+            },
+            "type": "array",
+            "title": "Prices"
+          },
+          "last_lot_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Lot Cost"
+          },
+          "lots_after": {
+            "type": "integer",
+            "title": "Lots After"
+          },
+          "lots_before": {
+            "type": "integer",
+            "title": "Lots Before"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_id",
+          "sku_id",
+          "name",
+          "skus",
+          "revenue",
+          "uzum_suggested",
+          "uzum_qty",
+          "own_qty",
+          "prices",
+          "last_lot_cost",
+          "lots_after",
+          "lots_before"
+        ],
+        "title": "OpeningRowOut",
+        "description": "Bitta tovar (``item_id``) yoki tovarga bog'lanmagan SKU (``sku_id``, ``item_id`` — ``null``)."
+      },
       "OrderByOut": {
         "properties": {
           "day": {
@@ -10296,23 +10683,39 @@
         ],
         "title": "PnlOut"
       },
-      "PriceOut": {
+      "PriceIn": {
         "properties": {
-          "amount": {
-            "type": "string",
-            "title": "Amount"
+          "valid_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid From"
           },
-          "currency": {
-            "type": "string",
-            "title": "Currency"
+          "unit_cost": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1000000000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Unit Cost"
           }
         },
         "type": "object",
         "required": [
-          "amount",
-          "currency"
+          "unit_cost"
         ],
-        "title": "PriceOut"
+        "title": "PriceIn"
       },
       "Problem": {
         "properties": {
@@ -10878,7 +11281,7 @@
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/PriceOut"
+                  "$ref": "#/components/schemas/upapi__routes__inventory__PriceOut"
                 },
                 "type": "array"
               },
@@ -13854,6 +14257,50 @@
         },
         "type": "object",
         "title": "WaiverPatch"
+      },
+      "upapi__routes__inventory__PriceOut": {
+        "properties": {
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          }
+        },
+        "type": "object",
+        "required": [
+          "amount",
+          "currency"
+        ],
+        "title": "PriceOut"
+      },
+      "upapi__routes__opening__PriceOut": {
+        "properties": {
+          "valid_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid From"
+          },
+          "unit_cost": {
+            "type": "string",
+            "title": "Unit Cost"
+          }
+        },
+        "type": "object",
+        "required": [
+          "valid_from",
+          "unit_cost"
+        ],
+        "title": "PriceOut"
       }
     }
   }

@@ -32,6 +32,7 @@ const CASES: Case[] = [
   { name: "Maʼlumotlar holati", path: "/status" },
   { name: "Ombor", path: "/inventory" },
   { name: "Sozlamalar", path: "/settings" },
+  { name: "Boshlangʻich holat", path: "/opening" },
   { name: "Xaridlar", path: "/purchases" },
   { name: "Xarid sahifasi", path: "/purchases/91111111-1111-4111-8111-111111111111" },
   { name: "UI-kit", path: "/ui-kit" },

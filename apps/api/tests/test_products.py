@@ -284,7 +284,7 @@ def test_sku_detail_calculator_defaults_and_sources(world: World) -> None:
     c, row = body["calc"], body["sku"]
     assert c["sources"] == {
         "price": "period",
-        "unit_cost": "period",
+        "unit_cost": "last_lot",  # narx qo'yish uchun oxirgi partiya (ADR-033)
         "logistics": "last_paid",
         "commission_pct": "period",
         "tax_pct": "period",
@@ -295,7 +295,7 @@ def test_sku_detail_calculator_defaults_and_sources(world: World) -> None:
     assert money(c["commission_pct"]) == D(20)  # komissiya sotuv narxining 20%
     assert money(c["tax_pct"]) == D(4)  # aylanmadan 4% (F11)
     assert money(c["ads_pct"]) == (D(row["acos"]) * 100).quantize(D("0.01"))
-    # Davrda sotuv yo'q: narx, tannarx va komissiya katalog/lotdan; qolgani noma'lum (taxmin yo'q).
+    # Davrda sotuv yo'q: narx va komissiya katalogdan, tannarx lotdan; qolgani noma'lum (taxmin yo'q).
     quiet = world.get(f"skus/{xa}", start="2026-07-01", end="2026-07-05")["calc"]
     assert quiet["sources"].get("unit_cost") == "last_lot" and money(quiet["unit_cost"]) == D(
         100_000

@@ -177,7 +177,11 @@ SKIP = {"id", "org_id", "created_at", "updated_at"}
 # Bo'sh bo'lmasligi CHECK bilan talab qilinadigan massivlar (``cardinality(kinds) > 0``).
 NONEMPTY = {"fee_waivers": {"kinds"}}
 # NULL bo'lishi mumkin, lekin CHECK bilan holatga bog'langan ustunlar (``token_state``: faol akkauntda kalit bor).
-FILLED = {"mp_accounts": {"token_encrypted", "key_version", "token_last4"}}
+FILLED = {
+    "mp_accounts": {"token_encrypted", "key_version", "token_last4"},
+    # NULLS NOT DISTINCT unikal kalit (F41): seed va yangi qator bir-biriga to'qnashmasin.
+    "item_costs": {"valid_from"},
+}
 
 
 def row_values(

@@ -144,6 +144,13 @@ const settings = createRoute({
   component: lazyRouteComponent(() => import("../routes/settings"), "Settings"),
 });
 
+/** Boshlang'ich holat (B4.12, ADR-033, F41): boshlash sanasi, tovar tannarxi va qoldiq — eski partiyalarsiz boshlash. */
+const opening = createRoute({
+  getParentRoute: () => app,
+  path: "/opening",
+  component: lazyRouteComponent(() => import("../routes/opening"), "Opening"),
+});
+
 const login = createRoute({
   getParentRoute: () => root,
   path: "/login",
@@ -175,7 +182,7 @@ const uiKit = createRoute({
 
 export const routeTree = root.addChildren([
   auth.addChildren([
-    app.addChildren([home, status, pnl, products, product, orders, expenses, purchases, purchase, inventory, cash, reports, settings]),
+    app.addChildren([home, status, pnl, products, product, orders, expenses, purchases, purchase, inventory, cash, reports, settings, opening]),
     onboarding,
     invite,
   ]),

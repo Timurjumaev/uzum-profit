@@ -144,6 +144,8 @@ orgs = Table(
     Column("cost_method", Text, nullable=False, server_default="fifo"),
     # Sozlamalar (B4.8): ``lead_days`` (F25 standart muddatlar), ``cover_days`` (F27 qamrov) — ``upapi.orgsettings``.
     Column("settings", JSONB, nullable=False, server_default=text("'{}'::jsonb")),
+    # F41 (ADR-033): boshlang'ich holat sanasi — undan oldingi sotuvlar tarixiy tannarxda; NULL — o'chirilgan.
+    Column("cost_start_on", Date),
     Column("deleted_at", TS),
     *_times(),
     check_in("cost_method", ("fifo", "average")),
@@ -558,6 +560,24 @@ stock_moves = tenant(
     Column("note", Text),
     check_in("kind", ("receive", "to_uzum", "adjust", "writeoff")),
     refs={"item_id": ("items", False), "purchase_line_id": ("purchase_lines", True)},
+)
+# F41 (ADR-033): boshlang'ich holat. ``item_costs`` — tovarning tarixiy tannarxi sana bo'yicha (``valid_from`` NULL —
+# boshidan); ``opening_stock`` — boshlash sanasidagi qoldiq (Uzumda + o'z omborimda), sotuvchi tasdiqlagan son.
+item_costs = tenant(
+    "item_costs",
+    Column("valid_from", Date),
+    Column("unit_cost", UZS, nullable=False),
+    CheckConstraint("unit_cost >= 0", name="unit_cost"),
+    UniqueConstraint("org_id", "item_id", "valid_from", postgresql_nulls_not_distinct=True),
+    refs={"item_id": ("items", False)},
+)
+opening_stock = tenant(
+    "opening_stock",
+    Column("uzum_qty", Integer, nullable=False, server_default="0"),
+    Column("own_qty", Integer, nullable=False, server_default="0"),
+    CheckConstraint("uzum_qty >= 0 AND own_qty >= 0", name="qty"),
+    UniqueConstraint("org_id", "item_id"),
+    refs={"item_id": ("items", False)},
 )
 fx_rates = global_table(
     "fx_rates",

@@ -9,6 +9,7 @@
   Standart muddatlar sozlamasi B4 da (M16); hozircha biror bosqich tarixi bo'lmasa muddat noma'lum — holat (F26)
   va tavsiya miqdor (F27) ko'rsatilmaydi (tamoyil 9, raqam o'ylab topilmaydi). Harakatsiz holat muddatsiz ham.
 - Lot narxi (F27, F29) — tovarning tayyor bo'lgan eng oxirgi loti (lot tayyorligi — F21, tannarx uchun).
+  Boshlang'ich holat (F41) bo'lsa va boshlashdan keyin tayyor lot yo'q — boshlash sanasidagi tarixiy narx.
 - Joylar (M10, B4.7) — xarid bosqichidan (``current_stage``): ``china`` (buyurtma / to'langan / Xitoy omborida),
   ``road`` (yo'lda / Toshkentga keldi), ``own`` (qabul qilindi, Uzumga yuborilmagan; ``stock_moves`` tuzatish va
   hisobdan chiqarish bilan, ``upcore.inventory.own_warehouse_qty``). Uzumga yuborilgan xarid — FBO qoldig'ida. Qiymat —
@@ -60,6 +61,7 @@ from upcore.money import Currency, Money
 from upcore.purchasing import LEAD_STAGES, Stage, current_stage, stage_days
 
 from upapi import orgsettings
+from upapi.calc.costs import openings
 from upapi.db import models as m
 from upapi.reports.purchases import stage_dates
 
@@ -176,6 +178,14 @@ async def _lots(conn: AsyncConnection, items: Iterable[UUID], as_of: date) -> di
             x.unit_cost, x.ready_on = Money(r.unit_cost, UZS), r.ready_on
         if r.unit_price is not None and r.currency in Currency.__members__:
             x.last_price = Money(r.unit_price, Currency(r.currency))
+    # F41 (ADR-033): boshlashdan keyin tayyor partiya bo'lmasa — boshlang'ich holat narxi (qoldiq shu narxda).
+    start = await conn.scalar(select(m.orgs.c.cost_start_on))
+    if start is not None:
+        for item_id, opening in (await openings(conn, start, set(items))).items():
+            unit = opening.price_on(start)
+            x = out.setdefault(item_id, _ItemLots())
+            if unit is not None and (x.ready_on is None or x.ready_on < start):
+                x.unit_cost, x.ready_on = unit, start
     return out
 
 

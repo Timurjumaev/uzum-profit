@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import { Popover } from "./Popover";
 
-export const HELP_PAGES = ["home", "pnl", "products", "orders", "expenses", "purchases", "inventory", "settings"] as const;
+export const HELP_PAGES = ["home", "pnl", "products", "orders", "expenses", "purchases", "inventory", "settings", "opening"] as const;
 export type HelpPage = (typeof HELP_PAGES)[number];
 
 export function PageHelp({ page }: { page: HelpPage }) {

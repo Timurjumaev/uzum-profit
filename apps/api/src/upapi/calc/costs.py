@@ -7,6 +7,9 @@ Tovar (``items``) bo'yicha hodisalar:
   ``amount``. ``amount`` — qolgan (sof) dona: ``sellerProfit`` hamma real qatorda ``amount`` bilan F6 ga teng (B2.11);
   qaytgan yoki bekor dona (``amountReturns``) lotdan olinmaydi, shuning uchun alohida qaytish hodisasi yo'q;
 - **hisobdan chiqarish** — ``stock_moves``: ``writeoff`` va manfiy ``adjust`` (brak, yo'qotish, kamomad).
+- **boshlang'ich holat** (F41, ADR-033) — ``orgs.cost_start_on`` qo'yilgan bo'lsa: undan oldingi sotuvlar
+  ``item_costs`` (tarixiy narx) bilan, lotlarga tegmaydi; ``opening_stock`` (Uzumda + o'z omborimda) — birinchi lot;
+  tayyor sanasi boshlashdan oldingi lotlar ishlatilmaydi (qoldiqqa kirgan).
 
 Hisob faqat ``upcore.costing.compute_costs`` da (tashkilot usuli: FIFO / o'rtacha). Tovar ichida doim to'liq
 hisoblanadi (natija to'liq qayta qurish bilan bir xil bo'lishi shart), lekin bazaga faqat o'zgargan qatorlar
@@ -26,7 +29,18 @@ from uuid import UUID
 from sqlalchemy import ColumnElement, Row, delete, or_, select, true
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncConnection
-from upcore.costing import CostFlag, CostMethod, Event, Lot, Outflow, Sale, WriteOff, compute_costs
+from upcore.costing import (
+    CostFlag,
+    CostMethod,
+    Event,
+    Lot,
+    Opening,
+    Outflow,
+    PricePoint,
+    Sale,
+    WriteOff,
+    compute_costs,
+)
 from upcore.metrics import TASHKENT as TASHKENT
 from upcore.metrics import StatusGroup, business_date, status_group
 from upcore.money import Currency, Money, quantize, round_rate
@@ -167,6 +181,37 @@ async def method_of(conn: AsyncConnection, org_id: UUID) -> CostMethod:
     return CostMethod(value or CostMethod.FIFO.value)
 
 
+async def start_of(conn: AsyncConnection, org_id: UUID) -> date | None:
+    """F41: boshlang'ich holat sanasi (``None`` — o'chirilgan)."""
+    value: date | None = await conn.scalar(
+        select(m.orgs.c.cost_start_on).where(m.orgs.c.id == org_id)
+    )
+    return value
+
+
+async def openings(
+    conn: AsyncConnection, start: date, items: set[UUID] | None = None
+) -> dict[UUID, Opening]:
+    """F41: tovar → boshlang'ich holat (qoldiq va tarixiy narxlar); yozuvi yo'q tovar — ro'yxatda yo'q."""
+    ic, os_ = m.item_costs, m.opening_stock
+    prices: dict[UUID, list[PricePoint]] = {}
+    for r in await conn.execute(
+        select(ic).where(true() if items is None else ic.c.item_id.in_(items))
+    ):
+        prices.setdefault(r.item_id, []).append(
+            PricePoint(r.valid_from, Money(r.unit_cost, Currency.UZS))
+        )
+    qty: dict[UUID, int] = {}
+    for r in await conn.execute(
+        select(os_).where(true() if items is None else os_.c.item_id.in_(items))
+    ):
+        qty[r.item_id] = r.uzum_qty + r.own_qty
+    return {
+        item: Opening(start, qty.get(item, 0), tuple(prices.get(item, ())))
+        for item in prices.keys() | qty.keys()
+    }
+
+
 async def items_with_sales(conn: AsyncConnection, shop_id: UUID, since: date | None) -> set[UUID]:
     """Do'konda ``since`` kunidan sotuvi bor tovarlar (sotuvlar o'zgargan oraliq)."""
     s, k = m.sale_items, m.mp_skus
@@ -240,9 +285,12 @@ async def recompute_items(
     ):
         lots_by.setdefault(lot.item_id, []).append(_lot(lot))
 
+    start = await start_of(conn, org_id)
+    opened = await openings(conn, start, items) if start is not None else {}
     desired: dict[UUID, dict[str, Any]] = {}
     for item_id, events in by_item.items():
-        result = compute_costs(lots_by.get(item_id, ()), events, method)
+        opening = opened.get(item_id, Opening(start)) if start is not None else None
+        result = compute_costs(lots_by.get(item_id, ()), events, method, opening)
         for sale_id, out in result.sales.items():
             desired[UUID(sale_id)] = _row(method, out)
     existing = await _existing(conn, only(k.c.item_id))

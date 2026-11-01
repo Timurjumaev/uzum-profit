@@ -227,6 +227,10 @@ manba: qo'lda / taklifdan, rad etilgan taklif `dismissed_at`; ADR-031; 0008 da `
    `changed_at`/`previous_cogs`. `amount` qaytganlarsiz (F18), shuning uchun qaytish hodisasi yo'q; hisobdan
    chiqarish — `stock_moves` (`writeoff`, manfiy `adjust`). `calc.nightly` — to'liq qayta qurish (kurs arxivi kech
    kelsa ham). Benchmark: 10 000 sotuvli tovar bazasi bilan < 3 s.
+8. Boshlang'ich holat (B4.12, F41, ADR-033): `orgs.cost_start_on`, `item_costs` (tovar, `valid_from`, narx),
+   `opening_stock` (tovar, Uzumda, o'z omborimda). Sana bo'lsa — undan oldingi sotuvlar tarixiy narxda (lotsiz),
+   boshlang'ich qoldiq birinchi lot, oldingi lotlar ishlatilmaydi (`upcore.costing.Opening`). API `/opening` (o'qish —
+   `view_finance`, yozish — `manage_settings`); sana o'zgarsa hamma tovar, aks holda o'zgargan tovarlar qayta hisoblanadi.
 
 ## 8. API dizayni
 
