@@ -5,10 +5,11 @@ Sotuvchi hamma eski partiyani kiritmasdan boshlaydi: **boshlash sanasi** (``orgs
 Uzumda + o'z omborimda). Undan oldingi sotuvlar tarixiy narxda ("tarixiy" belgisi — taxminiy), keyingilari
 partiyalardan (F21); boshlang'ich qoldiq — birinchi lot (:mod:`upcore.costing`).
 
-- ``GET`` — jadval: tovarlar va tovarga bog'lanmagan SKU'lar, oxirgi 90 kun tushumi bo'yicha (avval eng muhimlari),
+- ``GET`` — jadval: tovarlar va tovarga bog'lanmagan SKU'lar, boshlash sanasigacha bo'lgan tushum bo'yicha (shu narx
+  qo'llanadigan sotuvlar — avval eng muhimlari; doimiy oyna yo'q),
   Uzum qoldig'i taklifi (boshlash sanasi bugun yoki keyin — joriy qoldiq; o'tgan sana — oldingi kun snapshoti,
-  yo'q bo'lsa ``null``), saqlangan qiymatlar, oxirgi partiya narxi (ishora) va qamrov (tushumning qancha qismida
-  tannarx manbasi bor). ``?start=`` — boshqa sana uchun taklif. ``?shop=`` (bir necha marta) — tanlangan do'konlarda
+  yo'q bo'lsa ``null``), saqlangan qiymatlar, oxirgi partiya narxi (ishora) va qamrov (boshlash sanasigacha bo'lgan
+  tushumning qancha qismiga narx yozilgan). ``?start=`` — boshqa sana uchun taklif. ``?shop=`` (bir necha marta) — tanlangan do'konlarda
   SKU'si bor tovarlar; tannarx va qoldiq tovar bo'yicha umumiy (``shared`` — boshqa do'konda ham sotiladi).
   ``product_id`` — Uzum mahsuloti (birinchi SKU'niki): sahifa turlarni (rang, model) mahsulot bo'yicha guruhlaydi.
 - ``PUT`` — sana va qatorlarni saqlaydi. Tovarga bog'lanmagan SKU uchun tovar yaratiladi (SKU nomi bilan) va
@@ -42,7 +43,6 @@ from upapi.routes.purchases import _kick
 router = APIRouter(tags=["costing"])
 Viewer = Annotated[OrgContext, Depends(require(Permission.VIEW_FINANCE))]
 Manager = Annotated[OrgContext, Depends(require(Permission.MANAGE_SETTINGS))]
-REVENUE_DAYS = 90
 MAX_ROWS = 5000
 MAX_QTY = 10_000_000
 Cost = Annotated[Decimal, Field(ge=0, le=Decimal("1e12"), max_digits=14, decimal_places=2)]
@@ -66,7 +66,7 @@ class OpeningRowOut(BaseModel):
     # Uzum mahsuloti (bir nechta SKU — rang, model ...): sahifada guruh, "hammasiga bitta narx" uchun.
     product_id: UUID | None
     product: str | None
-    revenue: Decimal  # oxirgi 90 kun
+    revenue: Decimal  # boshlash sanasigacha bo'lgan tushum (shu narx qo'llanadigan sotuvlar)
     uzum_suggested: (
         int | None
     )  # boshlash sanasidagi Uzum qoldig'i (FBO + FBS); ``null`` — snapshot yo'q
@@ -82,7 +82,9 @@ class OpeningOut(BaseModel):
     start_on: date | None  # saqlangan sana (``null`` — o'chirilgan)
     as_of: date  # takliflar shu sana uchun (``?start=`` yoki saqlangan, bo'lmasa bugun)
     stock_source: str  # ``current`` (joriy qoldiq) | ``snapshot`` (oldingi kun) | ``none``
-    coverage: Decimal | None  # tushumning tannarx manbasi bor ulushi (0–1); tushum yo'q — ``null``
+    coverage: (
+        Decimal | None
+    )  # boshlash sanasigacha tushumning narx yozilgan ulushi (0–1); tushum yo'q — ``null``
     rows: list[OpeningRowOut]
 
 
@@ -139,7 +141,7 @@ async def _read(
         r.sku_id: Decimal(r.revenue)
         for r in await conn.execute(
             select(dm.c.sku_id, func.sum(dm.c.revenue).label("revenue"))
-            .where(dm.c.day >= today() - timedelta(days=REVENUE_DAYS), dm.c.sku_id.is_not(None))
+            .where(dm.c.day < as_of, dm.c.sku_id.is_not(None))
             .group_by(dm.c.sku_id)
         )
     }
@@ -230,7 +232,7 @@ async def _read(
         )
     rows.sort(key=lambda r: (-r.revenue, r.name, str(r.item_id or r.sku_id)))
     total = sum((r.revenue for r in rows), Decimal(0))
-    covered = sum((r.revenue for r in rows if r.prices or r.lots_after), Decimal(0))
+    covered = sum((r.revenue for r in rows if r.prices), Decimal(0))
     return OpeningOut(
         start_on=saved,
         as_of=as_of,

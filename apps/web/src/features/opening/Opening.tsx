@@ -68,7 +68,11 @@ export function Opening() {
   const [edits, setEdits] = useState<Record<string, Edit>>({});
   const [needle, setNeedle] = useState("");
   const [limit, setLimit] = useState(PAGE);
+  const [ownChoice, setOwnChoice] = useState<boolean | null>(null);
   const data = query.data;
+  // O'z omborim ustuni — faqat kerak bo'lsa (belgi yoki avval kiritilgan son); Uzum ustuni — faqat Uzum qoldig'i noma'lum bo'lsa.
+  const showOwn = ownChoice ?? (data?.rows ?? []).some((r) => (r.own_qty ?? 0) > 0);
+  const showUzum = (data?.rows ?? []).some((r) => r.uzum_suggested === null);
   const startValue = start ?? data?.start_on ?? data?.as_of ?? "";
   const save = useMutation({
     mutationFn: (off: boolean) =>
@@ -120,6 +124,11 @@ export function Opening() {
         <th scope="row">
           <div className="opening-table__cell">
             <span className="opening-table__sku">{sku}</span>
+            {r.uzum_suggested !== null && (
+              <span className="caption">
+                {t("opening.inUzum", { n: r.uzum_suggested })}
+              </span>
+            )}
             {r.shared && <span className="caption">{t("opening.shared")}</span>}
             {r.last_lot_cost !== null && (
               <span className="caption">
@@ -133,9 +142,6 @@ export function Opening() {
             )}
           </div>
         </th>
-        <td className="opening-table__num opening-table__rev">
-          {f.money(r.revenue)}
-        </td>
         <td>
           {hasPeriods(r) ? (
             <span className="caption">
@@ -157,29 +163,30 @@ export function Opening() {
             />
           )}
         </td>
-        <td>
-          <NumberInput
-            label={`${t("opening.uzum")} — ${sku}`}
-            help={
-              r.uzum_suggested !== null
-                ? t("opening.suggested", { n: r.uzum_suggested })
-                : undefined
-            }
-            digits={0}
-            disabled={!canManage}
-            value={d.uzum}
-            onValueChange={(uzum) => patch(r, { uzum })}
-          />
-        </td>
-        <td>
-          <NumberInput
-            label={`${t("opening.own")} — ${sku}`}
-            digits={0}
-            disabled={!canManage}
-            value={d.own}
-            onValueChange={(own) => patch(r, { own })}
-          />
-        </td>
+        {showUzum && (
+          <td>
+            {r.uzum_suggested === null && (
+              <NumberInput
+                label={`${t("opening.uzum")} — ${sku}`}
+                digits={0}
+                disabled={!canManage}
+                value={d.uzum}
+                onValueChange={(uzum) => patch(r, { uzum })}
+              />
+            )}
+          </td>
+        )}
+        {showOwn && (
+          <td>
+            <NumberInput
+              label={`${t("opening.own")} — ${sku}`}
+              digits={0}
+              disabled={!canManage}
+              value={d.own}
+              onValueChange={(own) => patch(r, { own })}
+            />
+          </td>
+        )}
       </tr>
     );
   };
@@ -197,11 +204,10 @@ export function Opening() {
         <table className="opening-table">
           <thead>
             <tr>
-              <th scope="col">{t("opening.col.sku")}</th>
-              <th scope="col" className="opening-table__num opening-table__rev">
-                {t("opening.col.revenue")}
+              <th scope="col" className="opening-table__skucol">
+                {t("opening.col.sku")}
               </th>
-              <th scope="col">
+              <th scope="col" className="opening-table__pricecol">
                 <span className="opening-table__th">
                   {t("opening.col.price")}
                   {canManage && g.rows.length > 1 && (
@@ -214,8 +220,8 @@ export function Opening() {
                   )}
                 </span>
               </th>
-              <th scope="col">{t("opening.col.uzum")}</th>
-              <th scope="col">{t("opening.col.own")}</th>
+              {showUzum && <th scope="col">{t("opening.col.uzum")}</th>}
+              {showOwn && <th scope="col">{t("opening.col.own")}</th>}
             </tr>
           </thead>
           <tbody>{g.rows.map(row)}</tbody>
@@ -300,6 +306,18 @@ export function Opening() {
                 value={needle}
                 onValueChange={setNeedle}
               />
+              <label className="opening__toggle">
+                <input
+                  type="checkbox"
+                  checked={showOwn}
+                  disabled={!canManage}
+                  onChange={(e) => setOwnChoice(e.target.checked)}
+                />
+                <span>
+                  {t("opening.ownToggle")}
+                  <span className="caption"> — {t("opening.ownToggleHelp")}</span>
+                </span>
+              </label>
               <div className="opening__list">
                 {groups.slice(0, limit).map(card)}
               </div>

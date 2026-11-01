@@ -42,21 +42,14 @@
 
 .opening-table {
   inline-size: 100%;
-  min-inline-size: 600px;
+  min-inline-size: 0;
   border-collapse: collapse;
   table-layout: fixed; /* hamma kartada ustunlar bir xil kenglikda */
 }
 
-.opening-table thead th:nth-child(1) {
-  inline-size: 30%;
-}
-
-.opening-table thead th:nth-child(2) {
-  inline-size: 14%;
-}
-
-.opening-table thead th:nth-child(3) {
-  inline-size: 22%;
+/* SKU — qolgan kenglik; har bir kiritish ustuni bir xil, ixcham kenglikda. */
+.opening-table thead th:not(.opening-table__skucol) {
+  inline-size: 15rem;
 }
 
 .opening-table th,
@@ -166,33 +159,27 @@
   }
 }
 
-/* Telefonda tushum ustuni yashiriladi — jadval torroq (qolgani o'z konteynerida skrollanadi). */
+/* Ixtiyoriy ustunlar (Uzum qoldig'i noma'lum, o'z omborim) qo'shilsa telefonda jadval o'z konteynerida skrollanadi. */
 @media (max-width: 639px) {
-  .opening-table {
+  .opening-table thead th:not(.opening-table__skucol) {
+    inline-size: 10.5rem;
+  }
+
+  .opening-table:has(th:nth-child(3)) {
     min-inline-size: 480px;
-  }
-
-  .opening-table__rev {
-    display: none;
-  }
-
-  .opening-table thead th:nth-child(1) {
-    inline-size: 34%;
-  }
-
-  .opening-table thead th:nth-child(3) {
-    inline-size: 26%;
   }
 }
 
-/* Ochilgan panelda yorliq ko'rinadi ("Barcha turlar uchun qo'llash") — jadvaldagi yashirishdan mustasno. */
-.opening-table .opening-apply .ui-field__label {
-  position: static;
-  inline-size: auto;
-  block-size: auto;
-  overflow: visible;
-  clip-path: none;
-  white-space: nowrap;
-  color: var(--text-secondary);
-  font-weight: 400;
+.opening__toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  cursor: pointer;
+}
+
+.opening__toggle input {
+  margin-block-start: 3px;
+  inline-size: 18px;
+  block-size: 18px;
+  accent-color: var(--accent);
 }

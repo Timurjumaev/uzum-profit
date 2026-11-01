@@ -20,10 +20,11 @@ export function saved(r: OpeningRow): Draft {
   };
 }
 
-/** Ko'rinadigan qiymat: tahrir → saqlangan → taklif (Uzum qoldig'i). */
+/** Ko'rinadigan qiymat: tahrir → Uzum qoldig'i (taklif, bo'lmasa saqlangan) va saqlangan narx / o'z omborim. */
 export function draftOf(r: OpeningRow, edit: Edit | undefined): Draft {
   const s = saved(r);
-  const base: Draft = { uzum: s.uzum ?? (r.uzum_suggested === null ? null : String(r.uzum_suggested)), own: s.own, price: s.price };
+  // Uzum qoldig'i — Uzumdan (boshlash kuni holati); saqlangan son faqat Uzum qoldig'i noma'lum bo'lsa (o'tgan sana, snapshot yo'q).
+  const base: Draft = { uzum: r.uzum_suggested === null ? s.uzum : String(r.uzum_suggested), own: s.own, price: s.price };
   return { ...base, ...edit };
 }
 
@@ -72,9 +73,9 @@ export function openingBody(start: string | null, rows: OpeningRow[], edits: Rec
   return { start_on: start, rows: out };
 }
 
-/** Narx kiritilgan (yoki partiyasi bor) qatorlar soni — "N / M tovar". */
+/** Narx yozilgan qatorlar soni — "N / M tur" (qamrov bilan bir asosda: faqat narx). */
 export function filled(rows: OpeningRow[], edits: Record<string, Edit>): number {
-  return rows.filter((r) => r.lots_after > 0 || hasPeriods(r) || (price(draftOf(r, edits[rowKey(r)]).price) ?? null) !== null).length;
+  return rows.filter((r) => hasPeriods(r) || (price(draftOf(r, edits[rowKey(r)]).price) ?? null) !== null).length;
 }
 
 /** Uzum mahsuloti bo'yicha guruh: bir mahsulotning turlari (rang, model, o'lcham) — "hammasiga bitta narx" uchun. */
