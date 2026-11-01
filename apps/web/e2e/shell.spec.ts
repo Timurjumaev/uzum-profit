@@ -43,8 +43,9 @@ test("davr va solishtirish URL'da; bo'limga o'tganda saqlanadi", async ({ page }
     await expect(page).toHaveURL(/cmp=previous/);
   }
   const menu = page.getByRole("navigation", { name: isMobile(info.project.name) ? "Pastki menyu" : "Asosiy menyu" });
-  await menu.getByRole("link", { name: "Ombor" }).click();
-  await expect(page).toHaveURL(/\/inventory\?.*from=2026-10-20&to=2026-10-26/);
+  // Foyda — davr va solishtirishni ishlatadi (Ombor davrni ishlatmaydi, topbar'da yo'q — `pageFilters`).
+  await menu.getByRole("link", { name: "Foyda" }).click();
+  await expect(page).toHaveURL(/\/pnl\?.*from=2026-10-20&to=2026-10-26/);
   if (!isMobile(info.project.name)) await expect(page).toHaveURL(/cmp=previous/);
   await expect(page.getByRole("button", { name: /^Davr: 7 kun/ })).toBeVisible();
 });
