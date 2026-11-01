@@ -10,6 +10,7 @@ partiyalardan (F21); boshlang'ich qoldiq — birinchi lot (:mod:`upcore.costing`
   yo'q bo'lsa ``null``), saqlangan qiymatlar, oxirgi partiya narxi (ishora) va qamrov (tushumning qancha qismida
   tannarx manbasi bor). ``?start=`` — boshqa sana uchun taklif. ``?shop=`` (bir necha marta) — tanlangan do'konlarda
   SKU'si bor tovarlar; tannarx va qoldiq tovar bo'yicha umumiy (``shared`` — boshqa do'konda ham sotiladi).
+  ``product_id`` — Uzum mahsuloti (birinchi SKU'niki): sahifa turlarni (rang, model) mahsulot bo'yicha guruhlaydi.
 - ``PUT`` — sana va qatorlarni saqlaydi. Tovarga bog'lanmagan SKU uchun tovar yaratiladi (SKU nomi bilan) va
   bog'lanadi. Qator narxlari to'liq almashtiriladi; narxi ham, qoldig'i ham yo'q qator — o'chiriladi. Sana
   o'zgarsa — hamma tovar, aks holda faqat o'zgargan tovarlar qayta hisoblanadi (navbat orqali, "qayta hisoblandi").
@@ -62,6 +63,9 @@ class OpeningRowOut(BaseModel):
     name: str
     skus: list[str]
     shared: bool  # tovar tanlanmagan do'konda ham sotiladi (narx va qoldiq — hamma do'kon bo'yicha)
+    # Uzum mahsuloti (bir nechta SKU — rang, model ...): sahifada guruh, "hammasiga bitta narx" uchun.
+    product_id: UUID | None
+    product: str | None
     revenue: Decimal  # oxirgi 90 kun
     uzum_suggested: (
         int | None
@@ -188,6 +192,8 @@ async def _read(
                 sku_id=None,
                 name=items.get(item_id, "—"),
                 skus=[catalog[s].title or "—" for s in skus],
+                product_id=catalog[skus[0]].product_id if skus else None,
+                product=catalog[skus[0]].product_title if skus else None,
                 shared=any(catalog[s].shop_id not in (shops or catalog_shops) for s in skus),
                 revenue=sum((revenue.get(s, Decimal(0)) for s in skus), Decimal(0)),
                 uzum_suggested=stock_of(skus),
@@ -209,6 +215,8 @@ async def _read(
                 sku_id=sku_id,
                 name=info.product_title or info.title or "—",
                 skus=[info.title or "—"],
+                product_id=info.product_id,
+                product=info.product_title,
                 shared=False,
                 revenue=revenue.get(sku_id, Decimal(0)),
                 uzum_suggested=stock.get(sku_id, 0 if source == "current" else None),

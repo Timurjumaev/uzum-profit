@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { openingRow } from "../../test/opening";
-import { draftOf, filled, invalid, openingBody, rowBody, rowKey } from "./model";
+import { applyGroupPrice, draftOf, filled, groupRows, invalid, openingBody, rowBody, rowKey } from "./model";
 
 describe("boshlang'ich holat modeli", () => {
   it("qoralama: tahrir → saqlangan → Uzum taklifi", () => {
@@ -50,5 +50,32 @@ describe("boshlang'ich holat modeli", () => {
     const edits = { "item-1": { price: "100" } };
     expect(openingBody("2026-11-01", rows, edits)).toEqual({ start_on: "2026-11-01", rows: [{ item_id: "item-1", uzum_qty: 120, own_qty: 0, prices: [{ valid_from: null, unit_cost: "100" }] }] });
     expect(filled(rows, edits)).toBe(2);
+  });
+});
+
+describe("mahsulot guruhi (turlar)", () => {
+  const a = openingRow({ item_id: null, sku_id: "v1", skus: ["ELONE-AIRGILOF-ВИШН-4"], product_id: "p1", product: "AirPods gʻilof" });
+  const b = openingRow({ item_id: null, sku_id: "v2", skus: ["ELONE-AIRGILOF-ПАСТ-4"], product_id: "p1", product: "AirPods gʻilof" });
+  const c = openingRow({ item_id: "i3", name: "Soat" });
+
+  it("Uzum mahsuloti bo'yicha guruhlanadi, tartib saqlanadi", () => {
+    const groups = groupRows([a, c, b]);
+    expect(groups.map((g) => [g.title, g.rows.length])).toEqual([["AirPods gʻilof", 2], ["Soat", 1]]);
+  });
+
+  it("hammasiga bitta narx; keyin bittasini alohida o'zgartirish", () => {
+    const [g] = groupRows([a, b]);
+    const edits = applyGroupPrice(g!, "15000", {});
+    expect(openingBody("2026-11-01", [a, b], edits).rows.map((r) => r.prices?.[0]?.unit_cost)).toEqual(["15000", "15000"]);
+    const one = { ...edits, [rowKey(b)]: { ...edits[rowKey(b)], price: "17000" } };
+    expect(openingBody("2026-11-01", [a, b], one).rows.map((r) => r.prices?.[0]?.unit_cost)).toEqual(["15000", "17000"]);
+  });
+
+  it("narx davrlari bor tur guruh narxidan tashqarida", () => {
+    const periods = openingRow({ item_id: "i9", product_id: "p1", uzum_qty: 1, own_qty: 0, prices: [{ valid_from: null, unit_cost: "1.00" }, { valid_from: "2026-09-01", unit_cost: "2.00" }] });
+    const [g] = groupRows([a, periods]);
+    const edits = applyGroupPrice(g!, "5", {});
+    expect(edits[rowKey(periods)]).toBeUndefined();
+    expect(edits[rowKey(a)]?.price).toBe("5");
   });
 });

@@ -357,6 +357,8 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   ✓ 2026-11-01 tuzatish (Temur topdi): sahifa do'kon filtriga bo'ysunadi (`?shop=`, umumiy tovar belgisi); yuqori panel
   har sahifada faqat o'sha sahifa ishlatadigan filtrlarni ko'rsatadi (`pageFilters`; Xaridlar, Sozlamalar, holat —
   "Butun tashkilot bo'yicha").
+  ✓ 2026-11-01 (Temur taklifi): Uzum kabinetidagi SKU jadvali kabi — har mahsulot karta va jadval, "Tannarx" sarlavhasidagi
+  tugma bilan "Barcha turlar uchun qo'llash", keyin istalgan turini alohida o'zgartirish mumkin.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

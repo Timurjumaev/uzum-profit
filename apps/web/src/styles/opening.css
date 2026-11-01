@@ -1,40 +1,147 @@
-/* Boshlang'ich holat (B4.12, F41): qatorlar — keng ekranda bitta qator (nom + 3 maydon), 360 px'da karta (ustma-ust);
-   faqat tokenlar, gorizontal skroll yo'q (04 §3). */
+/* Boshlang'ich holat (B4.12, F41): har mahsulot — karta va ixcham jadval (Uzum kabinetidagi SKU jadvali kabi);
+   faqat tokenlar; 360 px'da sahifa skrollanmaydi, jadval o'z konteynerida skrollanadi (04 §3). */
 
 .opening,
 .opening__list {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
   min-inline-size: 0;
 }
 
-.opening > * {
-  min-inline-size: 0;
-}
-
-.opening__top {
+/* Mahsulot kartasi: sarlavha + ixcham jadval (Uzum kabinetidagi SKU jadvali kabi). */
+.opening-card {
   display: grid;
-  gap: var(--space-4);
-  align-items: end;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-panel);
+  background: var(--bg-surface);
+  grid-template-columns: minmax(0, 1fr);
+  min-inline-size: 0;
 }
 
-.opening__list {
-  list-style: none;
+.opening-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.opening-card__head > * {
   margin: 0;
-  padding: 0;
-  gap: 0;
+  overflow-wrap: anywhere;
 }
 
-.opening-row {
-  display: grid;
-  gap: var(--space-3);
-  padding-block: var(--space-3);
+/* Jadval o'z konteynerida gorizontal skrollanadi (360 px'da sahifa skrollanmaydi, 04 §3). */
+.opening-table__wrap {
+  position: relative; /* yashirin yorliqlar (absolute) shu konteynerda qirqiladi — sahifa kengaymaydi */
+  overflow-x: auto;
+  min-inline-size: 0;
+}
+
+.opening-table {
+  inline-size: 100%;
+  min-inline-size: 600px;
+  border-collapse: collapse;
+  table-layout: fixed; /* hamma kartada ustunlar bir xil kenglikda */
+}
+
+.opening-table thead th:nth-child(1) {
+  inline-size: 30%;
+}
+
+.opening-table thead th:nth-child(2) {
+  inline-size: 14%;
+}
+
+.opening-table thead th:nth-child(3) {
+  inline-size: 22%;
+}
+
+.opening-table th,
+.opening-table td {
+  padding: var(--space-2);
+  text-align: start;
+  vertical-align: top;
   border-block-end: 1px solid var(--border-hairline);
 }
 
-.opening-row__name > * {
-  margin: 0;
+.opening-table tbody tr:last-child > * {
+  border-block-end: 0;
+}
+
+.opening-table thead th {
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.opening-table tbody th {
+  font-weight: 400;
+  min-inline-size: 10rem;
+}
+
+.opening-table__cell {
+  display: grid;
+  gap: 2px;
+}
+
+.opening-table__sku {
+  font-weight: 500;
   overflow-wrap: anywhere;
+}
+
+.opening-table__num {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.opening-table thead .opening-table__num {
+  text-align: end;
+}
+
+.opening-table__th {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Jadvalda maydon yorlig'i ko'rinmaydi (ustun sarlavhasi bor), ekran o'quvchi uchun qoladi. */
+.opening-table .ui-field__label {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.opening-table .ui-field__help {
+  margin: 0;
+}
+
+.opening-table__apply {
+  border: 1px solid var(--border-input);
+  color: var(--accent-text);
+}
+
+.opening-apply {
+  display: flex;
+  align-items: end;
+  gap: var(--space-2);
+  min-inline-size: 15rem;
+}
+
+.opening-apply .ui-field {
+  flex: 1;
+}
+
+.opening-apply__ok {
+  min-block-size: 40px;
+  min-inline-size: 40px;
+  border: 1px solid var(--border-input);
 }
 
 .opening-row__warn {
@@ -50,9 +157,35 @@
   .opening__top {
     grid-template-columns: minmax(0, 16rem) minmax(0, 1fr);
   }
+}
 
-  .opening-row {
-    grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
-    align-items: start;
+/* Telefonda tushum ustuni yashiriladi — jadval torroq (qolgani o'z konteynerida skrollanadi). */
+@media (max-width: 639px) {
+  .opening-table {
+    min-inline-size: 480px;
   }
+
+  .opening-table__rev {
+    display: none;
+  }
+
+  .opening-table thead th:nth-child(1) {
+    inline-size: 34%;
+  }
+
+  .opening-table thead th:nth-child(3) {
+    inline-size: 26%;
+  }
+}
+
+/* Ochilgan panelda yorliq ko'rinadi ("Barcha turlar uchun qo'llash") — jadvaldagi yashirishdan mustasno. */
+.opening-table .opening-apply .ui-field__label {
+  position: static;
+  inline-size: auto;
+  block-size: auto;
+  overflow: visible;
+  clip-path: none;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  font-weight: 400;
 }

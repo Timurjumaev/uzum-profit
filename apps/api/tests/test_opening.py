@@ -225,3 +225,28 @@ def test_shop_filter(world: World) -> None:
     assert everything[str(item)]["shared"] is False and str(b_only) in everything
     body = ok(send(w, "PUT", f"opening?shop={b_shop}", start_on=None, rows=[]))
     assert str(w.ids["lone"]) not in rows(body)
+
+
+def test_rows_carry_uzum_product(world: World) -> None:
+    """Turlar (rang, model) Uzum mahsuloti bo'yicha guruhlanishi uchun ``product_id`` va nomi."""
+    w, a = world, world.a
+    product = a.insert("mp_products", shop_id=a.shop_id, external_id=555, title="AirPods g'ilof")
+    v1 = a.insert(
+        "mp_skus",
+        shop_id=a.shop_id,
+        external_id=951,
+        sku_code="ELONE-AIRGILOF-ВИШН-4",
+        product_id=product,
+    )
+    v2 = a.insert(
+        "mp_skus",
+        shop_id=a.shop_id,
+        external_id=952,
+        sku_code="ELONE-AIRGILOF-ПАСТ-4",
+        product_id=product,
+    )
+    got = rows(ok(send(w, "GET", "opening")))
+    for v in (v1, v2):
+        assert (
+            got[str(v)]["product_id"] == str(product) and got[str(v)]["product"] == "AirPods g'ilof"
+        )

@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App, createAppState } from "../../App";
 import { json, ME, ME_ROUTE, mockApi, ORG_ID, type Routes } from "../../test/api";
-import { openingData } from "../../test/opening";
+import { openingData, openingRow } from "../../test/opening";
 
 const ROUTE = `GET /api/v1/orgs/${ORG_ID}/opening`;
 const PUT = `PUT /api/v1/orgs/${ORG_ID}/opening`;
@@ -91,5 +91,32 @@ describe("do'kon filtri", () => {
     await waitFor(() => expect(api.bodiesOf(PUT)).toHaveLength(1));
     const put = api.fetch.mock.calls.map(([r]) => r as Request).find((r) => r.method === "PUT")!;
     expect(new URL(put.url).searchParams.getAll("shop")).toEqual([shop]);
+  });
+});
+
+describe("mahsulot turlari", () => {
+  it("guruh narxi hamma turga tushadi, bittasini alohida o'zgartirsa bo'ladi", async () => {
+    const v = (id: string, sku: string) => openingRow({ item_id: null, sku_id: id, name: "AirPods gʻilof", skus: [sku], product_id: "p1", product: "AirPods gʻilof", uzum_suggested: 3 });
+    const api = mockApi({
+      [ME_ROUTE]: () => json(200, ME),
+      [ROUTE]: () => json(200, data({ rows: [v("v1", "ELONE-AIRGILOF-ВИШН-4"), v("v2", "ELONE-AIRGILOF-ПАСТ-4")] })),
+      [PUT]: () => json(200, data()),
+    });
+    render(<App state={createAppState(createMemoryHistory({ initialEntries: ["/opening"] }), "uz-Latn")} />);
+    expect(await screen.findByText("2 ta tur (rang, model, oʻlcham)")).toBeTruthy();
+    expect(screen.getByText("ELONE-AIRGILOF-ВИШН-4")).toBeTruthy();
+    expect(screen.getByRole("table")).toBeTruthy(); // bitta mahsulot — bitta jadval
+    // "Tannarx" sarlavhasidagi tugma → "Barcha turlar uchun qoʻllash" → ✓ (Uzum kabinetidagi kabi).
+    fireEvent.click(screen.getByRole("button", { name: "Barcha turlar uchun narx: AirPods gʻilof" }));
+    fireEvent.change(screen.getByLabelText("Barcha turlar uchun qoʻllash"), { target: { value: "15000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Qoʻllash" }));
+    expect(screen.queryByLabelText("Barcha turlar uchun qoʻllash")).toBeNull(); // panel yopildi
+    const prices = screen.getAllByLabelText(/^Tannarx \/ dona — ELONE/) as HTMLInputElement[];
+    expect(prices.map((x) => x.value.replace(/\s/g, ""))).toEqual(["15000", "15000"]);
+    fireEvent.change(prices[1]!, { target: { value: "17000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Saqlash va qayta hisoblash" }));
+    await waitFor(() => expect(api.bodiesOf(PUT)).toHaveLength(1));
+    const body = api.bodiesOf(PUT)[0] as { rows: Array<{ sku_id: string; prices: Array<{ unit_cost: string }> }> };
+    expect(body.rows.map((r) => [r.sku_id, r.prices[0]!.unit_cost])).toEqual([["v1", "15000"], ["v2", "17000"]]);
   });
 });

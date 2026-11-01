@@ -2109,6 +2109,10 @@ export interface components {
             skus: string[];
             /** Shared */
             shared: boolean;
+            /** Product Id */
+            product_id: string | null;
+            /** Product */
+            product: string | null;
             /** Revenue */
             revenue: string;
             /** Uzum Suggested */
