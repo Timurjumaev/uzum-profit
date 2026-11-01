@@ -328,7 +328,7 @@ class StockDetailOut(BaseModel):
 class CalcDefaultsOut(BaseModel):
     """Unit kalkulyator boshlang'ich qiymatlari (F35, F36) va ularning manbasi; ``null`` — qiymat yo'q (UI so'raydi).
 
-    Manbalar: ``price`` — ``period`` (davr o'rtachasi) | ``catalog``; ``unit_cost`` — ``period`` | ``last_lot``;
+    Manbalar: ``price`` — ``period`` (davr o'rtachasi) | ``catalog``; ``unit_cost`` — ``last_lot`` | ``period``;
     ``logistics`` — ``last_paid`` | ``shop_typical`` (me'yoriy, bonussiz — F40); ``commission_pct`` — ``period`` |
     ``snapshot`` | ``catalog``; ``tax_pct`` va ``ads_pct`` — ``period``."""
 
@@ -461,10 +461,11 @@ async def sku_detail(
 
     calc = CalcDefaultsOut(
         price=pick("price", ("period", amount(u.avg_price)), ("catalog", info.price)),
+        # Narx qo'yish uchun — oxirgi partiya (keyingi donalar shu narxda keladi, ADR-033); bo'lmasa davr o'rtachasi.
         unit_cost=pick(
             "unit_cost",
-            ("period", amount(u.cogs_per_unit)),
             ("last_lot", None if last_lot is None else last_lot.unit_cost),
+            ("period", amount(u.cogs_per_unit)),
         ),
         logistics=pick("logistics", (fee_source or "", amount(fee))) if fee_source else None,
         packaging=Decimal(0),

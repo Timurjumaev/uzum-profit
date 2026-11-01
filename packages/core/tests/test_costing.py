@@ -6,10 +6,13 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from upcore.costing import (
+    OPENING_LOT,
     CostFlag,
     CostingError,
     CostMethod,
     Lot,
+    Opening,
+    PricePoint,
     Return,
     Sale,
     WriteOff,
@@ -254,3 +257,130 @@ def test_benchmark_10k_sales_under_1s() -> None:
     r = compute_costs(lots, events)
     assert time.perf_counter() - start < 1.0
     assert len(r.sales) == 10_000
+
+
+# --- F41: boshlang'ich holat (ADR-033) ------------------------------------------------------------
+
+
+def opening(start: int, qty: int, *prices: tuple[int | None, int]) -> Opening:
+    return Opening(
+        d(start), qty, tuple(PricePoint(None if f is None else d(f), uzs(u)) for f, u in prices)
+    )
+
+
+def test_opening_history_does_not_eat_lots() -> None:
+    """Muammo (hozirgi xatti-harakat): eski sotuvlar oxirgi partiyani yeydi; boshlang'ich holat bilan — yo'q."""
+    lots = [lot("New", 10, 200, 13000)]
+    old = [Sale(f"o{i}", d(i), 10) for i in range(10)]  # 100 dona boshlashdan oldin
+    new = [Sale(f"n{i}", d(11 + i), 6) for i in range(25)]  # 150 dona boshlashdan keyin
+    before = compute_costs(lots, old + new)
+    assert before.remaining == {"New": 0}  # haqiqatda 170 + boshlang'ich qoldiq
+
+    r = compute_costs(lots, old + new, FIFO, opening(10, 120, (None, 12000)))
+    for i in range(10):
+        out = r.sales[f"o{i}"]
+        assert out.cost == uzs(10 * 12000) and out.flags == {CostFlag.HISTORICAL}
+        assert out.allocations[0].lot_id is None
+    took: dict[str | None, int] = {}
+    for i in range(25):
+        assert r.sales[f"n{i}"].flags == frozenset()
+        for a in r.sales[f"n{i}"].allocations:
+            took[a.lot_id] = took.get(a.lot_id, 0) + a.qty
+    assert took == {OPENING_LOT: 120, "New": 30}
+    assert sum((r.sales[f"n{i}"].cost.amount for i in range(25)), D(0)) == 120 * 12000 + 30 * 13000  # type: ignore[union-attr]
+    assert r.remaining == {OPENING_LOT: 0, "New": 170} and r.remaining_value == uzs(170 * 13000)
+
+
+def test_opening_average_blends_with_new_lot() -> None:
+    r = compute_costs(
+        [lot("New", 5, 200, 13000)],
+        [Sale("a", d(1), 100), Sale("b", d(6), 10)],
+        AVG,
+        opening(0, 120, (None, 12000)),
+    )
+    # 1–4: boshlang'ich qoldiqdan 100; 5-kuni 20 × 12 000 + 200 × 13 000 = 2 840 000 / 220
+    assert r.sales["a"].cost == uzs(100 * 12000)
+    assert r.sales["b"].cost is not None
+    assert r.sales["b"].unit_cost == Money(D(2840000) / 220, r.sales["b"].cost.currency)
+
+
+def test_opening_price_periods() -> None:
+    o = opening(20, 5, (None, 8000), (10, 10000), (15, 11000))
+    assert o.price_on(d(0)) == uzs(8000) and o.price_on(d(12)) == uzs(10000)
+    assert o.price_on(d(30)) == uzs(11000)
+    lot_ = o.lot()
+    assert lot_ is not None and lot_.id == OPENING_LOT and lot_.total == uzs(5 * 11000)
+    # Birinchi narx sanasidan oldingi kun — eng birinchi narx.
+    assert opening(20, 1, (10, 9000)).price_on(d(0)) == uzs(9000)
+    assert opening(20, 1).price_on(d(0)) is None and opening(20, 1).lot() is None
+    assert opening(20, 0, (None, 5)).lot() is None
+
+
+def test_opening_first_before_same_day_lots_and_supersedes_older() -> None:
+    lots = [lot("Old", 2, 50, 9000), lot("Same", 10, 10, 15000), lot("Road", None, 5, 16000)]
+    r = compute_costs(lots, [Sale("s", d(10), 3)], FIFO, opening(10, 3, (None, 12000)))
+    assert [(a.lot_id, a.qty) for a in r.sales["s"].allocations] == [(OPENING_LOT, 3)]
+    assert r.superseded == {"Old"} and "Old" not in r.remaining
+    assert r.remaining["Same"] == 10 and r.remaining["Road"] == 5
+
+
+def test_opening_without_price() -> None:
+    r = compute_costs(
+        [lot("L", 5, 10, 100)],
+        [Sale("h", d(1), 2), Sale("n", d(6), 1), WriteOff("w", d(1), 1)],
+        FIFO,
+        opening(3, 4),
+    )
+    assert r.sales["h"].cost is None and r.sales["h"].flags == {CostFlag.HISTORICAL}
+    assert r.writeoffs["w"].cost is None
+    # Narx yo'q — boshlang'ich qoldiq loti yaratilmaydi, keyingi sotuv partiyadan.
+    assert r.sales["n"].allocations[0].lot_id == "L"
+
+
+def test_opening_returns() -> None:
+    o = opening(5, 2, (None, 1000))
+    r = compute_costs(
+        [], [Sale("h", d(1), 3), Return("rh", d(2), 1, "h"), Return("rx", d(2), 1, "zz")], FIFO, o
+    )
+    assert r.returns["rh"].cost == uzs(1000) and r.returns["rh"].flags == {CostFlag.HISTORICAL}
+    assert r.returns["rx"].cost is None
+    # Boshlashdan keyin qaytgan tarixiy sotuv — qoldiqqa qaytadi (tovar haqiqatda qaytdi).
+    r2 = compute_costs(
+        [], [Sale("h", d(1), 3), Return("rh", d(6), 1, "h"), Sale("n", d(7), 3)], FIFO, o
+    )
+    assert r2.sales["n"].cost == uzs(3000) and r2.sales["n"].flags == frozenset()
+
+
+def test_opening_validation() -> None:
+    with pytest.raises(CostingError):
+        Opening(d(0), -1)
+    with pytest.raises(CostingError):
+        compute_costs([lot(OPENING_LOT, 0, 1, 1)], [])
+
+
+@settings(max_examples=150)
+@given(
+    st.lists(lot_st, max_size=6),
+    st.lists(event_st, max_size=25),
+    st.sampled_from([FIFO, AVG]),
+    st.integers(0, 30),
+    st.integers(0, 50),
+)
+def test_opening_conserves_units(
+    raw_lots: list, raw_events: list, method: CostMethod, start: int, qty: int
+) -> None:
+    """Boshlashdan keyin lotlardan chiqqan + qoldiq = boshlang'ich qoldiq + ishlatilgan lotlar; tarix lotga tegmaydi."""
+    lots, events = build(raw_lots, raw_events)
+    o = opening(start, qty, (None, 100))
+    r = compute_costs(lots, events, method, o)
+    assert compute_costs(list(reversed(lots)), list(reversed(events)), method, o) == r
+    used = sum(x.qty for x in lots if x.id not in r.superseded)
+    out = [*r.sales.values(), *r.writeoffs.values()]
+    taken = sum(a.qty for x in out for a in x.allocations if a.lot_id is not None)
+    back = sum(
+        min(e.qty, r.sales[e.sale_id].qty)
+        for e in events
+        if isinstance(e, Return) and e.day >= o.start and e.sale_id in r.sales
+    )
+    assert taken + sum(r.remaining.values()) <= qty + used + back
+    assert all(x.flags == {CostFlag.HISTORICAL} for x in out if x.day < o.start)

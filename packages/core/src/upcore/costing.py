@@ -11,6 +11,11 @@ ichida sanadan kesilmaydi: keyinroq tayyor bo'lgan lot "erta sotuv" orqali oldin
 Tayyor lot yetmasa (F21): avval tayyor sanasi keyinroq bo'lgan lot ("erta sotuv"), keyin sanasiz — yo'ldagi
 lot ("qabul belgilanmagan": sotuv bor — demak tovar kelgan). Hammasi tugasa — oxirgi ma'lum narx + "lot
 yetmadi"; tovarda lot umuman yo'q bo'lsa tannarx yo'q (``None``).
+
+Boshlang'ich holat (F41, ADR-033): ``Opening`` berilsa, boshlash sanasidan oldingi sotuvlar lotlarga tegmaydi —
+sotuvchi kiritgan tarixiy tannarx (sana bo'yicha narxlar) bilan, "tarixiy" belgisi bilan hisoblanadi. Boshlash
+kunidagi qoldiq (dona × shu sanadagi narx) birinchi lot bo'ladi; tayyor sanasi boshlashdan oldingi lotlar
+qoldiqqa kirgan deb hisoblanadi va ishlatilmaydi (``superseded``). Boshlashdan keyin — odatdagi FIFO / o'rtacha.
 """
 
 from __future__ import annotations
@@ -42,6 +47,7 @@ class CostFlag(StrEnum):
     LOT_SHORTAGE = "lot_shortage"  # lotlar yetmadi — oxirgi ma'lum narx
     RETURN_UNMATCHED = "return_unmatched"  # qaytishning asl sotuvi topilmadi
     NO_LOTS = "no_lots"  # tovarda lot umuman yo'q — tannarx yo'q
+    HISTORICAL = "historical"  # boshlash sanasidan oldingi sotuv — tarixiy tannarx (F41)
     NO_ITEM = (
         "no_item"  # SKU tovarga bog'lanmagan — tannarx yo'q (dvigatelga kirmaydi, B2.8 belgisi)
     )
@@ -105,6 +111,45 @@ class WriteOff:
 
 type Event = Sale | Return | WriteOff
 
+OPENING_LOT = "opening"  # boshlang'ich qoldiq lotining id'si (F41)
+
+
+@dataclass(frozen=True, slots=True)
+class PricePoint:
+    """Tarixiy tannarx: ``valid_from`` dan (``None`` — boshidan) boshlab dona narxi (so'm)."""
+
+    valid_from: date | None
+    unit: Money
+
+
+@dataclass(frozen=True, slots=True)
+class Opening:
+    """F41. Boshlang'ich holat: boshlash sanasi, shu kungi qoldiq (dona) va tarixiy narxlar."""
+
+    start: date
+    qty: int = 0
+    prices: tuple[PricePoint, ...] = ()
+
+    def __post_init__(self) -> None:
+        if self.qty < 0:
+            raise CostingError("boshlang'ich qoldiq manfiy bo'lmaydi")
+
+    def price_on(self, day: date) -> Money | None:
+        """F41: ``day`` dagi tarixiy narx — ``valid_from <= day`` bo'lgan eng oxirgisi; ``day`` hamma narxdan
+        oldin bo'lsa — eng birinchisi; narx yo'q — ``None``."""
+        ordered = sorted(self.prices, key=lambda x: x.valid_from or date.min)
+        if not ordered:
+            return None
+        valid = [x for x in ordered if (x.valid_from or date.min) <= day]
+        return (valid[-1] if valid else ordered[0]).unit
+
+    def lot(self) -> Lot | None:
+        """Boshlang'ich qoldiq loti (narxi boshlash sanasidagi tarixiy narx); dona 0 yoki narx yo'q — ``None``."""
+        unit = self.price_on(self.start)
+        if self.qty == 0 or unit is None:
+            return None
+        return Lot(OPENING_LOT, self.start, self.qty, Money(unit.amount * self.qty, UZS))
+
 
 @dataclass(frozen=True, slots=True)
 class Allocation:
@@ -147,6 +192,9 @@ class CostingResult:
     returns: dict[str, ReturnResult]
     remaining: dict[str, int]  # lot → qolgan dona
     remaining_value: Money
+    superseded: frozenset[str] = (
+        frozenset()
+    )  # boshlash sanasidan oldingi lotlar (F41) — ishlatilmadi
 
 
 def lots_from_purchase(
@@ -189,36 +237,55 @@ _ORDER: dict[type, int] = {Return: 0, Sale: 1, WriteOff: 1}
 
 
 def compute_costs(
-    lots: Iterable[Lot], events: Iterable[Event], method: CostMethod = CostMethod.FIFO
+    lots: Iterable[Lot],
+    events: Iterable[Event],
+    method: CostMethod = CostMethod.FIFO,
+    opening: Opening | None = None,
 ) -> CostingResult:
-    """F21. Bitta tovarning lotlari va hodisalari bo'yicha sotuv tannarxi."""
+    """F21 (+ F41 ``opening`` bilan). Bitta tovarning lotlari va hodisalari bo'yicha sotuv tannarxi."""
     all_lots = list(lots)
     all_events = list(events)
     if len({lot.id for lot in all_lots}) != len(all_lots):
         raise CostingError("lot id'lari takrorlangan")
+    if any(lot.id == OPENING_LOT for lot in all_lots):
+        raise CostingError(f"lot id {OPENING_LOT!r} band (boshlang'ich qoldiq)")
     for event in all_events:
         if event.qty <= 0:
             raise CostingError(f"hodisa {event.id}: dona musbat bo'lishi kerak")
 
-    engine = _Engine(method, all_lots)
-    for event in sorted(all_events, key=lambda e: (e.day, _ORDER[type(e)], e.id)):
+    def order(e: Event) -> tuple[date, int, str]:
+        return (e.day, _ORDER[type(e)], e.id)
+
+    superseded: frozenset[str] = frozenset()
+    if opening is None:
+        engine = _Engine(method, all_lots)
+    else:
+        start = opening.start
+        superseded = frozenset(x.id for x in all_lots if x.ready is not None and x.ready < start)
+        engine = _Engine(method, [x for x in all_lots if x.id not in superseded], opening.lot())
+        for event in sorted((e for e in all_events if e.day < start), key=order):
+            engine.historical(event, opening.price_on(event.day))
+        all_events = [e for e in all_events if e.day >= start]
+    for event in sorted(all_events, key=order):
         engine.receive_until(event.day)
         if isinstance(event, Return):
             engine.give_back(event)
         else:
             engine.take(event)
-    return engine.result()
+    return engine.result(superseded)
 
 
 class _Engine:
     """Ochiq qatlamlar (lotlar) navbati. FIFO: eng eski qatlamdan; AVERAGE: hovuzning o'rtacha narxida,
     donalar qatlamlardan FIFO tartibida yechiladi (qoldiq va qaytish uchun)."""
 
-    def __init__(self, method: CostMethod, lots: list[Lot]) -> None:
+    def __init__(self, method: CostMethod, lots: list[Lot], first: Lot | None = None) -> None:
         self.method = method
         self.pending = sorted(
             (x for x in lots if x.ready is not None), key=lambda x: (x.ready, x.id)
         )
+        if first is not None:  # boshlang'ich qoldiq — o'sha kungi lotlardan ham oldin
+            self.pending.insert(0, first)
         self.transit = sorted((x for x in lots if x.ready is None), key=lambda x: (x.seq, x.id))
         self.open: list[_Layer] = []
         self.by_id: dict[str, _Layer] = {}
@@ -276,6 +343,27 @@ class _Engine:
         cost = Money(sum((a.unit * a.qty for a in allocations), Decimal(0)), UZS)
         self._record(event, cost, tuple(allocations), flags)
 
+    def historical(self, event: Event, unit: Money | None) -> None:
+        """F41: boshlashdan oldingi hodisa — lotga tegmaydi; sotuv tarixiy narxda (narx yo'q — ``None``).
+
+        Qaytish hodisasi asl sotuvga qaytadi: tarixiy sotuvning qaytishi qoldiqqa qo'shilmaydi (u boshlang'ich
+        qoldiq sonida)."""
+        if isinstance(event, Return):
+            sale = self.sales.get(event.sale_id)
+            cost = None
+            if sale is not None and sale.unit_cost is not None:
+                cost = Money(sale.unit_cost.amount * min(event.qty, sale.qty), UZS)
+            flags: frozenset[AnyFlag] = frozenset({CostFlag.HISTORICAL})
+            self.returns[event.id] = ReturnResult(event.id, event.sale_id, event.qty, cost, flags)
+            return
+        if unit is None:
+            self._record(event, None, (), {CostFlag.HISTORICAL})
+            return
+        cost = Money(unit.amount * event.qty, UZS)
+        self._record(
+            event, cost, (Allocation(None, event.qty, unit.amount),), {CostFlag.HISTORICAL}
+        )
+
     def _record(
         self,
         event: Sale | WriteOff,
@@ -326,9 +414,11 @@ class _Engine:
             event.id, event.sale_id, qty, Money(value, UZS), frozenset(flags)
         )
 
-    def result(self) -> CostingResult:
+    def result(self, superseded: frozenset[str] = frozenset()) -> CostingResult:
         self.receive_until(date.max)
         remaining = {lid: layer.remaining for lid, layer in self.by_id.items()}
         remaining.update({lot.id: lot.qty for lot in self.transit})
         value = self.pool_value + sum((lot.total.amount for lot in self.transit), Decimal(0))
-        return CostingResult(self.sales, self.writeoffs, self.returns, remaining, Money(value, UZS))
+        return CostingResult(
+            self.sales, self.writeoffs, self.returns, remaining, Money(value, UZS), superseded
+        )
