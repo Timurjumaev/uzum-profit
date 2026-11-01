@@ -330,7 +330,7 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   tahriri, valyuta va kurs manbasi, ogohlantirish chegaralari, Telegram, to'liq eksport, tashkilotni o'chirish (30 kun)
   — keyingi bosqichlar (B5–B8); to'lov jadvali shartlarini tahrirlash — B5 (Pul oqimi); vizual e2e asoslari.
 - [x] ~~B4.9 Legacy import: `uzum.db` yuklash → xaridlar; solishtirma hisobot.~~ Bekor (ADR-032, 2026-10-31): Temur
-  2 ta legacy partiyani Xaridlar sahifasida qo'lda kiritadi.
+  2 ta legacy partiyani Xaridlar sahifasida qo'lda kiritadi. (ADR-033 dan: shart emas — boshlang'ich holat.)
 - [x] B4.10 Excel eksport: server tomonda `openpyxl` (`GET /orgs/{id}/exports/{sales,skus,expenses,purchases,inventory}.xlsx`),
   tugma — Buyurtmalar, Mahsulotlar, Xarajatlar (Uzum va o'z), Xaridlar, Ombor. Eksport ro'yxat endpoint'ining o'zini
   sahifalab chaqiradi (filtr, tartib, rol bo'yicha yashirish ro'yxat bilan bir xil); ruxsat `export` / `export_inventory`
@@ -343,7 +343,20 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   ko'rsatkichlarga qo'shildi: Buyurtmalar qatorlari (F4–F8), qaytim saqlash (F9), Ombor (tavsiya miqdor F27, qiymat va
   yo'ldagi F29). Testlar: PageHelp (ochilish, Esc, matnlar to'liqligi va uzunligi), Buyurtmalar sahifasi. **Qoldi:** yordam
   maqolalari, videolar, "Yangiliklar" sahifasi — M18 / B8.
-- T: legacy partiyalarini Xaridlar sahifasida qo'lda kiritish (ADR-032); 14 kun faqat yangi dasturda ishlash; topilgan har noqulaylikni yozib yuborish.
+- [x] B4.12 Boshlang'ich holat (ADR-033, F41): eski partiyalarsiz boshlash — boshlash sanasi, tovar tarixiy tannarxi
+  (sana bo'yicha davrlar API'da), boshlash kunidagi qoldiq; dvigatelda tarixiy sotuv lotga tegmaydi, boshlang'ich qoldiq —
+  birinchi lot. ✓ 2026-11-01: `upcore.costing` (`Opening`, `PricePoint`, `historical` belgisi, `superseded`), migratsiya
+  0010 (`orgs.cost_start_on`, `item_costs`, `opening_stock`, RLS), `upapi.calc.costs` (tovar bo'yicha boshlang'ich holat),
+  `GET/PUT /opening` (tovarlar va tovarsiz SKU'lar 90 kun tushumi bo'yicha, Uzum qoldig'i taklifi — joriy yoki oldingi kun
+  snapshoti, oxirgi partiya narxi ishorasi, qamrov; tovarsiz SKU'ga narx yozilsa tovar yaratiladi va bog'lanadi; audit;
+  sana o'zgarsa hamma tovar qayta hisoblanadi), ombor qiymatida boshlang'ich narx (partiya yo'q bo'lsa), unit
+  kalkulyator tannarxi — oxirgi partiya. Web: `/opening` sahifasi (Sozlamalar → Tannarx usulidan havola), qidiruv, 50 tadan
+  ko'rsatish, 360 px. **Qoldi:** narx davrlarini sahifada tahrirlash (API bor; sahifa ko'rsatadi), CNY + kurs bilan kiritish,
+  o'tgan sana uchun snapshot yo'q bo'lsa qoldiqni sotuv va postavkalardan taxminlash, "dastur qoldig'i ↔ Uzum qoldig'i"
+  mosligi tekshiruvi (B5.3/B5.4 bilan), onboarding'dagi 5-qadamga ulash (M2), Excel shablon (B7.1), vizual e2e asosi.
+- T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
+  Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
+  har noqulaylikni yozib yuborish.
 
 **Chiqish:** Temur 14 kun faqat yangi dasturdan foydalangan; kritik xato yo'q; legacy `legacy/` papkaga ko'chirildi.
 

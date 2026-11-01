@@ -369,6 +369,14 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   in'ektsiyasidan himoya, tugma (URL, yuklash, xato toast'i).
 - B4.11 Yordam: `PageHelp` (8 asosiy sahifada "?" — qisqa tushuntirish, uz-Latn/uz-Cyrl/ru) va yetishmagan FormulaPopover'lar
   (Buyurtmalar qatorlari F4–F8, qaytim saqlash F9, Ombor F27/F29). Testlar: PageHelp, Buyurtmalar sahifasi, matnlar to'liqligi.
+- B4.12 Boshlang'ich holat (ADR-033, F41): eski partiyalarni kiritmasdan boshlash. `upcore.costing.Opening` — boshlash
+  sanasidan oldingi sotuvlar tarixiy narxda ("tarixiy" belgisi, lotlarga tegmaydi), boshlang'ich qoldiq — birinchi lot,
+  oldingi partiyalar ishlatilmaydi; migratsiya 0010 (`orgs.cost_start_on`, `item_costs`, `opening_stock`); `GET/PUT
+  /opening` (tushum tartibi, Uzum qoldig'i taklifi, qamrov, tovarsiz SKU uchun tovar yaratish, audit, qayta hisob); ombor
+  qiymatida boshlang'ich narx; unit kalkulyator tannarxi — oxirgi partiya. Web: `/opening` sahifasi (Sozlamalar → Tannarx
+  usulidan havola). Testlar: core (FIFO va o'rtacha, narx davrlari, qaytish, hypothesis), API (haqiqiy PostgreSQL: tarixiy
+  sotuv, FIFO taqsimoti 120 + 30, takroriy saqlash, ruxsatlar, tekshiruvlar, o'chirish, RLS), web (model, sahifa, axe),
+  e2e (kontrast bilan axe, 360 px).
 
 ### Tuzatildi
 
