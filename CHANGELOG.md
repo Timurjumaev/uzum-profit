@@ -381,6 +381,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   tushum, tannarx, Uzumda, o'z omborimda); "Tannarx" ustuni sarlavhasidagi tugma — "Barcha turlar uchun qo'llash" (narx →
   ✓ → hamma turga), keyin istalgan turini alohida o'zgartirish mumkin (Temur taklifi). API qatorida `product_id`, `product`.
 
+- B4.13 (ADR-034, tovar joylari 1-qadam): `realcheck` hisobotida "qoldiq joylari" — SKU `quantity*` maydonlari
+  yig'indilari (SKU/mahsulot holati bo'yicha, munosabatlar, hujjatda yo'q maydonlar), postavka holatlari, qaytarish turi ×
+  holati, 60 kunlik sotuv holatlari; faqat yig'indilar, nom va shaxsiy ma'lumotsiz.
+
 ### Tuzatildi
 
 - Boshlang'ich holat soddalashtirildi (Temur bilan kelishildi): jadvalda odatda faqat **Tur (SKU)** va **Tannarx**. Tushum

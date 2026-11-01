@@ -361,6 +361,14 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   tugma bilan "Barcha turlar uchun qo'llash", keyin istalgan turini alohida o'zgartirish mumkin.
   ✓ 2026-11-01 soddalashtirish (Temur bilan): jadvalda Tur va Tannarx; Uzum qoldig'i avtomatik (matn), o'z omborim —
   belgi bilan; qamrov — boshlash sanasigacha bo'lgan tushum bo'yicha (90 kunlik doimiy oyna olib tashlandi).
+- [x] B4.13 Tovar joylari — real ma'lumot (ADR-034, 1-qadam): `realcheck` ga "qoldiq joylari" bo'limi — SKU `quantity*`
+  maydonlari (yig'indi, nol bo'lmagan, SKU va mahsulot holati bo'yicha, hujjatda yo'q maydonlar, `quantityAvailableByStockType`
+  ko'rinishi, maydonlar munosabatlari), postavka holatlari (e'lon qilingan / qabul qilingan), qaytarish turi × holati, oxirgi
+  60 kun sotuv holatlari; faqat yig'indilar. ✓ 2026-11-01 vosita tayyor. **T:** merge'dan keyin staging'da `realcheck.sh` ni
+  ishga tushirib natijani yuborish — maydonlar ma'nosi 08 §4 ga yoziladi.
+- [ ] B4.14 Tovar joylari — FBO (ADR-034, 2-qadam): "Uzumga yo'lda" (qabul qilinmagan postavkalar), "Uzumga qaytmoqda",
+  Uzumdagi holatlar (B4.13 natijasi bo'yicha), o'z omborim = qabul − postavkalar + qaytgan ± tuzatish; Ombor sahifasida
+  ustunlar; boshlang'ich holat qoldig'iga qo'shish (bitta son, ichida joylar).
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.
@@ -378,7 +386,8 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
 - [ ] B5.7 Pul oqimi (M11): hisoblar, tranzaksiyalar, Uzum to'lov prognozi (F38), 90 kunlik kalendar (F39).
 - [ ] B5.8 Reja-fakt (M12).
 - [ ] B5.9 Kalkulyator (M13) + ochiq versiya komponenti (landing uchun).
-- [ ] B5.10 FBS (do'konda bo'lsa): faol buyurtmalar va muddatlar.
+- [ ] B5.10 FBS (do'konda bo'lsa): faol buyurtmalar va muddatlar; FBS qoldig'i — o'z omborim manbasi, ikki marta sanash yo'q
+  (ADR-034, 3-qadam); keyin DBS va mahalliy xarid (bozor, o'z ishlab chiqarishi) uchun soddalashtirilgan xarid bosqichlari.
 - T: yetkazib beruvchi va kargo ma'lumotlarini kiritish; har funksiyani real ma'lumotda sinab ko'rish.
 
 **Chiqish:** har funksiya Temurning real ma'lumotida tekshirilgan, yordam maqolasi yozilgan.

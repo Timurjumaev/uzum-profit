@@ -9,7 +9,10 @@ Sinxronlangan ma'lumotdan JSON chiqaradi (stdout; xulosa — stderr):
   ``dateCreated`` formati, ``/v1/return`` sahifalash va hajmi, logistika xarajati ``externalId`` = sotuv qatori id,
   ``amount`` / ``amountReturns`` semantikasi (``sellerProfit`` qaysi dona bilan F6 ga to'g'ri keladi), noma'lum
   xarajat kodlari;
-- **sinxron holati** — oxirgi 24 soatdagi ishlar va xatolar.
+- **sinxron holati** — oxirgi 24 soatdagi ishlar va xatolar;
+- **qoldiq joylari** (ADR-034) — SKU ``quantity*`` maydonlari (yig'indi, nol bo'lmagan SKU'lar, SKU holati bo'yicha),
+  postavka holatlari (e'lon qilingan / qabul qilingan), qaytarish turi × holati, sotuv holatlari (oxirgi 60 kun) —
+  maydonlar ma'nosini real ma'lumotda aniqlash uchun; faqat yig'indilar, nom va shaxsiy ma'lumot yo'q.
 
 Kalit va boshqa sirlar o'qilmaydi (ustunlar aniq sanab olinadi). Solishtirish — Temurning Mac'ida
 ``scripts/compare_staging.py`` (legacy ``uzum.db`` bilan). Ulanish — ilova roli (``up_app``) bilan, RLS ostida:
@@ -360,6 +363,122 @@ async def expenses_check(conn: AsyncConnection, shop: UUID) -> dict[str, Any]:
 # --- Sinxron holati -----------------------------------------------------------------------------
 
 
+# Uzum SKU qoldiq maydonlari (``/v1/product/shop``): ma'nosi to'liq hujjatlanmagan — real ma'lumotda yig'indilar.
+STOCK_FIELDS = (
+    "quantityActive",
+    "quantityFbs",
+    "quantityAvailable",
+    "quantityReserved",
+    "quantityPending",
+    "quantityDefected",
+    "quantityOnPhotoStudio",
+    "quantityAdditional",
+    "quantityArchived",
+    "quantityCreated",
+    "quantityMissing",
+    "quantitySold",
+    "quantityReturned",
+)
+RECENT_DAYS = 60
+
+
+def _num(raw: dict[str, Any], name: str) -> int:
+    value = raw.get(name)
+    return int(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else 0
+
+
+async def stock_check(conn: AsyncConnection, shop: UUID, now: datetime) -> dict[str, Any]:
+    """ADR-034: qoldiq joylari maydonlari ma'nosi uchun yig'indilar (faqat sonlar, nomlarsiz)."""
+    skus = (
+        await conn.execute(
+            text(
+                "SELECT k.raw AS raw, coalesce(p.raw -> 'status' ->> 'value', '<null>') AS product_status "
+                "FROM mp_skus k LEFT JOIN mp_products p ON p.id = k.product_id WHERE k.shop_id = :s"
+            ),
+            {"s": shop},
+        )
+    ).all()
+    fields: dict[str, dict[str, int]] = {}
+    by_status: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    extra_keys: Counter[str] = Counter()
+    by_stock_type: Counter[str] = Counter()
+    mismatches: Counter[str] = Counter()
+    for r in skus:
+        raw = r.raw or {}
+        sku_status = raw.get("status")
+        status = (
+            sku_status.get("value") if isinstance(sku_status, dict) else sku_status
+        ) or "<null>"
+        key = f"{r.product_status} / {status}"
+        by_status[key]["skus"] += 1
+
+        for name in STOCK_FIELDS:
+            v = _num(raw, name)
+            f = fields.setdefault(name, {"sum": 0, "nonzero": 0, "missing": 0})
+            f["sum"] += v
+            f["nonzero"] += v != 0
+            f["missing"] += name not in raw
+            if v:
+                by_status[key][name] += v
+        extra_keys.update(
+            k
+            for k in raw
+            if k.startswith("quantity")
+            and k not in STOCK_FIELDS
+            and k != "quantityAvailableByStockType"
+        )
+        typed = raw.get("quantityAvailableByStockType")
+        if isinstance(typed, dict):
+            by_stock_type.update(f"{k}: {pattern(v)}" for k, v in typed.items())
+        elif typed is not None:
+            by_stock_type[pattern(typed)] += 1
+        # Munosabatlar: qaysi maydon qaysining yig'indisi ekanini aniqlash uchun (mos kelmagan SKU'lar soni).
+        if _num(raw, "quantityAvailable") != _num(raw, "quantityActive") + _num(raw, "quantityFbs"):
+            mismatches["available != active + fbs"] += 1
+        if _num(raw, "quantityAvailable") != _num(raw, "quantityActive"):
+            mismatches["available != active"] += 1
+        if _num(raw, "quantityReserved") > _num(raw, "quantityActive") + _num(raw, "quantityFbs"):
+            mismatches["reserved > active + fbs"] += 1
+    invoices = await conn.execute(
+        text(
+            "SELECT coalesce(status, '<null>') AS status, count(*) AS n, coalesce(sum(to_stock), 0) AS to_stock, "
+            "coalesce(sum(accepted), 0) AS accepted, "
+            "count(*) FILTER (WHERE raw -> 'dateAccepted' IS NOT NULL AND raw ->> 'dateAccepted' <> 'null') "
+            "AS with_date_accepted, max(created_on) AS last FROM fbo_invoices WHERE shop_id = :s "
+            "GROUP BY 1 ORDER BY 1"
+        ),
+        {"s": shop},
+    )
+    returns = await conn.execute(
+        text(
+            "SELECT r.type, coalesce(r.status, '<null>') AS status, count(DISTINCT r.id) AS n, "
+            "coalesce(sum(i.quantity), 0) AS units, max(r.created_on) AS last "
+            "FROM mp_returns r LEFT JOIN mp_return_items i ON i.return_id = r.id WHERE r.shop_id = :s "
+            "GROUP BY 1, 2 ORDER BY 1, 2"
+        ),
+        {"s": shop},
+    )
+    sales = await conn.execute(
+        text(
+            "SELECT status, count(*) AS lines, coalesce(sum(amount), 0) AS amount, "
+            "coalesce(sum(amount_returns), 0) AS amount_returns FROM sale_items "
+            "WHERE shop_id = :s AND ordered_at >= :since GROUP BY 1 ORDER BY 1"
+        ),
+        {"s": shop, "since": now - timedelta(days=RECENT_DAYS)},
+    )
+    return {
+        "skus": len(skus),
+        "fields": fields,
+        "by_status": {k: dict(v) for k, v in sorted(by_status.items())},
+        "extra_quantity_keys": dict(extra_keys.most_common(SAMPLE)),
+        "available_by_stock_type": dict(by_stock_type.most_common(SAMPLE)),
+        "mismatches": dict(mismatches),
+        "invoices_by_status": [dict(r._mapping) for r in invoices],
+        "returns_by_type_status": [dict(r._mapping) for r in returns],
+        f"sales_last_{RECENT_DAYS}d_by_status": [dict(r._mapping) for r in sales],
+    }
+
+
 async def sync_check(conn: AsyncConnection, shop: UUID, since: datetime) -> dict[str, Any]:
     rows = await conn.execute(
         text(
@@ -401,7 +520,9 @@ async def org_ids(engine: AsyncEngine) -> list[UUID]:
         return [r[0] for r in rows]
 
 
-async def shop_report(conn: AsyncConnection, shop: Any, since: datetime) -> dict[str, Any]:
+async def shop_report(
+    conn: AsyncConnection, shop: Any, since: datetime, now: datetime
+) -> dict[str, Any]:
     sales = await _sales(conn, shop.id)
     return {
         "external_id": shop.external_id,
@@ -415,6 +536,7 @@ async def shop_report(conn: AsyncConnection, shop: Any, since: datetime) -> dict
             "returns": await returns_check(conn, shop.id),
             "logistics": await logistics_check(conn, shop.id),
             "expenses": await expenses_check(conn, shop.id),
+            "stock": await stock_check(conn, shop.id, now),
         },
         "sync": await sync_check(conn, shop.id, since),
     }
@@ -439,7 +561,7 @@ async def build(
                 {
                     "id": org,
                     "name": name,
-                    "shops": [await shop_report(conn, s, since) for s in shops.all()],
+                    "shops": [await shop_report(conn, s, since, now) for s in shops.all()],
                 }
             )
     return out
@@ -467,7 +589,10 @@ def summary(report: dict[str, Any]) -> list[str]:
                 f"sotuv qatorlari={len(sales['lines'])}, oylar={len(sales['months'])}; "
                 f"postavka tarkibi {inv['items_linked']}/{inv['items']} SKU'ga bog'langan; "
                 f"qaytarishlar {ret['returns']}; logistika {lg['linked']}/{lg['expenses']} sotuvga "
-                f"bog'langan; 24 soatda xato ishlar: {sync['errors_24h']}"
+                f"bog'langan; 24 soatda xato ishlar: {sync['errors_24h']}; "
+                f"qoldiq maydonlari: {checks['stock']['skus']} SKU, postavka holatlari "
+                f"{len(checks['stock']['invoices_by_status'])}, qaytarish holatlari "
+                f"{len(checks['stock']['returns_by_type_status'])}"
             )
     return out
 
