@@ -205,3 +205,23 @@ def test_turn_off_restores_lot_costing_and_clears_row(world: World) -> None:
     recalc(w)
     flags = {f for _, _, fl, *_ in a.costs().values() for f in fl}
     assert "historical" not in flags
+
+
+def test_shop_filter(world: World) -> None:
+    """Do'kon filtri: tanlangan do'konda SKU'si bor tovarlar; ikki do'konli tovar — ``shared``."""
+    w, a = world, world.a
+    b_shop = a.insert("shops", account_id=a.sql("SELECT account_id FROM shops WHERE id = %s", [a.shop_id])[0][0],
+                      external_id=777, name="EL-ONE")  # fmt: skip
+    item = w.ids["item"]
+    a.insert("mp_skus", shop_id=b_shop, external_id=901, sku_code="Soat-B", item_id=item)
+    b_only = a.insert("mp_skus", shop_id=b_shop, external_id=902, sku_code="Faqat-B")
+    mine = rows(ok(send(w, "GET", f"opening?shop={a.shop_id}")))
+    assert str(b_only) not in mine and mine[str(item)]["shared"] is True
+    assert sorted(mine[str(item)]["skus"]) == ["Soat", "Soat-B"]
+    theirs = rows(ok(send(w, "GET", f"opening?shop={b_shop}")))
+    assert str(b_only) in theirs and str(w.ids["lone"]) not in theirs
+    assert theirs[str(b_only)]["shared"] is False
+    everything = rows(ok(send(w, "GET", "opening")))
+    assert everything[str(item)]["shared"] is False and str(b_only) in everything
+    body = ok(send(w, "PUT", f"opening?shop={b_shop}", start_on=None, rows=[]))
+    assert str(w.ids["lone"]) not in rows(body)

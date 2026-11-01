@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { matchPreset, presetRange } from "../lib/dates";
-import { filterSearch, resolveFilters, toSearch } from "./filters";
+import { filterSearch, pageFilters, resolveFilters, toSearch } from "./filters";
 
 const A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const B = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
@@ -83,5 +83,24 @@ describe("matchPreset", () => {
     expect(matchPreset(presetRange("last30", "2026-10-29"), "2026-10-29")).toBe("last30");
     expect(matchPreset({ start: "2026-01-01", end: "2026-01-01" }, "2026-01-01")).toBe("today");
     expect(matchPreset({ start: "2026-10-02", end: "2026-10-30" }, today)).toBeNull();
+  });
+});
+
+describe("pageFilters — sahifa ishlatadigan filtrlar", () => {
+  it.each([
+    ["/", ["shop", "range", "compare"]],
+    ["/pnl", ["shop", "range", "compare"]],
+    ["/products", ["shop", "range"]],
+    ["/products/abc", ["shop", "range"]],
+    ["/orders", ["shop", "range"]],
+    ["/expenses", ["shop", "range"]],
+    ["/inventory", ["shop"]],
+    ["/opening", ["shop"]],
+    ["/purchases", []],
+    ["/purchases/abc", []],
+    ["/settings", []],
+    ["/status", []],
+  ])("%s", (path, kinds) => {
+    expect([...pageFilters(path)].sort()).toEqual([...kinds].sort());
   });
 });

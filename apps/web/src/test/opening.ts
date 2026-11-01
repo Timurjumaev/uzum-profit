@@ -7,6 +7,7 @@ export function openingRow(over: Partial<OpeningRow> = {}): OpeningRow {
     sku_id: null,
     name: "Soat",
     skus: ["Soat-qora"],
+    shared: false,
     revenue: "1000000.00",
     uzum_suggested: 120,
     uzum_qty: null,

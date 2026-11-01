@@ -354,6 +354,9 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   ko'rsatish, 360 px. **Qoldi:** narx davrlarini sahifada tahrirlash (API bor; sahifa ko'rsatadi), CNY + kurs bilan kiritish,
   o'tgan sana uchun snapshot yo'q bo'lsa qoldiqni sotuv va postavkalardan taxminlash, "dastur qoldig'i ↔ Uzum qoldig'i"
   mosligi tekshiruvi (B5.3/B5.4 bilan), onboarding'dagi 5-qadamga ulash (M2), Excel shablon (B7.1), vizual e2e asosi.
+  ✓ 2026-11-01 tuzatish (Temur topdi): sahifa do'kon filtriga bo'ysunadi (`?shop=`, umumiy tovar belgisi); yuqori panel
+  har sahifada faqat o'sha sahifa ishlatadigan filtrlarni ko'rsatadi (`pageFilters`; Xaridlar, Sozlamalar, holat —
+  "Butun tashkilot bo'yicha").
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

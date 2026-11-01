@@ -2107,6 +2107,8 @@ export interface components {
             name: string;
             /** Skus */
             skus: string[];
+            /** Shared */
+            shared: boolean;
             /** Revenue */
             revenue: string;
             /** Uzum Suggested */
@@ -7201,6 +7203,8 @@ export interface operations {
         parameters: {
             query?: {
                 start?: string | null;
+                /** @description Do'konlar (bir necha marta) */
+                shop?: string[] | null;
             };
             header?: never;
             path: {
@@ -7241,7 +7245,10 @@ export interface operations {
     };
     put_opening_api_v1_orgs__org_id__opening_put: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Do'konlar (bir necha marta) */
+                shop?: string[] | null;
+            };
             header?: never;
             path: {
                 org_id: string;

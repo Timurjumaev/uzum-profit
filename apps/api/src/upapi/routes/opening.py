@@ -8,7 +8,8 @@ partiyalardan (F21); boshlang'ich qoldiq — birinchi lot (:mod:`upcore.costing`
 - ``GET`` — jadval: tovarlar va tovarga bog'lanmagan SKU'lar, oxirgi 90 kun tushumi bo'yicha (avval eng muhimlari),
   Uzum qoldig'i taklifi (boshlash sanasi bugun yoki keyin — joriy qoldiq; o'tgan sana — oldingi kun snapshoti,
   yo'q bo'lsa ``null``), saqlangan qiymatlar, oxirgi partiya narxi (ishora) va qamrov (tushumning qancha qismida
-  tannarx manbasi bor). ``?start=`` — boshqa sana uchun taklif.
+  tannarx manbasi bor). ``?start=`` — boshqa sana uchun taklif. ``?shop=`` (bir necha marta) — tanlangan do'konlarda
+  SKU'si bor tovarlar; tannarx va qoldiq tovar bo'yicha umumiy (``shared`` — boshqa do'konda ham sotiladi).
 - ``PUT`` — sana va qatorlarni saqlaydi. Tovarga bog'lanmagan SKU uchun tovar yaratiladi (SKU nomi bilan) va
   bog'lanadi. Qator narxlari to'liq almashtiriladi; narxi ham, qoldig'i ham yo'q qator — o'chiriladi. Sana
   o'zgarsa — hamma tovar, aks holda faqat o'zgargan tovarlar qayta hisoblanadi (navbat orqali, "qayta hisoblandi").
@@ -45,6 +46,7 @@ MAX_ROWS = 5000
 MAX_QTY = 10_000_000
 Cost = Annotated[Decimal, Field(ge=0, le=Decimal("1e12"), max_digits=14, decimal_places=2)]
 Qty = Annotated[int, Field(ge=0, le=MAX_QTY)]
+Shops = Annotated[list[UUID] | None, Query(description="Do'konlar (bir necha marta)")]
 
 
 class PriceOut(BaseModel):
@@ -59,6 +61,7 @@ class OpeningRowOut(BaseModel):
     sku_id: UUID | None
     name: str
     skus: list[str]
+    shared: bool  # tovar tanlanmagan do'konda ham sotiladi (narx va qoldiq — hamma do'kon bo'yicha)
     revenue: Decimal  # oxirgi 90 kun
     uzum_suggested: (
         int | None
@@ -119,7 +122,9 @@ async def _stock(conn: Any, as_of: date) -> tuple[dict[UUID, int], str]:
     return out, "snapshot" if out else "none"
 
 
-async def _read(ctx: OrgContext, start: date | None) -> OpeningOut:
+async def _read(
+    ctx: OrgContext, start: date | None, shops: frozenset[UUID] | None = None
+) -> OpeningOut:
     conn = ctx.conn
     saved = await conn.scalar(select(m.orgs.c.cost_start_on).where(m.orgs.c.id == ctx.org_id))
     as_of = start or saved or today()
@@ -160,6 +165,13 @@ async def _read(ctx: OrgContext, start: date | None) -> OpeningOut:
             groups.setdefault(sku.item_id, []).append(sku.id)
     for item_id in prices.keys() | opening.keys():
         groups.setdefault(item_id, [])
+    if shops:  # do'kon filtri: tanlangan do'konda SKU'si bor tovarlar (tannarx va qoldiq — tovar bo'yicha umumiy)
+        groups = {i: g for i, g in groups.items() if any(catalog[x].shop_id in shops for x in g)}
+        lone = [x for x in lone if catalog[x].shop_id in shops]
+
+    catalog_shops = frozenset(
+        x.shop_id for x in catalog.values()
+    )  # filtrsiz — hech narsa "boshqa do'kon" emas
 
     def stock_of(skus: list[UUID]) -> int | None:
         known = [stock[s] for s in skus if s in stock]
@@ -176,6 +188,7 @@ async def _read(ctx: OrgContext, start: date | None) -> OpeningOut:
                 sku_id=None,
                 name=items.get(item_id, "—"),
                 skus=[catalog[s].title or "—" for s in skus],
+                shared=any(catalog[s].shop_id not in (shops or catalog_shops) for s in skus),
                 revenue=sum((revenue.get(s, Decimal(0)) for s in skus), Decimal(0)),
                 uzum_suggested=stock_of(skus),
                 uzum_qty=saved_row.uzum_qty if saved_row else None,
@@ -196,6 +209,7 @@ async def _read(ctx: OrgContext, start: date | None) -> OpeningOut:
                 sku_id=sku_id,
                 name=info.product_title or info.title or "—",
                 skus=[info.title or "—"],
+                shared=False,
                 revenue=revenue.get(sku_id, Decimal(0)),
                 uzum_suggested=stock.get(sku_id, 0 if source == "current" else None),
                 uzum_qty=None,
@@ -219,11 +233,13 @@ async def _read(ctx: OrgContext, start: date | None) -> OpeningOut:
 
 
 @router.get("/orgs/{org_id}/opening", response_model=OpeningOut)
-async def get_opening(ctx: Viewer, start: Annotated[date | None, Query()] = None) -> OpeningOut:
+async def get_opening(
+    ctx: Viewer, start: Annotated[date | None, Query()] = None, shop: Shops = None
+) -> OpeningOut:
     """Boshlang'ich holat jadvali (F41); ``start`` — boshqa boshlash sanasi uchun qoldiq taklifi."""
     if start is not None and start > today():
         raise AppError("bad_day", 422, detail="kelajak sanasi bo'lmaydi")
-    return await _read(ctx, start)
+    return await _read(ctx, start, frozenset(shop) if shop else None)
 
 
 async def _item_for(ctx: OrgContext, row: OpeningRowIn) -> UUID:
@@ -253,7 +269,11 @@ async def _item_for(ctx: OrgContext, row: OpeningRowIn) -> UUID:
 
 @router.put("/orgs/{org_id}/opening", response_model=OpeningOut)
 async def put_opening(
-    body: OpeningIn, ctx: Manager, request: Request, background: BackgroundTasks
+    body: OpeningIn,
+    ctx: Manager,
+    request: Request,
+    background: BackgroundTasks,
+    shop: Shops = None,
 ) -> OpeningOut:
     """Boshlash sanasi va qatorlar (F41). ``start_on: null`` — o'chirish (kiritilgan narxlar saqlanadi)."""
     if body.start_on is not None and body.start_on > today():
@@ -342,4 +362,4 @@ async def put_opening(
             await calc.request(conn, ctx.org_id, calc.Scope.ITEM, item_id)
     if before != body.start_on or touched:
         background.add_task(_kick, request, ctx.org_id)
-    return await _read(ctx, None)
+    return await _read(ctx, None, frozenset(shop) if shop else None)

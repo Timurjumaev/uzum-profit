@@ -271,6 +271,7 @@ export const uzLatn = {
   },
   shell: {
     skip: "Asosiy kontentga oʻtish",
+    orgWide: "Butun tashkilot boʻyicha",
     filters: "Filtrlar",
     shop: "Doʻkon",
     allShops: "Hammasi",
@@ -817,6 +818,7 @@ export const uzLatn = {
     search: "Qidirish",
     revenue: "90 kun: {{sum}}",
     lastLot: "Oxirgi partiya: {{sum}} / dona",
+    shared: "Boshqa doʻkonda ham sotiladi — tannarx va qoldiq hamma doʻkon boʻyicha umumiy",
     lotsBefore: "{{n}} ta partiya boshlash sanasidan oldin — hisobga olinmaydi (qoldiqqa kirgan)",
     periods: "Narx davrlari: {{list}}",
     fromStart: "boshidan",

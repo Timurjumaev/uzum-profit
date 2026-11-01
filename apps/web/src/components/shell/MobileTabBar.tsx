@@ -5,7 +5,7 @@ import { Ellipsis } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useFilters } from "../../app/filters";
+import { pageFilters, useFilters } from "../../app/filters";
 import { CompareToggle, Drawer } from "../ui";
 import { cx } from "../ui/cx";
 import { NavLink } from "./NavLink";
@@ -41,9 +41,11 @@ export function MobileTabBar({ account }: { account: Account }) {
             </li>
           ))}
         </ul>
-        <div className="more__section">
-          <CompareToggle value={filters.compare} onChange={(compare) => setFilters({ compare })} />
-        </div>
+        {pageFilters(pathname).has("compare") && (
+          <div className="more__section">
+            <CompareToggle value={filters.compare} onChange={(compare) => setFilters({ compare })} />
+          </div>
+        )}
         <AccountPanel account={account} />
       </Drawer>
     </nav>
