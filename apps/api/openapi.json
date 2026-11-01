@@ -6212,6 +6212,28 @@
               ],
               "title": "Start"
             }
+          },
+          {
+            "name": "shop",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Do'konlar (bir necha marta)",
+              "title": "Shop"
+            },
+            "description": "Do'konlar (bir necha marta)"
           }
         ],
         "responses": {
@@ -6264,6 +6286,28 @@
               "format": "uuid",
               "title": "Org Id"
             }
+          },
+          {
+            "name": "shop",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Do'konlar (bir necha marta)",
+              "title": "Shop"
+            },
+            "description": "Do'konlar (bir necha marta)"
           }
         ],
         "requestBody": {
@@ -9363,6 +9407,10 @@
             "type": "array",
             "title": "Skus"
           },
+          "shared": {
+            "type": "boolean",
+            "title": "Shared"
+          },
           "revenue": {
             "type": "string",
             "title": "Revenue"
@@ -9433,6 +9481,7 @@
           "sku_id",
           "name",
           "skus",
+          "shared",
           "revenue",
           "uzum_suggested",
           "uzum_qty",

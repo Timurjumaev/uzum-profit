@@ -380,6 +380,12 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- Boshlang'ich holat sahifasi yuqoridagi do'kon filtrini e'tiborsiz qoldirardi (byDurii tanlansa ham ikkala do'kon
+  tovarlari chiqardi): endi `GET/PUT /opening?shop=` — tanlangan do'konda SKU'si bor tovarlar; ikki do'konda sotiladigan
+  tovar "boshqa do'konda ham" belgisi bilan (tannarx va qoldiq tovar bo'yicha umumiy).
+- Yuqori panel sahifa ishlatmaydigan filtrlarni ham ko'rsatardi (Xaridlar, Sozlamalar, Ma'lumotlar holati — hech birini;
+  Ombor — davrni; Mahsulotlar, Buyurtmalar, Xarajatlar — solishtirishni): endi faqat ishlatiladiganlari (`pageFilters`),
+  filtrsiz sahifada "Butun tashkilot bo'yicha" yozuvi; mobil "Yana" panelida solishtirish ham shunday.
 - Shell testlari soatga bog'liq edi (oyning 1-kunida standart "Shu oy" davri "Bugun" deb nomlanadi) — soat qotirildi.
 - Davr nomi: 30 kunlik oyning 30-kunida (va 1-yanvarda) standart "Shu oy" davri "30 kun" ("Bugun") deb ko'rinardi —
   bir xil kunlarga tushgan tayyor davrlarda taqvim nomi ustun (`matchPreset`).

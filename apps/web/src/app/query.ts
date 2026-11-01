@@ -426,13 +426,15 @@ export const setInventorySettings = (orgId: string, body: InventorySettingsIn) =
 
 // --- Boshlang'ich holat (F41, ADR-033) ---------------------------------------------------------------------------
 
-export const openingKey = (orgId: string, start: string | null) => ["orgs", orgId, "opening", start ?? ""] as const;
+export const openingKey = (orgId: string, start: string | null, shops: string[] = []) => ["orgs", orgId, "opening", start ?? "", ...shops] as const;
 
-/** Boshlang'ich holat jadvali; `start` — boshqa boshlash sanasi uchun Uzum qoldig'i taklifi. */
-export const openingQuery = (orgId: string, start: string | null) =>
+/** Boshlang'ich holat jadvali; `start` — boshqa boshlash sanasi uchun Uzum qoldig'i taklifi; `shops` — do'kon filtri. */
+export const openingQuery = (orgId: string, start: string | null, shops: string[] = []) =>
   queryOptions({
-    queryKey: openingKey(orgId, start),
-    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/opening", { params: { path: { org_id: orgId }, query: start ? { start } : {} } })),
+    queryKey: openingKey(orgId, start, shops),
+    queryFn: () =>
+      unwrap(api.GET("/api/v1/orgs/{org_id}/opening", { params: { path: { org_id: orgId }, query: { ...(start ? { start } : {}), ...(shops.length ? { shop: shops } : {}) } } })),
   });
 
-export const saveOpening = (orgId: string, body: OpeningIn) => unwrap(api.PUT("/api/v1/orgs/{org_id}/opening", { params: orgPath(orgId), body }));
+export const saveOpening = (orgId: string, body: OpeningIn, shops: string[] = []) =>
+  unwrap(api.PUT("/api/v1/orgs/{org_id}/opening", { params: { path: { org_id: orgId }, query: shops.length ? { shop: shops } : {} }, body }));

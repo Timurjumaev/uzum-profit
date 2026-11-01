@@ -13,6 +13,7 @@ import {
   LOGOUT_ROUTE,
   ME,
   ME_ROUTE,
+  ORG_ID,
   mockApi,
   problem,
   REFRESH_ROUTE,
@@ -138,6 +139,19 @@ describe("nav.ts", () => {
 });
 
 describe("topbar: filtrlar (URL'da)", () => {
+  it("sahifa ishlatmaydigan filtr ko'rsatilmaydi: Xaridlar — butun tashkilot, Ombor — faqat do'kon", async () => {
+    const bar = () => within(document.querySelector("header.topbar") as HTMLElement);
+    await renderShell("/purchases", { [`GET /api/v1/orgs/${ORG_ID}/purchases`]: () => json(200, { items: [], amounts: true }) });
+    expect(bar().getByText("Butun tashkilot boʻyicha")).toBeTruthy();
+    expect(bar().queryByRole("button", { name: /^Davr:/ })).toBeNull();
+    expect(bar().queryByRole("button", { name: /^Doʻkon/ })).toBeNull();
+    cleanup();
+    await renderShell("/inventory");
+    expect(bar().getByRole("button", { name: /^Doʻkon/ })).toBeTruthy();
+    expect(bar().queryByRole("button", { name: /^Davr:/ })).toBeNull();
+    expect(bar().queryByText("Butun tashkilot boʻyicha")).toBeNull();
+  });
+
   it("tanlanmagan davr — Shu oy", async () => {
     vi.useFakeTimers({ toFake: ["Date"] }); // oyning 1-kunida "Shu oy" = "Bugun" (nomi "Bugun") — soat qotiriladi
     vi.setSystemTime(new Date("2026-10-25T09:00:00Z"));

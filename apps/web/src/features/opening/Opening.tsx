@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
+import { useFilters } from "../../app/filters";
 import { currentOrg, meQuery, openingQuery, saveOpening } from "../../app/query";
 import { Banner, Button, EmptyState, MoneyInput, NumberInput, PageHelp, ProgressBar, Skeleton, TextInput, useToast } from "../../components/ui";
 import type { OpeningRow } from "../../lib/api/types";
@@ -26,18 +27,19 @@ export function Opening() {
   const org = currentOrg(me)!;
   const canManage = MANAGE_ROLES.includes(org.role);
   const [start, setStart] = useState<string | null>(null); // null — saqlangan (yoki bugun)
-  const query = useQuery(openingQuery(org.id, start));
+  const { filters } = useFilters(); // do'kon filtri — tanlangan do'konda sotiladigan tovarlar
+  const query = useQuery(openingQuery(org.id, start, filters.shops));
   const [edits, setEdits] = useState<Record<string, Edit>>({});
   const [needle, setNeedle] = useState("");
   const [limit, setLimit] = useState(PAGE);
   const data = query.data;
   const startValue = start ?? data?.start_on ?? data?.as_of ?? "";
   const save = useMutation({
-    mutationFn: (off: boolean) => saveOpening(org.id, off ? { start_on: null, rows: [] } : openingBody(startValue || null, data?.rows ?? [], edits)),
+    mutationFn: (off: boolean) => saveOpening(org.id, off ? { start_on: null, rows: [] } : openingBody(startValue || null, data?.rows ?? [], edits), filters.shops),
     onSuccess: async (body, off) => {
       setEdits({});
       setStart(null);
-      client.setQueryData(openingQuery(org.id, null).queryKey, body);
+      client.setQueryData(openingQuery(org.id, null, filters.shops).queryKey, body);
       await client.invalidateQueries({ queryKey: ["orgs", org.id], predicate: (q) => q.queryKey[2] !== "opening" });
       toast.show(t(off ? "opening.offDone" : "opening.saved"), "positive");
     },
@@ -103,6 +105,7 @@ export function Opening() {
                         <p className="caption">
                           {r.skus.join(", ")} · {t("opening.revenue", { sum: f.money(r.revenue) })}
                         </p>
+                        {r.shared && <p className="caption">{t("opening.shared")}</p>}
                         {r.last_lot_cost !== null && <p className="caption">{t("opening.lastLot", { sum: f.money(r.last_lot_cost) })}</p>}
                         {r.lots_before > 0 && <p className="caption opening-row__warn">{t("opening.lotsBefore", { n: r.lots_before })}</p>}
                       </div>

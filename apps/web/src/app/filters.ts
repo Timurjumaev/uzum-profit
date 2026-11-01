@@ -16,6 +16,20 @@ export type Filters = {
   compare: CompareMode;
 };
 
+/** Topbar filtrlari: sahifa qaysilarini haqiqatan ishlatadi (ishlatmaydigani ko'rsatilmaydi — aldamasin). */
+export type FilterKind = "shop" | "range" | "compare";
+
+const PAGE_FILTERS: ReadonlyArray<readonly [RegExp, readonly FilterKind[]]> = [
+  [/^\/(pnl\/?)?$/, ["shop", "range", "compare"]], // bosh sahifa, Foyda va zarar
+  [/^\/(products|orders|expenses)(\/|$)/, ["shop", "range"]],
+  [/^\/(inventory|opening)\/?$/, ["shop"]], // qoldiq — davrsiz (bugungi holat)
+];
+
+/** Sahifa ishlatadigan filtrlar; ro'yxatda yo'q sahifa (Xaridlar, Sozlamalar, holat ...) — butun tashkilot bo'yicha. */
+export function pageFilters(pathname: string): ReadonlySet<FilterKind> {
+  return new Set(PAGE_FILTERS.find(([re]) => re.test(pathname))?.[1] ?? []);
+}
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** URL → tiplangan qidiruv: noto'g'ri qiymat jim tashlanadi (ruxsatsiz yoki eskirgan havola sahifani buzmasin). */

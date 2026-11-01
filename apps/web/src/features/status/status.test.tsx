@@ -117,21 +117,22 @@ describe("Maʼlumotlar holati", () => {
 
   it("umumiy holat: yangi — faqat 'Yangilandi'; xato — sariq banner; eskirgan; uzilish", async () => {
     await renderStatus({ [SYNC_ROUTE]: () => json(200, status({ healthy: true })) });
-    expect(await screen.findByText("Yangilandi: 3 daqiqa oldin")).toBeTruthy();
+    // Sahifa ichida (topbar SyncIndicator ham shu matnni ko'rsatadi).
+    expect(await within(await screen.findByRole("main")).findByText("Yangilandi: 3 daqiqa oldin")).toBeTruthy();
     expect(screen.queryByText("Sinxronda xato")).toBeNull();
     cleanup();
 
     await renderStatus({ [SYNC_ROUTE]: () => json(200, status({ healthy: false })) });
-    expect(await screen.findByText("Sinxronda xato")).toBeTruthy();
+    expect(await within(await screen.findByRole("main")).findByText("Sinxronda xato")).toBeTruthy();
     cleanup();
 
     await renderStatus({ [SYNC_ROUTE]: () => json(200, status({ freshness: { orders: minutesAgo(130) } })) });
-    expect(await screen.findByText("Yangilanmagan: 2 soat oldin")).toBeTruthy();
+    expect(await within(await screen.findByRole("main")).findByText("Yangilanmagan: 2 soat oldin")).toBeTruthy();
     cleanup();
 
     const outage = { active: true, since: minutesAgo(20), paused_until: null, recovered_from: null, recovered_at: null };
     await renderStatus({ [SYNC_ROUTE]: () => json(200, status({ outage })) });
-    expect(await screen.findByText("Uzumda uzilish")).toBeTruthy(); // karkas banneri — sahifa takrorlamaydi
+    expect((await screen.findAllByText("Uzumda uzilish")).length).toBeGreaterThan(0); // karkas banneri (+ topbar belgisi) — sahifa takrorlamaydi
     expect(screen.getAllByText(/Shu paytda sotuv yoʻq deb koʻrinsa, ishonmang/)).toHaveLength(1);
     expect((screen.getByRole("button", { name: "Hozir yangilash" }) as HTMLButtonElement).disabled).toBe(true);
   });

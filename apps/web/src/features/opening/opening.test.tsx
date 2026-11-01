@@ -73,3 +73,23 @@ describe("boshlang'ich holat", () => {
     expect((screen.getByLabelText("Boshlash sanasi") as HTMLInputElement).disabled).toBe(true);
   });
 });
+
+describe("do'kon filtri", () => {
+  it("tanlangan do'kon so'rovga va saqlashga uzatiladi; umumiy tovar belgisi; topbar'da davr yo'q", async () => {
+    const shop = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const api = mockApi({
+      [ME_ROUTE]: () => json(200, ME),
+      [ROUTE]: () => json(200, data({ rows: [{ ...data().rows[0]!, shared: true }] })),
+      [PUT]: () => json(200, data()),
+    });
+    render(<App state={createAppState(createMemoryHistory({ initialEntries: [`/opening?shop=${shop}`] }), "uz-Latn")} />);
+    expect(await screen.findByText(/Boshqa doʻkonda ham sotiladi/)).toBeTruthy();
+    expect(api.fetch.mock.calls.some(([r]) => (r as Request).url.includes(`shop=${shop}`))).toBe(true);
+    expect(screen.queryByRole("button", { name: /Solishtirish/ })).toBeNull();
+    fireEvent.change(screen.getAllByLabelText(/Tannarx \/ dona/)[0]!, { target: { value: "5" } });
+    fireEvent.click(screen.getByRole("button", { name: "Saqlash va qayta hisoblash" }));
+    await waitFor(() => expect(api.bodiesOf(PUT)).toHaveLength(1));
+    const put = api.fetch.mock.calls.map(([r]) => r as Request).find((r) => r.method === "PUT")!;
+    expect(new URL(put.url).searchParams.getAll("shop")).toEqual([shop]);
+  });
+});

@@ -1,12 +1,13 @@
-// TopBar (04 §7.1): do'kon, davr, solishtirish (filtrlar URL'da — `app/filters`), o'ngda — SyncIndicator, tez o'tish
+// TopBar (04 §7.1): do'kon, davr, solishtirish (filtrlar URL'da — `app/filters`; faqat sahifa ishlatadiganlari — `pageFilters`), o'ngda — SyncIndicator, tez o'tish
 // (Ctrl+K) va foydalanuvchi menyusi. Mobilda ixcham: do'kon, davr, qidiruv, yangilik belgisi (solishtirish va
 // hisob — "Yana" panelida).
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useFilters } from "../../app/filters";
+import { pageFilters, useFilters } from "../../app/filters";
 import { shopsQuery } from "../../app/query";
 import { DateRangePicker } from "../ui";
 import { CompareMenu } from "./CompareMenu";
@@ -20,6 +21,8 @@ export type TopBarProps = { orgId: string | null; account: Account; onSearch: ()
 export function TopBar({ orgId, account, onSearch }: TopBarProps) {
   const { t } = useTranslation();
   const { filters, setFilters } = useFilters();
+  const { pathname } = useLocation();
+  const kinds = pageFilters(pathname); // sahifa ishlatmaydigan filtr ko'rsatilmaydi
   const shops = useQuery({ ...shopsQuery(orgId ?? ""), enabled: orgId !== null });
   // "Hammasi" davri eng birinchi sotuvdan boshlanadi (tanlangan do'konlar bo'yicha).
   const first = useMemo(() => {
@@ -33,9 +36,10 @@ export function TopBar({ orgId, account, onSearch }: TopBarProps) {
   return (
     <header className="topbar">
       <div className="topbar__filters" role="group" aria-label={t("shell.filters")}>
-        {orgId && <ShopFilter orgId={orgId} selected={filters.shops} onChange={(shops) => setFilters({ shops })} />}
-        <DateRangePicker value={filters.range} first={first} onChange={(range) => setFilters({ range })} />
-        {orgId && <CompareMenu value={filters.compare} onChange={(compare) => setFilters({ compare })} />}
+        {orgId && kinds.has("shop") && <ShopFilter orgId={orgId} selected={filters.shops} onChange={(shops) => setFilters({ shops })} />}
+        {kinds.has("range") && <DateRangePicker value={filters.range} first={first} onChange={(range) => setFilters({ range })} />}
+        {orgId && kinds.has("compare") && <CompareMenu value={filters.compare} onChange={(compare) => setFilters({ compare })} />}
+        {kinds.size === 0 && <span className="caption topbar__scope">{t("shell.orgWide")}</span>}
       </div>
       <div className="topbar__tools">
         {orgId && <SyncIndicator orgId={orgId} />}
