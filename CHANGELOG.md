@@ -383,6 +383,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- Boshlang'ich holat jadvali: ustun sarlavhalari bir qatorda va o'z ustunidagi maydon bilan tekis (avval "Tannarx" tugmasi
+  sarlavha qatorini balandlatib, sarlavhalar har xil balandlikda edi; "Tushum" o'ngga tekislangan edi); tugma ixcham.
 - Boshlang'ich holat sahifasi yuqoridagi do'kon filtrini e'tiborsiz qoldirardi (byDurii tanlansa ham ikkala do'kon
   tovarlari chiqardi): endi `GET/PUT /opening?shop=` — tanlangan do'konda SKU'si bor tovarlar; ikki do'konda sotiladigan
   tovar "boshqa do'konda ham" belgisi bilan (tannarx va qoldiq tovar bo'yicha umumiy).
