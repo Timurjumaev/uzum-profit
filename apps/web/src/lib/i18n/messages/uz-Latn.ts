@@ -973,8 +973,9 @@ export const uzLatn = {
     days: "{{count}} kun",
     kpi: {
       frozen: "Muzlagan pul",
-      frozenNote: "{{units}} dona: Uzumda va oʻz omborimda",
+      frozenNote: "{{units}} dona: Uzumda, postavkada va oʻz omborimda",
       transit: "Yoʻldagi tovar",
+      transitInbound: "shundan postavkada {{count}} dona",
       own: "Oʻz omborimda",
       days: "Oʻrtacha sotilish muddati",
     },

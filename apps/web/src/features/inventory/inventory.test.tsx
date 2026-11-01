@@ -91,6 +91,17 @@ describe("ombor jadvali", () => {
     expect(screen.getByRole("tab", { name: /Hammasi/ }).textContent).toContain("2");
   });
 
+  it("KPI: postavkadagi tovar ham yo'lda (ADR-034)", async () => {
+    const base = inventoryData();
+    const totals = { ...base.totals, units: { ...base.totals.units, inbound: 744 }, frozen_money: { ...base.totals.frozen_money!, inbound: "1000000.00" } };
+    await renderAt("/inventory", { [INVENTORY_ROUTE]: () => json(200, { ...base, totals }) });
+    await screen.findByRole("table", { name: "Qoldiq jadvali" });
+    const page = norm(document.body.textContent!);
+    expect(page).toContain(norm(`${f.number(794)} dona`)); // 20 + 30 + 744
+    expect(page).toContain(norm(`shundan postavkada ${f.number(744)} dona`));
+    expect(page).toContain(norm(f.money(7_000_000))); // 6 000 000 + 1 000 000
+  });
+
   it("holat guruhi URL'da va API'ga `status` bo'lib boradi; qidiruv — `q`", async () => {
     const { api, history } = await renderAt("/inventory");
     await screen.findByRole("table", { name: "Qoldiq jadvali" });

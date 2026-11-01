@@ -391,6 +391,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- Ombor KPI: "Yo'ldagi tovar" postavkadagi (qabul qilinmagan) tovarni ham o'z ichiga oladi ("shundan postavkada N"),
+  muzlagan pul izohida "Uzumda, postavkada va o'z omborimda" (B4.14 dan keyin Temur ko'rdi: postavka KPI'da ko'rinmasdi).
 - Boshlang'ich holat soddalashtirildi (Temur bilan kelishildi): jadvalda odatda faqat **Tur (SKU)** va **Tannarx**. Tushum
   ustuni olib tashlandi (tartib qoladi); Uzum qoldig'i Uzumdan o'zi olinadi va SKU ostida matn bilan ko'rinadi (kiritish
   ustuni faqat qoldiq noma'lum bo'lsa — o'tgan sana, snapshot yo'q); "O'z omborimda" ustuni — "O'z omborimda ham tovar
