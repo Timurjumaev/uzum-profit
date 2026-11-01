@@ -262,3 +262,31 @@ def test_writeoff_reduces_cost_lots(world: World) -> None:
     )
     a.recalc(datetime.now(UTC))  # navbat (commitdan keyin ish; testda qo'lda)
     assert D(cost()) == 2_000  # arzon lot to'liq hisobdan chiqdi
+
+
+def test_inbound_invoice_location(world: World) -> None:
+    """ADR-034: qabul qilinmagan postavka — "postavkada"; o'z omborimdan ayiriladi; qabul qilingani va bekori — yo'q."""
+    w, a = world, world.a
+    before = row(w)["locations"]
+    own_before = before["own"]
+    for ext, status, qty in [(9001, "CREATED", 7), (9002, "ACCEPTED", 100), (9003, "CANCELED", 50)]:
+        inv = a.insert(
+            "fbo_invoices", shop_id=a.shop_id, external_id=ext, status=status, to_stock=qty
+        )
+        a.insert(
+            "fbo_invoice_items",
+            invoice_id=inv,
+            sku_external_id=1,
+            sku_id=w.ids["sku"],
+            quantity_to_stock=qty,
+        )
+    r = row(w)
+    assert r["locations"]["inbound"] == 7
+    assert r["locations"]["own"] == max(0, own_before - 7)
+    body = ok(send(w, "GET", f"inventory?as_of={TODAY.isoformat()}"))
+    assert body["totals"]["units"]["inbound"] == 7
+    assert D(body["totals"]["frozen_money"]["inbound"]) >= 0
+    # Boshlang'ich holat taklifi postavkani ham qo'shadi.
+    opening = ok(send(w, "GET", "opening"))
+    mine = next(x for x in opening["rows"] if x["item_id"] == str(w.ids["item"]))
+    assert mine["inbound"] == 7 and mine["uzum_suggested"] >= 7

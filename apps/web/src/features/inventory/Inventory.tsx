@@ -88,7 +88,7 @@ export function Inventory() {
           <Kpi
             label={t("inventory.kpi.frozen")}
             value={f.money(totals.frozen_total!)}
-            note={t("inventory.kpi.frozenNote", { units: f.number(totals.units.fbo + totals.units.fbs + totals.units.own) })}
+            note={t("inventory.kpi.frozenNote", { units: f.number(totals.units.fbo + totals.units.fbs + totals.units.own + (totals.units.inbound ?? 0)) })}
             help={<Help id="f29" metric={t("inventory.kpi.frozen")} />}
           />
         )}

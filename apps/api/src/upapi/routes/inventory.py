@@ -84,6 +84,7 @@ class LocationsOut(BaseModel):
     china: int
     road: int
     own: int
+    inbound: int  # postavkada — qabul qilinmagan (ADR-034)
 
 
 class OrderByOut(BaseModel):
@@ -123,7 +124,7 @@ class StockRowOut(BaseModel):
 class StockTotalsOut(BaseModel):
     frozen_money: (
         dict[str, Decimal] | None
-    )  # F29 joylar bo'yicha (china, road, own, fbo, fbs, defected)
+    )  # F29 joylar bo'yicha (china, road, own, inbound, fbo, fbs, defected)
     frozen_total: Decimal | None
     average_days_to_sell: Decimal | None  # F29
     uncosted: int  # qoldig'i bor, lot narxi yo'q SKU'lar
@@ -209,6 +210,7 @@ async def inventory(
                     china=s.china,
                     road=s.road,
                     own=s.own,
+                    inbound=s.inbound,
                 ),
                 velocity=VelocityOut(
                     value=s.velocity.value,

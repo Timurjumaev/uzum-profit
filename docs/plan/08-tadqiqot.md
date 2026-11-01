@@ -98,6 +98,16 @@ spetsifikatsiyasi, 2026-aprel asosida).
   `BALANCE_CORRECTION` — xarajat emas. Birinchi harf kirill yoki lotin bo'lib keladi.
 - Temurning do'konlari: byDurii — API'da 2026-07-14 dan 2465 sotuv (undan oldingi davr YaTT o'zgarishi sababli
   berilmaydi); EL-ONE — 2026-10-02 dan 203 sotuv; 2020-01-01 dan so'rov rad etilmaydi.
+- **Qoldiq maydonlari real ma'lumotda (B4.13, 2026-11-01, `realcheck`, byDurii 178 + EL-ONE 292 SKU, faqat FBO):**
+  `quantityAvailable` = `quantityActive` (+ FBS 0) hamma SKU'da; `quantityReserved` umuman kelmaydi; `quantityPending`,
+  `quantityOnPhotoStudio`, `quantityAdditional`, `quantityArchived`, `quantityMissing` — ikkala do'konda 0 (ma'nosi real
+  ma'lumotda tasdiqlanmadi — hisobga olinadi, lekin ishonilmaydi); `quantityDefected` — brak (byDurii 10); `quantityCreated`
+  (759) — yaratilgan, qabul qilinmagan postavkadagi dona bo'lsa kerak (o'sha payt bitta "CREATED" postavka — 744 dona);
+  `quantityAvailableByStockType` — `{fbo, fbs}`. Postavka holatlari: `CREATED` (yaratilgan — sotuvchida yoki viloyatdan Uzum
+  logistikasi bilan omborga yo'lda; qabul vaqti `timeSlotReservation`), `ACCEPTED`, `CANCELED`. Qaytarishlar: `DEFECTED` ×
+  `ASSEMBLED` (olib ketish kutilmoqda), `UTILIZED` (Uzum yo'q qildi). 60 kunda bekor: byDurii 754 dona, EL-ONE 77 —
+  "qaytish yo'lida" soni API'da yo'q (faqat taxmin). Temur: Toshkentdagi sotuvchi postavkani qabul vaqtida o'zi topshiradi,
+  viloyatdagisi oldindan Uzum logistikasi bilan jo'natadi — dastur uchun ikkalasi bitta joy: "postavkada".
 - Uzum 2026-10-08 da texnik uzilish bo'lgan, 09-da tiklana boshlagan; sotuvchilarga oktabr oxirigacha logistika va
   saqlash bepul ([gazeta.uz](https://www.gazeta.uz/oz/2026/10/09/uzum-market/)).
 

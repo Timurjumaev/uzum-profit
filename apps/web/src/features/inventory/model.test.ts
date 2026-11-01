@@ -13,6 +13,9 @@ describe("ombor yordamchilari", () => {
       { place: "defected", qty: 1 },
     ]);
     expect(extraPlaces(deadRow().locations)).toEqual([]);
+    // ADR-034: qabul qilinmagan postavka — o'z omborimdan keyin.
+    const r = stockRow();
+    expect(extraPlaces({ ...r.locations, inbound: 7 }).map((x) => x.place)).toEqual(["china", "road", "own", "inbound", "defected"]);
   });
 
   it("buyurtma sanasi: kechikkan / sana / yo'q", () => {

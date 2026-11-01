@@ -1958,6 +1958,8 @@ export interface components {
             road: number;
             /** Own */
             own: number;
+            /** Inbound */
+            inbound: number;
         };
         /** LoginRequest */
         LoginRequest: {
@@ -2117,6 +2119,8 @@ export interface components {
             revenue: string;
             /** Uzum Suggested */
             uzum_suggested: number | null;
+            /** Inbound */
+            inbound: number;
             /** Uzum Qty */
             uzum_qty: number | null;
             /** Own Qty */

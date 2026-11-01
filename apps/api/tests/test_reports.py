@@ -690,6 +690,7 @@ def test_inventory(world: World) -> None:
     # M10 joylar: p3 — faqat buyurtma berilgan (Xitoyda), p1 Uzumga yuborilgan (FBO qoldig'ida).
     assert xa["locations"] == {
         "fbo": 80, "fbs": 5, "defected": 2, "pending": 0, "china": 20, "road": 0, "own": 0,
+        "inbound": 0,
     }  # fmt: skip
     # F27 buyurtma sanasi = bugun + (zaxira kunlari − muddat 32 kun), kunga pastga yaxlitlanadi.
     slack = D(xa["days_of_stock"]) - 32
@@ -724,10 +725,11 @@ def test_inventory(world: World) -> None:
         "fbo": D(10_000_000),
         "fbs": D(500_000),
         "defected": D(200_000),
+        "inbound": D(0),
     }
     assert money(totals["frozen_total"]) == D(15_900_000)
     assert totals["units"] == {
-        "china": 20, "road": 0, "own": 60, "fbo": 120, "fbs": 5, "defected": 2,
+        "china": 20, "road": 0, "own": 60, "fbo": 120, "fbs": 5, "defected": 2, "inbound": 0,
     }  # fmt: skip
     assert totals["statuses"] == {"dead": 1, "good": 1}
     assert body["as_of"] == "2026-10-20" and body["total"] == 4  # lampa — qoldiqsiz
