@@ -350,11 +350,19 @@ class _Engine:
         qoldiq sonida)."""
         if isinstance(event, Return):
             sale = self.sales.get(event.sale_id)
-            cost = None
-            if sale is not None and sale.unit_cost is not None:
-                cost = Money(sale.unit_cost.amount * min(event.qty, sale.qty), UZS)
-            flags: frozenset[AnyFlag] = frozenset({CostFlag.HISTORICAL})
-            self.returns[event.id] = ReturnResult(event.id, event.sale_id, event.qty, cost, flags)
+            if sale is None or sale.unit_cost is None:
+                self.returns[event.id] = ReturnResult(
+                    event.id, event.sale_id, event.qty, None, frozenset({CostFlag.RETURN_UNMATCHED})
+                )
+                return
+            qty = min(event.qty, sale.qty - self._returned(sale.id))
+            flags: set[AnyFlag] = {CostFlag.HISTORICAL}
+            if qty < event.qty:
+                flags.add(CostFlag.RETURN_UNMATCHED)  # sotilganidan ko'p qaytish
+            cost = Money(sale.unit_cost.amount * qty, UZS)
+            self.returns[event.id] = ReturnResult(
+                event.id, event.sale_id, qty, cost, frozenset(flags)
+            )
             return
         if unit is None:
             self._record(event, None, (), {CostFlag.HISTORICAL})
@@ -374,6 +382,11 @@ class _Engine:
         out = Outflow(event.id, event.day, event.qty, cost, allocations, frozenset(flags))
         (self.sales if isinstance(event, Sale) else self.writeoffs)[event.id] = out
 
+    def _returned(self, sale_id: str) -> int:
+        return sum(
+            r.qty for r in self.returns.values() if r.sale_id == sale_id and r.cost is not None
+        )
+
     def give_back(self, event: Return) -> None:
         """Qaytish asl sotuv qatlamlariga, sotuvdagi narxda (oxirgi olingan qatlamdan boshlab)."""
         sale = self.sales.get(event.sale_id)
@@ -382,10 +395,7 @@ class _Engine:
                 event.id, event.sale_id, event.qty, None, frozenset({CostFlag.RETURN_UNMATCHED})
             )
             return
-        returned = sum(
-            r.qty for r in self.returns.values() if r.sale_id == sale.id and r.cost is not None
-        )
-        left = qty = min(event.qty, sale.qty - returned)
+        left = qty = min(event.qty, sale.qty - self._returned(sale.id))
         value = Decimal(0)
         for alloc in reversed(sale.allocations):
             back = min(left, alloc.qty)

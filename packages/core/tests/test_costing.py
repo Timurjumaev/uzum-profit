@@ -343,7 +343,13 @@ def test_opening_returns() -> None:
         [], [Sale("h", d(1), 3), Return("rh", d(2), 1, "h"), Return("rx", d(2), 1, "zz")], FIFO, o
     )
     assert r.returns["rh"].cost == uzs(1000) and r.returns["rh"].flags == {CostFlag.HISTORICAL}
-    assert r.returns["rx"].cost is None
+    assert r.returns["rx"].cost is None and r.returns["rx"].flags == {CostFlag.RETURN_UNMATCHED}
+    # Sotilganidan ko'p qaytish (tarixiy, keyin yana boshlashdan keyin) — manfiy dona yo'q (hypothesis topgan).
+    r3 = compute_costs(
+        [], [Sale("h", d(1), 1), Return("a", d(2), 2, "h"), Return("b", d(6), 1, "h")], FIFO, o
+    )
+    assert r3.returns["a"].qty == 1 and CostFlag.RETURN_UNMATCHED in r3.returns["a"].flags
+    assert r3.returns["b"].qty == 0 and r3.remaining == {OPENING_LOT: 2}
     # Boshlashdan keyin qaytgan tarixiy sotuv — qoldiqqa qaytadi (tovar haqiqatda qaytdi).
     r2 = compute_costs(
         [], [Sale("h", d(1), 3), Return("rh", d(6), 1, "h"), Sale("n", d(7), 3)], FIFO, o
