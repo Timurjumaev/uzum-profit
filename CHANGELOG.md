@@ -383,6 +383,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- Boshlang'ich holat soddalashtirildi (Temur bilan kelishildi): jadvalda odatda faqat **Tur (SKU)** va **Tannarx**. Tushum
+  ustuni olib tashlandi (tartib qoladi); Uzum qoldig'i Uzumdan o'zi olinadi va SKU ostida matn bilan ko'rinadi (kiritish
+  ustuni faqat qoldiq noma'lum bo'lsa — o'tgan sana, snapshot yo'q); "O'z omborimda" ustuni — "O'z omborimda ham tovar
+  bor" belgisi bilan. Qamrov endi doimiy 90 kun emas, boshlash sanasigacha bo'lgan tushum bo'yicha (shu narx qo'llanadigan
+  sotuvlar) va faqat yozilgan narxlarni sanaydi; tartib ham shu tushum bo'yicha.
 - Boshlang'ich holat jadvali: ustun sarlavhalari bir qatorda va o'z ustunidagi maydon bilan tekis (avval "Tannarx" tugmasi
   sarlavha qatorini balandlatib, sarlavhalar har xil balandlikda edi; "Tushum" o'ngga tekislangan edi); tugma ixcham.
 - Boshlang'ich holat sahifasi yuqoridagi do'kon filtrini e'tiborsiz qoldirardi (byDurii tanlansa ham ikkala do'kon

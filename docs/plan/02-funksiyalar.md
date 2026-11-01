@@ -475,4 +475,6 @@ oldingi kun snapshoti, S bugun bo'lsa joriy qoldiq) + o'z omborimda (sotuvchi ta
   o'rtachada hovuzning boshlang'ich qiymati. Q = 0 yoki narx yo'q — lot yo'q.
 - Tayyor sanasi < S bo'lgan partiyalar ishlatilmaydi (qoldiqqa kirgan); yo'ldagi (sanasiz) va S dan keyingilari — F21.
 - Ombor qiymati (F27, F29): S dan keyin tayyor partiya bo'lmasa — S kungi narx.
+- Qamrov (sahifada): S gacha bo'lgan tushumning narx yozilgan turlarga to'g'ri keladigan ulushi — shu narx qo'llanadigan
+  sotuvlar bo'yicha (doimiy oyna yo'q, tamoyil 2).
 - Unit kalkulyator (F35/F36) tannarxi: oxirgi tayyor partiya, bo'lmasa davr o'rtachasi (narx keyingi donalar uchun).
