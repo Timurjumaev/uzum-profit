@@ -68,3 +68,7 @@ export type PayoutScheduleIn = Schemas["PayoutScheduleIn"];
 export type ScheduleKind = Schemas["ScheduleKind"];
 export type InventorySettingsIn = Schemas["InventorySettingsIn"];
 export type WaiverPatch = Schemas["WaiverPatch"];
+export type Opening = Schemas["OpeningOut"];
+export type OpeningRow = Schemas["OpeningRowOut"];
+export type OpeningIn = Schemas["OpeningIn"];
+export type OpeningRowIn = Schemas["OpeningRowIn"];

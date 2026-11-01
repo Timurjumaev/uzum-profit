@@ -1170,6 +1170,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/opening": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Opening
+         * @description Boshlang'ich holat jadvali (F41); ``start`` — boshqa boshlash sanasi uchun qoldiq taklifi.
+         */
+        get: operations["get_opening_api_v1_orgs__org_id__opening_get"];
+        /**
+         * Put Opening
+         * @description Boshlash sanasi va qatorlar (F41). ``start_on: null`` — o'chirish (kiritilgan narxlar saqlanadi).
+         */
+        put: operations["put_opening_api_v1_orgs__org_id__opening_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1280,7 +1304,7 @@ export interface components {
          * CalcDefaultsOut
          * @description Unit kalkulyator boshlang'ich qiymatlari (F35, F36) va ularning manbasi; ``null`` — qiymat yo'q (UI so'raydi).
          *
-         *     Manbalar: ``price`` — ``period`` (davr o'rtachasi) | ``catalog``; ``unit_cost`` — ``period`` | ``last_lot``;
+         *     Manbalar: ``price`` — ``period`` (davr o'rtachasi) | ``catalog``; ``unit_cost`` — ``last_lot`` | ``period``;
          *     ``logistics`` — ``last_paid`` | ``shop_typical`` (me'yoriy, bonussiz — F40); ``commission_pct`` — ``period`` |
          *     ``snapshot`` | ``catalog``; ``tax_pct`` va ``ads_pct`` — ``period``.
          */
@@ -2022,6 +2046,84 @@ export interface components {
                 [key: string]: string;
             };
         };
+        /** OpeningIn */
+        OpeningIn: {
+            /** Start On */
+            start_on: string | null;
+            /**
+             * Rows
+             * @default []
+             */
+            rows: components["schemas"]["OpeningRowIn"][];
+        };
+        /** OpeningOut */
+        OpeningOut: {
+            /** Start On */
+            start_on: string | null;
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Stock Source */
+            stock_source: string;
+            /** Coverage */
+            coverage: string | null;
+            /** Rows */
+            rows: components["schemas"]["OpeningRowOut"][];
+        };
+        /** OpeningRowIn */
+        OpeningRowIn: {
+            /** Item Id */
+            item_id?: string | null;
+            /** Sku Id */
+            sku_id?: string | null;
+            /**
+             * Uzum Qty
+             * @default 0
+             */
+            uzum_qty: number;
+            /**
+             * Own Qty
+             * @default 0
+             */
+            own_qty: number;
+            /**
+             * Prices
+             * @default []
+             */
+            prices: components["schemas"]["PriceIn"][];
+        };
+        /**
+         * OpeningRowOut
+         * @description Bitta tovar (``item_id``) yoki tovarga bog'lanmagan SKU (``sku_id``, ``item_id`` — ``null``).
+         */
+        OpeningRowOut: {
+            /** Item Id */
+            item_id: string | null;
+            /** Sku Id */
+            sku_id: string | null;
+            /** Name */
+            name: string;
+            /** Skus */
+            skus: string[];
+            /** Revenue */
+            revenue: string;
+            /** Uzum Suggested */
+            uzum_suggested: number | null;
+            /** Uzum Qty */
+            uzum_qty: number | null;
+            /** Own Qty */
+            own_qty: number | null;
+            /** Prices */
+            prices: components["schemas"]["upapi__routes__opening__PriceOut"][];
+            /** Last Lot Cost */
+            last_lot_cost: string | null;
+            /** Lots After */
+            lots_after: number;
+            /** Lots Before */
+            lots_before: number;
+        };
         /** OrderByOut */
         OrderByOut: {
             /**
@@ -2413,12 +2515,12 @@ export interface components {
             /** Waiver Suggestions */
             waiver_suggestions: components["schemas"]["SuggestionOut"][];
         };
-        /** PriceOut */
-        PriceOut: {
-            /** Amount */
-            amount: string;
-            /** Currency */
-            currency: string;
+        /** PriceIn */
+        PriceIn: {
+            /** Valid From */
+            valid_from?: string | null;
+            /** Unit Cost */
+            unit_cost: number | string;
         };
         /**
          * Problem
@@ -2573,7 +2675,7 @@ export interface components {
             /** Raw */
             raw: string;
             /** Budget */
-            budget: components["schemas"]["PriceOut"][] | null;
+            budget: components["schemas"]["upapi__routes__inventory__PriceOut"][] | null;
         };
         /** ReturnCauseOut */
         ReturnCauseOut: {
@@ -3540,6 +3642,20 @@ export interface components {
             kinds?: string[] | null;
             /** Reason */
             reason?: string | null;
+        };
+        /** PriceOut */
+        upapi__routes__inventory__PriceOut: {
+            /** Amount */
+            amount: string;
+            /** Currency */
+            currency: string;
+        };
+        /** PriceOut */
+        upapi__routes__opening__PriceOut: {
+            /** Valid From */
+            valid_from: string | null;
+            /** Unit Cost */
+            unit_cost: string;
         };
     };
     responses: never;
@@ -7060,6 +7176,92 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_opening_api_v1_orgs__org_id__opening_get: {
+        parameters: {
+            query?: {
+                start?: string | null;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpeningOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    put_opening_api_v1_orgs__org_id__opening_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OpeningIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpeningOut"];
+                };
             };
             /** @description Validatsiya xatosi */
             422: {

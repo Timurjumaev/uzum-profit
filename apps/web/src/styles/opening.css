@@ -1,0 +1,58 @@
+/* Boshlang'ich holat (B4.12, F41): qatorlar — keng ekranda bitta qator (nom + 3 maydon), 360 px'da karta (ustma-ust);
+   faqat tokenlar, gorizontal skroll yo'q (04 §3). */
+
+.opening,
+.opening__list {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.opening > * {
+  min-inline-size: 0;
+}
+
+.opening__top {
+  display: grid;
+  gap: var(--space-4);
+  align-items: end;
+}
+
+.opening__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+}
+
+.opening-row {
+  display: grid;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+  border-block-end: 1px solid var(--border-hairline);
+}
+
+.opening-row__name > * {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.opening-row__warn {
+  color: var(--warning-text);
+}
+
+.opening__link {
+  color: var(--accent-text);
+  align-self: center;
+}
+
+@media (min-width: 768px) {
+  .opening__top {
+    grid-template-columns: minmax(0, 16rem) minmax(0, 1fr);
+  }
+
+  .opening-row {
+    grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
+    align-items: start;
+  }
+}

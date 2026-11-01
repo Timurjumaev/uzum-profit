@@ -3,7 +3,7 @@
 import { infiniteQueryOptions, MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
-import type { ComponentIn, ComponentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, WaiverIn, WaiverPatch } from "../lib/api/types";
+import type { ComponentIn, ComponentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, OpeningIn, WaiverIn, WaiverPatch } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -423,3 +423,16 @@ export const deletePayoutSchedule = (orgId: string, id: string) =>
 
 export const setInventorySettings = (orgId: string, body: InventorySettingsIn) =>
   unwrap(api.PUT("/api/v1/orgs/{org_id}/settings/inventory", { params: orgPath(orgId), body }));
+
+// --- Boshlang'ich holat (F41, ADR-033) ---------------------------------------------------------------------------
+
+export const openingKey = (orgId: string, start: string | null) => ["orgs", orgId, "opening", start ?? ""] as const;
+
+/** Boshlang'ich holat jadvali; `start` — boshqa boshlash sanasi uchun Uzum qoldig'i taklifi. */
+export const openingQuery = (orgId: string, start: string | null) =>
+  queryOptions({
+    queryKey: openingKey(orgId, start),
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/opening", { params: { path: { org_id: orgId }, query: start ? { start } : {} } })),
+  });
+
+export const saveOpening = (orgId: string, body: OpeningIn) => unwrap(api.PUT("/api/v1/orgs/{org_id}/opening", { params: orgPath(orgId), body }));

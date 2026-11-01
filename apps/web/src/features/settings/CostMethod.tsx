@@ -1,4 +1,5 @@
 // Tannarx usuli (F21): FIFO yoki o'rtacha. O'zgarsa o'tgan sotuvlar tannarxi qayta hisoblanadi — tasdiq so'raladi.
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -22,6 +23,9 @@ export function CostMethod({ orgId, value, canManage }: { orgId: string; value: 
         {t("settings.cost.title")}
       </h2>
       <p className="caption">{t("settings.cost.lead")}</p>
+      <Link to="/opening" className="settings-section__link">
+        {t("settings.cost.opening")}
+      </Link>
       <div className="settings-section__row">
         <Select
           label={t("settings.cost.method")}
