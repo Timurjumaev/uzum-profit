@@ -3,7 +3,7 @@
 Bloklar: hisob varag'i (P&L bilan bitta funksiya — ``upapi.reports.cells``, oldingi davr bilan), davr chizig'i
 (bugun, kecha, shu oy, oy prognozi, o'tgan oy — tanlangan davrdan qat'i nazar, do'kon filtri bilan), kunlik grafik,
 eng foydali 5 va zarar 5 SKU, qo'shimcha ko'rsatkichlar (F13–F19, F16, F29) va "Diqqat talab qiladi" sanoqlari.
-To'lov kutilmoqda (F38) — B5 da.
+Sotuvlar Yakunlangan + Jarayonda (ADR-036), har kesimda Jarayondagi qismi alohida. To'lov kutilmoqda (F38) — B5 da.
 """
 
 from __future__ import annotations
@@ -61,6 +61,8 @@ class PeriodTotalOut(BaseModel):
     revenue: Decimal
     net_profit: Decimal
     units: int
+    units_processing: int  # ADR-036: shundan Jarayonda (yakuniy emas)
+    revenue_processing: Decimal
 
 
 class ForecastOut(BaseModel):
@@ -76,6 +78,8 @@ class DayOut(BaseModel):
     revenue: Decimal
     net_profit: Decimal
     units: int
+    revenue_done: Decimal  # ADR-036: tushumning Yakunlangan qismi (grafikda qatlam)
+    revenue_processing: Decimal  # tushumning Jarayondagi qismi (grafikda ustidagi qatlam)
 
 
 class SkuBriefOut(BaseModel):
@@ -96,7 +100,7 @@ class KpiOut(BaseModel):
     cancel_share: Decimal | None  # F17
     return_share: Decimal | None  # F18
     drr: Decimal | None  # F19
-    expected_profit: PendingOut  # F16
+    pending: PendingOut  # F16: Jarayondagi sotuvlar (hisobga kirgan, yakuniy emas)
     frozen_money: Decimal  # F29 (Uzum FBO + FBS + brak + o'z omborim, lot narxida)
     in_transit_value: Decimal  # F29 "yo'lda" (Xitoyda buyurtma qilingan + yo'lda)
     average_days_to_sell: Decimal | None  # F29
@@ -138,6 +142,8 @@ def _total(key: str, period: Period, s: Statement) -> PeriodTotalOut:
         revenue=s.revenue.amount,
         net_profit=s.net_profit.amount,
         units=s.units,
+        units_processing=s.units_processing,
+        revenue_processing=s.revenue_processing.amount,
     )
 
 
@@ -173,7 +179,12 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
         ds = by_day.get(day, empty)
         daily.append(
             DayOut(
-                day=day, revenue=ds.revenue.amount, net_profit=ds.net_profit.amount, units=ds.units
+                day=day,
+                revenue=ds.revenue.amount,
+                net_profit=ds.net_profit.amount,
+                units=ds.units,
+                revenue_done=ds.revenue_done.amount,
+                revenue_processing=ds.revenue_processing.amount,
             )
         )
 
@@ -232,7 +243,7 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
             cancel_share=cancel_rate(sums.units, sums.canceled),
             return_share=return_share(sums.units, sums.returns),
             drr=drr(ads, s.revenue),
-            expected_profit=PendingOut.of(pend.total),
+            pending=PendingOut.of(pend.total),
             frozen_money=on_hand.amount,
             in_transit_value=in_transit.amount,
             average_days_to_sell=stock.average_days,

@@ -5,7 +5,8 @@ Qator: sana (F1), holat va guruh (F2), SKU, dona, narx, tushum, komissiya, logis
 eng yangisidan; sahifalash kursor bilan. ``summary`` — filtr (davr, do'kon, SKU) bo'yicha bekor va qaytish ulushi
 (F17, F18, ``daily_sku_metrics`` dan; holat filtri unga ta'sir qilmaydi).
 
-P&L qatori drill-down'i: ``group=completed`` qatorlari tushum/komissiya/logistika/tannarx yig'indisi = P&L qatori.
+P&L qatori drill-down'i: ``counted=true`` (Yakunlangan + Jarayonda, ADR-036) qatorlari tushum/komissiya/logistika/
+tannarx yig'indisi = P&L qatori.
 """
 
 from __future__ import annotations
@@ -18,7 +19,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy import and_, func, or_, select
-from upcore.metrics import StatusGroup, cancel_rate, return_share, status_group, statuses
+from upcore.metrics import COUNTED, StatusGroup, cancel_rate, return_share, status_group, statuses
 from upcore.money import Currency, Money
 
 from upapi.auth.deps import OrgContext, require
@@ -93,6 +94,10 @@ async def sales(
     group: StatusGroup | None = None,
     sku: Annotated[UUID | None, Query(description="SKU id")] = None,
     unlinked: Annotated[bool, Query(description="Faqat SKU'ga bog'lanmagan sotuvlar")] = False,
+    counted: Annotated[
+        bool,
+        Query(description="Faqat hisobga kiradiganlar: Yakunlangan + Jarayonda (P&L drill-down)"),
+    ] = False,
     limit: Limit = 100,
     cursor: Cursor = None,
 ) -> SalesOut:
@@ -114,6 +119,9 @@ async def sales(
         where.append(func.upper(func.trim(s.c.status)).not_in(known))
     elif group is not None:
         where.append(func.upper(func.trim(s.c.status)).in_(statuses(group)))
+    if counted:
+        wanted = [x for g in sorted(COUNTED) for x in sorted(statuses(g))]
+        where.append(func.upper(func.trim(s.c.status)).in_(wanted))
     query = (
         select(s, c.c.cogs, c.c.flags, c.c.changed_at, c.c.previous_cogs)
         .outerjoin(c, c.c.sale_item_id == s.c.id)

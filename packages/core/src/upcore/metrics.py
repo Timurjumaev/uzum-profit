@@ -21,6 +21,7 @@ from upcore.money import Currency, DecimalLike, Money, allocate, quantize, to_de
 TASHKENT = ZoneInfo("Asia/Tashkent")
 RATIO_PLACES = 6
 UZS = Currency.UZS
+ZERO_UZS = Money.zero(UZS)
 
 
 def ratio(numerator: DecimalLike, denominator: DecimalLike) -> Decimal | None:
@@ -159,6 +160,15 @@ def completed(lines: Iterable[SaleLine]) -> list[SaleLine]:
     return _in_group(lines, StatusGroup.COMPLETED)
 
 
+COUNTED = frozenset({StatusGroup.COMPLETED, StatusGroup.PROCESSING})
+
+
+def counted(lines: Iterable[SaleLine]) -> list[SaleLine]:
+    """F2 (ADR-036): hisobga olinadigan qatorlar — Yakunlangan va Jarayonda. Jarayondagi qator Uzum hozir bergan
+    qiymatlar bilan kiradi; bekor bo'lsa Uzum uni 0 qilib beradi va u o'zi chiqib ketadi."""
+    return [line for line in lines if line.group in COUNTED]
+
+
 def in_period(lines: Iterable[SaleLine], period: Period) -> list[SaleLine]:
     """F1. Buyurtma sanasi davrga tushgan qatorlar."""
     return [line for line in lines if line.order_date in period]
@@ -168,23 +178,24 @@ def in_period(lines: Iterable[SaleLine], period: Period) -> list[SaleLine]:
 
 
 def revenue(lines: Iterable[SaleLine]) -> Money:
-    """F3. Tushum = Σ ``sellPrice`` × ``amount`` (Yakunlangan)."""
-    return _uzs(sum((line.revenue for line in completed(lines)), Decimal(0)))
+    """F3. Tushum = Σ ``sellPrice`` × ``amount`` (Yakunlangan + Jarayonda, ADR-036)."""
+    return _uzs(sum((line.revenue for line in counted(lines)), Decimal(0)))
 
 
 def commission(lines: Iterable[SaleLine]) -> Money:
-    """F4. Uzum komissiyasi = Σ ``commission`` (Yakunlangan)."""
-    return _uzs(sum((to_decimal(line.commission) for line in completed(lines)), Decimal(0)))
+    """F4. Uzum komissiyasi = Σ ``commission`` (Yakunlangan + Jarayonda)."""
+    return _uzs(sum((to_decimal(line.commission) for line in counted(lines)), Decimal(0)))
 
 
 def logistics(lines: Iterable[SaleLine]) -> Money:
-    """F5. Logistika = Σ ``logisticDeliveryFee`` (Yakunlangan)."""
-    return _uzs(sum((to_decimal(line.logistics) for line in completed(lines)), Decimal(0)))
+    """F5. Logistika = Σ ``logisticDeliveryFee`` (Yakunlangan + Jarayonda). Uzum logistikani tovar punktdan olib
+    ketilganda yozadi — undan oldin Jarayondagi qatorda 0 (API bergandek, taxmin qo'shilmaydi)."""
+    return _uzs(sum((to_decimal(line.logistics) for line in counted(lines)), Decimal(0)))
 
 
 def payout(lines: Iterable[SaleLine]) -> Money:
     """F6. Uzum to'lovi = F3 − F4 − F5."""
-    items = completed(lines)
+    items = counted(lines)
     return revenue(items) - commission(items) - logistics(items)
 
 
@@ -193,21 +204,21 @@ def payout_mismatches(lines: Iterable[SaleLine], tolerance: DecimalLike = 1) -> 
     tol = to_decimal(tolerance)
     return [
         line
-        for line in completed(lines)
+        for line in counted(lines)
         if line.seller_profit is not None
         and abs(to_decimal(line.seller_profit) - line.payout) > tol
     ]
 
 
 def cogs(lines: Iterable[SaleLine]) -> Money:
-    """F7. Tannarx = Σ birlik tannarx (F21) × ``amount`` (Yakunlangan, tannarxi ma'lum qatorlar)."""
-    known = (line.cogs for line in completed(lines))
+    """F7. Tannarx = Σ birlik tannarx (F21) × ``amount`` (Yakunlangan + Jarayonda, tannarxi ma'lum qatorlar)."""
+    known = (line.cogs for line in counted(lines))
     return _uzs(sum((c for c in known if c is not None), Decimal(0)))
 
 
 def gross_profit(lines: Iterable[SaleLine]) -> Money:
     """F8. Yalpi foyda = F6 − F7 (tannarxi ma'lum qatorlar bo'yicha; qamrov — F15)."""
-    covered = [line for line in completed(lines) if line.unit_cost is not None]
+    covered = [line for line in counted(lines) if line.unit_cost is not None]
     return payout(covered) - cogs(covered)
 
 
@@ -219,8 +230,8 @@ class SaleTotals:
     yig'indilardan hisoblanadi.
     """
 
-    revenue: Money  # F3
-    units: int  # Yakunlangan dona
+    revenue: Money  # F3 (Yakunlangan + Jarayonda)
+    units: int  # hisobga olingan dona (Yakunlangan + Jarayonda)
     commission: Money  # F4
     logistics: Money  # F5
     cogs: Money  # F7 (tannarxi ma'lum qatorlar)
@@ -229,19 +240,25 @@ class SaleTotals:
     cogs_estimated: Money  # F22: taxminiy belgili qatorlar tannarxi (F7 ning qismi)
     returns: int  # F18 surati: Yakunlangan qatorlardagi Σ ``amountReturns``
     canceled: int  # F17 surati: Bekor dona (``amount`` + ``amountReturns``)
-    lines: int = 0  # Yakunlangan qatorlar soni
+    lines: int = 0  # hisobga olingan qatorlar soni
     uncovered_lines: int = 0  # shundan tannarxsiz (F15 "N ta sotuv tannarxsiz")
-    units_costed: int = 0  # tannarxi ma'lum Yakunlangan dona (tannarx/dona, foyda/dona — M6)
+    units_costed: int = 0  # tannarxi ma'lum hisobga olingan dona (tannarx/dona, foyda/dona — M6)
+    units_processing: int = (
+        0  # shundan Jarayonda (yakuniy emas, ADR-036); Yakunlangan = units − units_processing
+    )
+    revenue_processing: Money = ZERO_UZS  # F3 ning Jarayondagi qismi
 
 
 def sale_totals(lines: Iterable[SaleLine]) -> SaleTotals:
-    """F3–F8, F15, F17, F18, F22 yig'indilari bitta to'plam uchun (kunlik agregat jadvali manbasi)."""
+    """F3–F8, F15, F17, F18, F22 yig'indilari bitta to'plam uchun (kunlik agregat jadvali manbasi). Pul va dona —
+    Yakunlangan + Jarayonda (ADR-036), Jarayondagi qismi alohida; F17/F18 uchun Yakunlangan = units − units_processing."""
     items = list(lines)
-    done = completed(items)
+    done = counted(items)
     covered = [line for line in done if line.unit_cost is not None]
+    pending = _in_group(done, StatusGroup.PROCESSING)
     return SaleTotals(
         revenue=revenue(done),
-        units=_units(done, StatusGroup.COMPLETED),
+        units=sum(line.amount for line in done),
         commission=commission(done),
         logistics=logistics(done),
         cogs=cogs(covered),
@@ -252,7 +269,9 @@ def sale_totals(lines: Iterable[SaleLine]) -> SaleTotals:
         canceled=_units(items, StatusGroup.CANCELED),
         lines=len(done),
         uncovered_lines=len(done) - len(covered),
-        units_costed=_units(covered, StatusGroup.COMPLETED),
+        units_costed=sum(line.amount for line in covered),
+        units_processing=sum(line.amount for line in pending),
+        revenue_processing=revenue(pending),
     )
 
 
@@ -409,7 +428,7 @@ def _returned(lines: Iterable[SaleLine]) -> int:
 
 
 def realization_rate(window: Iterable[SaleLine], min_units: int = 50) -> Decimal | None:
-    """F16. R = yakuniy holatga yetgan donalar ichida Yakunlangan ulushi.
+    """F16. R = yakuniy holatga yetgan donalar ichida Yakunlangan ulushi (fakt; summaga ko'paytirilmaydi, ADR-036).
 
     ``window`` — do'konning oxirgi 90 kunidagi qatorlar (davrni chaqiruvchi tanlaydi). Yakuniy donalar
     ``min_units`` dan kam bo'lsa ``None`` (R ko'rsatilmaydi).
@@ -421,7 +440,7 @@ def realization_rate(window: Iterable[SaleLine], min_units: int = 50) -> Decimal
 
 
 def realization_rate_units(done: int, canceled: int, min_units: int = 50) -> Decimal | None:
-    """F16. R dona yig'indilaridan (masalan, ``daily_sku_metrics``: ``units`` va ``canceled``)."""
+    """F16. R dona yig'indilaridan (``daily_sku_metrics``: Yakunlangan = ``units − units_processing``, ``canceled``)."""
     final = done + canceled
     if final < min_units:
         return None
@@ -429,25 +448,29 @@ def realization_rate_units(done: int, canceled: int, min_units: int = 50) -> Dec
 
 
 @dataclass(frozen=True, slots=True)
-class ExpectedProfit:
-    """F16 natijasi. ``amount`` — R ma'lum bo'lmasa ``None``; tannarxsiz Jarayondagi qatorlar alohida."""
+class PendingSales:
+    """F16 natijasi (ADR-036): Jarayondagi sotuvlar — ular F3–F12 ga allaqachon kirgan, bu blok qaysi qismi yakuniy
+    emasligini ko'rsatadi. ``rate`` — fakt (oxirgi 90 kunda yakuniy holatga yetganlarning Yakunlangan ulushi), summaga
+    ko'paytirilmaydi; ma'lumot kam bo'lsa ``None``."""
 
-    amount: Money | None
-    rate: Decimal | None
-    raw: Money  # Σ (F6 − F7), R qo'llanmagan
+    units: int
+    revenue: Money  # F3 ning Jarayondagi qismi
+    profit: Money  # Σ (F6 − F7) Jarayondagi tannarxi ma'lum qatorlar
     uncovered_lines: int
+    rate: Decimal | None
 
 
-def expected_profit(lines: Iterable[SaleLine], rate: Decimal | None) -> ExpectedProfit:
-    """F16. Kutilayotgan foyda = Σ (F6 − F7) Jarayondagi (tannarxi ma'lum) qatorlar × R."""
+def pending_sales(lines: Iterable[SaleLine], rate: Decimal | None) -> PendingSales:
+    """F16. Jarayondagi sotuvlar: dona, tushum, yalpi foyda (Σ (F6 − F7) tannarxi ma'lum qatorlar), tannarxsizlar soni
+    va R (fakt sifatida)."""
     pending = _in_group(lines, StatusGroup.PROCESSING)
     known = [line for line in pending if line.unit_cost is not None]
-    raw = _uzs(sum((line.payout - (line.cogs or Decimal(0)) for line in known), Decimal(0)))
-    return ExpectedProfit(
-        amount=None if rate is None else raw * rate,
-        rate=rate,
-        raw=raw,
+    return PendingSales(
+        units=sum(line.amount for line in pending),
+        revenue=_uzs(sum((line.revenue for line in pending), Decimal(0))),
+        profit=_uzs(sum((line.payout - (line.cogs or Decimal(0)) for line in known), Decimal(0))),
         uncovered_lines=len(pending) - len(known),
+        rate=rate,
     )
 
 

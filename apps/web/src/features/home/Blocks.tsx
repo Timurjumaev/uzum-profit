@@ -9,6 +9,7 @@ import { LineBarChart } from "../../components/charts";
 import type { Dashboard } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import type { AttentionItem } from "./model";
+import { ProcessingNote } from "./ProcessingNote";
 
 const tone = (value: string) => (Number(value) < 0 ? "negative" : "positive");
 
@@ -71,6 +72,7 @@ export function PeriodStrip({ data }: { data: Dashboard }) {
                   </div>
                 </dl>
               )}
+              {tile.p && <ProcessingNote units={tile.p.units_processing} revenue={tile.p.revenue_processing} compact />}
             </li>
           );
         })}
@@ -88,7 +90,9 @@ export function DailyChart({ data }: { data: Dashboard }) {
       title={t("home.chart.title")}
       x={data.daily.map((d) => d.day)}
       series={[
-        { key: "revenue", name: t("home.chart.revenue"), color: 1, values: data.daily.map((d) => d.revenue) },
+        // ADR-036: tushum ikki qatlam — Yakunlangan va ustida Jarayondagi (yakuniy emas); qismlar API'dan.
+        { key: "revenue", name: t("home.chart.revenueDone"), color: 1, stack: "revenue", values: data.daily.map((d) => d.revenue_done) },
+        { key: "processing", name: t("home.chart.revenueProcessing"), color: "other", stack: "revenue", values: data.daily.map((d) => d.revenue_processing) },
         { key: "net", name: t("home.chart.netProfit"), color: "ink", kind: "line", values: data.daily.map((d) => d.net_profit) },
       ]}
     />
@@ -197,11 +201,11 @@ export function Kpis({ data }: { data: Dashboard }) {
       code={t(`home.formula.${key}.code`)}
       formula={t(`home.formula.${key}.formula`)}
       source={t(`home.formula.${key}.source`)}
-      estimatedReason={key === "expected" ? t("home.formula.expected.estimated") : undefined}
+      estimatedReason={key === "processing" ? t("home.formula.processing.estimated") : undefined}
     />
   );
   const uncovered = Number(k.uncovered_share) > 0 ? t("home.kpis.uncovered", { share: f.percent(k.uncovered_share) }) : undefined;
-  const expected = k.expected_profit;
+  const pending = k.pending;
   return (
     <section aria-labelledby="home-kpis" className="home-kpis">
       <h2 id="home-kpis" className="h3">
@@ -221,10 +225,14 @@ export function Kpis({ data }: { data: Dashboard }) {
         />
         <Kpi label={t("home.kpis.inTransit")} value={f.money(k.in_transit_value)} help={help("inTransit", t("home.kpis.inTransit"))} />
         <Kpi
-          label={t("home.kpis.expected")}
-          value={expected.amount === null ? "—" : f.money(expected.amount)}
-          note={expected.rate === null ? t("home.kpis.expectedNoRate", { raw: f.money(expected.raw) }) : t("home.kpis.expectedRate", { rate: f.percent(expected.rate) })}
-          help={help("expected", t("home.kpis.expected"))}
+          label={t("home.kpis.pending")}
+          value={f.money(pending.revenue)}
+          note={
+            pending.rate === null
+              ? t("home.kpis.pendingUnits", { units: f.number(pending.units) })
+              : t("home.kpis.pendingRate", { units: f.number(pending.units), rate: f.percent(pending.rate) })
+          }
+          help={help("processing", t("home.kpis.pending"))}
         />
       </div>
     </section>

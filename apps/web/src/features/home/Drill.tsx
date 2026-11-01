@@ -49,7 +49,17 @@ function SalesBody({ orgId, params, field }: { orgId: string; params: ReportPara
     {
       key: "sku",
       header: t("home.drill.sku"),
-      render: (r) => r.sku_title ?? t("home.drill.unlinked"),
+      render: (r) => (
+        <>
+          {r.sku_title ?? t("home.drill.unlinked")}
+          {r.group === "processing" && (
+            <>
+              {" "}
+              <Badge tone="info">{t("home.drill.processing")}</Badge>
+            </>
+          )}
+        </>
+      ),
     },
     { key: "units", header: t("home.drill.units"), numeric: true, render: (r) => f.number(r.amount) },
     {

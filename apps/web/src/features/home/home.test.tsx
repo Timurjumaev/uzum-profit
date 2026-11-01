@@ -138,6 +138,12 @@ describe("davr chizig'i va grafik", () => {
     expect(tile("Bugun").getByText("38 dona")).toBeTruthy();
     expect(tile("Kecha").getByText(m("1810000.00"))).toBeTruthy();
     expect(tile("Oʻtgan oy").getByText(m("47000000.00"))).toBeTruthy();
+    // ADR-036: Jarayondagi sotuvlar hisobga kirgan — qaysi qismi yakuniy emasligi yoziladi; yo'q bo'lsa izoh yo'q.
+    expect(norm(tile("Bugun").getByText(/shundan jarayonda/).textContent!)).toBe(`shundan jarayonda: 38 dona, ${m("5200000.00")}`);
+    expect(tile("Oʻtgan oy").queryByText(/shundan jarayonda/)).toBeNull();
+    expect(tile("Oy prognozi").queryByText(/shundan jarayonda/)).toBeNull();
+    const hero = norm(screen.getByText(/^Shundan jarayonda:/).textContent!);
+    expect(hero).toContain(`410 dona, ${m("61000000.00")} tushum — hali yakuniy emas.`);
     // Prognoz (run-rate) API'dan; dona butun songa yaxlitlanadi.
     expect(tile("Oy prognozi").getByText(m("216000000.00"))).toBeTruthy();
     expect(tile("Oy prognozi").getByText("1 437 dona")).toBeTruthy();
@@ -160,7 +166,9 @@ describe("davr chizig'i va grafik", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Jadval" }));
     const table = await screen.findByRole("table", { name: /Kunlik tushum va sof foyda/ });
     expect(within(table).getAllByRole("row")).toHaveLength(4); // sarlavha + 3 kun
-    expect(within(table).getAllByText(/7\s100\s000/).length).toBeGreaterThan(0);
+    // ADR-036: tushum ikki qatlam — yakunlangan va jarayonda (qismlar API'dan).
+    expect(chart.getAttribute("aria-label")).toContain("Tushum: jarayonda");
+    expect(within(table).getAllByText(/6\s800\s000/).length).toBeGreaterThan(0);
   });
 });
 
@@ -235,8 +243,8 @@ describe("eng foydali 5 / zarar 5 va ko'rsatkichlar", () => {
     expect(value("Reklama ulushi (DRR)")).toBe(norm(f.percent("0.032200")));
     expect(value("Muzlagan pul")).toBe(m("92000000.00"));
     expect(value("Yoʻldagi tovar qiymati")).toBe(m("31000000.00"));
-    expect(value("Kutilayotgan foyda")).toBe(m("4100000.00"));
-    expect(kpis.getByText("realizatsiya darajasi: 87%")).toBeTruthy();
+    expect(value("Jarayondagi sotuvlar")).toBe(m("61000000.00"));
+    expect(norm(kpis.getByText(/oxirgi 90 kunda bunday sotuvlarning/).textContent!)).toBe(norm(`410 dona; oxirgi 90 kunda bunday sotuvlarning ${f.percent("0.870000")} yakunlangan`));
     expect(kpis.getByText("oʻrtacha sotilish: 42 kun")).toBeTruthy();
   });
 
@@ -249,15 +257,16 @@ describe("eng foydali 5 / zarar 5 va ko'rsatkichlar", () => {
         uncovered_share: "0.250000",
         roi: null,
         drr: null,
-        expected_profit: { amount: null, rate: null, raw: "500000.00", uncovered_lines: 0 },
+        pending: { units: 4, revenue: "500000.00", profit: "120000.00", uncovered_lines: 0, rate: null },
       },
     });
     await renderHome("/", { [DASHBOARD_ROUTE]: () => json(200, data) });
     const kpis = within(screen.getByRole("region", { name: "Qoʻshimcha koʻrsatkichlar" }));
     expect(kpis.getByText("Tannarxsiz qism: 25%")).toBeTruthy();
     expect(kpis.getByText("ROI").closest(".ui-kpi")!.querySelector(".kpi")!.textContent).toBe("—");
-    expect(kpis.getByText("Kutilayotgan foyda").closest(".ui-kpi")!.querySelector(".kpi")!.textContent).toBe("—");
-    expect(kpis.getByText(`realizatsiya darajasi hisoblanmadi (maʼlumot kam); koeffitsientsiz: ${m("500000.00")}`)).toBeTruthy();
+    // ADR-036: Jarayondagi sotuvlar — tushum (foydaga kirgan), R yo'q bo'lsa faqat dona.
+    expect(norm(kpis.getByText("Jarayondagi sotuvlar").closest(".ui-kpi")!.querySelector(".kpi")!.textContent!)).toBe(m("500000.00"));
+    expect(kpis.getByText("4 dona — foydaga kirgan, hali yakuniy emas")).toBeTruthy();
   });
 });
 
@@ -346,10 +355,10 @@ describe("drill-down", () => {
   });
   const drawer = () => screen.getByRole("dialog");
 
-  it("Tushum: yakunlangan sotuv qatorlari, jami API qatoridan, kursor bilan 'Yana yuklash'", async () => {
+  it("Tushum: yakunlangan va jarayondagi sotuv qatorlari, jami API qatoridan, kursor bilan 'Yana yuklash'", async () => {
     const { api } = await renderHome("/?from=2026-10-01&to=2026-10-20", {
       [SALES_ROUTE]: [
-        () => json(200, page([sale("s1"), sale("s2", { sku_id: null, sku_title: null, day: "2026-10-11" })], "c2")),
+        () => json(200, page([sale("s1", { status: "PROCESSING", group: "processing" }), sale("s2", { sku_id: null, sku_title: null, day: "2026-10-11" })], "c2")),
         () => json(200, page([sale("s3", { day: "2026-10-10" })], null)),
       ],
     });
@@ -358,9 +367,11 @@ describe("drill-down", () => {
     expect(within(dlg).getByText(m("186420000.00"), { selector: ".kpi" })).toBeTruthy(); // jami — hisob varag'idagi qator, qayta hisoblanmagan
     expect(await within(dlg).findByText("Sumka qora M")).toBeTruthy();
     expect(within(dlg).getByText("SKU bogʻlanmagan")).toBeTruthy();
+    expect(within(dlg).getAllByText("Jarayonda")).toHaveLength(1); // Jarayondagi qator belgilanadi (ADR-036)
     expect(within(dlg).getAllByText(n("200000.00"), { selector: "td" })).toHaveLength(2);
     const [first] = requestUrls(api, SALES_ROUTE.split(" ")[1]!);
-    expect(first!.searchParams.get("group")).toBe("completed");
+    expect(first!.searchParams.get("counted")).toBe("true"); // Yakunlangan + Jarayonda (ADR-036)
+    expect(first!.searchParams.get("group")).toBeNull();
     expect(first!.searchParams.get("start")).toBe("2026-10-01");
     expect(first!.searchParams.get("end")).toBe("2026-10-20");
     fireEvent.click(within(dlg).getByRole("button", { name: "Yana yuklash" }));

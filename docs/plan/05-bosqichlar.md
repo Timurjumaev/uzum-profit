@@ -378,6 +378,14 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   Uzum bonuslari, "Bonus davri" belgisi, grafik soyasi, "Me'yoriy foyda/dona" ustuni (jadval, SKU sahifasi, Excel)
   olib tashlandi; migratsiya 0011 (`fee_waivers` o'chiriladi). F40 — kalkulyator uchun standart logistika (oxirgi
   pullik tarif, bo'lmasa do'konning odatiy tarifi), bonus davrlarisiz. B4.2a ning **T** (oktabr bonusini kiritish) bekor.
+- [x] B4.16 Jarayondagi sotuvlar hisobga kiradi (ADR-036, ADR-017 ning "foyda = faqat Yakunlangan" qismi almashtirildi):
+  F3–F8, F12–F15 = Yakunlangan + Jarayonda, Uzum hozirgi qiymatlari bilan; holat o'zgarsa qayta hisob. ✓ 2026-11-02:
+  `upcore.metrics.counted`, `SaleTotals`/`Statement` da Jarayondagi qism, F16 → `PendingSales` (R — fakt), migratsiya 0012
+  (`daily_sku_metrics.units_processing`, `revenue_processing` + to'liq qayta qurish so'rovi), F17/F18/R — Yakunlangan =
+  `units − units_processing`; `/sales?counted=true` (P&L drill-down), `/dashboard` davrlar va kunlarda Jarayondagi qism,
+  oldingi davrda sotuv bo'lmasa o'zgarish foizi yo'q. UI: "shundan jarayonda" (bosh sahifa sarlavhasi, davr
+  kartochkalari, P&L), grafikda ikki qatlam, "Jarayondagi sotuvlar" bloki va ko'rsatkichi, drill-down'da "Jarayonda"
+  belgisi. F23 sotuv tezligi ham Jarayondagi sotuvlarni oladi (oxirgi 14 kun endi bo'sh emas).
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

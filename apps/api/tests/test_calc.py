@@ -246,8 +246,26 @@ def test_lots_sale_costs_and_metrics(org: Org) -> None:
 
     metrics = org.metrics()
     oct6 = metrics[(sku, d(10, 6))]
-    # Jarayonda va bekor qilingan: tushumda yo'q; bekor dona — 2 + 3 (F17), qaytish emas (F18 = 0).
-    assert oct6 == (D(0), 0, D(0), D(0), D(0), D(0), 0, 5, D(0), D(0), D(0))
+    # ADR-036: Jarayondagi qator (1 dona) hisobga kiradi; bekor qilingan — yo'q, bekor dona — 2 + 3 (F17), qaytish
+    # emas (F18 = 0).
+    assert oct6 == (
+        D("200000.00"),
+        1,
+        D("40000.00"),
+        D("5000.00"),
+        D("130000.00"),
+        D(0),
+        0,
+        5,
+        D("200000.00"),
+        D("155000.00"),
+        D(0),
+    )
+    assert org.sql(
+        "SELECT units_processing, revenue_processing FROM daily_sku_metrics WHERE org_id = %s AND sku_id = %s "
+        "AND day = %s",
+        [org.org_id, sku, d(10, 6)],
+    ) == [(1, D("200000.00"))]
     oct5 = metrics[(sku, d(10, 5))]
     assert oct5 == (
         D("800000.00"),
@@ -540,7 +558,7 @@ def test_sync_writes_requests_and_job_runs_calc(
     revenue = admin(
         db,
         "SELECT (SELECT sum(revenue) FROM daily_sku_metrics WHERE org_id = %(o)s), "
-        "(SELECT sum(sell_price * amount) FROM sale_items WHERE org_id = %(o)s AND status IN ('TO_WITHDRAW', 'PARTIALLY_CANCELLED'))",
+        "(SELECT sum(sell_price * amount) FROM sale_items WHERE org_id = %(o)s AND status IN ('TO_WITHDRAW', 'PARTIALLY_CANCELLED', 'PROCESSING'))",
         {"o": account.org_id},
     )[0]
     assert revenue[0] == revenue[1] and revenue[0] > 0

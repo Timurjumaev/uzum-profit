@@ -162,7 +162,7 @@ def test_sku_detail(world: World) -> None:
     body = world.get(f"skus/{xa}", **OCT)
     row = rows(world, **OCT)[str(xa)]
     assert body["sku"] == row  # jadval bilan bir xil hisob
-    assert body["statement"]["units"] == 6 and money(body["statement"]["revenue"]) == D(1_200_000)
+    assert body["statement"]["units"] == 7 and money(body["statement"]["revenue"]) == D(1_400_000)
     assert body["uzum_url"] is None
     # Kunlik tarix: sotuv kunlari + snapshot kunlari (1–20 oktabr); yig'indisi jadval bilan mos.
     days = {x["day"]: x for x in body["history"]}

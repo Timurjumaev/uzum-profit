@@ -107,11 +107,11 @@ export const pnlQuery = (orgId: string, p: ReportParams, view: "month" | "shop" 
       unwrap(api.GET("/api/v1/orgs/{org_id}/pnl", { params: { path: { org_id: orgId }, query: { ...reportQuery(p), view } } })),
   });
 
-/** Drill-down: Yakunlangan sotuv qatorlari (P&L qatorlari yig'indisi shulardan), kursor bilan sahifalanadi. */
+/** Drill-down: hisobga kiradigan sotuv qatorlari — Yakunlangan + Jarayonda (ADR-036; P&L qatorlari yig'indisi shulardan), kursor bilan sahifalanadi. */
 export const salesPage = (orgId: string, p: ReportParams, cursor: string | null) =>
   unwrap(
     api.GET("/api/v1/orgs/{org_id}/sales", {
-      params: { path: { org_id: orgId }, query: { ...reportQuery(p), group: "completed", limit: 50, cursor } },
+      params: { path: { org_id: orgId }, query: { ...reportQuery(p), counted: true, limit: 50, cursor } },
     }),
   );
 

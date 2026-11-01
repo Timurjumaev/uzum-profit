@@ -133,9 +133,12 @@ export function lineBarOption(
           markArea,
         };
       }
+      // Qatlamli ustunda faqat eng yuqori qatlamning uchi yumaloq (pastkilari to'g'ri).
+      const below = s.stack !== undefined && series.slice(i + 1).some((o) => o.stack === s.stack && o.kind !== "line");
       return {
         name: s.name,
         type: "bar",
+        stack: s.stack,
         data: s.values.map((v) => {
           const n = num(v);
           return n !== null && n < 0
@@ -144,7 +147,7 @@ export function lineBarOption(
         }),
         color,
         barMaxWidth: BAR_MAX,
-        itemStyle: { color, borderRadius: [4, 4, 0, 0], borderColor: palette.surface, borderWidth: 1 },
+        itemStyle: { color, borderRadius: below ? 0 : [4, 4, 0, 0], borderColor: palette.surface, borderWidth: 1 },
         emphasis: { focus: "none" },
         markArea,
       };

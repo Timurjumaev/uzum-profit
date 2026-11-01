@@ -26,13 +26,13 @@ from sqlalchemy import Text, cast, func, literal, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.expenses import ExpenseCategory, signed_amount
 from upcore.metrics import (
-    ExpectedProfit,
     ManualExpense,
+    PendingSales,
     Period,
     SaleLine,
     StatusGroup,
     business_date,
-    expected_profit,
+    pending_sales,
     realization_rate_units,
     statuses,
 )
@@ -70,7 +70,8 @@ class Book:
 
 @dataclass(slots=True)
 class SaleSums:
-    """Yakunlangan, bekor va qaytgan dona (F17, F18) — ``daily_sku_metrics`` yig'indisi."""
+    """Yakunlangan, bekor va qaytgan dona (F17, F18) — ``daily_sku_metrics`` yig'indisi (Yakunlangan =
+    ``units − units_processing``, ADR-036)."""
 
     units: int = 0
     canceled: int = 0
@@ -88,7 +89,8 @@ async def sale_sums(
     """Filtr bo'yicha dona yig'indilari; ``by_sku`` — SKU kaliti bo'yicha (``UNLINKED`` — bog'lanmagan), aks holda
     bitta ``None`` kaliti."""
     d = m.daily_sku_metrics
-    sums = [func.coalesce(func.sum(c), 0) for c in (d.c.units, d.c.canceled, d.c.returns)]
+    done = d.c.units - d.c.units_processing
+    sums = [func.coalesce(func.sum(c), 0) for c in (done, d.c.canceled, d.c.returns)]
     query = select(cast(d.c.sku_id, Text) if by_sku else literal(None), *sums).where(
         d.c.day >= f.period.start, d.c.day <= f.period.end
     )
@@ -128,6 +130,8 @@ async def _totals(conn: AsyncConnection, period: Period) -> list[tuple[CellKey, 
             d.c.units_costed,
             d.c.lines,
             d.c.lines_uncosted,
+            d.c.units_processing,
+            d.c.revenue_processing,
         ).where(d.c.day >= period.start, d.c.day <= period.end)
     )
     return [
@@ -241,12 +245,13 @@ def span(*periods: Period) -> Period:
 
 @dataclass(frozen=True, slots=True)
 class Pending:
-    total: ExpectedProfit
-    shops: dict[UUID, ExpectedProfit]
+    total: PendingSales
+    shops: dict[UUID, PendingSales]
 
 
 async def pending(conn: AsyncConnection, f: Filters) -> Pending:
-    """F16: davrdagi Jarayondagi qatorlar × R; R har do'kon uchun alohida (oxirgi 90 kun, ``daily_sku_metrics``)."""
+    """F16 (ADR-036): davrdagi Jarayondagi sotuvlar (ular F3–F12 ga kirgan) va R — fakt, har do'kon uchun alohida
+    (oxirgi 90 kun, ``daily_sku_metrics``)."""
     s, c, d = m.sale_items, m.sale_costs, m.daily_sku_metrics
     query = (
         select(
@@ -280,28 +285,27 @@ async def pending(conn: AsyncConnection, f: Filters) -> Pending:
         for r in await conn.execute(
             select(
                 d.c.shop_id,
-                func.sum(d.c.units).label("done"),
+                func.sum(d.c.units - d.c.units_processing).label("done"),
                 func.sum(d.c.canceled).label("canceled"),
             )
             .where(d.c.shop_id.in_(lines), d.c.day >= since, d.c.day <= f.today)
             .group_by(d.c.shop_id)
         )
     }
-    shops = {shop: expected_profit(items, window.get(shop)) for shop, items in lines.items()}
+    shops = {shop: pending_sales(items, window.get(shop)) for shop, items in lines.items()}
     return Pending(_combine(list(shops.values())), shops)
 
 
-def _combine(items: list[ExpectedProfit]) -> ExpectedProfit:
-    """Do'konlar F16 natijalari yig'indisi; biror do'konda R noma'lum bo'lsa umumiy summa ham noma'lum."""
+def _combine(items: list[PendingSales]) -> PendingSales:
+    """Do'konlar F16 natijalari yig'indisi; R bitta bo'lsa (yoki bitta do'kon) — o'sha, aks holda ``None``."""
     zero = Money.zero(UZS)
-    raw = sum((e.raw for e in items), zero)
-    known = all(e.amount is not None for e in items)
     rates = {e.rate for e in items}
-    return ExpectedProfit(
-        amount=sum((e.amount or zero for e in items), zero) if known else None,
-        rate=next(iter(rates)) if len(rates) == 1 else None,
-        raw=raw,
+    return PendingSales(
+        units=sum(e.units for e in items),
+        revenue=sum((e.revenue for e in items), zero),
+        profit=sum((e.profit for e in items), zero),
         uncovered_lines=sum(e.uncovered_lines for e in items),
+        rate=next(iter(rates)) if len(rates) == 1 else None,
     )
 
 

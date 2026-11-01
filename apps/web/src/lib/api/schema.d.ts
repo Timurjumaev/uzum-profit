@@ -1472,6 +1472,10 @@ export interface components {
             net_profit: string;
             /** Units */
             units: number;
+            /** Revenue Done */
+            revenue_done: string;
+            /** Revenue Processing */
+            revenue_processing: string;
         };
         /** ExpenseOut */
         ExpenseOut: {
@@ -1731,7 +1735,7 @@ export interface components {
             return_share: string | null;
             /** Drr */
             drr: string | null;
-            expected_profit: components["schemas"]["PendingOut"];
+            pending: components["schemas"]["PendingOut"];
             /** Frozen Money */
             frozen_money: string;
             /** In Transit Value */
@@ -2391,28 +2395,33 @@ export interface components {
         };
         /**
          * PendingOut
-         * @description F16: Jarayondagi sotuvlardan kutilayotgan foyda (R qo'llangan) va R siz summa.
+         * @description F16 (ADR-036): Jarayondagi sotuvlar — hisobga kirgan, lekin yakuniy emas. ``rate`` — oxirgi 90 kunda yakuniy
+         *     holatga yetganlarning Yakunlangan ulushi (fakt, summaga ko'paytirilmaydi).
          */
         PendingOut: {
-            /** Amount */
-            amount: string | null;
-            /** Rate */
-            rate: string | null;
-            /** Raw */
-            raw: string;
+            /** Units */
+            units: number;
+            /** Revenue */
+            revenue: string;
+            /** Profit */
+            profit: string;
             /** Uncovered Lines */
             uncovered_lines: number;
+            /** Rate */
+            rate: string | null;
         };
         /** PendingShopOut */
         PendingShopOut: {
-            /** Amount */
-            amount: string | null;
-            /** Rate */
-            rate: string | null;
-            /** Raw */
-            raw: string;
+            /** Units */
+            units: number;
+            /** Revenue */
+            revenue: string;
+            /** Profit */
+            profit: string;
             /** Uncovered Lines */
             uncovered_lines: number;
+            /** Rate */
+            rate: string | null;
             /**
              * Shop Id
              * Format: uuid
@@ -2445,6 +2454,10 @@ export interface components {
             net_profit: string;
             /** Units */
             units: number;
+            /** Units Processing */
+            units_processing: number;
+            /** Revenue Processing */
+            revenue_processing: string;
         };
         /**
          * Permission
@@ -3087,6 +3100,10 @@ export interface components {
             covered_units: number;
             /** Lines */
             lines: number;
+            /** Units Processing */
+            units_processing: number;
+            /** Revenue Processing */
+            revenue_processing: string;
             uncovered: components["schemas"]["UncoveredOut"];
             /** Direct Total */
             direct_total: string;
@@ -5269,6 +5286,8 @@ export interface operations {
                 sku?: string | null;
                 /** @description Faqat SKU'ga bog'lanmagan sotuvlar */
                 unlinked?: boolean;
+                /** @description Faqat hisobga kiradiganlar: Yakunlangan + Jarayonda (P&L drill-down) */
+                counted?: boolean;
                 limit?: number;
                 /** @description Oldingi javobdagi ``next_cursor`` */
                 cursor?: string | null;

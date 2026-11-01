@@ -312,11 +312,13 @@ def test_pnl_matches_line_level_core(world: World) -> None:
     body = world.get("pnl", **OCT)
     ref = _reference(world, Period(d(10, 1), d(10, 20))).statement()
     s = body["statement"]
-    assert money(s["revenue"]) == ref.revenue.amount == D(1_800_000)
+    # ADR-036: 15-oktabr Jarayondagi sotuv (1 × 200 000) ham kiradi.
+    assert money(s["revenue"]) == ref.revenue.amount == D(2_000_000)
     for key in ("commission", "logistics", "cogs", "tax", "net_profit", "expenses_deducted"):
         assert money(s[key]) == getattr(ref, key).amount, key
-    assert s["units"] == ref.units == 12 and s["lines"] == ref.lines == 6
-    assert s["covered_units"] == ref.covered_units == 10
+    assert s["units"] == ref.units == 13 and s["lines"] == ref.lines == 7
+    assert s["covered_units"] == ref.covered_units == 11
+    assert s["units_processing"] == 1 and money(s["revenue_processing"]) == D(200_000)
     assert s["uncovered"]["lines"] == 2 and money(s["uncovered"]["revenue"]) == D(200_000)
     assert D(s["coverage"]) == ref.coverage
     assert {k: money(v) for k, v in s["uzum_expenses"].items()} == {
@@ -342,11 +344,11 @@ def test_pnl_matches_line_level_core(world: World) -> None:
 def test_pnl_rows_and_previous(world: World) -> None:
     body = world.get("pnl", **OCT)
     rows = {r["code"]: r for r in body["rows"]}
-    assert money(rows["revenue"]["amount"]) == D(1_800_000)
+    assert money(rows["revenue"]["amount"]) == D(2_000_000)
     assert money(rows["revenue"]["previous"]) == D(400_000)  # 20-sentabr, 2 dona
-    assert money(rows["revenue"]["diff"]) == D(1_400_000)
+    assert money(rows["revenue"]["diff"]) == D(1_600_000)
     assert D(rows["revenue"]["share_of_revenue"]) == D(1)
-    assert D(rows["revenue"]["change"]) == D("3.5")  # 1 400 000 / 400 000
+    assert D(rows["revenue"]["change"]) == D("4")  # 1 600 000 / 400 000
     assert money(rows["net_profit"]["amount"]) == money(body["statement"]["net_profit"])
     assert money(body["previous"]["revenue"]) == D(400_000)
     assert "uzum:fine" in rows and "own:ijara" in rows and "uncovered_payout" in rows
@@ -376,7 +378,7 @@ def test_pnl_shop_filter_equals_shop_column(world: World) -> None:
         alone = world.get("pnl", shop=str(shop), **OCT)["statement"]
         assert alone == by_shop[str(shop)]
     both = world.get("pnl", shop=[str(world.a.shop_id), str(world.b.shop_id)], **OCT)
-    assert money(both["statement"]["revenue"]) == D(1_800_000)
+    assert money(both["statement"]["revenue"]) == D(2_000_000)
     assert both["meta"]["shops"] == sorted([str(world.a.shop_id), str(world.b.shop_id)])
 
 
@@ -417,10 +419,50 @@ def test_pnl_sku_columns_have_titles(world: World) -> None:
 
 def test_pnl_pending_profit(world: World) -> None:
     body = world.get("pnl", **OCT)
-    # 15-oktabr Jarayonda: 200 000 − 40 000 − 5 000 − tannarx 100 000 = 55 000; R — 50 donadan kam (noma'lum).
-    assert money(body["pending"]["raw"]) == D(55_000)
-    assert body["pending"]["amount"] is None and body["pending"]["rate"] is None
+    # 15-oktabr Jarayonda: 200 000 − 40 000 − 5 000 − tannarx 100 000 = 55 000 (sof foydaga kirgan, ADR-036);
+    # R — 50 donadan kam (noma'lum).
+    p = body["pending"]
+    assert (p["units"], money(p["revenue"]), money(p["profit"])) == (1, D(200_000), D(55_000))
+    assert p["rate"] is None and p["uncovered_lines"] == 0
     assert [p["shop_id"] for p in body["pending_shops"]] == [str(world.a.shop_id)]
+
+
+def test_processing_sale_leaves_when_canceled(world: World) -> None:
+    """ADR-036: Jarayondagi sotuv bekor bo'lsa (Uzum qatorni 0 qilib beradi) — sinxrondan keyingi qayta hisobda
+    tushum va foydadan o'zi chiqadi; Yakunlangan bo'lsa — "shundan jarayonda" dan chiqadi, summa o'zgarmaydi."""
+    a = world.a
+    before = world.get("pnl", **OCT)["statement"]
+
+    def resync(status: str, amount: int, returns: int) -> dict[str, Any]:
+        a.sql(
+            "UPDATE sale_items SET status = %s, amount = %s, amount_returns = %s, commission = %s, "
+            "logistics_fee = %s WHERE org_id = %s AND sku_id = %s "
+            "AND (ordered_at AT TIME ZONE 'Asia/Tashkent')::date = %s",
+            [
+                status,
+                amount,
+                returns,
+                40_000 * amount,
+                5_000 * amount,
+                a.org_id,
+                world.ids["xa"],
+                d(10, 15),
+            ],
+        )
+        a.run(lambda conn: calc.request(conn, world.org_id, calc.Scope.SHOP, a.shop_id, d(10, 15)))
+        assert a.recalc(datetime.now(UTC)).errors == {}
+        return world.get("pnl", **OCT)["statement"]
+
+    try:
+        done = resync("TO_WITHDRAW", 1, 0)
+        assert money(done["revenue"]) == money(before["revenue"]) and done["units_processing"] == 0
+        canceled = resync("CANCELED", 0, 1)
+        assert money(canceled["revenue"]) == money(before["revenue"]) - D(200_000)
+        assert money(canceled["net_profit"]) < money(before["net_profit"])
+        assert canceled["units_processing"] == 0 and canceled["units"] == before["units"] - 1
+    finally:
+        after = resync("PROCESSING", 1, 0)
+    assert after == before
 
 
 def test_recalculated_flag(world: World, db: dict[str, str]) -> None:
@@ -460,7 +502,12 @@ def test_dashboard_equals_pnl_and_skus(world: World) -> None:
         rows_net + money(skus["unlinked"]["net_profit"]) + money(skus["unallocated"]["net_profit"])
         == net
     )
-    assert sum(money(x["revenue"]) for x in dash["daily"]) == D(1_800_000)
+    assert sum(money(x["revenue"]) for x in dash["daily"]) == D(2_000_000)
+    oct15 = next(x for x in dash["daily"] if x["day"] == "2026-10-15")
+    assert money(oct15["revenue_processing"]) == D(200_000)
+    assert money(oct15["revenue_done"]) + money(oct15["revenue_processing"]) == money(
+        oct15["revenue"]
+    )
     assert len(dash["daily"]) == 20 and dash["daily"][0]["day"] == "2026-10-01"
     assert money(dash["daily"][0]["revenue"]) == 0  # sotuvsiz kun ham bor
 
@@ -474,10 +521,11 @@ def test_dashboard_blocks(world: World) -> None:
     assert periods["this_month"]["period"]["start"] == today.replace(day=1).isoformat()
     assert dash["forecast"]["revenue"] is not None
     kpis = dash["kpis"]
-    # F17: bekor 1 / (yakunlangan 12 + 1); F18: qaytgan 1 / (12 + 1); F19: reklama 20 000 / 1 800 000.
+    # F17: bekor 1 / (yakunlangan 12 + 1); F18: qaytgan 1 / (12 + 1) — Jarayondagi kirmaydi (ADR-036);
+    # F19: reklama 20 000 / 2 000 000.
     assert D(kpis["cancel_share"]) == D("0.076923") and D(kpis["return_share"]) == D("0.076923")
-    assert D(kpis["drr"]) == D("0.011111")
-    assert money(kpis["expected_profit"]["raw"]) == D(55_000)
+    assert D(kpis["drr"]) == D("0.010000")
+    assert money(kpis["pending"]["profit"]) == D(55_000)
     # F29: X — 100 000 × (80 + 5 + 2), Z — 50 000 × 40; yo'lda 20 × 120 000.
     assert money(kpis["frozen_money"]) == D(
         13_500_000
@@ -501,13 +549,15 @@ def test_skus_table(world: World) -> None:
     assert set(rows) == {str(world.ids[k]) for k in ("xa", "ya", "zb", "lb")}
     assert rows[str(world.ids["lb"])]["units"] == 0
     xa = rows[str(world.ids["xa"])]
-    assert xa["units"] == 6 and money(xa["revenue"]) == D(1_200_000)
+    assert xa["units"] == 7 and money(xa["revenue"]) == D(
+        1_400_000
+    )  # + 15-oktabr Jarayonda (ADR-036)
     assert money(xa["avg_price"]) == D(200_000)
     assert D(xa["commission_share"]) == D("0.2")
     assert money(xa["logistics_per_unit"]) == D(5_000)
     assert money(xa["cogs_per_unit"]) == D(100_000)
-    assert money(xa["ads_per_unit"]) == D("3333.33")  # 20 000 / 6
-    assert D(xa["return_share"]) == D("0.142857")  # 1 / (6 + 1)
+    assert money(xa["ads_per_unit"]) == D("2857.14")  # 20 000 / 7
+    assert D(xa["return_share"]) == D("0.142857")  # 1 / (yakunlangan 6 + 1)
     assert D(xa["cancel_share"]) == D("0.142857")
     assert xa["stock"] == 85 and xa["abc"] in ("A", "B", "C") and xa["rank"] == "A"
     assert xa["label"] in ("profitable", "borderline", "loss")
@@ -545,7 +595,7 @@ def test_sales_drilldown_sums_match_pnl(world: World) -> None:
     items: list[dict[str, Any]] = []
     cursor = None
     while True:
-        params = {"group": "completed", "limit": 2, **OCT}
+        params = {"counted": "true", "limit": 2, **OCT}  # Yakunlangan + Jarayonda (ADR-036)
         if cursor:
             params["cursor"] = cursor
         page = world.get("sales", **params)
@@ -553,7 +603,8 @@ def test_sales_drilldown_sums_match_pnl(world: World) -> None:
         cursor = page["next_cursor"]
         if not cursor:
             break
-    assert len(items) == 6 and len({i["id"] for i in items}) == 6
+    assert len(items) == 7 and len({i["id"] for i in items}) == 7
+    assert {i["group"] for i in items} == {"completed", "processing"}
     for key in ("revenue", "commission", "logistics"):
         assert sum(money(i[key]) for i in items) == money(pnl[key]), key
     assert sum(money(i["cogs"]) for i in items) == money(pnl["cogs"])
@@ -647,7 +698,13 @@ def test_inventory(world: World) -> None:
     rows = {r["sku_id"]: r for r in body["items"]}
     xa = rows[str(world.ids["xa"])]
     # F23 mustaqil: 56 kunlik oyna, 8-oktabr qoldiq 0, birinchi sotuv 20-sentabr.
-    sold = {d(9, 20): 2, d(10, 2): 2, d(10, 5): 1, d(10, 10): 3}
+    sold = {
+        d(9, 20): 2,
+        d(10, 2): 2,
+        d(10, 5): 1,
+        d(10, 10): 3,
+        d(10, 15): 1,
+    }  # + Jarayonda (ADR-036)
     snaps = {d(10, i): i != 8 for i in range(1, 21)}
     days = [
         DayStat(AS_OF - timedelta(days=i), sold.get(AS_OF - timedelta(days=i), 0),
@@ -680,7 +737,7 @@ def test_inventory(world: World) -> None:
     }
     assert D(xa["lead_time"]["total"]) == 32 and xa["status"] == StockStatus.GOOD.value
     assert money(xa["unit_cost"]) == D(100_000) and money(xa["stock_value"]) == D(8_500_000)
-    assert xa["reorder"]["qty"] == 0 and xa["last_sale_on"] == "2026-10-10"
+    assert xa["reorder"]["qty"] == 0 and xa["last_sale_on"] == "2026-10-15"  # Jarayondagi ham sotuv
     zb = rows[str(world.ids["zb"])]
     # Oxirgi sotuv 2-oktabr (14 kunlik oynadan tashqari): tezlik 0, qoldiq 40 — Harakatsiz (muddatsiz ham aniq).
     assert zb["lead_time"] is None and zb["reorder"] is None and zb["order_by"] is None

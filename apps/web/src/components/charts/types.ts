@@ -12,10 +12,12 @@ export type SeriesInput = {
   color: ColorKey;
   /** LineBar: ustun yoki chiziq (standart — ustun). */
   kind?: "bar" | "line";
+  /** LineBar: bir xil `stack` dagi ustunlar ustma-ust (masalan, Yakunlangan + Jarayonda tushum). */
+  stack?: string;
   values: Value[];
 };
 
-/** Annotatsiya (04 §5.1): `shade` — Uzum bepul logistika davri (soya), `hatch` — sinxron uzilgan kunlar (shtrix). */
+/** Annotatsiya (04 §5.1): `shade` — davr belgisi (soya), `hatch` — sinxron uzilgan kunlar (shtrix). */
 export type Band = { from: string; to: string; kind: "shade" | "hatch"; label: string };
 
 export type LegendItem = { key: string; name: string; color: ColorKey | "gradient"; shape: "bar" | "line" | "shade" | "hatch" };

@@ -635,6 +635,10 @@ daily_sku_metrics = tenant(
     Column("lines", Integer, nullable=False, server_default="0"),
     Column("lines_uncosted", Integer, nullable=False, server_default="0"),
     Column("units_costed", Integer, nullable=False, server_default="0"),
+    # ADR-036: pul va dona ustunlari Yakunlangan + Jarayonda; shundan Jarayondagi (yakuniy emas) qism. Yakunlangan
+    # dona (F16 R, F17, F18) = ``units − units_processing``.
+    Column("units_processing", Integer, nullable=False, server_default="0"),
+    Column("revenue_processing", UZS, nullable=False, server_default="0"),
     UniqueConstraint("org_id", "shop_id", "sku_id", "day", postgresql_nulls_not_distinct=True),
     refs={"shop_id": ("shops", False), "sku_id": ("mp_skus", True)},
 )

@@ -148,8 +148,9 @@ def test_slices_sum_to_total() -> None:
         assert total([s.revenue for s in view.values()], "UZS") == whole.revenue
     # 1 000 so'm 31 kunga (10-oktabr – 9-noyabr), oktabrda 22 kun: 1 000 × 22 / 31
     assert whole.own_expenses == {"ish haqi": uzs("709.68")}
-    assert list(cells.by_sku()) == ["A", "B", None]
-    assert whole.units == 5  # PROCESSING kirmaydi
+    assert list(cells.by_sku()) == ["A", "B", "C", None]
+    assert whole.units == 6  # ADR-036: Jarayondagi qator ham kiradi
+    assert (whole.units_processing, whole.revenue_processing) == (1, uzs(100_000))
 
 
 def test_rows_and_compare() -> None:
@@ -186,6 +187,13 @@ def test_rows_and_compare() -> None:
     assert rows["uzum:fine"].change == D("1")
     assert rows["uzum:advertising"].change is None
     assert "uncovered_payout" not in dict(prev.rows())
+    # Oldingi davrda sotuv yo'q (do'kon hali ulanmagan): faqat jarima bo'lsa ham foiz ma'nosiz — ko'rsatilmaydi.
+    empty = build_cells(
+        Period(date(2026, 9, 1), date(2026, 9, 30)),
+        [],
+        [ExpenseItem(date(2026, 9, 5), "S1", C.FINE, uzs(500))],
+    ).statement()
+    assert all(r.change is None for r in compare(cur, empty))
 
 
 def test_expense_items_adapter() -> None:
@@ -210,9 +218,9 @@ def test_pending_profit() -> None:
     window = [sale(1, qty=90), sale(2, qty=10, status="CANCELED")]
     lines = [sale(3, status="PROCESSING"), sale(3), sale(3, status="PROCESSING", cost=None)]
     e = pending_profit(OCT, lines, window)
-    assert e.rate == D("0.9") and e.raw == uzs(100_000 - 20_000 - 5_000 - 40_000)
-    assert e.amount == uzs(31_500) and e.uncovered_lines == 1
-    assert pending_profit(OCT, lines, window[:1], min_units=100).amount is None
+    assert e.rate == D("0.9") and e.profit == uzs(100_000 - 20_000 - 5_000 - 40_000)
+    assert e.units == 2 and e.uncovered_lines == 1
+    assert pending_profit(OCT, lines, window[:1], min_units=100).rate is None
 
 
 # --- Xossalar va tezlik ----------------------------------------------------------------------
