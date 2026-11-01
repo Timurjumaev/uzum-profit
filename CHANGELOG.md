@@ -377,6 +377,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   usulidan havola). Testlar: core (FIFO va o'rtacha, narx davrlari, qaytish, hypothesis), API (haqiqiy PostgreSQL: tarixiy
   sotuv, FIFO taqsimoti 120 + 30, takroriy saqlash, ruxsatlar, tekshiruvlar, o'chirish, RLS), web (model, sahifa, axe),
   e2e (kontrast bilan axe, 360 px).
+- Boshlang'ich holat: bitta Uzum mahsulotining turlari (rang, model, o'lcham) guruhlanadi, guruh tepasida "Hamma turlarga
+  bitta narx" — yozilsa har bir turga tushadi, keyin istalgan turini alohida o'zgartirish mumkin (Temur taklifi).
+  API qatorida `product_id`, `product`.
 
 ### Tuzatildi
 

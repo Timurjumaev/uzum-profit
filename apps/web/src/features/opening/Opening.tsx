@@ -13,7 +13,7 @@ import { Banner, Button, EmptyState, MoneyInput, NumberInput, PageHelp, Progress
 import type { OpeningRow } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { searchKey } from "../../lib/i18n/translit";
-import { draftOf, filled, hasPeriods, invalid, openingBody, rowKey, type Edit } from "./model";
+import { applyGroupPrice, draftOf, filled, groupPrice, groupRows, hasPeriods, invalid, openingBody, rowKey, type Edit } from "./model";
 
 const MANAGE_ROLES = ["owner", "manager"];
 const PAGE = 50;
@@ -45,12 +45,38 @@ export function Opening() {
     },
     onError: (error) => toast.show(errorText(error, t), "negative"),
   });
-  const rows = useMemo(() => {
+  const groups = useMemo(() => {
     const key = searchKey(needle.trim());
-    return (data?.rows ?? []).filter((r) => !key || searchKey([r.name, ...r.skus].join(" ")).includes(key));
+    return groupRows((data?.rows ?? []).filter((r) => !key || searchKey([r.name, r.product ?? "", ...r.skus].join(" ")).includes(key)));
   }, [data, needle]);
   const anyInvalid = (data?.rows ?? []).some((r) => invalid(draftOf(r, edits[rowKey(r)])));
   const patch = (r: OpeningRow, e: Edit) => setEdits((all) => ({ ...all, [rowKey(r)]: { ...all[rowKey(r)], ...e } }));
+  // Bitta tur (yoki tovar) qatori; `variant` — mahsulot guruhi ichida (sarlavha — SKU, mahsulot nomi guruhda).
+  // Funksiya (komponent emas): har chizishda qayta o'rnatilmaydi — yozayotganda maydon fokusni yo'qotmaydi.
+  const row = (r: OpeningRow, title: string, variant = false) => {
+    const d = draftOf(r, edits[rowKey(r)]);
+    return (
+      <li key={rowKey(r)} className={variant ? "opening-row opening-row--variant" : "opening-row"}>
+        <div className="opening-row__name">
+          <p className="label">{title}</p>
+          <p className="caption">
+            {!variant && `${r.skus.join(", ")} · `}
+            {t("opening.revenue", { sum: f.money(r.revenue) })}
+          </p>
+          {r.shared && <p className="caption">{t("opening.shared")}</p>}
+          {r.last_lot_cost !== null && <p className="caption">{t("opening.lastLot", { sum: f.money(r.last_lot_cost) })}</p>}
+          {r.lots_before > 0 && <p className="caption opening-row__warn">{t("opening.lotsBefore", { n: r.lots_before })}</p>}
+        </div>
+        {hasPeriods(r) ? (
+          <p className="caption">{t("opening.periods", { list: r.prices.map((p) => `${p.valid_from ? f.date(p.valid_from) : t("opening.fromStart")}: ${f.money(p.unit_cost)}`).join("; ") })}</p>
+        ) : (
+          <MoneyInput label={t("opening.price")} optional disabled={!canManage} value={d.price} onValueChange={(price) => patch(r, { price })} />
+        )}
+        <NumberInput label={t("opening.uzum")} help={r.uzum_suggested !== null ? t("opening.suggested", { n: r.uzum_suggested }) : undefined} digits={0} disabled={!canManage} value={d.uzum} onValueChange={(uzum) => patch(r, { uzum })} />
+        <NumberInput label={t("opening.own")} optional digits={0} disabled={!canManage} value={d.own} onValueChange={(own) => patch(r, { own })} />
+      </li>
+    );
+  };
 
   return (
     <section className="opening">
@@ -96,33 +122,35 @@ export function Opening() {
             <>
               <TextInput label={t("opening.search")} type="search" value={needle} onValueChange={setNeedle} />
               <ul className="opening__list" aria-label={t("opening.title")}>
-                {rows.slice(0, limit).map((r) => {
-                  const d = draftOf(r, edits[rowKey(r)]);
-                  return (
-                    <li key={rowKey(r)} className="opening-row">
-                      <div className="opening-row__name">
-                        <p className="label">{r.name}</p>
-                        <p className="caption">
-                          {r.skus.join(", ")} · {t("opening.revenue", { sum: f.money(r.revenue) })}
-                        </p>
-                        {r.shared && <p className="caption">{t("opening.shared")}</p>}
-                        {r.last_lot_cost !== null && <p className="caption">{t("opening.lastLot", { sum: f.money(r.last_lot_cost) })}</p>}
-                        {r.lots_before > 0 && <p className="caption opening-row__warn">{t("opening.lotsBefore", { n: r.lots_before })}</p>}
+                {groups.slice(0, limit).map((g) =>
+                  g.rows.length === 1 ? (
+                    row(g.rows[0]!, g.rows[0]!.name)
+                  ) : (
+                    <li key={g.key} className="opening-group">
+                      <div className="opening-group__head">
+                        <div className="opening-row__name">
+                          <p className="label">{g.title}</p>
+                          <p className="caption">{t("opening.variants", { n: g.rows.length })}</p>
+                        </div>
+                        <MoneyInput
+                          label={t("opening.groupPrice")}
+                          help={t("opening.groupPriceHelp")}
+                          optional
+                          disabled={!canManage}
+                          value={groupPrice(g, edits)}
+                          onValueChange={(price) => setEdits((all) => applyGroupPrice(g, price, all))}
+                        />
                       </div>
-                      {hasPeriods(r) ? (
-                        <p className="caption">{t("opening.periods", { list: r.prices.map((p) => `${p.valid_from ? f.date(p.valid_from) : t("opening.fromStart")}: ${f.money(p.unit_cost)}`).join("; ") })}</p>
-                      ) : (
-                        <MoneyInput label={t("opening.price")} optional disabled={!canManage} value={d.price} onValueChange={(price) => patch(r, { price })} />
-                      )}
-                      <NumberInput label={t("opening.uzum")} help={r.uzum_suggested !== null ? t("opening.suggested", { n: r.uzum_suggested }) : undefined} digits={0} disabled={!canManage} value={d.uzum} onValueChange={(uzum) => patch(r, { uzum })} />
-                      <NumberInput label={t("opening.own")} optional digits={0} disabled={!canManage} value={d.own} onValueChange={(own) => patch(r, { own })} />
+                      <ul className="opening__list" aria-label={g.title}>
+                        {g.rows.map((r) => row(r, r.skus.join(", "), true))}
+                      </ul>
                     </li>
-                  );
-                })}
+                  ),
+                )}
               </ul>
-              {rows.length > limit && (
+              {groups.length > limit && (
                 <Button variant="ghost" onClick={() => setLimit((n) => n + PAGE)}>
-                  {t("opening.more", { n: rows.length - limit })}
+                  {t("opening.more", { n: groups.length - limit })}
                 </Button>
               )}
             </>

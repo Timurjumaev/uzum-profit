@@ -76,3 +76,34 @@ export function openingBody(start: string | null, rows: OpeningRow[], edits: Rec
 export function filled(rows: OpeningRow[], edits: Record<string, Edit>): number {
   return rows.filter((r) => r.lots_after > 0 || hasPeriods(r) || (price(draftOf(r, edits[rowKey(r)]).price) ?? null) !== null).length;
 }
+
+/** Uzum mahsuloti bo'yicha guruh: bir mahsulotning turlari (rang, model, o'lcham) — "hammasiga bitta narx" uchun. */
+export type Group = { key: string; title: string; rows: OpeningRow[] };
+
+/** Qatorlar tartibi saqlanadi (tushum bo'yicha): guruh o'rni — eng katta tushumli turi o'rni. */
+export function groupRows(rows: OpeningRow[]): Group[] {
+  const groups = new Map<string, Group>();
+  for (const r of rows) {
+    const key = r.product_id ? `p:${r.product_id}` : rowKey(r);
+    const group = groups.get(key) ?? { key, title: r.product ?? r.name, rows: [] };
+    group.rows.push(r);
+    groups.set(key, group);
+  }
+  return [...groups.values()];
+}
+
+/** Guruhdagi umumiy narx: tahrirlanadigan hamma turda bir xil bo'lsa — shu, aks holda `null` (har xil yoki bo'sh). */
+export function groupPrice(group: Group, edits: Record<string, Edit>): string | null {
+  const prices = group.rows.filter((r) => !hasPeriods(r)).map((r) => draftOf(r, edits[rowKey(r)]).price);
+  if (prices.length === 0 || prices.some((p) => p === null || p.trim() === "")) return null;
+  return prices.every((p) => Number(parseNumber(p!)) === Number(parseNumber(prices[0]!))) ? prices[0]! : null;
+}
+
+/** "Hammasiga bitta narx": guruhning hamma turiga (narx davrlari bor turdan tashqari) bir xil narx tahriri. */
+export function applyGroupPrice(group: Group, price: string | null, edits: Record<string, Edit>): Record<string, Edit> {
+  const next = { ...edits };
+  for (const r of group.rows) {
+    if (!hasPeriods(r)) next[rowKey(r)] = { ...next[rowKey(r)], price };
+  }
+  return next;
+}

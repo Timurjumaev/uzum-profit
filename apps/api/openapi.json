@@ -9411,6 +9411,29 @@
             "type": "boolean",
             "title": "Shared"
           },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
+          "product": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product"
+          },
           "revenue": {
             "type": "string",
             "title": "Revenue"
@@ -9482,6 +9505,8 @@
           "name",
           "skus",
           "shared",
+          "product_id",
+          "product",
           "revenue",
           "uzum_suggested",
           "uzum_qty",

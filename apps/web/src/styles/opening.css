@@ -56,3 +56,32 @@
     align-items: start;
   }
 }
+
+/* Mahsulot guruhi (turlari — rang, model): sarlavhada "hammasiga bitta narx", ichida turlar chekinish bilan. */
+.opening-group {
+  display: grid;
+  gap: var(--space-2);
+  padding-block: var(--space-3);
+  border-block-end: 1px solid var(--border-hairline);
+}
+
+.opening-group__head {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.opening-group .opening__list {
+  padding-inline-start: var(--space-4);
+  border-inline-start: 2px solid var(--border-hairline);
+}
+
+.opening-row--variant:last-child {
+  border-block-end: 0;
+}
+
+@media (min-width: 768px) {
+  .opening-group__head {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 2fr);
+    align-items: start;
+  }
+}

@@ -6,7 +6,7 @@ import type { Page, Route } from "@playwright/test";
 import { dashboardData } from "../../src/test/dashboard";
 import { inventoryData } from "../../src/test/inventory";
 import { pnlData, skuColumns, waiver } from "../../src/test/pnl";
-import { openingData } from "../../src/test/opening";
+import { openingData, openingRow } from "../../src/test/opening";
 import { settingsData } from "../../src/test/settings";
 import { PURCHASE_1, purchaseDetail, purchaseRow } from "../../src/test/purchases";
 
@@ -242,7 +242,13 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
       return json(route, 200, { items: [waiver()], kinds: ["sale_logistics", "advertising", "storage", "return_storage"] });
     if (key === `GET /orgs/${ORG_ID}/sales`) return json(route, 200, SALES);
     if (key === `GET /orgs/${ORG_ID}/settings`) return json(route, 200, settingsData());
-    if (key === `GET /orgs/${ORG_ID}/opening`) return json(route, 200, openingData());
+    if (key === `GET /orgs/${ORG_ID}/opening`) {
+      // Bitta mahsulotning ikki turi (rang) — "hammasiga bitta narx" guruhi.
+      const variant = (id: string, sku: string, n: number) =>
+        openingRow({ item_id: null, sku_id: id, name: "AirPods gʻilof", skus: [sku], product_id: "p-airgilof", product: "AirPods gʻilof", revenue: "500000.00", uzum_suggested: n });
+      const base = openingData();
+      return json(route, 200, { ...base, rows: [base.rows[0]!, variant("v1", "ELONE-AIRGILOF-ВИШН-4", 12), variant("v2", "ELONE-AIRGILOF-ПАСТ-4", 9), ...base.rows.slice(1)] });
+    }
     if (key === `GET /orgs/${ORG_ID}/inventory`) return json(route, 200, inventoryData());
     if (key === `GET /orgs/${ORG_ID}/purchases`) return json(route, 200, { items: [purchaseRow()], amounts: true });
     if (key === `GET /orgs/${ORG_ID}/purchases/${PURCHASE_1}`) return json(route, 200, purchaseDetail());
