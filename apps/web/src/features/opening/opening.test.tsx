@@ -33,7 +33,7 @@ describe("boshlang'ich holat", () => {
     await screen.findByRole("heading", { level: 1, name: "Boshlangʻich holat" });
     expect(await screen.findByText("Soat")).toBeTruthy();
     expect(screen.getByText("Sumka")).toBeTruthy();
-    expect(norm(document.body.textContent)).toContain("Tushumning 25");
+    expect(norm(document.body.textContent)).toContain("tushumning 25");
     expect(screen.getByText(/2 ta partiya boshlash sanasidan oldin/)).toBeTruthy();
     expect(screen.getByText("Boshlangʻich holat oʻrnatilmagan")).toBeTruthy();
     expect((screen.getByLabelText("Boshlash sanasi") as HTMLInputElement).value).toBe("2026-11-01");
@@ -50,7 +50,7 @@ describe("boshlang'ich holat", () => {
     await waitFor(() => expect(api.bodiesOf(PUT)).toHaveLength(1));
     expect(api.bodiesOf(PUT)[0]).toEqual({ start_on: "2026-11-01", rows: [{ item_id: "item-1", uzum_qty: 120, own_qty: 0, prices: [{ valid_from: null, unit_cost: "12000" }] }] });
     expect(await screen.findByText(/Saqlandi/)).toBeTruthy();
-    await waitFor(() => expect(norm(document.body.textContent)).toContain("Tushumning 77"));
+    await waitFor(() => expect(norm(document.body.textContent)).toContain("tushumning 77"));
   });
 
   it("sana almashsa — shu sana uchun taklif so'raladi; o'chirish", async () => {
@@ -118,5 +118,26 @@ describe("mahsulot turlari", () => {
     await waitFor(() => expect(api.bodiesOf(PUT)).toHaveLength(1));
     const body = api.bodiesOf(PUT)[0] as { rows: Array<{ sku_id: string; prices: Array<{ unit_cost: string }> }> };
     expect(body.rows.map((r) => [r.sku_id, r.prices[0]!.unit_cost])).toEqual([["v1", "15000"], ["v2", "17000"]]);
+  });
+});
+
+describe("ixcham jadval", () => {
+  it("odatda faqat Tur va Tannarx; Uzum qoldig'i — matn; o'z omborim — belgi bilan", async () => {
+    renderPage();
+    await screen.findByText("Soat");
+    const headers = () => screen.getAllByRole("columnheader").map((h) => h.textContent);
+    expect(new Set(headers())).toEqual(new Set(["Tur (SKU)", "Tannarx, soʻm"]));
+    expect(screen.getByText("Uzumda: 120 dona")).toBeTruthy();
+    expect(screen.queryByLabelText(/^Uzumda \(dona\)/)).toBeNull();
+    fireEvent.click(screen.getByRole("checkbox", { name: /Oʻz omborimda ham tovar bor/ }));
+    expect(headers()).toContain("Oʻz omborimda, dona");
+    expect(screen.getAllByLabelText(/^Oʻz omborimda \(dona\)/)).toHaveLength(2);
+  });
+
+  it("Uzum qoldig'i noma'lum (o'tgan sana, snapshot yo'q) — kiritish ustuni chiqadi", async () => {
+    renderPage({ [ROUTE]: () => json(200, data({ stock_source: "none", rows: data().rows.map((r) => ({ ...r, uzum_suggested: null })) })) });
+    await screen.findByText("Soat");
+    expect(screen.getAllByRole("columnheader").map((h) => h.textContent)).toContain("Uzumda, dona");
+    expect(screen.getAllByLabelText(/^Uzumda \(dona\)/)).toHaveLength(2);
   });
 });

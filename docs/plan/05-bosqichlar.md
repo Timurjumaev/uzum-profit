@@ -359,6 +359,8 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   "Butun tashkilot bo'yicha").
   ✓ 2026-11-01 (Temur taklifi): Uzum kabinetidagi SKU jadvali kabi — har mahsulot karta va jadval, "Tannarx" sarlavhasidagi
   tugma bilan "Barcha turlar uchun qo'llash", keyin istalgan turini alohida o'zgartirish mumkin.
+  ✓ 2026-11-01 soddalashtirish (Temur bilan): jadvalda Tur va Tannarx; Uzum qoldig'i avtomatik (matn), o'z omborim —
+  belgi bilan; qamrov — boshlash sanasigacha bo'lgan tushum bo'yicha (90 kunlik doimiy oyna olib tashlandi).
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

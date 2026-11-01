@@ -42,21 +42,14 @@
 
 .opening-table {
   inline-size: 100%;
-  min-inline-size: 600px;
+  min-inline-size: 0;
   border-collapse: collapse;
   table-layout: fixed; /* hamma kartada ustunlar bir xil kenglikda */
 }
 
-.opening-table thead th:nth-child(1) {
-  inline-size: 30%;
-}
-
-.opening-table thead th:nth-child(2) {
-  inline-size: 14%;
-}
-
-.opening-table thead th:nth-child(3) {
-  inline-size: 22%;
+/* SKU — qolgan kenglik; har bir kiritish ustuni bir xil, ixcham kenglikda. */
+.opening-table thead th:not(.opening-table__skucol) {
+  inline-size: 15rem;
 }
 
 .opening-table th,
@@ -71,7 +64,10 @@
   border-block-end: 0;
 }
 
+/* Sarlavhalar bir qatorda, bir xil balandlikda, o'rtaga tekislangan; matn katakdagi maydon chetidan boshlanadi. */
 .opening-table thead th {
+  block-size: 2.5rem;
+  vertical-align: middle;
   font-weight: 500;
   color: var(--text-secondary);
   white-space: nowrap;
@@ -80,6 +76,11 @@
 .opening-table tbody th {
   font-weight: 400;
   min-inline-size: 10rem;
+  padding-block-start: calc(var(--space-2) + 9px); /* matn maydon matni bilan bir chiziqda */
+}
+
+.opening-table tbody td.opening-table__num {
+  padding-block-start: calc(var(--space-2) + 9px);
 }
 
 .opening-table__cell {
@@ -93,17 +94,12 @@
 }
 
 .opening-table__num {
-  text-align: end;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.opening-table thead .opening-table__num {
-  text-align: end;
-}
-
 .opening-table__th {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: var(--space-1);
 }
@@ -122,7 +118,11 @@
   margin: 0;
 }
 
+/* Ixcham (24 px) — sarlavha qatori balandligini o'zgartirmaydi; ko'rinadigan maydoni ikonka atrofida. */
 .opening-table__apply {
+  min-inline-size: 24px;
+  min-block-size: 24px;
+  padding: 0;
   border: 1px solid var(--border-input);
   color: var(--accent-text);
 }
@@ -159,33 +159,27 @@
   }
 }
 
-/* Telefonda tushum ustuni yashiriladi — jadval torroq (qolgani o'z konteynerida skrollanadi). */
+/* Ixtiyoriy ustunlar (Uzum qoldig'i noma'lum, o'z omborim) qo'shilsa telefonda jadval o'z konteynerida skrollanadi. */
 @media (max-width: 639px) {
-  .opening-table {
+  .opening-table thead th:not(.opening-table__skucol) {
+    inline-size: 10.5rem;
+  }
+
+  .opening-table:has(th:nth-child(3)) {
     min-inline-size: 480px;
-  }
-
-  .opening-table__rev {
-    display: none;
-  }
-
-  .opening-table thead th:nth-child(1) {
-    inline-size: 34%;
-  }
-
-  .opening-table thead th:nth-child(3) {
-    inline-size: 26%;
   }
 }
 
-/* Ochilgan panelda yorliq ko'rinadi ("Barcha turlar uchun qo'llash") — jadvaldagi yashirishdan mustasno. */
-.opening-table .opening-apply .ui-field__label {
-  position: static;
-  inline-size: auto;
-  block-size: auto;
-  overflow: visible;
-  clip-path: none;
-  white-space: nowrap;
-  color: var(--text-secondary);
-  font-weight: 400;
+.opening__toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  cursor: pointer;
+}
+
+.opening__toggle input {
+  margin-block-start: 3px;
+  inline-size: 18px;
+  block-size: 18px;
+  accent-color: var(--accent);
 }
