@@ -389,6 +389,16 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   qiymati, F27 da yo'ldagi tovar); o'z omborimdan ayiriladi. Boshlang'ich holat qoldig'iga brak, kutilayotgan, fotostudiya
   va postavkadagi tovar ham qo'shildi ("shundan postavkada N"). B4.13 natijalari 08 §4 da.
 
+### O'zgartirildi
+
+- B4.16 (ADR-036, ADR-017 ning "foyda = faqat Yakunlangan" qismi almashtirildi): Jarayondagi sotuvlar tushum, komissiya,
+  logistika, tannarx va foydaga Uzum hozir bergan qiymatlar bilan kiradi (Bugun, Kecha, Shu oy, Oy prognozi endi 0 emas);
+  bekor yoki qaytsa — sinxrondan keyin o'zi chiqadi. Har joyda "shundan jarayonda: N dona, X so'm", kunlik grafikda
+  yakunlangan va jarayondagi qatlamlar, P&L'da "Jarayondagi sotuvlar" bloki (R — fakt, ko'paytirilmaydi), drill-down'da
+  "Jarayonda" belgisi. Bekor/qaytish ulushi va R — faqat yakuniy holatlardan. Sotuv tezligi (F23) ham Jarayondagilarni
+  oladi. Oldingi davrda sotuv bo'lmasa o'zgarish foizi ko'rsatilmaydi (masalan, "▲47 228%" o'rniga). Migratsiya 0012:
+  `daily_sku_metrics` ga Jarayondagi qism ustunlari va to'liq qayta qurish so'rovi.
+
 ### Olib tashlandi
 
 - B4.15 (ADR-035, ADR-031 almashtirildi): Uzum bonuslari funksiyasi — P&L'dagi "Uzum logistikani olmagan ko'rinadi /

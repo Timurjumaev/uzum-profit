@@ -8,7 +8,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from pydantic import BaseModel
-from upcore.metrics import ExpectedProfit
+from upcore.metrics import PendingSales
 from upcore.money import Money
 from upcore.pnl import CompareRow, Statement
 
@@ -49,6 +49,9 @@ class StatementOut(BaseModel):
     units: int
     covered_units: int
     lines: int
+    # ADR-036: sotuvlar Yakunlangan + Jarayonda; shundan Jarayondagi (yakuniy emas) qism.
+    units_processing: int
+    revenue_processing: Decimal
     uncovered: UncoveredOut
     direct_total: Decimal  # ADR-026
     allocated_total: Decimal
@@ -81,6 +84,8 @@ class StatementOut(BaseModel):
             units=s.units,
             covered_units=s.covered_units,
             lines=s.lines,
+            units_processing=s.units_processing,
+            revenue_processing=s.revenue_processing.amount,
             uncovered=UncoveredOut(
                 lines=s.uncovered_lines,
                 revenue=s.uncovered_revenue.amount,
@@ -123,18 +128,21 @@ class RowOut(BaseModel):
 
 
 class PendingOut(BaseModel):
-    """F16: Jarayondagi sotuvlardan kutilayotgan foyda (R qo'llangan) va R siz summa."""
+    """F16 (ADR-036): Jarayondagi sotuvlar — hisobga kirgan, lekin yakuniy emas. ``rate`` — oxirgi 90 kunda yakuniy
+    holatga yetganlarning Yakunlangan ulushi (fakt, summaga ko'paytirilmaydi)."""
 
-    amount: Decimal | None
-    rate: Decimal | None
-    raw: Decimal
+    units: int
+    revenue: Decimal
+    profit: Decimal  # Σ (F6 − F7) tannarxi ma'lum qatorlar
     uncovered_lines: int
+    rate: Decimal | None
 
     @classmethod
-    def of(cls, e: ExpectedProfit) -> PendingOut:
+    def of(cls, e: PendingSales) -> PendingOut:
         return cls(
-            amount=amount(e.amount),
-            rate=e.rate,
-            raw=e.raw.amount,
+            units=e.units,
+            revenue=e.revenue.amount,
+            profit=e.profit.amount,
             uncovered_lines=e.uncovered_lines,
+            rate=e.rate,
         )

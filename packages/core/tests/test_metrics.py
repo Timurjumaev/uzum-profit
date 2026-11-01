@@ -16,7 +16,6 @@ from upcore.metrics import (
     commission,
     date_from_epoch_ms,
     drr,
-    expected_profit,
     fixed_unit_cost,
     gross_profit,
     in_period,
@@ -25,6 +24,7 @@ from upcore.metrics import (
     own_expenses,
     payout,
     payout_mismatches,
+    pending_sales,
     period_return_share,
     profit_summary,
     ratio,
@@ -127,19 +127,21 @@ def test_status_group(status: str, group: StatusGroup) -> None:
 SAMPLE = [
     line(amount=2, comm=40_000, log=10_000),  # yakunlangan, 2 dona
     line("PARTIALLY_CANCELLED", price=50_000, comm=10_000, log=5_000, cost=None),
-    line("PROCESSING"),
+    line("PROCESSING"),  # ADR-036: Jarayondagi qator ham hisobga kiradi
     line("CANCELED", amount=3),
     line("SOMETHING_NEW"),
 ]
 
 
 def test_f3_to_f8() -> None:
-    assert revenue(SAMPLE) == uzs(250_000)
-    assert commission(SAMPLE) == uzs(50_000)
-    assert logistics(SAMPLE) == uzs(15_000)
-    assert payout(SAMPLE) == uzs(185_000)
-    assert cogs(SAMPLE) == uzs(80_000)  # tannarxsiz qator kirmaydi
-    assert gross_profit(SAMPLE) == uzs(70_000)  # 200 000 − 40 000 − 10 000 − 80 000
+    assert revenue(SAMPLE) == uzs(350_000)
+    assert commission(SAMPLE) == uzs(70_000)
+    assert logistics(SAMPLE) == uzs(20_000)
+    assert payout(SAMPLE) == uzs(260_000)
+    assert cogs(SAMPLE) == uzs(120_000)  # tannarxsiz qator kirmaydi
+    assert gross_profit(SAMPLE) == uzs(105_000)  # (300 000 − 60 000 − 15 000) − 120 000
+    # Bekor va noma'lum holat hech qaysi hisobga kirmaydi.
+    assert revenue([line("CANCELED"), line("SOMETHING_NEW")]).is_zero()
 
 
 def test_payout_mismatches() -> None:
@@ -158,11 +160,12 @@ def test_sale_totals() -> None:
         line("CANCELED", amount=3),
     ]
     t = sale_totals(lines)
-    assert t.revenue == uzs(350_000) and t.units == 4
-    assert (t.commission, t.logistics) == (uzs(70_000), uzs(20_000))
-    assert t.cogs == uzs(110_000) and t.cogs_estimated == uzs(30_000)
-    assert t.revenue_costed == uzs(300_000) and t.payout_costed == uzs(300_000 - 60_000 - 15_000)
-    assert (t.returns, t.canceled) == (1, 3)
+    assert t.revenue == uzs(450_000) and t.units == 5  # Yakunlangan 4 + Jarayonda 1 (ADR-036)
+    assert (t.units_processing, t.revenue_processing) == (1, uzs(100_000))
+    assert (t.commission, t.logistics) == (uzs(90_000), uzs(25_000))
+    assert t.cogs == uzs(150_000) and t.cogs_estimated == uzs(30_000)
+    assert t.revenue_costed == uzs(400_000) and t.payout_costed == uzs(400_000 - 80_000 - 20_000)
+    assert (t.returns, t.canceled) == (1, 3)  # F17/F18 — faqat Yakunlangan va Bekor
     assert t.payout_costed - t.cogs == gross_profit(lines)  # F8
 
 
@@ -304,17 +307,17 @@ def test_realization_rate() -> None:
     assert realization_rate(window, min_units=51) is None
 
 
-def test_expected_profit() -> None:
+def test_pending_sales() -> None:
     pending = [
         line("PROCESSING", amount=2, comm=40_000, log=10_000),
         line("PROCESSING", cost=None),
         line(),
     ]
-    e = expected_profit(pending, D("0.9"))
-    assert e.raw == uzs(70_000)
-    assert e.amount == uzs(63_000)
-    assert e.uncovered_lines == 1
-    assert expected_profit(pending, None).amount is None
+    e = pending_sales(pending, D("0.9"))
+    assert e.units == 3 and e.revenue == uzs(300_000)
+    assert e.profit == uzs(70_000)  # R summaga ko'paytirilmaydi (ADR-036) — faqat fakt
+    assert e.rate == D("0.9") and e.uncovered_lines == 1
+    assert pending_sales(pending, None).rate is None
 
 
 def test_cancel_and_return_share() -> None:

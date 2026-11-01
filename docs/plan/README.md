@@ -10,7 +10,7 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | Joriy bosqich | **B4. Asosiy ekranlar.** **B2 tugadi** (2026-10-27: B2.11 real sinov, 24 soat xatosiz), **B3 tugadi** (2026-10-26) |
 | Keyingi vazifa | **B4 chiqish mezoni** — Temur 14 kun faqat yangi dasturda ishlaydi (B4.1–B4.12 tayyor; B4.9 bekor — ADR-032), keyin B5. B3 qoldig'i: Temur Q1 tovar belgisi tekshiruvi (ADR-030), `sellermax.uz` domenini ro'yxatdan o'tkazish |
 | Temurdan kutilmoqda | Boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni Xaridlarga kiritish (ADR-033; legacy partiyalar shart emas). Ixtiyoriy: staging'da Ombor sahifasini ochib "Omborimda" sonlarini tekshirish (Uzumga yuborilgan xaridlarga "Uzumga yuborildi" sanasi qo'yilgan bo'lishi kerak); staging'da bitta yangi xaridni bosqichma-bosqich kiritib ko'rish (Xaridlar → Yangi xarid); partiya qatorlariga SKU biriktirish |
-| Oxirgi yangilanish | 2026-11-01 (B4.15 Uzum bonuslari olib tashlandi — ADR-035) |
+| Oxirgi yangilanish | 2026-11-02 (B4.16 Jarayondagi sotuvlar hisobga kiradi — ADR-036) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

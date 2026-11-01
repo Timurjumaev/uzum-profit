@@ -96,7 +96,7 @@ async def analysis(ctx: Finance, f: Filter) -> OrdersAnalysisOut:
     day_query = (
         select(
             d.c.day,
-            func.sum(d.c.units),
+            func.sum(d.c.units - d.c.units_processing),  # Yakunlangan dona (ADR-036)
             func.sum(d.c.canceled),
             func.sum(d.c.returns),
         )

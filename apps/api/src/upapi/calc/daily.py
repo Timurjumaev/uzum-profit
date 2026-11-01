@@ -2,7 +2,8 @@
 
 Manba: ``sale_items`` (hamma holatlar), ``sale_costs`` (F21) va reklama xarajatlari (``mp_expenses``, toifa
 ``advertising``, P&L'ga kiradiganlari). Yig'indilar ``upcore.metrics.sale_totals`` dan (F3–F8, F15, F17, F18, F22) —
-SQL'da formula yo'q. Hamma ustunlar additiv: davr natijasi = kunlar yig'indisi.
+SQL'da formula yo'q. Hamma ustunlar additiv: davr natijasi = kunlar yig'indisi. Sotuvlar — Yakunlangan + Jarayonda
+(ADR-036), Jarayondagi qismi ``units_processing``, ``revenue_processing``.
 
 - Kun — buyurtma sanasi (F1); reklama — xarajat sanasi.
 - Reklama SKU'ga ``AD#<sotuv qatori id>`` orqali (F19); bog'lanmagani (yoki bir ma'noli bo'lmagani) — ``sku_id`` NULL
@@ -140,6 +141,8 @@ async def rebuild_shop(
                 "lines": t.lines,
                 "lines_uncosted": t.uncovered_lines,
                 "units_costed": t.units_costed,
+                "units_processing": t.units_processing,
+                "revenue_processing": t.revenue_processing.amount,
             }
         )
     for start in range(0, len(rows), 2_000):

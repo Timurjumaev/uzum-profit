@@ -40,6 +40,8 @@ describe("hisob varag'i", () => {
     await renderPnl();
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(`Foyda va zarar, ${f.period("2026-09-01", "2026-10-31")}`);
     expect(norm(screen.getByText(/^Oldingi davr:/).textContent!)).toBe(norm(`Oldingi davr: ${f.period("2026-07-02", "2026-08-31")}`));
+    // ADR-036: sarlavha ostida — jarayondagi (yakuniy emas) qism.
+    expect(norm(screen.getByText(/^Shundan jarayonda:/).textContent!)).toContain(`8 dona, ${m("1200000.00")} tushum`);
     const names = within(ledger())
       .getAllByRole("rowheader")
       .map((h) => h.querySelector(".ui-ledger__link")?.textContent ?? h.textContent);
@@ -96,12 +98,13 @@ describe("sharshara va kutilayotgan", () => {
     expect(steps).toEqual(["Tushum", "Komissiya", "Logistika", "Uzum toʻlovi", "Tannarxsiz", "Tannarx", "Yalpi foyda", "Uzum xarajatlari", "Oʻz xarajatlarim", "Soliq", "Tannarxsiz qism xarajati", "Sof foyda"]);
   });
 
-  it("F16: kutilayotgan foyda; R hisoblanmasa sababi va koeffitsientsiz summa; do'konlar bo'yicha", async () => {
+  it("F16 (ADR-036): Jarayondagi sotuvlar — tushum, yalpi foyda, R fakt sifatida; do'konlar bo'yicha", async () => {
     await renderPnl();
-    const [block] = screen.getAllByRole("region", { name: /Kutilayotgan/ }); // blok (ichida do'konlar jadvali)
-    expect(norm(within(block!).getByTestId("pending-amount").textContent!)).toBe(m("870000.00"));
-    expect(within(block!).getByText(/Realizatsiya darajasi hisoblanmadi/)).toBeTruthy();
-    expect(within(block!).getByText(/2 ta sotuv tannarxsiz/)).toBeTruthy();
+    const [block] = screen.getAllByRole("region", { name: /Jarayondagi sotuvlar/ }); // blok (ichida do'konlar jadvali)
+    expect(norm(within(block!).getByTestId("pending-amount").textContent!)).toBe(m("1200000.00"));
+    expect(norm(within(block!).getByText(/8 dona, yalpi foyda/).textContent!)).toContain(m("300000.00"));
+    expect(within(block!).getByText(/yakunlanish ulushi uchun maʼlumot kam/)).toBeTruthy();
+    expect(within(block!).getByText(/2 ta sotuvning tannarxi yoʻq/)).toBeTruthy();
     const shops = within(block!).getByRole("table");
     expect(within(shops).getByText("Durii")).toBeTruthy(); // taxallus (alias)
     expect(within(shops).getByText("EL-ONE")).toBeTruthy();
@@ -109,7 +112,7 @@ describe("sharshara va kutilayotgan", () => {
   });
 
   it("Jarayondagi sotuv yo'q — bo'sh matn", async () => {
-    await renderPnl(PATH, { [PNL_ROUTE]: () => json(200, pnlData({ pending_shops: [], pending: { amount: "0.00", rate: null, raw: "0.00", uncovered_lines: 0 } })) });
+    await renderPnl(PATH, { [PNL_ROUTE]: () => json(200, pnlData({ pending_shops: [], pending: { units: 0, revenue: "0.00", profit: "0.00", uncovered_lines: 0, rate: null } })) });
     expect(screen.getByText("Bu davrda Jarayondagi sotuv yoʻq.")).toBeTruthy();
   });
 });

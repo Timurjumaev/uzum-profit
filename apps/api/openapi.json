@@ -2925,6 +2925,18 @@
             "description": "Faqat SKU'ga bog'lanmagan sotuvlar"
           },
           {
+            "name": "counted",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Faqat hisobga kiradiganlar: Yakunlangan + Jarayonda (P&L drill-down)",
+              "default": false,
+              "title": "Counted"
+            },
+            "description": "Faqat hisobga kiradiganlar: Yakunlangan + Jarayonda (P&L drill-down)"
+          },
+          {
             "name": "limit",
             "in": "query",
             "required": false,
@@ -7180,6 +7192,14 @@
           "units": {
             "type": "integer",
             "title": "Units"
+          },
+          "revenue_done": {
+            "type": "string",
+            "title": "Revenue Done"
+          },
+          "revenue_processing": {
+            "type": "string",
+            "title": "Revenue Processing"
           }
         },
         "type": "object",
@@ -7187,7 +7207,9 @@
           "day",
           "revenue",
           "net_profit",
-          "units"
+          "units",
+          "revenue_done",
+          "revenue_processing"
         ],
         "title": "DayOut"
       },
@@ -8018,7 +8040,7 @@
             ],
             "title": "Drr"
           },
-          "expected_profit": {
+          "pending": {
             "$ref": "#/components/schemas/PendingOut"
           },
           "frozen_money": {
@@ -8049,7 +8071,7 @@
           "cancel_share",
           "return_share",
           "drr",
-          "expected_profit",
+          "pending",
           "frozen_money",
           "in_transit_value",
           "average_days_to_sell"
@@ -10235,16 +10257,21 @@
       },
       "PendingOut": {
         "properties": {
-          "amount": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Amount"
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          },
+          "revenue": {
+            "type": "string",
+            "title": "Revenue"
+          },
+          "profit": {
+            "type": "string",
+            "title": "Profit"
+          },
+          "uncovered_lines": {
+            "type": "integer",
+            "title": "Uncovered Lines"
           },
           "rate": {
             "anyOf": [
@@ -10256,38 +10283,36 @@
               }
             ],
             "title": "Rate"
-          },
-          "raw": {
-            "type": "string",
-            "title": "Raw"
-          },
-          "uncovered_lines": {
-            "type": "integer",
-            "title": "Uncovered Lines"
           }
         },
         "type": "object",
         "required": [
-          "amount",
-          "rate",
-          "raw",
-          "uncovered_lines"
+          "units",
+          "revenue",
+          "profit",
+          "uncovered_lines",
+          "rate"
         ],
         "title": "PendingOut",
-        "description": "F16: Jarayondagi sotuvlardan kutilayotgan foyda (R qo'llangan) va R siz summa."
+        "description": "F16 (ADR-036): Jarayondagi sotuvlar — hisobga kirgan, lekin yakuniy emas. ``rate`` — oxirgi 90 kunda yakuniy\nholatga yetganlarning Yakunlangan ulushi (fakt, summaga ko'paytirilmaydi)."
       },
       "PendingShopOut": {
         "properties": {
-          "amount": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Amount"
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          },
+          "revenue": {
+            "type": "string",
+            "title": "Revenue"
+          },
+          "profit": {
+            "type": "string",
+            "title": "Profit"
+          },
+          "uncovered_lines": {
+            "type": "integer",
+            "title": "Uncovered Lines"
           },
           "rate": {
             "anyOf": [
@@ -10299,14 +10324,6 @@
               }
             ],
             "title": "Rate"
-          },
-          "raw": {
-            "type": "string",
-            "title": "Raw"
-          },
-          "uncovered_lines": {
-            "type": "integer",
-            "title": "Uncovered Lines"
           },
           "shop_id": {
             "type": "string",
@@ -10316,10 +10333,11 @@
         },
         "type": "object",
         "required": [
-          "amount",
-          "rate",
-          "raw",
+          "units",
+          "revenue",
+          "profit",
           "uncovered_lines",
+          "rate",
           "shop_id"
         ],
         "title": "PendingShopOut"
@@ -10369,6 +10387,14 @@
           "units": {
             "type": "integer",
             "title": "Units"
+          },
+          "units_processing": {
+            "type": "integer",
+            "title": "Units Processing"
+          },
+          "revenue_processing": {
+            "type": "string",
+            "title": "Revenue Processing"
           }
         },
         "type": "object",
@@ -10377,7 +10403,9 @@
           "period",
           "revenue",
           "net_profit",
-          "units"
+          "units",
+          "units_processing",
+          "revenue_processing"
         ],
         "title": "PeriodTotalOut"
       },
@@ -12562,6 +12590,14 @@
             "type": "integer",
             "title": "Lines"
           },
+          "units_processing": {
+            "type": "integer",
+            "title": "Units Processing"
+          },
+          "revenue_processing": {
+            "type": "string",
+            "title": "Revenue Processing"
+          },
           "uncovered": {
             "$ref": "#/components/schemas/UncoveredOut"
           },
@@ -12625,6 +12661,8 @@
           "units",
           "covered_units",
           "lines",
+          "units_processing",
+          "revenue_processing",
           "uncovered",
           "direct_total",
           "allocated_total",

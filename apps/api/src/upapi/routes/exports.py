@@ -112,7 +112,7 @@ async def export_sales(
     _need(ctx, Permission.VIEW_FINANCE)
 
     async def fetch(cursor: str | None) -> Any:
-        return await sales_routes.sales(ctx, f, group, sku, unlinked, MAX_LIMIT, cursor)
+        return await sales_routes.sales(ctx, f, group, sku, unlinked, False, MAX_LIMIT, cursor)
 
     rows = await _all(fetch)
     note = [_period(f), *_shops(f)]

@@ -8,6 +8,7 @@ import { cx } from "../../components/ui/cx";
 import type { Dashboard } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { Change } from "./Change";
+import { ProcessingNote } from "./ProcessingNote";
 import { homeRows, rowLabel, type HomeRow } from "./model";
 
 type Props = {
@@ -58,6 +59,7 @@ export function Ledger({ data, onRow, costAction }: Props) {
             <span className="caption">{prev ? t("home.vsPrevious", { period: f.period(prev.start, prev.end) }) : ""}</span>
           </p>
         )}
+        <ProcessingNote units={data.statement.units_processing} revenue={data.statement.revenue_processing} />
       </div>
       <LedgerTable
         caption={t("home.ledger.caption")}

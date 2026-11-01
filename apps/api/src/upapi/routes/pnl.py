@@ -3,8 +3,9 @@
 Hisob varag'i tanlangan davr va oldingi xuddi shu uzunlikdagi davr bilan solishtiriladi (``rows``: joriy, tushumga
 nisbatan, oldingi, farq). Ko'rinishlar (``view``): oylar, kunlar, do'konlar, SKU bo'yicha ustunlar — kataklar
 yig'indisi (ustunlar yig'indisi = jami). SKU ko'rinishida ``unlinked`` — SKU'ga bog'lanmagan sotuvlar, ``null`` —
-taqsimlanmagan (sotuvsiz kun) xarajatlar. Kutilayotgan foyda (F16) va "qayta hisoblandi" soni alohida. Uzum
-xarajatlari API bergandek olinadi (ADR-035); SKU ko'rinishida ustun nomi.
+taqsimlanmagan (sotuvsiz kun) xarajatlar. Sotuvlar Yakunlangan + Jarayonda
+(ADR-036); Jarayondagi sotuvlar bloki (F16) va "qayta hisoblandi" soni alohida. Uzum xarajatlari API bergandek olinadi
+(ADR-035); SKU ko'rinishida ustun nomi.
 Drill-down: sotuvlar — ``/sales``, xarajatlar — ``/expenses`` (shu filtrlar bilan).
 """
 

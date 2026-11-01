@@ -16,6 +16,7 @@ import { Banner, Button, EmptyState, Skeleton, PageHelp } from "../../components
 import { useFormat } from "../../lib/i18n";
 import { syncSummary } from "../../lib/sync";
 import { Drill } from "../home/Drill";
+import { ProcessingNote } from "../home/ProcessingNote";
 import { rowLabel } from "../home/model";
 import { Breakdown } from "./Breakdown";
 import { pnlLines, waterfallSteps, type PnlLine, type View } from "./model";
@@ -70,6 +71,7 @@ export function Pnl() {
           <PageHelp page="pnl" />
         </div>
         {previous && <p className="caption">{t("pnl.previousNote", { period: f.period(previous.start, previous.end) })}</p>}
+        <ProcessingNote units={s.units_processing} revenue={s.revenue_processing} />
       </header>
       {filters.compare === "lastYear" && <Banner tone="info" title={t("home.lastYearSoon")} />}
       {s.lines === 0 && (

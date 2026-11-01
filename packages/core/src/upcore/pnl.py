@@ -32,15 +32,15 @@ from typing import NamedTuple, cast
 
 from upcore.expenses import ExpenseCategory, ExpenseRecord
 from upcore.metrics import (
-    ExpectedProfit,
     ManualExpense,
+    PendingSales,
     Period,
     SaleLine,
     SaleTotals,
     StatusGroup,
-    completed,
-    expected_profit,
+    counted,
     own_expense_in_period,
+    pending_sales,
     ratio,
     realization_rate,
 )
@@ -141,6 +141,8 @@ class Cell:
     covered_units: int = 0
     lines: int = 0
     uncovered_lines: int = 0
+    units_processing: int = 0  # ADR-036: shundan Jarayonda
+    revenue_processing: Decimal = _D0
     # Xarajatlar (F9 turlari, F10 toifalari) va shundan taqsimlangani; ``None`` — yo'q (lug'at kerak bo'lganda).
     uzum: dict[ExpenseCategory, Decimal] | None = None
     own: dict[str, Decimal] | None = None
@@ -177,6 +179,8 @@ class CellSales:
     units_costed: int
     lines: int
     uncovered_lines: int
+    units_processing: int = 0  # ADR-036: shundan Jarayonda
+    revenue_processing: Decimal = _D0
 
     @classmethod
     def of(cls, t: SaleTotals) -> CellSales:
@@ -191,6 +195,8 @@ class CellSales:
             units_costed=t.units_costed,
             lines=t.lines,
             uncovered_lines=t.uncovered_lines,
+            units_processing=t.units_processing,
+            revenue_processing=t.revenue_processing.amount,
         )
 
 
@@ -214,7 +220,15 @@ class Statement:
     # ADR-026: shundan tushum ulushida taqsimlangan qism (do'kon / tashkilot xarajatidan SKU'larga).
     uzum_allocated: Mapping[ExpenseCategory, Money] = field(default_factory=dict)
     own_allocated: Mapping[str, Money] = field(default_factory=dict)
-    covered_units: int = 0  # tannarxi ma'lum Yakunlangan dona
+    covered_units: int = 0  # tannarxi ma'lum hisobga olingan dona
+    # ADR-036: sotuvlar Yakunlangan + Jarayonda; shundan Jarayondagi (yakuniy emas) qism — "shundan jarayonda".
+    units_processing: int = 0
+    revenue_processing: Money = ZERO
+
+    @property
+    def revenue_done(self) -> Money:
+        """F3 ning Yakunlangan qismi (ADR-036): tushum − Jarayondagi qism."""
+        return self.revenue - self.revenue_processing
 
     @property
     def payout(self) -> Money:
@@ -400,7 +414,8 @@ def _roll(cells: Iterable[Cell]) -> Cell:
     """Kataklar yig'indisi (xom): kesim natijasi va kesimlar jami uchun."""
     revenue = commission = logistics = cogs = covered_revenue = covered_payout = _D0
     tax = deducted = _D0
-    units = lines = uncovered = covered_units = 0
+    units = lines = uncovered = covered_units = units_processing = 0
+    revenue_processing = _D0
     uzum: dict[ExpenseCategory, Decimal] = {}
     own: dict[str, Decimal] = {}
     uzum_alloc: dict[ExpenseCategory, Decimal] = {}
@@ -418,6 +433,8 @@ def _roll(cells: Iterable[Cell]) -> Cell:
         lines += c.lines
         uncovered += c.uncovered_lines
         covered_units += c.covered_units
+        units_processing += c.units_processing
+        revenue_processing += c.revenue_processing
         if c.uzum:
             for cat, a in c.uzum.items():
                 uzum[cat] = uzum.get(cat, _D0) + a
@@ -441,6 +458,8 @@ def _roll(cells: Iterable[Cell]) -> Cell:
         covered_units=covered_units,
         lines=lines,
         uncovered_lines=uncovered,
+        units_processing=units_processing,
+        revenue_processing=revenue_processing,
         uzum=uzum,
         own=own,
         uzum_alloc=uzum_alloc,
@@ -468,6 +487,8 @@ def _statement(c: Cell) -> Statement:
         uzum_allocated=_money_map(c.uzum_alloc or {}),
         own_allocated=_money_map(c.own_alloc or {}),
         covered_units=c.covered_units,
+        units_processing=c.units_processing,
+        revenue_processing=_uzs(c.revenue_processing),
     )
 
 
@@ -537,7 +558,8 @@ def build_cells(
     """F12–F15 kataklari. Davrdan tashqari sotuv va xarajatlar e'tiborga olinmaydi.
 
     ``totals`` — tayyor katak yig'indilari (``CellSales``, masalan ``daily_sku_metrics``); ``lines`` bilan bir
-    xil natija beradi (Yakunlangan qatori yo'q yig'indi katak yaratmaydi)."""
+    xil natija beradi (hisobga olinadigan qatori yo'q yig'indi katak yaratmaydi). Sotuvlar — Yakunlangan + Jarayonda
+    (ADR-036)."""
     acc: dict[CellKey, Cell] = defaultdict(Cell)
     first, last = period.start, period.end
 
@@ -555,8 +577,10 @@ def build_cells(
         a.covered_units += t.units_costed
         a.lines += t.lines
         a.uncovered_lines += t.uncovered_lines
+        a.units_processing += t.units_processing
+        a.revenue_processing += t.revenue_processing
 
-    for line in completed(x for x in lines if x.order_date in period):
+    for line in counted(x for x in lines if x.order_date in period):
         a = acc[CellKey(line.order_date, line.shop, line.sku)]
         rev = _cents(line.revenue)
         fee = _cents(to_decimal(line.commission))
@@ -566,6 +590,9 @@ def build_cells(
         a.logistics += logistic
         a.units += line.amount
         a.lines += 1
+        if line.group is StatusGroup.PROCESSING:
+            a.units_processing += line.amount
+            a.revenue_processing += rev
         cost = line.cogs
         if cost is None:
             a.uncovered_lines += 1
@@ -685,17 +712,18 @@ def unit_economics(s: Statement) -> UnitEconomics:
 
 def pending_profit(
     period: Period, lines: Iterable[SaleLine], window: Iterable[SaleLine], min_units: int = 50
-) -> ExpectedProfit:
-    """F16 bloki: davrdagi Jarayondagi qatorlar × R (R — ``window``: do'konning oxirgi 90 kuni)."""
+) -> PendingSales:
+    """F16 bloki: davrdagi Jarayondagi qatorlar va R (fakt — ``window``: do'konning oxirgi 90 kuni)."""
     pending = [x for x in lines if x.order_date in period and x.group is StatusGroup.PROCESSING]
-    return expected_profit(pending, realization_rate(window, min_units))
+    return pending_sales(pending, realization_rate(window, min_units))
 
 
 @dataclass(frozen=True, slots=True)
 class CompareRow:
     """M5 ustunlari: joriy, tushumga nisbatan %, oldingi davr, farq va o'zgarish ulushi.
 
-    ``change`` = farq / |oldingi davr| (ishorali qiymat bo'yicha: yuqori — yaxshi); oldingi davr nol bo'lsa ``None``.
+    ``change`` = farq / |oldingi davr| (ishorali qiymat bo'yicha: yuqori — yaxshi); oldingi davr nol bo'lsa yoki oldingi
+    davrda sotuv bo'lmasa (tushum 0 — masalan, do'kon hali ulanmagan) ``None``: aks holda foiz ma'nosiz (47 228%).
     """
 
     code: str
@@ -709,6 +737,7 @@ class CompareRow:
 def compare(current: Statement, previous: Statement) -> list[CompareRow]:
     """Ikki davr hisobot qatorlari: joriy davrda yo'q qator oldingisida bo'lsa ham ko'rsatiladi."""
     cur, prev = dict(current.rows()), dict(previous.rows())
+    comparable = not previous.revenue.is_zero()
     codes = [c for c, _ in current.rows()] + [c for c, _ in previous.rows() if c not in cur]
     rows = []
     for code in codes:
@@ -721,7 +750,7 @@ def compare(current: Statement, previous: Statement) -> list[CompareRow]:
                 ratio(now.amount, current.revenue.amount),
                 before,
                 diff,
-                ratio(diff.amount, abs(before.amount)),
+                ratio(diff.amount, abs(before.amount)) if comparable else None,
             )
         )
     return rows
