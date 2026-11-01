@@ -391,6 +391,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- Boshlang'ich holat: saqlagandan keyin keyingi qadam aniq emas edi (sahifa o'zgarmay qolardi, faqat toast) — endi
+  sahifa tepaga qaytadi, tepada natija (nechta turga narx, qamrov, hisob fonda) va "Foydani ko'rish" / "Omborni ko'rish"
+  havolalari; narx maydonida ortiqcha ",00" yo'q (Temur topdi).
 - Ombor KPI: "Yo'ldagi tovar" postavkadagi (qabul qilinmagan) tovarni ham o'z ichiga oladi ("shundan postavkada N"),
   muzlagan pul izohida "Uzumda, postavkada va o'z omborimda" (B4.14 dan keyin Temur ko'rdi: postavka KPI'da ko'rinmasdi).
 - Boshlang'ich holat soddalashtirildi (Temur bilan kelishildi): jadvalda odatda faqat **Tur (SKU)** va **Tannarx**. Tushum

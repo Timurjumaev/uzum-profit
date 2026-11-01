@@ -183,3 +183,13 @@
   block-size: 18px;
   accent-color: var(--accent);
 }
+
+.opening__next {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.opening__next a {
+  color: var(--accent-text);
+}

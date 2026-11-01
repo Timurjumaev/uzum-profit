@@ -7,6 +7,11 @@ import type { OpeningIn, OpeningRow, OpeningRowIn } from "../../lib/api/types";
 export type Edit = { uzum?: string | null; own?: string | null; price?: string | null };
 export type Draft = { uzum: string | null; own: string | null; price: string | null };
 
+/** "20000.00" → "20000" (so'mda kasr odatda yo'q — maydonda ",00" ko'rinmasin); "1.50" → "1.5". */
+export function trimZeros(value: string): string {
+  return value.includes(".") ? value.replace(/\.?0+$/, "") : value;
+}
+
 export const rowKey = (r: OpeningRow): string => r.item_id ?? `sku:${r.sku_id}`;
 
 /** Bir nechta narx davri bo'lsa — bu sahifada faqat ko'rsatiladi (tahrir — keyin), saqlashda o'zgarmay qaytadi. */
@@ -16,7 +21,7 @@ export function saved(r: OpeningRow): Draft {
   return {
     uzum: r.uzum_qty === null ? null : String(r.uzum_qty),
     own: r.own_qty === null ? null : String(r.own_qty),
-    price: r.prices.length === 1 ? r.prices[0].unit_cost : null,
+    price: r.prices.length === 1 ? trimZeros(r.prices[0].unit_cost) : null,
   };
 }
 

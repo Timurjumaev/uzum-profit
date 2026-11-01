@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { openingRow } from "../../test/opening";
-import { applyGroupPrice, draftOf, filled, groupRows, invalid, openingBody, rowBody, rowKey } from "./model";
+import { applyGroupPrice, draftOf, filled, groupRows, invalid, openingBody, rowBody, rowKey, trimZeros } from "./model";
 
 describe("boshlang'ich holat modeli", () => {
   it("qoralama: tahrir → saqlangan → Uzum taklifi", () => {
@@ -9,7 +9,7 @@ describe("boshlang'ich holat modeli", () => {
     expect(draftOf(r, undefined)).toEqual({ uzum: "120", own: null, price: null });
     const saved = openingRow({ uzum_qty: 100, own_qty: 5, prices: [{ valid_from: null, unit_cost: "12000.00" }] });
     // Uzum qoldig'i — Uzumdan (taklif); saqlangan son faqat taklif yo'q bo'lsa.
-    expect(draftOf(saved, undefined)).toEqual({ uzum: "120", own: "5", price: "12000.00" });
+    expect(draftOf(saved, undefined)).toEqual({ uzum: "120", own: "5", price: "12000" }); // ",00" ko'rinmaydi
     expect(draftOf({ ...saved, uzum_suggested: null }, undefined).uzum).toBe("100");
     expect(draftOf(saved, { price: "13000" }).price).toBe("13000");
     expect(rowKey(openingRow({ item_id: null, sku_id: "sku-9" }))).toBe("sku:sku-9");
@@ -52,6 +52,14 @@ describe("boshlang'ich holat modeli", () => {
     const edits = { "item-1": { price: "100" } };
     expect(openingBody("2026-11-01", rows, edits)).toEqual({ start_on: "2026-11-01", rows: [{ item_id: "item-1", uzum_qty: 120, own_qty: 0, prices: [{ valid_from: null, unit_cost: "100" }] }] });
     expect(filled(rows, edits)).toBe(1); // faqat narx yozilgani (partiyasi borligi hisoblanmaydi)
+  });
+});
+
+describe("trimZeros", () => {
+  it("so'mdagi ortiqcha nollar", () => {
+    expect(trimZeros("20000.00")).toBe("20000");
+    expect(trimZeros("1.50")).toBe("1.5");
+    expect(trimZeros("300")).toBe("300");
   });
 });
 
