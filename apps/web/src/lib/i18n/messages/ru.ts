@@ -971,8 +971,9 @@ export const ru: Messages = {
     days: "{{count}} дн.",
     kpi: {
       frozen: "Замороженные деньги",
-      frozenNote: "{{units}} шт.: в Uzum и на моём складе",
+      frozenNote: "{{units}} шт.: в Uzum, в поставке и на моём складе",
       transit: "Товар в пути",
+      transitInbound: "из них в поставке {{count}} шт.",
       own: "На моём складе",
       days: "Средний срок продажи",
     },

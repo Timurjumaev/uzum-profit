@@ -72,6 +72,7 @@ export function Inventory() {
   const counts = totals.statuses as Record<string, number>;
   const all = Object.values(counts).reduce((a, b) => a + b, 0);
   const amounts = totals.frozen_total !== null;
+  const inbound = totals.units.inbound ?? 0; // postavkada (ADR-034)
   const filtered = Boolean(search.q || search.status);
   return (
     <section className="inventory" aria-busy={query.isPlaceholderData || undefined}>
@@ -83,6 +84,7 @@ export function Inventory() {
         <p className="caption">{t("inventory.asOf", { date: f.date(first.as_of) })}</p>
       </header>
 
+      {/* ADR-034: postavkadagi (qabul qilinmagan) tovar ham yo'lda — Uzumga ketmoqda. */}
       <div className="inventory__kpis">
         {amounts && (
           <Kpi
@@ -94,8 +96,13 @@ export function Inventory() {
         )}
         <Kpi
           label={t("inventory.kpi.transit")}
-          value={t("inventory.kpiUnits", { count: f.number(totals.units.china + totals.units.road) })}
-          note={amounts ? f.money(Number(totals.frozen_money!.china) + Number(totals.frozen_money!.road)) : undefined}
+          value={t("inventory.kpiUnits", { count: f.number(totals.units.china + totals.units.road + inbound) })}
+          note={[
+            amounts ? f.money(Number(totals.frozen_money!.china) + Number(totals.frozen_money!.road) + Number(totals.frozen_money!.inbound ?? 0)) : null,
+            inbound > 0 ? t("inventory.kpi.transitInbound", { count: f.number(inbound) }) : null,
+          ]
+            .filter(Boolean)
+            .join(" · ") || undefined}
           help={<Help id="f29" metric={t("inventory.kpi.transit")} />}
         />
         <Kpi label={t("inventory.kpi.own")} value={t("inventory.kpiUnits", { count: f.number(totals.units.own) })} note={amounts ? f.money(totals.frozen_money!.own) : undefined} />
