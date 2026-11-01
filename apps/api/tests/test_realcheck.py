@@ -258,3 +258,41 @@ def test_pattern_and_money() -> None:
     assert rc.money(Decimal("1000.00")) == "1000"
     assert rc.money(Decimal("12.50")) == "12.50"
     assert rc.money(Decimal("-0")) == "0"
+
+
+def test_stock_fields_report(db: dict[str, str]) -> None:
+    """ADR-034: qoldiq maydonlari yig'indilari, SKU holati bo'yicha, munosabatlar, postavka va qaytarish holatlari."""
+    product = sf.product(
+        501,
+        [(5011, "SKU-A"), (5012, "SKU-B")],
+        quantityAvailable=10,
+        quantityReserved=1,
+        quantityOnPhotoStudio=2,
+        quantityNew=7,  # hujjatda yo'q maydon — "extra" ga tushadi
+        quantityAvailableByStockType={"FBO": 10},
+        status={"value": "BLOCKED"},
+    )
+    fake = seller(
+        shops=BOTH,
+        products={A: [product], B: []},
+        invoices={A: [sf.invoice(601), sf.invoice(602, status="CREATED")], B: []},
+    )
+    _, report = synced(db, fake)
+    stock = shop(report, A)["checks"]["stock"]
+    assert stock["skus"] == 2
+    f = stock["fields"]
+    assert f["quantityActive"] == {"sum": 20, "nonzero": 2, "missing": 0}
+    assert f["quantityOnPhotoStudio"]["sum"] == 4 and f["quantityArchived"]["missing"] == 2
+    assert stock["by_status"]["IN_STOCK / BLOCKED"]["skus"] == 2
+    assert stock["by_status"]["IN_STOCK / BLOCKED"]["quantityPending"] == 4
+    assert stock["extra_quantity_keys"] == {"quantityNew": 2}
+    assert stock["available_by_stock_type"] == {"FBO: <number>": 2}
+    assert stock["mismatches"] == {}  # available = active (= active + fbs, FBS 0)
+    statuses = {r["status"]: r for r in stock["invoices_by_status"]}
+    assert set(statuses) == {"ACCEPTED", "CREATED"} and statuses["CREATED"]["to_stock"] == 5
+    assert {(r["type"], r["status"]) for r in stock["returns_by_type_status"]} == {
+        ("RETURN", "ASSEMBLED")
+    }
+    sales = {r["status"]: r for r in stock["sales_last_60d_by_status"]}
+    assert set(sales) == {"PROCESSING", "TO_WITHDRAW"}  # 100 kun oldingi sotuv oynadan tashqarida
+    assert json.dumps(report, default=rc._json)  # JSON'ga yoziladi
