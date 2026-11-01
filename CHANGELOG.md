@@ -377,9 +377,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   usulidan havola). Testlar: core (FIFO va o'rtacha, narx davrlari, qaytish, hypothesis), API (haqiqiy PostgreSQL: tarixiy
   sotuv, FIFO taqsimoti 120 + 30, takroriy saqlash, ruxsatlar, tekshiruvlar, o'chirish, RLS), web (model, sahifa, axe),
   e2e (kontrast bilan axe, 360 px).
-- Boshlang'ich holat: bitta Uzum mahsulotining turlari (rang, model, o'lcham) guruhlanadi, guruh tepasida "Hamma turlarga
-  bitta narx" — yozilsa har bir turga tushadi, keyin istalgan turini alohida o'zgartirish mumkin (Temur taklifi).
-  API qatorida `product_id`, `product`.
+- Boshlang'ich holat: Uzum kabinetidagi SKU jadvali ko'rinishi — har Uzum mahsuloti alohida karta va ixcham jadval (tur,
+  tushum, tannarx, Uzumda, o'z omborimda); "Tannarx" ustuni sarlavhasidagi tugma — "Barcha turlar uchun qo'llash" (narx →
+  ✓ → hamma turga), keyin istalgan turini alohida o'zgartirish mumkin (Temur taklifi). API qatorida `product_id`, `product`.
 
 ### Tuzatildi
 

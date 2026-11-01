@@ -105,8 +105,13 @@ describe("mahsulot turlari", () => {
     render(<App state={createAppState(createMemoryHistory({ initialEntries: ["/opening"] }), "uz-Latn")} />);
     expect(await screen.findByText("2 ta tur (rang, model, oʻlcham)")).toBeTruthy();
     expect(screen.getByText("ELONE-AIRGILOF-ВИШН-4")).toBeTruthy();
-    fireEvent.change(screen.getByLabelText(/Hamma turlarga bitta narx/), { target: { value: "15000" } });
-    const prices = screen.getAllByLabelText(/^Tannarx \/ dona/) as HTMLInputElement[];
+    expect(screen.getByRole("table")).toBeTruthy(); // bitta mahsulot — bitta jadval
+    // "Tannarx" sarlavhasidagi tugma → "Barcha turlar uchun qoʻllash" → ✓ (Uzum kabinetidagi kabi).
+    fireEvent.click(screen.getByRole("button", { name: "Barcha turlar uchun narx: AirPods gʻilof" }));
+    fireEvent.change(screen.getByLabelText("Barcha turlar uchun qoʻllash"), { target: { value: "15000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Qoʻllash" }));
+    expect(screen.queryByLabelText("Barcha turlar uchun qoʻllash")).toBeNull(); // panel yopildi
+    const prices = screen.getAllByLabelText(/^Tannarx \/ dona — ELONE/) as HTMLInputElement[];
     expect(prices.map((x) => x.value.replace(/\s/g, ""))).toEqual(["15000", "15000"]);
     fireEvent.change(prices[1]!, { target: { value: "17000" } });
     fireEvent.click(screen.getByRole("button", { name: "Saqlash va qayta hisoblash" }));

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { openingRow } from "../../test/opening";
-import { applyGroupPrice, draftOf, filled, groupPrice, groupRows, invalid, openingBody, rowBody, rowKey } from "./model";
+import { applyGroupPrice, draftOf, filled, groupRows, invalid, openingBody, rowBody, rowKey } from "./model";
 
 describe("boshlang'ich holat modeli", () => {
   it("qoralama: tahrir → saqlangan → Uzum taklifi", () => {
@@ -65,12 +65,9 @@ describe("mahsulot guruhi (turlar)", () => {
 
   it("hammasiga bitta narx; keyin bittasini alohida o'zgartirish", () => {
     const [g] = groupRows([a, b]);
-    expect(groupPrice(g!, {})).toBeNull();
     const edits = applyGroupPrice(g!, "15000", {});
-    expect(groupPrice(g!, edits)).toBe("15000");
     expect(openingBody("2026-11-01", [a, b], edits).rows.map((r) => r.prices?.[0]?.unit_cost)).toEqual(["15000", "15000"]);
     const one = { ...edits, [rowKey(b)]: { ...edits[rowKey(b)], price: "17000" } };
-    expect(groupPrice(g!, one)).toBeNull(); // har xil — guruh maydoni bo'sh
     expect(openingBody("2026-11-01", [a, b], one).rows.map((r) => r.prices?.[0]?.unit_cost)).toEqual(["15000", "17000"]);
   });
 
@@ -79,6 +76,6 @@ describe("mahsulot guruhi (turlar)", () => {
     const [g] = groupRows([a, periods]);
     const edits = applyGroupPrice(g!, "5", {});
     expect(edits[rowKey(periods)]).toBeUndefined();
-    expect(groupPrice(g!, edits)).toBe("5");
+    expect(edits[rowKey(a)]?.price).toBe("5");
   });
 });

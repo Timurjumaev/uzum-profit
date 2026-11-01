@@ -92,13 +92,6 @@ export function groupRows(rows: OpeningRow[]): Group[] {
   return [...groups.values()];
 }
 
-/** Guruhdagi umumiy narx: tahrirlanadigan hamma turda bir xil bo'lsa — shu, aks holda `null` (har xil yoki bo'sh). */
-export function groupPrice(group: Group, edits: Record<string, Edit>): string | null {
-  const prices = group.rows.filter((r) => !hasPeriods(r)).map((r) => draftOf(r, edits[rowKey(r)]).price);
-  if (prices.length === 0 || prices.some((p) => p === null || p.trim() === "")) return null;
-  return prices.every((p) => Number(parseNumber(p!)) === Number(parseNumber(prices[0]!))) ? prices[0]! : null;
-}
-
 /** "Hammasiga bitta narx": guruhning hamma turiga (narx davrlari bor turdan tashqari) bir xil narx tahriri. */
 export function applyGroupPrice(group: Group, price: string | null, edits: Record<string, Edit>): Record<string, Edit> {
   const next = { ...edits };
