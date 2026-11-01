@@ -1,4 +1,4 @@
-// Buyurtmalar (M7, B4.4): sotuv qatorlari ro'yxati ("Bonus davri" belgisi bilan) va bekor / qaytish tahlili.
+// Buyurtmalar (M7, B4.4): sotuv qatorlari ro'yxati va bekor / qaytish tahlili.
 // Bo'lim (`tab`) va ro'yxat holati filtri (`group`) — URL'da. Hamma raqam API'dan (`/sales`, `/orders/analysis`):
 // ulushlar (F17, F18) serverda hisoblanadi, bu yerda qayta hisoblanmaydi (tamoyil 4).
 import { useSuspenseQuery } from "@tanstack/react-query";

@@ -5,7 +5,7 @@ import type { Page, Route } from "@playwright/test";
 
 import { dashboardData } from "../../src/test/dashboard";
 import { inventoryData } from "../../src/test/inventory";
-import { pnlData, skuColumns, waiver } from "../../src/test/pnl";
+import { pnlData, skuColumns } from "../../src/test/pnl";
 import { openingData, openingRow } from "../../src/test/opening";
 import { settingsData } from "../../src/test/settings";
 import { PURCHASE_1, purchaseDetail, purchaseRow } from "../../src/test/purchases";
@@ -182,11 +182,6 @@ export function loadingSync(shops: Shop[]) {
 }
 
 /** Marshrutlarni o'rnatadi va holat/so'rovlarga havola qaytaradi. `page.clock` shu yerda qotiriladi. */
-const PNL_EXTRA = {
-  waivers: [waiver()], // Uzum bonusi (ADR-031): banner, haqiqiy hisob o'zgarmaydi
-  waiver_suggestions: [{ shop_id: SHOPS[1]!.id, start_on: "2026-10-05", end_on: "2026-10-06", kinds: ["sale_logistics"] }],
-};
-
 export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
   const state: ApiState = {
     me: { user: { ...USER }, orgs: [ORG] },
@@ -234,12 +229,10 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
     if (key === `GET /orgs/${ORG_ID}/sync`) return json(route, 200, state.sync);
     if (key === `GET /orgs/${ORG_ID}/dashboard`) return json(route, 200, dashboardData({}, ago));
     if (key === `GET /orgs/${ORG_ID}/pnl`) {
-      // Uzum bonusi davri bilan (haqiqiy hisob o'zgarmaydi); SKU kesimi — aralash tartibdagi ustunlar.
+      // SKU kesimi — aralash tartibdagi ustunlar.
       const sku = url.searchParams.get("view") === "sku";
-      return json(route, 200, pnlData({ ...PNL_EXTRA, ...(sku ? { columns: skuColumns() } : {}) }));
+      return json(route, 200, pnlData(sku ? { columns: skuColumns() } : {}));
     }
-    if (key === `GET /orgs/${ORG_ID}/fee-waivers`)
-      return json(route, 200, { items: [waiver()], kinds: ["sale_logistics", "advertising", "storage", "return_storage"] });
     if (key === `GET /orgs/${ORG_ID}/sales`) return json(route, 200, SALES);
     if (key === `GET /orgs/${ORG_ID}/settings`) return json(route, 200, settingsData());
     if (key === `GET /orgs/${ORG_ID}/opening`) {

@@ -1,6 +1,5 @@
 // Mahsulotlar (M6, B4.3): SKU jadvali — qidiruv (lotin/kirill), filtrlar, saralash (URL'da), ustun tanlash va saqlangan
 // ko'rinishlar (brauzerda), 500+ qatorda virtual skroll. Har raqam API'dan (`/skus`); har ustunda "?" formulasi (F-raqam).
-// Bonus davri (ADR-031) bo'lsa — ma'lumot banneri va "Me'yoriy foyda/dona" ustuni: haqiqiy foyda o'zgarmaydi.
 // Jadvaldan tashqari qismlar (SKUga bog'lanmagan sotuvlar, taqsimlanmagan xarajat) alohida — qatorlar + ular = P&L jami.
 import { keepPreviousData, useInfiniteQuery, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
@@ -13,11 +12,9 @@ import { useFilters } from "../../app/filters";
 import { currentOrg, meQuery, shopsQuery, skusQuery, syncQuery } from "../../app/query";
 import { DEFAULT_PRODUCT_SORT, parseSort, productsSearch, PRODUCT_ABC, PRODUCT_LABELS, type ProductSort } from "../../app/search";
 import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, FormulaPopover, Popover, ProductThumb, Select, Skeleton, StatusPill, type Column, PageHelp } from "../../components/ui";
-import { cx } from "../../components/ui/cx";
 import type { SkuRow, Skus } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { syncSummary } from "../../lib/sync";
-import { useKindLabel } from "../pnl/Waivers";
 import {
   COLUMN_FORMULA,
   COLUMN_IDS,
@@ -78,9 +75,7 @@ export function Products() {
   const [views, setViews] = useState<SavedView[]>(() => loadViews(org.id));
   const first = query.data?.pages[0];
   const rows = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
-  const hasBonus = (first?.bonus.waivers.length ?? 0) > 0;
-  // Foydalanuvchi ustun tanlamagan va bonus davri bor — me'yoriy foyda ustuni o'zi ko'rinadi (ADR-031).
-  const chosen: readonly ColumnId[] = stored ?? (hasBonus ? DEFAULT_COLUMNS.flatMap((c) => (c === "profit" ? [c, "normative" as const] : [c])) : DEFAULT_COLUMNS);
+  const chosen: readonly ColumnId[] = stored ?? DEFAULT_COLUMNS;
   const setColumns = (next: ColumnId[]) => {
     setStored(next);
     saveColumns(org.id, next);
@@ -135,7 +130,6 @@ export function Products() {
         </div>
         <p className="caption">{t("products.count", { shown: f.number(rows.length), total: f.number(first.total) })}</p>
       </header>
-      {hasBonus && <BonusNote data={first} />}
 
       <div className="products__bar" role="search">
         <input
@@ -230,7 +224,6 @@ function buildColumns(ids: readonly ColumnId[], { t, f, shopName }: Ctx): Column
         code={t(`home.formula.${key}.code`)}
         formula={t(`home.formula.${key}.formula`)}
         source={t(`home.formula.${key}.source`)}
-        estimatedReason={key === "normative" ? t("home.formula.normative.estimated") : undefined}
       />
     ) : undefined;
   };
@@ -245,7 +238,6 @@ function buildColumns(ids: readonly ColumnId[], { t, f, shopName }: Ctx): Column
     cogs: (r) => money(r.cogs_per_unit),
     ads: (r) => money(r.ads_per_unit),
     profit: (r) => money(r.profit_per_unit),
-    normative: (r) => <NormativeCell row={r} />,
     net: (r) => money(r.net_profit),
     margin: (r) => percent(r.margin),
     roi: (r) => percent(r.roi),
@@ -289,33 +281,7 @@ function ProductCell({ row }: { row: SkuRow }) {
   );
 }
 
-/** F40: bonus SKU'ga ta'sir qilmagan bo'lsa haqiqiy foyda; ta'sir qilgan bo'lsa me'yoriy; baho yo'q — taxmin emas, "baho yo'q". */
-function NormativeCell({ row }: { row: SkuRow }) {
-  const { t } = useTranslation();
-  const f = useFormat();
-  if (row.normative_state === "unavailable") return <span className="muted">{t("products.normative.unavailable")}</span>;
-  if (row.normative_profit_per_unit === null) return <span className="muted">—</span>;
-  return (
-    <span className={cx(tone(row.normative_profit_per_unit))} title={row.normative_state === "adjusted" ? t("products.normative.adjusted") : undefined}>
-      {f.money(row.normative_profit_per_unit, { unit: false })}
-      {row.normative_state === "adjusted" && <Badge tone="info">{t("products.normative.badge")}</Badge>}
-    </span>
-  );
-}
-
-// --- Bonus va jadvaldan tashqari ---------------------------------------------------------------------------------
-
-function BonusNote({ data }: { data: Skus }) {
-  const { t } = useTranslation();
-  const kindLabel = useKindLabel();
-  const gaps = data.bonus.unestimated_kinds;
-  return (
-    <Banner tone="info" title={t("products.bonus.title")}>
-      {t("products.bonus.text")}
-      {gaps.length > 0 && <> {t("products.bonus.unestimated", { kinds: gaps.map(kindLabel).join(", ") })}</>}
-    </Banner>
-  );
-}
+// --- Jadvaldan tashqari -----------------------------------------------------------------------------------------
 
 /** ADR-026: SKUga bog'lanmagan sotuvlar va sotuvsiz kun xarajati jadval qatori emas — qatorlar + ular = P&L jami. */
 function Outside({ data }: { data: Skus }) {

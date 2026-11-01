@@ -88,8 +88,6 @@ export function pnlData(over: Partial<Pnl> = {}): Pnl {
       { shop_id: SHOP_B, amount: null, rate: null, raw: "300000.00", uncovered_lines: 0 },
     ],
     recalculated: 0,
-    waivers: [],
-    waiver_suggestions: [],
     ...over,
   };
 }
@@ -102,20 +100,4 @@ export function skuColumns(): Pnl["columns"] {
     { key: "unlinked", statement: pnlStatement({ net_profit: "0.00" }), title: null, shop_id: null },
     { key: "s-top", statement: pnlStatement({ net_profit: "3450000.00" }), title: "Sumka qora M", shop_id: SHOP_A },
   ];
-}
-
-/** Uzum bonusi davri (ADR-031) — namunaviy yozuv. */
-export function waiver(over: Partial<Pnl["waivers"][number]> = {}): Pnl["waivers"][number] {
-  return {
-    id: "w-1",
-    shop_id: null,
-    start_on: "2026-10-10",
-    end_on: "2026-10-31",
-    kinds: ["sale_logistics", "storage"],
-    reason: "Uzum nosozligi uchun kompensatsiya",
-    source: "manual",
-    dismissed: false,
-    created_at: "2026-10-26T10:00:00Z",
-    ...over,
-  };
 }

@@ -1,4 +1,4 @@
-// Buyurtmalar (M7, B4.4): ro'yxat (holat filtri, "Bonus davri" belgisi, tannarxsiz belgisi, sahifalash), bekor va
+// Buyurtmalar (M7, B4.4): ro'yxat (holat filtri, tannarxsiz belgisi, sahifalash), bekor va
 // qaytish tahlili (F17, F18, sabablar, SKU bo'yicha, qaytim saqlash). Butun ilova soxta API ustida.
 import { createMemoryHistory } from "@tanstack/react-router";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
@@ -63,7 +63,7 @@ describe("Excel eksport", () => {
 });
 
 describe("roʻyxat", () => {
-  it("qatorlar: holat belgisi, bonus davri, tannarxsiz va taxminiy belgilar; yuqorida F17/F18 ulushi", async () => {
+  it("qatorlar: holat belgisi, tannarxsiz va taxminiy belgilar; yuqorida F17/F18 ulushi", async () => {
     await renderAt(PATH);
     const table = await screen.findByRole("table", { name: CAPTION });
     expect(screen.getByRole("heading", { level: 1 }).textContent).toContain("Buyurtmalar");
@@ -73,7 +73,7 @@ describe("roʻyxat", () => {
     expect(within(rows[0]!).getByText(n("310000.00"))).toBeTruthy();
     expect(within(rows[1]!).getByText("Bekor")).toBeTruthy();
     expect(within(rows[1]!).getAllByText("—").length).toBeGreaterThan(0); // tannarx va foyda noma'lum
-    expect(within(rows[2]!).getByText("Bonus davri")).toBeTruthy();
+    expect(within(rows[2]!).queryByText("Bonus davri")).toBeNull(); // bonus belgisi yo'q (ADR-035)
     expect(within(rows[2]!).getByText("SKU bogʻlanmagan")).toBeTruthy();
     expect(within(rows[3]!).getByText("Jarayonda")).toBeTruthy();
     expect(within(rows[3]!).getByText("Taxminiy")).toBeTruthy();

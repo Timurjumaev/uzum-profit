@@ -1,6 +1,5 @@
 // Sotuv qatorlari ro'yxati (M7): sana, holat, SKU, dona, narx, komissiya, logistika, Uzum to'lovi, tannarx, foyda.
-// Uzum bonusi davridagi buyurtma — "Bonus davri" belgisi (ADR-031); tannarxsiz yoki taxminiy qator belgilanadi
-// (tamoyil 9). Yuqorida davr bo'yicha bekor (F17) va qaytish (F18) ulushi — holat filtriga bog'liq emas.
+// Tannarxsiz yoki taxminiy qator belgilanadi (tamoyil 9). Yuqorida davr bo'yicha bekor (F17) va qaytish (F18) ulushi — holat filtriga bog'liq emas.
 import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -42,19 +41,7 @@ export function OrdersList({ orgId, params, group }: Props) {
     {
       key: "sku",
       header: t("orders.col.sku"),
-      render: (r) => (
-        <>
-          {r.sku_title ?? t("orders.unlinked")}
-          {r.waiver_id && (
-            <>
-              {" "}
-              <span title={t("pnl.waivers.badgeTitle")}>
-                <Badge tone="info">{t("pnl.waivers.badge")}</Badge>
-              </span>
-            </>
-          )}
-        </>
-      ),
+      render: (r) => r.sku_title ?? t("orders.unlinked"),
     },
     { key: "amount", header: t("orders.col.units"), numeric: true, render: (r) => f.number(r.amount) },
     { key: "price", header: t("orders.col.price"), numeric: true, render: (r) => f.money(r.sell_price, { unit: false }) },

@@ -1,5 +1,5 @@
 // Sozlamalar (M16, B4.8): tannarx usuli (tasdiq bilan), soliq profili (sana bo'yicha, rejimga mos maydonlar), Uzum
-// to'lov jadvali, muddatlar va qamrov, do'konlar (faqat egasi), Uzum bonuslari ro'yxati (qo'shish, tahrirlash, o'chirish);
+// to'lov jadvali, muddatlar va qamrov, do'konlar (faqat egasi); Uzum bonuslari bo'limi yo'q (ADR-035);
 // ruxsatlar: buxgalter faqat ko'radi, omborchi — ruxsat yo'q. Butun ilova soxta API ustida.
 import { createMemoryHistory } from "@tanstack/react-router";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
@@ -25,17 +25,11 @@ import {
   shopRoute,
   TAX_CREATE_ROUTE,
   taxRoute,
-  waiverDeleteRoute,
-  waiverPatchRoute,
-  WAIVER_CREATE_ROUTE,
-  WAIVERS_ROUTE,
   type Routes,
 } from "../../test/api";
-import { waiver } from "../../test/pnl";
 import { PAY_1, settingsData, TAX_1, TAX_2 } from "../../test/settings";
 
 const norm = (text: string) => text.replace(/[\u00A0\u202F]/g, " ");
-const KINDS = ["sale_logistics", "advertising", "storage", "return_storage"];
 
 afterEach(() => {
   cleanup();
@@ -46,15 +40,6 @@ async function renderSettings(routes: Routes = {}, role = "owner") {
   const api = mockApi({
     [ME_ROUTE]: () => json(200, { ...ME, orgs: [{ ...ME.orgs[0]!, role }] }),
     [SETTINGS_ROUTE]: () => json(200, settingsData()),
-    [WAIVERS_ROUTE]: () =>
-      json(200, {
-        items: [
-          waiver({ id: "w-old", start_on: "2026-08-10", end_on: "2026-08-12", reason: "Avgust" }),
-          waiver({ id: "w-new", start_on: "2026-10-10", end_on: "2026-10-31", reason: "Oktabr kompensatsiyasi", source: "detected" }),
-          waiver({ id: "w-dis", start_on: "2026-09-05", end_on: "2026-09-06", reason: "", dismissed: true }),
-        ],
-        kinds: KINDS,
-      }),
     ...routes,
   });
   const history = createMemoryHistory({ initialEntries: ["/settings"] });
@@ -76,9 +61,10 @@ describe("sahifa", () => {
     await renderSettings();
     await ready();
     expect(screen.queryByText(/Sahifa qurilmoqda/)).toBeNull();
-    for (const title of ["Tannarx usuli", "Soliq profili", "Uzum toʻlov jadvali", "Muddatlar va qamrov", "Doʻkonlar", "Uzum bonuslari"]) {
+    for (const title of ["Tannarx usuli", "Soliq profili", "Uzum toʻlov jadvali", "Muddatlar va qamrov", "Doʻkonlar"]) {
       expect(screen.getByRole("heading", { level: 2, name: title })).toBeTruthy();
     }
+    expect(screen.queryByRole("heading", { level: 2, name: "Uzum bonuslari" })).toBeNull();
     const [first, second] = rowsOf("Soliq profili");
     expect(norm(first!.textContent!)).toContain("Aylanmadan foiz");
     expect(norm(first!.textContent!)).toContain("Amalda");
@@ -270,69 +256,13 @@ describe("do'konlar", () => {
   });
 });
 
-describe("Uzum bonuslari", () => {
-  it("ro'yxat: yangisi tepada, rad etilgan belgisi, rad etilganda 'Tahrirlash' yo'q", async () => {
-    await renderSettings();
-    await ready();
-    await waitFor(() => expect(rowsOf("Uzum bonuslari")).toHaveLength(3));
-    const rows = rowsOf("Uzum bonuslari").map((r) => norm(r.textContent!));
-    expect(rows[0]).toContain("Oktabr kompensatsiyasi");
-    expect(rows[0]).toContain("Tizim taklifi (tasdiqlangan)");
-    expect(rows[1]).toContain("Rad etilgan");
-    expect(rows[2]).toContain("Avgust");
-    expect(rows[2]).toContain("Qoʻlda");
-    expect(within(rowsOf("Uzum bonuslari")[1]!).queryByRole("button", { name: "Tahrirlash" })).toBeNull();
-    expect(within(rowsOf("Uzum bonuslari")[1]!).getByRole("button", { name: "Oʻchirish" })).toBeTruthy();
-  });
-
-  it("qo'shish POST, tahrirlash PATCH (to'g'ri tana), o'chirish — tasdiqdan keyin DELETE", async () => {
-    const { api } = await renderSettings({
-      [WAIVER_CREATE_ROUTE]: () => json(201, waiver()),
-      [waiverPatchRoute("w-new")]: () => json(200, waiver({ id: "w-new" })),
-      [waiverDeleteRoute("w-old")]: () => new Response(null, { status: 204 }),
-    });
-    await ready();
-    await waitFor(() => expect(rowsOf("Uzum bonuslari")).toHaveLength(3));
-    const box = section("Uzum bonuslari");
-    fireEvent.click(within(box).getAllByRole("button", { name: "Bonus qoʻshish" })[0]!);
-    const add = await screen.findByRole("dialog", { name: "Uzum bonusi" });
-    fireEvent.change(within(add).getByLabelText(/^Sabab/), { target: { value: "Yangi" } });
-    fireEvent.click(within(add).getByRole("button", { name: "Bonusni saqlash" }));
-    await waitFor(() => expect(bodiesOf(api, WAIVER_CREATE_ROUTE)).toHaveLength(1));
-    expect(bodiesOf(api, WAIVER_CREATE_ROUTE)[0]).toMatchObject({ shop_id: null, kinds: ["sale_logistics"], reason: "Yangi", source: "manual", dismissed: false });
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-
-    fireEvent.click(within(rowsOf("Uzum bonuslari")[0]!).getByRole("button", { name: "Tahrirlash" }));
-    const edit = await screen.findByRole("dialog", { name: "Uzum bonusi" });
-    expect((within(edit).getByLabelText(/^Sabab/) as HTMLInputElement).value).toBe("Oktabr kompensatsiyasi");
-    fireEvent.change(within(edit).getByLabelText(/^Sabab/), { target: { value: "Tuzatildi" } });
-    fireEvent.click(within(edit).getByRole("button", { name: "Bonusni saqlash" }));
-    await waitFor(() => expect(bodiesOf(api, waiverPatchRoute("w-new"))).toHaveLength(1));
-    expect(bodiesOf(api, waiverPatchRoute("w-new"))[0]).toEqual({ shop_id: null, start_on: "2026-10-10", end_on: "2026-10-31", kinds: ["sale_logistics", "storage"], reason: "Tuzatildi" });
-    expect(api.count(WAIVER_CREATE_ROUTE)).toBe(1); // tahrirlash yangi yozuv yaratmaydi
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-
-    fireEvent.click(within(rowsOf("Uzum bonuslari")[2]!).getByRole("button", { name: "Oʻchirish" }));
-    const confirm = await screen.findByRole("dialog", { name: "Bonus davrini oʻchirish" });
-    expect(api.count(waiverDeleteRoute("w-old"))).toBe(0);
-    fireEvent.click(within(confirm).getByRole("button", { name: "Oʻchirish" }));
-    await waitFor(() => expect(api.count(waiverDeleteRoute("w-old"))).toBe(1));
-  });
-
-  it("bo'sh holat: taklif va qo'shish tugmasi", async () => {
-    await renderSettings({ [WAIVERS_ROUTE]: () => json(200, { items: [], kinds: KINDS }) });
-    expect(await screen.findByText("Bonus davrlari yoʻq")).toBeTruthy();
-    expect(within(section("Uzum bonuslari")).getAllByRole("button", { name: "Bonus qoʻshish" })).toHaveLength(2);
-  });
-});
-
 describe("rollar", () => {
   it("buxgalter faqat ko'radi: o'zgartirish tugmalari yo'q, izoh bor", async () => {
     await renderSettings({}, "accountant");
     await ready();
-    await waitFor(() => expect(rowsOf("Uzum bonuslari")).toHaveLength(3));
+    await waitFor(() => expect(within(section("Doʻkonlar")).getAllByRole("row").length).toBeGreaterThan(1));
     expect(screen.getByText("Sozlamalarni faqat koʻrasiz")).toBeTruthy();
-    for (const name of ["Profil qoʻshish", "Jadval qoʻshish", "Bonus qoʻshish", "Tahrirlash", "Oʻchirish", "Saqlash", "Standartga qaytarish"]) {
+    for (const name of ["Profil qoʻshish", "Jadval qoʻshish", "Tahrirlash", "Oʻchirish", "Saqlash", "Standartga qaytarish"]) {
       expect(screen.queryByRole("button", { name })).toBeNull();
     }
   });
@@ -348,7 +278,7 @@ describe("rollar", () => {
 it("a11y: jiddiy buzilish yo'q", async () => {
   await renderSettings();
   await ready();
-  await waitFor(() => expect(rowsOf("Uzum bonuslari")).toHaveLength(3));
+  await waitFor(() => expect(within(section("Doʻkonlar")).getAllByRole("row").length).toBeGreaterThan(1));
   const result = await axe.run(document.body, { rules: { "color-contrast": { enabled: false }, region: { enabled: false } } });
   expect(result.violations.filter((v) => v.impact === "critical" || v.impact === "serious").map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
 });

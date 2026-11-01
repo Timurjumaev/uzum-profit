@@ -40,9 +40,6 @@ export function skuRow(over: Partial<Row> = {}): Row {
     ads_per_unit: "3333.33",
     acos: "0.016667",
     profit_per_unit: "40000.00",
-    normative_profit_per_unit: "40000.00",
-    saved_per_unit: null,
-    normative_state: "none",
     net_profit: "240000.00",
     expenses_direct: "20000.00",
     expenses_allocated: "10000.00",
@@ -74,7 +71,6 @@ export const SECOND = skuRow({
   avg_price: "150000.00",
   cogs_per_unit: null,
   profit_per_unit: null,
-  normative_profit_per_unit: null,
   net_profit: "-5000.00",
   margin: null,
   roi: null,
@@ -94,7 +90,6 @@ export function skusData(over: Partial<Skus> = {}): Skus {
     next_cursor: null,
     unlinked: pnlStatement({ units: 1, lines: 1, revenue: "50000.00", net_profit: "0.00" }),
     unallocated: pnlStatement({ units: 0, lines: 0, revenue: "0.00", net_profit: "-12000.00" }),
-    bonus: { waivers: [], unestimated_kinds: [] },
     ...over,
   };
 }
@@ -119,7 +114,6 @@ export function skuDetail(over: Partial<Detail> = {}): Detail {
     ],
     stock_detail: { active: 80, fbs: 5, defected: 2, pending: 0, in_transit: 20, status: null },
     linked: { item_id: ITEM_1, name: "Mashina", skus: [{ sku_id: SKU_1, shop_id: SHOP_A, title: "Oʻyinchoq mashina qizil" }, { sku_id: SKU_2, shop_id: SHOP_A, title: "Кружка белая" }] },
-    bonus: { waivers: [], unestimated_kinds: [] },
     calc: {
       price: "200000.00",
       unit_cost: "100000.00",

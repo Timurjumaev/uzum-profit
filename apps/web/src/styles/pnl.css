@@ -169,52 +169,6 @@
   font-weight: 500;
 }
 
-/* --- Uzum bonuslari (ADR-031) --- */
-.pnl-waivers {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.pnl-waivers__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.pnl-waivers__add {
-  justify-self: start;
-}
-
-.pnl-waiver-form {
-  display: grid;
-  gap: var(--space-4);
-}
-
-.pnl-waiver-form > p {
-  margin: 0;
-}
-
-.pnl-waiver-form__dates {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-  gap: var(--space-3);
-}
-
-.pnl-waiver-form__kinds {
-  display: grid;
-  gap: var(--space-2);
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.pnl-waiver-form__kinds label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-block-size: 32px;
-}
-
 /* Tor ekranda banner tugmalari matn ostiga tushadi (matn ustuni torayib ketmasin). */
 @media (max-width: 639px) {
   .pnl .ui-banner {

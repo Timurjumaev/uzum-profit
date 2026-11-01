@@ -1,5 +1,5 @@
 // Ustun + chiziq, bitta o'q (04 §5, §5.1): kunlik tushum (ustun) va sof foyda (chiziq) kabi. Annotatsiyalar:
-// `bands` — bepul logistika davri (soya), sinxron uzilgan kunlar (shtrix).
+// `bands` — davr belgisi (soya), sinxron uzilgan kunlar (shtrix).
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 

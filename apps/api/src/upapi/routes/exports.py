@@ -98,7 +98,6 @@ SALES = [
     xlsx.Col("Tannarx (F7)", lambda r: r.cogs, "money", total=True),
     xlsx.Col("Yalpi foyda (F8)", lambda r: r.gross_profit, "money", total=True),
     xlsx.Col("Tannarx belgilari", _flags),
-    xlsx.Col("Bonus davri", lambda r: r.waiver_id is not None, "bool"),
 ]
 
 
@@ -134,7 +133,6 @@ SKUS = [
     xlsx.Col("Tannarx/dona", lambda r: r.cogs_per_unit, "money"),
     xlsx.Col("Reklama/dona", lambda r: r.ads_per_unit, "money"),
     xlsx.Col("Foyda/dona", lambda r: r.profit_per_unit, "money"),
-    xlsx.Col("Meʼyoriy foyda/dona (F40)", lambda r: r.normative_profit_per_unit, "money"),
     xlsx.Col("Sof foyda (F12)", lambda r: r.net_profit, "money", total=True),
     xlsx.Col("Bevosita xarajat", lambda r: r.expenses_direct, "money", total=True),
     xlsx.Col("Taqsimlangan xarajat", lambda r: r.expenses_allocated, "money", total=True),

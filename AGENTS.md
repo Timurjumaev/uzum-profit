@@ -34,7 +34,7 @@ ishlaydi. Sen — **ijrochisan**: topshiriqni aniq bajarasan, rejani o'zgartirma
   transliteratsiya qilinadi; `uz-Cyrl.fixes.ts` ga faqat kerak bo'lsa tegasan.
 - Rang, shrift, oraliq — mavjud tokenlar (`var(--...)`) va `components/ui` komponentlari (`docs/plan/04-dizayn.md`).
   Yangi rang qiymati o'ylab topma.
-- Yangi sahifa yoki forma qurishda eng yaqin mavjud sahifani namuna qil (masalan, `features/pnl/Waivers.tsx`).
+- Yangi sahifa yoki forma qurishda eng yaqin mavjud sahifani namuna qil (masalan, `features/settings/Payouts.tsx`).
 - 360 px kenglikda gorizontal skroll bo'lmasin; holat faqat rang bilan emas (ikon va matn bilan).
 
 ## 5. Testlar

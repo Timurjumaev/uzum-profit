@@ -1,15 +1,13 @@
-"""B4.3 Mahsulotlar (M6) API'lari (haqiqiy PostgreSQL): jadval ustunlari va filtrlari, me'yoriy (bonussiz) foyda/dona
-(F40, ADR-031), SKU sahifasi, unit kalkulyator (F35, F36) va tovar ↔ SKU bog'lash.
+"""B4.3 Mahsulotlar (M6) API'lari (haqiqiy PostgreSQL): jadval ustunlari va filtrlari, SKU sahifasi, unit kalkulyator
+(F35, F36; standart logistika — F40, ADR-035) va tovar ↔ SKU bog'lash.
 
 Dunyo (``world``) — ``test_reports`` dagi bilan bir xil, lekin shu modul uchun alohida baza. Testlar o'z ma'lumotini
-(yangi SKU, boshqa oylar) qo'shadi va bonus davrlarini oxirida o'chiradi.
+(yangi SKU, boshqa oylar) qo'shadi.
 """
 
 from __future__ import annotations
 
 import uuid
-from collections.abc import Iterator
-from contextlib import contextmanager
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
@@ -30,26 +28,6 @@ def send(w: World, method: str, path: str, role: str = "owner", **body: Any) -> 
     if method == "delete":
         return w.api.client.delete(url)
     return getattr(w.api.client, method)(url, json=body)
-
-
-@contextmanager
-def bonus(w: World, day: str, *kinds: str, shop: Any = None, **extra: Any) -> Iterator[str]:
-    """Bonus davri (bir kun) — blokdan chiqqach o'chiriladi."""
-    r = send(
-        w,
-        "post",
-        "fee-waivers",
-        shop_id=str(shop or w.b.shop_id),
-        start_on=day,
-        end_on=extra.pop("end", day),
-        kinds=list(kinds),
-        **extra,
-    )
-    assert r.status_code == 201, r.text
-    try:
-        yield r.json()["id"]
-    finally:
-        assert send(w, "delete", f"fee-waivers/{r.json()['id']}").status_code == 204
 
 
 def foreign_sku(w: World) -> uuid.UUID:
@@ -80,13 +58,11 @@ def lamp(w: World, **params: Any) -> dict[str, Any]:
 # --- Jadval ---------------------------------------------------------------------------------------
 
 
-def test_table_columns_without_bonus(world: World) -> None:
+def test_table_columns(world: World) -> None:
     body = world.get("skus", **OCT)
-    assert body["bonus"] == {"waivers": [], "unestimated_kinds": []}
+    assert "bonus" not in body
     xa = {r["sku_id"]: r for r in body["items"]}[str(world.ids["xa"])]
-    # Bonus yo'q — me'yoriy foyda haqiqiy foydaga teng (F40), "tejalgan" qiymat yo'q.
-    assert xa["normative_state"] == "none" and xa["saved_per_unit"] is None
-    assert xa["normative_profit_per_unit"] == xa["profit_per_unit"]
+    assert "normative_profit_per_unit" not in xa
     # Xarajatlar ikki qismda (ADR-026) va P&L SKU ustuni bilan bir xil.
     col = {c["key"]: c for c in world.get("pnl", view="sku", **OCT)["columns"]}[
         str(world.ids["xa"])
@@ -122,7 +98,6 @@ def test_table_filters_and_sorts(world: World) -> None:
     for key in (
         "avg_price",
         "profit_per_unit",
-        "normative_profit_per_unit",
         "roi",
         "return_share",
         "cancel_share",
@@ -139,49 +114,18 @@ def test_table_filters_and_sorts(world: World) -> None:
     assert [r["sku_id"] for r in only_b["items"]] == [str(world.ids["zb"])]
 
 
-# --- F40: me'yoriy foyda/dona ----------------------------------------------------------------------
+# --- F40: kalkulyator logistikasi -------------------------------------------------------------------
 
 
-def test_normative_sale_logistics_uses_last_paid_fee(world: World) -> None:
-    # B: 10-avgust 3 dona logistikasiz (bonus), 11-avgust 1 dona 7 000 so'm bilan — oxirgi pullik tarif.
-    with bonus(world, "2026-08-10", "sale_logistics", reason="Test"):
-        row = lamp(world)
-        assert row["normative_state"] == "adjusted"
-        assert money(row["saved_per_unit"]) == D(5_250)  # 3 × 7 000 / 4 tannarxi ma'lum dona
-        assert money(row["normative_profit_per_unit"]) == money(row["profit_per_unit"]) - D(5_250)
-        # Haqiqiy foyda bonusdan o'zgarmaydi (ADR-031).
-        after = lamp(world)
-    assert money(after["net_profit"]) == money(row["net_profit"])
-    plain = lamp(world)
-    assert plain["normative_state"] == "none" and money(plain["net_profit"]) == money(
-        row["net_profit"]
-    )
-    assert plain["normative_profit_per_unit"] == plain["profit_per_unit"]
+def test_lamp_zero_logistics_rows_are_kept_as_is(world: World) -> None:
+    # B: 10-avgust 3 dona logistikasiz, 11-avgust 1 dona 7 000 so'm bilan — API bergandek (ADR-035).
+    row = lamp(world)
+    assert money(row["logistics_per_unit"]) == D(7_000) / 4
+    calc_ = world.get(f"skus/{world.ids['lb']}", shop=str(world.b.shop_id), **AUG)["calc"]
+    assert calc_["sources"]["logistics"] == "last_paid" and money(calc_["logistics"]) == D(7_000)
 
 
-def test_bonus_that_does_not_touch_the_sku_changes_nothing(world: World) -> None:
-    with bonus(world, "2026-08-10", "sale_logistics", shop=world.a.shop_id):  # A do'koni davri
-        assert lamp(world)["normative_state"] == "none"
-    with bonus(world, "2026-08-10", "sale_logistics", dismissed=True):  # rad etilgan taklif
-        assert lamp(world)["normative_state"] == "none"
-    with bonus(
-        world, "2026-08-11", "sale_logistics"
-    ):  # 11-avgust logistika pullik edi — tejalgani yo'q
-        assert lamp(world)["normative_state"] == "none"
-
-
-def test_normative_unestimated_kinds_are_reported_not_guessed(world: World) -> None:
-    with bonus(world, "2026-08-10", "sale_logistics", "fine"):
-        body = world.get("skus", shop=str(world.b.shop_id), **AUG)
-        row = {r["sku_id"]: r for r in body["items"]}[str(world.ids["lb"])]
-        assert body["bonus"]["unestimated_kinds"] == ["fine"]
-        assert [w["kinds"] for w in body["bonus"]["waivers"]] == [["sale_logistics", "fine"]]
-        assert (
-            row["normative_state"] == "adjusted"
-        )  # baholanadigan qismi hisoblandi, qolgani aytilgan
-
-
-def test_normative_fee_fallback_chain(world: World) -> None:
+def test_calculator_logistics_fallback_chain(world: World) -> None:
     b = world.b
     item = b.insert("items", name="Kabel")
     sku = b.insert("mp_skus", shop_id=b.shop_id, external_id=31, sku_code="Kabel", item_id=item)
@@ -193,44 +137,21 @@ def test_normative_fee_fallback_chain(world: World) -> None:
     settle(world)
     june = {"start": "2026-06-10", "end": "2026-06-10", "shop": str(b.shop_id)}
 
-    def kabel() -> dict[str, Any]:
-        return rows(world, **june)[str(sku)]
+    def calc_() -> dict[str, Any]:
+        return world.get(f"skus/{sku}", **june)["calc"]
 
-    with bonus(world, "2026-06-10", "sale_logistics"):
-        # Hech qanday pullik tarif yo'q: taxmin yo'q, "me'yoriy baho yo'q".
-        row = kabel()
-        assert row["normative_state"] == "unavailable" and row["normative_profit_per_unit"] is None
-        assert row["saved_per_unit"] is None and row["profit_per_unit"] is not None
-        # Do'konning odatiy tarifi (oxirgi 90 kun): boshqa SKU'ning pullik qatori.
-        b.sale(other, d(6, 5), 1, logistics=6_000)
-        row = kabel()
-        assert row["normative_state"] == "adjusted" and money(row["saved_per_unit"]) == D(6_000)
-        # SKU'ning o'z oxirgi pullik tarifi odatiydan ustun; u bonus davridan oldin bo'lishi kerak.
-        b.sale(sku, d(6, 8), 1, logistics=4_500)
-        settle(world)
-        row = kabel()
-        assert row["normative_state"] == "adjusted"
-        assert money(row["saved_per_unit"]) == D(9_000) / 2  # 2 dona × 4 500 / 2 (10-iyun davri)
-
-
-def test_normative_storage_uses_sku_storage_price_and_stock_days(world: World) -> None:
-    b, lb = world.b, world.ids["lb"]
-    b.insert("sku_daily", sku_id=lb, day=d(8, 10), qty_active=5, qty_fbs=0)
-    b.insert("sku_daily", sku_id=lb, day=d(8, 11), qty_active=4, qty_fbs=0)
-    b.insert("sku_daily", sku_id=lb, day=d(8, 12), qty_active=3, qty_fbs=0)  # bonus tashqarisida
-    with bonus(world, "2026-08-10", "storage", end="2026-08-11"):
-        # Uzum saqlash narxini bermagan: baho yo'q.
-        row = lamp(world)
-        assert row["normative_state"] == "unavailable" and row["normative_profit_per_unit"] is None
-        b.sql("UPDATE mp_skus SET storage_price = 100 WHERE id = %s", [lb])
-        row = lamp(world)
-        # (5 + 4) dona-kun × 100 = 900; tannarxi ma'lum 4 dona → 225 / dona.
-        assert row["normative_state"] == "adjusted" and money(row["saved_per_unit"]) == D(225)
-        assert money(row["normative_profit_per_unit"]) == money(row["profit_per_unit"]) - D(225)
-        # Ikkala tur birga: tejamlar qo'shiladi.
-        with bonus(world, "2026-08-10", "sale_logistics"):
-            assert money(lamp(world)["saved_per_unit"]) == D(225) + D(5_250)
-    b.sql("UPDATE mp_skus SET storage_price = NULL WHERE id = %s", [lb])
+    # Faqat logistikasi 0 qator: pullik tarif yo'q — taxmin yo'q, 0 ham olinmaydi.
+    got = calc_()
+    assert got["logistics"] is None and "logistics" not in got["sources"]
+    # Do'konning odatiy tarifi (oxirgi 90 kun): boshqa SKU'ning pullik qatori.
+    b.sale(other, d(6, 5), 1, logistics=6_000)
+    got = calc_()
+    assert got["sources"]["logistics"] == "shop_typical" and money(got["logistics"]) == D(6_000)
+    # SKU'ning o'z oxirgi pullik tarifi odatiydan ustun (0 qatorlar o'tkazib yuboriladi).
+    b.sale(sku, d(6, 8), 1, logistics=4_500)
+    settle(world)
+    got = calc_()
+    assert got["sources"]["logistics"] == "last_paid" and money(got["logistics"]) == D(4_500)
 
 
 # --- SKU sahifasi ---------------------------------------------------------------------------------
@@ -259,7 +180,6 @@ def test_sku_detail(world: World) -> None:
     assert [s["sku_id"] for s in body["linked"]["skus"]] == [str(xa)]
     assert body["stock_detail"]["active"] == 80 and body["stock_detail"]["fbs"] == 5
     assert body["stock_detail"]["defected"] == 2 and body["stock_detail"]["in_transit"] == 20
-    assert body["bonus"] == {"waivers": [], "unestimated_kinds": []}
 
 
 def test_sku_detail_returns_by_cause(world: World) -> None:

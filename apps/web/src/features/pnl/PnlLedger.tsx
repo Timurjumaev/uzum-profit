@@ -1,6 +1,6 @@
 // Foyda va zarar hisob varag'i (M5, 04 §6.1 + §7.4): to'liq qatorlar (Uzum xarajatlari turlari, o'z xarajatlari
 // toifalari, yalpi foyda) va ustunlar: joriy davr, tushumga nisbatan, oldingi davr, farq, o'zgarish. Qator bosilsa —
-// drill-down. Uzum bonusi (bepul logistika) haqiqiy hisobga hech narsa qo'shmaydi — ADR-031.
+// drill-down. Uzum xarajatlari API bergandek, hech narsa qo'shilmaydi — ADR-035.
 // Tor ekranda (< 640 px) faqat joriy summa va o'zgarish qoladi (gorizontal skroll yo'q).
 import { useTranslation } from "react-i18next";
 

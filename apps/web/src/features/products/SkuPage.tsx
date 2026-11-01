@@ -1,6 +1,6 @@
 // SKU sahifasi (M6, B4.3): sarlavha (rasm, nom, Uzum sahifasiga havola), KPI'lar (har biri formula bilan), narx, foyda
 // va sotuv tarixi, qoldiq tarixi, tannarx tarixi (tovar lotlari), qaytishlar sabablari, tovarga bog'lash va unit
-// kalkulyator. Hamma raqam API'dan (`/skus/{id}`); me'yoriy foyda (F40) bonus davrida alohida, haqiqiy foyda o'zgarmaydi.
+// kalkulyator. Hamma raqam API'dan (`/skus/{id}`).
 import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, ExternalLink } from "lucide-react";
@@ -11,11 +11,9 @@ import { errorText } from "../../app/errors";
 import { useFilters } from "../../app/filters";
 import { currentOrg, meQuery, shopsQuery, skuQuery } from "../../app/query";
 import { LineBarChart } from "../../components/charts";
-import type { Band } from "../../components/charts";
 import { Badge, Banner, Button, DataTable, FormulaPopover, Kpi, ProductThumb, Skeleton, StatusPill, type Column } from "../../components/ui";
 import type { SkuDetail, SkuLot } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
-import { useKindLabel } from "../pnl/Waivers";
 import { Calculator } from "./Calculator";
 import { LinkItem } from "./LinkItem";
 import { LABEL_TONE } from "./model";
@@ -65,11 +63,9 @@ function Detail({ orgId, detail, canManage }: { orgId: string; detail: SkuDetail
   const { t } = useTranslation();
   const f = useFormat();
   const shops = useQuery(shopsQuery(orgId));
-  const kindLabel = useKindLabel();
   const { sku, statement: s } = detail;
   const name = sku.title ?? sku.product_title ?? t("home.sku.unnamed");
   const shop = shops.data?.find((x) => x.id === sku.shop_id);
-  const waivers = detail.bonus.waivers.filter((w) => w.shop_id === null || w.shop_id === sku.shop_id);
   const { period } = detail.meta;
 
   const help = (key: string, metric: string) => (
@@ -78,7 +74,6 @@ function Detail({ orgId, detail, canManage }: { orgId: string; detail: SkuDetail
       code={t(`home.formula.${key}.code`)}
       formula={t(`home.formula.${key}.formula`)}
       source={t(`home.formula.${key}.source`)}
-      estimatedReason={key === "normative" ? t("home.formula.normative.estimated") : undefined}
     />
   );
   const percent = (v: string | null) => (v === null ? "—" : f.percent(v));
@@ -107,12 +102,6 @@ function Detail({ orgId, detail, canManage }: { orgId: string; detail: SkuDetail
       </header>
       <p className="caption">{t("products.sku.period", { period: f.period(period.start, period.end) })}</p>
 
-      {waivers.map((w) => (
-        <Banner key={w.id} tone="info" title={t("pnl.waivers.title", { reason: w.reason || t("pnl.waivers.noReason") })}>
-          {t("products.sku.waiverText", { period: f.period(w.start_on, w.end_on), kinds: w.kinds.map(kindLabel).join(", ") })}
-          {detail.bonus.unestimated_kinds.length > 0 && <> {t("products.bonus.unestimated", { kinds: detail.bonus.unestimated_kinds.map(kindLabel).join(", ") })}</>}
-        </Banner>
-      ))}
       {s.uncovered.lines > 0 && (
         <Banner tone="warning" title={t("home.coverage.title")}>
           {t("pnl.coverageText", { value: f.number(s.uncovered.lines), amount: f.money(s.uncovered.revenue) })}
@@ -125,14 +114,6 @@ function Detail({ orgId, detail, canManage }: { orgId: string; detail: SkuDetail
         <Kpi label={t("products.col.units")} value={f.number(sku.units)} />
         <Kpi label={t("products.col.avg_price")} value={money(sku.avg_price)} />
         <Kpi label={t("products.col.profit")} value={money(sku.profit_per_unit)} help={help("profitPerUnit", t("products.col.profit"))} />
-        {sku.normative_state !== "none" && (
-          <Kpi
-            label={t("products.col.normative")}
-            value={sku.normative_state === "unavailable" ? t("products.normative.unavailable") : money(sku.normative_profit_per_unit)}
-            note={sku.normative_state === "adjusted" && sku.saved_per_unit !== null ? t("products.sku.saved", { value: f.money(sku.saved_per_unit) }) : undefined}
-            help={help("normative", t("products.col.normative"))}
-          />
-        )}
         <Kpi label={t("terms.margin")} value={percent(sku.margin)} help={help("margin", t("terms.margin"))} />
         <Kpi label={t("terms.roi")} value={percent(sku.roi)} help={help("roi", t("terms.roi"))} />
         <Kpi label={t("products.col.cogs")} value={money(sku.cogs_per_unit)} help={help("cogs", t("products.col.cogs"))} />
@@ -146,7 +127,7 @@ function Detail({ orgId, detail, canManage }: { orgId: string; detail: SkuDetail
         />
       </section>
 
-      <Charts detail={detail} waivers={waivers} />
+      <Charts detail={detail} />
       <Lots detail={detail} />
       <Returns detail={detail} />
       <LinkItem orgId={orgId} detail={detail} canManage={canManage} />
@@ -155,16 +136,14 @@ function Detail({ orgId, detail, canManage }: { orgId: string; detail: SkuDetail
   );
 }
 
-function Charts({ detail, waivers }: { detail: SkuDetail; waivers: SkuDetail["bonus"]["waivers"] }) {
+function Charts({ detail }: { detail: SkuDetail }) {
   const { t } = useTranslation();
   const days = detail.history.map((d) => d.day);
-  const bands: Band[] = waivers.map((w) => ({ from: w.start_on, to: w.end_on, kind: "shade", label: t("pnl.waivers.badge") }));
   return (
     <section className="sku__charts" aria-label={t("products.sku.history")}>
       <LineBarChart
         title={t("products.sku.chartSales")}
         x={days}
-        bands={bands}
         series={[
           { key: "revenue", name: t("terms.revenue"), color: 1, values: detail.history.map((d) => (d.units > 0 ? d.revenue : null)) },
           { key: "profit", name: t("terms.netProfit"), color: "ink", kind: "line", values: detail.history.map((d) => (d.units > 0 ? d.net_profit : null)) },

@@ -373,6 +373,11 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   (API son bermaydi — faqat taxmin, keyin), Uzum qaytarishlari (`ASSEMBLED` — olib ketish kutilmoqda; `UTILIZED` —
   hisobdan chiqim), o'z omborimni xarid bosqichi o'rniga postavkalar bo'yicha hisoblash (boshlash sanasidan keyin; bo'lib
   jo'natish) — B5.3 postavkalar bilan.
+- [x] B4.15 Uzum bonuslari funksiyasini olib tashlash (ADR-035, ADR-031 almashtirildi): API nima bersa, shu — logistika
+  0 kelsa 0, sababi so'ralmaydi. ✓ 2026-11-01: `upcore.waivers`, `/fee-waivers`, P&L taklif va banneri, Sozlamalar →
+  Uzum bonuslari, "Bonus davri" belgisi, grafik soyasi, "Me'yoriy foyda/dona" ustuni (jadval, SKU sahifasi, Excel)
+  olib tashlandi; migratsiya 0011 (`fee_waivers` o'chiriladi). F40 — kalkulyator uchun standart logistika (oxirgi
+  pullik tarif, bo'lmasa do'konning odatiy tarifi), bonus davrlarisiz. B4.2a ning **T** (oktabr bonusini kiritish) bekor.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

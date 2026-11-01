@@ -175,7 +175,7 @@ def _value(table: Table, col: Any, allowed: dict[str, str]) -> Any:
 
 SKIP = {"id", "org_id", "created_at", "updated_at"}
 # Bo'sh bo'lmasligi CHECK bilan talab qilinadigan massivlar (``cardinality(kinds) > 0``).
-NONEMPTY = {"fee_waivers": {"kinds"}}
+NONEMPTY: dict[str, set[str]] = {}
 # NULL bo'lishi mumkin, lekin CHECK bilan holatga bog'langan ustunlar (``token_state``: faol akkauntda kalit bor).
 FILLED = {
     "mp_accounts": {"token_encrypted", "key_version", "token_last4"},

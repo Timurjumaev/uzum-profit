@@ -137,7 +137,7 @@ const soon = <const P extends string>(path: P, name: keyof typeof import("../rou
   });
 const cash = soon("/cash", "Cash");
 const reports = soon("/reports", "Reports");
-/** Sozlamalar (M16, B4.8): tannarx usuli, soliq, to'lov jadvali, muddatlar, do'konlar, Uzum bonuslari. */
+/** Sozlamalar (M16, B4.8): tannarx usuli, soliq, to'lov jadvali, muddatlar, do'konlar. */
 const settings = createRoute({
   getParentRoute: () => app,
   path: "/settings",

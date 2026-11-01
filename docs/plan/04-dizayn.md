@@ -208,7 +208,7 @@ loading, error). `/ui-kit` ichki sahifasida hammasi ko'rinadi (yorug'/qorong'i, 
 - ≥ 2 seriya — legenda doim; ≤ 4 seriya — qo'shimcha to'g'ridan-to'g'ri yorliq (faqat oxirgi nuqta yoki ekstremum).
 - Hover: chiziqda crosshair + tooltip (hamma seriyalar qiymati), ustunda shu ustun tooltip'i.
 - O'q raqamlari ixcham: 0 / 500 ming / 1 mln / 1,5 mln.
-- Annotatsiya: Uzum bepul logistika davrlari — soya; sinxron uzilgan kunlar — shtrix.
+- Annotatsiya: sinxron uzilgan kunlar — shtrix (soya — kerak bo'lganda davr belgisi).
 - Pirog/donut ishlatilmaydi — ulushlar uchun yotiq ustunlar.
 
 ## 6. Xos komponentlar

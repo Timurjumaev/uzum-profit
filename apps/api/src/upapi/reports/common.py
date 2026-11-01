@@ -251,9 +251,7 @@ class SkuInfo:
     rank: str | None
     status: str | None
     commission_pct: Any = None  # Uzum katalogidagi komissiya, %
-    storage_price: Any = (
-        None  # Uzum ``paidStoragePriceItem`` (F40: saqlash bonusining me'yoriy qiymati)
-    )
+    storage_price: Any = None  # Uzum ``paidStoragePriceItem`` (saqlash narxi, dona/kun)
     product_external_id: int | None = None  # Uzum mahsulot id (sahifaga havola)
 
     def haystack(self) -> str:
