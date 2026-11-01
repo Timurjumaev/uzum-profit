@@ -840,7 +840,10 @@ export const uzLatn = {
     offTitle: "Boshlangʻich holat oʻrnatilmagan",
     offText: "Hozir tannarx faqat kiritilgan partiyalardan. Eski partiyalar kiritilmagan boʻlsa, eski sotuvlar yangi partiyani «yeb qoʻyadi».",
     offDone: "Boshlangʻich holat oʻchirildi — tannarx qayta hisoblanmoqda",
-    saved: "Saqlandi — sotuvlar tannarxi qayta hisoblanmoqda",
+    savedTitle: "Saqlandi",
+    savedText: "{{total}} turdan {{n}} tasiga narx yozilgan, boshlash sanasigacha boʻlgan tushumning {{pct}} i qoplandi. Sotuvlar tannarxi fonda qayta hisoblanmoqda — bir necha daqiqada Foyda va Ombor sahifalarida koʻrinadi.",
+    toPnl: "Foydani koʻrish",
+    toInventory: "Omborni koʻrish",
     toPurchases: "Yoʻldagi partiyalar — Xaridlarga",
   },
   settings: {

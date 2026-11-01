@@ -69,6 +69,7 @@ export function Opening() {
   const [needle, setNeedle] = useState("");
   const [limit, setLimit] = useState(PAGE);
   const [ownChoice, setOwnChoice] = useState<boolean | null>(null);
+  const [result, setResult] = useState<{ filled: number; total: number; coverage: string | null } | null>(null);
   const data = query.data;
   // O'z omborim ustuni — faqat kerak bo'lsa (belgi yoki avval kiritilgan son); Uzum ustuni — faqat Uzum qoldig'i noma'lum bo'lsa.
   const showOwn = ownChoice ?? (data?.rows ?? []).some((r) => (r.own_qty ?? 0) > 0);
@@ -94,7 +95,12 @@ export function Opening() {
         queryKey: ["orgs", org.id],
         predicate: (q) => q.queryKey[2] !== "opening",
       });
-      toast.show(t(off ? "opening.offDone" : "opening.saved"), "positive");
+      if (off) toast.show(t("opening.offDone"), "positive");
+      else {
+        // Saqlangach — natija sahifa tepasida (keyingi qadam bilan), sahifa tepaga qaytadi.
+        setResult({ filled: filled(body.rows, {}), total: body.rows.length, coverage: body.coverage });
+        window.scrollTo?.({ top: 0, behavior: "smooth" });
+      }
     },
     onError: (error) => toast.show(errorText(error, t), "negative"),
   });
@@ -254,6 +260,24 @@ export function Opening() {
         <Skeleton label={t("common.loading")} lines={8} />
       ) : (
         <>
+          {result && (
+            <Banner
+              tone="positive"
+              title={t("opening.savedTitle")}
+              action={
+                <span className="opening__next">
+                  <Link to="/pnl">{t("opening.toPnl")}</Link>
+                  <Link to="/inventory">{t("opening.toInventory")}</Link>
+                </span>
+              }
+            >
+              {t("opening.savedText", {
+                n: result.filled,
+                total: result.total,
+                pct: result.coverage === null ? "—" : f.percent(result.coverage),
+              })}
+            </Banner>
+          )}
           {!canManage && (
             <Banner tone="info" title={t("settings.readOnly")}>
               {t("settings.readOnlyText")}

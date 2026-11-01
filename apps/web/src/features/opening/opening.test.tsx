@@ -49,7 +49,10 @@ describe("boshlang'ich holat", () => {
     fireEvent.click(screen.getByRole("button", { name: "Saqlash va qayta hisoblash" }));
     await waitFor(() => expect(api.bodiesOf(PUT)).toHaveLength(1));
     expect(api.bodiesOf(PUT)[0]).toEqual({ start_on: "2026-11-01", rows: [{ item_id: "item-1", uzum_qty: 120, own_qty: 0, prices: [{ valid_from: null, unit_cost: "12000" }] }] });
-    expect(await screen.findByText(/Saqlandi/)).toBeTruthy();
+    // Natija sahifa tepasida: nechta turga narx, qamrov va keyingi qadam havolalari.
+    expect(await screen.findByText("Saqlandi")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Foydani koʻrish" }).getAttribute("href")).toBe("/pnl");
+    expect(screen.getByRole("link", { name: "Omborni koʻrish" }).getAttribute("href")).toBe("/inventory");
     await waitFor(() => expect(norm(document.body.textContent)).toContain("tushumning 77"));
   });
 
