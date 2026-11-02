@@ -339,7 +339,8 @@ Uzum `amount` = 0, `commission`, `logisticDeliveryFee`, `sellerProfit` = 0 berad
 
 **F5. Logistika** = Σ `logisticDeliveryFee` (Yakunlangan + Jarayonda). Xarajatlardagi logistika kodlari qayta ayrilmaydi.
 Har qatorda Uzum bergandek (Jarayondagi ham): 0 kelsa — 0, taxmin qo'shilmaydi (ADR-035, ADR-038). Real ma'lumot:
-Uzum Jarayondagi qatorga logistikani topshirishdan oldin yozadi; 0 — bonus davri (masalan, 16–31-oktabr 2026).
+Uzum Jarayondagi qatorga logistikani topshirishdan oldin yozadi; 0 — bonus davri (masalan, 2026-oktabr ikkinchi yarmida **olib ketilgan** buyurtmalar; bepullik olib ketilgan kunga
+qarab). Bonusda buyurtma qilinib keyin olib ketilgan qatorda Uzum logistikani yozguncha 0, keyingi sinxronda yangilanadi.
 
 **F6. Uzum to'lovi** = F3 − F4 − F5. `sellerProfit` kelgan qatorlarda solishtiriladi; farq > 1 so'm bo'lsa log.
 
