@@ -790,6 +790,7 @@ export const uzLatn = {
     coverage: "Boshlash sanasigacha boʻlgan tushumning {{pct}} iga tannarx yozildi",
     hidden: "Sotuvi ham, qoldigʻi ham boʻlmagan {{n}} ta SKU koʻrsatilmadi (arxivlangan, bloklangan yoki tovar kelmagan) — ularga tannarx kerak emas.",
     filled: "Narx yozilgan: {{n}} / {{total}} tur",
+    onlyUnpriced: "Faqat narxsiz turlar ({{n}})",
     stock: {
       snapshot: "Uzum qoldigʻi {{day}} dan oldingi kun holati boʻyicha",
       none: "{{day}} uchun Uzum qoldigʻi saqlanmagan — sonlarni qoʻlda kiriting",

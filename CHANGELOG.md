@@ -419,6 +419,15 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- B4.19: "Tannarxsiz sotuvlar hisobga kirmadi", garchi hamma tovarga narx yozilgan bo'lsa ham (Temur, byDurii). Sabablar:
+  (1) narx yozilgan, lekin boshlash kunidagi qoldiq 0 va partiya yo'q tovar sotilsa — sotuv tannarxsiz qolardi
+  ("lot yo'q"); endi o'sha kundagi tarixiy narx, "lot yetmadi" (taxminiy) belgisi bilan hisoblanadi (F21, F41);
+  (2) sotuv qatori SKU'ga faqat `skuTitle` = `skuFullTitle` aniq tengligi bilan bog'lanardi — nom o'zgargan,
+  bo'sh joy / harf farq qilsa sotuv abadiy bog'lanmay (tannarxsiz) qolardi; endi bir ma'noli bo'lsa: harf va bo'sh
+  joydan qat'i nazar, mahsulot (`productId`) ichida nom bo'yicha, yoki mahsulotning yagona SKU'siga bog'lanadi
+  (ikki ma'noli — bog'lanmaydi); keyingi sinxronda eski bog'lanmaganlar ham bog'lanib, tannarxi qayta hisoblanadi;
+  (3) Boshlang'ich holatda "Narx yozilgan: N / M" da qaysi turga narx yo'qligini topish qiyin edi — "Faqat narxsiz
+  turlar (N)" filtri qo'shildi.
 - B4.17: Boshlang'ich holat sahifasi hamma SKU'ga tannarx so'rardi — endi faqat sotilgan yoki qoldig'i / postavkasi bor
   (yoki narxi allaqachon saqlangan) tovarlar; arxivlangan, bloklangan va hech qachon tovar kelmagan kartochkalar
   ko'rsatilmaydi, soni sahifada yoziladi.

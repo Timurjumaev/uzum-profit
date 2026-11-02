@@ -42,6 +42,7 @@ import {
   applyGroupPrice,
   draftOf,
   filled,
+  unpriced,
   groupRows,
   hasPeriods,
   invalid,
@@ -67,6 +68,7 @@ export function Opening() {
   const query = useQuery(openingQuery(org.id, start, filters.shops));
   const [edits, setEdits] = useState<Record<string, Edit>>({});
   const [needle, setNeedle] = useState("");
+  const [onlyUnpriced, setOnlyUnpriced] = useState(false);
   const [limit, setLimit] = useState(PAGE);
   const [ownChoice, setOwnChoice] = useState<boolean | null>(null);
   const [result, setResult] = useState<{ filled: number; total: number; coverage: string | null } | null>(null);
@@ -109,13 +111,15 @@ export function Opening() {
     return groupRows(
       (data?.rows ?? []).filter(
         (r) =>
-          !key ||
-          searchKey([r.name, r.product ?? "", ...r.skus].join(" ")).includes(
-            key,
-          ),
+          (!onlyUnpriced || unpriced(r)) &&
+          (!key ||
+            searchKey([r.name, r.product ?? "", ...r.skus].join(" ")).includes(
+              key,
+            )),
       ),
     );
-  }, [data, needle]);
+  }, [data, needle, onlyUnpriced]);
+  const unpricedCount = (data?.rows ?? []).filter(unpriced).length;
   const anyInvalid = (data?.rows ?? []).some((r) =>
     invalid(draftOf(r, edits[rowKey(r)])),
   );
@@ -333,6 +337,16 @@ export function Opening() {
                 value={needle}
                 onValueChange={setNeedle}
               />
+              {unpricedCount > 0 && (
+                <label className="opening__toggle">
+                  <input
+                    type="checkbox"
+                    checked={onlyUnpriced}
+                    onChange={(e) => setOnlyUnpriced(e.target.checked)}
+                  />
+                  <span>{t("opening.onlyUnpriced", { n: unpricedCount })}</span>
+                </label>
+              )}
               <label className="opening__toggle">
                 <input
                   type="checkbox"

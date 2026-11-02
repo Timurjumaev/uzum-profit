@@ -489,6 +489,8 @@ oldingi kun snapshoti, S bugun bo'lsa joriy qoldiq) + o'z omborimda (sotuvchi ta
 - Sotuv kuni < S: tannarx = shu kungi narx × dona, "tarixiy" belgisi (F22), lotlarga tegmaydi; narx yo'q — tannarxsiz.
 - S kunida "boshlang'ich qoldiq" loti: Q dona × S kungi narx; FIFO'da shu kungi partiyalardan ham oldin ishlatiladi,
   o'rtachada hovuzning boshlang'ich qiymati. Q = 0 yoki narx yo'q — lot yo'q.
+- S dan keyingi sotuvga lot ham, qoldiq ham yetmasa, lekin tovarga narx yozilgan bo'lsa — sotuv kunidagi narx +
+  "lot yetmadi" (tannarxsiz qolmaydi); narx ham yo'q bo'lsa — tannarxsiz.
 - Tayyor sanasi < S bo'lgan partiyalar ishlatilmaydi (qoldiqqa kirgan); yo'ldagi (sanasiz) va S dan keyingilari — F21.
 - Ombor qiymati (F27, F29): S dan keyin tayyor partiya bo'lmasa — S kungi narx.
 - Qamrov (sahifada): S gacha bo'lgan tushumning narx yozilgan turlarga to'g'ri keladigan ulushi — shu narx qo'llanadigan

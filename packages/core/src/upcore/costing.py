@@ -262,7 +262,9 @@ def compute_costs(
     else:
         start = opening.start
         superseded = frozenset(x.id for x in all_lots if x.ready is not None and x.ready < start)
-        engine = _Engine(method, [x for x in all_lots if x.id not in superseded], opening.lot())
+        engine = _Engine(
+            method, [x for x in all_lots if x.id not in superseded], opening.lot(), opening
+        )
         for event in sorted((e for e in all_events if e.day < start), key=order):
             engine.historical(event, opening.price_on(event.day))
         all_events = [e for e in all_events if e.day >= start]
@@ -279,8 +281,15 @@ class _Engine:
     """Ochiq qatlamlar (lotlar) navbati. FIFO: eng eski qatlamdan; AVERAGE: hovuzning o'rtacha narxida,
     donalar qatlamlardan FIFO tartibida yechiladi (qoldiq va qaytish uchun)."""
 
-    def __init__(self, method: CostMethod, lots: list[Lot], first: Lot | None = None) -> None:
+    def __init__(
+        self,
+        method: CostMethod,
+        lots: list[Lot],
+        first: Lot | None = None,
+        opening: Opening | None = None,
+    ) -> None:
         self.method = method
+        self.opening = opening
         self.pending = sorted(
             (x for x in lots if x.ready is not None), key=lambda x: (x.ready, x.id)
         )
@@ -335,11 +344,18 @@ class _Engine:
             allocations.append(Allocation(layer.lot.id, take, unit))
             self.last_unit, self.last_flags = unit, set(layer.flags)
         if need > 0:
-            if self.last_unit is None:  # tovarda lot umuman yo'q
+            short: Decimal | None = self.last_unit
+            shortage_flags: set[AnyFlag] = self.last_flags
+            if short is None and self.opening is not None:
+                # Lot ham, boshlang'ich qoldiq ham yo'q (qoldiq 0 yozilgan yoki sotuvdan keyin tovar keldi, partiya
+                # kiritilmagan), lekin sotuvchi tarixiy narx yozgan: o'sha kundagi narx — taxminiy ("lot yetmadi").
+                price = self.opening.price_on(event.day)
+                short = None if price is None else price.amount
+            if short is None:  # tovarda lot umuman yo'q
                 self._record(event, None, (), flags | {CostFlag.NO_LOTS})
                 return
-            flags |= self.last_flags | {CostFlag.LOT_SHORTAGE}
-            allocations.append(Allocation(None, need, self.last_unit))
+            flags |= shortage_flags | {CostFlag.LOT_SHORTAGE}
+            allocations.append(Allocation(None, need, short))
         cost = Money(sum((a.unit * a.qty for a in allocations), Decimal(0)), UZS)
         self._record(event, cost, tuple(allocations), flags)
 

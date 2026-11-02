@@ -83,6 +83,9 @@ export function filled(rows: OpeningRow[], edits: Record<string, Edit>): number 
   return rows.filter((r) => hasPeriods(r) || (price(draftOf(r, edits[rowKey(r)]).price) ?? null) !== null).length;
 }
 
+/** Serverda narxi hali yo'q qatorlar ("Faqat narxsizlar" filtri): saqlangan holat bo'yicha — yozayotganda qator yo'qolmaydi. */
+export const unpriced = (r: OpeningRow): boolean => r.prices.length === 0;
+
 /** Uzum mahsuloti bo'yicha guruh: bir mahsulotning turlari (rang, model, o'lcham) — "hammasiga bitta narx" uchun. */
 export type Group = { key: string; title: string; rows: OpeningRow[] };
 
