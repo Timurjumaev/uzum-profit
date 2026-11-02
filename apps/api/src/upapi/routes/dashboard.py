@@ -165,7 +165,7 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
     this_month = Period(today.replace(day=1), today)
     last_end = this_month.start - timedelta(days=1)
     last_month = Period(last_end.replace(day=1), last_end)
-    book = await rc.load_book(conn, rc.span(previous, f.period, last_month, this_month), today)
+    book = await rc.load_book(conn, rc.span(previous, f.period, last_month, this_month))
     cur = book.scoped(f, f.period)
 
     periods = [

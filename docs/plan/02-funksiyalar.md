@@ -338,10 +338,8 @@ Uzum `amount` = 0, `commission`, `logisticDeliveryFee`, `sellerProfit` = 0 berad
 **F4. Uzum komissiyasi** = Σ `commission` (Yakunlangan + Jarayonda).
 
 **F5. Logistika** = Σ `logisticDeliveryFee` (Yakunlangan + Jarayonda). Xarajatlardagi logistika kodlari qayta ayrilmaydi.
-Uzum logistikani tovar punktdan olib ketilganda yozadi (buyurtma sanasidan qat'i nazar; Temur, 2026-11-02). Shuning
-uchun hali topshirilmagan (`dateIssued` yo'q) va logistikasi 0 Jarayondagi qator uchun **kutilayotgan logistika** =
-F40 tarifi × dona taxminiy qo'shiladi (ADR-037; "taxminiy" belgisi, drill-down'da qator bo'yicha); topshirilgandan keyin
-0 kelsa — 0 (ADR-035); tarif noma'lum — taxmin yo'q, soni ko'rsatiladi. Yakunlangan qator — Uzum bergandek.
+Har qatorda Uzum bergandek (Jarayondagi ham): 0 kelsa — 0, taxmin qo'shilmaydi (ADR-035, ADR-038). Real ma'lumot:
+Uzum Jarayondagi qatorga logistikani topshirishdan oldin yozadi; 0 — bonus davri (masalan, 16–31-oktabr 2026).
 
 **F6. Uzum to'lovi** = F3 − F4 − F5. `sellerProfit` kelgan qatorlarda solishtiriladi; farq > 1 so'm bo'lsa log.
 
@@ -380,7 +378,7 @@ qatorlar bo'yicha hisoblanadi; F9, F10, F11 qamrov ulushiga mutanosib qismi ayri
 qatorida alohida ko'rsatiladi. (Legacy hamma xarajatni ayirib, foydani kam ko'rsatardi.)
 
 **F16. Kutilayotgan sof foyda** (ADR-036, ADR-037; F12 ning qismi) = Jarayondagi sotuvlar qismi, xuddi naqd kabi:
-tushum − komissiya − logistika (Uzum hali yozmagani — F5 taxmini) − tannarx − F9, F10 ning tushum ulushidagi qismi −
+tushum − komissiya − logistika (F5, Uzum bergani) − tannarx − F9, F10 ning tushum ulushidagi qismi −
 F11 (o'z tushumidan), F15 qamrovi bilan. R = tanlangan do'konlarning oxirgi 90 kunida yakuniy holatga yetgan donalar
 ichida Yakunlangan ulushi — **fakt** sifatida ko'rsatiladi ("bunday sotuvlarning X% yakunlangan"), summaga
 ko'paytirilmaydi. Ma'lumot kam bo'lsa (< 50 dona) R ko'rsatilmaydi.
@@ -479,8 +477,8 @@ ish kuni), oraliq + 4 ish kuni (Uzum kechiktirishi mumkin). Summa = shu davrda Y
 oxirgi pullik (logistika > 0) Yakunlangan sotuvi bo'yicha bir dona logistika; bo'lmasa do'konning odatiy (oxirgi
 90 kundagi eng ko'p uchragan, teng bo'lsa kattasi) pullik tarifi; SKU o'lchamlari bazada bo'lsa (B4.6) — F37 (kodda
 hozircha qo'llanmaydi). Logistikasi 0 qatorlar (sababi qanday bo'lmasin) hisobga olinmaydi, sotuvchidan hech narsa
-so'ralmaydi; pullik qator yo'q — qiymat yo'q (maydon bo'sh, taxmin qilinmaydi). P&L'da faqat Uzum hali yozmagan
-Jarayondagi logistika taxmini uchun ishlatiladi (F5, ADR-037, hisobot kunidagi tarif); qolgani Uzum bergandek.
+so'ralmaydi; pullik qator yo'q — qiymat yo'q (maydon bo'sh, taxmin qilinmaydi). P&L va hisob varag'i Uzum bergandek
+(F3–F16; ADR-038).
 
 **F41. Boshlang'ich holat** (ADR-033). Boshlash sanasi S (tashkilot sozlamasi, ixtiyoriy), tovar bo'yicha tarixiy
 narxlar {(sana dan, dona narxi)} (sana yo'q — boshidan) va S kunidagi qoldiq Q = Uzumda (FBO + FBS; taklif — S dan

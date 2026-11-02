@@ -93,7 +93,7 @@ def columns(cells: Cells, view: View) -> tuple[list[ColumnOut], Statement]:
 @router.get("/orgs/{org_id}/pnl", response_model=PnlOut)
 async def pnl(ctx: Finance, f: Filter, _: Heavy, view: View = View.TOTAL) -> PnlOut:
     previous = f.period.previous()
-    book = await rc.load_book(ctx.conn, rc.span(previous, f.period), f.today)
+    book = await rc.load_book(ctx.conn, rc.span(previous, f.period))
     cur, before = book.scoped(f, f.period), book.scoped(f, previous)
     cols, s = columns(cur, view)
     if view is View.SKU:

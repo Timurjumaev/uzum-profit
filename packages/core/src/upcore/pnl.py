@@ -684,7 +684,8 @@ def build_cells(
     ``totals`` — tayyor katak yig'indilari (``CellSales``, masalan ``daily_sku_metrics``); ``lines`` bilan bir
     xil natija beradi (hisobga olinadigan qatori yo'q yig'indi katak yaratmaydi). Sotuvlar — Yakunlangan + Jarayonda
     (ADR-036), Jarayondagi qismi katakda alohida (ADR-037). ``logistics_fee`` — F40 tarifi (do'kon, SKU → dona
-    logistikasi): Uzum hali yozmagan Jarayondagi logistika uchun taxmin; berilmasa taxmin yo'q (tarif noma'lum)."""
+    logistikasi): Uzum hali yozmagan Jarayondagi logistika uchun taxmin; berilmasa (API — ADR-038) taxmin ham, "tarif
+    noma'lum" sanog'i ham yo'q — logistika Uzum bergandek."""
     acc: dict[CellKey, Cell] = defaultdict(Cell)
     first, last = period.start, period.end
 
@@ -717,13 +718,14 @@ def build_cells(
             p.covered_units += t.units_costed_processing
             p.lines += t.lines_processing
             p.uncovered_lines += t.uncovered_lines_processing
-            _estimate(
-                a,
-                fee_of(key) if t.lines_logistics_due else None,
-                t.units_logistics_due,
-                t.units_logistics_due_costed,
-                t.lines_logistics_due,
-            )
+            if logistics_fee is not None:
+                _estimate(
+                    a,
+                    fee_of(key) if t.lines_logistics_due else None,
+                    t.units_logistics_due,
+                    t.units_logistics_due_costed,
+                    t.lines_logistics_due,
+                )
 
     for line in counted(x for x in lines if x.order_date in period):
         key = CellKey(line.order_date, line.shop, line.sku)
@@ -746,7 +748,7 @@ def build_cells(
                 c.covered_units += line.amount
                 c.covered_revenue += rev
                 c.covered_payout += rev - fee - logistic
-        if logistics_due(line):
+        if logistics_fee is not None and logistics_due(line):
             costed = 0 if cost is None else line.amount
             _estimate(a, fee_of(key), line.amount, costed, 1)
 

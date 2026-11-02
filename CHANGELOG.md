@@ -419,6 +419,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- B4.19 (ADR-038): kutilayotgan logistika taxmini olib tashlandi — Uzum bonus davridagi (16–31-oktabr) bepul
+  buyurtmalarga soxta logistika qo'shib, kutilayotgan foydani kamaytirib ko'rsatardi. Logistika endi har qatorda Uzum
+  bergandek (staging realcheck: noyabr buyurtmalarida Uzum logistikani jarayondayoq yozadi).
+
 - B4.17: Boshlang'ich holat sahifasi hamma SKU'ga tannarx so'rardi — endi faqat sotilgan yoki qoldig'i / postavkasi bor
   (yoki narxi allaqachon saqlangan) tovarlar; arxivlangan, bloklangan va hech qachon tovar kelmagan kartochkalar
   ko'rsatilmaydi, soni sahifada yoziladi.

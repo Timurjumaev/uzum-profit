@@ -409,6 +409,9 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   logistika 0 / > 0). **Qoldi:** **T:** staging'da `realcheck.sh` natijasini yuborish — `dateIssued` topshirishda to'lishi
   real ma'lumotda tasdiqlanadi (bo'lmasa taxmin qoidasi aniqlashtiriladi); kutilayotgan foyda "qachon pulga aylanadi"
   (to'lov sanasi bo'yicha) — B5.7 Pul oqimi bilan.
+- [x] B4.19 Kutilayotgan logistika taxmini olib tashlandi (ADR-038, realcheck natijasi). ✓ 2026-11-02: logistika har
+  qatorda Uzum bergandek — bonus davrlari (16–31-oktabr: 0) o'zi to'g'ri; `load_book` va `/sales` taxmin qilmaydi
+  (`logistics_estimated` doim bo'sh), `build_cells` tarif berilmasa "tarif noma'lum" ham sanamaydi; realcheck bo'limi qoladi.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

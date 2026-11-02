@@ -204,7 +204,7 @@ async def skus(
     except ValueError:
         raise AppError("bad_sort", 422, detail=sort) from None
     offset = int((decode_cursor(cursor, 1) or [0])[0])
-    book = await rc.load_book(ctx.conn, f.period, f.today)
+    book = await rc.load_book(ctx.conn, f.period)
     cells = book.scoped(f)
     by_sku = cells.by_sku()
     sums = await rc.sale_sums(ctx.conn, f, by_sku=True)
@@ -344,7 +344,7 @@ async def sku_detail(
     if info is None:
         raise AppError("sku_not_found", 404)
     conn = ctx.conn
-    book = await rc.load_book(conn, f.period, f.today)
+    book = await rc.load_book(conn, f.period)
     key = str(sku_id)
     mine = book.cells.within(f.period, lambda k: k.sku == key)
     s, daily = mine.statement(), mine.by(lambda k: k.day)

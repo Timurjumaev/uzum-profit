@@ -9,8 +9,7 @@
 - O'z xarajatlari (F10) — ``manual_expenses``: tovarga bog'langan va tovarning bitta SKU'si bo'lsa — o'sha SKU'ga,
   aks holda do'kon (yoki tashkilot) darajasida. Takrorlanish va tovar bo'yicha taqsimot sozlamasi — B4 (M8).
 - Soliq (F11) — ``tax_profiles`` sana bo'yicha (``upcore.tax.daily_rule``).
-- Kutilayotgan logistika (F5, ADR-037) — Uzum hali yozmagan Jarayondagi donalar × F40 tarifi (``reports.products``),
-  hisobot kunidagi tarif bilan; naqd va kutilayotgan sof foyda (F16) — ``upcore.pnl`` kataklarida.
+- Naqd va kutilayotgan sof foyda (F16, ADR-037) — ``upcore.pnl`` kataklarida; logistika Uzum bergandek (ADR-038).
 
 Kataklar butun tashkilot uchun quriladi, do'kon filtri keyin qo'llanadi: tashkilot xarajati tanlangan do'konlarga
 emas, hamma do'konlarga tushum ulushida taqsimlanadi (filtr bo'yicha natija = do'konlar kesimidagi qatorlar).
@@ -18,7 +17,6 @@ emas, hamma do'konlarga tushum ulushida taqsimlanadi (filtr bo'yicha natija = do
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
@@ -42,7 +40,6 @@ from upcore.tax import TaxProfile, TaxRegime, daily_rule
 from upapi.calc.costs import day_start
 from upapi.db import models as m
 from upapi.reports.common import Filters
-from upapi.reports.products import load_fees
 
 UZS = Currency.UZS
 UNLINKED = "unlinked"  # SKU'ga bog'lanmagan sotuvlar katagi (``sku_id`` NULL)
@@ -239,23 +236,10 @@ async def tax_profiles(conn: AsyncConnection) -> list[TaxProfile]:
     ]
 
 
-async def expected_fees(
-    conn: AsyncConnection, today: date, keys: list[tuple[str, str]]
-) -> Callable[[str, str], Money | None]:
-    """F40 tariflari (``today`` kungi) Uzum logistikasini hali yozmagan Jarayondagi donalar kataklari (do'kon, SKU
-    kaliti) uchun — kutilayotgan logistika taxmini (F5, ADR-037)."""
-    skus = {UUID(sku): UUID(shop) for shop, sku in keys if sku != UNLINKED}
-    shops = {UUID(shop) for shop, sku in keys if sku == UNLINKED}
-    if not skus and not shops:
-        return lambda _shop, _sku: None
-    return (await load_fees(conn, today, skus, shops)).unit
-
-
-async def load_book(conn: AsyncConnection, period: Period, today: date) -> Book:
-    """Davr (masalan, joriy + oldingi davr birga) kataklari butun tashkilot bo'yicha. ``today`` — kutilayotgan
-    logistika taxmini tarifi kuni (F40, ADR-037)."""
+async def load_book(conn: AsyncConnection, period: Period) -> Book:
+    """Davr (masalan, joriy + oldingi davr birga) kataklari butun tashkilot bo'yicha. Logistika — Uzum bergandek
+    (ADR-035, ADR-038): taxmin qo'shilmaydi."""
     totals = await _totals(conn, period)
-    due = sorted({(k.shop, k.sku or UNLINKED) for k, t in totals if t.lines_logistics_due})
     cells = build_cells(
         period,
         [],
@@ -263,7 +247,6 @@ async def load_book(conn: AsyncConnection, period: Period, today: date) -> Book:
         await _own(conn, period),
         tax=daily_rule(await tax_profiles(conn)),
         totals=totals,
-        logistics_fee=await expected_fees(conn, today, due),
     )
     return Book(cells)
 

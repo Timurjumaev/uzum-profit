@@ -302,8 +302,8 @@ def test_expected_logistics_estimate() -> None:
     a = cells.items[CellKey(d(3), "S1", "A")]
     assert a.logistics_estimated == uzs(8_000) and a.logistics_estimated_units == 2
     assert cells.items[CellKey(d(3), "S1", "B")].logistics_missing_lines == 1
-    # Tarif berilmasa — hamma Uzum yozmagan qator "tarifi noma'lum".
-    assert plain.logistics_estimated == uzs(0) and plain.logistics_missing_lines == 3
+    # Tarif funksiyasi berilmasa (API, ADR-038) — taxmin ham, "tarif noma'lum" sanog'i ham yo'q.
+    assert plain.logistics_estimated == uzs(0) and plain.logistics_missing_lines == 0
 
 
 # --- Xossalar va tezlik ----------------------------------------------------------------------

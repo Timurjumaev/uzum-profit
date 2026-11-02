@@ -457,44 +457,33 @@ def test_pnl_expected_profit(world: World) -> None:
     assert money(rows["uzum:storage"]["processing"]) == 0  # 15-oktabrda saqlash yo'q
 
 
-def test_expected_logistics_estimate(world: World) -> None:
-    """F5 (ADR-037): Uzum logistikasini hali yozmagan (topshirilmagan, 0) Jarayondagi sotuv — F40 tarifi × dona
-    (SKU'ning oxirgi pullik Yakunlangan sotuvi: 5 000/dona) taxminiy qo'shiladi; drill-down qatorida ham shu summa,
-    yig'indi qator bilan bir xil; topshirilgan bo'lsa (0 — Uzum bergani) taxmin yo'q."""
+def test_processing_logistics_as_given(world: World) -> None:
+    """ADR-038 (ADR-035 ga qaytish): Jarayondagi sotuvda logistika 0 kelsa (masalan, Uzum bonus davri) — 0, taxmin
+    qo'shilmaydi; topshirilgan-topshirilmaganidan qat'i nazar. Drill-down'da ham Uzum qiymati."""
     a = world.a
     before = world.get("pnl", **OCT)
 
-    def resync(logistics: int, issued: datetime | None) -> dict[str, Any]:
+    def resync(logistics: int) -> dict[str, Any]:
         a.sql(
-            "UPDATE sale_items SET logistics_fee = %s, issued_at = %s WHERE org_id = %s AND sku_id = %s "
+            "UPDATE sale_items SET logistics_fee = %s WHERE org_id = %s AND sku_id = %s "
             "AND (ordered_at AT TIME ZONE 'Asia/Tashkent')::date = %s",
-            [logistics, issued, a.org_id, world.ids["xa"], d(10, 15)],
+            [logistics, a.org_id, world.ids["xa"], d(10, 15)],
         )
         a.run(lambda conn: calc.request(conn, world.org_id, calc.Scope.SHOP, a.shop_id, d(10, 15)))
         assert a.recalc(datetime.now(UTC)).errors == {}
         return world.get("pnl", **OCT)
 
     try:
-        due = resync(0, None)
-        s = due["statement"]
-        assert money(s["logistics_estimated"]) == D(5_000)
-        assert (s["logistics_estimated_units"], s["logistics_estimated_lines"]) == (1, 1)
-        assert money(s["logistics"]) == money(
-            before["statement"]["logistics"]
-        )  # 5 000 → taxmin 5 000
-        assert money(due["expected"]["logistics_estimated"]) == D(5_000)
-        assert money(due["expected"]["net_profit"]) == D(37_000)
+        free = resync(0)
+        s = free["statement"]
+        assert money(s["logistics_estimated"]) == 0 and s["logistics_missing_lines"] == 0
+        assert money(s["logistics"]) == money(before["statement"]["logistics"]) - D(5_000)
+        assert money(free["expected"]["net_profit"]) == D(42_000)
         sales = world.get("sales", counted="true", **OCT)["items"]
         row = next(x for x in sales if x["group"] == "processing")
-        assert money(row["logistics"]) == D(5_000) and money(row["logistics_estimated"]) == D(5_000)
-        assert money(row["payout"]) == D(200_000 - 40_000 - 5_000)
-        assert sum(money(x["logistics"]) for x in sales) == money(s["logistics"])
-        assert all(x["logistics_estimated"] is None for x in sales if x["group"] != "processing")
-        free = resync(0, at(d(10, 18)))  # topshirilgan, Uzum 0 yozgan — taxmin yo'q (ADR-035)
-        assert money(free["statement"]["logistics_estimated"]) == 0
-        assert money(free["expected"]["net_profit"]) == D(42_000)
+        assert money(row["logistics"]) == 0 and row["logistics_estimated"] is None
     finally:
-        after = resync(5_000, None)
+        after = resync(5_000)
     assert after["statement"] == before["statement"]
 
 
