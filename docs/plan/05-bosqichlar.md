@@ -406,8 +406,8 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   solishtirish, "≈" taxminiy logistika va izohi, tor ekranda ustun almashtirgichi (`Segmented`, UI-kit'da), kutilayotgan
   sof foyda bloki (do'konlar bilan), kesimlarda "shundan naqd / kutilayotgan", drill-down va Buyurtmalarda logistika
   "Taxminiy" belgisi. PageHelp matnlari yangilandi; `realcheck` ga "processing_logistics" bo'limi (Jarayondagi qatorlar: `dateIssued` ×
-  logistika 0 / > 0). **Qoldi:** **T:** staging'da `realcheck.sh` natijasini yuborish — `dateIssued` topshirishda to'lishi
-  real ma'lumotda tasdiqlanadi (bo'lmasa taxmin qoidasi aniqlashtiriladi); kutilayotgan foyda "qachon pulga aylanadi"
+  logistika 0 / > 0). ✓ 2026-11-02 realcheck (Temur): `dateIssued` ishonchli, qoida tasdiqlandi — bonus olib ketilgan kunga qarab, olib
+  ketilgan va 0 — haqiqiy 0, olib ketilmagan va 0 — taxmin. **Qoldi:** kutilayotgan foyda "qachon pulga aylanadi"
   (to'lov sanasi bo'yicha) — B5.7 Pul oqimi bilan.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
