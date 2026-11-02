@@ -2022,6 +2022,8 @@ export interface components {
             coverage: string | null;
             /** Rows */
             rows: components["schemas"]["OpeningRowOut"][];
+            /** Hidden */
+            hidden: number;
         };
         /** OpeningRowIn */
         OpeningRowIn: {

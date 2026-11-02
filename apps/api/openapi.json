@@ -9034,6 +9034,10 @@
             },
             "type": "array",
             "title": "Rows"
+          },
+          "hidden": {
+            "type": "integer",
+            "title": "Hidden"
           }
         },
         "type": "object",
@@ -9042,7 +9046,8 @@
           "as_of",
           "stock_source",
           "coverage",
-          "rows"
+          "rows",
+          "hidden"
         ],
         "title": "OpeningOut"
       },

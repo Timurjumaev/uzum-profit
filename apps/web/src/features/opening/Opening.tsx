@@ -309,6 +309,7 @@ export function Opening() {
                   total: data.rows.length,
                 })}
               />
+              {data.hidden > 0 && <p className="caption">{t("opening.hidden", { n: data.hidden })}</p>}
             </div>
           </div>
           {data.stock_source !== "current" && (

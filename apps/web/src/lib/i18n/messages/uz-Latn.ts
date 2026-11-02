@@ -770,6 +770,7 @@ export const uzLatn = {
     start: "Boshlash sanasi",
     startHelp: "Shu kundan partiyalar bilan aniq hisob. Odatda — bugun yoki oy boshi.",
     coverage: "Boshlash sanasigacha boʻlgan tushumning {{pct}} iga tannarx yozildi",
+    hidden: "Sotuvi ham, qoldigʻi ham boʻlmagan {{n}} ta SKU koʻrsatilmadi (arxivlangan, bloklangan yoki tovar kelmagan) — ularga tannarx kerak emas.",
     filled: "Narx yozilgan: {{n}} / {{total}} tur",
     stock: {
       snapshot: "Uzum qoldigʻi {{day}} dan oldingi kun holati boʻyicha",
