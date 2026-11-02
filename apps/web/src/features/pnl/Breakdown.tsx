@@ -1,5 +1,5 @@
 // Kesimlar (M5): oylar va do'konlar — qator = P&L qatori, ustun = oy / do'kon + jami (04 §7.4: "ustun = oy");
-// SKU — qator = SKU (ko'p bo'ladi), ustun = asosiy qatorlar. Do'kon va SKU kesimida Uzum va o'z xarajatlari
+// SKU — qator = SKU (ko'p bo'ladi), ustun = asosiy qatorlar. Sof foyda ostida naqd va kutilayotgan qismlari (ADR-037). Do'kon va SKU kesimida Uzum va o'z xarajatlari
 // to'g'ridan-to'g'ri va taqsimlangan qismlarga bo'linadi, sotuvsiz kun xarajati — "Taqsimlanmagan" (ADR-026).
 // Ustunlar yig'indisi = jami — API kafolati (kataklar yig'indisi); bu yerda hech narsa qo'shilmaydi.
 import { useQuery } from "@tanstack/react-query";
@@ -139,6 +139,7 @@ function SkuTable({ data }: { data: Pnl }) {
     { key: "own_allocated", header: split("terms.ownExpenses", "allocated"), value: minus((s) => s.own_allocated_total) },
     { key: "tax", header: t("terms.tax"), value: minus((s) => s.tax) },
     { key: "net", header: t("terms.netProfit"), value: (s) => s.net_profit },
+    { key: "net_processing", header: t("pnl.views.processing"), value: (s) => s.net_profit_processing },
     { key: "margin", header: t("pnl.views.margin"), value: (s) => s.margin, ratio: true },
   ];
   const name = (c: Column) => (c.key === null ? t("pnl.views.unallocated") : c.key === "unlinked" ? t("pnl.views.unlinked") : (c.title ?? t("home.sku.unnamed")));

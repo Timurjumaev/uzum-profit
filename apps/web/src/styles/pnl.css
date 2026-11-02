@@ -61,9 +61,44 @@
   white-space: normal;
 }
 
-@media (max-width: 639px) {
+.pnl-ledger-box__note {
+  margin: 0;
+}
+
+.pnl-ledger .pnl-total-cell {
+  font-weight: 500;
+}
+
+.pnl-estimated {
+  text-decoration: none;
+  cursor: help;
+}
+
+/* Ustun tanlash faqat tor ekranda (pastda); kengda uchala ustun yonma-yon. */
+.pnl-parts {
+  display: none;
+  justify-self: start;
+}
+
+@media (max-width: 1099px) {
   .pnl-wide {
-    display: none; /* tor ekranda: joriy summa va o'zgarish */
+    display: none; /* o'rta ekranda: naqd, kutilayotgan, jami va o'zgarish */
+  }
+}
+
+@media (max-width: 639px) {
+  .pnl-parts {
+    display: inline-flex;
+  }
+
+  /* ADR-037: tor ekranda bitta pul ustuni — tanlangani (gorizontal skroll yo'q); o'zgarish faqat jamida. */
+  .pnl-ledger[data-part="done"] [data-part="processing"],
+  .pnl-ledger[data-part="done"] [data-part="total"],
+  .pnl-ledger[data-part="processing"] [data-part="done"],
+  .pnl-ledger[data-part="processing"] [data-part="total"],
+  .pnl-ledger[data-part="total"] [data-part="done"],
+  .pnl-ledger[data-part="total"] [data-part="processing"] {
+    display: none;
   }
 
   .pnl-ledger-box {
@@ -76,7 +111,7 @@
   }
 }
 
-/* --- Kutilayotgan (F16) --- */
+/* --- Kutilayotgan sof foyda (F16, ADR-037) --- */
 .pnl-pending {
   display: grid;
   gap: var(--space-2);

@@ -6,6 +6,8 @@ describe("API tiplari", () => {
     const row: PnlRow = {
       code: "revenue",
       amount: "1800000.00",
+      done: "1500000.00",
+      processing: "300000.00",
       share_of_revenue: "1.000000",
       previous: "400000.00",
       diff: "1400000.00",

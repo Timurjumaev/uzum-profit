@@ -24,7 +24,6 @@ from upcore.metrics import (
     own_expenses,
     payout,
     payout_mismatches,
-    pending_sales,
     period_return_share,
     profit_summary,
     ratio,
@@ -59,6 +58,7 @@ def line(
     seller_profit: int | None = None,
     returns: int = 0,
     estimated: bool = False,
+    issued: bool = False,
 ) -> SaleLine:
     return SaleLine(
         sku=sku,
@@ -72,6 +72,7 @@ def line(
         amount_returns=returns,
         unit_cost=None if cost is None else D(cost),
         estimated=estimated,
+        issued=issued,
     )
 
 
@@ -307,17 +308,55 @@ def test_realization_rate() -> None:
     assert realization_rate(window, min_units=51) is None
 
 
-def test_pending_sales() -> None:
+def test_sale_totals_processing_part() -> None:
+    """ADR-037: Jarayondagi qism hamma pul ustunlari bo'yicha; Uzum logistikasini hali yozmagan qatorlar (taxmin asosi)."""
     pending = [
-        line("PROCESSING", amount=2, comm=40_000, log=10_000),
-        line("PROCESSING", cost=None),
+        line(
+            "PROCESSING", amount=2, comm=40_000, log=10_000, issued=True
+        ),  # topshirilgan, Uzum yozgan
+        line("PROCESSING", cost=None, log=0),  # topshirilmagan, logistika 0 — taxmin asosi
+        line("PROCESSING", amount=3, log=0),  # tannarxi ma'lum, taxmin asosi
+        line(
+            "PROCESSING", log=0, issued=True
+        ),  # topshirilgan, 0 — Uzum bergani (ADR-035), taxmin yo'q
         line(),
+        line("CANCELED", amount=0, log=0),
     ]
-    e = pending_sales(pending, D("0.9"))
-    assert e.units == 3 and e.revenue == uzs(300_000)
-    assert e.profit == uzs(70_000)  # R summaga ko'paytirilmaydi (ADR-036) — faqat fakt
-    assert e.rate == D("0.9") and e.uncovered_lines == 1
-    assert pending_sales(pending, None).rate is None
+    t = sale_totals(pending)
+    assert (t.units_processing, t.lines_processing) == (7, 4)
+    assert t.revenue_processing == uzs(700_000)
+    assert t.commission_processing == uzs(40_000 + 20_000 * 3)
+    assert t.logistics_processing == uzs(10_000)
+    assert t.cogs_processing == uzs(
+        40_000 * (2 + 3 + 1)
+    )  # tannarxi ma'lum qatorlar: dona narxi × dona
+    assert t.revenue_costed_processing == uzs(600_000) and t.units_costed_processing == 6
+    assert t.payout_costed_processing == uzs(600_000 - 80_000 - 10_000)
+    assert t.uncovered_lines_processing == 1
+    assert (t.units_logistics_due, t.units_logistics_due_costed, t.lines_logistics_due) == (4, 3, 2)
+
+
+def test_logistics_due() -> None:
+    from upcore.metrics import logistics_due
+
+    assert logistics_due(line("PROCESSING", log=0))
+    assert not logistics_due(line("PROCESSING", log=0, issued=True))  # 0 — Uzum bergani
+    assert not logistics_due(line("PROCESSING"))  # Uzum yozgan
+    assert not logistics_due(line(log=0))  # Yakunlangan: API bergandek (ADR-035)
+    assert not logistics_due(line("PROCESSING", log=0, amount=0))
+
+
+def test_with_expected_logistics() -> None:
+    from upcore.metrics import expected_logistics, with_expected_logistics
+
+    assert expected_logistics(uzs(4_000), 3) == uzs(12_000)
+    due = line("PROCESSING", amount=3, log=0)
+    filled, est = with_expected_logistics(due, uzs(4_000))
+    assert est == uzs(12_000) and filled.logistics == D(12_000)
+    assert filled.payout == due.payout - D(12_000)  # F6 taxmin bilan
+    assert with_expected_logistics(due, None) == (due, None)  # tarif noma'lum
+    done = line(log=0)
+    assert with_expected_logistics(done, uzs(4_000)) == (done, None)  # Yakunlangan — Uzum bergani
 
 
 def test_cancel_and_return_share() -> None:

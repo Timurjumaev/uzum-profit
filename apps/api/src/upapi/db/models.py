@@ -639,6 +639,19 @@ daily_sku_metrics = tenant(
     # dona (F16 R, F17, F18) = ``units − units_processing``.
     Column("units_processing", Integer, nullable=False, server_default="0"),
     Column("revenue_processing", UZS, nullable=False, server_default="0"),
+    # ADR-037: Jarayondagi qism hamma pul ustunlari bo'yicha (kutilayotgan sof foyda, F16) va Uzum logistikasini hali
+    # yozmagan Jarayondagi qatorlar donasi (F5 taxmini asosi; summa o'qishda F40 tarifi bilan).
+    Column("commission_processing", UZS, nullable=False, server_default="0"),
+    Column("logistics_processing", UZS, nullable=False, server_default="0"),
+    Column("cogs_processing", UZS, nullable=False, server_default="0"),
+    Column("revenue_costed_processing", UZS, nullable=False, server_default="0"),
+    Column("payout_costed_processing", UZS, nullable=False, server_default="0"),
+    Column("units_costed_processing", Integer, nullable=False, server_default="0"),
+    Column("lines_processing", Integer, nullable=False, server_default="0"),
+    Column("lines_uncosted_processing", Integer, nullable=False, server_default="0"),
+    Column("units_logistics_due", Integer, nullable=False, server_default="0"),
+    Column("units_logistics_due_costed", Integer, nullable=False, server_default="0"),
+    Column("lines_logistics_due", Integer, nullable=False, server_default="0"),
     UniqueConstraint("org_id", "shop_id", "sku_id", "day", postgresql_nulls_not_distinct=True),
     refs={"shop_id": ("shops", False), "sku_id": ("mp_skus", True)},
 )

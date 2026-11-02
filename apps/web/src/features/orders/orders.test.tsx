@@ -76,7 +76,8 @@ describe("roʻyxat", () => {
     expect(within(rows[2]!).queryByText("Bonus davri")).toBeNull(); // bonus belgisi yo'q (ADR-035)
     expect(within(rows[2]!).getByText("SKU bogʻlanmagan")).toBeTruthy();
     expect(within(rows[3]!).getByText("Jarayonda")).toBeTruthy();
-    expect(within(rows[3]!).getByText("Taxminiy")).toBeTruthy();
+    // Tannarx taxminiy (F22) va logistika taxminiy (Uzum hali yozmagan, ADR-037) — ikkala belgi.
+    expect(within(rows[3]!).getAllByText("Taxminiy")).toHaveLength(2);
     const summary = document.querySelector(".orders-summary")!.textContent!;
     expect(norm(summary)).toContain("13 dona yakunlandi");
     expect(summary).toContain(f.percent("0.277778"));

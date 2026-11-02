@@ -9,6 +9,8 @@
 - O'z xarajatlari (F10) — ``manual_expenses``: tovarga bog'langan va tovarning bitta SKU'si bo'lsa — o'sha SKU'ga,
   aks holda do'kon (yoki tashkilot) darajasida. Takrorlanish va tovar bo'yicha taqsimot sozlamasi — B4 (M8).
 - Soliq (F11) — ``tax_profiles`` sana bo'yicha (``upcore.tax.daily_rule``).
+- Kutilayotgan logistika (F5, ADR-037) — Uzum hali yozmagan Jarayondagi donalar × F40 tarifi (``reports.products``),
+  hisobot kunidagi tarif bilan; naqd va kutilayotgan sof foyda (F16) — ``upcore.pnl`` kataklarida.
 
 Kataklar butun tashkilot uchun quriladi, do'kon filtri keyin qo'llanadi: tashkilot xarajati tanlangan do'konlarga
 emas, hamma do'konlarga tushum ulushida taqsimlanadi (filtr bo'yicha natija = do'konlar kesimidagi qatorlar).
@@ -16,6 +18,7 @@ emas, hamma do'konlarga tushum ulushida taqsimlanadi (filtr bo'yicha natija = do
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
@@ -27,14 +30,10 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.expenses import ExpenseCategory, signed_amount
 from upcore.metrics import (
     ManualExpense,
-    PendingSales,
     Period,
     SaleLine,
-    StatusGroup,
     business_date,
-    pending_sales,
     realization_rate_units,
-    statuses,
 )
 from upcore.money import Currency, Money
 from upcore.pnl import CellKey, Cells, CellSales, ExpenseItem, OwnExpense, TaxBase, build_cells
@@ -43,6 +42,7 @@ from upcore.tax import TaxProfile, TaxRegime, daily_rule
 from upapi.calc.costs import day_start
 from upapi.db import models as m
 from upapi.reports.common import Filters
+from upapi.reports.products import load_fees
 
 UZS = Currency.UZS
 UNLINKED = "unlinked"  # SKU'ga bog'lanmagan sotuvlar katagi (``sku_id`` NULL)
@@ -113,6 +113,34 @@ def _uzs(value: Any) -> Money:
     return Money(value, UZS)
 
 
+# ``daily_sku_metrics`` ustuni → ``CellSales`` maydoni (tartib — ``CellSales`` dagi kabi).
+_SALES = (
+    ("revenue", "revenue"),
+    ("commission", "commission"),
+    ("logistics", "logistics"),
+    ("cogs", "cogs"),
+    ("revenue_costed", "revenue_costed"),
+    ("payout_costed", "payout_costed"),
+    ("units", "units"),
+    ("units_costed", "units_costed"),
+    ("lines", "lines"),
+    ("uncovered_lines", "lines_uncosted"),
+    ("units_processing", "units_processing"),
+    ("revenue_processing", "revenue_processing"),
+    ("commission_processing", "commission_processing"),
+    ("logistics_processing", "logistics_processing"),
+    ("cogs_processing", "cogs_processing"),
+    ("revenue_costed_processing", "revenue_costed_processing"),
+    ("payout_costed_processing", "payout_costed_processing"),
+    ("units_costed_processing", "units_costed_processing"),
+    ("lines_processing", "lines_processing"),
+    ("uncovered_lines_processing", "lines_uncosted_processing"),
+    ("units_logistics_due", "units_logistics_due"),
+    ("units_logistics_due_costed", "units_logistics_due_costed"),
+    ("lines_logistics_due", "lines_logistics_due"),
+)
+
+
 async def _totals(conn: AsyncConnection, period: Period) -> list[tuple[CellKey, CellSales]]:
     d = m.daily_sku_metrics
     rows = await conn.execute(
@@ -120,18 +148,7 @@ async def _totals(conn: AsyncConnection, period: Period) -> list[tuple[CellKey, 
             d.c.day,
             cast(d.c.shop_id, Text),  # matn — katak kaliti (Python'da UUID → str sekin)
             cast(d.c.sku_id, Text),
-            d.c.revenue,
-            d.c.commission,
-            d.c.logistics,
-            d.c.cogs,
-            d.c.revenue_costed,
-            d.c.payout_costed,
-            d.c.units,
-            d.c.units_costed,
-            d.c.lines,
-            d.c.lines_uncosted,
-            d.c.units_processing,
-            d.c.revenue_processing,
+            *(d.c[column] for _, column in _SALES),
         ).where(d.c.day >= period.start, d.c.day <= period.end)
     )
     return [
@@ -222,9 +239,23 @@ async def tax_profiles(conn: AsyncConnection) -> list[TaxProfile]:
     ]
 
 
-async def load_book(conn: AsyncConnection, period: Period) -> Book:
-    """Davr (masalan, joriy + oldingi davr birga) kataklari butun tashkilot bo'yicha."""
+async def expected_fees(
+    conn: AsyncConnection, today: date, keys: list[tuple[str, str]]
+) -> Callable[[str, str], Money | None]:
+    """F40 tariflari (``today`` kungi) Uzum logistikasini hali yozmagan Jarayondagi donalar kataklari (do'kon, SKU
+    kaliti) uchun — kutilayotgan logistika taxmini (F5, ADR-037)."""
+    skus = {UUID(sku): UUID(shop) for shop, sku in keys if sku != UNLINKED}
+    shops = {UUID(shop) for shop, sku in keys if sku == UNLINKED}
+    if not skus and not shops:
+        return lambda _shop, _sku: None
+    return (await load_fees(conn, today, skus, shops)).unit
+
+
+async def load_book(conn: AsyncConnection, period: Period, today: date) -> Book:
+    """Davr (masalan, joriy + oldingi davr birga) kataklari butun tashkilot bo'yicha. ``today`` — kutilayotgan
+    logistika taxmini tarifi kuni (F40, ADR-037)."""
     totals = await _totals(conn, period)
+    due = sorted({(k.shop, k.sku or UNLINKED) for k, t in totals if t.lines_logistics_due})
     cells = build_cells(
         period,
         [],
@@ -232,6 +263,7 @@ async def load_book(conn: AsyncConnection, period: Period) -> Book:
         await _own(conn, period),
         tax=daily_rule(await tax_profiles(conn)),
         totals=totals,
+        logistics_fee=await expected_fees(conn, today, due),
     )
     return Book(cells)
 
@@ -240,72 +272,37 @@ def span(*periods: Period) -> Period:
     return Period(min(p.start for p in periods), max(p.end for p in periods))
 
 
-# --- F16 va "qayta hisoblandi" ----------------------------------------------------------------
+# --- F16 (R) va "qayta hisoblandi" ------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
-class Pending:
-    total: PendingSales
-    shops: dict[UUID, PendingSales]
+class Realization:
+    """F16 R — fakt (ADR-036, ADR-037): oxirgi 90 kunda yakuniy holatga yetgan donalar ichida Yakunlangan ulushi;
+    ``total`` — tanlangan do'konlar birga, ``shops`` — har do'kon. Kutilayotgan sof foydaga ko'paytirilmaydi."""
+
+    total: Decimal | None
+    shops: dict[UUID, Decimal | None]
 
 
-async def pending(conn: AsyncConnection, f: Filters) -> Pending:
-    """F16 (ADR-036): davrdagi Jarayondagi sotuvlar (ular F3–F12 ga kirgan) va R — fakt, har do'kon uchun alohida
-    (oxirgi 90 kun, ``daily_sku_metrics``)."""
-    s, c, d = m.sale_items, m.sale_costs, m.daily_sku_metrics
+async def realization(conn: AsyncConnection, f: Filters) -> Realization:
+    """F16 R: tanlangan do'konlar (filtr bo'lmasa — hammasi) bo'yicha oxirgi 90 kun (``daily_sku_metrics``)."""
+    d = m.daily_sku_metrics
+    since = f.today - timedelta(days=REALIZATION_DAYS - 1)
     query = (
         select(
-            s.c.shop_id,
-            s.c.sku_id,
-            s.c.ordered_at,
-            s.c.status,
-            s.c.sell_price,
-            s.c.amount,
-            s.c.commission,
-            s.c.logistics_fee,
-            s.c.amount_returns,
-            c.c.cogs,
-            c.c.flags,
+            d.c.shop_id,
+            func.sum(d.c.units - d.c.units_processing).label("done"),
+            func.sum(d.c.canceled).label("canceled"),
         )
-        .outerjoin(c, c.c.sale_item_id == s.c.id)
-        .where(
-            s.c.ordered_at >= day_start(f.period.start),
-            s.c.ordered_at < day_start(f.period.end + timedelta(days=1)),
-            func.upper(func.trim(s.c.status)).in_(statuses(StatusGroup.PROCESSING)),
-        )
+        .where(d.c.day >= since, d.c.day <= f.today)
+        .group_by(d.c.shop_id)
     )
     if f.shops:
-        query = query.where(s.c.shop_id.in_(f.shops))
-    lines: dict[UUID, list[SaleLine]] = {}
-    for r in await conn.execute(query):
-        lines.setdefault(r.shop_id, []).append(sale_line(r))
-    since = f.today - timedelta(days=REALIZATION_DAYS - 1)
-    window = {
-        r.shop_id: realization_rate_units(int(r.done), int(r.canceled))
-        for r in await conn.execute(
-            select(
-                d.c.shop_id,
-                func.sum(d.c.units - d.c.units_processing).label("done"),
-                func.sum(d.c.canceled).label("canceled"),
-            )
-            .where(d.c.shop_id.in_(lines), d.c.day >= since, d.c.day <= f.today)
-            .group_by(d.c.shop_id)
-        )
-    }
-    shops = {shop: pending_sales(items, window.get(shop)) for shop, items in lines.items()}
-    return Pending(_combine(list(shops.values())), shops)
-
-
-def _combine(items: list[PendingSales]) -> PendingSales:
-    """Do'konlar F16 natijalari yig'indisi; R bitta bo'lsa (yoki bitta do'kon) — o'sha, aks holda ``None``."""
-    zero = Money.zero(UZS)
-    rates = {e.rate for e in items}
-    return PendingSales(
-        units=sum(e.units for e in items),
-        revenue=sum((e.revenue for e in items), zero),
-        profit=sum((e.profit for e in items), zero),
-        uncovered_lines=sum(e.uncovered_lines for e in items),
-        rate=next(iter(rates)) if len(rates) == 1 else None,
+        query = query.where(d.c.shop_id.in_(f.shops))
+    rows = [(r.shop_id, int(r.done), int(r.canceled)) for r in await conn.execute(query)]
+    return Realization(
+        total=realization_rate_units(sum(r[1] for r in rows), sum(r[2] for r in rows)),
+        shops={shop: realization_rate_units(done, canceled) for shop, done, canceled in rows},
     )
 
 
@@ -326,6 +323,7 @@ def sale_line(r: Any) -> SaleLine:
         unit_cost=unit,
         shop=str(r.shop_id),
         estimated=bool(r.flags),
+        issued=r.issued_at is not None,
     )
 
 

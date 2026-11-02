@@ -18,6 +18,13 @@ tushum 0 bo'lsa 1). Qolgani — "tannarxsiz qism".
 Sotuvlar ikki ko'rinishda beriladi: qatorlar (``SaleLine``) yoki katak yig'indilari (``CellSales`` —
 ``daily_sku_metrics`` qatori, ``upcore.metrics.sale_totals`` natijasining xom ko'rinishi). Ikkalasi bir xil
 kataklar beradi.
+
+**Naqd va kutilayotgan (ADR-037).** Har katakda Jarayondagi sotuvlar qismi (``Cell.processing``) alohida
+yuritiladi: o'z tushumi, komissiyasi, logistikasi, tannarxi va katak xarajatlarining (F9, F10) tushum ulushidagi
+qismi, o'z soliq summasi (F11) va F15. Kutilayotgan sof foyda (F16) — shu qism sof foydasi; naqd sof foyda — katak
+sof foydasi minus shu qism (yig'indi har doim F12 ga teng). Sotuvsiz kun xarajati (taqsimlanmagan katak) — naqdda.
+Uzum logistikasini hali yozmagan Jarayondagi qatorlar (``logistics_due``) uchun kutilayotgan logistika F40 tarifi ×
+dona bilan taxminan qo'shiladi (``logistics_fee``), "taxminiy" sifatida alohida sanaladi (tamoyil 9).
 """
 
 from __future__ import annotations
@@ -33,18 +40,20 @@ from typing import NamedTuple, cast
 from upcore.expenses import ExpenseCategory, ExpenseRecord
 from upcore.metrics import (
     ManualExpense,
-    PendingSales,
     Period,
     SaleLine,
     SaleTotals,
     StatusGroup,
     counted,
+    expected_logistics,
+    logistics_due,
     own_expense_in_period,
-    pending_sales,
     ratio,
-    realization_rate,
 )
 from upcore.money import Currency, Money, quantize, split, to_decimal, total
+
+type LogisticsFee = Callable[[str, str], Money | None]
+"""F40 standart logistika/dona (do'kon, SKU kaliti) — kutilayotgan logistika taxmini uchun (ADR-037)."""
 
 UZS = Currency.UZS
 ZERO = Money.zero(UZS)
@@ -133,7 +142,7 @@ class Cell:
 
     revenue: Decimal = _D0
     commission: Decimal = _D0
-    logistics: Decimal = _D0
+    logistics: Decimal = _D0  # Uzum yozgani + kutilayotgan logistika taxmini (``logistics_est``)
     cogs: Decimal = _D0
     covered_revenue: Decimal = _D0
     covered_payout: Decimal = _D0
@@ -141,8 +150,6 @@ class Cell:
     covered_units: int = 0
     lines: int = 0
     uncovered_lines: int = 0
-    units_processing: int = 0  # ADR-036: shundan Jarayonda
-    revenue_processing: Decimal = _D0
     # Xarajatlar (F9 turlari, F10 toifalari) va shundan taqsimlangani; ``None`` — yo'q (lug'at kerak bo'lganda).
     uzum: dict[ExpenseCategory, Decimal] | None = None
     own: dict[str, Decimal] | None = None
@@ -150,6 +157,19 @@ class Cell:
     own_alloc: dict[str, Decimal] | None = None
     tax: Decimal = _D0
     deducted: Decimal = _D0
+    # F5 (ADR-037): kutilayotgan logistika taxmini (F40 × dona) va uning asosi; tarif noma'lum qatorlar soni.
+    logistics_est: Decimal = _D0
+    units_est: int = 0
+    lines_est: int = 0
+    lines_est_missing: int = 0
+    # ADR-036/037: shundan Jarayondagi qism (o'z xarajat ulushi, soliq va F15 bilan — ``_finish``); ``None`` — yo'q.
+    processing: Cell | None = None
+
+    def part(self) -> Cell:
+        """Jarayondagi qism katagi (kerak bo'lganda yaratiladi)."""
+        if self.processing is None:
+            self.processing = Cell()
+        return self.processing
 
 
 def _uzs(amount: Decimal) -> Money:
@@ -181,6 +201,18 @@ class CellSales:
     uncovered_lines: int
     units_processing: int = 0  # ADR-036: shundan Jarayonda
     revenue_processing: Decimal = _D0
+    # ADR-037: Jarayondagi qismning qolgan ustunlari va Uzum logistikasini hali yozmagan donalar (taxmin asosi).
+    commission_processing: Decimal = _D0
+    logistics_processing: Decimal = _D0
+    cogs_processing: Decimal = _D0
+    revenue_costed_processing: Decimal = _D0
+    payout_costed_processing: Decimal = _D0
+    units_costed_processing: int = 0
+    lines_processing: int = 0
+    uncovered_lines_processing: int = 0
+    units_logistics_due: int = 0
+    units_logistics_due_costed: int = 0
+    lines_logistics_due: int = 0
 
     @classmethod
     def of(cls, t: SaleTotals) -> CellSales:
@@ -197,6 +229,17 @@ class CellSales:
             uncovered_lines=t.uncovered_lines,
             units_processing=t.units_processing,
             revenue_processing=t.revenue_processing.amount,
+            commission_processing=t.commission_processing.amount,
+            logistics_processing=t.logistics_processing.amount,
+            cogs_processing=t.cogs_processing.amount,
+            revenue_costed_processing=t.revenue_costed_processing.amount,
+            payout_costed_processing=t.payout_costed_processing.amount,
+            units_costed_processing=t.units_costed_processing,
+            lines_processing=t.lines_processing,
+            uncovered_lines_processing=t.uncovered_lines_processing,
+            units_logistics_due=t.units_logistics_due,
+            units_logistics_due_costed=t.units_logistics_due_costed,
+            lines_logistics_due=t.lines_logistics_due,
         )
 
 
@@ -224,11 +267,38 @@ class Statement:
     # ADR-036: sotuvlar Yakunlangan + Jarayonda; shundan Jarayondagi (yakuniy emas) qism — "shundan jarayonda".
     units_processing: int = 0
     revenue_processing: Money = ZERO
+    # ADR-037: Jarayondagi qism hisoboti (kutilayotgan sof foyda — F16); ``None`` — Jarayondagi sotuv yo'q.
+    processing: Statement | None = None
+    # F5 (ADR-037): ``logistics`` ning taxminiy qismi (Uzum hali yozmagan, F40 × dona), uning asosi va tarifi noma'lum
+    # bo'lgani uchun taxmin qo'shilmagan qatorlar soni.
+    logistics_estimated: Money = ZERO
+    logistics_estimated_units: int = 0
+    logistics_estimated_lines: int = 0
+    logistics_missing_lines: int = 0
 
     @property
     def revenue_done(self) -> Money:
         """F3 ning Yakunlangan qismi (ADR-036): tushum − Jarayondagi qism."""
         return self.revenue - self.revenue_processing
+
+    @property
+    def units_done(self) -> int:
+        """Yakunlangan dona (ADR-037, naqd qism)."""
+        return self.units - self.units_processing
+
+    @property
+    def lines_processing(self) -> int:
+        return 0 if self.processing is None else self.processing.lines
+
+    @property
+    def net_profit_processing(self) -> Money:
+        """F16 (ADR-037): kutilayotgan sof foyda — Jarayondagi qism sof foydasi."""
+        return ZERO if self.processing is None else self.processing.net_profit
+
+    @property
+    def net_profit_done(self) -> Money:
+        """ADR-037: naqd sof foyda = F12 − kutilayotgan sof foyda (yig'indi doim F12)."""
+        return self.net_profit - self.net_profit_processing
 
     @property
     def payout(self) -> Money:
@@ -411,15 +481,16 @@ class Cells:
 
 
 def _roll(cells: Iterable[Cell]) -> Cell:
-    """Kataklar yig'indisi (xom): kesim natijasi va kesimlar jami uchun."""
+    """Kataklar yig'indisi (xom): kesim natijasi va kesimlar jami uchun (Jarayondagi qismlar ham yig'iladi)."""
     revenue = commission = logistics = cogs = covered_revenue = covered_payout = _D0
-    tax = deducted = _D0
-    units = lines = uncovered = covered_units = units_processing = 0
-    revenue_processing = _D0
+    tax = deducted = logistics_est = _D0
+    units = lines = uncovered = covered_units = 0
+    units_est = lines_est = lines_est_missing = 0
     uzum: dict[ExpenseCategory, Decimal] = {}
     own: dict[str, Decimal] = {}
     uzum_alloc: dict[ExpenseCategory, Decimal] = {}
     own_alloc: dict[str, Decimal] = {}
+    parts: list[Cell] = []
     for c in cells:
         revenue += c.revenue
         commission += c.commission
@@ -433,8 +504,13 @@ def _roll(cells: Iterable[Cell]) -> Cell:
         lines += c.lines
         uncovered += c.uncovered_lines
         covered_units += c.covered_units
-        units_processing += c.units_processing
-        revenue_processing += c.revenue_processing
+        if c.processing is not None:
+            parts.append(c.processing)
+        if c.lines_est or c.lines_est_missing:
+            logistics_est += c.logistics_est
+            units_est += c.units_est
+            lines_est += c.lines_est
+            lines_est_missing += c.lines_est_missing
         if c.uzum:
             for cat, a in c.uzum.items():
                 uzum[cat] = uzum.get(cat, _D0) + a
@@ -458,18 +534,22 @@ def _roll(cells: Iterable[Cell]) -> Cell:
         covered_units=covered_units,
         lines=lines,
         uncovered_lines=uncovered,
-        units_processing=units_processing,
-        revenue_processing=revenue_processing,
         uzum=uzum,
         own=own,
         uzum_alloc=uzum_alloc,
         own_alloc=own_alloc,
         tax=tax,
         deducted=deducted,
+        logistics_est=logistics_est,
+        units_est=units_est,
+        lines_est=lines_est,
+        lines_est_missing=lines_est_missing,
+        processing=_roll(parts) if parts else None,
     )
 
 
 def _statement(c: Cell) -> Statement:
+    p = c.processing
     return Statement(
         revenue=_uzs(c.revenue),
         commission=_uzs(c.commission),
@@ -487,8 +567,13 @@ def _statement(c: Cell) -> Statement:
         uzum_allocated=_money_map(c.uzum_alloc or {}),
         own_allocated=_money_map(c.own_alloc or {}),
         covered_units=c.covered_units,
-        units_processing=c.units_processing,
-        revenue_processing=_uzs(c.revenue_processing),
+        units_processing=0 if p is None else p.units,
+        revenue_processing=ZERO if p is None else _uzs(p.revenue),
+        processing=None if p is None else _statement(p),
+        logistics_estimated=_uzs(c.logistics_est),
+        logistics_estimated_units=c.units_est,
+        logistics_estimated_lines=c.lines_est,
+        logistics_missing_lines=c.lines_est_missing,
     )
 
 
@@ -526,8 +611,9 @@ def _rules(
     return rule
 
 
-def _finish(a: Cell, rule: TaxRule | None) -> None:
-    """Katak soliq (F11) va F15 bo'yicha ayriladigan xarajati: katak xarajati × qamrov (tushum 0 bo'lsa hammasi)."""
+def _deduct(a: Cell, rule: TaxRule | None) -> None:
+    """Katak (yoki uning qismi) soliq summasi (F11) va F15 bo'yicha ayriladigan xarajati: xarajat × qamrov (tushum 0
+    bo'lsa hammasi)."""
     a.tax = _D0
     if rule is not None:
         a.tax = rule.amount_on(a.revenue, a.revenue - a.commission - a.logistics)
@@ -543,8 +629,45 @@ def _finish(a: Cell, rule: TaxRule | None) -> None:
         a.deducted = _cents(overhead * a.covered_revenue / a.revenue)
 
 
+def _finish(a: Cell, rule: TaxRule | None) -> None:
+    """Katak F11 va F15; Jarayondagi qism (ADR-037) katak xarajatlarining (F9, F10) tushum ulushidagi qismini oladi,
+    soliq va F15 — o'z tushumidan. Naqd qism = katak − Jarayondagi qism (``Statement.net_profit_done``)."""
+    _deduct(a, rule)
+    p = a.processing
+    if p is None:
+        return
+    if a.revenue > 0 and p.revenue > 0:
+        share = p.revenue / a.revenue
+        if a.uzum:
+            p.uzum = {cat: _cents(v * share) for cat, v in a.uzum.items()}
+        if a.own:
+            p.own = {cat: _cents(v * share) for cat, v in a.own.items()}
+    _deduct(p, rule)
+
+
 def _days(period: Period) -> list[date]:
     return [period.start + timedelta(days=i) for i in range(period.days)]
+
+
+def _estimate(a: Cell, fee: Money | None, units: int, units_costed: int, lines: int) -> None:
+    """F5 (ADR-037): Uzum logistikasini hali yozmagan Jarayondagi ``units`` dona uchun kutilayotgan logistika =
+    F40 tarifi × dona — katakka va uning Jarayondagi qismiga; tannarxi ma'lum donalar qismi F8 (``covered_payout``)
+    dan ham ayriladi. Tarif noma'lum (pullik qator yo'q) — taxmin qo'shilmaydi, qatorlar soni sanaladi."""
+    if lines == 0:
+        return
+    p = a.part()
+    if fee is None:
+        a.lines_est_missing += lines
+        p.lines_est_missing += lines
+        return
+    est = expected_logistics(fee, units).amount
+    est_costed = expected_logistics(fee, units_costed).amount
+    for c in (a, p):
+        c.logistics += est
+        c.covered_payout -= est_costed
+        c.logistics_est += est
+        c.units_est += units
+        c.lines_est += lines
 
 
 def build_cells(
@@ -554,14 +677,19 @@ def build_cells(
     own_expenses: Iterable[OwnExpense] = (),
     tax: TaxRule | Callable[[date], TaxRule | None] | None = None,
     totals: Iterable[tuple[CellKey, CellSales]] = (),
+    logistics_fee: LogisticsFee | None = None,
 ) -> Cells:
     """F12–F15 kataklari. Davrdan tashqari sotuv va xarajatlar e'tiborga olinmaydi.
 
     ``totals`` — tayyor katak yig'indilari (``CellSales``, masalan ``daily_sku_metrics``); ``lines`` bilan bir
     xil natija beradi (hisobga olinadigan qatori yo'q yig'indi katak yaratmaydi). Sotuvlar — Yakunlangan + Jarayonda
-    (ADR-036)."""
+    (ADR-036), Jarayondagi qismi katakda alohida (ADR-037). ``logistics_fee`` — F40 tarifi (do'kon, SKU → dona
+    logistikasi): Uzum hali yozmagan Jarayondagi logistika uchun taxmin; berilmasa taxmin yo'q (tarif noma'lum)."""
     acc: dict[CellKey, Cell] = defaultdict(Cell)
     first, last = period.start, period.end
+
+    def fee_of(key: CellKey) -> Money | None:
+        return None if logistics_fee is None else logistics_fee(key.shop, key.sku or "")
 
     for key, t in totals:
         if not first <= key[0] <= last or t.lines == 0:
@@ -577,30 +705,50 @@ def build_cells(
         a.covered_units += t.units_costed
         a.lines += t.lines
         a.uncovered_lines += t.uncovered_lines
-        a.units_processing += t.units_processing
-        a.revenue_processing += t.revenue_processing
+        if t.lines_processing:
+            p = a.part()
+            p.revenue += t.revenue_processing
+            p.commission += t.commission_processing
+            p.logistics += t.logistics_processing
+            p.cogs += t.cogs_processing
+            p.covered_revenue += t.revenue_costed_processing
+            p.covered_payout += t.payout_costed_processing
+            p.units += t.units_processing
+            p.covered_units += t.units_costed_processing
+            p.lines += t.lines_processing
+            p.uncovered_lines += t.uncovered_lines_processing
+            _estimate(
+                a,
+                fee_of(key) if t.lines_logistics_due else None,
+                t.units_logistics_due,
+                t.units_logistics_due_costed,
+                t.lines_logistics_due,
+            )
 
     for line in counted(x for x in lines if x.order_date in period):
-        a = acc[CellKey(line.order_date, line.shop, line.sku)]
+        key = CellKey(line.order_date, line.shop, line.sku)
+        a = acc[key]
         rev = _cents(line.revenue)
         fee = _cents(to_decimal(line.commission))
         logistic = _cents(to_decimal(line.logistics))
-        a.revenue += rev
-        a.commission += fee
-        a.logistics += logistic
-        a.units += line.amount
-        a.lines += 1
-        if line.group is StatusGroup.PROCESSING:
-            a.units_processing += line.amount
-            a.revenue_processing += rev
         cost = line.cogs
-        if cost is None:
-            a.uncovered_lines += 1
-        else:
-            a.cogs += _cents(cost)
-            a.covered_units += line.amount
-            a.covered_revenue += rev
-            a.covered_payout += rev - fee - logistic
+        into = [a, a.part()] if line.group is StatusGroup.PROCESSING else [a]
+        for c in into:
+            c.revenue += rev
+            c.commission += fee
+            c.logistics += logistic
+            c.units += line.amount
+            c.lines += 1
+            if cost is None:
+                c.uncovered_lines += 1
+            else:
+                c.cogs += _cents(cost)
+                c.covered_units += line.amount
+                c.covered_revenue += rev
+                c.covered_payout += rev - fee - logistic
+        if logistics_due(line):
+            costed = 0 if cost is None else line.amount
+            _estimate(a, fee_of(key), line.amount, costed, 1)
 
     # Kun × do'kon bo'yicha SKU tushumlari — taqsimot og'irliklari (kataklar yaratilishidan oldin olinadi).
     sales_by_day: dict[date, list[CellKey]] = defaultdict(list)
@@ -707,20 +855,13 @@ def unit_economics(s: Statement) -> UnitEconomics:
     )
 
 
-# --- Kutilayotgan foyda va solishtirish -----------------------------------------------------
-
-
-def pending_profit(
-    period: Period, lines: Iterable[SaleLine], window: Iterable[SaleLine], min_units: int = 50
-) -> PendingSales:
-    """F16 bloki: davrdagi Jarayondagi qatorlar va R (fakt — ``window``: do'konning oxirgi 90 kuni)."""
-    pending = [x for x in lines if x.order_date in period and x.group is StatusGroup.PROCESSING]
-    return pending_sales(pending, realization_rate(window, min_units))
+# --- Solishtirish (naqd va kutilayotgan qismlar bilan) ------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
 class CompareRow:
-    """M5 ustunlari: joriy, tushumga nisbatan %, oldingi davr, farq va o'zgarish ulushi.
+    """M5 ustunlari: joriy (jami), shundan naqd va kutilayotgan (ADR-037), tushumga nisbatan %, oldingi davr, farq va
+    o'zgarish ulushi.
 
     ``change`` = farq / |oldingi davr| (ishorali qiymat bo'yicha: yuqori — yaxshi); oldingi davr nol bo'lsa yoki oldingi
     davrda sotuv bo'lmasa (tushum 0 — masalan, do'kon hali ulanmagan) ``None``: aks holda foiz ma'nosiz (47 228%).
@@ -732,16 +873,22 @@ class CompareRow:
     previous: Money
     diff: Money
     change: Decimal | None
+    processing: Money = ZERO  # ADR-037: Jarayondagi qism (kutilayotgan)
+    done: Money = ZERO  # naqd qism = joriy − kutilayotgan
 
 
 def compare(current: Statement, previous: Statement) -> list[CompareRow]:
-    """Ikki davr hisobot qatorlari: joriy davrda yo'q qator oldingisida bo'lsa ham ko'rsatiladi."""
+    """Ikki davr hisobot qatorlari: joriy davrda yo'q qator oldingisida bo'lsa ham ko'rsatiladi. Har qatorda joriy
+    davrning Jarayondagi (kutilayotgan) va naqd qismi — bir xil ``rows()`` kodlari bo'yicha (ADR-037)."""
     cur, prev = dict(current.rows()), dict(previous.rows())
+    part = dict(current.processing.rows()) if current.processing is not None else {}
     comparable = not previous.revenue.is_zero()
-    codes = [c for c, _ in current.rows()] + [c for c, _ in previous.rows() if c not in cur]
+    codes = [c for c, _ in current.rows()]
+    codes += [c for c in prev if c not in cur] + [c for c in part if c not in cur and c not in prev]
     rows = []
     for code in codes:
         now, before = cur.get(code, ZERO), prev.get(code, ZERO)
+        pending = part.get(code, ZERO)
         diff = now - before
         rows.append(
             CompareRow(
@@ -751,6 +898,8 @@ def compare(current: Statement, previous: Statement) -> list[CompareRow]:
                 before,
                 diff,
                 ratio(diff.amount, abs(before.amount)) if comparable else None,
+                processing=pending,
+                done=now - pending,
             )
         )
     return rows

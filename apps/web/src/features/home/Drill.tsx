@@ -1,4 +1,4 @@
-// Drill-down (M4: "har qator bosilsa — manba yozuvlar"): o'ngdan Drawer. Sotuv qatorlari (tushum, komissiya, logistika,
+// Drill-down (M5: "har qator bosilsa — manba yozuvlar"): o'ngdan Drawer. Sotuv qatorlari (tushum, komissiya, logistika,
 // Uzum to'lovi, tannarx), Uzum toifasi xarajatlari yoki o'z xarajatlari; boshqa qatorlar boshqalardan hisoblanadi —
 // faqat formula. Yig'indi (jami) — API qatoridan, yozuvlardan UI qayta hisoblamaydi (tamoyil 4).
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
@@ -68,9 +68,11 @@ function SalesBody({ orgId, params, field }: { orgId: string; params: ReportPara
       numeric: true,
       render: (r) => {
         const value = r[field];
+        // Taxminiy: tannarxda F22 belgisi; logistika va Uzum to'lovida — Uzum hali yozmagan logistika (ADR-037).
+        const estimated = field === "cogs" ? r.cost_flags.length > 0 : (field === "logistics" || field === "payout") && r.logistics_estimated !== null;
         return (
           <>
-            {r.cost_flags.length > 0 && field === "cogs" && <Badge tone="warning">{t("home.drill.estimated")}</Badge>} {value === null ? "—" : f.money(value, { unit: false })}
+            {estimated && <Badge tone="warning">{t("home.drill.estimated")}</Badge>} {value === null ? "—" : f.money(value, { unit: false })}
           </>
         );
       },

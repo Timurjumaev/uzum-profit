@@ -1,4 +1,5 @@
-// Foyda va zarar (M5, B4.2): hisob varag'i ustunlari, drill-down, kesimlar URL'da, gorizontal skrollsiz (360 px).
+// Foyda va zarar (M5, ADR-037): hisob varag'i ustunlari (naqd, kutilayotgan, jami), drill-down, kesimlar URL'da,
+// gorizontal skrollsiz (360 px).
 import { expect, test } from "@playwright/test";
 
 import { mockApi } from "./support/api";
@@ -13,10 +14,20 @@ test("hisob varag'i: yalpi foyda, ustunlar; drill-down", async ({ page }, info) 
   await expect(page.getByText(/Standart tarif/)).toHaveCount(0); // o'ylab topilgan qator yo'q
   // ADR-035: Uzum bonusi haqida savol va banner yo'q — API nima bersa, shu.
   await expect(page.getByText("Uzum logistikani olmagan koʻrinadi")).toHaveCount(0);
-  // Tor ekranda faqat joriy summa — qo'shimcha ustunlar yashirin.
+  // ADR-037: kengda naqd, kutilayotgan, jami yonma-yon; tor ekranda bitta ustun — tanlangani (standart — jami).
   const previous = ledger.getByRole("columnheader", { name: "Oldingi davr" });
-  if (isMobile(info.project.name)) await expect(previous).toBeHidden();
-  else await expect(previous).toBeVisible();
+  const done = ledger.getByRole("columnheader", { name: "Naqd" });
+  if (isMobile(info.project.name)) {
+    await expect(previous).toBeHidden();
+    await expect(done).toBeHidden();
+    await page.getByRole("radio", { name: "Naqd" }).check();
+    await expect(done).toBeVisible();
+    await expect(ledger.getByRole("columnheader", { name: "Jami" })).toBeHidden();
+  } else {
+    await expect(previous).toBeVisible();
+    await expect(done).toBeVisible();
+    await expect(ledger.getByRole("columnheader", { name: "Kutilayotgan" })).toBeVisible();
+  }
   await expect(page.getByText(/tannarxsiz — foydaga kirmadi/)).toBeVisible();
   await ledger.getByRole("button", { name: "Tushum", exact: true }).click();
   const drawer = page.getByRole("dialog", { name: "Tushum" });

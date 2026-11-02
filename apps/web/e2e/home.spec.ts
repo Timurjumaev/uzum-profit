@@ -1,42 +1,34 @@
-// Bosh sahifa (M4, B4.1): hisob varag'i, drill-down, mobilda yig'ilgan ko'rinish, gorizontal skrollsiz (360 px).
+// Bosh sahifa (M4, ADR-037): uch raqam (naqd + kutilayotgan = jami), formula, Foyda sahifasiga o'tish, mobil, gorizontal
+// skrollsiz (360 px).
 import { expect, test } from "@playwright/test";
 
 import { mockApi } from "./support/api";
 import { isMobile, open } from "./support/page";
 
-test("hisob varag'i: sof foyda, qatorlar, o'zgarish; formula", async ({ page }, info) => {
+test("uch raqam: naqd + kutilayotgan = jami sof foyda; formula; 'Qanday hisoblandi' Foyda sahifasiga", async ({ page }) => {
   await mockApi(page);
   await open(page, "/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^Sof foyda, 1–26-oktabr/);
+  await expect(page.getByTestId("net-done")).toHaveText(/31\s508\s700\ssoʻm/);
+  await expect(page.getByTestId("net-expected")).toHaveText(/16\s884\s300\ssoʻm/);
   await expect(page.getByTestId("net-profit")).toHaveText(/48\s393\s000\ssoʻm/);
-  const ledger = page.getByRole("table", { name: "Hisob varagʻi: tushumdan sof foydagacha" });
-  await expect(ledger.getByRole("row", { name: /^Sof foyda/ })).toBeVisible();
-  if (isMobile(info.project.name)) await page.getByRole("button", { name: "Barcha qatorlar" }).click(); // Soliq mobilda yig'ilgan
-  await page.getByRole("button", { name: "Qanday hisoblanadi: Soliq" }).click();
-  await expect(page.getByText("Soliq profili boʻyicha")).toBeVisible();
-});
-
-test("qatorni bosish — manba yozuvlar drawer'da; Esc yopadi", async ({ page }, info) => {
-  await mockApi(page);
-  await open(page, "/");
-  if (isMobile(info.project.name)) await page.getByRole("button", { name: "Barcha qatorlar" }).click();
-  await page.getByRole("table", { name: /Hisob varagʻi/ }).getByRole("button", { name: "Uzum komissiyasi", exact: true }).click();
-  const drawer = page.getByRole("dialog", { name: "Uzum komissiyasi" });
-  await expect(drawer).toBeVisible();
-  await expect(drawer.getByText("Sumka qora M")).toBeVisible();
-  await expect(drawer.getByRole("table")).toBeVisible();
+  await page.getByRole("button", { name: "Qanday hisoblanadi: Kutilayotgan sof foyda" }).click();
+  await expect(page.getByText(/xuddi naqd kabi/)).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(drawer).toBeHidden();
+  await page.getByRole("link", { name: "Qanday hisoblandi — «Foyda» sahifasida" }).click();
+  await expect(page).toHaveURL(/\/pnl/);
+  await expect(page.getByRole("table", { name: "Foyda va zarar: tushumdan sof foydagacha" })).toBeVisible();
 });
 
-test("mobil: ledger yig'ilgan (3 qator) va 'Barcha qatorlar' ochadi; SKU tablari", async ({ page }, info) => {
+test("mobil: uch raqam ustma-ust, grafikda 'Tushum'ga o'tish; SKU tablari", async ({ page }, info) => {
   test.skip(!isMobile(info.project.name), "faqat mobil");
   await mockApi(page);
   await open(page, "/");
-  const ledger = page.getByRole("table", { name: /Hisob varagʻi/ });
-  await expect(ledger.getByRole("row")).toHaveCount(3); // yashirin qatorlar `display: none` — hisobga olinmaydi
-  await page.getByRole("button", { name: "Barcha qatorlar" }).click();
-  await expect(ledger.getByRole("row")).toHaveCount(10);
+  const done = await page.getByTestId("net-done").boundingBox();
+  const total = await page.getByTestId("net-profit").boundingBox();
+  expect(total!.y).toBeGreaterThan(done!.y); // ustma-ust (bir qatorda emas)
+  await page.getByRole("radio", { name: "Tushum" }).check();
+  await expect(page.getByRole("img", { name: /Kunlik tushum: yakunlangan va jarayonda/ })).toBeVisible();
   await page.getByRole("tab", { name: "Zarar qilayotgan 5" }).click();
   await expect(page.getByRole("table", { name: "Zarar qilayotgan 5" })).toBeVisible();
   await expect(page.getByRole("table", { name: "Eng foydali 5" })).toBeHidden();

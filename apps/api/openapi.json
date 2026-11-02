@@ -7114,6 +7114,9 @@
           "statement": {
             "$ref": "#/components/schemas/StatementOut"
           },
+          "expected": {
+            "$ref": "#/components/schemas/ExpectedOut"
+          },
           "rows": {
             "items": {
               "$ref": "#/components/schemas/RowOut"
@@ -7163,6 +7166,7 @@
         "required": [
           "meta",
           "statement",
+          "expected",
           "rows",
           "periods",
           "forecast",
@@ -7200,6 +7204,14 @@
           "revenue_processing": {
             "type": "string",
             "title": "Revenue Processing"
+          },
+          "net_profit_done": {
+            "type": "string",
+            "title": "Net Profit Done"
+          },
+          "net_profit_processing": {
+            "type": "string",
+            "title": "Net Profit Processing"
           }
         },
         "type": "object",
@@ -7209,9 +7221,178 @@
           "net_profit",
           "units",
           "revenue_done",
-          "revenue_processing"
+          "revenue_processing",
+          "net_profit_done",
+          "net_profit_processing"
         ],
         "title": "DayOut"
+      },
+      "ExpectedOut": {
+        "properties": {
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          },
+          "lines": {
+            "type": "integer",
+            "title": "Lines"
+          },
+          "revenue": {
+            "type": "string",
+            "title": "Revenue"
+          },
+          "commission": {
+            "type": "string",
+            "title": "Commission"
+          },
+          "logistics": {
+            "type": "string",
+            "title": "Logistics"
+          },
+          "cogs": {
+            "type": "string",
+            "title": "Cogs"
+          },
+          "expenses": {
+            "type": "string",
+            "title": "Expenses"
+          },
+          "net_profit": {
+            "type": "string",
+            "title": "Net Profit"
+          },
+          "uncovered_lines": {
+            "type": "integer",
+            "title": "Uncovered Lines"
+          },
+          "logistics_estimated": {
+            "type": "string",
+            "title": "Logistics Estimated"
+          },
+          "logistics_estimated_units": {
+            "type": "integer",
+            "title": "Logistics Estimated Units"
+          },
+          "logistics_missing_lines": {
+            "type": "integer",
+            "title": "Logistics Missing Lines"
+          },
+          "rate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "units",
+          "lines",
+          "revenue",
+          "commission",
+          "logistics",
+          "cogs",
+          "expenses",
+          "net_profit",
+          "uncovered_lines",
+          "logistics_estimated",
+          "logistics_estimated_units",
+          "logistics_missing_lines",
+          "rate"
+        ],
+        "title": "ExpectedOut",
+        "description": "F16 (ADR-037): kutilayotgan sof foyda — Jarayondagi sotuvlar qismi (mijoz hali olmagan yoki qaytarish muddati\ntugamagan): tushumdan komissiya, logistika (Uzum hali yozmagani — F40 bo'yicha taxminiy), tannarx va katak\nxarajatlarining tushum ulushidagi qismi ayrilgan. ``rate`` — fakt (oxirgi 90 kunda yakuniy holatga yetganlarning\nYakunlangan ulushi), summaga ko'paytirilmaydi; ma'lumot kam bo'lsa ``None``."
+      },
+      "ExpectedShopOut": {
+        "properties": {
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          },
+          "lines": {
+            "type": "integer",
+            "title": "Lines"
+          },
+          "revenue": {
+            "type": "string",
+            "title": "Revenue"
+          },
+          "commission": {
+            "type": "string",
+            "title": "Commission"
+          },
+          "logistics": {
+            "type": "string",
+            "title": "Logistics"
+          },
+          "cogs": {
+            "type": "string",
+            "title": "Cogs"
+          },
+          "expenses": {
+            "type": "string",
+            "title": "Expenses"
+          },
+          "net_profit": {
+            "type": "string",
+            "title": "Net Profit"
+          },
+          "uncovered_lines": {
+            "type": "integer",
+            "title": "Uncovered Lines"
+          },
+          "logistics_estimated": {
+            "type": "string",
+            "title": "Logistics Estimated"
+          },
+          "logistics_estimated_units": {
+            "type": "integer",
+            "title": "Logistics Estimated Units"
+          },
+          "logistics_missing_lines": {
+            "type": "integer",
+            "title": "Logistics Missing Lines"
+          },
+          "rate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate"
+          },
+          "shop_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Shop Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "units",
+          "lines",
+          "revenue",
+          "commission",
+          "logistics",
+          "cogs",
+          "expenses",
+          "net_profit",
+          "uncovered_lines",
+          "logistics_estimated",
+          "logistics_estimated_units",
+          "logistics_missing_lines",
+          "rate",
+          "shop_id"
+        ],
+        "title": "ExpectedShopOut"
       },
       "ExpenseOut": {
         "properties": {
@@ -8040,9 +8221,6 @@
             ],
             "title": "Drr"
           },
-          "pending": {
-            "$ref": "#/components/schemas/PendingOut"
-          },
           "frozen_money": {
             "type": "string",
             "title": "Frozen Money"
@@ -8071,7 +8249,6 @@
           "cancel_share",
           "return_share",
           "drr",
-          "pending",
           "frozen_money",
           "in_transit_value",
           "average_days_to_sell"
@@ -10260,93 +10437,6 @@
         ],
         "title": "PayoutTermsOut"
       },
-      "PendingOut": {
-        "properties": {
-          "units": {
-            "type": "integer",
-            "title": "Units"
-          },
-          "revenue": {
-            "type": "string",
-            "title": "Revenue"
-          },
-          "profit": {
-            "type": "string",
-            "title": "Profit"
-          },
-          "uncovered_lines": {
-            "type": "integer",
-            "title": "Uncovered Lines"
-          },
-          "rate": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rate"
-          }
-        },
-        "type": "object",
-        "required": [
-          "units",
-          "revenue",
-          "profit",
-          "uncovered_lines",
-          "rate"
-        ],
-        "title": "PendingOut",
-        "description": "F16 (ADR-036): Jarayondagi sotuvlar — hisobga kirgan, lekin yakuniy emas. ``rate`` — oxirgi 90 kunda yakuniy\nholatga yetganlarning Yakunlangan ulushi (fakt, summaga ko'paytirilmaydi)."
-      },
-      "PendingShopOut": {
-        "properties": {
-          "units": {
-            "type": "integer",
-            "title": "Units"
-          },
-          "revenue": {
-            "type": "string",
-            "title": "Revenue"
-          },
-          "profit": {
-            "type": "string",
-            "title": "Profit"
-          },
-          "uncovered_lines": {
-            "type": "integer",
-            "title": "Uncovered Lines"
-          },
-          "rate": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rate"
-          },
-          "shop_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Shop Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "units",
-          "revenue",
-          "profit",
-          "uncovered_lines",
-          "rate",
-          "shop_id"
-        ],
-        "title": "PendingShopOut"
-      },
       "PeriodOut": {
         "properties": {
           "start": {
@@ -10389,6 +10479,14 @@
             "type": "string",
             "title": "Net Profit"
           },
+          "net_profit_done": {
+            "type": "string",
+            "title": "Net Profit Done"
+          },
+          "net_profit_processing": {
+            "type": "string",
+            "title": "Net Profit Processing"
+          },
           "units": {
             "type": "integer",
             "title": "Units"
@@ -10408,6 +10506,8 @@
           "period",
           "revenue",
           "net_profit",
+          "net_profit_done",
+          "net_profit_processing",
           "units",
           "units_processing",
           "revenue_processing"
@@ -10458,15 +10558,15 @@
             "type": "array",
             "title": "Columns"
           },
-          "pending": {
-            "$ref": "#/components/schemas/PendingOut"
+          "expected": {
+            "$ref": "#/components/schemas/ExpectedOut"
           },
-          "pending_shops": {
+          "expected_shops": {
             "items": {
-              "$ref": "#/components/schemas/PendingShopOut"
+              "$ref": "#/components/schemas/ExpectedShopOut"
             },
             "type": "array",
-            "title": "Pending Shops"
+            "title": "Expected Shops"
           },
           "recalculated": {
             "type": "integer",
@@ -10480,8 +10580,8 @@
           "previous",
           "rows",
           "columns",
-          "pending",
-          "pending_shops",
+          "expected",
+          "expected_shops",
           "recalculated"
         ],
         "title": "PnlOut"
@@ -11173,6 +11273,14 @@
             "type": "string",
             "title": "Amount"
           },
+          "done": {
+            "type": "string",
+            "title": "Done"
+          },
+          "processing": {
+            "type": "string",
+            "title": "Processing"
+          },
           "share_of_revenue": {
             "anyOf": [
               {
@@ -11208,13 +11316,15 @@
         "required": [
           "code",
           "amount",
+          "done",
+          "processing",
           "share_of_revenue",
           "previous",
           "diff",
           "change"
         ],
         "title": "RowOut",
-        "description": "M5 hisob varag'i qatori: ``code`` (``revenue``, ``uzum:fine``, ``own:ijara``, ``net_profit`` ...), joriy summa,\ntushumga nisbatan, oldingi davr, farq va o'zgarish ulushi (``upcore.pnl.compare``)."
+        "description": "M5 hisob varag'i qatori: ``code`` (``revenue``, ``uzum:fine``, ``own:ijara``, ``net_profit`` ...), joriy summa\n(jami), shundan naqd va kutilayotgan (ADR-037), tushumga nisbatan, oldingi davr, farq va o'zgarish ulushi\n(``upcore.pnl.compare``)."
       },
       "SaleOut": {
         "properties": {
@@ -11311,6 +11421,17 @@
             "type": "string",
             "title": "Logistics"
           },
+          "logistics_estimated": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logistics Estimated"
+          },
           "payout": {
             "type": "string",
             "title": "Payout"
@@ -11387,6 +11508,7 @@
           "revenue",
           "commission",
           "logistics",
+          "logistics_estimated",
           "payout",
           "cogs",
           "gross_profit",
@@ -12603,6 +12725,42 @@
             "type": "string",
             "title": "Revenue Processing"
           },
+          "net_profit_done": {
+            "type": "string",
+            "title": "Net Profit Done"
+          },
+          "net_profit_processing": {
+            "type": "string",
+            "title": "Net Profit Processing"
+          },
+          "revenue_done": {
+            "type": "string",
+            "title": "Revenue Done"
+          },
+          "units_done": {
+            "type": "integer",
+            "title": "Units Done"
+          },
+          "lines_processing": {
+            "type": "integer",
+            "title": "Lines Processing"
+          },
+          "logistics_estimated": {
+            "type": "string",
+            "title": "Logistics Estimated"
+          },
+          "logistics_estimated_units": {
+            "type": "integer",
+            "title": "Logistics Estimated Units"
+          },
+          "logistics_estimated_lines": {
+            "type": "integer",
+            "title": "Logistics Estimated Lines"
+          },
+          "logistics_missing_lines": {
+            "type": "integer",
+            "title": "Logistics Missing Lines"
+          },
           "uncovered": {
             "$ref": "#/components/schemas/UncoveredOut"
           },
@@ -12668,6 +12826,15 @@
           "lines",
           "units_processing",
           "revenue_processing",
+          "net_profit_done",
+          "net_profit_processing",
+          "revenue_done",
+          "units_done",
+          "lines_processing",
+          "logistics_estimated",
+          "logistics_estimated_units",
+          "logistics_estimated_lines",
+          "logistics_missing_lines",
           "uncovered",
           "direct_total",
           "allocated_total",

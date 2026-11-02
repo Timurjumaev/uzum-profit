@@ -4,8 +4,13 @@ import type { Pnl, PnlRow, Statement } from "../../lib/api/types";
 import type { WaterfallStep } from "../../components/charts/options";
 import { homeRows, negate, type HomeRow } from "../home/model";
 
-/** Hisob varag'i qatori: bosh sahifa qatori + M5 ustunlari (tushumga nisbatan, oldingi davr, farq). */
-export type PnlLine = HomeRow & { share: string | null; previous: string; diff: string; estimated?: boolean };
+/** Hisob varag'i qatori: qator belgilari + M5 ustunlari — naqd va kutilayotgan qism (ADR-037; jami — `amount`), tushumga
+ * nisbatan, oldingi davr, farq. `estimated` — summada taxminiy qism bor (kutilayotgan logistika, F5). */
+export type PnlLine = HomeRow & { done: string; processing: string; share: string | null; previous: string; diff: string; estimated?: boolean };
+
+/** Hisob varag'i ustuni (ADR-037): naqd, kutilayotgan yoki jami. */
+export type Part = "done" | "processing" | "total";
+export const PARTS: readonly Part[] = ["done", "processing", "total"];
 
 const neg = (v: string | null) => (v === null ? null : negate(v));
 
@@ -16,10 +21,19 @@ export function pnlLines(rows: PnlRow[], label: (code: string) => string, grossL
   const byCode = new Map(rows.map((r) => [r.code, r]));
   const lines: PnlLine[] = homeRows(rows, label).map((row) => {
     const api = byCode.get(row.key);
-    if (!api) return { ...row, share: null, previous: "0", diff: "0" }; // nol qator (Uzum / o'z xarajati yo'q)
-    // Tannarxsiz to'lov ayiriluvchi qator sifatida ko'rsatiladi (bosh sahifadagi kabi) — ustunlar ham teskari ishorada.
-    if (row.key === "uncovered_payout") return { ...row, share: neg(api.share_of_revenue), previous: negate(api.previous), diff: negate(api.diff) };
-    return { ...row, share: api.share_of_revenue, previous: api.previous, diff: api.diff };
+    if (!api) return { ...row, done: "0", processing: "0", share: null, previous: "0", diff: "0" }; // nol qator (Uzum / o'z xarajati yo'q)
+    // Tannarxsiz to'lov ayiriluvchi qator sifatida ko'rsatiladi — ustunlar ham teskari ishorada.
+    if (row.key === "uncovered_payout") {
+      return {
+        ...row,
+        done: negate(api.done),
+        processing: negate(api.processing),
+        share: neg(api.share_of_revenue),
+        previous: negate(api.previous),
+        diff: negate(api.diff),
+      };
+    }
+    return { ...row, done: api.done, processing: api.processing, share: api.share_of_revenue, previous: api.previous, diff: api.diff };
   });
   const gross = byCode.get("gross_profit");
   const uncovered = lines.findIndex((l) => l.key === "uncovered_payout");
@@ -39,6 +53,8 @@ export function pnlLines(rows: PnlRow[], label: (code: string) => string, grossL
           direction: "income",
           keep: true,
           change: gross.change,
+          done: gross.done,
+          processing: gross.processing,
           share: gross.share_of_revenue,
           previous: gross.previous,
           diff: gross.diff,
@@ -115,6 +131,9 @@ export function breakdownLines(t: (key: string) => string, split: boolean): Brea
     { key: "tax", label: t("terms.tax"), op: "−", kind: "row", value: minus((s) => s.tax) },
     { key: "uncovered_expenses", label: t("pnl.uncoveredExpenses"), op: "+", kind: "row", value: (s) => s.uncovered.expenses },
     { key: "net_profit", label: t("terms.netProfit"), op: "=", kind: "total", value: (s) => s.net_profit },
+    // ADR-037: sof foydaning naqd va kutilayotgan qismlari (har ustunda API'dan).
+    { key: "net_done", label: t("pnl.views.done"), op: "", kind: "part", value: (s) => s.net_profit_done },
+    { key: "net_processing", label: t("pnl.views.processing"), op: "", kind: "part", value: (s) => s.net_profit_processing },
     { key: "margin", label: t("terms.margin"), op: "", kind: "row", value: (s) => s.margin, ratio: true },
   );
   return lines;

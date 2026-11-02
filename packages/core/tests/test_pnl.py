@@ -18,7 +18,6 @@ from upcore.pnl import (
     build_cells,
     compare,
     expense_items,
-    pending_profit,
 )
 
 D = Decimal
@@ -42,6 +41,8 @@ def sale(
     qty: int = 1,
     cost: int | None = 40_000,
     status: str = "TO_WITHDRAW",
+    logistics: int | None = None,
+    issued: bool = False,
 ) -> SaleLine:
     return SaleLine(
         sku,
@@ -50,9 +51,10 @@ def sale(
         D(price),
         qty,
         D(price * qty // 5),
-        D(5_000 * qty),
+        D(5_000 * qty if logistics is None else logistics),
         unit_cost=None if cost is None else D(cost),
         shop=shop,
+        issued=issued,
     )
 
 
@@ -214,13 +216,94 @@ def test_expense_items_adapter() -> None:
     assert expense_items(records, "S1")[0].sku is None
 
 
-def test_pending_profit() -> None:
-    window = [sale(1, qty=90), sale(2, qty=10, status="CANCELED")]
-    lines = [sale(3, status="PROCESSING"), sale(3), sale(3, status="PROCESSING", cost=None)]
-    e = pending_profit(OCT, lines, window)
-    assert e.rate == D("0.9") and e.profit == uzs(100_000 - 20_000 - 5_000 - 40_000)
-    assert e.units == 2 and e.uncovered_lines == 1
-    assert pending_profit(OCT, lines, window[:1], min_units=100).rate is None
+def fee_table(shop: str, sku: str) -> Money | None:
+    """F40 tarifi (soxta): A — 4 000, B — tarif yo'q, qolgani — do'kon odatiy 6 000."""
+    return {"A": uzs(4_000)}.get(sku) or (None if sku == "B" else uzs(6_000))
+
+
+def test_processing_part_and_cash_split() -> None:
+    """ADR-037: kutilayotgan qism — o'z sotuvlari, katak xarajatlarining tushum ulushi, o'z soliq summasi; naqd = jami −
+    kutilayotgan; sotuvsiz kun xarajati — naqdda."""
+    lines = [
+        sale(1, "A", price=300_000),  # Yakunlangan
+        sale(
+            1, "A", price=100_000, status="PROCESSING", issued=True
+        ),  # Jarayonda, logistika yozilgan
+        sale(2, "A", price=200_000, status="PROCESSING", cost=None, issued=True),  # tannarxsiz
+    ]
+    exp = [
+        ExpenseItem(
+            d(1), "S1", C.ADVERTISING, uzs(40_000)
+        ),  # A katagida: 3/4 naqd, 1/4 kutilayotgan
+        ExpenseItem(d(5), "S1", C.STORAGE, uzs(9_000)),  # sotuvsiz kun — naqd
+    ]
+    own = [OwnExpense(ManualExpense(uzs(8_000), d(1), d(1)), "qadoq")]
+    cells = build_cells(OCT, lines, exp, own, TaxRule(D(1)))
+    cell = cells.items[CellKey(d(1), "S1", "A")]
+    part = cell.processing
+    assert part is not None and part.revenue == uzs(100_000) and part.units == 1
+    assert part.uzum_expenses == {C.ADVERTISING: uzs(10_000)} and part.own_expenses == {
+        "qadoq": uzs(2_000)
+    }
+    assert part.tax == uzs(1_000)  # o'z tushumidan (1%)
+    # 100 000 − 20 000 − 5 000 − 40 000 − (10 000 + 2 000 + 1 000)
+    assert part.net_profit == cell.net_profit_processing == uzs(22_000)
+    assert cell.net_profit_done == cell.net_profit - uzs(22_000)
+    assert cells.items[CellKey(d(5), "S1", None)].processing is None
+    whole = cells.statement()
+    assert whole.net_profit_done + whole.net_profit_processing == whole.net_profit
+    assert whole.processing is not None and whole.processing.uncovered_lines == 1
+    assert (whole.units_done, whole.lines_processing) == (1, 2)
+    assert whole.revenue_done == uzs(300_000) and whole.revenue_processing == uzs(300_000)
+    # Qatorlar: jami = naqd + kutilayotgan; sotuvsiz kun saqlash xarajati to'liq naqdda.
+    rows = {r.code: r for r in compare(whole, build_cells(OCT, []).statement())}
+    for r in rows.values():
+        assert r.done + r.processing == r.current
+    assert rows["uzum:storage"].processing == uzs(0) and rows["uzum:storage"].done == uzs(-9_000)
+    assert rows["net_profit"].processing == whole.net_profit_processing
+    assert rows["revenue"].processing == uzs(300_000)
+    # Jarayondagi sotuvsiz hisobot — qism yo'q, naqd = jami.
+    done_only = build_cells(OCT, [sale(1)]).statement()
+    assert done_only.processing is None and done_only.net_profit_processing == uzs(0)
+    assert done_only.net_profit_done == done_only.net_profit and done_only.lines_processing == 0
+    assert all(r.processing == uzs(0) for r in compare(done_only, done_only))
+
+
+def test_expected_logistics_estimate() -> None:
+    """F5 (ADR-037): Uzum logistikasini hali yozmagan Jarayondagi qator — F40 × dona (taxminiy); topshirilgan va 0 —
+    taxminsiz (ADR-035); tarif noma'lum — taxmin yo'q, qatorlar sanaladi."""
+    lines = [
+        sale(3, "A", qty=2, status="PROCESSING", logistics=0),  # 2 × 4 000, tannarxi ma'lum
+        sale(
+            3, "C", status="PROCESSING", logistics=0, cost=None
+        ),  # do'kon odatiy 6 000, tannarxsiz
+        sale(3, "B", status="PROCESSING", logistics=0),  # tarif yo'q
+        sale(
+            3, "A", status="PROCESSING", logistics=0, issued=True
+        ),  # topshirilgan, 0 — Uzum bergani
+        sale(3, "A", logistics=0),  # Yakunlangan, 0 — Uzum bergani
+    ]
+    plain = build_cells(OCT, lines).statement()
+    cells = build_cells(OCT, lines, logistics_fee=fee_table)
+    s = cells.statement()
+    assert s.logistics_estimated == uzs(8_000 + 6_000) and s.logistics == plain.logistics + uzs(
+        14_000
+    )
+    assert (
+        s.logistics_estimated_units,
+        s.logistics_estimated_lines,
+        s.logistics_missing_lines,
+    ) == (3, 2, 1)
+    assert s.gross_profit == plain.gross_profit - uzs(8_000)  # tannarxsiz qatorniki F8 ga kirmaydi
+    assert s.payout == plain.payout - uzs(14_000)
+    assert s.processing is not None and s.processing.logistics_estimated == uzs(14_000)
+    assert s.net_profit_processing == plain.net_profit_processing - uzs(8_000)
+    assert s.net_profit_done == plain.net_profit_done
+    a = cells.items[CellKey(d(3), "S1", "A")]
+    assert a.logistics_estimated == uzs(8_000) and a.logistics_estimated_units == 2
+    assert cells.items[CellKey(d(3), "S1", "B")].logistics_missing_lines == 1
+    # Tarif berilmasa — hamma Uzum yozmagan qator "tarifi noma'lum".
+    assert plain.logistics_estimated == uzs(0) and plain.logistics_missing_lines == 3
 
 
 # --- Xossalar va tezlik ----------------------------------------------------------------------
@@ -235,6 +318,7 @@ def test_pending_profit() -> None:
             st.sampled_from(["S1", "S2"]),
             st.integers(1, 10**6),
             st.booleans(),
+            st.sampled_from(["TO_WITHDRAW", "PROCESSING", "PROCESSING_DUE"]),
         ),
         max_size=25,
     ),
@@ -251,15 +335,23 @@ def test_pending_profit() -> None:
 )
 def test_additivity_property(raw_sales: list, raw_exp: list, raw_own: list) -> None:
     lines = [
-        sale(dd, sku, shop, price, cost=40_000 if known else None)
-        for dd, sku, shop, price, known in raw_sales
+        sale(
+            dd,
+            sku,
+            shop,
+            price,
+            cost=40_000 if known else None,
+            status=status.removesuffix("_DUE"),
+            logistics=0 if status.endswith("_DUE") else None,
+        )
+        for dd, sku, shop, price, known, status in raw_sales
     ]
     exp = [ExpenseItem(d(dd), shop, C.OTHER, uzs(a), sku) for dd, shop, a, sku in raw_exp]
     own = [
         OwnExpense(ManualExpense(uzs(a), d(dd), d(dd) + timedelta(days=n)), "x")
         for dd, n, a in raw_own
     ]
-    cells = build_cells(OCT, lines, exp, own, TaxRule(D("1.5")))
+    cells = build_cells(OCT, lines, exp, own, TaxRule(D("1.5")), logistics_fee=fee_table)
     whole = cells.statement()
     for key in (lambda k: k.day, lambda k: k.sku):
         groups, combined = cells.by_and_total(key)
@@ -273,6 +365,11 @@ def test_additivity_property(raw_sales: list, raw_exp: list, raw_own: list) -> N
         assert total([s.net_profit for s in view.values()], "UZS") == whole.net_profit
     # Hamma xarajat yo yerda ayrilgan, yo tannarxsiz qismda — yo'qolmaydi.
     assert whole.expenses_deducted + whole.uncovered_expenses == whole.overhead
+    # ADR-037: naqd + kutilayotgan = jami; kesimlar bo'yicha kutilayotgan qismlar yig'indisi = butun davrniki.
+    assert whole.net_profit_done + whole.net_profit_processing == whole.net_profit
+    for view in (cells.by_day(), cells.by_shop(), cells.by_sku()):
+        parts = [s.net_profit_processing for s in view.values()]
+        assert total(parts, "UZS") == whole.net_profit_processing
     assert whole.direct_total + whole.allocated_total + whole.tax == whole.overhead
     assert whole.uzum_direct + whole.uzum_allocated_total == whole.uzum_total
     assert whole.own_direct + whole.own_allocated_total == whole.own_total
@@ -328,7 +425,7 @@ def test_year_50k_lines_fast() -> None:
             st.integers(1, 10**6),
             st.integers(1, 3),
             st.booleans(),
-            st.sampled_from(["TO_WITHDRAW", "PROCESSING", "CANCELED"]),
+            st.sampled_from(["TO_WITHDRAW", "PROCESSING", "PROCESSING_DUE", "CANCELED"]),
         ),
         max_size=25,
     ),
@@ -338,11 +435,21 @@ def test_year_50k_lines_fast() -> None:
     ),
 )
 def test_totals_input_matches_lines(raw_sales: list, raw_exp: list) -> None:
-    """``daily_sku_metrics`` yig'indilari (``sale_totals``) qatorlar bilan bir xil kataklar beradi (B2.9)."""
+    """``daily_sku_metrics`` yig'indilari (``sale_totals``) qatorlar bilan bir xil kataklar beradi (B2.9), Jarayondagi
+    qism va kutilayotgan logistika taxmini bilan (ADR-037)."""
     from upcore.metrics import sale_totals
 
     lines = [
-        sale(dd, sku, shop, price, qty, cost=40_000 if known else None, status=status)
+        sale(
+            dd,
+            sku,
+            shop,
+            price,
+            qty,
+            cost=40_000 if known else None,
+            status=status.removesuffix("_DUE"),
+            logistics=0 if status.endswith("_DUE") else None,
+        )
         for dd, sku, shop, price, qty, known, status in raw_sales
     ]
     groups: dict[CellKey, list[SaleLine]] = {}
@@ -350,8 +457,8 @@ def test_totals_input_matches_lines(raw_sales: list, raw_exp: list) -> None:
         groups.setdefault(CellKey(line.order_date, line.shop, line.sku), []).append(line)
     totals = [(k, CellSales.of(sale_totals(v))) for k, v in groups.items()]
     exp = [ExpenseItem(d(dd), shop, C.STORAGE, uzs(a)) for dd, shop, a in raw_exp]
-    by_lines = build_cells(OCT, lines, exp, tax=TaxRule(D(4)))
-    by_totals = build_cells(OCT, [], exp, tax=TaxRule(D(4)), totals=totals)
+    by_lines = build_cells(OCT, lines, exp, tax=TaxRule(D(4)), logistics_fee=fee_table)
+    by_totals = build_cells(OCT, [], exp, tax=TaxRule(D(4)), totals=totals, logistics_fee=fee_table)
     assert by_lines.items == by_totals.items
 
 

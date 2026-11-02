@@ -417,14 +417,85 @@ def test_pnl_sku_columns_have_titles(world: World) -> None:
     )
 
 
-def test_pnl_pending_profit(world: World) -> None:
+def test_cell_sales_columns_match_fields() -> None:
+    """``daily_sku_metrics`` ustunlari ``CellSales`` ga pozitsiya bo'yicha o'qiladi — tartib bir xil bo'lishi shart."""
+    from dataclasses import fields
+
+    from upapi.reports.cells import _SALES
+    from upcore.pnl import CellSales
+
+    assert [name for name, _ in _SALES] == [f.name for f in fields(CellSales)]
+
+
+def test_pnl_expected_profit(world: World) -> None:
+    """ADR-037: kutilayotgan sof foyda (F16) — 15-oktabr Jarayondagi sotuv: 200 000 − 40 000 − 5 000 − tannarx 100 000 −
+    o'sha kungi ijara (10 000, kunning yagona sotuvi — hammasi shu katakka) − soliq 4% (8 000) = 37 000; naqd = jami −
+    kutilayotgan; har qator ikki qismda. R — 50 donadan kam (noma'lum)."""
     body = world.get("pnl", **OCT)
-    # 15-oktabr Jarayonda: 200 000 − 40 000 − 5 000 − tannarx 100 000 = 55 000 (sof foydaga kirgan, ADR-036);
-    # R — 50 donadan kam (noma'lum).
-    p = body["pending"]
-    assert (p["units"], money(p["revenue"]), money(p["profit"])) == (1, D(200_000), D(55_000))
-    assert p["rate"] is None and p["uncovered_lines"] == 0
-    assert [p["shop_id"] for p in body["pending_shops"]] == [str(world.a.shop_id)]
+    e = body["expected"]
+    assert (e["units"], e["lines"], money(e["revenue"])) == (1, 1, D(200_000))
+    assert (money(e["commission"]), money(e["logistics"]), money(e["cogs"])) == (
+        D(40_000),
+        D(5_000),
+        D(100_000),
+    )
+    assert money(e["expenses"]) == D(18_000) and money(e["net_profit"]) == D(37_000)
+    assert e["rate"] is None and e["uncovered_lines"] == 0
+    assert money(e["logistics_estimated"]) == 0 and e["logistics_missing_lines"] == 0
+    assert [x["shop_id"] for x in body["expected_shops"]] == [str(world.a.shop_id)]
+    assert money(body["expected_shops"][0]["net_profit"]) == D(37_000)
+    s = body["statement"]
+    assert money(s["net_profit_processing"]) == D(37_000)
+    assert money(s["net_profit_done"]) + D(37_000) == money(s["net_profit"])
+    assert (s["units_done"], s["lines_processing"]) == (s["units"] - 1, 1)
+    rows = {r["code"]: r for r in body["rows"]}
+    for r in rows.values():
+        assert money(r["done"]) + money(r["processing"]) == money(r["amount"])
+    assert money(rows["net_profit"]["processing"]) == D(37_000)
+    assert money(rows["own:ijara"]["processing"]) == D(-10_000)
+    assert money(rows["tax"]["processing"]) == D(-8_000)
+    assert money(rows["uzum:storage"]["processing"]) == 0  # 15-oktabrda saqlash yo'q
+
+
+def test_expected_logistics_estimate(world: World) -> None:
+    """F5 (ADR-037): Uzum logistikasini hali yozmagan (topshirilmagan, 0) Jarayondagi sotuv — F40 tarifi × dona
+    (SKU'ning oxirgi pullik Yakunlangan sotuvi: 5 000/dona) taxminiy qo'shiladi; drill-down qatorida ham shu summa,
+    yig'indi qator bilan bir xil; topshirilgan bo'lsa (0 — Uzum bergani) taxmin yo'q."""
+    a = world.a
+    before = world.get("pnl", **OCT)
+
+    def resync(logistics: int, issued: datetime | None) -> dict[str, Any]:
+        a.sql(
+            "UPDATE sale_items SET logistics_fee = %s, issued_at = %s WHERE org_id = %s AND sku_id = %s "
+            "AND (ordered_at AT TIME ZONE 'Asia/Tashkent')::date = %s",
+            [logistics, issued, a.org_id, world.ids["xa"], d(10, 15)],
+        )
+        a.run(lambda conn: calc.request(conn, world.org_id, calc.Scope.SHOP, a.shop_id, d(10, 15)))
+        assert a.recalc(datetime.now(UTC)).errors == {}
+        return world.get("pnl", **OCT)
+
+    try:
+        due = resync(0, None)
+        s = due["statement"]
+        assert money(s["logistics_estimated"]) == D(5_000)
+        assert (s["logistics_estimated_units"], s["logistics_estimated_lines"]) == (1, 1)
+        assert money(s["logistics"]) == money(
+            before["statement"]["logistics"]
+        )  # 5 000 → taxmin 5 000
+        assert money(due["expected"]["logistics_estimated"]) == D(5_000)
+        assert money(due["expected"]["net_profit"]) == D(37_000)
+        sales = world.get("sales", counted="true", **OCT)["items"]
+        row = next(x for x in sales if x["group"] == "processing")
+        assert money(row["logistics"]) == D(5_000) and money(row["logistics_estimated"]) == D(5_000)
+        assert money(row["payout"]) == D(200_000 - 40_000 - 5_000)
+        assert sum(money(x["logistics"]) for x in sales) == money(s["logistics"])
+        assert all(x["logistics_estimated"] is None for x in sales if x["group"] != "processing")
+        free = resync(0, at(d(10, 18)))  # topshirilgan, Uzum 0 yozgan — taxmin yo'q (ADR-035)
+        assert money(free["statement"]["logistics_estimated"]) == 0
+        assert money(free["expected"]["net_profit"]) == D(42_000)
+    finally:
+        after = resync(5_000, None)
+    assert after["statement"] == before["statement"]
 
 
 def test_processing_sale_leaves_when_canceled(world: World) -> None:
@@ -525,7 +596,24 @@ def test_dashboard_blocks(world: World) -> None:
     # F19: reklama 20 000 / 2 000 000.
     assert D(kpis["cancel_share"]) == D("0.076923") and D(kpis["return_share"]) == D("0.076923")
     assert D(kpis["drr"]) == D("0.010000")
-    assert money(kpis["pending"]["profit"]) == D(55_000)
+    # ADR-037: kutilayotgan sof foyda (F16) — hisobot, davr chizig'i va kunlarda naqd + kutilayotgan = jami.
+    assert money(dash["expected"]["net_profit"]) == D(37_000)
+    st = dash["statement"]
+    assert money(st["net_profit_done"]) + money(st["net_profit_processing"]) == money(
+        st["net_profit"]
+    )
+    for p in dash["periods"]:
+        assert money(p["net_profit_done"]) + money(p["net_profit_processing"]) == money(
+            p["net_profit"]
+        )
+    for x in dash["daily"]:
+        assert money(x["net_profit_done"]) + money(x["net_profit_processing"]) == money(
+            x["net_profit"]
+        )
+    oct15 = next(x for x in dash["daily"] if x["day"] == "2026-10-15")
+    assert (
+        money(oct15["net_profit_processing"]) == D(37_000) and money(oct15["net_profit_done"]) == 0
+    )
     # F29: X — 100 000 × (80 + 5 + 2), Z — 50 000 × 40; yo'lda 20 × 120 000.
     assert money(kpis["frozen_money"]) == D(
         13_500_000

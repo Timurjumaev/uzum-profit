@@ -1,5 +1,6 @@
-// Bosh sahifa modeli (M4): API javobi → ekran qatorlari. Hisoblash yo'q (tamoyil 4) — summa, o'zgarish ulushi va
-// sanoqlar API'dan; bu yerda faqat tartib, belgi (ikon/rang uchun yo'nalish) va matn kalitlari.
+// Hisob varag'i qatorlari modeli (M5 Foyda sahifasi, ADR-037) va bosh sahifa "Diqqat talab qiladi" ro'yxati. Hisoblash
+// yo'q (tamoyil 4) — summa, o'zgarish ulushi va sanoqlar API'dan; bu yerda faqat tartib, belgi (ikon/rang uchun
+// yo'nalish) va matn kalitlari.
 import type { TFunction } from "i18next";
 
 import type { LedgerRow } from "../../components/ui";
@@ -120,7 +121,7 @@ export function homeRows(rows: PnlRow[], label: (code: string) => string): HomeR
     // Xarajat zonasi tugadi (soliqdan boshlab): yetishmayotgan nol qatorlar shu yerda.
     if (row.code === "tax") {
       for (const z of missing) {
-        const zero: PnlRow = { code: z.code, amount: "0", share_of_revenue: null, previous: "0", diff: "0", change: null };
+        const zero: PnlRow = { code: z.code, amount: "0", done: "0", processing: "0", share_of_revenue: null, previous: "0", diff: "0", change: null };
         out.push(toRow(zero, label(z.code), { spec: z.spec }));
       }
     }

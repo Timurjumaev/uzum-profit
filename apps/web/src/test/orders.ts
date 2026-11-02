@@ -34,6 +34,7 @@ export function sale(over: Partial<Sale> = {}): Sale {
     revenue: "400000.00",
     commission: "80000.00",
     logistics: "10000.00",
+    logistics_estimated: null,
     payout: "310000.00",
     cogs: "200000.00",
     gross_profit: "110000.00",
@@ -51,7 +52,8 @@ export function salesData(over: Partial<Sales> = {}): Sales {
       sale(),
       sale({ id: "s2", day: "2026-10-03", status: "CANCELED", group: "canceled", amount: 0, amount_returns: 1, cogs: null, gross_profit: null, payout: "0.00", revenue: "0.00" }),
       sale({ id: "s3", day: "2026-10-04", sku_id: null, sku_title: null, cogs: null, gross_profit: null, cost_flags: ["no_item"] }),
-      sale({ id: "s4", day: "2026-10-05", status: "PROCESSING", group: "processing", cost_flags: ["estimated"] }),
+      // ADR-037: Uzum logistikani hali yozmagan — taxmin (F40 × dona).
+      sale({ id: "s4", day: "2026-10-05", status: "PROCESSING", group: "processing", cost_flags: ["estimated"], logistics_estimated: "10000.00" }),
     ],
     next_cursor: null,
     summary: { units: 13, canceled: 5, returns: 3, cancel_share: "0.277778", return_share: "0.187500" },

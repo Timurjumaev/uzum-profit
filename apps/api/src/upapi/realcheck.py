@@ -327,6 +327,25 @@ async def logistics_check(conn: AsyncConnection, shop: UUID) -> dict[str, Any]:
     )
 
 
+async def processing_logistics_check(conn: AsyncConnection, shop: UUID) -> dict[str, Any]:
+    """ADR-037: Uzum Jarayondagi qatorga logistikani qachon yozadi — ``dateIssued`` (topshirilgan) × logistika (0 / > 0).
+    Kutilayotgan logistika taxmini (F5) "topshirilmagan va 0" qatorlarga qo'shiladi; "topshirilgan va 0" — Uzum bergani.
+    Yakunlangan qatorlarda ``dateIssued`` bo'shligi — maydon ishonchliligini ko'rsatadi."""
+    processing = "upper(trim(status)) = 'PROCESSING'"
+    return await _scalar_row(
+        conn,
+        f"SELECT count(*) FILTER (WHERE {processing}) AS processing, "
+        f"count(*) FILTER (WHERE {processing} AND issued_at IS NULL AND logistics_fee = 0) AS not_issued_zero, "
+        f"count(*) FILTER (WHERE {processing} AND issued_at IS NULL AND logistics_fee > 0) AS not_issued_paid, "
+        f"count(*) FILTER (WHERE {processing} AND issued_at IS NOT NULL AND logistics_fee = 0) AS issued_zero, "
+        f"count(*) FILTER (WHERE {processing} AND issued_at IS NOT NULL AND logistics_fee > 0) AS issued_paid, "
+        "count(*) FILTER (WHERE upper(trim(status)) = 'TO_WITHDRAW') AS completed, "
+        "count(*) FILTER (WHERE upper(trim(status)) = 'TO_WITHDRAW' AND issued_at IS NULL) AS completed_not_issued "
+        "FROM sale_items WHERE shop_id = :s",
+        shop,
+    )
+
+
 async def expenses_check(conn: AsyncConnection, shop: UUID) -> dict[str, Any]:
     """Toifalar (P&L'dan chiqarilganlari sababi bilan), holatlar va "boshqa" toifasiga tushgan kodlar."""
     rows = await conn.execute(
@@ -535,6 +554,7 @@ async def shop_report(
             "invoices": await invoices_check(conn, shop.id),
             "returns": await returns_check(conn, shop.id),
             "logistics": await logistics_check(conn, shop.id),
+            "processing_logistics": await processing_logistics_check(conn, shop.id),
             "expenses": await expenses_check(conn, shop.id),
             "stock": await stock_check(conn, shop.id, now),
         },
@@ -584,12 +604,15 @@ def summary(report: dict[str, Any]) -> list[str]:
         for shop in org["shops"]:
             sales, checks, sync = shop["sales"], shop["checks"], shop["sync"]
             inv, ret, lg = checks["invoices"], checks["returns"], checks["logistics"]
+            pl = checks["processing_logistics"]
             out.append(
                 f"{shop['name']} ({shop['external_id']}): tarix={shop['history_status']}, "
                 f"sotuv qatorlari={len(sales['lines'])}, oylar={len(sales['months'])}; "
                 f"postavka tarkibi {inv['items_linked']}/{inv['items']} SKU'ga bog'langan; "
                 f"qaytarishlar {ret['returns']}; logistika {lg['linked']}/{lg['expenses']} sotuvga "
-                f"bog'langan; 24 soatda xato ishlar: {sync['errors_24h']}; "
+                f"bog'langan; jarayonda {pl['processing']} qator (topshirilmagan va logistika 0: "
+                f"{pl['not_issued_zero']}, topshirilgan va 0: {pl['issued_zero']}); "
+                f"24 soatda xato ishlar: {sync['errors_24h']}; "
                 f"qoldiq maydonlari: {checks['stock']['skus']} SKU, postavka holatlari "
                 f"{len(checks['stock']['invoices_by_status'])}, qaytarish holatlari "
                 f"{len(checks['stock']['returns_by_type_status'])}"

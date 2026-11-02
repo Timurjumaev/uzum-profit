@@ -46,7 +46,18 @@ export function OrdersList({ orgId, params, group }: Props) {
     { key: "amount", header: t("orders.col.units"), numeric: true, render: (r) => f.number(r.amount) },
     { key: "price", header: t("orders.col.price"), numeric: true, render: (r) => f.money(r.sell_price, { unit: false }) },
     { key: "commission", header: t("terms.commission"), help: help("commission", t("terms.commission")), numeric: true, render: (r) => f.money(r.commission, { unit: false }) },
-    { key: "logistics", header: t("terms.logistics"), help: help("logistics", t("terms.logistics")), numeric: true, render: (r) => f.money(r.logistics, { unit: false }) },
+    {
+      key: "logistics",
+      header: t("terms.logistics"),
+      help: help("logistics", t("terms.logistics")),
+      numeric: true,
+      // ADR-037: Uzum hali yozmagan logistika — taxmin (F40 × dona), belgi bilan.
+      render: (r) => (
+        <>
+          {r.logistics_estimated !== null && <Badge tone="warning">{t("orders.estimated")}</Badge>} {f.money(r.logistics, { unit: false })}
+        </>
+      ),
+    },
     { key: "payout", header: t("terms.payout"), help: help("payout", t("terms.payout")), numeric: true, render: (r) => f.money(r.payout, { unit: false }) },
     {
       key: "cogs",

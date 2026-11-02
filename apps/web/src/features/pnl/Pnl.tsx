@@ -1,7 +1,8 @@
-// Foyda va zarar (M5, B4.2). Maket — 04 §7.4: yuqorida hisob varag'i to'liq (ustunlar: joriy, tushumga nisbatan,
-// oldingi davr, farq), ostida sharshara va kutilayotgan blok (F16), keyin kesimlar (oylar / do'konlar / SKU).
-// Tannarx qamrovi < 100% — sariq banner (F15). Uzum xarajatlari API bergandek (logistika 0 kelsa — 0, ADR-035).
-// Hamma raqam API'dan (`/pnl`), drill-down — bosh sahifadagi `Drill` (sotuvlar, Uzum toifasi, o'z xarajatlari).
+// Foyda va zarar (M5, ADR-037) — "qanday hisoblandi": hisob varag'i to'liq, har qator uch ustunda — naqd (Yakunlangan
+// sotuvlar), kutilayotgan (Jarayondagi sotuvlar), jami — va oldingi davr bilan solishtirish; ostida sharshara (jami) va
+// kutilayotgan sof foyda bloki (F16), keyin kesimlar (oylar / do'konlar / SKU). Maket — 04 §7.4. Tannarx qamrovi < 100%
+// — sariq banner (F15). Uzum xarajatlari API bergandek (ADR-035), Uzum hali yozmagan logistika — taxminiy (F5, "≈").
+// Hamma raqam API'dan (`/pnl`), drill-down — `home/Drill` (sotuvlar, Uzum toifasi, o'z xarajatlari).
 import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useSearch } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -12,15 +13,14 @@ import { useFilters } from "../../app/filters";
 import { currentOrg, meQuery, pnlQuery, syncQuery } from "../../app/query";
 import { pnlSearch } from "../../app/search";
 import { WaterfallChart } from "../../components/charts";
-import { Banner, Button, EmptyState, Skeleton, PageHelp } from "../../components/ui";
+import { Banner, Button, EmptyState, Skeleton, PageHelp, Segmented } from "../../components/ui";
 import { useFormat } from "../../lib/i18n";
 import { syncSummary } from "../../lib/sync";
 import { Drill } from "../home/Drill";
-import { ProcessingNote } from "../home/ProcessingNote";
 import { rowLabel } from "../home/model";
 import { Breakdown } from "./Breakdown";
-import { pnlLines, waterfallSteps, type PnlLine, type View } from "./model";
-import { Pending } from "./Pending";
+import { Expected } from "./Expected";
+import { PARTS, pnlLines, waterfallSteps, type Part, type PnlLine, type View } from "./model";
 import { PnlLedger } from "./PnlLedger";
 
 export function Pnl() {
@@ -38,9 +38,16 @@ export function Pnl() {
   const query = useQuery({ ...pnlQuery(org.id, params, view), placeholderData: keepPreviousData });
   const sync = useQuery(syncQuery(org.id));
   const [drill, setDrill] = useState<PnlLine | null>(null);
+  const [part, setPart] = useState<Part>("total"); // tor ekranda ko'rinadigan pul ustuni
 
   const data = query.data;
-  const lines = useMemo(() => (data ? pnlLines(data.rows, (code) => rowLabel(code, t), t("terms.grossProfit")) : []), [data, t]);
+  const lines = useMemo(() => {
+    if (!data) return [];
+    const estimated = Number(data.statement.logistics_estimated) !== 0; // F5: kutilayotgan logistika taxmini (≈)
+    return pnlLines(data.rows, (code) => rowLabel(code, t), t("terms.grossProfit")).map((l) =>
+      l.key === "logistics" && estimated ? { ...l, estimated: true } : l,
+    );
+  }, [data, t]);
   const steps = useMemo(() => (data ? waterfallSteps(data.statement, (key) => t(`pnl.waterfall.${key}`)) : []), [data, t]);
 
   if (query.isError && !data) {
@@ -71,7 +78,6 @@ export function Pnl() {
           <PageHelp page="pnl" />
         </div>
         {previous && <p className="caption">{t("pnl.previousNote", { period: f.period(previous.start, previous.end) })}</p>}
-        <ProcessingNote units={s.units_processing} revenue={s.revenue_processing} />
       </header>
       {filters.compare === "lastYear" && <Banner tone="info" title={t("home.lastYearSoon")} />}
       {s.lines === 0 && (
@@ -103,12 +109,26 @@ export function Pnl() {
       {data.recalculated > 0 && <Banner tone="info" title={t("pnl.recalculated", { value: f.number(data.recalculated) })} />}
 
       <div className="pnl-ledger-box">
-        <PnlLedger lines={lines} onRow={setDrill} />
+        <p className="caption pnl-ledger-box__note">{t("pnl.partsNote")}</p>
+        <Segmented
+          label={t("pnl.partLabel")}
+          className="pnl-parts"
+          value={part}
+          onChange={setPart}
+          options={PARTS.map((p) => ({ value: p, label: t(`pnl.col.${p}`) }))}
+        />
+        <PnlLedger lines={lines} part={part} onRow={setDrill} />
+        {s.logistics_estimated_units > 0 && (
+          <p className="caption">
+            {t("pnl.logisticsEstimated", { amount: f.money(s.logistics_estimated), units: f.number(s.logistics_estimated_units) })}
+          </p>
+        )}
+        {s.logistics_missing_lines > 0 && <p className="caption">{t("pnl.logisticsMissing", { value: f.number(s.logistics_missing_lines) })}</p>}
       </div>
 
       <div className="pnl__row">
         <WaterfallChart title={t("pnl.waterfall.title")} steps={s.lines === 0 ? [] : steps} />
-        <Pending orgId={org.id} data={data} />
+        <Expected orgId={org.id} data={data} />
       </div>
 
       <Breakdown orgId={org.id} data={data} view={view} busy={query.isPlaceholderData} />

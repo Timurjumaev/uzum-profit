@@ -1,9 +1,10 @@
-// Bosh sahifa (M4, B4.1): hisob varag'i (asosiy element), davr chizig'i, kunlik grafik, "Diqqat talab qiladi",
-// eng foydali 5 / zarar 5 SKU va qo'shimcha ko'rsatkichlar. Maket — 04 §7.2 (desktop) / §7.3 (mobil). Davr, do'kon va
-// solishtirish — URL'da (`app/filters`), hamma raqam API'dan (`/dashboard`), bu yerda hisoblash yo'q.
+// Bosh sahifa (M4, ADR-037) — "bir qarashda": uch raqam (naqd + kutilayotgan = jami sof foyda), davr chizig'i,
+// kunlik grafik (sof foyda naqd va kutilayotgan qatlamlarda), "Diqqat talab qiladi", eng foydali 5 / zarar 5 SKU va
+// qo'shimcha ko'rsatkichlar. Qatorma-qator hisob — Foyda sahifasida. Maket — 04 §7.2 (desktop) / §7.3 (mobil). Davr,
+// do'kon va solishtirish — URL'da (`app/filters`), hamma raqam API'dan (`/dashboard`), bu yerda hisoblash yo'q.
 import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
@@ -12,9 +13,8 @@ import { currentOrg, dashboardQuery, meQuery, syncQuery } from "../../app/query"
 import { Banner, Button, EmptyState, Skeleton } from "../../components/ui";
 import { syncSummary } from "../../lib/sync";
 import { Attention, DailyChart, Kpis, PeriodStrip, SkuLists } from "./Blocks";
-import { Drill } from "./Drill";
-import { Ledger } from "./Ledger";
-import { attentionItems, type HomeRow } from "./model";
+import { attentionItems } from "./model";
+import { Summary } from "./Summary";
 
 export function Home() {
   const { t } = useTranslation();
@@ -27,7 +27,6 @@ export function Home() {
   );
   const query = useQuery({ ...dashboardQuery(org.id, params), placeholderData: keepPreviousData });
   const sync = useQuery(syncQuery(org.id));
-  const [drill, setDrill] = useState<HomeRow | null>(null);
 
   const data = query.data;
   const summary = sync.data ? syncSummary(sync.data) : null;
@@ -68,25 +67,19 @@ export function Home() {
           }
         />
       )}
-      <div className="home__top">
-        <Ledger
-          data={data}
-          onRow={setDrill}
-          costAction={
-            <Link to="/products" search={(prev) => prev} className="ui-btn ui-btn--secondary ui-btn--md">
-              {t("home.coverage.action")}
-            </Link>
-          }
-        />
-        <div className="home__side">
-          <PeriodStrip data={data} />
-          <DailyChart data={data} />
-        </div>
-      </div>
+      <Summary
+        data={data}
+        costAction={
+          <Link to="/products" search={(prev) => prev} className="ui-btn ui-btn--secondary ui-btn--md">
+            {t("home.coverage.action")}
+          </Link>
+        }
+      />
+      <PeriodStrip data={data} />
+      <DailyChart data={data} />
       <Attention items={attention} />
       <SkuLists top={data.top} bottom={data.bottom} />
       <Kpis data={data} />
-      <Drill orgId={org.id} params={params} row={drill} onClose={() => setDrill(null)} />
     </section>
   );
 }

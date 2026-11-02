@@ -126,6 +126,7 @@ const SALES = {
     revenue,
     commission,
     logistics,
+    logistics_estimated: null,
     payout,
     cogs,
     gross_profit: "70000.00",

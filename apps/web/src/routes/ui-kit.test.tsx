@@ -39,7 +39,7 @@ describe("/ui-kit", () => {
         "Button",
         "Input, NumberInput, MoneyInput",
         "Select, Combobox",
-        "DateRangePicker, CompareToggle",
+        "DateRangePicker, CompareToggle, Segmented",
         "KPI, FormulaPopover",
         "LedgerTable (Hisob varagʻi)",
         "DataTable",
