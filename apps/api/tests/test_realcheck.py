@@ -211,6 +211,43 @@ def test_assumption_checks(db: dict[str, str]) -> None:
     assert sync["runs_24h"]["orders"] == {"ok": 1}
 
 
+def test_processing_logistics_check(db: dict[str, str]) -> None:
+    """ADR-037: Jarayondagi qatorlar — ``dateIssued`` × logistika kesimi (kutilayotgan logistika taxmini qoidasi)."""
+    issued = sf.ms(NOW - 2 * DAY)
+    fake = seller(
+        shops=BOTH,
+        orders={
+            A: [
+                sf.order(1, A, NOW - 30 * DAY, dateIssued=issued),
+                sf.order(2, A, NOW - 3 * DAY, status="PROCESSING", logisticDeliveryFee=0),
+                sf.order(
+                    3,
+                    A,
+                    NOW - 3 * DAY,
+                    status="PROCESSING",
+                    logisticDeliveryFee=0,
+                    dateIssued=issued,
+                ),
+                sf.order(4, A, NOW - 3 * DAY, status="PROCESSING", dateIssued=issued),
+                sf.order(5, A, NOW - 2 * DAY, status="PROCESSING"),
+            ],
+            B: [],
+        },
+    )
+    _, report = synced(db, fake)
+    pl = shop(report, A)["checks"]["processing_logistics"]
+    assert pl == {
+        "processing": 4,
+        "not_issued_zero": 1,
+        "not_issued_paid": 1,
+        "issued_zero": 1,
+        "issued_paid": 1,
+        "completed": 1,
+        "completed_not_issued": 0,
+    }
+    assert any("topshirilmagan va logistika 0: 1" in line for line in rc.summary(report))
+
+
 def test_sync_errors_reported(db: dict[str, str]) -> None:
     fake = seller(shops=BOTH, fail={"expenses": "server"})
     _, report = synced(db, fake)

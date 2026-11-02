@@ -1,15 +1,15 @@
 // Bosh sahifa bloklari (M4): davr chizig'i, kunlik grafik, "Diqqat talab qiladi", TOP/zarar SKU, ko'rsatkichlar.
+// Sof foyda har joyda ikki qismda — naqd va kutilayotgan (ADR-037); qismlar API'dan.
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { DataTable, FormulaPopover, Kpi, StatusPill, type Column } from "../../components/ui";
+import { DataTable, FormulaPopover, Kpi, Segmented, StatusPill, type Column } from "../../components/ui";
 import { cx } from "../../components/ui/cx";
 import { LineBarChart } from "../../components/charts";
 import type { Dashboard } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import type { AttentionItem } from "./model";
-import { ProcessingNote } from "./ProcessingNote";
 
 const tone = (value: string) => (Number(value) < 0 ? "negative" : "positive");
 
@@ -37,6 +37,7 @@ export function PeriodStrip({ data }: { data: Dashboard }) {
           const revenue = tile.p?.revenue ?? tile.forecast?.revenue ?? null;
           const net = tile.p?.net_profit ?? tile.forecast?.net_profit ?? null;
           const units = tile.p ? String(tile.p.units) : (tile.forecast?.units ?? null);
+          const p = tile.p;
           return (
             <li key={tile.key} className="home-period">
               <h3 className="label">
@@ -65,6 +66,11 @@ export function PeriodStrip({ data }: { data: Dashboard }) {
                   <div>
                     <dt className="caption">{t("home.periods.netProfit")}</dt>
                     <dd className={cx("num", `ui-text--${tone(net ?? "0")}`)}>{net === null ? "—" : f.money(net)}</dd>
+                    {p && Number(p.net_profit_processing) !== 0 && (
+                      <dd className="caption home-period__split">
+                        {t("home.periods.split", { done: f.money(p.net_profit_done), expected: f.money(p.net_profit_processing) })}
+                      </dd>
+                    )}
                   </div>
                   <div>
                     <dt className="caption">{t("home.periods.units")}</dt>
@@ -72,7 +78,6 @@ export function PeriodStrip({ data }: { data: Dashboard }) {
                   </div>
                 </dl>
               )}
-              {tile.p && <ProcessingNote units={tile.p.units_processing} revenue={tile.p.revenue_processing} compact />}
             </li>
           );
         })}
@@ -83,19 +88,37 @@ export function PeriodStrip({ data }: { data: Dashboard }) {
 
 // --- Kunlik grafik -------------------------------------------------------------------------------------------------
 
+type ChartView = "profit" | "revenue";
+
 export function DailyChart({ data }: { data: Dashboard }) {
   const { t } = useTranslation();
+  const [view, setView] = useState<ChartView>("profit");
+  const x = data.daily.map((d) => d.day);
+  // ADR-037: ikki qatlam — naqd (Yakunlangan) va ustida kutilayotgan (Jarayonda); tushumda ham shunday (ADR-036).
+  const series =
+    view === "profit"
+      ? [
+          { key: "done", name: t("home.chart.profitDone"), color: 1 as const, stack: "profit", values: data.daily.map((d) => d.net_profit_done) },
+          { key: "expected", name: t("home.chart.profitExpected"), color: "other" as const, stack: "profit", values: data.daily.map((d) => d.net_profit_processing) },
+        ]
+      : [
+          { key: "done", name: t("home.chart.revenueDone"), color: 1 as const, stack: "revenue", values: data.daily.map((d) => d.revenue_done) },
+          { key: "expected", name: t("home.chart.revenueProcessing"), color: "other" as const, stack: "revenue", values: data.daily.map((d) => d.revenue_processing) },
+        ];
   return (
-    <LineBarChart
-      title={t("home.chart.title")}
-      x={data.daily.map((d) => d.day)}
-      series={[
-        // ADR-036: tushum ikki qatlam — Yakunlangan va ustida Jarayondagi (yakuniy emas); qismlar API'dan.
-        { key: "revenue", name: t("home.chart.revenueDone"), color: 1, stack: "revenue", values: data.daily.map((d) => d.revenue_done) },
-        { key: "processing", name: t("home.chart.revenueProcessing"), color: "other", stack: "revenue", values: data.daily.map((d) => d.revenue_processing) },
-        { key: "net", name: t("home.chart.netProfit"), color: "ink", kind: "line", values: data.daily.map((d) => d.net_profit) },
-      ]}
-    />
+    <section className="home-chart" aria-label={t("home.chart.label")}>
+      <Segmented
+        label={t("home.chart.view")}
+        className="home-chart__view"
+        value={view}
+        onChange={setView}
+        options={[
+          { value: "profit", label: t("home.chart.viewProfit") },
+          { value: "revenue", label: t("home.chart.viewRevenue") },
+        ]}
+      />
+      <LineBarChart title={t(view === "profit" ? "home.chart.titleProfit" : "home.chart.titleRevenue")} x={x} series={series} />
+    </section>
   );
 }
 
@@ -201,11 +224,9 @@ export function Kpis({ data }: { data: Dashboard }) {
       code={t(`home.formula.${key}.code`)}
       formula={t(`home.formula.${key}.formula`)}
       source={t(`home.formula.${key}.source`)}
-      estimatedReason={key === "processing" ? t("home.formula.processing.estimated") : undefined}
     />
   );
   const uncovered = Number(k.uncovered_share) > 0 ? t("home.kpis.uncovered", { share: f.percent(k.uncovered_share) }) : undefined;
-  const pending = k.pending;
   return (
     <section aria-labelledby="home-kpis" className="home-kpis">
       <h2 id="home-kpis" className="h3">
@@ -224,16 +245,6 @@ export function Kpis({ data }: { data: Dashboard }) {
           help={help("frozen", t("home.kpis.frozen"))}
         />
         <Kpi label={t("home.kpis.inTransit")} value={f.money(k.in_transit_value)} help={help("inTransit", t("home.kpis.inTransit"))} />
-        <Kpi
-          label={t("home.kpis.pending")}
-          value={f.money(pending.revenue)}
-          note={
-            pending.rate === null
-              ? t("home.kpis.pendingUnits", { units: f.number(pending.units) })
-              : t("home.kpis.pendingRate", { units: f.number(pending.units), rate: f.percent(pending.rate) })
-          }
-          help={help("processing", t("home.kpis.pending"))}
-        />
       </div>
     </section>
   );

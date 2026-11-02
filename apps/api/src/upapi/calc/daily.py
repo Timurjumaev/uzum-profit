@@ -3,7 +3,8 @@
 Manba: ``sale_items`` (hamma holatlar), ``sale_costs`` (F21) va reklama xarajatlari (``mp_expenses``, toifa
 ``advertising``, P&L'ga kiradiganlari). Yig'indilar ``upcore.metrics.sale_totals`` dan (F3–F8, F15, F17, F18, F22) —
 SQL'da formula yo'q. Hamma ustunlar additiv: davr natijasi = kunlar yig'indisi. Sotuvlar — Yakunlangan + Jarayonda
-(ADR-036), Jarayondagi qismi ``units_processing``, ``revenue_processing``.
+(ADR-036), Jarayondagi qismi har pul ustuni bo'yicha alohida (``*_processing``, ADR-037) va Uzum logistikasini hali
+yozmagan Jarayondagi qatorlar donasi (``*_logistics_due`` — F5 taxmini asosi; summa o'qishda F40 bilan).
 
 - Kun — buyurtma sanasi (F1); reklama — xarajat sanasi.
 - Reklama SKU'ga ``AD#<sotuv qatori id>`` orqali (F19); bog'lanmagani (yoki bir ma'noli bo'lmagani) — ``sku_id`` NULL
@@ -76,6 +77,7 @@ async def _sales(
             s.c.commission,
             s.c.logistics_fee,
             s.c.amount_returns,
+            s.c.issued_at,
             c.c.cogs,
             c.c.flags,
         )
@@ -102,6 +104,7 @@ async def _sales(
                 amount_returns=r.amount_returns,
                 unit_cost=unit,
                 estimated=bool(r.flags),
+                issued=r.issued_at is not None,
             )
         )
     return out
@@ -143,6 +146,17 @@ async def rebuild_shop(
                 "units_costed": t.units_costed,
                 "units_processing": t.units_processing,
                 "revenue_processing": t.revenue_processing.amount,
+                "commission_processing": t.commission_processing.amount,
+                "logistics_processing": t.logistics_processing.amount,
+                "cogs_processing": t.cogs_processing.amount,
+                "revenue_costed_processing": t.revenue_costed_processing.amount,
+                "payout_costed_processing": t.payout_costed_processing.amount,
+                "units_costed_processing": t.units_costed_processing,
+                "lines_processing": t.lines_processing,
+                "lines_uncosted_processing": t.uncovered_lines_processing,
+                "units_logistics_due": t.units_logistics_due,
+                "units_logistics_due_costed": t.units_logistics_due_costed,
+                "lines_logistics_due": t.lines_logistics_due,
             }
         )
     for start in range(0, len(rows), 2_000):

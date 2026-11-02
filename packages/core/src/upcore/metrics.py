@@ -10,7 +10,7 @@ Nisbatlar (marja, ROI, ulushlar) — kasr ``Decimal`` (0,125 = 12,5%), 6 xona; m
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from enum import StrEnum
@@ -110,7 +110,7 @@ class SaleLine:
     """``finance/orders`` qatori (so'mda). ``commission`` va ``logistics`` — qator bo'yicha jami.
 
     ``unit_cost`` — F21 dan sotuvning birlik tannarxi; noma'lum bo'lsa ``None``. ``estimated`` — tannarxda F22
-    taxminiy belgisi bor.
+    taxminiy belgisi bor. ``issued`` — tovar xaridorga topshirilgan (``dateIssued`` bor; F5, ADR-037).
     """
 
     sku: str
@@ -125,6 +125,7 @@ class SaleLine:
     unit_cost: Decimal | None = None
     shop: str = ""
     estimated: bool = False
+    issued: bool = False
 
     @property
     def group(self) -> StatusGroup:
@@ -188,9 +189,35 @@ def commission(lines: Iterable[SaleLine]) -> Money:
 
 
 def logistics(lines: Iterable[SaleLine]) -> Money:
-    """F5. Logistika = Σ ``logisticDeliveryFee`` (Yakunlangan + Jarayonda). Uzum logistikani tovar punktdan olib
-    ketilganda yozadi — undan oldin Jarayondagi qatorda 0 (API bergandek, taxmin qo'shilmaydi)."""
+    """F5. Logistika = Σ ``logisticDeliveryFee`` (Yakunlangan + Jarayonda) — Uzum bergan qiymat. Uzum logistikani tovar
+    punktdan olib ketilganda yozadi; undan oldingi Jarayondagi qator (``logistics_due``) uchun kutilayotgan logistika
+    F40 bo'yicha taxminiy qo'shiladi — ``upcore.pnl.build_cells`` (ADR-037)."""
     return _uzs(sum((to_decimal(line.logistics) for line in counted(lines)), Decimal(0)))
+
+
+def expected_logistics(fee: Money, units: int) -> Money:
+    """F5 (ADR-037): Uzum hali yozmagan Jarayondagi logistika taxmini = F40 standart logistika/dona × dona."""
+    return Money(fee.amount * units, fee.currency)
+
+
+def with_expected_logistics(line: SaleLine, fee: Money | None) -> tuple[SaleLine, Money | None]:
+    """F5 (ADR-037): Uzum logistikasini hali yozmagan qator (``logistics_due``) — logistikasi taxmin bilan to'ldirilgan
+    nusxa (F6, F8 shundan) va taxmin summasi. Boshqa qator yoki tarif noma'lum — o'zgarmaydi, taxmin ``None``."""
+    if fee is None or not logistics_due(line):
+        return line, None
+    est = expected_logistics(fee, line.amount)
+    return replace(line, logistics=est.amount), est
+
+
+def logistics_due(line: SaleLine) -> bool:
+    """F5 (ADR-037): Uzum logistikasini hali yozmagan Jarayondagi qator — tovar xaridorga topshirilmagan
+    (``dateIssued`` yo'q) va logistika 0. Topshirilgandan keyin 0 kelsa — 0 (ADR-035), taxmin qilinmaydi."""
+    return (
+        line.group is StatusGroup.PROCESSING
+        and not line.issued
+        and to_decimal(line.logistics) == 0
+        and line.amount > 0
+    )
 
 
 def payout(lines: Iterable[SaleLine]) -> Money:
@@ -247,15 +274,31 @@ class SaleTotals:
         0  # shundan Jarayonda (yakuniy emas, ADR-036); Yakunlangan = units − units_processing
     )
     revenue_processing: Money = ZERO_UZS  # F3 ning Jarayondagi qismi
+    # ADR-037: Jarayondagi qism to'liq (kutilayotgan sof foyda — F16): yuqoridagi ustunlarning shu qismi.
+    commission_processing: Money = ZERO_UZS
+    logistics_processing: Money = ZERO_UZS  # Uzum yozgani (taxminsiz)
+    cogs_processing: Money = ZERO_UZS
+    revenue_costed_processing: Money = ZERO_UZS
+    payout_costed_processing: Money = ZERO_UZS
+    units_costed_processing: int = 0
+    lines_processing: int = 0
+    uncovered_lines_processing: int = 0
+    # F5 (ADR-037): Uzum logistikasini hali yozmagan Jarayondagi qatorlar (``logistics_due``) — taxmin asosi.
+    units_logistics_due: int = 0
+    units_logistics_due_costed: int = 0  # shundan tannarxi ma'lum qatorlar donasi
+    lines_logistics_due: int = 0
 
 
 def sale_totals(lines: Iterable[SaleLine]) -> SaleTotals:
     """F3–F8, F15, F17, F18, F22 yig'indilari bitta to'plam uchun (kunlik agregat jadvali manbasi). Pul va dona —
-    Yakunlangan + Jarayonda (ADR-036), Jarayondagi qismi alohida; F17/F18 uchun Yakunlangan = units − units_processing."""
+    Yakunlangan + Jarayonda (ADR-036), Jarayondagi qismi alohida (ADR-037: hamma pul ustunlari bo'yicha); F17/F18 uchun
+    Yakunlangan = units − units_processing."""
     items = list(lines)
     done = counted(items)
     covered = [line for line in done if line.unit_cost is not None]
     pending = _in_group(done, StatusGroup.PROCESSING)
+    pending_covered = [line for line in pending if line.unit_cost is not None]
+    due = [line for line in pending if logistics_due(line)]
     return SaleTotals(
         revenue=revenue(done),
         units=sum(line.amount for line in done),
@@ -272,6 +315,17 @@ def sale_totals(lines: Iterable[SaleLine]) -> SaleTotals:
         units_costed=sum(line.amount for line in covered),
         units_processing=sum(line.amount for line in pending),
         revenue_processing=revenue(pending),
+        commission_processing=commission(pending),
+        logistics_processing=logistics(pending),
+        cogs_processing=cogs(pending_covered),
+        revenue_costed_processing=revenue(pending_covered),
+        payout_costed_processing=payout(pending_covered),
+        units_costed_processing=sum(line.amount for line in pending_covered),
+        lines_processing=len(pending),
+        uncovered_lines_processing=len(pending) - len(pending_covered),
+        units_logistics_due=sum(line.amount for line in due),
+        units_logistics_due_costed=sum(line.amount for line in due if line.unit_cost is not None),
+        lines_logistics_due=len(due),
     )
 
 
@@ -428,7 +482,8 @@ def _returned(lines: Iterable[SaleLine]) -> int:
 
 
 def realization_rate(window: Iterable[SaleLine], min_units: int = 50) -> Decimal | None:
-    """F16. R = yakuniy holatga yetgan donalar ichida Yakunlangan ulushi (fakt; summaga ko'paytirilmaydi, ADR-036).
+    """F16. R = yakuniy holatga yetgan donalar ichida Yakunlangan ulushi (fakt; kutilayotgan sof foydaga
+    ko'paytirilmaydi — ADR-036, ADR-037). Kutilayotgan sof foyda o'zi — ``upcore.pnl.Statement.processing``.
 
     ``window`` — do'konning oxirgi 90 kunidagi qatorlar (davrni chaqiruvchi tanlaydi). Yakuniy donalar
     ``min_units`` dan kam bo'lsa ``None`` (R ko'rsatilmaydi).
@@ -445,33 +500,6 @@ def realization_rate_units(done: int, canceled: int, min_units: int = 50) -> Dec
     if final < min_units:
         return None
     return ratio(done, final)
-
-
-@dataclass(frozen=True, slots=True)
-class PendingSales:
-    """F16 natijasi (ADR-036): Jarayondagi sotuvlar — ular F3–F12 ga allaqachon kirgan, bu blok qaysi qismi yakuniy
-    emasligini ko'rsatadi. ``rate`` — fakt (oxirgi 90 kunda yakuniy holatga yetganlarning Yakunlangan ulushi), summaga
-    ko'paytirilmaydi; ma'lumot kam bo'lsa ``None``."""
-
-    units: int
-    revenue: Money  # F3 ning Jarayondagi qismi
-    profit: Money  # Σ (F6 − F7) Jarayondagi tannarxi ma'lum qatorlar
-    uncovered_lines: int
-    rate: Decimal | None
-
-
-def pending_sales(lines: Iterable[SaleLine], rate: Decimal | None) -> PendingSales:
-    """F16. Jarayondagi sotuvlar: dona, tushum, yalpi foyda (Σ (F6 − F7) tannarxi ma'lum qatorlar), tannarxsizlar soni
-    va R (fakt sifatida)."""
-    pending = _in_group(lines, StatusGroup.PROCESSING)
-    known = [line for line in pending if line.unit_cost is not None]
-    return PendingSales(
-        units=sum(line.amount for line in pending),
-        revenue=_uzs(sum((line.revenue for line in pending), Decimal(0))),
-        profit=_uzs(sum((line.payout - (line.cogs or Decimal(0)) for line in known), Decimal(0))),
-        uncovered_lines=len(pending) - len(known),
-        rate=rate,
-    )
 
 
 def cancel_share(lines: Iterable[SaleLine]) -> Decimal | None:

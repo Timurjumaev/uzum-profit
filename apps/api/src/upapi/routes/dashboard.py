@@ -2,8 +2,9 @@
 
 Bloklar: hisob varag'i (P&L bilan bitta funksiya — ``upapi.reports.cells``, oldingi davr bilan), davr chizig'i
 (bugun, kecha, shu oy, oy prognozi, o'tgan oy — tanlangan davrdan qat'i nazar, do'kon filtri bilan), kunlik grafik,
-eng foydali 5 va zarar 5 SKU, qo'shimcha ko'rsatkichlar (F13–F19, F16, F29) va "Diqqat talab qiladi" sanoqlari.
-Sotuvlar Yakunlangan + Jarayonda (ADR-036), har kesimda Jarayondagi qismi alohida. To'lov kutilmoqda (F38) — B5 da.
+eng foydali 5 va zarar 5 SKU, qo'shimcha ko'rsatkichlar (F13–F19, F29) va "Diqqat talab qiladi" sanoqlari.
+Sotuvlar Yakunlangan + Jarayonda (ADR-036); sof foyda har kesimda ikki qismda — naqd va kutilayotgan (ADR-037, F16):
+hisobot, davr chizig'i, kunlar; ``expected`` — kutilayotgan qism tafsiloti va R (fakt). To'lov kutilmoqda (F38) — B5 da.
 """
 
 from __future__ import annotations
@@ -44,7 +45,7 @@ from upapi.reports.common import (
     meta,
     sku_catalog,
 )
-from upapi.reports.schemas import PendingOut, RowOut, StatementOut
+from upapi.reports.schemas import ExpectedOut, RowOut, StatementOut
 from upapi.reports.stock import load_stock
 
 router = APIRouter(tags=["reports"])
@@ -60,6 +61,10 @@ class PeriodTotalOut(BaseModel):
     period: PeriodOut
     revenue: Decimal
     net_profit: Decimal
+    net_profit_done: (
+        Decimal  # ADR-037: naqd (Yakunlangan) + kutilayotgan (Jarayonda) = ``net_profit``
+    )
+    net_profit_processing: Decimal
     units: int
     units_processing: int  # ADR-036: shundan Jarayonda (yakuniy emas)
     revenue_processing: Decimal
@@ -80,6 +85,10 @@ class DayOut(BaseModel):
     units: int
     revenue_done: Decimal  # ADR-036: tushumning Yakunlangan qismi (grafikda qatlam)
     revenue_processing: Decimal  # tushumning Jarayondagi qismi (grafikda ustidagi qatlam)
+    net_profit_done: (
+        Decimal  # ADR-037: sof foydaning naqd va kutilayotgan qismlari (grafikda qatlamlar)
+    )
+    net_profit_processing: Decimal
 
 
 class SkuBriefOut(BaseModel):
@@ -100,7 +109,6 @@ class KpiOut(BaseModel):
     cancel_share: Decimal | None  # F17
     return_share: Decimal | None  # F18
     drr: Decimal | None  # F19
-    pending: PendingOut  # F16: Jarayondagi sotuvlar (hisobga kirgan, yakuniy emas)
     frozen_money: Decimal  # F29 (Uzum FBO + FBS + brak + o'z omborim, lot narxida)
     in_transit_value: Decimal  # F29 "yo'lda" (Xitoyda buyurtma qilingan + yo'lda)
     average_days_to_sell: Decimal | None  # F29
@@ -120,6 +128,7 @@ class AttentionOut(BaseModel):
 class DashboardOut(BaseModel):
     meta: Meta
     statement: StatementOut
+    expected: ExpectedOut  # F16 (ADR-037): kutilayotgan sof foyda tafsiloti va R
     rows: list[RowOut]
     periods: list[PeriodTotalOut]
     forecast: ForecastOut
@@ -141,6 +150,8 @@ def _total(key: str, period: Period, s: Statement) -> PeriodTotalOut:
         period=PeriodOut.of(period),
         revenue=s.revenue.amount,
         net_profit=s.net_profit.amount,
+        net_profit_done=s.net_profit_done.amount,
+        net_profit_processing=s.net_profit_processing.amount,
         units=s.units,
         units_processing=s.units_processing,
         revenue_processing=s.revenue_processing.amount,
@@ -154,7 +165,7 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
     this_month = Period(today.replace(day=1), today)
     last_end = this_month.start - timedelta(days=1)
     last_month = Period(last_end.replace(day=1), last_end)
-    book = await rc.load_book(conn, rc.span(previous, f.period, last_month, this_month))
+    book = await rc.load_book(conn, rc.span(previous, f.period, last_month, this_month), today)
     cur = book.scoped(f, f.period)
 
     periods = [
@@ -185,6 +196,8 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
                 units=ds.units,
                 revenue_done=ds.revenue_done.amount,
                 revenue_processing=ds.revenue_processing.amount,
+                net_profit_done=ds.net_profit_done.amount,
+                net_profit_processing=ds.net_profit_processing.amount,
             )
         )
 
@@ -213,7 +226,7 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
 
     sums = (await rc.sale_sums(conn, f)).get(None, rc.SaleSums())
     ads = s.uzum_expenses.get(ExpenseCategory.ADVERTISING, Money.zero(UZS))
-    pend = await rc.pending(conn, f)
+    rates = await rc.realization(conn, f)
     stock = await load_stock(conn, sorted(f.shops, key=str) if f.shops else None, today)
     statuses = [x.status for x in stock.skus.values()]
     now = await db_now(conn)
@@ -226,6 +239,7 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
     return DashboardOut(
         meta=await meta(conn, f, KINDS, previous),
         statement=StatementOut.of(s),
+        expected=ExpectedOut.of(s, rates.total),
         rows=[RowOut.of(r) for r in compare(s, p)],
         periods=[_total(key, period, totals[key]) for key, period in periods],
         forecast=ForecastOut(
@@ -243,7 +257,6 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
             cancel_share=cancel_rate(sums.units, sums.canceled),
             return_share=return_share(sums.units, sums.returns),
             drr=drr(ads, s.revenue),
-            pending=PendingOut.of(pend.total),
             frozen_money=on_hand.amount,
             in_transit_value=in_transit.amount,
             average_days_to_sell=stock.average_days,

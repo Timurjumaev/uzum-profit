@@ -6,7 +6,8 @@ eng yangisidan; sahifalash kursor bilan. ``summary`` — filtr (davr, do'kon, SK
 (F17, F18, ``daily_sku_metrics`` dan; holat filtri unga ta'sir qilmaydi).
 
 P&L qatori drill-down'i: ``counted=true`` (Yakunlangan + Jarayonda, ADR-036) qatorlari tushum/komissiya/logistika/
-tannarx yig'indisi = P&L qatori.
+tannarx yig'indisi = P&L qatori. Uzum logistikasini hali yozmagan Jarayondagi qatorda logistika — F40 × dona taxmini
+(``logistics_estimated``, ADR-037), Uzum to'lovi va yalpi foyda shu bilan — P&L kataklari bilan bir xil tarif.
 """
 
 from __future__ import annotations
@@ -19,7 +20,16 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy import and_, func, or_, select
-from upcore.metrics import COUNTED, StatusGroup, cancel_rate, return_share, status_group, statuses
+from upcore.metrics import (
+    COUNTED,
+    StatusGroup,
+    cancel_rate,
+    logistics_due,
+    return_share,
+    status_group,
+    statuses,
+    with_expected_logistics,
+)
 from upcore.money import Currency, Money
 
 from upapi.auth.deps import OrgContext, require
@@ -63,7 +73,10 @@ class SaleOut(BaseModel):
     sell_price: Decimal
     revenue: Decimal
     commission: Decimal
-    logistics: Decimal
+    logistics: Decimal  # F5: Uzum bergani yoki (hali yozmagan bo'lsa) taxmin
+    logistics_estimated: (
+        Decimal | None
+    )  # ADR-037: taxmin summasi (F40 × dona); ``None`` — Uzum qiymati
     payout: Decimal  # F6
     cogs: Decimal | None  # F7 (F21)
     gross_profit: Decimal | None  # F8
@@ -136,9 +149,12 @@ async def sales(
     more = len(rows) > limit
     rows = rows[:limit]
     recent = now - timedelta(days=rc.RECALC_DAYS)
+    lines = [rc.sale_line(r) for r in rows]
+    due = sorted({(x.shop, x.sku) for x in lines if logistics_due(x)})
+    fee = await rc.expected_fees(ctx.conn, f.today, due)
     items = []
-    for r in rows:
-        line = rc.sale_line(r)
+    for r, raw in zip(rows, lines, strict=True):
+        line, estimate = with_expected_logistics(raw, fee(raw.shop, raw.sku))
         profit = line.gross_profit
         changed = r.changed_at if r.changed_at is not None and r.changed_at >= recent else None
         items.append(
@@ -159,7 +175,8 @@ async def sales(
                 sell_price=r.sell_price,
                 revenue=line.revenue,
                 commission=r.commission,
-                logistics=r.logistics_fee,
+                logistics=Money(line.logistics, UZS).amount,
+                logistics_estimated=None if estimate is None else estimate.amount,
                 payout=line.payout,
                 cogs=r.cogs,
                 gross_profit=None if profit is None else Money(profit, UZS).amount,

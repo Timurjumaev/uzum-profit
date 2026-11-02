@@ -95,19 +95,22 @@ yozilmaydi; sotuvchi kiritgan ma'lumot sinxron tomonidan hech qachon o'zgarmaydi
 Yuqorida: do'kon tanlash, davr (Bugun, Kecha, 7 kun, 30 kun, Shu oy, O'tgan oy, Shu yil, Hammasi, tanlash),
 "solishtirish" (oldingi davr / o'tgan yil shu davri), yangilanish holati.
 
+Bosh sahifa — "bir qarashda" (ADR-037); qatorma-qator hisob (hisob varag'i) — Foyda sahifasida (M5).
 Bloklar (joylashuvi 04-dizayn.md §7.2 desktop, §7.3 mobil):
-1. **Hisob varag'i** (asosiy element): Tushum → − komissiya → − logistika → = Uzum to'lovi → − tannarx →
-   − Uzum xarajatlari → − o'z xarajatlari → − soliq → **= Sof foyda** (ikki chiziq ostida). Har qator yonida
-   oldingi davrga nisbatan o'zgarish (oldingi davrda sotuv bo'lmasa — foizsiz). Har qator bosilsa — manba yozuvlar
-   ro'yxati (drill-down). Sotuvlar Yakunlangan + Jarayonda (ADR-036), ostida "shundan jarayonda: N dona, X so'm".
-2. **Davr chizig'i:** Bugun, Kecha, Shu oy, Oy prognozi (run-rate), O'tgan oy — har birida tushum, sof foyda,
-   buyurtma (dona) va "shundan jarayonda".
-3. **Kunlik grafik:** tushum (ustun: yakunlangan + ustida jarayondagi qatlam) va sof foyda (chiziq) bir o'qda.
+1. **Uch raqam** (asosiy element, 04 §6.3): tanlangan davr uchun **Naqd sof foyda** (Yakunlangan sotuvlar) +
+   **Kutilayotgan sof foyda** (Jarayondagi sotuvlar, F16) = **Jami sof foyda** (F12). Naqd ostida — yakunlangan dona
+   va tushum; kutilayotgan ostida — jarayondagi dona va tushum, R (fakt), taxminiy logistika donasi; jami ostida —
+   oldingi davrga nisbatan o'zgarish (oldingi davrda sotuv bo'lmasa — foizsiz) va marja. Har raqamda formula ("?"),
+   "Qanday hisoblandi" — Foyda sahifasiga (filtrlar bilan).
+2. **Davr chizig'i:** Bugun, Kecha, Shu oy, Oy prognozi (run-rate), O'tgan oy — har birida tushum, sof foyda
+   (ostida "naqd X · kutilayotgan Y"), buyurtma (dona).
+3. **Kunlik grafik:** sof foyda (ustun: naqd + ustida kutilayotgan qatlam); almashtirgich bilan — tushum (yakunlangan +
+   jarayondagi qatlam).
 4. **Diqqat talab qiladi** (ustuvorlik bo'yicha): tannarxsiz sotuvlar, tugayotgan tovar, zarar bilan sotilayotgan
    SKU, yangi jarimalar, kechikayotgan kargo, sinxron xatosi, Uzum to'lovi kutilmoqda.
 5. **Eng foydali 5 / zarar 5 SKU.**
 6. **Qo'shimcha ko'rsatkichlar:** marja (yonida tannarxsiz qism ulushi, F13), ROI, bekor %, qaytish %, reklama ulushi (DRR), muzlagan pul, yo'ldagi
-   tovar qiymati, Jarayondagi sotuvlar (F16).
+   tovar qiymati.
 
 Qabul mezonlari: 1 yillik, 50 000 sotuv qatori bilan javob p95 < 700 ms; davr va do'kon tanlovi URL'da
 (havolani ulashsa shu ko'rinish ochiladi); 360 px kenglikda gorizontal skroll yo'q.
@@ -116,13 +119,16 @@ Qabul mezonlari: 1 yillik, 50 000 sotuv qatori bilan javob p95 < 700 ms; davr va
 
 - Hisobot qatorlari: F3 → F4 → F5 → F6 → F7 → F8 → F9 (turlari alohida: reklama, saqlash, qaytim saqlash,
   jarimalar, fotostudiya, pul yechish xizmati, kompensatsiya) → F10 (toifalar bo'yicha) → F11 → **F12**.
-- Ustunlar: tanlangan davr, tushumga nisbatan %, oldingi davr, farq. Ko'rinishlar: oylar bo'yicha (ustun = oy),
-  do'konlar bo'yicha, SKU / toifa bo'yicha.
+- Ustunlar (ADR-037): **naqd** (Yakunlangan sotuvlar), **kutilayotgan** (Jarayondagi sotuvlar), **jami**, tushumga
+  nisbatan %, oldingi davr, farq, o'zgarish (jami bo'yicha). O'rta ekranda — naqd, kutilayotgan, jami; tor ekranda bitta
+  pul ustuni (almashtirgich, standart — jami). Ko'rinishlar: oylar bo'yicha (ustun = oy), do'konlar bo'yicha, SKU /
+  toifa bo'yicha — har birida sof foyda ostida "shundan naqd / kutilayotgan".
 - Do'kon va SKU kesimlarida F9/F10 xarajatlari ikki qismda: **to'g'ridan-to'g'ri** (SKU'ga bog'langan) va
   **taqsimlangan** (do'kon / tashkilot xarajatining tushum ulushi); sotuvsiz kun xarajati — "Taqsimlanmagan" (ADR-026).
 - Grafik: sharshara (waterfall) — tushumdan sof foydagacha.
-- Sotuvlar Yakunlangan + Jarayonda (ADR-036); sarlavha ostida "shundan jarayonda". **Jarayondagi sotuvlar** bloki
-  (F16): dona, tushum, yalpi foyda va fakt — oxirgi 90 kunda bunday sotuvlarning necha foizi yakunlangan.
+- Sotuvlar Yakunlangan + Jarayonda (ADR-036). **Kutilayotgan sof foyda** bloki (F16, ADR-037): summa, dona, tushum,
+  fakt — oxirgi 90 kunda bunday sotuvlarning necha foizi yakunlangan, taxminiy logistika, tannarxsiz qism, do'konlar
+  bo'yicha. Kutilayotgan logistika taxmini hisob varag'ida "≈" bilan belgilanadi va izohlanadi.
 - **Tannarx qamrovi** (F15) < 100% bo'lsa, qizil emas, sariq banner: "N ta sotuv (X so'm) tannarxsiz — foydaga
   kirmadi. [Tannarx kiritish]".
 - Uzum xarajatlari API bergandek (ADR-035): logistika yoki boshqa xarajat 0 kelsa — 0, sababi so'ralmaydi;
@@ -131,7 +137,8 @@ Qabul mezonlari: 1 yillik, 50 000 sotuv qatori bilan javob p95 < 700 ms; davr va
 - Excel va PDF eksport.
 
 Qabul mezonlari: P&L'dagi sof foyda = bosh sahifadagi sof foyda = SKU jadvali yig'indisi (bitta funksiya);
-oylar yig'indisi = butun davr; har drill-down yig'indisi qator summasiga teng (avtomatik test).
+oylar yig'indisi = butun davr; har qatorda naqd + kutilayotgan = jami; har drill-down yig'indisi qator summasiga teng
+(avtomatik test).
 
 ## M6. Mahsulotlar (SKU va unit-iqtisod) [B4]
 
@@ -331,8 +338,10 @@ Uzum `amount` = 0, `commission`, `logisticDeliveryFee`, `sellerProfit` = 0 berad
 **F4. Uzum komissiyasi** = Σ `commission` (Yakunlangan + Jarayonda).
 
 **F5. Logistika** = Σ `logisticDeliveryFee` (Yakunlangan + Jarayonda). Xarajatlardagi logistika kodlari qayta ayrilmaydi.
-Uzum logistikani tovar punktdan olib ketilganda yozadi (buyurtma sanasidan qat'i nazar; Temur, 2026-11-02) — undan
-oldin Jarayondagi qatorda 0, taxmin qo'shilmaydi (ADR-035).
+Uzum logistikani tovar punktdan olib ketilganda yozadi (buyurtma sanasidan qat'i nazar; Temur, 2026-11-02). Shuning
+uchun hali topshirilmagan (`dateIssued` yo'q) va logistikasi 0 Jarayondagi qator uchun **kutilayotgan logistika** =
+F40 tarifi × dona taxminiy qo'shiladi (ADR-037; "taxminiy" belgisi, drill-down'da qator bo'yicha); topshirilgandan keyin
+0 kelsa — 0 (ADR-035); tarif noma'lum — taxmin yo'q, soni ko'rsatiladi. Yakunlangan qator — Uzum bergandek.
 
 **F6. Uzum to'lovi** = F3 − F4 − F5. `sellerProfit` kelgan qatorlarda solishtiriladi; farq > 1 so'm bo'lsa log.
 
@@ -358,7 +367,9 @@ aniq summa (legacy `AD_RE`) ishlatiladi.
 Stavkalar bazada sana bo'yicha (2026: YaTT 1% yillik daromad 1 mlrd so'mgacha; e-tijorat yuridik shaxslari uchun
 bazaviy 4% / 15% — 08-tadqiqot.md, buxgalter bilan tasdiqlanadi).
 
-**F12. Sof foyda** = F8 − F9 − F10 − F11.
+**F12. Sof foyda** = F8 − F9 − F10 − F11. Ikki qismda (ADR-037): **naqd** (Yakunlangan sotuvlar) + **kutilayotgan**
+(Jarayondagi sotuvlar, F16) = F12. F9, F10 har katakda (kun × do'kon × SKU) qismlarga tushum ulushida bo'linadi, F11 —
+har qismning o'z tushumidan, F15 — har qismda; sotuvsiz kun xarajati — naqdda; naqd = F12 − kutilayotgan.
 
 **F13. Marja** = F12 / (tannarxi ma'lum qatorlar tushumi) — F15 bilan bir asosda (ADR-024); qamrov 100% bo'lsa
 F12 / F3. Marja yonida doim **tannarxsiz qism ulushi** = 1 − F15 alohida ko'rsatiladi (0% bo'lsa yashiriladi).
@@ -368,10 +379,11 @@ F12 / F3. Marja yonida doim **tannarxsiz qism ulushi** = 1 − F15 alohida ko'rs
 qatorlar bo'yicha hisoblanadi; F9, F10, F11 qamrov ulushiga mutanosib qismi ayriladi; qolgani "tannarxsiz qism"
 qatorida alohida ko'rsatiladi. (Legacy hamma xarajatni ayirib, foydani kam ko'rsatardi.)
 
-**F16. Jarayondagi sotuvlar** (ADR-036; ular F3–F12 ga allaqachon kirgan): dona, tushum, yalpi foyda = Σ (F6 − F7)
-Jarayondagi tannarxi ma'lum qatorlar. R = do'konning oxirgi 90 kunida yakuniy holatga yetgan donalar ichida
-Yakunlangan ulushi — **fakt** sifatida ko'rsatiladi ("bunday sotuvlarning X% yakunlangan"), summaga ko'paytirilmaydi.
-Ma'lumot kam bo'lsa (< 50 dona) R ko'rsatilmaydi.
+**F16. Kutilayotgan sof foyda** (ADR-036, ADR-037; F12 ning qismi) = Jarayondagi sotuvlar qismi, xuddi naqd kabi:
+tushum − komissiya − logistika (Uzum hali yozmagani — F5 taxmini) − tannarx − F9, F10 ning tushum ulushidagi qismi −
+F11 (o'z tushumidan), F15 qamrovi bilan. R = tanlangan do'konlarning oxirgi 90 kunida yakuniy holatga yetgan donalar
+ichida Yakunlangan ulushi — **fakt** sifatida ko'rsatiladi ("bunday sotuvlarning X% yakunlangan"), summaga
+ko'paytirilmaydi. Ma'lumot kam bo'lsa (< 50 dona) R ko'rsatilmaydi.
 
 **F17. Bekor ulushi** = Bekor / (Yakunlangan + Bekor), dona bo'yicha. Bekor dona = `amount` + `amountReturns` (F2).
 
@@ -467,8 +479,8 @@ ish kuni), oraliq + 4 ish kuni (Uzum kechiktirishi mumkin). Summa = shu davrda Y
 oxirgi pullik (logistika > 0) Yakunlangan sotuvi bo'yicha bir dona logistika; bo'lmasa do'konning odatiy (oxirgi
 90 kundagi eng ko'p uchragan, teng bo'lsa kattasi) pullik tarifi; SKU o'lchamlari bazada bo'lsa (B4.6) — F37 (kodda
 hozircha qo'llanmaydi). Logistikasi 0 qatorlar (sababi qanday bo'lmasin) hisobga olinmaydi, sotuvchidan hech narsa
-so'ralmaydi; pullik qator yo'q — qiymat yo'q (maydon bo'sh, taxmin qilinmaydi). P&L va hisob varag'i Uzum
-bergandek qoladi (F3–F16).
+so'ralmaydi; pullik qator yo'q — qiymat yo'q (maydon bo'sh, taxmin qilinmaydi). P&L'da faqat Uzum hali yozmagan
+Jarayondagi logistika taxmini uchun ishlatiladi (F5, ADR-037, hisobot kunidagi tarif); qolgani Uzum bergandek.
 
 **F41. Boshlang'ich holat** (ADR-033). Boshlash sanasi S (tashkilot sozlamasi, ixtiyoriy), tovar bo'yicha tarixiy
 narxlar {(sana dan, dona narxi)} (sana yo'q — boshidan) va S kunidagi qoldiq Q = Uzumda (FBO + FBS; taklif — S dan

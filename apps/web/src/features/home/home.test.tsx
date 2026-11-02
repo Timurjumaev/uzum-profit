@@ -1,5 +1,6 @@
-// Bosh sahifa (M4, B4.1): hisob varag'i, davr chizig'i, grafik, "Diqqat talab qiladi", SKU, ko'rsatkichlar, drill-down.
-// Butun ilova (marshrutlovchi + so'rovlar) soxta API ustida — `test/api.ts`.
+// Bosh sahifa (M4, ADR-037): uch raqam (naqd + kutilayotgan = jami sof foyda), davr chizig'i, grafik, "Diqqat talab
+// qiladi", SKU, ko'rsatkichlar. Hisob varag'i va drill-down — Foyda sahifasida (`pnl.test.tsx`). Butun ilova
+// (marshrutlovchi + so'rovlar) soxta API ustida — `test/api.ts`.
 import { createMemoryHistory } from "@tanstack/react-router";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import axe from "axe-core";
@@ -10,13 +11,11 @@ import { formatterFor } from "../../lib/format";
 import {
   dashboardData,
   DASHBOARD_ROUTE,
-  EXPENSES_ROUTE,
   json,
   ME,
   ME_ROUTE,
   mockApi,
   problem,
-  SALES_ROUTE,
   SHOP_A,
   SYNC_ROUTE,
   syncStatus,
@@ -46,37 +45,70 @@ async function renderHome(path = "/", routes: Routes = {}, lang: "uz-Latn" | "ru
   return { api, history };
 }
 
-const ledger = () => screen.getByRole("table", { name: "Hisob varagʻi: tushumdan sof foydagacha" });
-const row = (name: string) => within(ledger()).getByRole("row", { name: new RegExp(`^${name}`) });
+const card = (testId: string) => within(screen.getByTestId(testId).closest("li")!);
 const requestUrls = (api: ReturnType<typeof mockApi>, path: string) =>
   api.fetch.mock.calls.map(([r]) => new URL((r as Request).url)).filter((u) => u.pathname === path);
 
-describe("hisob varag'i", () => {
-  it("sof foyda (hero) va qatorlar tartibi: tushumdan sof foydagacha", async () => {
+describe("uch raqam (ADR-037)", () => {
+  it("sarlavha va tenglama: naqd + kutilayotgan = jami sof foyda (summalar API'dan)", async () => {
     await renderHome();
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(`Sof foyda, ${f.period("2026-10-01", "2026-10-26")}`);
+    expect(norm(screen.getByTestId("net-done").textContent!)).toBe(m("31508700.00"));
+    expect(norm(screen.getByTestId("net-expected").textContent!)).toBe(m("16884300.00"));
     expect(norm(screen.getByTestId("net-profit").textContent!)).toBe(m("48393000.00"));
-    const names = within(ledger())
-      .getAllByRole("row")
-      .map((r) => within(r).getByRole("rowheader").textContent);
-    expect(names).toEqual(["Tushum", "Uzum komissiyasi", "Logistika", "Uzum toʻlovi", "Tannarx", "Reklama", "Saqlash", "Oʻz xarajatlarim", "Soliq", "Sof foyda"]);
-    // oraliq summa va yakun — buxgalteriya chiziqlari (sinf), summalar valyutasiz va API'dan.
-    expect(row("Uzum toʻlovi").className).toContain("is-subtotal");
-    expect(row("Sof foyda").className).toContain("is-total");
-    expect(within(row("Uzum komissiyasi")).getByText(n("-37284000.00"))).toBeTruthy();
-    expect(within(row("Oʻz xarajatlarim")).getAllByText("0").length).toBeGreaterThan(0);
+    const labels = screen.getAllByRole("heading", { level: 2 }).slice(0, 3).map((h) => h.firstChild?.textContent);
+    expect(labels).toEqual(["Naqd sof foyda", "Kutilayotgan sof foyda", "Jami sof foyda"]);
+    // Amal belgilari — bezak (ekran o'quvchi ro'yxatni 3 ta element sifatida o'qiydi).
+    expect([...document.querySelectorAll(".home-sum__op")].map((x) => x.textContent)).toEqual(["+", "="]);
+    expect(screen.getByTestId("net-done").className).toContain("ui-text--positive");
   });
 
-  it("oldingi davrga nisbatan o'zgarish: ishora + nom bilan davr; rang = yo'nalish × yaxshimi", async () => {
+  it("izohlar: yakunlangan va jarayondagi dona, tushum, yakunlanish ulushi (fakt), taxminiy logistika", async () => {
     await renderHome();
-    const hero = screen.getByText(/oldingi davrga nisbatan/);
-    expect(norm(hero.textContent ?? "")).toContain(norm(f.period("2026-09-05", "2026-09-30")));
-    expect(norm(hero.parentElement?.textContent ?? "")).toContain(ch("0.124274"));
-    // Tushum o'sdi — yaxshi; komissiya (xarajat) o'sdi — yomon, ▲ kattalik bo'yicha; logistika kamaydi — yaxshi.
-    expect(within(row("Tushum")).getByText(ch("0.129818")).className).toContain("ui-text--positive");
-    const commission = within(row("Uzum komissiyasi")).getByText(ch("0.129818"));
-    expect(commission.className).toContain("ui-text--negative");
-    expect(within(row("Logistika")).getByText(ch("-0.067781")).className).toContain("ui-text--positive");
+    expect(norm(card("net-done").getByText(/^Yakunlangan sotuvlar:/).textContent!)).toBe(`Yakunlangan sotuvlar: 830 dona, tushum ${m("125420000.00")}`);
+    expect(norm(card("net-expected").getByText(/^Jarayonda:/).textContent!)).toBe(`Jarayonda: 410 dona, tushum ${m("61000000.00")}`);
+    expect(norm(card("net-expected").getByText(/bunday sotuvlarning/).textContent!)).toBe(norm(`Oxirgi 90 kunda bunday sotuvlarning ${f.percent("0.870000")} yakunlangan`));
+    expect(card("net-expected").getByText("Logistika 380 dona uchun taxminiy — Uzum hali yozmagan")).toBeTruthy();
+    expect(norm(card("net-profit").getByText(/oldingi davrga nisbatan/).textContent!)).toContain(norm(f.period("2026-09-05", "2026-09-30")));
+    expect(norm(card("net-profit").getByText(ch("0.124274")).textContent!)).toBe(ch("0.124274"));
+    expect(card("net-profit").getByText(norm(`Marja ${f.percent("0.259400")}`))).toBeTruthy();
+  });
+
+  it("formula: naqd (F12), kutilayotgan (F16, taxminiy sababi bilan), jami", async () => {
+    await renderHome();
+    fireEvent.click(card("net-expected").getByRole("button", { name: /Qanday hisoblanadi/ }));
+    expect(screen.getByText("Kutilayotgan sof foyda · F16")).toBeTruthy();
+    expect(screen.getByText(/xuddi naqd kabi: tushum − komissiya − logistika − tannarx/)).toBeTruthy();
+    expect(screen.getByText(/10 kun ichida qaytarsa kamayadi/)).toBeTruthy();
+    fireEvent.keyDown(document.activeElement!, { key: "Escape" });
+    fireEvent.click(card("net-profit").getByRole("button", { name: /Qanday hisoblanadi/ }));
+    expect(screen.getByText("Naqd sof foyda + kutilayotgan sof foyda")).toBeTruthy();
+  });
+
+  it("jarayondagi sotuv yo'q va yakunlangan yo'q — bo'sh matnlar; zarar — qizil", async () => {
+    const base = dashboardData();
+    const data = dashboardData({
+      statement: { ...base.statement, units_done: 0, net_profit_done: "-650000.00" },
+      expected: { ...base.expected, units: 0, net_profit: "0.00", logistics_estimated_units: 0 },
+    });
+    await renderHome("/", { [DASHBOARD_ROUTE]: () => json(200, data) });
+    expect(card("net-done").getByText("Bu davrda yakunlangan sotuv hali yoʻq")).toBeTruthy();
+    expect(screen.getByTestId("net-done").className).toContain("ui-text--negative");
+    expect(card("net-expected").getByText("Jarayondagi sotuv yoʻq")).toBeTruthy();
+    expect(card("net-expected").queryByText(/taxminiy/)).toBeNull();
+  });
+
+  it("yakunlanish ulushi uchun ma'lumot kam — shunday deyiladi (R o'ylab topilmaydi)", async () => {
+    const base = dashboardData();
+    await renderHome("/", { [DASHBOARD_ROUTE]: () => json(200, dashboardData({ expected: { ...base.expected, rate: null } })) });
+    expect(card("net-expected").getByText("Yakunlanish ulushi uchun maʼlumot hali kam")).toBeTruthy();
+  });
+
+  it("'Qanday hisoblandi' — Foyda sahifasiga (filtrlar saqlanadi); bosh sahifada hisob varag'i yo'q", async () => {
+    await renderHome("/?from=2026-10-01&to=2026-10-20");
+    const how = screen.getByRole("link", { name: "Qanday hisoblandi — «Foyda» sahifasida" });
+    expect(how.getAttribute("href")).toBe("/pnl?from=2026-10-01&to=2026-10-20");
+    expect(screen.queryByRole("table", { name: /Hisob varagʻi/ })).toBeNull();
   });
 
   it("filtrlar URL'dan API'ga: davr va do'kon", async () => {
@@ -97,24 +129,6 @@ describe("hisob varag'i", () => {
     expect(banner.className).toContain("ui-tone--warning");
     expect(norm(banner.textContent!)).toContain(`12 ta sotuv (${m("1240000.00")})`);
     expect(within(banner as HTMLElement).getByRole("link", { name: "Tannarx kiritish" }).getAttribute("href")).toBe("/products");
-  });
-
-  it("mobilda yig'ilgan ko'rinish: 'Barcha qatorlar' tugmasi", async () => {
-    await renderHome();
-    const toggle = screen.getByRole("button", { name: "Barcha qatorlar" });
-    expect(toggle.getAttribute("aria-expanded")).toBe("false");
-    expect(ledger().getAttribute("data-compact")).toBe("true");
-    expect(within(ledger()).getAllByRole("row").filter((r) => r.className.includes("is-compact-hidden"))).toHaveLength(7);
-    fireEvent.click(toggle);
-    expect(ledger().getAttribute("data-compact")).toBeNull();
-    expect(screen.getByRole("button", { name: "Qatorlarni yigʻish" }).getAttribute("aria-expanded")).toBe("true");
-  });
-
-  it("har qatorda formula: F-raqam va manba", async () => {
-    await renderHome();
-    fireEvent.click(within(row("Soliq")).getByRole("button", { name: /Qanday hisoblanadi/ }));
-    expect(screen.getByText("Soliq · F11")).toBeTruthy();
-    expect(screen.getByText("Soliq profili boʻyicha")).toBeTruthy();
   });
 });
 
@@ -138,12 +152,10 @@ describe("davr chizig'i va grafik", () => {
     expect(tile("Bugun").getByText("38 dona")).toBeTruthy();
     expect(tile("Kecha").getByText(m("1810000.00"))).toBeTruthy();
     expect(tile("Oʻtgan oy").getByText(m("47000000.00"))).toBeTruthy();
-    // ADR-036: Jarayondagi sotuvlar hisobga kirgan — qaysi qismi yakuniy emasligi yoziladi; yo'q bo'lsa izoh yo'q.
-    expect(norm(tile("Bugun").getByText(/shundan jarayonda/).textContent!)).toBe(`shundan jarayonda: 38 dona, ${m("5200000.00")}`);
-    expect(tile("Oʻtgan oy").queryByText(/shundan jarayonda/)).toBeNull();
-    expect(tile("Oy prognozi").queryByText(/shundan jarayonda/)).toBeNull();
-    const hero = norm(screen.getByText(/^Shundan jarayonda:/).textContent!);
-    expect(hero).toContain(`410 dona, ${m("61000000.00")} tushum — hali yakuniy emas.`);
+    // ADR-037: sof foyda ostida naqd va kutilayotgan qismlari (API'dan); kutilayotgan yo'q — izoh yo'q.
+    expect(norm(tile("Kecha").getByText(/^naqd /).textContent!)).toBe(`naqd ${m("60000.00")} · kutilayotgan ${m("1750000.00")}`);
+    expect(tile("Oʻtgan oy").queryByText(/kutilayotgan/)).toBeNull();
+    expect(tile("Oy prognozi").queryByText(/kutilayotgan/)).toBeNull();
     // Prognoz (run-rate) API'dan; dona butun songa yaxlitlanadi.
     expect(tile("Oy prognozi").getByText(m("216000000.00"))).toBeTruthy();
     expect(tile("Oy prognozi").getByText("1 437 dona")).toBeTruthy();
@@ -159,16 +171,17 @@ describe("davr chizig'i va grafik", () => {
     expect(tile("Oy prognozi").getByText("Maʼlumot yetarli emas")).toBeTruthy();
   });
 
-  it("kunlik grafik: tushum (ustun) va sof foyda (chiziq), jadval ko'rinishi", async () => {
+  it("kunlik grafik: sof foyda naqd va kutilayotgan qatlamlarda; 'Tushum' — yakunlangan va jarayonda; jadval", async () => {
     await renderHome();
-    const chart = await screen.findByRole("img", { name: /Kunlik tushum va sof foyda/ });
-    expect(chart.getAttribute("aria-label")).toContain("Tushum");
+    const chart = await screen.findByRole("img", { name: /Kunlik sof foyda: naqd va kutilayotgan/ });
+    expect(chart.getAttribute("aria-label")).toContain("Kutilayotgan");
     fireEvent.click(screen.getByRole("radio", { name: "Jadval" }));
-    const table = await screen.findByRole("table", { name: /Kunlik tushum va sof foyda/ });
+    const table = await screen.findByRole("table", { name: /Kunlik sof foyda/ });
     expect(within(table).getAllByRole("row")).toHaveLength(4); // sarlavha + 3 kun
-    // ADR-036: tushum ikki qatlam — yakunlangan va jarayonda (qismlar API'dan).
-    expect(chart.getAttribute("aria-label")).toContain("Tushum: jarayonda");
-    expect(within(table).getAllByText(/6\s800\s000/).length).toBeGreaterThan(0);
+    expect(within(table).getAllByText(/1\s750\s000/).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("radio", { name: "Tushum" }));
+    const revenue = await screen.findByRole("table", { name: /Kunlik tushum: yakunlangan va jarayonda/ });
+    expect(within(revenue).getAllByText(/6\s800\s000/).length).toBeGreaterThan(0);
   });
 });
 
@@ -232,7 +245,7 @@ describe("eng foydali 5 / zarar 5 va ko'rsatkichlar", () => {
     expect(screen.getByText("Zarar qilayotgan SKU yoʻq.")).toBeTruthy();
   });
 
-  it("ko'rsatkichlar: marja, ROI, bekor %, qaytish %, DRR, muzlagan pul, yo'ldagi tovar, kutilayotgan foyda", async () => {
+  it("ko'rsatkichlar: marja, ROI, bekor %, qaytish %, DRR, muzlagan pul, yo'ldagi tovar", async () => {
     await renderHome();
     const kpis = within(screen.getByRole("region", { name: "Qoʻshimcha koʻrsatkichlar" }));
     const value = (label: string) => norm(kpis.getByText(label).closest(".ui-kpi")!.querySelector(".kpi")!.textContent ?? "");
@@ -243,9 +256,9 @@ describe("eng foydali 5 / zarar 5 va ko'rsatkichlar", () => {
     expect(value("Reklama ulushi (DRR)")).toBe(norm(f.percent("0.032200")));
     expect(value("Muzlagan pul")).toBe(m("92000000.00"));
     expect(value("Yoʻldagi tovar qiymati")).toBe(m("31000000.00"));
-    expect(value("Jarayondagi sotuvlar")).toBe(m("61000000.00"));
-    expect(norm(kpis.getByText(/oxirgi 90 kunda bunday sotuvlarning/).textContent!)).toBe(norm(`410 dona; oxirgi 90 kunda bunday sotuvlarning ${f.percent("0.870000")} yakunlangan`));
     expect(kpis.getByText("oʻrtacha sotilish: 42 kun")).toBeTruthy();
+    // Kutilayotgan sof foyda — yuqoridagi uch raqamda (ADR-037), bu yerda takrorlanmaydi.
+    expect(kpis.queryByText("Jarayondagi sotuvlar")).toBeNull();
   });
 
   it("tannarxsiz qism marja yonida; ma'lumot yo'q — '—' va sababi (taxmin yashirilmaydi)", async () => {
@@ -257,16 +270,12 @@ describe("eng foydali 5 / zarar 5 va ko'rsatkichlar", () => {
         uncovered_share: "0.250000",
         roi: null,
         drr: null,
-        pending: { units: 4, revenue: "500000.00", profit: "120000.00", uncovered_lines: 0, rate: null },
       },
     });
     await renderHome("/", { [DASHBOARD_ROUTE]: () => json(200, data) });
     const kpis = within(screen.getByRole("region", { name: "Qoʻshimcha koʻrsatkichlar" }));
     expect(kpis.getByText("Tannarxsiz qism: 25%")).toBeTruthy();
     expect(kpis.getByText("ROI").closest(".ui-kpi")!.querySelector(".kpi")!.textContent).toBe("—");
-    // ADR-036: Jarayondagi sotuvlar — tushum (foydaga kirgan), R yo'q bo'lsa faqat dona.
-    expect(norm(kpis.getByText("Jarayondagi sotuvlar").closest(".ui-kpi")!.querySelector(".kpi")!.textContent!)).toBe(m("500000.00"));
-    expect(kpis.getByText("4 dona — foydaga kirgan, hali yakuniy emas")).toBeTruthy();
   });
 });
 
@@ -312,135 +321,25 @@ describe("holatlar", () => {
     expect(api.count(DASHBOARD_ROUTE)).toBe(2);
   });
 
-  it("ruscha: sarlavha va qatorlar", async () => {
+  it("ruscha: sarlavha va uch raqam", async () => {
     await renderHome("/", {}, "ru");
     expect(screen.getByRole("heading", { level: 1 }).textContent).toMatch(/^Чистая прибыль, /);
-    expect(screen.getByRole("table", { name: /Расчётный лист/ })).toBeTruthy();
+    expect(screen.getByText("Фактическая чистая прибыль")).toBeTruthy();
+    expect(screen.getByText("Ожидаемая чистая прибыль")).toBeTruthy();
+    expect(screen.getByText("Итого чистая прибыль")).toBeTruthy();
     expect(screen.getByText("Требует внимания")).toBeTruthy();
   });
 });
 
-describe("drill-down", () => {
-  const sale = (id: string, over: Record<string, unknown> = {}) => ({
-    id,
-    shop_id: SHOP_A,
-    sku_id: "d1",
-    sku_title: "Sumka qora M",
-    order_id: 1,
-    external_id: 1,
-    ordered_at: "2026-10-12T10:00:00Z",
-    day: "2026-10-12",
-    status: "TO_WITHDRAW",
-    group: "completed",
-    amount: 2,
-    amount_returns: 0,
-    return_cause: null,
-    sell_price: "100000.00",
-    revenue: "200000.00",
-    commission: "40000.00",
-    logistics: "10000.00",
-    payout: "150000.00",
-    cogs: "80000.00",
-    gross_profit: "70000.00",
-    cost_flags: [],
-    recalculated_at: null,
-    previous_cogs: null,
-    ...over,
-  });
-  const page = (items: unknown[], next: string | null) => ({
-    meta: dashboardData().meta,
-    items,
-    next_cursor: next,
-    summary: { units: 2, canceled: 0, returns: 0, cancel_share: null, return_share: null },
-  });
-  const drawer = () => screen.getByRole("dialog");
-
-  it("Tushum: yakunlangan va jarayondagi sotuv qatorlari, jami API qatoridan, kursor bilan 'Yana yuklash'", async () => {
-    const { api } = await renderHome("/?from=2026-10-01&to=2026-10-20", {
-      [SALES_ROUTE]: [
-        () => json(200, page([sale("s1", { status: "PROCESSING", group: "processing" }), sale("s2", { sku_id: null, sku_title: null, day: "2026-10-11" })], "c2")),
-        () => json(200, page([sale("s3", { day: "2026-10-10" })], null)),
-      ],
-    });
-    fireEvent.click(within(ledger()).getByRole("button", { name: "Tushum" }));
-    const dlg = await screen.findByRole("dialog", { name: "Tushum" });
-    expect(within(dlg).getByText(m("186420000.00"), { selector: ".kpi" })).toBeTruthy(); // jami — hisob varag'idagi qator, qayta hisoblanmagan
-    expect(await within(dlg).findByText("Sumka qora M")).toBeTruthy();
-    expect(within(dlg).getByText("SKU bogʻlanmagan")).toBeTruthy();
-    expect(within(dlg).getAllByText("Jarayonda")).toHaveLength(1); // Jarayondagi qator belgilanadi (ADR-036)
-    expect(within(dlg).getAllByText(n("200000.00"), { selector: "td" })).toHaveLength(2);
-    const [first] = requestUrls(api, SALES_ROUTE.split(" ")[1]!);
-    expect(first!.searchParams.get("counted")).toBe("true"); // Yakunlangan + Jarayonda (ADR-036)
-    expect(first!.searchParams.get("group")).toBeNull();
-    expect(first!.searchParams.get("start")).toBe("2026-10-01");
-    expect(first!.searchParams.get("end")).toBe("2026-10-20");
-    fireEvent.click(within(dlg).getByRole("button", { name: "Yana yuklash" }));
-    await waitFor(() => expect(within(dlg).getAllByRole("row")).toHaveLength(4)); // sarlavha + 3
-    expect(requestUrls(api, SALES_ROUTE.split(" ")[1]!)[1]!.searchParams.get("cursor")).toBe("c2");
-    expect(within(dlg).queryByRole("button", { name: "Yana yuklash" })).toBeNull();
-  });
-
-  it("Tannarx: taxminiy belgi (F22) va qiymat ustuni tannarx", async () => {
-    await renderHome("/", {
-      [SALES_ROUTE]: () => json(200, page([sale("s1", { cost_flags: ["estimated"] }), sale("s2", { cogs: null })], null)),
-    });
-    fireEvent.click(within(ledger()).getByRole("button", { name: "Tannarx" }));
-    const dlg = await screen.findByRole("dialog", { name: "Tannarx" });
-    await within(dlg).findByText("Sumka qora M", { exact: true, selector: "td" }).catch(() => undefined);
-    expect(await within(dlg).findByText("Taxminiy", { selector: ".ui-badge" })).toBeTruthy();
-    expect(within(dlg).getByRole("columnheader", { name: "Tannarx" })).toBeTruthy();
-    expect(within(dlg).getByText(n("80000.00"))).toBeTruthy();
-  });
-
-  it("Uzum toifasi: shu toifa xarajatlari (chiqim — minus), toifa so'rovda", async () => {
-    const expense = (id: string, type: string, amount: string) => ({
-      id, shop_id: SHOP_A, external_id: 1, created_on: "2026-10-05T10:00:00Z", day: "2026-10-05", code: "Y1", raw_code: "Y1",
-      category: "advertising", type, amount, name: "Reklama kampaniyasi", status: null, excluded: null, in_pnl: true, order_id: null, sale_item_id: null,
-    });
-    const { api } = await renderHome("/", {
-      [EXPENSES_ROUTE]: () =>
-        json(200, {
-          meta: dashboardData().meta, uzum: [], uzum_total: "0.00", by_month: [], fines: [], own: [], own_total: "0.00", own_items: [],
-          items: [expense("e1", "OUTCOME", "300000.00"), expense("e2", "INCOME", "50000.00")], next_cursor: null,
-        }),
-    });
-    fireEvent.click(within(ledger()).getByRole("button", { name: "Reklama" }));
-    const dlg = await screen.findByRole("dialog", { name: "Reklama" });
-    expect(await within(dlg).findAllByText("Reklama kampaniyasi")).toHaveLength(2);
-    expect(within(dlg).getByText(n("-300000.00"))).toBeTruthy();
-    expect(within(dlg).getByText(n("50000.00"))).toBeTruthy();
-    expect(requestUrls(api, EXPENSES_ROUTE.split(" ")[1]!)[0]!.searchParams.get("category")).toBe("advertising");
-  });
-
-  it("hisoblanadigan qator (Soliq): yozuv yo'q, faqat formula; sotuv so'ralmaydi", async () => {
-    const { api } = await renderHome();
-    fireEvent.click(within(ledger()).getByRole("button", { name: "Soliq" }));
-    const dlg = await screen.findByRole("dialog", { name: "Soliq" });
-    expect(within(dlg).getByText(/Bu qator boshqa qatorlardan hisoblanadi/)).toBeTruthy();
-    expect(within(dlg).getByText(/F11: Soliq profili boʻyicha/)).toBeTruthy();
-    expect(api.count(SALES_ROUTE)).toBe(0);
-  });
-
-  it("ruxsat yo'q (xarajatlar sozlama ruxsati) — drawer ichida xato matni; Esc yopadi", async () => {
-    await renderHome("/", { [EXPENSES_ROUTE]: () => problem(403, "forbidden") });
-    fireEvent.click(within(ledger()).getByRole("button", { name: "Saqlash" }));
-    const dlg = await screen.findByRole("dialog", { name: "Saqlash" });
-    expect((await within(dlg).findByRole("alert")).textContent).toContain("Bu sahifaga ruxsatingiz yoʻq.");
-    fireEvent.keyDown(drawer(), { key: "Escape" });
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-  });
-});
-
 describe("kirish imkoniyati", () => {
-  it("axe-core: jiddiy xato 0 (drawer ochiq ham)", async () => {
+  it("axe-core: jiddiy xato 0 (formula ochiq ham)", async () => {
     await renderHome();
     const run = async () => {
       const result = await axe.run(document.body, { rules: { "color-contrast": { enabled: false } } });
       return result.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`);
     };
     expect(await run()).toEqual([]);
-    fireEvent.click(within(ledger()).getByRole("button", { name: "Soliq" }));
-    await screen.findByRole("dialog", { name: "Soliq" });
+    fireEvent.click(card("net-done").getByRole("button", { name: /Qanday hisoblanadi/ }));
     expect(await run()).toEqual([]);
   }, 30_000);
 });

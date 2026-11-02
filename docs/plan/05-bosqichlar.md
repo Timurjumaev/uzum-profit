@@ -390,6 +390,25 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   jadvalida biror marta sotilgan (Yakunlangan yoki Jarayonda) yoki hozir qoldig'i / postavkasi bor SKU'lar, yoki saqlangan
   narx, qoldiq yoki partiyasi bor tovarlar; qolganlari (arxivlangan, bloklangan, hech qachon tovar kelmagan kartochkalar)
   ko'rsatilmaydi — soni (`hidden`) sahifada yoziladi.
+- [x] B4.18 Foyda uch raqamda: naqd + kutilayotgan = jami (ADR-037, Temur, 2026-11-02) — Asosiy va Foyda sahifalari
+  vazifasi ajratildi. ✓ 2026-11-02: `upcore.pnl` — har katakda Jarayondagi qism (`Cell.processing`): o'z sotuvlari,
+  katak xarajatlarining (F9, F10) tushum ulushidagi qismi, o'z soliq summasi (F11) va F15; `Statement.processing`,
+  `net_profit_done` / `net_profit_processing`, `compare()` da har qatorda `done` / `processing`; F5 — Uzum hali yozmagan
+  Jarayondagi logistika (topshirilmagan, 0) F40 tarifi × dona bilan taxminiy (`logistics_due`, `with_expected_logistics`,
+  hisobot kunidagi tarif), "taxminiy" sifatida sanaladi; F16 eski bloki (`PendingSales`) o'rniga kutilayotgan qism.
+  Migratsiya 0013 (`daily_sku_metrics` ga Jarayondagi qismning hamma pul ustunlari va taxmin asosi donalari + to'liq
+  qayta qurish so'rovi), `calc.daily` — `issued_at`. API: `StatementOut` (naqd/kutilayotgan sof foyda, taxminiy
+  logistika), `RowOut.done/processing`, `/dashboard` `expected` (R — tanlangan do'konlar birga), davrlar va kunlarda
+  qismlar, `/pnl` `expected` / `expected_shops`, `/sales` `logistics_estimated` (drill-down va Excel'da ham). Web: Asosiy —
+  uch kartochka (naqd + kutilayotgan = jami, izoh va formulalar, "Qanday hisoblandi" → Foyda), davr plitkalarida
+  "naqd · kutilayotgan", kunlik grafik — sof foyda qatlamlari / tushum almashtirgichi, "Jarayondagi sotuvlar" KPI
+  olib tashlandi; hisob varag'i Asosiydan olib tashlandi. Foyda — hisob varag'i ustunlari naqd / kutilayotgan / jami +
+  solishtirish, "≈" taxminiy logistika va izohi, tor ekranda ustun almashtirgichi (`Segmented`, UI-kit'da), kutilayotgan
+  sof foyda bloki (do'konlar bilan), kesimlarda "shundan naqd / kutilayotgan", drill-down va Buyurtmalarda logistika
+  "Taxminiy" belgisi. PageHelp matnlari yangilandi; `realcheck` ga "processing_logistics" bo'limi (Jarayondagi qatorlar: `dateIssued` ×
+  logistika 0 / > 0). **Qoldi:** **T:** staging'da `realcheck.sh` natijasini yuborish — `dateIssued` topshirishda to'lishi
+  real ma'lumotda tasdiqlanadi (bo'lmasa taxmin qoidasi aniqlashtiriladi); kutilayotgan foyda "qachon pulga aylanadi"
+  (to'lov sanasi bo'yicha) — B5.7 Pul oqimi bilan.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

@@ -266,6 +266,29 @@ def test_lots_sale_costs_and_metrics(org: Org) -> None:
         "AND day = %s",
         [org.org_id, sku, d(10, 6)],
     ) == [(1, D("200000.00"))]
+    # ADR-037: Jarayondagi qism hamma pul ustunlari bo'yicha (shu kunning yagona hisobga olinadigan qatori) va Uzum
+    # logistikasini hali yozmagan donalar (bu qatorda logistika yozilgan — 0).
+    assert org.sql(
+        "SELECT commission_processing, logistics_processing, cogs_processing, revenue_costed_processing, "
+        "payout_costed_processing, units_costed_processing, lines_processing, lines_uncosted_processing, "
+        "units_logistics_due, units_logistics_due_costed, lines_logistics_due FROM daily_sku_metrics "
+        "WHERE org_id = %s AND sku_id = %s AND day = %s",
+        [org.org_id, sku, d(10, 6)],
+    ) == [
+        (
+            D("40000.00"),
+            D("5000.00"),
+            D("130000.00"),
+            D("200000.00"),
+            D("155000.00"),
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+        )
+    ]
     oct5 = metrics[(sku, d(10, 5))]
     assert oct5 == (
         D("800000.00"),

@@ -1,4 +1,4 @@
-/* Bosh sahifa (M4, B4.1): maket 04 §7.2 (desktop) / §7.3 (mobil) — faqat tokenlar orqali. Hisob varag'i va jadvallarda radius yo'q (04 §3). */
+/* Bosh sahifa (M4, ADR-037): maket 04 §7.2 (desktop) / §7.3 (mobil) — faqat tokenlar orqali. Kartochka va jadvallarda radius yo'q (04 §3). */
 
 .home {
   display: grid;
@@ -6,72 +6,106 @@
   min-inline-size: 0;
 }
 
-.home__top {
-  display: grid;
-  gap: var(--space-6);
-  min-inline-size: 0;
-}
-
-.home > *,
-.home__top > *,
-.home__side > * {
+.home > * {
   min-inline-size: 0; /* grid ichida keng bola (gorizontal skrollli ro'yxat, jadval) sahifani kengaytirmasin */
 }
 
-.home__side {
+/* --- Uch raqam (ADR-037): naqd + kutilayotgan = jami sof foyda --- */
+.home-summary {
   display: grid;
-  gap: var(--space-4);
-  align-content: start;
+  gap: var(--space-3);
   min-inline-size: 0;
 }
 
-@media (min-width: 1024px) {
-  .home__top {
-    grid-template-columns: minmax(22rem, 5fr) minmax(0, 7fr);
-    align-items: start;
+.home-summary__cards {
+  display: grid;
+  gap: var(--space-6); /* amal belgisi (+, =) kartochkalar orasida */
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 900px) {
+  .home-summary__cards {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.15fr);
+    gap: var(--space-8);
   }
 }
 
-/* --- Hisob varag'i --- */
-.home-ledger {
+.home-sum {
+  position: relative;
   display: grid;
-  gap: var(--space-4);
+  align-content: start;
+  gap: var(--space-1);
   padding: var(--space-4);
   border: 1px solid var(--border-hairline);
   background: var(--bg-surface);
   min-inline-size: 0;
 }
 
-.home-ledger__head > * {
+.home-sum > :not(.home-sum__op) {
   margin: 0;
 }
 
-.home-ledger__head .hero {
-  margin-block-start: var(--space-1);
+.home-sum__label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--text-secondary);
 }
 
-.home-ledger__vs {
-  margin-block-start: var(--space-1);
+.home-sum .home-sum__amount {
+  white-space: nowrap;
+  text-align: start; /* KPI kabi — yorliq bilan bir chiziqda (".num" o'ngga tekislaydi) */
+  font-variant-numeric: tabular-nums;
 }
 
-.home-ledger .ui-ledger th,
-.home-ledger .ui-ledger td {
-  padding-inline: var(--space-2);
+/* Kutilayotgan — hali yakuniy emas: shtrix chegara (rangdan tashqari belgi, 04 §11). */
+.home-sum--expected {
+  border-style: dashed;
+  border-color: var(--border-input);
 }
 
-.home-ledger .ui-ledger__label {
-  white-space: normal;
+/* Jami — natija: hisob varag'idagi yakun chizig'i kabi. */
+.home-sum--total {
+  border-color: var(--border-rule);
 }
 
-.home-ledger__toggle {
-  display: none;
-  justify-self: start;
-}
-
-@media (max-width: 639px) {
-  .home-ledger__toggle {
-    display: inline-flex;
+@media (min-width: 1200px) {
+  .home-sum--total .home-sum__amount {
+    font: var(--type-display);
+    letter-spacing: var(--tracking-display);
   }
+}
+
+.home-sum__op {
+  position: absolute;
+  inset-block-start: calc(var(--space-6) / -2);
+  inset-inline-start: var(--space-4);
+  transform: translateY(-50%);
+  font: var(--type-h1);
+  color: var(--text-secondary);
+}
+
+@media (min-width: 900px) {
+  .home-sum__op {
+    inset-block-start: 50%;
+    inset-inline-start: calc(var(--space-8) / -2);
+    transform: translate(-50%, -50%);
+  }
+}
+
+.home-summary__vs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1);
+}
+
+.home-summary__how {
+  justify-self: start;
+  color: var(--accent-text);
+  font: var(--type-body-strong);
 }
 
 .home-change {
@@ -130,6 +164,22 @@
   margin: 0;
   text-align: start;
   font: var(--type-body-strong);
+}
+
+.home-period dd.home-period__split {
+  font: var(--type-caption);
+  color: var(--text-secondary);
+}
+
+/* --- Kunlik grafik: sof foyda / tushum --- */
+.home-chart {
+  display: grid;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.home-chart__view {
+  justify-self: start;
 }
 
 /* --- Diqqat talab qiladi --- */

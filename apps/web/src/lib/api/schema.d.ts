@@ -1445,6 +1445,7 @@ export interface components {
         DashboardOut: {
             meta: components["schemas"]["Meta"];
             statement: components["schemas"]["StatementOut"];
+            expected: components["schemas"]["ExpectedOut"];
             /** Rows */
             rows: components["schemas"]["RowOut"][];
             /** Periods */
@@ -1476,6 +1477,79 @@ export interface components {
             revenue_done: string;
             /** Revenue Processing */
             revenue_processing: string;
+            /** Net Profit Done */
+            net_profit_done: string;
+            /** Net Profit Processing */
+            net_profit_processing: string;
+        };
+        /**
+         * ExpectedOut
+         * @description F16 (ADR-037): kutilayotgan sof foyda — Jarayondagi sotuvlar qismi (mijoz hali olmagan yoki qaytarish muddati
+         *     tugamagan): tushumdan komissiya, logistika (Uzum hali yozmagani — F40 bo'yicha taxminiy), tannarx va katak
+         *     xarajatlarining tushum ulushidagi qismi ayrilgan. ``rate`` — fakt (oxirgi 90 kunda yakuniy holatga yetganlarning
+         *     Yakunlangan ulushi), summaga ko'paytirilmaydi; ma'lumot kam bo'lsa ``None``.
+         */
+        ExpectedOut: {
+            /** Units */
+            units: number;
+            /** Lines */
+            lines: number;
+            /** Revenue */
+            revenue: string;
+            /** Commission */
+            commission: string;
+            /** Logistics */
+            logistics: string;
+            /** Cogs */
+            cogs: string;
+            /** Expenses */
+            expenses: string;
+            /** Net Profit */
+            net_profit: string;
+            /** Uncovered Lines */
+            uncovered_lines: number;
+            /** Logistics Estimated */
+            logistics_estimated: string;
+            /** Logistics Estimated Units */
+            logistics_estimated_units: number;
+            /** Logistics Missing Lines */
+            logistics_missing_lines: number;
+            /** Rate */
+            rate: string | null;
+        };
+        /** ExpectedShopOut */
+        ExpectedShopOut: {
+            /** Units */
+            units: number;
+            /** Lines */
+            lines: number;
+            /** Revenue */
+            revenue: string;
+            /** Commission */
+            commission: string;
+            /** Logistics */
+            logistics: string;
+            /** Cogs */
+            cogs: string;
+            /** Expenses */
+            expenses: string;
+            /** Net Profit */
+            net_profit: string;
+            /** Uncovered Lines */
+            uncovered_lines: number;
+            /** Logistics Estimated */
+            logistics_estimated: string;
+            /** Logistics Estimated Units */
+            logistics_estimated_units: number;
+            /** Logistics Missing Lines */
+            logistics_missing_lines: number;
+            /** Rate */
+            rate: string | null;
+            /**
+             * Shop Id
+             * Format: uuid
+             */
+            shop_id: string;
         };
         /** ExpenseOut */
         ExpenseOut: {
@@ -1735,7 +1809,6 @@ export interface components {
             return_share: string | null;
             /** Drr */
             drr: string | null;
-            pending: components["schemas"]["PendingOut"];
             /** Frozen Money */
             frozen_money: string;
             /** In Transit Value */
@@ -2395,41 +2468,6 @@ export interface components {
             /** Fee Pct */
             fee_pct: string;
         };
-        /**
-         * PendingOut
-         * @description F16 (ADR-036): Jarayondagi sotuvlar — hisobga kirgan, lekin yakuniy emas. ``rate`` — oxirgi 90 kunda yakuniy
-         *     holatga yetganlarning Yakunlangan ulushi (fakt, summaga ko'paytirilmaydi).
-         */
-        PendingOut: {
-            /** Units */
-            units: number;
-            /** Revenue */
-            revenue: string;
-            /** Profit */
-            profit: string;
-            /** Uncovered Lines */
-            uncovered_lines: number;
-            /** Rate */
-            rate: string | null;
-        };
-        /** PendingShopOut */
-        PendingShopOut: {
-            /** Units */
-            units: number;
-            /** Revenue */
-            revenue: string;
-            /** Profit */
-            profit: string;
-            /** Uncovered Lines */
-            uncovered_lines: number;
-            /** Rate */
-            rate: string | null;
-            /**
-             * Shop Id
-             * Format: uuid
-             */
-            shop_id: string;
-        };
         /** PeriodOut */
         PeriodOut: {
             /**
@@ -2454,6 +2492,10 @@ export interface components {
             revenue: string;
             /** Net Profit */
             net_profit: string;
+            /** Net Profit Done */
+            net_profit_done: string;
+            /** Net Profit Processing */
+            net_profit_processing: string;
             /** Units */
             units: number;
             /** Units Processing */
@@ -2475,9 +2517,9 @@ export interface components {
             rows: components["schemas"]["RowOut"][];
             /** Columns */
             columns: components["schemas"]["ColumnOut"][];
-            pending: components["schemas"]["PendingOut"];
-            /** Pending Shops */
-            pending_shops: components["schemas"]["PendingShopOut"][];
+            expected: components["schemas"]["ExpectedOut"];
+            /** Expected Shops */
+            expected_shops: components["schemas"]["ExpectedShopOut"][];
             /** Recalculated */
             recalculated: number;
         };
@@ -2666,14 +2708,19 @@ export interface components {
         };
         /**
          * RowOut
-         * @description M5 hisob varag'i qatori: ``code`` (``revenue``, ``uzum:fine``, ``own:ijara``, ``net_profit`` ...), joriy summa,
-         *     tushumga nisbatan, oldingi davr, farq va o'zgarish ulushi (``upcore.pnl.compare``).
+         * @description M5 hisob varag'i qatori: ``code`` (``revenue``, ``uzum:fine``, ``own:ijara``, ``net_profit`` ...), joriy summa
+         *     (jami), shundan naqd va kutilayotgan (ADR-037), tushumga nisbatan, oldingi davr, farq va o'zgarish ulushi
+         *     (``upcore.pnl.compare``).
          */
         RowOut: {
             /** Code */
             code: string;
             /** Amount */
             amount: string;
+            /** Done */
+            done: string;
+            /** Processing */
+            processing: string;
             /** Share Of Revenue */
             share_of_revenue: string | null;
             /** Previous */
@@ -2730,6 +2777,8 @@ export interface components {
             commission: string;
             /** Logistics */
             logistics: string;
+            /** Logistics Estimated */
+            logistics_estimated: string | null;
             /** Payout */
             payout: string;
             /** Cogs */
@@ -3106,6 +3155,24 @@ export interface components {
             units_processing: number;
             /** Revenue Processing */
             revenue_processing: string;
+            /** Net Profit Done */
+            net_profit_done: string;
+            /** Net Profit Processing */
+            net_profit_processing: string;
+            /** Revenue Done */
+            revenue_done: string;
+            /** Units Done */
+            units_done: number;
+            /** Lines Processing */
+            lines_processing: number;
+            /** Logistics Estimated */
+            logistics_estimated: string;
+            /** Logistics Estimated Units */
+            logistics_estimated_units: number;
+            /** Logistics Estimated Lines */
+            logistics_estimated_lines: number;
+            /** Logistics Missing Lines */
+            logistics_missing_lines: number;
             uncovered: components["schemas"]["UncoveredOut"];
             /** Direct Total */
             direct_total: string;

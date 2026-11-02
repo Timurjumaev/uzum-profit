@@ -21,6 +21,7 @@ import {
   MoneyInput,
   NumberInput,
   ProductThumb,
+  Segmented,
   ProgressBar,
   Select,
   Skeleton,
@@ -156,6 +157,7 @@ export function UiKit() {
   const [sku, setSku] = useState<string | null>(null);
   const [range, setRange] = useState<Range>({ start: "2026-10-01", end: TODAY });
   const [compare, setCompare] = useState<CompareMode>("previous");
+  const [part, setPart] = useState<"done" | "processing" | "total">("total");
   const [dialog, setDialog] = useState(false);
   const [drawer, setDrawer] = useState<LedgerRow | null>(null);
   const [loading, setLoading] = useState(false);
@@ -238,9 +240,19 @@ export function UiKit() {
         />
       </Section>
 
-      <Section title="DateRangePicker, CompareToggle">
+      <Section title="DateRangePicker, CompareToggle, Segmented">
         <DateRangePicker value={range} onChange={setRange} today={TODAY} first="2026-07-14" />
         <CompareToggle value={compare} onChange={setCompare} />
+        <Segmented
+          label="Hisob varagʻi ustuni"
+          value={part}
+          onChange={setPart}
+          options={[
+            { value: "done", label: "Naqd" },
+            { value: "processing", label: "Kutilayotgan" },
+            { value: "total", label: "Jami" },
+          ]}
+        />
       </Section>
 
       <Section title="KPI, FormulaPopover">

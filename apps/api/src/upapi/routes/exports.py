@@ -94,6 +94,7 @@ SALES = [
     xlsx.Col("Tushum (F3)", lambda r: r.revenue, "money", total=True),
     xlsx.Col("Komissiya", lambda r: r.commission, "money", total=True),
     xlsx.Col("Logistika", lambda r: r.logistics, "money", total=True),
+    xlsx.Col("shundan taxminiy (F40)", lambda r: r.logistics_estimated, "money", total=True),
     xlsx.Col("Uzum toʼlovi (F6)", lambda r: r.payout, "money", total=True),
     xlsx.Col("Tannarx (F7)", lambda r: r.cogs, "money", total=True),
     xlsx.Col("Yalpi foyda (F8)", lambda r: r.gross_profit, "money", total=True),

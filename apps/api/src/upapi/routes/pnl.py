@@ -4,8 +4,10 @@ Hisob varag'i tanlangan davr va oldingi xuddi shu uzunlikdagi davr bilan solisht
 nisbatan, oldingi, farq). Ko'rinishlar (``view``): oylar, kunlar, do'konlar, SKU bo'yicha ustunlar — kataklar
 yig'indisi (ustunlar yig'indisi = jami). SKU ko'rinishida ``unlinked`` — SKU'ga bog'lanmagan sotuvlar, ``null`` —
 taqsimlanmagan (sotuvsiz kun) xarajatlar. Sotuvlar Yakunlangan + Jarayonda
-(ADR-036); Jarayondagi sotuvlar bloki (F16) va "qayta hisoblandi" soni alohida. Uzum xarajatlari API bergandek olinadi
-(ADR-035); SKU ko'rinishida ustun nomi.
+(ADR-036); har qator va ustun naqd va kutilayotgan qismlarga bo'linadi (ADR-037): ``rows`` da ``done`` /
+``processing``, ``expected`` — kutilayotgan sof foyda tafsiloti (F16) va R, ``expected_shops`` — do'konlar bo'yicha;
+"qayta hisoblandi" soni alohida. Uzum xarajatlari API bergandek olinadi (ADR-035), Uzum hali yozmagan Jarayondagi
+logistika — F40 bo'yicha taxminiy (F5); SKU ko'rinishida ustun nomi.
 Drill-down: sotuvlar — ``/sales``, xarajatlar — ``/expenses`` (shu filtrlar bilan).
 """
 
@@ -32,7 +34,7 @@ from upapi.reports.common import (
     meta,
     sku_catalog,
 )
-from upapi.reports.schemas import PendingOut, RowOut, StatementOut
+from upapi.reports.schemas import ExpectedOut, RowOut, StatementOut
 
 router = APIRouter(tags=["reports"])
 Finance = Annotated[OrgContext, Depends(require(Permission.VIEW_FINANCE))]
@@ -55,7 +57,7 @@ class ColumnOut(BaseModel):
     shop_id: UUID | None = None  # SKU ko'rinishida: SKU do'koni
 
 
-class PendingShopOut(PendingOut):
+class ExpectedShopOut(ExpectedOut):
     shop_id: UUID
 
 
@@ -65,8 +67,8 @@ class PnlOut(BaseModel):
     previous: StatementOut
     rows: list[RowOut]
     columns: list[ColumnOut]
-    pending: PendingOut
-    pending_shops: list[PendingShopOut]
+    expected: ExpectedOut  # F16 (ADR-037): kutilayotgan sof foyda tafsiloti va R
+    expected_shops: list[ExpectedShopOut]  # Jarayondagi sotuvi bor do'konlar
     recalculated: int  # davr sotuvlaridan oxirgi 7 kunda tannarxi o'zgarganlari (03 §7)
 
 
@@ -91,13 +93,14 @@ def columns(cells: Cells, view: View) -> tuple[list[ColumnOut], Statement]:
 @router.get("/orgs/{org_id}/pnl", response_model=PnlOut)
 async def pnl(ctx: Finance, f: Filter, _: Heavy, view: View = View.TOTAL) -> PnlOut:
     previous = f.period.previous()
-    book = await rc.load_book(ctx.conn, rc.span(previous, f.period))
+    book = await rc.load_book(ctx.conn, rc.span(previous, f.period), f.today)
     cur, before = book.scoped(f, f.period), book.scoped(f, previous)
     cols, s = columns(cur, view)
     if view is View.SKU:
         await _titles(ctx, cols)
     p = before.statement()
-    pend = await rc.pending(ctx.conn, f)
+    rates = await rc.realization(ctx.conn, f)
+    shops = {k: v for k, v in cur.by_shop().items() if v.processing is not None}
     now = await db_now(ctx.conn)
     return PnlOut(
         meta=await meta(ctx.conn, f, KINDS, previous),
@@ -105,10 +108,13 @@ async def pnl(ctx: Finance, f: Filter, _: Heavy, view: View = View.TOTAL) -> Pnl
         previous=StatementOut.of(p),
         rows=[RowOut.of(r) for r in compare(s, p)],
         columns=cols,
-        pending=PendingOut.of(pend.total),
-        pending_shops=[
-            PendingShopOut(shop_id=shop, **PendingOut.of(e).model_dump())
-            for shop, e in sorted(pend.shops.items(), key=lambda kv: str(kv[0]))
+        expected=ExpectedOut.of(s, rates.total),
+        expected_shops=[
+            ExpectedShopOut(
+                shop_id=UUID(shop),
+                **ExpectedOut.of(st, rates.shops.get(UUID(shop))).model_dump(),
+            )
+            for shop, st in sorted(shops.items())
         ],
         recalculated=await rc.recalculated(ctx.conn, f, now),
     )

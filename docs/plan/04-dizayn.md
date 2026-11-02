@@ -213,26 +213,27 @@ loading, error). `/ui-kit` ichki sahifasida hammasi ko'rinadi (yorug'/qorong'i, 
 
 ## 6. Xos komponentlar
 
-### 6.1 Hisob varag'i
+### 6.1 Hisob varag'i (Foyda sahifasi, ADR-037)
 
 ```
-Sof foyda, oktabr                         ▲ 12,4% o'tgan oyga nisbatan
-48 357 200 soʻm
-──────────────────────────────────────────────────────
-  Tushum                               186 420 000
-− Uzum komissiyasi                      −37 284 000
-− Logistika                              −9 135 750
-──────────────────────────────────────────────────────
-= Uzum toʻlovi                          140 000 250
-− Tannarx (partiyalar)                  −78 112 050
-− Reklama, saqlash, jarima              −11 631 000
-− Oʻz xarajatlarim                               0
-− Soliq (1%)                             −1 864 200
-══════════════════════════════════════════════════════
-= Sof foyda                              48 357 200
+                                    Naqd     Kutilayotgan          Jami   Oldingi davr
+  Tushum                      125 420 000      61 000 000   186 420 000    165 000 000  ▲13%
+− Uzum komissiyasi            −25 084 000     −12 200 000   −37 284 000    −33 000 000  ▲13%
+− Logistika                    −7 235 750     ≈−1 900 000   ≈−9 135 750     −9 800 000  ▼6,8%
+─────────────────────────────────────────────────────────────────────────────────────────
+= Uzum toʻlovi                 93 100 250      46 900 000   140 000 250    122 200 000  ▲14,6%
+− Tannarx (partiyalar)        −52 512 050     −25 600 000   −78 112 050    −70 000 000  ▲11,6%
+− Reklama, saqlash, jarima     −7 825 300      −3 805 700   −11 631 000    −10 700 000
+− Oʻz xarajatlarim                      0               0             0              0
+− Soliq (1%)                   −1 254 200        −610 000    −1 864 200     −1 650 000
+═════════════════════════════════════════════════════════════════════════════════════════
+= Sof foyda                    31 508 700      16 884 300    48 393 000     43 012 000  ▲12,4%
+  ≈ Kutilayotgan logistikaning 1 900 000 soʻm qismi taxminiy (Uzum tovar topshirilganda yozadi)
   Tannarxsiz 12 ta sotuv (1 240 000 soʻm) hisobga kirmadi   [Tannarx kiritish]
 ```
-Har qator bosiladi → o'ng tomondan drawer: shu summani tashkil qilgan yozuvlar + "?" formula.
+Har qator bosiladi → o'ng tomondan drawer: shu summani tashkil qilgan yozuvlar + "?" formula. Keng ekranda yana
+"Tushumga nisbatan" va "Farq"; o'rtada (< 1100 px) naqd, kutilayotgan, jami; tor ekranda (< 640 px) bitta pul ustuni —
+yuqoridagi "Naqd | Kutilayotgan | Jami" almashtirgichi bilan (standart — jami).
 
 ### 6.2 Partiya yo'li
 
@@ -242,6 +243,21 @@ Buyurtma ─● To'landi ─● Xitoy ombori ─● Yo'lda ─◐ Toshkent ─�
 ```
 To'ldirilgan nuqta — bajarilgan bosqich (sanasi bilan), yarim — joriy, bo'sh — kelajak; joriy bosqichda necha kun
 o'tgani va kutilgan sana (F25). Mobilda vertikal. Kechikish bo'lsa joriy nuqta yonida ogohlantirish ikonasi va matni.
+
+### 6.3 Uch raqam (bosh sahifa, ADR-037)
+
+```
+Sof foyda, 1–26-oktabr (?)
+┌ Naqd sof foyda (?) ──┐   ┌ Kutilayotgan sof foyda (?) ┐   ┏ Jami sof foyda (?) ━━━━━┓
+│ 31 508 700 soʻm      │ + ┆ 16 884 300 soʻm            ┆ = ┃ 48 393 000 soʻm         ┃
+│ Yakunlangan: 830     │   ┆ Jarayonda: 410 dona, ...   ┆   ┃ ▲12,4% oldingi davrga   ┃
+│ dona, tushum ...     │   ┆ 90 kunda 87% yakunlangan   ┆   ┃ Marja 25,9%             ┃
+└──────────────────────┘   └┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┘   ┗━━━━━━━━━━━━━━━━━━━━━━━━━┛
+Qanday hisoblandi — «Foyda» sahifasida
+```
+Tenglama: naqd + kutilayotgan = jami. Kutilayotgan — shtrix chegara (hali yakuniy emas; rangdan tashqari belgi,
+§11), jami — natija chizig'i (`--border-rule`) va kattaroq raqam (≥ 1200 px'da `--type-display`). Summalar rangi —
+ishora bo'yicha (musbat — yashil, manfiy — qizil). Mobilda ustma-ust, "+" va "=" kartochkalar orasida.
 
 ## 7. Sahifa maketlari
 
@@ -267,15 +283,16 @@ o'tgani va kutilgan sana (F25). Mobilda vertikal. Kechikish bo'lsa joriy nuqta y
 Sidebar 232 px (yig'ilganda 64 px). Mobil: yuqorida ixcham panel (do'kon, davr), pastda tab bar:
 Asosiy · Foyda · Ombor · Xaridlar · Yana.
 
-### 7.2 Bosh sahifa (desktop)
+### 7.2 Bosh sahifa (desktop, ADR-037)
 
 ```
-┌──────────────────────────────┬───────────────────────────────────────────┐
-│ HISOB VARAG'I (§6.1)         │ Bugun | Kecha | Shu oy | Oy prognozi | O'tgan│
-│ hero: Sof foyda              │───────────────────────────────────────────│
-│ qatorlar ...                 │ Kunlik tushum (ustun) + sof foyda (chiziq) │
-│ ════════                     │                                           │
-├──────────────────────────────┴───────────────────────────────────────────┤
+┌──────────────────────────────────────────────────────────────────────────┐
+│ UCH RAQAM (§6.3): Naqd  +  Kutilayotgan  =  Jami  · Qanday hisoblandi →  │
+├──────────────────────────────────────────────────────────────────────────┤
+│ Bugun | Kecha | Shu oy | Oy prognozi | O'tgan oy (sof foyda: naqd · kut.)│
+├──────────────────────────────────────────────────────────────────────────┤
+│ [Sof foyda | Tushum]  Kunlik grafik: naqd + kutilayotgan qatlamlar        │
+├──────────────────────────────────────────────────────────────────────────┤
 │ Diqqat talab qiladi (ro'yxat, ustuvorlik bo'yicha)                        │
 ├────────────────────────────────────┬─────────────────────────────────────┤
 │ Eng foydali 5                      │ Zarar qilayotgan 5                  │
@@ -283,23 +300,28 @@ Asosiy · Foyda · Ombor · Xaridlar · Yana.
 │ Marja · ROI · Bekor % · Qaytish % · DRR · Muzlagan pul · Yo'ldagi tovar   │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
-(Oxirgi qatordagi ko'rsatkichlar alohida KPI elementlari, nuqta bilan ulangan matn emas.)
+(Oxirgi qatordagi ko'rsatkichlar alohida KPI elementlari, nuqta bilan ulangan matn emas.) Hisob varag'i (§6.1) —
+Foyda sahifasida; bosh sahifa uni takrorlamaydi.
 
 ### 7.3 Bosh sahifa (mobil, 390 px)
 
 ```
 Sof foyda, oktabr
-48 357 200 soʻm      ▲12,4%
-[Hisob varag'i — yig'ilgan, 3 qator + "Hammasi"]
+[Naqd sof foyda      31 508 700 soʻm]
+   +
+[Kutilayotgan        16 884 300 soʻm]
+   =
+[Jami sof foyda      48 393 000 soʻm  ▲12,4%]
 [Bugun | Kecha | Oy prognozi] (gorizontal skroll)
-[Kunlik grafik]
+[Kunlik grafik — Sof foyda | Tushum]
 [Diqqat talab qiladi]
 [Eng foydali / Zarar — tab]
 ```
 
 ### 7.4 Boshqa sahifalar (qisqa)
 
-- **Foyda va zarar:** yuqorida hisob varag'i to'liq; ostida sharshara; keyin oylar bo'yicha jadval (ustun = oy).
+- **Foyda va zarar:** yuqorida hisob varag'i to'liq — naqd, kutilayotgan, jami ustunlari (§6.1); ostida sharshara (jami)
+  va kutilayotgan sof foyda bloki; keyin oylar bo'yicha jadval (ustun = oy; sof foyda ostida naqd va kutilayotgan).
 - **Mahsulotlar:** filtrlar qatori → DataTable; mobilda ro'yxat (rasm, nom, foyda/dona, zaxira kunlari) + bosilsa SKU sahifasi.
 - **SKU sahifasi:** sarlavha (rasm, nom, holat) → KPI qatori → unit kalkulyator (o'ngda) + grafiklar (chapda) →
   lotlar vaqt chizig'i → qaytishlar.
@@ -321,11 +343,12 @@ Bo'sh holat: harakatga taklif. Kechirim so'ralmaydi, noaniq gap yo'q.
 ### 8.2 Atamalar lug'ati (hamma joyda bir xil)
 
 Tushum · Uzum komissiyasi · Logistika · Uzum to'lovi · Tannarx · Yalpi foyda · Uzum xarajatlari ·
-O'z xarajatlarim · Soliq · Sof foyda · Marja · ROI · Reklama ulushi (DRR) · Kutilayotgan foyda ·
+O'z xarajatlarim · Soliq · Sof foyda · Naqd sof foyda · Kutilayotgan sof foyda · Marja · ROI · Reklama ulushi (DRR) ·
 Yakunlangan / Jarayonda / Bekor qilingan / Qaytarilgan · Xarid (partiya) · Kargo · Yo'lda · Qoldiq ·
 Zaxira kunlari · Muzlagan pul · Postavka · Kamomad · Jarima · Kompensatsiya · Taxminiy.
-(Rus tilida mos ravishda: Выручка, Комиссия Uzum, Логистика, Выплата Uzum, Себестоимость, ...; lug'at
-`lib/i18n/glossary` faylida.)
+(Rus tilida mos ravishda: Выручка, Комиссия Uzum, Логистика, Выплата Uzum, Себестоимость, ..., Фактическая чистая
+прибыль, Ожидаемая чистая прибыль; lug'at `lib/i18n/glossary` faylida. Hisob varag'i ustunlari qisqa: Naqd ·
+Kutilayotgan · Jami — Факт · Ожидается · Итого.)
 
 ### 8.3 O'zbek yozuvi
 

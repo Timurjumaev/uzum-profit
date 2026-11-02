@@ -18,6 +18,7 @@ export { Dialog, Drawer } from "./Overlay";
 export { PageHelp, HELP_PAGES, type HelpPage } from "./PageHelp";
 export { Popover, Tooltip } from "./Popover";
 export { ProductThumb } from "./ProductThumb";
+export { Segmented, type SegmentedOption } from "./Segmented";
 export { Select } from "./Select";
 export { Stepper, Timeline, type Stage } from "./Steps";
 export { ToastProvider, useToast } from "./Toast";

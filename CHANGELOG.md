@@ -391,6 +391,15 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.18 (ADR-037, Temur taklifi): foyda uch raqamda — **naqd** (yakunlangan sotuvlar) + **kutilayotgan** (jarayondagi
+  sotuvlar) = **jami** sof foyda. Kutilayotgan qism xuddi naqd kabi hisoblanadi: komissiya, logistika, tannarx, Uzum va o'z
+  xarajatlarining tushum ulushi, soliq ayriladi; Uzum hali yozmagan logistika (tovar topshirilmagan) oxirgi pullik tarif
+  × dona bilan taxminiy qo'shiladi va "≈ / Taxminiy" deb belgilanadi. Asosiy sahifa — "bir qarashda": uchta kartochka
+  (naqd + kutilayotgan = jami), davr plitkalarida "naqd · kutilayotgan", kunlik grafikda sof foyda qatlamlari (tushumga
+  almashtirish mumkin); hisob varag'i va "Jarayondagi sotuvlar" ko'rsatkichi Asosiydan olib tashlandi. Foyda sahifasi —
+  "qanday hisoblandi": har qator naqd, kutilayotgan va jami ustunlarida (tor ekranda almashtirgich), kutilayotgan sof
+  foyda bloki, kesimlarda "shundan naqd / kutilayotgan". Migratsiya 0013: `daily_sku_metrics` ga Jarayondagi qism
+  ustunlari va to'liq qayta qurish so'rovi.
 - B4.16 (ADR-036, ADR-017 ning "foyda = faqat Yakunlangan" qismi almashtirildi): Jarayondagi sotuvlar tushum, komissiya,
   logistika, tannarx va foydaga Uzum hozir bergan qiymatlar bilan kiradi (Bugun, Kecha, Shu oy, Oy prognozi endi 0 emas);
   bekor yoki qaytsa — sinxrondan keyin o'zi chiqadi. Har joyda "shundan jarayonda: N dona, X so'm", kunlik grafikda
