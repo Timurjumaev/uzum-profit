@@ -41,6 +41,15 @@ describe("boshlang'ich holat", () => {
     expect(result.violations.filter((v) => v.impact === "critical" || v.impact === "serious")).toEqual([]);
   });
 
+  it("sotuvi va qoldig'i yo'q SKU'lar ko'rsatilmagani yoziladi; yo'q bo'lsa — yozuv yo'q", async () => {
+    renderPage({ [ROUTE]: () => json(200, data({ hidden: 42 })) });
+    expect(await screen.findByText(/Sotuvi ham, qoldigʻi ham boʻlmagan 42 ta SKU koʻrsatilmadi/)).toBeTruthy();
+    cleanup();
+    renderPage();
+    await screen.findByText("Soat");
+    expect(screen.queryByText(/koʻrsatilmadi/)).toBeNull();
+  });
+
   it("narx kiritilgan qatorlar yuboriladi; javob keshga", async () => {
     const api = renderPage({ [PUT]: () => json(200, data({ start_on: "2026-11-01", coverage: "0.7700" })) });
     await screen.findByText("Soat");

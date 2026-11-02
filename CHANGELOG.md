@@ -410,6 +410,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- B4.17: Boshlang'ich holat sahifasi hamma SKU'ga tannarx so'rardi — endi faqat sotilgan yoki qoldig'i / postavkasi bor
+  (yoki narxi allaqachon saqlangan) tovarlar; arxivlangan, bloklangan va hech qachon tovar kelmagan kartochkalar
+  ko'rsatilmaydi, soni sahifada yoziladi.
+
 - Boshlang'ich holat: saqlagandan keyin keyingi qadam aniq emas edi (sahifa o'zgarmay qolardi, faqat toast) — endi
   sahifa tepaga qaytadi, tepada natija (nechta turga narx, qamrov, hisob fonda) va "Foydani ko'rish" / "Omborni ko'rish"
   havolalari; narx maydonida ortiqcha ",00" yo'q (Temur topdi).

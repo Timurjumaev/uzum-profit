@@ -214,7 +214,7 @@ def test_shop_filter(world: World) -> None:
                       external_id=777, name="EL-ONE")  # fmt: skip
     item = w.ids["item"]
     a.insert("mp_skus", shop_id=b_shop, external_id=901, sku_code="Soat-B", item_id=item)
-    b_only = a.insert("mp_skus", shop_id=b_shop, external_id=902, sku_code="Faqat-B")
+    b_only = a.insert("mp_skus", shop_id=b_shop, external_id=902, sku_code="Faqat-B", qty_active=3)
     mine = rows(ok(send(w, "GET", f"opening?shop={a.shop_id}")))
     assert str(b_only) not in mine and mine[str(item)]["shared"] is True
     assert sorted(mine[str(item)]["skus"]) == ["Soat", "Soat-B"]
@@ -237,6 +237,7 @@ def test_rows_carry_uzum_product(world: World) -> None:
         external_id=951,
         sku_code="ELONE-AIRGILOF-ВИШН-4",
         product_id=product,
+        qty_active=2,
     )
     v2 = a.insert(
         "mp_skus",
@@ -244,9 +245,43 @@ def test_rows_carry_uzum_product(world: World) -> None:
         external_id=952,
         sku_code="ELONE-AIRGILOF-ПАСТ-4",
         product_id=product,
+        qty_active=1,
     )
     got = rows(ok(send(w, "GET", "opening")))
     for v in (v1, v2):
         assert (
             got[str(v)]["product_id"] == str(product) and got[str(v)]["product"] == "AirPods g'ilof"
         )
+
+
+def test_hides_skus_that_never_sold_and_have_no_stock(world: World) -> None:
+    """Tannarx faqat kerak bo'lganda so'raladi: arxivlangan / hech qachon tovar kelmagan / faqat bekor qilingan SKU —
+    ko'rsatilmaydi (``hidden`` soni bilan); sotilgan (hozir qoldig'i 0 bo'lsa ham) yoki narxi saqlangan — ko'rsatiladi."""
+    w, a = world, world.a
+    before = ok(send(w, "GET", "opening"))
+    empty = a.insert(
+        "mp_skus", shop_id=a.shop_id, external_id=960, sku_code="Arxiv-1", status="ARCHIVED"
+    )
+    canceled = a.insert("mp_skus", shop_id=a.shop_id, external_id=961, sku_code="Bekor-1")
+    a.sale(canceled, day(-5), 0, "CANCELED", amount_returns=1)
+    sold = a.insert("mp_skus", shop_id=a.shop_id, external_id=962, sku_code="Sotilgan-1")
+    a.sale(sold, day(-5), 1, "PROCESSING")
+    a.request(calc.Scope.SHOP, a.shop_id)
+    recalc(w)
+    body = ok(send(w, "GET", "opening"))
+    got = rows(body)
+    assert str(empty) not in got and str(canceled) not in got
+    assert got[str(sold)]["uzum_suggested"] == 0  # sotilgan, qoldig'i yo'q — tannarx kerak
+    assert body["hidden"] == before["hidden"] + 2
+    # Saqlangan narxi bor tovar sotuv va qoldiqsiz ham ko'rinadi (kiritilgan ma'lumot yo'qolmaydi).
+    item, _ = a.item("Faqat narx")
+    saved = ok(
+        send(
+            w,
+            "PUT",
+            "opening",
+            start_on=None,
+            rows=[{"item_id": str(item), "prices": [{"unit_cost": "1000"}]}],
+        )
+    )
+    assert str(item) in rows(saved)

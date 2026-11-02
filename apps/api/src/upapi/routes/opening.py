@@ -6,7 +6,10 @@ Uzumda + o'z omborimda). Undan oldingi sotuvlar tarixiy narxda ("tarixiy" belgis
 partiyalardan (F21); boshlang'ich qoldiq — birinchi lot (:mod:`upcore.costing`).
 
 - ``GET`` — jadval: tovarlar va tovarga bog'lanmagan SKU'lar, boshlash sanasigacha bo'lgan tushum bo'yicha (shu narx
-  qo'llanadigan sotuvlar — avval eng muhimlari; doimiy oyna yo'q),
+  qo'llanadigan sotuvlar — avval eng muhimlari; doimiy oyna yo'q). Faqat tannarx kerak bo'ladiganlari: biror marta
+  sotilgan (Yakunlangan yoki Jarayonda) yoki hozir qoldig'i / postavkasi bor SKU'lar, yoki tovarda saqlangan narx,
+  qoldiq yoki partiya bor; qolganlari (arxivlangan, bloklangan, hech qachon tovar kelmagan kartochkalar) — ``hidden``
+  soni bilan,
   Uzum qoldig'i taklifi (boshlash sanasi bugun yoki keyin — joriy qoldiq; o'tgan sana — oldingi kun snapshoti,
   yo'q bo'lsa ``null``), saqlangan qiymatlar, oxirgi partiya narxi (ishora) va qamrov (boshlash sanasigacha bo'lgan
   tushumning qancha qismiga narx yozilgan). ``?start=`` — boshqa sana uchun taklif. ``?shop=`` (bir necha marta) — tanlangan do'konlarda
@@ -88,6 +91,7 @@ class OpeningOut(BaseModel):
         Decimal | None
     )  # boshlash sanasigacha tushumning narx yozilgan ulushi (0–1); tushum yo'q — ``null``
     rows: list[OpeningRowOut]
+    hidden: int  # ko'rsatilmagan SKU'lar: sotuvi ham, qoldig'i ham yo'q (arxivlangan, hech qachon tovar kelmagan)
 
 
 class PriceIn(BaseModel):
@@ -201,9 +205,26 @@ async def _read(
             groups.setdefault(sku.item_id, []).append(sku.id)
     for item_id in prices.keys() | opening.keys():
         groups.setdefault(item_id, [])
+
     if shops:  # do'kon filtri: tanlangan do'konda SKU'si bor tovarlar (tannarx va qoldiq — tovar bo'yicha umumiy)
         groups = {i: g for i, g in groups.items() if any(catalog[x].shop_id in shops for x in g)}
         lone = [x for x in lone if catalog[x].shop_id in shops]
+
+    # Tannarx faqat sotilgan yoki qoldig'i bor tovarga kerak: arxivlangan, bloklangan, hech qachon tovar kelmagan
+    # kartochkalar ko'rsatilmaydi (saqlangan narx, qoldiq yoki partiyasi bo'lsa — ko'rsatiladi).
+    sold = {
+        r[0]
+        for r in await conn.execute(
+            select(dm.c.sku_id).where(dm.c.sku_id.is_not(None), dm.c.units > 0).distinct()
+        )
+    }
+    now_stock = stock if source == "current" else (await _stock(conn, today()))[0]
+    needed = sold | {s for s, qty in now_stock.items() if qty > 0}
+    kept = prices.keys() | opening.keys() | lots.keys()
+    before = sum(len(g) for g in groups.values()) + len(lone)
+    groups = {i: g for i, g in groups.items() if i in kept or any(x in needed for x in g)}
+    lone = [x for x in lone if x in needed]
+    hidden = before - sum(len(g) for g in groups.values()) - len(lone)
 
     catalog_shops = frozenset(
         x.shop_id for x in catalog.values()
@@ -271,6 +292,7 @@ async def _read(
         stock_source=source,
         coverage=(covered / total).quantize(Decimal("0.0001")) if total else None,
         rows=rows,
+        hidden=hidden,
     )
 
 

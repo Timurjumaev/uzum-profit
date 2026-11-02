@@ -386,6 +386,10 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   oldingi davrda sotuv bo'lmasa o'zgarish foizi yo'q. UI: "shundan jarayonda" (bosh sahifa sarlavhasi, davr
   kartochkalari, P&L), grafikda ikki qatlam, "Jarayondagi sotuvlar" bloki va ko'rsatkichi, drill-down'da "Jarayonda"
   belgisi. F23 sotuv tezligi ham Jarayondagi sotuvlarni oladi (oxirgi 14 kun endi bo'sh emas).
+- [x] B4.17 Boshlang'ich holat: faqat tannarx kerak bo'ladigan tovarlar (Temur, 2026-11-02). ✓ 2026-11-02: `/opening`
+  jadvalida biror marta sotilgan (Yakunlangan yoki Jarayonda) yoki hozir qoldig'i / postavkasi bor SKU'lar, yoki saqlangan
+  narx, qoldiq yoki partiyasi bor tovarlar; qolganlari (arxivlangan, bloklangan, hech qachon tovar kelmagan kartochkalar)
+  ko'rsatilmaydi — soni (`hidden`) sahifada yoziladi.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.
