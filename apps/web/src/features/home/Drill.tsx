@@ -99,7 +99,8 @@ function UzumBody({ orgId, params, category }: { orgId: string; params: ReportPa
   if (query.isPending) return <Skeleton label={t("home.drill.loading")} lines={5} />;
   const items = query.data.pages.flatMap((p) => p.items);
   const columns: Column<Expenses["items"][number]>[] = [
-    { key: "day", header: t("home.drill.day"), render: (r) => f.date(r.day) },
+    // ADR-039: buyurtmaga bog'liq reklama — Uzum yechgan kun va P&L'dagi (buyurtma) kun.
+    { key: "day", header: t("home.drill.day"), render: (r) => (r.order_date ? `${f.date(r.day)} · ${t("home.drill.orderDate", { date: f.date(r.order_date) })}` : f.date(r.day)) },
     { key: "name", header: t("home.drill.name"), render: (r) => r.name ?? r.raw_code ?? r.code ?? "—" },
     // Chiqim — minus (hisob varag'idagi kabi), kirim (kompensatsiya) — plyus.
     { key: "amount", header: t("home.drill.amount"), numeric: true, render: (r) => f.money(r.type === "OUTCOME" ? negate(r.amount) : r.amount, { unit: false }) },
@@ -153,6 +154,7 @@ export function Drill({ orgId, params, row, onClose }: Props) {
           </p>
         )}
         {source.type === "sales" && <SalesBody orgId={orgId} params={params} field={SALE_FIELD[row.key as keyof typeof SALE_FIELD]} />}
+        {source.type === "uzum" && row.estimate && <p className="caption">{t("home.drill.estimate", { amount: f.money(row.estimate) })}</p>}
         {source.type === "uzum" && <UzumBody orgId={orgId} params={params} category={source.category!} />}
         {source.type === "own" && <OwnBody orgId={orgId} params={params} category={source.category!} />}
         {source.type === "none" && <p>{t("home.drill.calculated")}</p>}

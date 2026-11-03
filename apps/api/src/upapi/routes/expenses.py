@@ -2,8 +2,10 @@
 buxgalter — 03 §10 "xarajat ... ko'rish").
 
 - **Uzum xarajatlari** (F9): toifalar bo'yicha ishorali yig'indi (OUTCOME +, INCOME − — kompensatsiya), oylar trendi,
-  eng katta jarimalar; yig'indi = P&L dagi F9 (bir xil qoidalar: ``excluded`` bo'sh, toifa P&L'ga kiradi). Ro'yxat —
-  hamma qatorlar (``include_excluded`` bilan chiqarilganlari ham, sababi bilan), kursor bilan.
+  eng katta jarimalar; yig'indi = P&L dagi F9 (bir xil qoidalar: ``excluded`` bo'sh, toifa P&L'ga kiradi; sana — P&L
+  kuni, ``upapi.reports.cells.expense_day``: sotuvga bog'langan reklama — sotuvning buyurtma kuni, ADR-039; qatorda
+  ``order_date``). F42 taxmini (kutilayotgan reklama) bu yerda yo'q — u Uzum yechgan summa emas. Ro'yxat — hamma
+  qatorlar (``include_excluded`` bilan chiqarilganlari ham, sababi bilan), kursor bilan.
 - **O'z xarajatlari** (F10): davrga to'g'ri keladigan qismi (kunlik amortizatsiya, ``own_expense_in_period``),
   toifalar bo'yicha. Do'kon filtri bo'lsa — shu do'konlar va tashkilot darajasidagilari (``scope``) to'liq summasi;
   P&L'da esa tashkilot xarajati do'konlarga tushum ulushida taqsimlanadi (ADR-026).
@@ -18,7 +20,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, case, or_, select
 from upcore.expenses import Direction, ExpenseCategory, signed_amount
 from upcore.metrics import ManualExpense, business_date, own_expense_in_period
 from upcore.money import Currency, Money
@@ -27,7 +29,7 @@ from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission
 from upapi.calc.costs import day_start
 from upapi.db import models as m
-from upapi.reports.cells import in_pnl, month_start
+from upapi.reports.cells import by_sale, expense_day, in_pnl, month_start
 from upapi.reports.common import (
     Cursor,
     Filters,
@@ -62,7 +64,10 @@ class ExpenseOut(BaseModel):
     shop_id: UUID
     external_id: int
     created_on: datetime
-    day: date  # F1
+    day: date  # Uzum yechgan kun (F1)
+    order_date: (
+        date | None
+    )  # ADR-039: sotuvga bog'langan reklama — P&L'da shu (buyurtma) kunga yoziladi
     code: str | None
     raw_code: str | None
     category: str
@@ -110,6 +115,7 @@ def _row(r: Any) -> ExpenseOut:
         external_id=r.external_id,
         created_on=r.created_on,
         day=business_date(r.created_on),
+        order_date=business_date(r.sale_ordered_at) if r.sale_ordered_at is not None else None,
         code=r.code,
         raw_code=r.raw_code,
         category=r.category,
@@ -137,12 +143,15 @@ async def expenses(
     limit: Limit = 100,
     cursor: Cursor = None,
 ) -> ExpensesOut:
-    e = m.mp_expenses
+    e, s = m.mp_expenses, m.sale_items
     zero = Money.zero(UZS)
+    when = expense_day(e, s)
     where = [
-        e.c.created_on >= day_start(f.period.start),
-        e.c.created_on < day_start(f.period.end + timedelta(days=1)),
+        when >= day_start(f.period.start),
+        when < day_start(f.period.end + timedelta(days=1)),
     ]
+    source = e.outerjoin(s, s.c.id == e.c.sale_item_id)
+    sale_day = case((by_sale(e), s.c.ordered_at)).label("sale_ordered_at")
     if f.shops:
         where.append(e.c.shop_id.in_(f.shops))
 
@@ -150,18 +159,26 @@ async def expenses(
     totals: dict[str, Money] = {}
     months: dict[date, dict[str, Money]] = {}
     fines = []
-    for r in await ctx.conn.execute(select(e).where(*where, e.c.excluded.is_(None))):
+    for r in await ctx.conn.execute(
+        select(e, sale_day).select_from(source).where(*where, e.c.excluded.is_(None))
+    ):
         if not in_pnl(r.category):
             continue
         signed = signed_amount(Money(r.amount, UZS), r.type)
         totals[r.category] = totals.get(r.category, zero) + signed
-        month = months.setdefault(month_start(business_date(r.created_on)), {})
+        month = months.setdefault(month_start(business_date(r.sale_ordered_at or r.created_on)), {})
         month[r.category] = month.get(r.category, zero) + signed
         if r.category == ExpenseCategory.FINE.value and r.type == Direction.OUTCOME.value:
             fines.append(r)
     fines.sort(key=lambda r: (-r.amount, r.created_on, r.id))
 
-    query = select(e).where(*where).order_by(e.c.created_on.desc(), e.c.id.desc()).limit(limit + 1)
+    query = (
+        select(e, sale_day)
+        .select_from(source)
+        .where(*where)
+        .order_by(e.c.created_on.desc(), e.c.id.desc())
+        .limit(limit + 1)
+    )
     if not include_excluded:
         query = query.where(e.c.excluded.is_(None))
     if category is not None:

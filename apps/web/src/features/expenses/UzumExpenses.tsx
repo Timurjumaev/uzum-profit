@@ -52,7 +52,8 @@ export function UzumExpenses({ orgId, params, data }: { orgId: string; params: R
   ];
   const rows = list.data?.pages.flatMap((p) => p.items) ?? [];
   const listColumns: Column<UzumExpenseItem>[] = [
-    { key: "day", header: t("home.drill.day"), render: (r) => f.date(r.day) },
+    // ADR-039: buyurtmaga bog'liq reklama P&L'da buyurtma kuniga yoziladi — ikkala sana.
+    { key: "day", header: t("home.drill.day"), render: (r) => (r.order_date ? `${f.date(r.day)} · ${t("home.drill.orderDate", { date: f.date(r.order_date) })}` : f.date(r.day)) },
     { key: "category", header: t("expenses.col.category"), render: (r) => label(r.category) },
     {
       key: "name",

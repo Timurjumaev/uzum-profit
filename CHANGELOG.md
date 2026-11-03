@@ -396,6 +396,13 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.21 (ADR-039, Temur talabi): xarajat o'z sotuvi va SKU'siga. Buyurtmaga bog'liq reklama ("Xaridor tovarni olganida
+  ... yechib oldik") endi Uzum yechgan kunga emas, o'sha sotuvning buyurtma kuni, tovari va qismiga (kutilayotgan /
+  yakunlangan) yoziladi; hali topshirilmagan sotuvlarga kutilayotgan reklama oxirgi 30 kundagi ulush bo'yicha "≈"
+  taxminiy qo'shiladi (F42). Saqlash tovarlarga Uzum omboridagi qoldiq × saqlash narxi bo'yicha bo'linadi (F43) —
+  sekin sotilayotgan tovarning saqlashi endi o'zida. Bir necha SKU'li tovarga bog'langan o'z xarajati — faqat shu
+  SKU'larga. Xarajatlar sahifasi va drill-down P&L bilan bir xil sana (qatorda buyurtma sanasi ham). Realcheck'ga
+  boshqa xarajatlar havolalari, logistika farqi namunalari va saqlash modeli tekshiruvi.
 - B4.20 (ADR-038, Temur taklifi): "Naqd" nomi hamma joyda **"Yakunlangan"** bilan almashtirildi — Yakunlangan sof foyda +
   Kutilayotgan sof foyda = Jami (uch raqam, davr plitkalari, grafik, hisob varag'i ustuni va almashtirgichi, kesimlar,
   formulalar, yordam). "Naqd" pul qo'lga tushgan degan ma'noni berardi, aslida bu — davr buyurtmalarining yakunlangan

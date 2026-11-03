@@ -1,7 +1,7 @@
 # 02. Funksiyalar: modullar, qabul mezonlari, formulalar
 
 Bu fayl dastur NIMA qilishini belgilaydi. Har modulda: vazifasi, ekranlari, funksiyalari (qaysi bosqichda),
-qabul mezonlari. Oxirida **formulalar lug'ati (F1–F41)**: dasturdagi har bir raqam shu yerdagi bitta formuladan
+qabul mezonlari. Oxirida **formulalar lug'ati (F1–F43)**: dasturdagi har bir raqam shu yerdagi bitta formuladan
 hisoblanadi. Kodda formula funksiyasi docstring'ida `F12` kabi raqam bilan belgilanadi.
 
 Belgilar: **[B4]** = shu bosqichda quriladi (05-bosqichlar.md). **[Keyin]** = ommaviy chiqishdan keyin.
@@ -355,9 +355,10 @@ boshqa Uzum xizmatlari − kompensatsiyalar. Manba `finance/expenses`, toifa `co
 yoki lotin keladi: С/C, У/U/Y variantlari bitta kodga keltiriladi — legacy У→U ni, qo'llanma Y ni ko'rsatadi; real
 ma'lumotda B2.11 da tasdiqlanadi). `status` CANCELED/REFUNDED va `BALANCE_CORRECTION` hisobga
 olinmaydi; summa `abs(paymentPrice)`, yo'nalish `type` dan; dublikat `id` bo'yicha olib tashlanadi; reklama matnidagi
-aniq summa (legacy `AD_RE`) ishlatiladi. Xarajat kuni — `dateCreated` (Uzum yechgan kun); buyurtmaga bog'liq reklama
-("Xaridor tovarni olganida ... yechib oldik", `AD#<sotuv qatori id>`) ham hozircha shu kunga yoziladi va o'sha kungi
-sotuvlarga tushum ulushida bo'linadi — sotuvning o'ziga yozish 07 Q10 da (B4.20 realcheck).
+aniq summa (legacy `AD_RE`) ishlatiladi. Xarajat kuni va SKU'si (ADR-039): sotuv qatoriga bog'langani (buyurtmaga
+bog'liq reklama "Xaridor tovarni olganida ... yechib oldik", `AD#<sotuv qatori id>`) — o'sha sotuvning buyurtma kuni,
+SKU'si va qismi (hali topshirilmagan Jarayondagi sotuvga — F42 taxmini); saqlash — Uzum yechgan kuni SKU'larga F43
+og'irligida; qolgani — `dateCreated` (Uzum yechgan kun), do'kon darajasida, kun sotuvlariga tushum ulushida.
 
 **F10. O'z xarajatlari** = qo'lda kiritilgan xarajatlar, amortizatsiya bilan davrga to'g'ri keladigan qismi
 (kunlik teng taqsimot).
@@ -384,7 +385,8 @@ qatorlar bo'yicha hisoblanadi; F9, F10, F11 qamrov ulushiga mutanosib qismi ayri
 qatorida alohida ko'rsatiladi. (Legacy hamma xarajatni ayirib, foydani kam ko'rsatardi.)
 
 **F16. Kutilayotgan sof foyda** (ADR-036, ADR-037; F12 ning qismi) = Jarayondagi sotuvlar qismi, xuddi yakunlangan qism kabi:
-tushum − komissiya − logistika (Uzum hali yozmagani — F5 taxmini) − tannarx − F9, F10 ning tushum ulushidagi qismi −
+tushum − komissiya − logistika (Uzum hali yozmagani — F5 taxmini) − tannarx − o'z reklamasi (yechilgani va F42
+taxmini, ADR-039) − F9, F10 ning tushum ulushidagi qismi −
 F11 (o'z tushumidan), F15 qamrovi bilan. R = tanlangan do'konlarning oxirgi 90 kunida yakuniy holatga yetgan donalar
 ichida Yakunlangan ulushi — **fakt** sifatida ko'rsatiladi ("bunday sotuvlarning X% yakunlangan"), summaga
 ko'paytirilmaydi. Ma'lumot kam bo'lsa (< 50 dona) R ko'rsatilmaydi.
@@ -500,3 +502,16 @@ oldingi kun snapshoti, S bugun bo'lsa joriy qoldiq) + o'z omborimda (sotuvchi ta
 - Qamrov (sahifada): S gacha bo'lgan tushumning narx yozilgan turlarga to'g'ri keladigan ulushi — shu narx qo'llanadigan
   sotuvlar bo'yicha (doimiy oyna yo'q, tamoyil 2).
 - Unit kalkulyator (F35/F36) tannarxi: oxirgi tayyor partiya, bo'lmasa davr o'rtachasi (narx keyingi donalar uchun).
+
+**F42. Kutilayotgan reklama** (ADR-039). Buyurtmaga bog'liq reklamani Uzum tovar topshirilganda yechadi (sotuv qatoriga
+bog'lanadi — F9). Hali topshirilmagan (`dateIssued` yo'q) Jarayondagi sotuvga taxmin = tushum × ulush; ulush = SKU'ning
+oxirgi 30 kunda topshirilgan sotuvlariga yechilgan bog'liq reklama / shu sotuvlar tushumi (SKU'da topshirilgan sotuv
+yo'q — do'konniki; tushum 0 — taxmin yo'q). Kutilayotgan qismga, "≈ taxminiy" belgisi bilan (tamoyil 9); topshirilgach
+Uzum yechgan haqiqiy summa (yoki yechilmasa — 0) o'rnini oladi.
+
+**F43. Saqlash SKU bo'yicha** (ADR-039). Uzum saqlashni do'kon bo'yicha kuniga bitta summa qilib yechadi (B4.20
+realcheck). Kun summasi SKU'larga og'irlikda bo'linadi: og'irlik = shu kun (yoki oldingi 7 kun ichidagi oxirgi)
+qoldiq snapshoti (`qty_active` — Uzum omboridagi sotuvdagi dona) × SKU saqlash narxi (`paidStoragePriceItem`, dona/kun;
+noma'lum — ma'lum narxlar o'rtachasi; hech birida yo'q — faqat dona). Qoldig'i 0 SKU olmaydi; sotuvi yo'q SKU oladi
+(sekin tovarning saqlashi o'zida qoladi); bu qism SKU'ning to'g'ridan-to'g'ri xarajati. Snapshot yo'q kun — tushum
+ulushida (ADR-026). Realcheck `storage_model` — Uzum yechgani ↔ model nisbati.

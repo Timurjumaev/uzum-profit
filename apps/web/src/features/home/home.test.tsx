@@ -104,6 +104,13 @@ describe("uch raqam (ADR-037)", () => {
     expect(card("net-expected").getByText("Yakunlanish ulushi uchun maʼlumot hali kam")).toBeTruthy();
   });
 
+  it("kutilayotgan reklama taxmini (F42) kartochkada aytiladi", async () => {
+    const base = dashboardData();
+    const expected = { ...base.expected, uzum_estimated: { advertising: "6000.00" } };
+    await renderHome("/", { [DASHBOARD_ROUTE]: () => json(200, dashboardData({ expected })) });
+    expect(norm(card("net-expected").getByText(/^Reklama .* taxminiy/).textContent!)).toContain(m("6000.00"));
+  });
+
   it("'Qanday hisoblandi' — Foyda sahifasiga (filtrlar saqlanadi); bosh sahifada hisob varag'i yo'q", async () => {
     await renderHome("/?from=2026-10-01&to=2026-10-20");
     const how = screen.getByRole("link", { name: "Qanday hisoblandi — «Foyda» sahifasida" });

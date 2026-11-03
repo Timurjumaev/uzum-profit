@@ -9,6 +9,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { App, createAppState } from "../../App";
 import { formatterFor } from "../../lib/format";
 import { EXPENSES_ROUTE, json, ME, ME_ROUTE, mockApi, PNL_ROUTE, pnlData, problem, SALES_ROUTE, SHOP_A, SHOP_B, SYNC_ROUTE, syncStatus, type Routes } from "../../test/api";
+import { expensesData, uzumItem } from "../../test/expenses";
 import { expectedPart, pnlStatement, skuColumns } from "../../test/pnl";
 
 const f = formatterFor("uz-Latn");
@@ -98,6 +99,24 @@ describe("hisob varag'i", () => {
     expect(within(row("Tushum")).queryByTitle("Taxminiy qismi bor")).toBeNull();
     expect(norm(screen.getByText(/^≈ Kutilayotgan logistikaning/).textContent!)).toContain(`${m("40000.00")} qismi (4 dona) taxminiy`);
     expect(screen.getByText("2 ta sotuvda logistika tarifi nomaʼlum — taxmin qoʻshilmadi.")).toBeTruthy();
+  });
+
+  it("kutilayotgan reklama taxmini (F42, ADR-039): 'Reklama' qatorida '≈', izoh, kutilayotgan blokda va drill-down'da", async () => {
+    const data = pnlData({
+      statement: pnlStatement({ uzum_estimated: { advertising: "6000.00" } }),
+      expected: expectedPart({ uzum_estimated: { advertising: "6000.00" } }),
+    });
+    await renderPnl(PATH, {
+      [PNL_ROUTE]: () => json(200, data),
+      [EXPENSES_ROUTE]: () => json(200, expensesData({ items: [uzumItem({ category: "advertising", day: "2026-10-18", order_date: "2026-10-02" })] })),
+    });
+    expect(within(row("Reklama")).getAllByTitle("Taxminiy qismi bor").length).toBeGreaterThan(0);
+    expect(norm(screen.getByText(/^≈ Reklamaning/).textContent!)).toContain(`${m("6000.00")} qismi taxminiy`);
+    expect(norm(screen.getByText(/^Reklama .* taxminiy — Uzum uni tovar topshirilganda yechadi\.$/).textContent!)).toContain(m("6000.00"));
+    fireEvent.click(within(ledger()).getByRole("button", { name: "Reklama" }));
+    const drawer = await screen.findByRole("dialog");
+    expect(norm(within(drawer).getByText(/^≈ Yana/).textContent!)).toContain(m("6000.00"));
+    expect(await within(drawer).findByText(/buyurtma/)).toBeTruthy();
   });
 
   it("tor ekran uchun ustun tanlash: 'Jami' standart, tanlansa jadval belgisi o'zgaradi", async () => {

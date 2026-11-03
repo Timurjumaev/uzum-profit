@@ -20,6 +20,8 @@ export type HomeRow = LedgerRow & {
   direction: Direction;
   /** Mobilda yig'ilgan ko'rinishda ko'rinadigan qator (tushum, Uzum to'lovi, sof foyda). */
   keep: boolean;
+  /** Summaning taxminiy qismi (F42 kutilayotgan reklama, ADR-039) — drill-down'da alohida aytiladi; bo'lmasa yo'q. */
+  estimate?: string;
 };
 
 /** "12.5" ↔ "-12.5": nol ishorasiz qoladi. */

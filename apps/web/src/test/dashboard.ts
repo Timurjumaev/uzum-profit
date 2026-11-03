@@ -48,6 +48,7 @@ const statement = (): Dashboard["statement"] => ({
   logistics_estimated_units: 380,
   logistics_estimated_lines: 360,
   logistics_missing_lines: 0,
+  uzum_estimated: {},
   uncovered: { lines: 0, revenue: "0.00", payout: "0.00", expenses: "0.00", share: "0.000000" },
   direct_total: "0.00",
   allocated_total: "0.00",
@@ -84,6 +85,7 @@ export function dashboardData(over: Partial<Dashboard> = {}, ago: (minutes: numb
       logistics_estimated: "1900000.00",
       logistics_estimated_units: 380,
       logistics_missing_lines: 0,
+      uzum_estimated: {},
       rate: "0.870000",
     },
     rows: [

@@ -65,13 +65,22 @@ _D0 = Decimal(0)
 
 @dataclass(frozen=True, slots=True)
 class ExpenseItem:
-    """Uzum xarajati (F9) P&L uchun: ishorali summa (OUTCOME +, INCOME −), do'kon, ixtiyoriy SKU."""
+    """Uzum xarajati (F9) P&L uchun: ishorali summa (OUTCOME +, INCOME −), do'kon, ixtiyoriy SKU.
+
+    ADR-039: ``processing`` — xarajat bitta sotuvga tegishli (masalan, buyurtmaga bog'liq reklama): katakda tushum
+    ulushida bo'linmaydi, o'sha sotuv qismiga yoziladi (``True`` — kutilayotgan, ``False`` — yakunlangan); ``None`` —
+    katak xarajati, qismlarga tushum ulushida. ``estimated`` — taxminiy summa (F42 kutilayotgan reklama, "≈").
+    ``weights`` — do'kon xarajatini shu kungi SKU kataklariga berilgan og'irliklarda (F43 saqlash: qoldiq × narx)
+    bo'lish; bo'sh yoki yig'indisi 0 — odatdagidek (tushum ulushida)."""
 
     day: date
     shop: str
     category: ExpenseCategory
     amount: Money
     sku: str | None = None
+    processing: bool | None = None
+    estimated: bool = False
+    weights: Mapping[str, Decimal] | None = None
 
 
 def expense_items(
@@ -96,6 +105,9 @@ class OwnExpense:
     category: str
     shop: str | None = None
     sku: str | None = None
+    # ADR-039: tovarga bog'langan, tovarning bir necha SKU'si bo'lsa — (do'kon, SKU) lar: shu SKU'lar kataklariga tushum
+    # ulushida (kunda ularning sotuvi bo'lmasa — teng); do'kon yoki tashkilotning hamma SKU'lariga emas.
+    skus: tuple[tuple[str, str], ...] = ()
 
 
 class TaxBase(StrEnum):
@@ -164,6 +176,11 @@ class Cell:
     lines_est_missing: int = 0
     # ADR-036/037: shundan Jarayondagi qism (o'z xarajat ulushi, soliq va F15 bilan — ``_finish``); ``None`` — yo'q.
     processing: Cell | None = None
+    # ADR-039: bitta sotuvga tegishli Uzum xarajatlari (``uzum`` ichida) — qismga tushum ulushida emas, sotuv qismiga;
+    # taxminiy Uzum xarajatlari (F42, ``uzum`` ichida).
+    pin_done: dict[ExpenseCategory, Decimal] | None = None
+    pin_processing: dict[ExpenseCategory, Decimal] | None = None
+    uzum_est: dict[ExpenseCategory, Decimal] | None = None
 
     def part(self) -> Cell:
         """Jarayondagi qism katagi (kerak bo'lganda yaratiladi)."""
@@ -275,6 +292,12 @@ class Statement:
     logistics_estimated_units: int = 0
     logistics_estimated_lines: int = 0
     logistics_missing_lines: int = 0
+    # ADR-039: Uzum xarajatlarining taxminiy qismi turlar bo'yicha (F42 kutilayotgan reklama).
+    uzum_estimated: Mapping[ExpenseCategory, Money] = field(default_factory=dict)
+
+    @property
+    def uzum_estimated_total(self) -> Money:
+        return total(list(self.uzum_estimated.values()), UZS)
 
     @property
     def revenue_done(self) -> Money:
@@ -490,6 +513,7 @@ def _roll(cells: Iterable[Cell]) -> Cell:
     own: dict[str, Decimal] = {}
     uzum_alloc: dict[ExpenseCategory, Decimal] = {}
     own_alloc: dict[str, Decimal] = {}
+    uzum_est: dict[ExpenseCategory, Decimal] = {}
     parts: list[Cell] = []
     for c in cells:
         revenue += c.revenue
@@ -523,6 +547,9 @@ def _roll(cells: Iterable[Cell]) -> Cell:
         if c.own_alloc:
             for oc, a in c.own_alloc.items():
                 own_alloc[oc] = own_alloc.get(oc, _D0) + a
+        if c.uzum_est:
+            for cat, a in c.uzum_est.items():
+                uzum_est[cat] = uzum_est.get(cat, _D0) + a
     return Cell(
         revenue=revenue,
         commission=commission,
@@ -545,6 +572,7 @@ def _roll(cells: Iterable[Cell]) -> Cell:
         lines_est=lines_est,
         lines_est_missing=lines_est_missing,
         processing=_roll(parts) if parts else None,
+        uzum_est=uzum_est,
     )
 
 
@@ -574,6 +602,7 @@ def _statement(c: Cell) -> Statement:
         logistics_estimated_units=c.units_est,
         logistics_estimated_lines=c.lines_est,
         logistics_missing_lines=c.lines_est_missing,
+        uzum_estimated=_money_map(c.uzum_est or {}),
     )
 
 
@@ -593,6 +622,14 @@ def _put(a: Cell, own: bool, category: str, amount: Decimal) -> None:
         if a.uzum is None:
             a.uzum = {}
         a.uzum[c] = a.uzum.get(c, _D0) + amount
+
+
+def _add(
+    bucket: dict[ExpenseCategory, Decimal] | None, category: ExpenseCategory, amount: Decimal
+) -> dict[ExpenseCategory, Decimal]:
+    out = {} if bucket is None else bucket
+    out[category] = out.get(category, _D0) + amount
+    return out
 
 
 def _rules(
@@ -633,15 +670,21 @@ def _finish(a: Cell, rule: TaxRule | None) -> None:
     """Katak F11 va F15; Jarayondagi qism (ADR-037) katak xarajatlarining (F9, F10) tushum ulushidagi qismini oladi,
     soliq va F15 — o'z tushumidan. Yakunlangan qism = katak − Jarayondagi qism (``Statement.net_profit_done``)."""
     _deduct(a, rule)
-    p = a.processing
+    p = a.part() if a.pin_processing else a.processing
     if p is None:
         return
-    if a.revenue > 0 and p.revenue > 0:
-        share = p.revenue / a.revenue
-        if a.uzum:
-            p.uzum = {cat: _cents(v * share) for cat, v in a.uzum.items()}
-        if a.own:
-            p.own = {cat: _cents(v * share) for cat, v in a.own.items()}
+    share = p.revenue / a.revenue if a.revenue > 0 and p.revenue > 0 else None
+    if a.uzum and (share is not None or a.pin_processing):
+        # ADR-039: bitta sotuvga tegishli xarajat (``pin_*``) bo'linmaydi — o'sha sotuv qismiga.
+        pin_p, pin_d = a.pin_processing or {}, a.pin_done or {}
+        p.uzum = {}
+        for cat, v in a.uzum.items():
+            rest = v - pin_p.get(cat, _D0) - pin_d.get(cat, _D0)
+            part = (_cents(rest * share) if share is not None else _D0) + pin_p.get(cat, _D0)
+            if part or share is not None:
+                p.uzum[cat] = part
+    if a.own and share is not None:
+        p.own = {cat: _cents(v * share) for cat, v in a.own.items()}
     _deduct(p, rule)
 
 
@@ -797,8 +840,27 @@ def build_cells(
     for e in expenses:
         if e.day not in period:
             continue
+        if e.weights and e.sku is None:
+            # F43 (ADR-039): do'kon xarajati SKU'larga berilgan og'irliklarda (saqlash — qoldiq × narx).
+            chosen = [(sku, w) for sku, w in sorted(e.weights.items()) if w > 0]
+            if chosen:
+                parts = split(e.amount.amount, [w for _, w in chosen], UZS.places)
+                for (sku, _), share in zip(chosen, parts, strict=True):
+                    _put(acc[CellKey(e.day, e.shop, sku)], False, e.category, share)
+                continue
         if e.sku is not None:
-            _put(acc[CellKey(e.day, e.shop, e.sku)], False, e.category, e.amount.amount)
+            a = acc[CellKey(e.day, e.shop, e.sku)]
+            amount = e.amount.amount
+            _put(a, False, e.category, amount)
+            if e.processing is True:
+                a.pin_processing = _add(a.pin_processing, e.category, amount)
+            elif e.processing is False:
+                a.pin_done = _add(a.pin_done, e.category, amount)
+            if e.estimated:
+                a.uzum_est = _add(a.uzum_est, e.category, amount)
+                if e.processing is True:
+                    p = a.part()
+                    p.uzum_est = _add(p.uzum_est, e.category, amount)
         else:
             spread(e.day, e.shop, False, e.category, e.amount)
 
@@ -809,6 +871,14 @@ def build_cells(
                 continue
             if oe.sku is not None:
                 _put(acc[CellKey(day, oe.shop or "", oe.sku)], True, oe.category, part.amount)
+            elif oe.skus:
+                # ADR-039: tovarning SKU'lariga — shu kungi tushum ulushida, sotuv bo'lmasa teng.
+                keys = [CellKey(day, shop, sku) for shop, sku in sorted(set(oe.skus))]
+                weights = [acc[k].revenue if k in acc else _D0 for k in keys]
+                if not any(w > 0 for w in weights):
+                    weights = [Decimal(1)] * len(keys)
+                for k, share in zip(keys, split(part.amount, weights, UZS.places), strict=True):
+                    _put(acc[k], True, oe.category, share)
             else:
                 spread(day, oe.shop, True, oe.category, part)
 

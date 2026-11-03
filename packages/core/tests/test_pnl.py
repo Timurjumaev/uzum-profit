@@ -510,3 +510,78 @@ def test_tax_rule_money_and_raw() -> None:
     rule = TaxRule(D("1.5"), TaxBase.PAYOUT)
     assert rule.on(uzs(100_000), uzs(70_001)) == uzs("1050.02")
     assert rule.amount_on(D(100_000), D(70_001)) == D("1050.02")
+
+
+def test_expense_pinned_to_its_sale() -> None:
+    """ADR-039 (07 Q10): buyurtmaga bog'liq reklama — o'sha sotuvning katagi va qismiga (tushum ulushida emas);
+    taxminiy reklama (F42) — kutilayotgan qismga, "≈" sifatida sanaladi; bekor sotuvniki — yakunlangan qismda."""
+    lines = [
+        sale(1, "A", price=300_000),  # Yakunlangan
+        sale(1, "A", price=100_000, status="PROCESSING", issued=True),
+    ]
+    exp = [
+        ExpenseItem(
+            d(1), "S1", C.ADVERTISING, uzs(8_000), sku="A", processing=True
+        ),  # topshirilgan sotuvniki
+        ExpenseItem(
+            d(1), "S1", C.ADVERTISING, uzs(3_000), sku="A", processing=False
+        ),  # yakunlangan sotuvniki
+        ExpenseItem(
+            d(1), "S1", C.ADVERTISING, uzs(5_000), sku="A", processing=True, estimated=True
+        ),
+        ExpenseItem(d(1), "S1", C.STORAGE, uzs(4_000)),  # katak xarajati — tushum ulushida (1/4)
+        ExpenseItem(
+            d(2), "S1", C.ADVERTISING, uzs(2_000), sku="B", processing=False
+        ),  # bekor sotuv (tushum 0)
+    ]
+    cells = build_cells(OCT, lines, exp)
+    cell = cells.items[CellKey(d(1), "S1", "A")]
+    part = cell.processing
+    assert part is not None
+    assert part.uzum_expenses == {C.ADVERTISING: uzs(13_000), C.STORAGE: uzs(1_000)}
+    assert cell.uzum_expenses == {C.ADVERTISING: uzs(16_000), C.STORAGE: uzs(4_000)}
+    assert (
+        cell.uzum_estimated == {C.ADVERTISING: uzs(5_000)}
+        and part.uzum_estimated == cell.uzum_estimated
+    )
+    # Kutilayotgan: 100 000 − 20 000 − 5 000 − 40 000 − 14 000
+    assert cell.net_profit_processing == uzs(21_000)
+    canceled = cells.items[CellKey(d(2), "S1", "B")]
+    assert canceled.processing is None and canceled.net_profit_done == uzs(-2_000)
+    whole = cells.statement()
+    assert whole.uzum_estimated_total == uzs(5_000)
+    assert whole.net_profit_done + whole.net_profit_processing == whole.net_profit
+    rows = {r.code: r for r in compare(whole, build_cells(OCT, []).statement())}
+    assert rows["uzum:advertising"].processing == uzs(-13_000)
+    assert rows["uzum:advertising"].done == uzs(-5_000)  # 3 000 + bekor sotuvniki 2 000
+
+
+def test_storage_split_by_weights() -> None:
+    """F43 (ADR-039): do'kon saqlash xarajati SKU'larga og'irlikda (qoldiq × narx) — sotuvi yo'q SKU ham oladi,
+    to'g'ridan-to'g'ri (taqsimlangan emas); og'irlik yo'q — odatdagidek tushum ulushida."""
+    lines = [sale(1, "A", price=100_000), sale(1, "B", price=300_000)]
+    exp = [
+        ExpenseItem(d(1), "S1", C.STORAGE, uzs(10_000), weights={"A": D(1), "C": D(4), "B": D(0)}),
+        ExpenseItem(d(1), "S1", C.STORAGE, uzs(4_000), weights={}),  # og'irliksiz — tushum ulushida
+    ]
+    by_sku = build_cells(OCT, lines, exp).by_sku()
+    assert by_sku["A"].uzum_expenses == {C.STORAGE: uzs(3_000)}  # 2 000 + 1 000
+    assert by_sku["B"].uzum_expenses == {C.STORAGE: uzs(3_000)}  # 0 + 3 000
+    assert by_sku["C"].uzum_expenses == {C.STORAGE: uzs(8_000)} and by_sku["C"].revenue == uzs(0)
+    assert by_sku["C"].uzum_allocated == {} and by_sku["C"].net_profit == uzs(-8_000)
+    assert by_sku["A"].uzum_allocated == {C.STORAGE: uzs(1_000)}
+
+
+def test_own_expense_on_item_skus() -> None:
+    """ADR-039: bir necha SKU'li tovarga bog'langan o'z xarajati — faqat shu SKU'larga (tushum ulushida; kunda sotuv
+    bo'lmasa teng), do'konning boshqa SKU'lariga emas."""
+    lines = [sale(1, "A", price=100_000), sale(1, "B", price=300_000), sale(1, "Z", price=500_000)]
+    own = [
+        OwnExpense(ManualExpense(uzs(8_000), d(1), d(2)), "kargo", skus=(("S1", "A"), ("S1", "B")))
+    ]
+    by_sku = build_cells(OCT, lines, own_expenses=own).by_sku()
+    assert by_sku["A"].own_expenses == {
+        "kargo": uzs(3_000)
+    }  # 1-kun: 4 000 × 1/4 + 2-kun: 4 000 / 2
+    assert by_sku["B"].own_expenses == {"kargo": uzs(5_000)}  # 3 000 + 2 000
+    assert "Z" not in by_sku or by_sku["Z"].own_expenses == {}

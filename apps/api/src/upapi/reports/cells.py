@@ -4,10 +4,15 @@
 
 - Sotuvlar — ``daily_sku_metrics`` (B2.8 kunlik yig'indilar, ``sale_totals`` natijasi); katak — (kun, do'kon, SKU).
   SKU'ga bog'lanmagan sotuvlar — ``UNLINKED`` katagi (taqsimlanmagan xarajatlar ``None`` katagidan alohida).
-- Uzum xarajatlari (F9) — ``mp_expenses``, P&L'ga kiradiganlari (``excluded`` bo'sh, toifa ``in_pnl``), ishora bilan;
-  sotuv qatoriga bog'langani (``sale_item_id``) — o'sha sotuv SKU'siga, qolgani — do'kon darajasida.
-- O'z xarajatlari (F10) — ``manual_expenses``: tovarga bog'langan va tovarning bitta SKU'si bo'lsa — o'sha SKU'ga,
-  aks holda do'kon (yoki tashkilot) darajasida. Takrorlanish va tovar bo'yicha taqsimot sozlamasi — B4 (M8).
+- Uzum xarajatlari (F9) — ``mp_expenses``, P&L'ga kiradiganlari (``excluded`` bo'sh, toifa ``in_pnl``), ishora bilan
+  (ADR-039, :func:`expense_day`): sotuv qatoriga bog'langani (buyurtmaga bog'liq reklama) — o'sha sotuvning buyurtma
+  kuni, SKU'si va qismiga (Jarayonda — kutilayotgan, aks holda yakunlangan); saqlash — shu kuni SKU'larga Uzum
+  omboridagi qoldiq × saqlash narxi og'irligida (F43, ``sku_daily``; snapshot yo'q kun — tushum ulushida); qolgani —
+  yechilgan kuni do'kon darajasida (tushum ulushida).
+- Kutilayotgan reklama (F42) — hali topshirilmagan Jarayondagi sotuvlar tushumi × SKU'ning (bo'lmasa do'konning)
+  oxirgi 30 kundagi buyurtmaga bog'liq reklama ulushi, "≈" (taxminiy).
+- O'z xarajatlari (F10) — ``manual_expenses``: tovarga bog'langan — tovarning SKU'lariga (bitta bo'lsa o'shanga, bir
+  nechta bo'lsa ular orasida tushum ulushida, ADR-039), aks holda do'kon (yoki tashkilot) darajasida.
 - Soliq (F11) — ``tax_profiles`` sana bo'yicha (``upcore.tax.daily_rule``).
 - Kutilayotgan logistika (F5, ADR-037) — Uzum hali yozmagan Jarayondagi donalar × F40 tarifi (``reports.products``),
   hisobot kunidagi tarif bilan; yakunlangan va kutilayotgan sof foyda (F16) — ``upcore.pnl`` kataklarida.
@@ -25,15 +30,20 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import Text, cast, func, literal, select
+from sqlalchemy import Text, and_, case, cast, func, literal, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.expenses import ExpenseCategory, signed_amount
 from upcore.metrics import (
     ManualExpense,
     Period,
     SaleLine,
+    StatusGroup,
+    ad_rate,
     business_date,
+    expected_ads,
     realization_rate_units,
+    status_group,
+    storage_weights,
 )
 from upcore.money import Currency, Money
 from upcore.pnl import CellKey, Cells, CellSales, ExpenseItem, OwnExpense, TaxBase, build_cells
@@ -47,6 +57,10 @@ from upapi.reports.products import load_fees
 UZS = Currency.UZS
 UNLINKED = "unlinked"  # SKU'ga bog'lanmagan sotuvlar katagi (``sku_id`` NULL)
 REALIZATION_DAYS = 90  # F16: R — do'konning oxirgi 90 kuni
+AD_RATE_DAYS = 30  # F42: buyurtmaga bog'liq reklama ulushi — oxirgi 30 kunda topshirilgan sotuvlar
+SNAPSHOT_LOOKBACK = (
+    7  # F43: saqlash kuni uchun qoldiq snapshoti — shu kun yoki oldingi 7 kun ichidagi oxirgisi
+)
 RECALC_DAYS = 7  # 03 §7: "qayta hisoblandi" belgisi oxirgi 7 kun ko'rinadi
 
 
@@ -163,36 +177,202 @@ def in_pnl(category: str) -> bool:
         return False
 
 
+def by_sale(e: Any) -> Any:
+    """ADR-039: xarajat P&L'da sotuv sanasi bo'yicha (sotuv qatoriga bog'langan va P&L'ga kiradigan — buyurtmaga bog'liq
+    reklama); logistika qatorlari (P&L'dan tashqari) yechilgan kunida qoladi."""
+    return and_(e.c.sale_item_id.is_not(None), e.c.excluded.is_(None))
+
+
+def expense_day(e: Any, s: Any) -> Any:
+    """P&L kuni (vaqt): sotuvga bog'langan xarajat — sotuvning buyurtma vaqti, qolgani — Uzum yechgan vaqt
+    (``/expenses`` ham shu qoida bilan — drill-down yig'indisi P&L qatoriga teng)."""
+    return case((by_sale(e), s.c.ordered_at), else_=e.c.created_on)
+
+
 async def _expenses(conn: AsyncConnection, period: Period) -> list[ExpenseItem]:
     e, s = m.mp_expenses, m.sale_items
-    rows = await conn.execute(
-        select(
-            e.c.created_on,
-            e.c.shop_id,
-            e.c.category,
-            e.c.type,
-            e.c.amount,
-            e.c.sale_item_id,
-            s.c.sku_id,
-        )
-        .outerjoin(s, s.c.id == e.c.sale_item_id)
-        .where(
-            e.c.created_on >= day_start(period.start),
-            e.c.created_on < day_start(period.end + timedelta(days=1)),
-            e.c.excluded.is_(None),
+    when = expense_day(e, s)
+    rows = list(
+        await conn.execute(
+            select(
+                e.c.created_on,
+                e.c.shop_id,
+                e.c.category,
+                e.c.type,
+                e.c.amount,
+                e.c.sale_item_id,
+                s.c.sku_id,
+                s.c.ordered_at,
+                s.c.status,
+            )
+            .outerjoin(s, s.c.id == e.c.sale_item_id)
+            .where(
+                when >= day_start(period.start),
+                when < day_start(period.end + timedelta(days=1)),
+                e.c.excluded.is_(None),
+            )
         )
     )
-    return [
-        ExpenseItem(
-            day=business_date(r.created_on),
-            shop=str(r.shop_id),
-            category=ExpenseCategory(r.category),
-            amount=signed_amount(_uzs(r.amount), r.type),
-            sku=None if r.sale_item_id is None else sku_key(r.sku_id),
+    weights = await _storage_weights(
+        conn,
+        {
+            (r.shop_id, business_date(r.created_on))
+            for r in rows
+            if r.sale_item_id is None and r.category == ExpenseCategory.STORAGE.value
+        },
+    )
+    out = []
+    for r in rows:
+        if not in_pnl(r.category):
+            continue
+        amount = signed_amount(_uzs(r.amount), r.type)
+        category = ExpenseCategory(r.category)
+        if r.sale_item_id is not None:
+            out.append(
+                ExpenseItem(
+                    day=business_date(r.ordered_at),
+                    shop=str(r.shop_id),
+                    category=category,
+                    amount=amount,
+                    sku=sku_key(r.sku_id),
+                    processing=status_group(r.status) is StatusGroup.PROCESSING,
+                )
+            )
+            continue
+        day = business_date(r.created_on)
+        out.append(
+            ExpenseItem(
+                day=day,
+                shop=str(r.shop_id),
+                category=category,
+                amount=amount,
+                weights=weights.get((r.shop_id, day))
+                if category is ExpenseCategory.STORAGE
+                else None,
+            )
         )
-        for r in rows
-        if in_pnl(r.category)
-    ]
+    return out
+
+
+async def _storage_weights(
+    conn: AsyncConnection, wanted: set[tuple[UUID, date]]
+) -> dict[tuple[UUID, date], dict[str, Decimal]]:
+    """F43 og'irliklari (do'kon, kun) uchun: shu kun yoki oldingi ``SNAPSHOT_LOOKBACK`` kun ichidagi oxirgi qoldiq
+    snapshoti (``sku_daily.qty_active`` — Uzum omboridagi sotuvdagi dona) × SKU saqlash narxi. Snapshot yo'q — kiritilmaydi
+    (xarajat tushum ulushida bo'linadi)."""
+    if not wanted:
+        return {}
+    shops = {shop for shop, _ in wanted}
+    first = min(day for _, day in wanted) - timedelta(days=SNAPSHOT_LOOKBACK)
+    last = max(day for _, day in wanted)
+    k, sd = m.mp_skus, m.sku_daily
+    prices = {
+        r.id: r.storage_price
+        for r in await conn.execute(select(k.c.id, k.c.storage_price).where(k.c.shop_id.in_(shops)))
+    }
+    snaps: dict[UUID, dict[date, dict[str, int]]] = {}
+    for r in await conn.execute(
+        select(k.c.shop_id, sd.c.sku_id, sd.c.day, sd.c.qty_active)
+        .join(k, k.c.id == sd.c.sku_id)
+        .where(k.c.shop_id.in_(shops), sd.c.day >= first, sd.c.day <= last)
+    ):
+        snaps.setdefault(r.shop_id, {}).setdefault(r.day, {})[str(r.sku_id)] = int(
+            r.qty_active or 0
+        )
+    out = {}
+    for shop, day in wanted:
+        days = snaps.get(shop, {})
+        found = next(
+            (
+                days[d]
+                for i in range(SNAPSHOT_LOOKBACK + 1)
+                if (d := day - timedelta(days=i)) in days
+            ),
+            None,
+        )
+        if found:
+            w = storage_weights(found, {sku: prices.get(UUID(sku)) for sku in found})
+            if w:
+                out[shop, day] = w
+    return out
+
+
+async def _expected_ads(conn: AsyncConnection, period: Period, today: date) -> list[ExpenseItem]:
+    """F42 (ADR-039): hali topshirilmagan Jarayondagi sotuvlarga kutilayotgan reklama — SKU ulushi (oxirgi
+    ``AD_RATE_DAYS`` kunda topshirilgan sotuvlar), SKU'da topshirilgan sotuv bo'lmasa do'kon ulushi; ulush 0 — taxmin yo'q."""
+    s, e = m.sale_items, m.mp_expenses
+    pending: dict[tuple[date, UUID, str], Decimal] = {}
+    for r in await conn.execute(
+        select(s.c.shop_id, s.c.sku_id, s.c.ordered_at, s.c.sell_price, s.c.amount).where(
+            func.upper(func.trim(s.c.status)) == "PROCESSING",
+            s.c.issued_at.is_(None),
+            s.c.amount > 0,
+            s.c.ordered_at >= day_start(period.start),
+            s.c.ordered_at < day_start(period.end + timedelta(days=1)),
+        )
+    ):
+        key = (business_date(r.ordered_at), r.shop_id, sku_key(r.sku_id))
+        pending[key] = pending.get(key, Decimal(0)) + r.sell_price * r.amount
+    if not pending:
+        return []
+    ads = (
+        select(
+            e.c.sale_item_id,
+            func.sum(case((e.c.type == "OUTCOME", e.c.amount), else_=-e.c.amount)).label("ads"),
+        )
+        .where(
+            e.c.category == ExpenseCategory.ADVERTISING.value,
+            e.c.excluded.is_(None),
+            e.c.sale_item_id.is_not(None),
+        )
+        .group_by(e.c.sale_item_id)
+        .subquery()
+    )
+    sku_sums: dict[tuple[UUID, str], tuple[Decimal, Decimal]] = {}
+    shop_sums: dict[UUID, tuple[Decimal, Decimal]] = {}
+    for row in await conn.execute(
+        select(
+            s.c.shop_id,
+            s.c.sku_id,
+            func.coalesce(func.sum(ads.c.ads), 0),
+            func.coalesce(func.sum(s.c.sell_price * s.c.amount), 0),
+        )
+        .outerjoin(ads, ads.c.sale_item_id == s.c.id)
+        .where(
+            s.c.issued_at >= day_start(today - timedelta(days=AD_RATE_DAYS - 1)),
+            s.c.issued_at < day_start(today + timedelta(days=1)),
+            s.c.shop_id.in_({shop for _, shop, _ in pending}),
+        )
+        .group_by(s.c.shop_id, s.c.sku_id)
+    ):
+        spent, revenue = Decimal(row[2]), Decimal(row[3])
+        sku_sums[row.shop_id, sku_key(row.sku_id)] = (spent, revenue)
+        a, b = shop_sums.get(row.shop_id, (Decimal(0), Decimal(0)))
+        shop_sums[row.shop_id] = (a + spent, b + revenue)
+    out = []
+    for (day, shop, sku), revenue in sorted(
+        pending.items(), key=lambda x: (x[0][0], str(x[0][1]), x[0][2])
+    ):
+        spent, base = sku_sums.get((shop, sku), (Decimal(0), Decimal(0)))
+        if base <= 0:
+            spent, base = shop_sums.get(shop, (Decimal(0), Decimal(0)))
+        rate = ad_rate(spent, base)
+        if not rate:
+            continue
+        estimate = expected_ads(rate, revenue)
+        if estimate.amount > 0:
+            out.append(
+                ExpenseItem(
+                    day=day,
+                    shop=str(shop),
+                    category=ExpenseCategory.ADVERTISING,
+                    amount=estimate,
+                    sku=sku,
+                    processing=True,
+                    estimated=True,
+                )
+            )
+    return out
 
 
 async def _own(conn: AsyncConnection, period: Period) -> list[OwnExpense]:
@@ -219,7 +399,13 @@ async def _own(conn: AsyncConnection, period: Period) -> list[OwnExpense]:
         if len(linked) == 1:
             shop, sku = str(linked[0][0]), str(linked[0][1])
         out.append(
-            OwnExpense(ManualExpense(_uzs(r.amount), r.start_on, r.end_on), r.category, shop, sku)
+            OwnExpense(
+                ManualExpense(_uzs(r.amount), r.start_on, r.end_on),
+                r.category,
+                shop,
+                sku,
+                skus=tuple((str(a), str(b)) for a, b in linked) if len(linked) > 1 else (),
+            )
         )
     return out
 
@@ -259,7 +445,7 @@ async def load_book(conn: AsyncConnection, period: Period, today: date) -> Book:
     cells = build_cells(
         period,
         [],
-        await _expenses(conn, period),
+        [*await _expenses(conn, period), *await _expected_ads(conn, period, today)],
         await _own(conn, period),
         tax=daily_rule(await tax_profiles(conn)),
         totals=totals,

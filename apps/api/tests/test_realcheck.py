@@ -315,6 +315,9 @@ def test_expense_timing_checks(db: dict[str, str]) -> None:
                     205, A, NOW - 2 * DAY, dateService=sf.ms(NOW - 4 * DAY)
                 ),  # saqlash 2 kun kechikib
                 sf.expense(206, A, NOW - DAY),
+                sf.expense(
+                    207, A, NOW - DAY, "00001", 2_500, name="Jarima, buyurtma № 10", source="Boshqa"
+                ),
             ],
             B: [],
         },
@@ -380,7 +383,23 @@ def test_expense_timing_checks(db: dict[str, str]) -> None:
     (line,) = [x for x in rc.summary(report) if x.startswith(shop(report, A)["name"])]
     assert "bekor qatorlarda yechilgan 4000 so'm" in line
     assert "reklama 2 qator, shundan buyurtmaga bog'liq matn 1, sotuvga bog'langan 1" in line
-    assert "saqlash 60 kunda 2 kun yechilgan" in line
+    assert "saqlash 60 kunda 2 kun yechilgan, model bilan" in line
+
+    # B4.21 (ADR-039): boshqa xarajatlar havolalari, logistika farqi namunalari, saqlash modeli.
+    refs = {r["category"]: r for r in checks["expense_refs"]["by_category"]}
+    assert (refs["fine"]["with_order_no"], refs["fine"]["order_no_is_sale"]) == (1, 1)
+    assert refs["storage"]["n"] == 2 and refs["storage"]["ext_is_sale_line"] == 0
+    assert any(x["name"] == "Jarima, buyurtma № 99" for x in checks["expense_refs"]["patterns"])
+    (sample,) = checks["logistics_differ"]["samples"]  # 2-qator: qatorda 4 000, hali yechilmagan
+    assert (sample["status"], sample["line_fee"], sample["charged"], sample["charges"]) == (
+        "PROCESSING",
+        "4000",
+        "0",
+        0,
+    )
+    assert checks["logistics_differ"]["refund_patterns"] == []
+    days = checks["storage_model"]["days"]
+    assert [x["charged"] for x in days] == ["1500", "1500"]
 
 
 def test_sync_errors_reported(db: dict[str, str]) -> None:

@@ -43,9 +43,15 @@ export function Pnl() {
   const data = query.data;
   const lines = useMemo(() => {
     if (!data) return [];
-    const estimated = Number(data.statement.logistics_estimated) !== 0; // F5: kutilayotgan logistika taxmini (≈)
+    // Taxminiy qismli qatorlar (≈): kutilayotgan logistika (F5) va Uzum xarajatlari — kutilayotgan reklama (F42).
+    const estimates = new Map<string, string>(
+      Object.entries(data.statement.uzum_estimated)
+        .filter(([, amount]) => Number(amount) !== 0)
+        .map(([category, amount]) => [`uzum:${category}`, amount]),
+    );
+    if (Number(data.statement.logistics_estimated) !== 0) estimates.set("logistics", data.statement.logistics_estimated);
     return pnlLines(data.rows, (code) => rowLabel(code, t), t("terms.grossProfit")).map((l) =>
-      l.key === "logistics" && estimated ? { ...l, estimated: true } : l,
+      estimates.has(l.key) ? { ...l, estimated: true, estimate: l.key === "logistics" ? undefined : estimates.get(l.key) } : l,
     );
   }, [data, t]);
   const steps = useMemo(() => (data ? waterfallSteps(data.statement, (key) => t(`pnl.waterfall.${key}`)) : []), [data, t]);
@@ -124,6 +130,9 @@ export function Pnl() {
           </p>
         )}
         {s.logistics_missing_lines > 0 && <p className="caption">{t("pnl.logisticsMissing", { value: f.number(s.logistics_missing_lines) })}</p>}
+        {Number(s.uzum_estimated.advertising ?? 0) !== 0 && (
+          <p className="caption">{t("pnl.adsEstimated", { amount: f.money(s.uzum_estimated.advertising!) })}</p>
+        )}
       </div>
 
       <div className="pnl__row">
