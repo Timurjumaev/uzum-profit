@@ -10,7 +10,7 @@
   aks holda do'kon (yoki tashkilot) darajasida. Takrorlanish va tovar bo'yicha taqsimot sozlamasi — B4 (M8).
 - Soliq (F11) — ``tax_profiles`` sana bo'yicha (``upcore.tax.daily_rule``).
 - Kutilayotgan logistika (F5, ADR-037) — Uzum hali yozmagan Jarayondagi donalar × F40 tarifi (``reports.products``),
-  hisobot kunidagi tarif bilan; naqd va kutilayotgan sof foyda (F16) — ``upcore.pnl`` kataklarida.
+  hisobot kunidagi tarif bilan; yakunlangan va kutilayotgan sof foyda (F16) — ``upcore.pnl`` kataklarida.
 
 Kataklar butun tashkilot uchun quriladi, do'kon filtri keyin qo'llanadi: tashkilot xarajati tanlangan do'konlarga
 emas, hamma do'konlarga tushum ulushida taqsimlanadi (filtr bo'yicha natija = do'konlar kesimidagi qatorlar).

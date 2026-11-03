@@ -1,5 +1,5 @@
 // Segmentli tanlov (04 §5): bir nechta ko'rinishdan bittasi — radio guruh (strelkalar bilan), `ui-segmented` uslubi.
-// Masalan, grafikda "Sof foyda | Tushum" yoki tor ekranda hisob varag'i ustuni "Naqd | Kutilayotgan | Jami".
+// Masalan, grafikda "Sof foyda | Tushum" yoki tor ekranda hisob varag'i ustuni "Yakunlangan | Kutilayotgan | Jami".
 import { useId } from "react";
 
 import { cx } from "./cx";

@@ -12,7 +12,10 @@ Sinxronlangan ma'lumotdan JSON chiqaradi (stdout; xulosa — stderr):
 - **sinxron holati** — oxirgi 24 soatdagi ishlar va xatolar;
 - **qoldiq joylari** (ADR-034) — SKU ``quantity*`` maydonlari (yig'indi, nol bo'lmagan SKU'lar, SKU holati bo'yicha),
   postavka holatlari (e'lon qilingan / qabul qilingan), qaytarish turi × holati, sotuv holatlari (oxirgi 60 kun) —
-  maydonlar ma'nosini real ma'lumotda aniqlash uchun; faqat yig'indilar, nom va shaxsiy ma'lumot yo'q.
+  maydonlar ma'nosini real ma'lumotda aniqlash uchun; faqat yig'indilar, nom va shaxsiy ma'lumot yo'q;
+- **xarajatlar vaqti va bog'lanishi** (B4.20, 07 Q10) — Uzum yechgan logistika ↔ sotuv qatoridagi logistika (holat
+  bo'yicha), reklama turlari (buyurtmaga bog'liq "xaridor olganida" turi, ``AD#`` → sotuv qatori, yechilgan kun
+  buyurtma va topshirilgan kunga nisbatan), ``dateService`` ↔ ``dateCreated`` farqi va saqlash yechiladigan kunlar.
 
 Kalit va boshqa sirlar o'qilmaydi (ustunlar aniq sanab olinadi). Solishtirish — Temurning Mac'ida
 ``scripts/compare_staging.py`` (legacy ``uzum.db`` bilan). Ulanish — ilova roli (``up_app``) bilan, RLS ostida:
@@ -346,6 +349,130 @@ async def processing_logistics_check(conn: AsyncConnection, shop: UUID) -> dict[
     )
 
 
+_NET = "CASE WHEN e.type = 'OUTCOME' THEN e.amount ELSE -e.amount END"  # F9 ishorasi: chiqim +, qaytim −
+_TASHKENT_DAY = "(timezone('Asia/Tashkent', {}))::date"
+
+
+def _day(column: str) -> str:
+    return _TASHKENT_DAY.format(column)
+
+
+async def logistics_reconcile_check(conn: AsyncConnection, shop: UUID) -> dict[str, Any]:
+    """Uzum yechgan logistika (``finance/expenses``, sotuv qatoriga bog'langan, chiqim − qaytim) ↔ sotuv qatoridagi
+    logistika (F5) — holat bo'yicha. P&L logistikani faqat sotuv qatoridan oladi (xarajat qatorlari qayta ayrilmaydi):
+    ``differ`` va ayniqsa Bekor qatorlardagi ``expense_net`` — sotuv qatorida ko'rinmaydigan (yashirin) logistika;
+    ``fee_without_expense`` — Uzum qatorga yozgan, lekin hali yechmagan logistika (masalan, buyurtma paytida yozilgan)."""
+    rows = await conn.execute(
+        text(
+            "WITH x AS (SELECT e.sale_item_id AS id, sum(" + _NET + ") AS net FROM mp_expenses e "
+            "WHERE e.shop_id = :s AND e.sale_item_id IS NOT NULL "
+            "AND e.category IN ('logistics', 'logistics_refund') AND e.excluded IS DISTINCT FROM 'status' "
+            "GROUP BY 1) "
+            "SELECT upper(trim(s.status)) AS status, count(*) AS lines, count(x.id) AS with_expense, "
+            "count(*) FILTER (WHERE x.id IS NOT NULL AND abs(x.net - s.logistics_fee) <= 1) AS equal, "
+            "count(*) FILTER (WHERE x.id IS NOT NULL AND abs(x.net - s.logistics_fee) > 1) AS differ, "
+            "count(*) FILTER (WHERE x.id IS NULL AND s.logistics_fee > 0) AS fee_without_expense, "
+            "coalesce(sum(s.logistics_fee), 0) AS line_fee, coalesce(sum(x.net), 0) AS expense_net "
+            "FROM sale_items s LEFT JOIN x ON x.id = s.id WHERE s.shop_id = :s GROUP BY 1 ORDER BY 1"
+        ),
+        {"s": shop},
+    )
+    return {
+        "by_status": [
+            {**dict(r._mapping), "line_fee": money(r.line_fee), "expense_net": money(r.expense_net)}
+            for r in rows
+        ]
+    }
+
+
+async def ads_check(conn: AsyncConnection, shop: UUID) -> dict[str, Any]:
+    """Reklama xarajatlari (F9, F19) — qaysi turi buyurtmaga bog'liq ("Xaridor tovarni olganida ... yechib oldik",
+    ``AD#<sotuv qatori id>-...``) va u qachon yechiladi: buyurtma kuniga, topshirilgan kunga nisbatan (kun), ``AD#``
+    dagi sana nimani bildiradi. P&L hozir reklamani yechilgan kunga yozadi va o'sha kungi sotuvlarga tushum ulushida
+    bo'ladi — bog'liq turi buyurtmaning o'ziga yozilishi kerakmi (07 Q10), shu raqamlar bilan hal qilinadi.
+    Matnlar raqamlarsiz (``9``) — buyurtma raqami chiqmaydi."""
+    base = (
+        "FROM mp_expenses e LEFT JOIN LATERAL (SELECT s.id, s.status, s.ordered_at, s.issued_at FROM sale_items s "
+        "WHERE s.shop_id = e.shop_id AND s.external_id = e.item_external_id ORDER BY s.ordered_at LIMIT 1) s ON true "
+        "WHERE e.shop_id = :s AND e.category = 'advertising' AND e.excluded IS NULL"
+    )
+    rows = await conn.execute(
+        text(
+            "SELECT coalesce(e.raw_code, '<null>') AS code, count(*) AS n, coalesce(sum("
+            + _NET
+            + "), 0) AS amount, "
+            "count(*) FILTER (WHERE e.name ILIKE '%olganida%') AS per_order_text, "
+            "count(e.item_external_id) AS with_ad_id, count(s.id) AS linked "
+            + base
+            + " GROUP BY 1 ORDER BY 2 DESC"
+        ),
+        {"s": shop},
+    )
+    by_code = [{**dict(r._mapping), "amount": money(r.amount)} for r in rows]
+    rows = await conn.execute(
+        text(
+            "SELECT left(regexp_replace(coalesce(e.name, '<null>'), '[0-9]', '9', 'g'), 120) AS name, "
+            "count(*) AS n, coalesce(sum("
+            + _NET
+            + "), 0) AS amount "
+            + base
+            + " GROUP BY 1 ORDER BY 2 DESC LIMIT :n"
+        ),
+        {"s": shop, "n": SAMPLE},
+    )
+    names = [{**dict(r._mapping), "amount": money(r.amount)} for r in rows]
+    charged, ordered, issued = _day("e.created_on"), _day("s.ordered_at"), _day("s.issued_at")
+    ad_date = (
+        "substring(e.raw ->> 'externalId' from 'AD#[0-9]+-[0-9]+-([0-9]{4}-[0-9]{2}-[0-9]{2})')"
+    )
+    rows = await conn.execute(
+        text(
+            "SELECT upper(trim(s.status)) AS status, count(*) AS n, coalesce(sum("
+            + _NET
+            + "), 0) AS amount, "
+            f"count(*) FILTER (WHERE {charged} - {ordered} = 0) AS after_order_0, "
+            f"count(*) FILTER (WHERE {charged} - {ordered} BETWEEN 1 AND 3) AS after_order_1_3, "
+            f"count(*) FILTER (WHERE {charged} - {ordered} BETWEEN 4 AND 7) AS after_order_4_7, "
+            f"count(*) FILTER (WHERE {charged} - {ordered} BETWEEN 8 AND 14) AS after_order_8_14, "
+            f"count(*) FILTER (WHERE {charged} - {ordered} > 14) AS after_order_15_plus, "
+            "count(*) FILTER (WHERE s.issued_at IS NULL) AS not_issued, "
+            f"count(*) FILTER (WHERE {charged} = {issued}) AS on_issue_day, "
+            f"count(*) FILTER (WHERE {charged} > {issued}) AS after_issue_day, "
+            f"count(*) FILTER (WHERE {charged} < {issued}) AS before_issue_day, "
+            f"count(*) FILTER (WHERE {ad_date} = to_char({ordered}, 'YYYY-MM-DD')) AS ad_date_is_order, "
+            f"count(*) FILTER (WHERE {ad_date} = to_char({issued}, 'YYYY-MM-DD')) AS ad_date_is_issue, "
+            f"count(*) FILTER (WHERE {ad_date} = to_char({charged}, 'YYYY-MM-DD')) AS ad_date_is_charge "
+            + base
+            + " AND s.id IS NOT NULL GROUP BY 1 ORDER BY 1"
+        ),
+        {"s": shop},
+    )
+    linked = [{**dict(r._mapping), "amount": money(r.amount)} for r in rows]
+    return {"by_code": by_code, "name_patterns": names, "linked_by_status": linked}
+
+
+async def expense_dates_check(conn: AsyncConnection, shop: UUID, now: datetime) -> dict[str, Any]:
+    """Xarajat sanasi (P&L kuni — ``dateCreated``) va ``dateService`` farqi (kun) toifa bo'yicha, oxirgi 60 kunda
+    yechilgan kunlar soni (saqlash har kuni yechiladimi yoki bir necha kun birga). ``gap`` = yechilgan kun − xizmat
+    kuni (Toshkent)."""
+    service = "to_timestamp((raw ->> 'dateService')::bigint / 1000.0)"
+    gap = f"CASE WHEN (raw ->> 'dateService') ~ '^[0-9]+$' THEN {_day('created_on')} - {_day(service)} END"
+    rows = await conn.execute(
+        text(
+            "SELECT category, count(*) AS n, count(gap) AS with_service, "
+            "count(*) FILTER (WHERE gap = 0) AS gap_0, count(*) FILTER (WHERE gap = 1) AS gap_1, "
+            "count(*) FILTER (WHERE gap BETWEEN 2 AND 7) AS gap_2_7, count(*) FILTER (WHERE gap > 7) AS gap_8_plus, "
+            "count(*) FILTER (WHERE gap < 0) AS gap_negative, "
+            "count(*) FILTER (WHERE created_on >= :since) AS rows_60d, "
+            f"count(DISTINCT {_day('created_on')}) FILTER (WHERE created_on >= :since) AS days_60d "
+            f"FROM (SELECT category, created_on, {gap} AS gap FROM mp_expenses "
+            "WHERE shop_id = :s AND excluded IS DISTINCT FROM 'status') t GROUP BY 1 ORDER BY 1"
+        ),
+        {"s": shop, "since": now - timedelta(days=RECENT_DAYS)},
+    )
+    return {"by_category": [dict(r._mapping) for r in rows]}
+
+
 async def expenses_check(conn: AsyncConnection, shop: UUID) -> dict[str, Any]:
     """Toifalar (P&L'dan chiqarilganlari sababi bilan), holatlar va "boshqa" toifasiga tushgan kodlar."""
     rows = await conn.execute(
@@ -555,6 +682,9 @@ async def shop_report(
             "returns": await returns_check(conn, shop.id),
             "logistics": await logistics_check(conn, shop.id),
             "processing_logistics": await processing_logistics_check(conn, shop.id),
+            "logistics_reconcile": await logistics_reconcile_check(conn, shop.id),
+            "ads": await ads_check(conn, shop.id),
+            "expense_dates": await expense_dates_check(conn, shop.id, now),
             "expenses": await expenses_check(conn, shop.id),
             "stock": await stock_check(conn, shop.id, now),
         },
@@ -605,6 +735,13 @@ def summary(report: dict[str, Any]) -> list[str]:
             sales, checks, sync = shop["sales"], shop["checks"], shop["sync"]
             inv, ret, lg = checks["invoices"], checks["returns"], checks["logistics"]
             pl = checks["processing_logistics"]
+            ads = checks["ads"]["by_code"]
+            rec = checks["logistics_reconcile"]["by_status"]
+            canceled = next((r for r in rec if r["status"] == "CANCELED"), None)
+            storage = next(
+                (r for r in checks["expense_dates"]["by_category"] if r["category"] == "storage"),
+                None,
+            )
             out.append(
                 f"{shop['name']} ({shop['external_id']}): tarix={shop['history_status']}, "
                 f"sotuv qatorlari={len(sales['lines'])}, oylar={len(sales['months'])}; "
@@ -612,6 +749,11 @@ def summary(report: dict[str, Any]) -> list[str]:
                 f"qaytarishlar {ret['returns']}; logistika {lg['linked']}/{lg['expenses']} sotuvga "
                 f"bog'langan; jarayonda {pl['processing']} qator (topshirilmagan va logistika 0: "
                 f"{pl['not_issued_zero']}, topshirilgan va 0: {pl['issued_zero']}); "
+                f"logistika qator ↔ yechilgan farqi: {sum(r['differ'] for r in rec)} qator, bekor "
+                f"qatorlarda yechilgan {canceled['expense_net'] if canceled else '0'} so'm; "
+                f"reklama {sum(r['n'] for r in ads)} qator, shundan buyurtmaga bog'liq matn "
+                f"{sum(r['per_order_text'] for r in ads)}, sotuvga bog'langan {sum(r['linked'] for r in ads)}; "
+                f"saqlash 60 kunda {storage['days_60d'] if storage else 0} kun yechilgan; "
                 f"24 soatda xato ishlar: {sync['errors_24h']}; "
                 f"qoldiq maydonlari: {checks['stock']['skus']} SKU, postavka holatlari "
                 f"{len(checks['stock']['invoices_by_status'])}, qaytarish holatlari "

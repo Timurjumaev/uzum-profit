@@ -2709,7 +2709,7 @@ export interface components {
         /**
          * RowOut
          * @description M5 hisob varag'i qatori: ``code`` (``revenue``, ``uzum:fine``, ``own:ijara``, ``net_profit`` ...), joriy summa
-         *     (jami), shundan naqd va kutilayotgan (ADR-037), tushumga nisbatan, oldingi davr, farq va o'zgarish ulushi
+         *     (jami), shundan yakunlangan va kutilayotgan (ADR-037), tushumga nisbatan, oldingi davr, farq va o'zgarish ulushi
          *     (``upcore.pnl.compare``).
          */
         RowOut: {

@@ -1,4 +1,4 @@
-// Bosh sahifa (M4, ADR-037): uch raqam (naqd + kutilayotgan = jami sof foyda), davr chizig'i, grafik, "Diqqat talab
+// Bosh sahifa (M4, ADR-037): uch raqam (yakunlangan + kutilayotgan = jami sof foyda), davr chizig'i, grafik, "Diqqat talab
 // qiladi", SKU, ko'rsatkichlar. Hisob varag'i va drill-down — Foyda sahifasida (`pnl.test.tsx`). Butun ilova
 // (marshrutlovchi + so'rovlar) soxta API ustida — `test/api.ts`.
 import { createMemoryHistory } from "@tanstack/react-router";
@@ -50,14 +50,14 @@ const requestUrls = (api: ReturnType<typeof mockApi>, path: string) =>
   api.fetch.mock.calls.map(([r]) => new URL((r as Request).url)).filter((u) => u.pathname === path);
 
 describe("uch raqam (ADR-037)", () => {
-  it("sarlavha va tenglama: naqd + kutilayotgan = jami sof foyda (summalar API'dan)", async () => {
+  it("sarlavha va tenglama: yakunlangan + kutilayotgan = jami sof foyda (summalar API'dan)", async () => {
     await renderHome();
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(`Sof foyda, ${f.period("2026-10-01", "2026-10-26")}`);
     expect(norm(screen.getByTestId("net-done").textContent!)).toBe(m("31508700.00"));
     expect(norm(screen.getByTestId("net-expected").textContent!)).toBe(m("16884300.00"));
     expect(norm(screen.getByTestId("net-profit").textContent!)).toBe(m("48393000.00"));
     const labels = screen.getAllByRole("heading", { level: 2 }).slice(0, 3).map((h) => h.firstChild?.textContent);
-    expect(labels).toEqual(["Naqd sof foyda", "Kutilayotgan sof foyda", "Jami sof foyda"]);
+    expect(labels).toEqual(["Yakunlangan sof foyda", "Kutilayotgan sof foyda", "Jami sof foyda"]);
     // Amal belgilari — bezak (ekran o'quvchi ro'yxatni 3 ta element sifatida o'qiydi).
     expect([...document.querySelectorAll(".home-sum__op")].map((x) => x.textContent)).toEqual(["+", "="]);
     expect(screen.getByTestId("net-done").className).toContain("ui-text--positive");
@@ -74,15 +74,15 @@ describe("uch raqam (ADR-037)", () => {
     expect(card("net-profit").getByText(norm(`Marja ${f.percent("0.259400")}`))).toBeTruthy();
   });
 
-  it("formula: naqd (F12), kutilayotgan (F16, taxminiy sababi bilan), jami", async () => {
+  it("formula: yakunlangan (F12), kutilayotgan (F16, taxminiy sababi bilan), jami", async () => {
     await renderHome();
     fireEvent.click(card("net-expected").getByRole("button", { name: /Qanday hisoblanadi/ }));
     expect(screen.getByText("Kutilayotgan sof foyda · F16")).toBeTruthy();
-    expect(screen.getByText(/xuddi naqd kabi: tushum − komissiya − logistika − tannarx/)).toBeTruthy();
+    expect(screen.getByText(/xuddi yakunlanganlar kabi: tushum − komissiya − logistika − tannarx/)).toBeTruthy();
     expect(screen.getByText(/10 kun ichida qaytarsa kamayadi/)).toBeTruthy();
     fireEvent.keyDown(document.activeElement!, { key: "Escape" });
     fireEvent.click(card("net-profit").getByRole("button", { name: /Qanday hisoblanadi/ }));
-    expect(screen.getByText("Naqd sof foyda + kutilayotgan sof foyda")).toBeTruthy();
+    expect(screen.getByText("Yakunlangan sof foyda + kutilayotgan sof foyda")).toBeTruthy();
   });
 
   it("jarayondagi sotuv yo'q va yakunlangan yo'q — bo'sh matnlar; zarar — qizil", async () => {
@@ -152,8 +152,8 @@ describe("davr chizig'i va grafik", () => {
     expect(tile("Bugun").getByText("38 dona")).toBeTruthy();
     expect(tile("Kecha").getByText(m("1810000.00"))).toBeTruthy();
     expect(tile("Oʻtgan oy").getByText(m("47000000.00"))).toBeTruthy();
-    // ADR-037: sof foyda ostida naqd va kutilayotgan qismlari (API'dan); kutilayotgan yo'q — izoh yo'q.
-    expect(norm(tile("Kecha").getByText(/^naqd /).textContent!)).toBe(`naqd ${m("60000.00")} · kutilayotgan ${m("1750000.00")}`);
+    // ADR-037: sof foyda ostida yakunlangan va kutilayotgan qismlari (API'dan); kutilayotgan yo'q — izoh yo'q.
+    expect(norm(tile("Kecha").getByText(/^yakunlangan /).textContent!)).toBe(`yakunlangan ${m("60000.00")} · kutilayotgan ${m("1750000.00")}`);
     expect(tile("Oʻtgan oy").queryByText(/kutilayotgan/)).toBeNull();
     expect(tile("Oy prognozi").queryByText(/kutilayotgan/)).toBeNull();
     // Prognoz (run-rate) API'dan; dona butun songa yaxlitlanadi.
@@ -171,9 +171,9 @@ describe("davr chizig'i va grafik", () => {
     expect(tile("Oy prognozi").getByText("Maʼlumot yetarli emas")).toBeTruthy();
   });
 
-  it("kunlik grafik: sof foyda naqd va kutilayotgan qatlamlarda; 'Tushum' — yakunlangan va jarayonda; jadval", async () => {
+  it("kunlik grafik: sof foyda yakunlangan va kutilayotgan qatlamlarda; 'Tushum' — yakunlangan va jarayonda; jadval", async () => {
     await renderHome();
-    const chart = await screen.findByRole("img", { name: /Kunlik sof foyda: naqd va kutilayotgan/ });
+    const chart = await screen.findByRole("img", { name: /Kunlik sof foyda: yakunlangan va kutilayotgan/ });
     expect(chart.getAttribute("aria-label")).toContain("Kutilayotgan");
     fireEvent.click(screen.getByRole("radio", { name: "Jadval" }));
     const table = await screen.findByRole("table", { name: /Kunlik sof foyda/ });

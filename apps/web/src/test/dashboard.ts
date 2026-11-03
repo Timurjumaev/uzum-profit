@@ -7,7 +7,7 @@ const minutesAgo = (n: number) => new Date(Date.now() - n * 60_000).toISOString(
 
 type Dashboard = components["schemas"]["DashboardOut"];
 
-// ADR-037: har qatorda naqd va kutilayotgan qism (`processing`), naqd = jami − kutilayotgan.
+// ADR-037: har qatorda yakunlangan va kutilayotgan qism (`processing`), yakunlangan = jami − kutilayotgan.
 const row = (code: string, amount: string, processing: string, previous: string, change: string | null, share: string | null = null) => ({
   code,
   amount,

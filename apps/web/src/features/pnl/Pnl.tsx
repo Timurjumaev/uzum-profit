@@ -1,4 +1,4 @@
-// Foyda va zarar (M5, ADR-037) — "qanday hisoblandi": hisob varag'i to'liq, har qator uch ustunda — naqd (Yakunlangan
+// Foyda va zarar (M5, ADR-037) — "qanday hisoblandi": hisob varag'i to'liq, har qator uch ustunda — yakunlangan (Yakunlangan
 // sotuvlar), kutilayotgan (Jarayondagi sotuvlar), jami — va oldingi davr bilan solishtirish; ostida sharshara (jami) va
 // kutilayotgan sof foyda bloki (F16), keyin kesimlar (oylar / do'konlar / SKU). Maket — 04 §7.4. Tannarx qamrovi < 100%
 // — sariq banner (F15). Uzum xarajatlari API bergandek (ADR-035), Uzum hali yozmagan logistika — taxminiy (F5, "≈").

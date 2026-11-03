@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B4. Asosiy ekranlar.** **B2 tugadi** (2026-10-27: B2.11 real sinov, 24 soat xatosiz), **B3 tugadi** (2026-10-26) |
-| Keyingi vazifa | **B4 chiqish mezoni** — Temur 14 kun faqat yangi dasturda ishlaydi (B4.1–B4.19 tayyor; B4.9 bekor — ADR-032), keyin B5. B3 qoldig'i: Temur Q1 tovar belgisi tekshiruvi (ADR-030), `sellermax.uz` domenini ro'yxatdan o'tkazish |
-| Temurdan kutilmoqda | Boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni Xaridlarga kiritish (ADR-033; legacy partiyalar shart emas). Ixtiyoriy: staging'da Ombor sahifasini ochib "Omborimda" sonlarini tekshirish (Uzumga yuborilgan xaridlarga "Uzumga yuborildi" sanasi qo'yilgan bo'lishi kerak); staging'da bitta yangi xaridni bosqichma-bosqich kiritib ko'rish (Xaridlar → Yangi xarid); partiya qatorlariga SKU biriktirish |
-| Oxirgi yangilanish | 2026-11-02 (B4.19 tannarxsiz sotuvlar tuzatishi: narx bor tovar va sotuv → SKU bog'lanishi) |
+| Keyingi vazifa | **B4 chiqish mezoni** — Temur 14 kun faqat yangi dasturda ishlaydi (B4.1–B4.20 tayyor; B4.9 bekor — ADR-032), keyin B5. B3 qoldig'i: Temur Q1 tovar belgisi tekshiruvi (ADR-030), `sellermax.uz` domenini ro'yxatdan o'tkazish |
+| Temurdan kutilmoqda | **Q10** — buyurtmaga bog'liq reklama ("xaridor olganida") sotuvning o'ziga yozilsinmi (07); B4.20 merge va deploy'dan keyin staging'da `realcheck.sh` → xulosa qatorlari chatga. Boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni Xaridlarga kiritish (ADR-033; legacy partiyalar shart emas). Ixtiyoriy: staging'da Ombor sahifasini ochib "Omborimda" sonlarini tekshirish (Uzumga yuborilgan xaridlarga "Uzumga yuborildi" sanasi qo'yilgan bo'lishi kerak); staging'da bitta yangi xaridni bosqichma-bosqich kiritib ko'rish (Xaridlar → Yangi xarid); partiya qatorlariga SKU biriktirish |
+| Oxirgi yangilanish | 2026-11-03 (B4.20: "Naqd" → "Yakunlangan" — ADR-038; xarajatlar vaqti realcheck'i, Q10) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

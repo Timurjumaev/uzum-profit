@@ -51,7 +51,7 @@ class StatementOut(BaseModel):
     # ADR-036: sotuvlar Yakunlangan + Jarayonda; shundan Jarayondagi (yakuniy emas) qism.
     units_processing: int
     revenue_processing: Decimal
-    # ADR-037: sof foyda ikki qismda — naqd (Yakunlangan) + kutilayotgan (Jarayonda, F16) = ``net_profit``.
+    # ADR-037: sof foyda ikki qismda — yakunlangan + kutilayotgan (Jarayonda, F16) = ``net_profit``.
     net_profit_done: Decimal
     net_profit_processing: Decimal
     revenue_done: Decimal
@@ -125,12 +125,12 @@ class StatementOut(BaseModel):
 
 class RowOut(BaseModel):
     """M5 hisob varag'i qatori: ``code`` (``revenue``, ``uzum:fine``, ``own:ijara``, ``net_profit`` ...), joriy summa
-    (jami), shundan naqd va kutilayotgan (ADR-037), tushumga nisbatan, oldingi davr, farq va o'zgarish ulushi
+    (jami), shundan yakunlangan va kutilayotgan (ADR-037), tushumga nisbatan, oldingi davr, farq va o'zgarish ulushi
     (``upcore.pnl.compare``)."""
 
     code: str
     amount: Decimal
-    done: Decimal  # naqd qism (Yakunlangan sotuvlar)
+    done: Decimal  # yakunlangan qism (Yakunlangan sotuvlar)
     processing: Decimal  # kutilayotgan qism (Jarayondagi sotuvlar)
     share_of_revenue: Decimal | None
     previous: Decimal

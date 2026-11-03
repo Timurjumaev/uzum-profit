@@ -1,4 +1,4 @@
-// Foyda va zarar sahifasi (M5, ADR-037): hisob varag'i ustunlari (naqd, kutilayotgan, jami + solishtirish), qamrov
+// Foyda va zarar sahifasi (M5, ADR-037): hisob varag'i ustunlari (yakunlangan, kutilayotgan, jami + solishtirish), qamrov
 // banneri, sharshara, kutilayotgan sof foyda (F16), kesimlar (URL'dagi `view`), drill-down, holatlar va kirish
 // imkoniyati. Butun ilova soxta API ustida — `test/api.ts`.
 import { createMemoryHistory } from "@tanstack/react-router";
@@ -37,11 +37,11 @@ const pnlUrls = (api: ReturnType<typeof mockApi>) =>
   api.fetch.mock.calls.map(([r]) => new URL((r as Request).url)).filter((u) => u.pathname === PNL_ROUTE.split(" ")[1]);
 
 describe("hisob varag'i", () => {
-  it("sarlavha, qatorlar tartibi (yalpi foyda bilan) va ustunlar: naqd, kutilayotgan, jami, tushumga nisbatan, oldingi, farq", async () => {
+  it("sarlavha, qatorlar tartibi (yalpi foyda bilan) va ustunlar: yakunlangan, kutilayotgan, jami, tushumga nisbatan, oldingi, farq", async () => {
     await renderPnl();
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(`Foyda va zarar, ${f.period("2026-09-01", "2026-10-31")}`);
     expect(norm(screen.getByText(/^Oldingi davr:/).textContent!)).toBe(norm(`Oldingi davr: ${f.period("2026-07-02", "2026-08-31")}`));
-    expect(screen.getByText(/^Naqd — yakunlangan sotuvlar/)).toBeTruthy();
+    expect(screen.getByText(/^Yakunlangan — mijoz olgan va qaytarish muddati oʻtgan sotuvlar/)).toBeTruthy();
     const names = within(ledger())
       .getAllByRole("rowheader")
       .map((h) => h.querySelector(".ui-ledger__link")?.textContent ?? h.textContent);
@@ -62,7 +62,7 @@ describe("hisob varag'i", () => {
     ]);
     expect(within(ledger()).getAllByRole("columnheader").map((h) => h.textContent)).toEqual([
       "Qator",
-      "Naqd",
+      "Yakunlangan",
       "Kutilayotgan",
       "Jami",
       "Tushumga nisbatan",
@@ -79,7 +79,7 @@ describe("hisob varag'i", () => {
       n("2000000.00"),
       norm(f.change("0.250000")),
     ]);
-    // ADR-037: sof foyda = naqd + kutilayotgan (API qatoridan).
+    // ADR-037: sof foyda = yakunlangan + kutilayotgan (API qatoridan).
     const net = within(row("Sof foyda")).getAllByRole("cell").map((c) => norm(c.textContent ?? ""));
     expect(net.slice(0, 3)).toEqual([n("3020000.00"), n("190000.00"), n("3210000.00")]);
     expect(row("Yalpi foyda").className).toContain("is-subtotal");
@@ -104,7 +104,7 @@ describe("hisob varag'i", () => {
     await renderPnl();
     expect(ledger().getAttribute("data-part")).toBe("total");
     const group = screen.getByRole("group", { name: "Hisob varagʻi ustuni" });
-    expect(within(group).getAllByRole("radio").map((r) => r.closest("label")!.textContent)).toEqual(["Naqd", "Kutilayotgan", "Jami"]);
+    expect(within(group).getAllByRole("radio").map((r) => r.closest("label")!.textContent)).toEqual(["Yakunlangan", "Kutilayotgan", "Jami"]);
     fireEvent.click(within(group).getByRole("radio", { name: "Kutilayotgan" }));
     expect(ledger().getAttribute("data-part")).toBe("processing");
   });
@@ -172,11 +172,11 @@ describe("kesimlar", () => {
     const revenue = within(table).getByRole("row", { name: /Tushum/ });
     expect(within(revenue).getAllByRole("cell").map((c) => norm(c.textContent!))).toEqual([n("4000000.00"), n("6000000.00"), n("10000000.00")]);
     expect(within(table).queryByText(/toʻgʻridan-toʻgʻri/)).toBeNull();
-    // ADR-037: sof foyda ostida naqd va kutilayotgan qismlari, har oyda.
+    // ADR-037: sof foyda ostida yakunlangan va kutilayotgan qismlari, har oyda.
     const expected = within(table).getByRole("row", { name: /shundan kutilayotgan/ });
     expect(expected.className).toContain("is-part");
     expect(within(expected).getAllByRole("cell").map((c) => norm(c.textContent!))).toEqual([n("0.00"), n("190000.00"), n("190000.00")]);
-    expect(within(table).getByRole("row", { name: /shundan naqd/ })).toBeTruthy();
+    expect(within(table).getByRole("row", { name: /shundan yakunlangan/ })).toBeTruthy();
   });
 
   it("do'konlar: URL'da view=shop, do'kon nomlari, to'g'ridan-to'g'ri / taqsimlangan qatorlar, taqsimlanmagan ustun", async () => {

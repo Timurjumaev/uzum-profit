@@ -1,6 +1,6 @@
 // Namunaviy `/pnl` javobi (M5): tannarxsiz qism (qamrov 90%), kompensatsiya, o'z xarajati, kutilayotgan qism (F16,
 // ADR-037) ikki do'konda. Zanjir: 7 500 000 − 750 000 (tannarxsiz) − 3 000 000 = 3 750 000 yalpi; − 400 000 + 100 000
-// − 200 000 − 100 000 + 60 000 = 3 210 000 sof foyda = naqd 3 020 000 + kutilayotgan 190 000 (kutilayotgan zanjiri:
+// − 200 000 − 100 000 + 60 000 = 3 210 000 sof foyda = yakunlangan 3 020 000 + kutilayotgan 190 000 (kutilayotgan zanjiri:
 // 900 000 − 300 000 − 360 000 = 240 000; − 48 000 + 12 000 − 24 000 − 12 000 + 22 000 = 190 000). Vitest'ga bog'liq emas.
 import type { components } from "../lib/api/schema";
 

@@ -429,7 +429,7 @@ def test_cell_sales_columns_match_fields() -> None:
 
 def test_pnl_expected_profit(world: World) -> None:
     """ADR-037: kutilayotgan sof foyda (F16) — 15-oktabr Jarayondagi sotuv: 200 000 − 40 000 − 5 000 − tannarx 100 000 −
-    o'sha kungi ijara (10 000, kunning yagona sotuvi — hammasi shu katakka) − soliq 4% (8 000) = 37 000; naqd = jami −
+    o'sha kungi ijara (10 000, kunning yagona sotuvi — hammasi shu katakka) − soliq 4% (8 000) = 37 000; yakunlangan = jami −
     kutilayotgan; har qator ikki qismda. R — 50 donadan kam (noma'lum)."""
     body = world.get("pnl", **OCT)
     e = body["expected"]
@@ -596,7 +596,7 @@ def test_dashboard_blocks(world: World) -> None:
     # F19: reklama 20 000 / 2 000 000.
     assert D(kpis["cancel_share"]) == D("0.076923") and D(kpis["return_share"]) == D("0.076923")
     assert D(kpis["drr"]) == D("0.010000")
-    # ADR-037: kutilayotgan sof foyda (F16) — hisobot, davr chizig'i va kunlarda naqd + kutilayotgan = jami.
+    # ADR-037: kutilayotgan sof foyda (F16) — hisobot, davr chizig'i va kunlarda yakunlangan + kutilayotgan = jami.
     assert money(dash["expected"]["net_profit"]) == D(37_000)
     st = dash["statement"]
     assert money(st["net_profit_done"]) + money(st["net_profit_processing"]) == money(

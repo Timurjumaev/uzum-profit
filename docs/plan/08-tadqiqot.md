@@ -38,7 +38,7 @@ Faqat ochib o'qilgan sahifalar. Narxlar o'sha kungi; o'zgarishi mumkin.
 | G'oya | Manba | Modul / bosqich |
 |---|---|---|
 | Bugun / Kecha / Oy prognozi / O'tgan oy plitkalari | Sellerboard | M4 / B4 |
-| Foyda uch raqamda: naqd (yakunlangan) + kutilayotgan (jarayonda) = jami; "buyurtma → sotib olindi" va sotib olish foizi | Temur (2026-11-02), WB vositalari (выкуп) | M4, M5 / B4.18 (ADR-037) |
+| Foyda uch raqamda: yakunlangan + kutilayotgan (jarayonda) = jami (ADR-038: "naqd" emas); "buyurtma → sotib olindi" va sotib olish foizi | Temur (2026-11-02), WB vositalari (выкуп) | M4, M5 / B4.18 (ADR-037) |
 | Hisob varag'i (shaffof foyda zanjiri) | o'zimiz | M4, M5 / B4 |
 | FIFO partiya tannarxi, kech xarajatda qayta hisob, tannarx vaqt chizig'i | Sellerboard, UVIX | M9, F21 / B1, B4 |
 | Haqiqiy kurs (kartadan yechilgan summa), kargo vazn/hajm bo'yicha | o'zimiz (Temur jarayoni) | M9, F20 / B4 |

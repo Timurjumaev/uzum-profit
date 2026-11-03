@@ -248,6 +248,141 @@ def test_processing_logistics_check(db: dict[str, str]) -> None:
     assert any("topshirilmagan va logistika 0: 1" in line for line in rc.summary(report))
 
 
+def test_expense_timing_checks(db: dict[str, str]) -> None:
+    """B4.20 (07 Q10): Uzum yechgan logistika ↔ sotuv qatori (bekor qatorda yechilgan — yashirin), buyurtmaga bog'liq
+    reklama ("xaridor olganida", ``AD#<qator id>``) — yechilgan kun buyurtma va topshirilgan kunga nisbatan,
+    ``dateService`` ↔ ``dateCreated`` farqi."""
+    ordered, issued = NOW - 20 * DAY, NOW - 15 * DAY  # Toshkent: 2026-10-04 va 2026-10-09
+    fake = seller(
+        shops=BOTH,
+        orders={
+            A: [
+                sf.order(1, A, ordered, dateIssued=sf.ms(issued)),
+                sf.order(
+                    2, A, NOW - 3 * DAY, status="PROCESSING"
+                ),  # logistika yozilgan, hali yechilmagan
+                sf.order(
+                    3,
+                    A,
+                    NOW - 10 * DAY,
+                    status="CANCELED",
+                    amount=0,
+                    amountReturns=1,
+                    commission=0,
+                    sellerProfit=0,
+                    logisticDeliveryFee=0,
+                    dateIssued=sf.ms(NOW - 8 * DAY),
+                ),
+            ],
+            B: [],
+        },
+        expenses={
+            A: [
+                sf.expense(
+                    201, A, issued, "logistics-volume", 4_000, source="Logistika", externalId="1"
+                ),
+                # Bekor qator: Uzum logistikani yechgan, qaytarmagan — sotuv qatorida 0.
+                sf.expense(
+                    202,
+                    A,
+                    NOW - 8 * DAY,
+                    "logistics-volume",
+                    4_000,
+                    source="Logistika",
+                    externalId="3",
+                ),
+                sf.expense(
+                    203,
+                    A,
+                    issued,
+                    "У000120",
+                    2_000,
+                    name="Buyurtmalarni ko'paytirish. Sotuvdan foiz — 10%. Xaridor tovarni olganida 2000.5 so'm "
+                    "yechib oldik",
+                    source="Marketing",
+                    externalId="AD#1-1-2026-10-04",
+                ),
+                sf.expense(
+                    204,
+                    A,
+                    NOW - 2 * DAY,
+                    "Y000119",
+                    5_000,
+                    name="Reklama 12345",
+                    source="Marketing",
+                ),
+                sf.expense(
+                    205, A, NOW - 2 * DAY, dateService=sf.ms(NOW - 4 * DAY)
+                ),  # saqlash 2 kun kechikib
+                sf.expense(206, A, NOW - DAY),
+            ],
+            B: [],
+        },
+    )
+    _, report = synced(db, fake)
+    checks = shop(report, A)["checks"]
+
+    rec = {r["status"]: r for r in checks["logistics_reconcile"]["by_status"]}
+    assert rec["TO_WITHDRAW"] == {
+        "status": "TO_WITHDRAW",
+        "lines": 1,
+        "with_expense": 1,
+        "equal": 1,
+        "differ": 0,
+        "fee_without_expense": 0,
+        "line_fee": "4000",
+        "expense_net": "4000",
+    }
+    assert (
+        rec["CANCELED"]["differ"],
+        rec["CANCELED"]["line_fee"],
+        rec["CANCELED"]["expense_net"],
+    ) == (
+        1,
+        "0",
+        "4000",
+    )
+    assert (rec["PROCESSING"]["with_expense"], rec["PROCESSING"]["fee_without_expense"]) == (0, 1)
+
+    ads = checks["ads"]
+    by_code = {r["code"]: r for r in ads["by_code"]}
+    assert by_code["У000120"] == {
+        "code": "У000120",
+        "n": 1,
+        "amount": "2000.50",
+        "per_order_text": 1,
+        "with_ad_id": 1,
+        "linked": 1,
+    }
+    assert (by_code["Y000119"]["per_order_text"], by_code["Y000119"]["linked"]) == (0, 0)
+    names = {r["name"] for r in ads["name_patterns"]}
+    assert "Reklama 99999" in names
+    assert any("olganida 9999.9 so'm" in n for n in names)  # raqamlar yashirilgan
+    (linked,) = ads["linked_by_status"]
+    assert linked["status"] == "TO_WITHDRAW" and linked["amount"] == "2000.50"
+    assert (linked["after_order_4_7"], linked["on_issue_day"], linked["not_issued"]) == (1, 1, 0)
+    assert (
+        linked["ad_date_is_order"],
+        linked["ad_date_is_issue"],
+        linked["ad_date_is_charge"],
+    ) == (1, 0, 0)
+
+    dates = {r["category"]: r for r in checks["expense_dates"]["by_category"]}
+    storage = dates["storage"]
+    assert (storage["n"], storage["with_service"], storage["gap_0"], storage["gap_2_7"]) == (
+        2,
+        2,
+        1,
+        1,
+    )
+    assert (storage["rows_60d"], storage["days_60d"]) == (2, 2)
+
+    (line,) = [x for x in rc.summary(report) if x.startswith(shop(report, A)["name"])]
+    assert "bekor qatorlarda yechilgan 4000 so'm" in line
+    assert "reklama 2 qator, shundan buyurtmaga bog'liq matn 1, sotuvga bog'langan 1" in line
+    assert "saqlash 60 kunda 2 kun yechilgan" in line
+
+
 def test_sync_errors_reported(db: dict[str, str]) -> None:
     fake = seller(shops=BOTH, fail={"expenses": "server"})
     _, report = synced(db, fake)

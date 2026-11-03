@@ -1,5 +1,5 @@
 // Bosh sahifa bloklari (M4): davr chizig'i, kunlik grafik, "Diqqat talab qiladi", TOP/zarar SKU, ko'rsatkichlar.
-// Sof foyda har joyda ikki qismda — naqd va kutilayotgan (ADR-037); qismlar API'dan.
+// Sof foyda har joyda ikki qismda — yakunlangan va kutilayotgan (ADR-037); qismlar API'dan.
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -94,7 +94,7 @@ export function DailyChart({ data }: { data: Dashboard }) {
   const { t } = useTranslation();
   const [view, setView] = useState<ChartView>("profit");
   const x = data.daily.map((d) => d.day);
-  // ADR-037: ikki qatlam — naqd (Yakunlangan) va ustida kutilayotgan (Jarayonda); tushumda ham shunday (ADR-036).
+  // ADR-037: ikki qatlam — yakunlangan va ustida kutilayotgan (Jarayonda); tushumda ham shunday (ADR-036).
   const series =
     view === "profit"
       ? [

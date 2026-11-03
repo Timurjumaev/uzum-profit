@@ -248,7 +248,7 @@ export function UiKit() {
           value={part}
           onChange={setPart}
           options={[
-            { value: "done", label: "Naqd" },
+            { value: "done", label: "Yakunlangan" },
             { value: "processing", label: "Kutilayotgan" },
             { value: "total", label: "Jami" },
           ]}
