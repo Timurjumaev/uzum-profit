@@ -438,6 +438,16 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   qatorlar logistikasi to'liq qaytarilgan (qaytim summasi = yechilgan); Yakunlangan qatorlarda qatordagi logistika
   Uzum yechganidan ~575 ming so'm ko'p (97 qator) — `logistics_differ` bilan aniqlanadi. **T:** merge va deploy'dan
   keyin `realcheck.sh` → xulosa chatga.
+- [x] B4.22 Realcheck (B4.21) natijasi va "yakunlangan nega minus" (Temur, 2026-11-03).
+  ✓ 2026-11-03: Asosiy — Yakunlangan kartochkasida "shundan sotuvsiz xarajatlar" (`Statement.idle_expenses`: sotilmagan
+  tovar saqlashi F43, sotuv bo'lmagan kun xarajati — hech qaysi kutilayotgan sotuvga tegishli emas). Realcheck natijasi:
+  saqlash `externalId` = sana + do'kon id — Uzum SKU'ni bermaydi; qoldiq × narx modeliga EL-ONE ~86%, byDurii ~5% —
+  Uzum hamma qoldiqdan emas, ba'zi tovarlardan oladi; jarima — qabul farqi ("№ ... yuk xati"), qaytim saqlash —
+  "N - sonli yukxat"; Yakunlangan qatorlardagi logistika farqi — 9–12 oktabr olib ketilgan, qatorda 5 250, Uzum 0
+  yechgan (uzilish kompensatsiyasi). `realcheck` ga: `storage_rule` (hammasi / aylanma N kun / yosh N kun farazlari),
+  `expense_links` (jarima → postavka, qaytim saqlash → qaytarish), `logistics_payout` (`withdrawnProfit` qaysi logistika
+  bilan to'g'ri keladi). **T:** merge va deploy'dan keyin `realcheck.sh` → fayl chatga; kabinetda saqlash bo'yicha SKU
+  hisobi bormi — ko'rib aytish.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

@@ -547,6 +547,128 @@ async def logistics_differ_check(conn: AsyncConnection, shop: UUID) -> dict[str,
     return {"samples": samples, "refund_patterns": [dict(r._mapping) for r in rows]}
 
 
+STORAGE_DAYS = (30, 60, 90, 120)  # B4.22: saqlash qoidasi farazlari (kun)
+
+
+async def storage_rule_check(conn: AsyncConnection, shop: UUID, now: datetime) -> dict[str, Any]:
+    """B4.22: Uzum saqlashni qaysi tovar uchun oladi — oxirgi 3 xizmat kunining o'rtacha yechilgan summasi va joriy
+    qoldiq bo'yicha farazlar (``qty_active`` × ``paidStoragePriceItem``): hammasi; aylanma — qoldiqning ``N`` kunlik
+    sotuvdan (``avgdsales``) ortig'i yoki shunday SKU butunligicha; yosh — ``N`` kundan oldin yaratilgan postavkalardan
+    qolgan dona (oxirgi ``N`` kun postavkalari bepul deb). Qaysi model yechilgan summaga yaqin — qoida shu."""
+    service = _day("to_timestamp((e.raw ->> 'dateService')::bigint / 1000.0)")
+    charged_rows = list(
+        await conn.execute(
+            text(
+                f"SELECT {service} AS day, sum(e.amount) AS charged FROM mp_expenses e WHERE e.shop_id = :s "
+                "AND e.category = 'storage' AND e.excluded IS NULL AND (e.raw ->> 'dateService') ~ '^[0-9]+$' "
+                "GROUP BY 1 ORDER BY 1 DESC LIMIT 3"
+            ),
+            {"s": shop},
+        )
+    )
+    skus = list(
+        await conn.execute(
+            text(
+                "SELECT id, coalesce(qty_active, 0) AS qty, coalesce(avg_daily_sales, 0) AS speed, storage_price "
+                "FROM mp_skus WHERE shop_id = :s AND coalesce(qty_active, 0) > 0"
+            ),
+            {"s": shop},
+        )
+    )
+    arrivals: dict[UUID, list[tuple[datetime, int]]] = defaultdict(list)
+    for r in await conn.execute(
+        text(
+            "SELECT i.sku_id, v.created_on, i.quantity_accepted FROM fbo_invoice_items i "
+            "JOIN fbo_invoices v ON v.id = i.invoice_id WHERE v.shop_id = :s AND i.sku_id IS NOT NULL "
+            "AND upper(coalesce(v.status, '')) = 'ACCEPTED' AND v.created_on IS NOT NULL"
+        ),
+        {"s": shop},
+    ):
+        arrivals[r.sku_id].append((r.created_on, int(r.quantity_accepted or 0)))
+    prices = [Decimal(r.storage_price) for r in skus if r.storage_price]
+    models: dict[str, Decimal] = {"all": Decimal(0)}
+    for r in skus:
+        price = Decimal(r.storage_price or 0)
+        qty, speed = int(r.qty), Decimal(r.speed)
+        models["all"] += qty * price
+        for n in STORAGE_DAYS:
+            excess = max(Decimal(0), qty - speed * n)
+            models[f"turnover_excess_{n}"] = (
+                models.get(f"turnover_excess_{n}", Decimal(0)) + excess * price
+            )
+            slow = qty if speed == 0 or qty / speed > n else 0
+            models[f"turnover_whole_{n}"] = (
+                models.get(f"turnover_whole_{n}", Decimal(0)) + slow * price
+            )
+            fresh = sum(q for at, q in arrivals.get(r.id, []) if at >= now - timedelta(days=n))
+            models[f"age_{n}"] = models.get(f"age_{n}", Decimal(0)) + max(0, qty - fresh) * price
+    charged = (
+        sum((Decimal(r.charged) for r in charged_rows), Decimal(0)) / len(charged_rows)
+        if charged_rows
+        else None
+    )
+    return {
+        "charged_days": [r.day for r in charged_rows],
+        "charged_avg": None if charged is None else money(round(charged, 2)),
+        "skus_in_stock": len(skus),
+        "price_min": money(min(prices)) if prices else None,
+        "price_max": money(max(prices)) if prices else None,
+        "models": {k: money(round(v, 2)) for k, v in models.items()},
+    }
+
+
+async def expense_links_check(conn: AsyncConnection, shop: UUID) -> dict[str, Any]:
+    """B4.22: jarima ("№ ... yuk xati", qabul farqi) postavkaga, qaytim saqlash ("N - sonli yukxat") qaytarishga
+    bog'lanadimi — raqam qaysi ustunga mos (``fbo_invoices`` id / raqami, ``mp_returns`` id / xom raqamlari), shu
+    postavkada farqi bor SKU'lar soni."""
+    fines = await _scalar_row(
+        conn,
+        "SELECT count(*) AS fines, "
+        "count(*) FILTER (WHERE EXISTS (SELECT 1 FROM fbo_invoices v WHERE v.shop_id = e.shop_id "
+        "AND v.number = e.order_external_id)) AS number_is_invoice_number, "
+        "count(*) FILTER (WHERE EXISTS (SELECT 1 FROM fbo_invoices v WHERE v.shop_id = e.shop_id "
+        "AND v.external_id = e.order_external_id)) AS number_is_invoice_id, "
+        "count(*) FILTER (WHERE EXISTS (SELECT 1 FROM fbo_invoices v JOIN fbo_invoice_items i ON i.invoice_id = v.id "
+        "WHERE v.shop_id = e.shop_id AND (v.number = e.order_external_id OR v.external_id = e.order_external_id) "
+        "AND i.quantity_to_stock <> i.quantity_accepted)) AS invoice_has_diff_sku "
+        "FROM mp_expenses e WHERE e.shop_id = :s AND e.category = 'fine'",
+        shop,
+    )
+    num = "nullif(substring(coalesce(e.name, '') from '^([0-9]+)'), '')::bigint"
+    returns = await _scalar_row(
+        conn,
+        f"SELECT count(*) AS rows, count({num}) AS with_number, "
+        f"count(*) FILTER (WHERE EXISTS (SELECT 1 FROM mp_returns r WHERE r.shop_id = e.shop_id AND r.external_id = {num})) "
+        "AS number_is_return_id, "
+        f"count(*) FILTER (WHERE EXISTS (SELECT 1 FROM mp_returns r WHERE r.shop_id = e.shop_id AND r.raw::text LIKE "
+        f"'%' || {num}::text || '%')) AS number_in_return_raw "
+        "FROM mp_expenses e WHERE e.shop_id = :s AND e.category = 'return_storage'",
+        shop,
+    )
+    return {"fines": fines, "return_storage": returns}
+
+
+async def logistics_payout_check(conn: AsyncConnection, shop: UUID) -> dict[str, Any]:
+    """B4.22: qatordagi logistika va Uzum yechgani farq qilgan Yakunlangan qatorlarda Uzum aslida qancha to'lagan —
+    ``withdrawnProfit`` (yechib olingan) / ``sellerProfit`` ↔ tushum − komissiya − qatordagi yoki yechilgan logistika."""
+    return await _scalar_row(
+        conn,
+        "WITH x AS (SELECT e.sale_item_id AS id, sum(e.amount) AS charged FROM mp_expenses e WHERE e.shop_id = :s "
+        "AND e.sale_item_id IS NOT NULL AND e.category = 'logistics' AND e.type = 'OUTCOME' GROUP BY 1), "
+        "l AS (SELECT s.sell_price * s.amount - s.commission AS net, s.logistics_fee AS fee, coalesce(x.charged, 0) AS charged, "
+        "nullif(s.raw ->> 'withdrawnProfit', '')::numeric AS withdrawn, nullif(s.raw ->> 'sellerProfit', '')::numeric AS profit "
+        "FROM sale_items s JOIN x ON x.id = s.id WHERE s.shop_id = :s AND upper(trim(s.status)) = 'TO_WITHDRAW' "
+        "AND abs(x.charged - s.logistics_fee) > 1) "
+        "SELECT count(*) AS lines, coalesce(sum(fee), 0) AS line_fee, coalesce(sum(charged), 0) AS charged, "
+        "count(*) FILTER (WHERE abs(withdrawn - (net - fee)) <= 1) AS withdrawn_is_minus_line_fee, "
+        "count(*) FILTER (WHERE abs(withdrawn - (net - charged)) <= 1) AS withdrawn_is_minus_charged, "
+        "count(*) FILTER (WHERE withdrawn = 0) AS withdrawn_zero, "
+        "count(*) FILTER (WHERE abs(profit - (net - fee)) <= 1) AS profit_is_minus_line_fee, "
+        "count(*) FILTER (WHERE abs(profit - (net - charged)) <= 1) AS profit_is_minus_charged FROM l",
+        shop,
+    )
+
+
 async def storage_model_check(conn: AsyncConnection, shop: UUID, now: datetime) -> dict[str, Any]:
     """F43 tekshiruvi (oxirgi 30 kun): Uzum yechgan saqlash (xizmat kuni bo'yicha) ↔ shu kungi qoldiq snapshoti ×
     SKU saqlash narxi (``paidStoragePriceItem``) yig'indisi. Nisbat ~1 bo'lsa narx "dona/kun" va og'irlik to'g'ri."""
@@ -795,6 +917,9 @@ async def shop_report(
             "expense_refs": await expense_refs_check(conn, shop.id),
             "logistics_differ": await logistics_differ_check(conn, shop.id),
             "storage_model": await storage_model_check(conn, shop.id, now),
+            "storage_rule": await storage_rule_check(conn, shop.id, now),
+            "expense_links": await expense_links_check(conn, shop.id),
+            "logistics_payout": await logistics_payout_check(conn, shop.id),
             "expenses": await expenses_check(conn, shop.id),
             "stock": await stock_check(conn, shop.id, now),
         },

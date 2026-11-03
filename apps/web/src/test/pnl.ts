@@ -43,6 +43,7 @@ export function pnlStatement(over: Partial<Statement> = {}): Statement {
     logistics_estimated_lines: 3,
     logistics_missing_lines: 0,
     uzum_estimated: {},
+    idle_expenses: "0.00",
     uncovered: { lines: 4, revenue: "1000000.00", payout: "750000.00", expenses: "60000.00", share: "0.100000" },
     direct_total: "250000.00",
     allocated_total: "250000.00",

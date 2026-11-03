@@ -585,3 +585,18 @@ def test_own_expense_on_item_skus() -> None:
     }  # 1-kun: 4 000 × 1/4 + 2-kun: 4 000 / 2
     assert by_sku["B"].own_expenses == {"kargo": uzs(5_000)}  # 3 000 + 2 000
     assert "Z" not in by_sku or by_sku["Z"].own_expenses == {}
+
+
+def test_idle_expenses_in_done_part() -> None:
+    """B4.22: sotuvsiz katak xarajati (sotilmagan tovar saqlashi, sotuvsiz kun) — yakunlangan qismda va alohida
+    sanaladi: yakunlangan sotuv yo'q davrda yakunlangan sof foyda shu summaga teng (manfiy)."""
+    lines = [sale(1, "A", price=100_000, status="PROCESSING", issued=True)]
+    exp = [
+        ExpenseItem(
+            d(1), "S1", C.STORAGE, uzs(5_000), weights={"A": D(1), "B": D(4)}
+        ),  # B — sotilmagan
+        ExpenseItem(d(2), "S1", C.FINE, uzs(1_000)),  # sotuvsiz kun
+    ]
+    s = build_cells(OCT, lines, exp).statement()
+    assert s.idle_expenses == uzs(5_000)  # B ning 4 000 + sotuvsiz kun 1 000
+    assert s.net_profit_done == uzs(-5_000) and s.units_done == 0

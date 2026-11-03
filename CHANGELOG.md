@@ -396,6 +396,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.22: Asosiy sahifada Yakunlangan kartochkasida "shundan sotuvsiz xarajatlar" — yakunlangan sotuv yo'q davrda
+  yakunlangan sof foyda nega manfiy ekani (sotilmagan tovarlar saqlashi, sotuv bo'lmagan kun xarajati). Realcheck'ga
+  saqlash qoidasi farazlari, jarima → postavka va qaytim saqlash → qaytarish havolalari, Yakunlangan qatorlarda Uzum
+  to'lagan summa (`withdrawnProfit`) tekshiruvi.
 - B4.21 (ADR-039, Temur talabi): xarajat o'z sotuvi va SKU'siga. Buyurtmaga bog'liq reklama ("Xaridor tovarni olganida
   ... yechib oldik") endi Uzum yechgan kunga emas, o'sha sotuvning buyurtma kuni, tovari va qismiga (kutilayotgan /
   yakunlangan) yoziladi; hali topshirilmagan sotuvlarga kutilayotgan reklama oxirgi 30 kundagi ulush bo'yicha "≈"
