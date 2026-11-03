@@ -12,7 +12,6 @@ import type { Dashboard } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { term } from "../../lib/i18n/glossary";
 import { Change } from "./Change";
-import { negate } from "./model";
 
 const tone = (value: string) => (Number(value) < 0 ? "negative" : "positive");
 
@@ -86,9 +85,6 @@ export function Summary({ data, costAction }: Props) {
               ? t("home.summary.doneNote", { units: f.number(s.units_done), revenue: f.money(s.revenue_done) })
               : t("home.summary.doneEmpty")}
           </p>
-          {Number(s.idle_expenses) !== 0 && (
-            <p className="caption">{t("home.summary.idle", { amount: f.money(negate(s.idle_expenses)) })}</p>
-          )}
         </Card>
         <Card kind="expected" op="+" label={labels.expected} help={help("netExpected", labels.expected)} amount={e.net_profit} testId="net-expected">
           {e.units > 0 ? (

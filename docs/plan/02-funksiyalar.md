@@ -374,9 +374,9 @@ bazaviy 4% / 15% — 08-tadqiqot.md, buxgalter bilan tasdiqlanadi).
 **F12. Sof foyda** = F8 − F9 − F10 − F11. Ikki qismda (ADR-037, ADR-038): **yakunlangan** (Yakunlangan sotuvlar) +
 **kutilayotgan**
 (Jarayondagi sotuvlar, F16) = F12. F9, F10 har katakda (kun × do'kon × SKU) qismlarga tushum ulushida bo'linadi, F11 —
-har qismning o'z tushumidan, F15 — har qismda; sotuvsiz katak xarajati (sotuv bo'lmagan kun, F43 da sotilmagan tovar
-saqlashi) — yakunlangan qismda va alohida ko'rsatiladi ("shundan sotuvsiz xarajatlar", B4.22): yakunlangan sotuv yo'q
-davrda yakunlangan sof foyda shu sababli manfiy bo'ladi; yakunlangan = F12 − kutilayotgan.
+har qismning o'z tushumidan, F15 — har qismda; sotuvsiz katak xarajati (masalan, o'sha kuni sotilmagan SKU saqlashi)
+SKU'da qoladi, qismlarga — shu kungi do'kon tushumining Jarayondagi ulushida (ADR-040); do'konda kun bo'yi sotuv
+bo'lmasa — yakunlangan qismda; yakunlangan = F12 − kutilayotgan.
 
 **F13. Marja** = F12 / (tannarxi ma'lum qatorlar tushumi) — F15 bilan bir asosda (ADR-024); qamrov 100% bo'lsa
 F12 / F3. Marja yonida doim **tannarxsiz qism ulushi** = 1 − F15 alohida ko'rsatiladi (0% bo'lsa yashiriladi).
@@ -511,9 +511,13 @@ oxirgi 30 kunda topshirilgan sotuvlariga yechilgan bog'liq reklama / shu sotuvla
 yo'q — do'konniki; tushum 0 — taxmin yo'q). Kutilayotgan qismga, "≈ taxminiy" belgisi bilan (tamoyil 9); topshirilgach
 Uzum yechgan haqiqiy summa (yoki yechilmasa — 0) o'rnini oladi.
 
-**F43. Saqlash SKU bo'yicha** (ADR-039). Uzum saqlashni do'kon bo'yicha kuniga bitta summa qilib yechadi (B4.20
-realcheck). Kun summasi SKU'larga og'irlikda bo'linadi: og'irlik = shu kun (yoki oldingi 7 kun ichidagi oxirgi)
-qoldiq snapshoti (`qty_active` — Uzum omboridagi sotuvdagi dona) × SKU saqlash narxi (`paidStoragePriceItem`, dona/kun;
-noma'lum — ma'lum narxlar o'rtachasi; hech birida yo'q — faqat dona). Qoldig'i 0 SKU olmaydi; sotuvi yo'q SKU oladi
-(sekin tovarning saqlashi o'zida qoladi); bu qism SKU'ning to'g'ridan-to'g'ri xarajati. Snapshot yo'q kun — tushum
-ulushida (ADR-026). Realcheck `storage_model` — Uzum yechgani ↔ model nisbati.
+**F43. Saqlash SKU bo'yicha** (ADR-039, ADR-040). Uzum saqlashni do'kon bo'yicha kuniga bitta summa qilib yechadi
+(oldingi kun uchun; B4.20 realcheck). Uzum qoidasi: aylanma = oxirgi 15 kun o'rtacha qoldig'i / o'rtacha kunlik sotuv;
+60 kungacha bepul, oshsa pullik (litr × 12 so'm 61–180 kun, 18 — 181–360, 24 — 361+ kun, birlik uchun maksimum 5 000;
+SKU `paidStoragePriceItem`); yangi SKU dastlabki 30 kun bepul. Kun summasi faqat shu kuni pullik saqlashdagi SKU'larga
+(aylanma > 60 kun — sotuvsiz bo'lsa ham; birinchi postavka yoki sotuvdan ≥ 30 kun) og'irlikda bo'linadi: og'irlik =
+shu kun (yoki oldingi 7 kun ichidagi oxirgi) qoldiq snapshoti (`qty_active`) × `paidStoragePriceItem` (noma'lum — ma'lum
+narxlar o'rtachasi). Qoida hech kimni topmasa (ma'lumot kam) — hamma qoldiq bo'yicha; snapshot yo'q kun — tushum
+ulushida (ADR-026). Bu qism SKU'ning to'g'ridan-to'g'ri xarajati. Qoida — `upcore.tariffs.StorageRule` (sana bo'yicha).
+Realcheck `storage_rule` — Uzum yechgani ↔ modellar (`uzum_rule`). Qaytim saqlash — qaytarishdagi SKU'larga dona
+bo'yicha (ADR-040).

@@ -448,6 +448,14 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   `expense_links` (jarima → postavka, qaytim saqlash → qaytarish), `logistics_payout` (`withdrawnProfit` qaysi logistika
   bilan to'g'ri keladi). **T:** merge va deploy'dan keyin `realcheck.sh` → fayl chatga; kabinetda saqlash bo'yicha SKU
   hisobi bormi — ko'rib aytish.
+- [x] B4.23 Saqlash Uzum qoidasi bo'yicha, sotuvsiz xarajat qismlarga (ADR-040; Temur, 2026-11-03).
+  ✓ 2026-11-03: F43 — kunlik saqlash faqat pullik saqlashdagi SKU'larga (aylanma 15 kun o'rtacha qoldiq / o'rtacha
+  kunlik sotuv > 60 kun, yangi emas — `upcore.tariffs.paid_storage`), qoldiq × narx; qaytim saqlash — qaytarish
+  SKU'lariga; sotuvsiz katak xarajati qismlarga kun × do'kon tushumining Jarayondagi ulushida (`_finish(day_share)`) —
+  "Bugun" da yakunlangan endi faqat do'konda sotuv bo'lmagan kunlarda manfiy; "shundan sotuvsiz xarajatlar" izohi olib
+  tashlandi. Logistika — o'zgarishsiz (Uzum `sellerProfit` qatordagi summani ayiradi). Realcheck `storage_rule` ga
+  `uzum_rule` modeli. **T:** merge va deploy'dan keyin `realcheck.sh` → fayl chatga (qoida modeli yechilgan summaga
+  qanchalik yaqin).
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

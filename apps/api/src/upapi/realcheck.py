@@ -44,6 +44,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 from upcore.metrics import SaleLine
 
 from upapi.db.session import make_engine, org_transaction
+from upapi.reports.cells import storage_split
 from upapi.settings import Settings, get_settings
 from upapi.sync.mapping import TASHKENT
 
@@ -607,7 +608,16 @@ async def storage_rule_check(conn: AsyncConnection, shop: UUID, now: datetime) -
         if charged_rows
         else None
     )
+    # ADR-040: dasturdagi Uzum qoidasi (aylanma > 60 kun, yangi SKU emas) bo'yicha oxirgi yechilgan kunning modeli.
+    rule: dict[str, Decimal] = {}
+    if charged_rows:
+        rule = (await storage_split(conn, {(shop, charged_rows[0].day)})).get(
+            (shop, charged_rows[0].day), {}
+        )
+    models["uzum_rule"] = sum(rule.values(), Decimal(0))
     return {
+        "rule_skus": len(rule),
+        "charged_last": money(Decimal(charged_rows[0].charged)) if charged_rows else None,
         "charged_days": [r.day for r in charged_rows],
         "charged_avg": None if charged is None else money(round(charged, 2)),
         "skus_in_stock": len(skus),

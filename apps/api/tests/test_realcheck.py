@@ -404,7 +404,10 @@ def test_expense_timing_checks(db: dict[str, str]) -> None:
     # B4.22: saqlash qoidasi farazlari, jarima / qaytim saqlash havolalari, Yakunlangan qatorlarda Uzum to'lagani.
     rule = checks["storage_rule"]
     assert rule["charged_avg"] == "1500" and len(rule["charged_days"]) == 2
-    assert {"all", "turnover_excess_60", "turnover_whole_60", "age_60"} <= set(rule["models"])
+    assert {"all", "turnover_excess_60", "turnover_whole_60", "age_60", "uzum_rule"} <= set(
+        rule["models"]
+    )
+    assert rule["charged_last"] == "1500"
     links = checks["expense_links"]
     assert links["fines"]["fines"] == 1 and links["return_storage"]["rows"] == 0
     assert checks["logistics_payout"]["lines"] == 0

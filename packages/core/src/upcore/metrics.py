@@ -9,7 +9,7 @@ Nisbatlar (marja, ROI, ulushlar) — kasr ``Decimal`` (0,125 = 12,5%), 6 xona; m
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Collection, Iterable, Mapping
 from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
@@ -594,11 +594,20 @@ def expected_ads(rate: DecimalLike, revenue: DecimalLike) -> Money:
 
 
 def storage_weights(
-    stock: Mapping[str, int], prices: Mapping[str, DecimalLike | None]
+    stock: Mapping[str, int],
+    prices: Mapping[str, DecimalLike | None],
+    paid: Collection[str] | None = None,
 ) -> dict[str, Decimal]:
     """F43. Kunlik saqlash xarajatini SKU'larga bo'lish og'irligi = shu kungi Uzum omboridagi qoldiq × SKU saqlash
     narxi (Uzum ``paidStoragePriceItem``, dona/kun). Narxi noma'lum SKU — narxi ma'lum SKU'lar o'rtachasi bilan; hech
-    birida narx yo'q — faqat qoldiq. Qoldig'i 0 SKU og'irliksiz (saqlash unga tushmaydi)."""
+    birida narx yo'q — faqat qoldiq. Qoldig'i 0 SKU og'irliksiz (saqlash unga tushmaydi).
+
+    ``paid`` — Uzum qoidasi bo'yicha pullik saqlashdagi SKU'lar (``upcore.tariffs.paid_storage``, ADR-040): berilsa va
+    qoldig'i bor kamida bittasi bo'lsa — faqat ular; aks holda (qoida hech kimni topmadi, lekin Uzum yechgan) — hammasi."""
+    if paid is not None:
+        chosen = {s: q for s, q in stock.items() if s in paid and q > 0}
+        if chosen:
+            stock = chosen
     known = [
         to_decimal(p)
         for s, p in prices.items()

@@ -599,4 +599,7 @@ def test_idle_expenses_in_done_part() -> None:
     ]
     s = build_cells(OCT, lines, exp).statement()
     assert s.idle_expenses == uzs(5_000)  # B ning 4 000 + sotuvsiz kun 1 000
-    assert s.net_profit_done == uzs(-5_000) and s.units_done == 0
+    # ADR-040: B saqlashi SKU'da qoladi, qismga — kun tushumining Jarayondagi ulushida (100%); yakunlangan qismda
+    # faqat do'konda sotuv bo'lmagan kun xarajati.
+    assert s.net_profit_done == uzs(-1_000) and s.units_done == 0
+    assert s.processing is not None and s.processing.uzum_expenses[C.STORAGE] == uzs(5_000)

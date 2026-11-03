@@ -23,6 +23,7 @@ emas, hamma do'konlarga tushum ulushida taqsimlanadi (filtr bo'yicha natija = do
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
@@ -47,6 +48,7 @@ from upcore.metrics import (
 )
 from upcore.money import Currency, Money
 from upcore.pnl import CellKey, Cells, CellSales, ExpenseItem, OwnExpense, TaxBase, build_cells
+from upcore.tariffs import SEED_STORAGE_RULES, paid_storage, storage_rule
 from upcore.tax import TaxProfile, TaxRegime, daily_rule
 
 from upapi.calc.costs import day_start
@@ -177,6 +179,15 @@ def in_pnl(category: str) -> bool:
         return False
 
 
+_RETURN_NO = re.compile(r"^\s*(\d+)\s*-")
+
+
+def return_number(name: str | None) -> int | None:
+    """Qaytim saqlash matnidagi qaytarish (yukxat) raqami: "1234567890 - sonli yukxat ..." (B4.22 realcheck)."""
+    match = _RETURN_NO.match(name or "")
+    return int(match.group(1)) if match else None
+
+
 def by_sale(e: Any) -> Any:
     """ADR-039: xarajat P&L'da sotuv sanasi bo'yicha (sotuv qatoriga bog'langan va P&L'ga kiradigan — buyurtmaga bog'liq
     reklama); logistika qatorlari (P&L'dan tashqari) yechilgan kunida qoladi."""
@@ -201,6 +212,7 @@ async def _expenses(conn: AsyncConnection, period: Period) -> list[ExpenseItem]:
                 e.c.type,
                 e.c.amount,
                 e.c.sale_item_id,
+                e.c.name,
                 s.c.sku_id,
                 s.c.ordered_at,
                 s.c.status,
@@ -213,12 +225,22 @@ async def _expenses(conn: AsyncConnection, period: Period) -> list[ExpenseItem]:
             )
         )
     )
-    weights = await _storage_weights(
+    weights = await storage_split(
         conn,
         {
             (r.shop_id, business_date(r.created_on))
             for r in rows
             if r.sale_item_id is None and r.category == ExpenseCategory.STORAGE.value
+        },
+    )
+    returns = await _return_weights(
+        conn,
+        {
+            (r.shop_id, n)
+            for r in rows
+            if r.sale_item_id is None
+            and r.category == ExpenseCategory.RETURN_STORAGE.value
+            and (n := return_number(r.name)) is not None
         },
     )
     out = []
@@ -248,26 +270,31 @@ async def _expenses(conn: AsyncConnection, period: Period) -> list[ExpenseItem]:
                 amount=amount,
                 weights=weights.get((r.shop_id, day))
                 if category is ExpenseCategory.STORAGE
+                else returns.get((r.shop_id, return_number(r.name) or 0))
+                if category is ExpenseCategory.RETURN_STORAGE
                 else None,
             )
         )
     return out
 
 
-async def _storage_weights(
+async def storage_split(
     conn: AsyncConnection, wanted: set[tuple[UUID, date]]
 ) -> dict[tuple[UUID, date], dict[str, Decimal]]:
-    """F43 og'irliklari (do'kon, kun) uchun: shu kun yoki oldingi ``SNAPSHOT_LOOKBACK`` kun ichidagi oxirgi qoldiq
-    snapshoti (``sku_daily.qty_active`` — Uzum omboridagi sotuvdagi dona) × SKU saqlash narxi. Snapshot yo'q — kiritilmaydi
+    """F43 og'irliklari (do'kon, kun) uchun (ADR-040): Uzum qoidasi bo'yicha pullik saqlashdagi SKU'lar
+    (``upcore.tariffs.paid_storage``: oxirgi 15 kun o'rtacha qoldig'i / o'rtacha kunlik sotuv > 60 kun, yangi SKU
+    emas) — shu kungi qoldiq × saqlash narxi; qoida hech kimni topmasa — hamma qoldiq bo'yicha. Qoldiq — shu kun yoki
+    oldingi ``SNAPSHOT_LOOKBACK`` kun ichidagi oxirgi snapshot (``sku_daily.qty_active``); snapshot yo'q — kiritilmaydi
     (xarajat tushum ulushida bo'linadi)."""
     if not wanted:
         return {}
     shops = {shop for shop, _ in wanted}
-    first = min(day for _, day in wanted) - timedelta(days=SNAPSHOT_LOOKBACK)
+    window = max(r.window_days for r in SEED_STORAGE_RULES)
+    first = min(day for _, day in wanted) - timedelta(days=max(SNAPSHOT_LOOKBACK, window))
     last = max(day for _, day in wanted)
-    k, sd = m.mp_skus, m.sku_daily
+    k, sd, d, s = m.mp_skus, m.sku_daily, m.daily_sku_metrics, m.sale_items
     prices = {
-        r.id: r.storage_price
+        str(r.id): r.storage_price
         for r in await conn.execute(select(k.c.id, k.c.storage_price).where(k.c.shop_id.in_(shops)))
     }
     snaps: dict[UUID, dict[date, dict[str, int]]] = {}
@@ -279,21 +306,84 @@ async def _storage_weights(
         snaps.setdefault(r.shop_id, {}).setdefault(r.day, {})[str(r.sku_id)] = int(
             r.qty_active or 0
         )
+    sold: dict[tuple[str, date], int] = {}
+    for sale in await conn.execute(
+        select(d.c.sku_id, d.c.day, d.c.units).where(
+            d.c.shop_id.in_(shops), d.c.sku_id.is_not(None), d.c.day >= first, d.c.day <= last
+        )
+    ):
+        key = (str(sale.sku_id), sale.day)
+        sold[key] = sold.get(key, 0) + int(sale.units)
+    started: dict[str, date] = {}
+    v, vi = m.fbo_invoices, m.fbo_invoice_items
+    for sku, at in [
+        *await conn.execute(
+            select(s.c.sku_id, func.min(s.c.ordered_at))
+            .where(s.c.shop_id.in_(shops), s.c.sku_id.is_not(None))
+            .group_by(s.c.sku_id)
+        ),
+        *await conn.execute(
+            select(vi.c.sku_id, func.min(v.c.created_on))
+            .join(v, v.c.id == vi.c.invoice_id)
+            .where(v.c.shop_id.in_(shops), vi.c.sku_id.is_not(None), v.c.created_on.is_not(None))
+            .group_by(vi.c.sku_id)
+        ),
+    ]:
+        day = business_date(at)
+        if str(sku) not in started or day < started[str(sku)]:
+            started[str(sku)] = day
     out = {}
     for shop, day in wanted:
         days = snaps.get(shop, {})
         found = next(
             (
-                days[d]
+                days[x]
                 for i in range(SNAPSHOT_LOOKBACK + 1)
-                if (d := day - timedelta(days=i)) in days
+                if (x := day - timedelta(days=i)) in days
             ),
             None,
         )
-        if found:
-            w = storage_weights(found, {sku: prices.get(UUID(sku)) for sku in found})
-            if w:
-                out[shop, day] = w
+        if not found:
+            continue
+        rule = storage_rule(day)
+        paid = None
+        if rule is not None:
+            span = [day - timedelta(days=i) for i in range(rule.window_days)]
+            paid = set()
+            for sku in found:
+                stock = [days[x][sku] for x in span if x in days and sku in days[x]]
+                avg = Decimal(sum(stock)) / len(stock) if stock else Decimal(0)
+                units = sum(sold.get((sku, x), 0) for x in span)
+                if paid_storage(avg, units, started.get(sku), day, rule):
+                    paid.add(sku)
+        w = storage_weights(found, {sku: prices.get(sku) for sku in found}, paid)
+        if w:
+            out[shop, day] = w
+    return out
+
+
+async def _return_weights(
+    conn: AsyncConnection, wanted: set[tuple[UUID, int]]
+) -> dict[tuple[UUID, int], dict[str, Decimal]]:
+    """ADR-040: qaytim saqlash ("N - sonli yukxat ...", N = Uzum qaytarish id'si — B4.22 realcheck 36/36) — shu
+    qaytarishdagi SKU'larga dona bo'yicha."""
+    if not wanted:
+        return {}
+    r, ri = m.mp_returns, m.mp_return_items
+    out: dict[tuple[UUID, int], dict[str, Decimal]] = {}
+    for row in await conn.execute(
+        select(r.c.shop_id, r.c.external_id, ri.c.sku_id, ri.c.quantity)
+        .join(ri, ri.c.return_id == r.c.id)
+        .where(
+            r.c.shop_id.in_({shop for shop, _ in wanted}),
+            r.c.external_id.in_({n for _, n in wanted}),
+            ri.c.sku_id.is_not(None),
+        )
+    ):
+        key = (row.shop_id, int(row.external_id))
+        if key in wanted and row.quantity > 0:
+            bucket = out.setdefault(key, {})
+            bucket[str(row.sku_id)] = bucket.get(str(row.sku_id), Decimal(0)) + row.quantity
     return out
 
 
