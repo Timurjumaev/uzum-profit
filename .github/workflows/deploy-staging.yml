@@ -25,7 +25,7 @@ jobs:
     name: Image'lar (GHCR)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -62,7 +62,7 @@ jobs:
       HOST: ${{ vars.STAGING_HOST }}
       TARGET: deploy@${{ vars.STAGING_HOST }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: SSH kaliti (server kaliti oldindan ma'lum — birinchi ulanishda ham soxta serverga ulanmaydi)
         env:
           SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}

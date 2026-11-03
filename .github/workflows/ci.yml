@@ -33,7 +33,7 @@ jobs:
     env:
       UP_TEST_ADMIN_URL: postgresql://postgres@localhost:5432/postgres
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
@@ -57,7 +57,7 @@ jobs:
       matrix:
         python: ["3.8", "3.13", "3.15"]  # 3.15 — Temurning Mac'i (2026-10)
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
       - run: uv python install ${{ matrix.python }}
       # Legacy faqat stdlib ishlatadi; uv workspace'ga kirmaydi.
@@ -67,7 +67,7 @@ jobs:
     name: Core (Python 3.15)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
       - run: uv python install 3.15
       # Temurning Mac'idagi Python: yadro va B1.9 solishtirish skripti (faqat stdlib) shu yerda ham ishlashi shart.
@@ -79,7 +79,7 @@ jobs:
     name: Web (lint, typecheck, test, build)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v5
         with:
@@ -98,7 +98,7 @@ jobs:
     name: E2E va vizual (Playwright)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v5
         with:
@@ -122,7 +122,7 @@ jobs:
     name: Dev muhit (docker compose)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: docker compose -f infra/compose/dev.yml up --build --detach --wait --wait-timeout 300
       - run: curl --fail --silent http://localhost:8000/health
       - run: make seed
@@ -147,7 +147,7 @@ jobs:
       UP_HEALTH_INSECURE: "1"
       COMPOSE: docker compose -f infra/compose/staging.yml --env-file .env
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: shellcheck -x infra/staging/*.sh infra/backup/*.sh infra/compose/postgres-init-staging/*.sh
       - run: infra/staging/gen-env.sh localhost
         env:
