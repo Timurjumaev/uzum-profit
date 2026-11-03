@@ -389,8 +389,17 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   qiymati, F27 da yo'ldagi tovar); o'z omborimdan ayiriladi. Boshlang'ich holat qoldig'iga brak, kutilayotgan, fotostudiya
   va postavkadagi tovar ham qo'shildi ("shundan postavkada N"). B4.13 natijalari 08 §4 da.
 
+- B4.20 (07 Q10): `realcheck` hisobotida xarajatlar vaqti va bog'lanishi — Uzum yechgan logistika ↔ sotuv qatoridagi
+  logistika holat bo'yicha (bekor qatorda yechilgan yashirin logistika), reklama turlari (buyurtmaga bog'liq "xaridor
+  olganida" turi, `AD#` → sotuv qatori, yechilgan kun buyurtma va topshirilgan kunga nisbatan), `dateService` ↔
+  `dateCreated` farqi va saqlash yechiladigan kunlar; faqat yig'indilar, matnlar raqamsiz.
+
 ### O'zgartirildi
 
+- B4.20 (ADR-038, Temur taklifi): "Naqd" nomi hamma joyda **"Yakunlangan"** bilan almashtirildi — Yakunlangan sof foyda +
+  Kutilayotgan sof foyda = Jami (uch raqam, davr plitkalari, grafik, hisob varag'i ustuni va almashtirgichi, kesimlar,
+  formulalar, yordam). "Naqd" pul qo'lga tushgan degan ma'noni berardi, aslida bu — davr buyurtmalarining yakunlangan
+  qismi (pul Uzum balansida yoki yechilgan). Hisob va API o'zgarmadi; rus tilida "Факт".
 - B4.18 (ADR-037, Temur taklifi): foyda uch raqamda — **naqd** (yakunlangan sotuvlar) + **kutilayotgan** (jarayondagi
   sotuvlar) = **jami** sof foyda. Kutilayotgan qism xuddi naqd kabi hisoblanadi: komissiya, logistika, tannarx, Uzum va o'z
   xarajatlarining tushum ulushi, soliq ayriladi; Uzum hali yozmagan logistika (tovar topshirilmagan) oxirgi pullik tarif

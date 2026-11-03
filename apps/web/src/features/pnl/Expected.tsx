@@ -1,5 +1,5 @@
 // Kutilayotgan sof foyda (M5, F16, ADR-037): Jarayondagi sotuvlar — mijoz hali olmagan yoki qaytarish muddati (10 kun)
-// tugamagan. Ular xuddi naqd kabi hisoblangan (hisob varag'ining "Kutilayotgan" ustuni); bu blok nima uchun hali aniq
+// tugamagan. Ular xuddi yakunlanganlar kabi hisoblangan (hisob varag'ining "Kutilayotgan" ustuni); bu blok nima uchun hali aniq
 // emasligini ko'rsatadi: dona va tushum, yakunlanish darajasi — fakt (oxirgi 90 kunda shunday sotuvlarning necha foizi
 // yakunlangan, summaga ko'paytirilmaydi), taxminiy logistika va tannarxsiz qism. Do'konlar bo'yicha jadval.
 import { useQuery } from "@tanstack/react-query";

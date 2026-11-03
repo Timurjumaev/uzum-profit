@@ -222,8 +222,8 @@ def fee_table(shop: str, sku: str) -> Money | None:
 
 
 def test_processing_part_and_cash_split() -> None:
-    """ADR-037: kutilayotgan qism — o'z sotuvlari, katak xarajatlarining tushum ulushi, o'z soliq summasi; naqd = jami −
-    kutilayotgan; sotuvsiz kun xarajati — naqdda."""
+    """ADR-037: kutilayotgan qism — o'z sotuvlari, katak xarajatlarining tushum ulushi, o'z soliq summasi; yakunlangan = jami −
+    kutilayotgan; sotuvsiz kun xarajati — yakunlangan qismda."""
     lines = [
         sale(1, "A", price=300_000),  # Yakunlangan
         sale(
@@ -234,8 +234,8 @@ def test_processing_part_and_cash_split() -> None:
     exp = [
         ExpenseItem(
             d(1), "S1", C.ADVERTISING, uzs(40_000)
-        ),  # A katagida: 3/4 naqd, 1/4 kutilayotgan
-        ExpenseItem(d(5), "S1", C.STORAGE, uzs(9_000)),  # sotuvsiz kun — naqd
+        ),  # A katagida: 3/4 yakunlangan, 1/4 kutilayotgan
+        ExpenseItem(d(5), "S1", C.STORAGE, uzs(9_000)),  # sotuvsiz kun — yakunlangan
     ]
     own = [OwnExpense(ManualExpense(uzs(8_000), d(1), d(1)), "qadoq")]
     cells = build_cells(OCT, lines, exp, own, TaxRule(D(1)))
@@ -255,14 +255,14 @@ def test_processing_part_and_cash_split() -> None:
     assert whole.processing is not None and whole.processing.uncovered_lines == 1
     assert (whole.units_done, whole.lines_processing) == (1, 2)
     assert whole.revenue_done == uzs(300_000) and whole.revenue_processing == uzs(300_000)
-    # Qatorlar: jami = naqd + kutilayotgan; sotuvsiz kun saqlash xarajati to'liq naqdda.
+    # Qatorlar: jami = yakunlangan + kutilayotgan; sotuvsiz kun saqlash xarajati to'liq yakunlangan qismda.
     rows = {r.code: r for r in compare(whole, build_cells(OCT, []).statement())}
     for r in rows.values():
         assert r.done + r.processing == r.current
     assert rows["uzum:storage"].processing == uzs(0) and rows["uzum:storage"].done == uzs(-9_000)
     assert rows["net_profit"].processing == whole.net_profit_processing
     assert rows["revenue"].processing == uzs(300_000)
-    # Jarayondagi sotuvsiz hisobot — qism yo'q, naqd = jami.
+    # Jarayondagi sotuvsiz hisobot — qism yo'q, yakunlangan = jami.
     done_only = build_cells(OCT, [sale(1)]).statement()
     assert done_only.processing is None and done_only.net_profit_processing == uzs(0)
     assert done_only.net_profit_done == done_only.net_profit and done_only.lines_processing == 0
@@ -365,7 +365,7 @@ def test_additivity_property(raw_sales: list, raw_exp: list, raw_own: list) -> N
         assert total([s.net_profit for s in view.values()], "UZS") == whole.net_profit
     # Hamma xarajat yo yerda ayrilgan, yo tannarxsiz qismda — yo'qolmaydi.
     assert whole.expenses_deducted + whole.uncovered_expenses == whole.overhead
-    # ADR-037: naqd + kutilayotgan = jami; kesimlar bo'yicha kutilayotgan qismlar yig'indisi = butun davrniki.
+    # ADR-037: yakunlangan + kutilayotgan = jami; kesimlar bo'yicha kutilayotgan qismlar yig'indisi = butun davrniki.
     assert whole.net_profit_done + whole.net_profit_processing == whole.net_profit
     for view in (cells.by_day(), cells.by_shop(), cells.by_sku()):
         parts = [s.net_profit_processing for s in view.values()]

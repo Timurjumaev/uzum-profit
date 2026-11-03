@@ -19,10 +19,10 @@ Sotuvlar ikki ko'rinishda beriladi: qatorlar (``SaleLine``) yoki katak yig'indil
 ``daily_sku_metrics`` qatori, ``upcore.metrics.sale_totals`` natijasining xom ko'rinishi). Ikkalasi bir xil
 kataklar beradi.
 
-**Naqd va kutilayotgan (ADR-037).** Har katakda Jarayondagi sotuvlar qismi (``Cell.processing``) alohida
+**Yakunlangan va kutilayotgan (ADR-037; ADR-038 — nomi).** Har katakda Jarayondagi sotuvlar qismi (``Cell.processing``) alohida
 yuritiladi: o'z tushumi, komissiyasi, logistikasi, tannarxi va katak xarajatlarining (F9, F10) tushum ulushidagi
-qismi, o'z soliq summasi (F11) va F15. Kutilayotgan sof foyda (F16) — shu qism sof foydasi; naqd sof foyda — katak
-sof foydasi minus shu qism (yig'indi har doim F12 ga teng). Sotuvsiz kun xarajati (taqsimlanmagan katak) — naqdda.
+qismi, o'z soliq summasi (F11) va F15. Kutilayotgan sof foyda (F16) — shu qism sof foydasi; yakunlangan sof foyda — katak
+sof foydasi minus shu qism (yig'indi har doim F12 ga teng). Sotuvsiz kun xarajati (taqsimlanmagan katak) — yakunlangan qismda.
 Uzum logistikasini hali yozmagan Jarayondagi qatorlar (``logistics_due``) uchun kutilayotgan logistika F40 tarifi ×
 dona bilan taxminan qo'shiladi (``logistics_fee``), "taxminiy" sifatida alohida sanaladi (tamoyil 9).
 """
@@ -283,7 +283,7 @@ class Statement:
 
     @property
     def units_done(self) -> int:
-        """Yakunlangan dona (ADR-037, naqd qism)."""
+        """Yakunlangan dona (ADR-037, yakunlangan qism)."""
         return self.units - self.units_processing
 
     @property
@@ -297,7 +297,7 @@ class Statement:
 
     @property
     def net_profit_done(self) -> Money:
-        """ADR-037: naqd sof foyda = F12 − kutilayotgan sof foyda (yig'indi doim F12)."""
+        """ADR-037: yakunlangan sof foyda = F12 − kutilayotgan sof foyda (yig'indi doim F12)."""
         return self.net_profit - self.net_profit_processing
 
     @property
@@ -631,7 +631,7 @@ def _deduct(a: Cell, rule: TaxRule | None) -> None:
 
 def _finish(a: Cell, rule: TaxRule | None) -> None:
     """Katak F11 va F15; Jarayondagi qism (ADR-037) katak xarajatlarining (F9, F10) tushum ulushidagi qismini oladi,
-    soliq va F15 — o'z tushumidan. Naqd qism = katak − Jarayondagi qism (``Statement.net_profit_done``)."""
+    soliq va F15 — o'z tushumidan. Yakunlangan qism = katak − Jarayondagi qism (``Statement.net_profit_done``)."""
     _deduct(a, rule)
     p = a.processing
     if p is None:
@@ -855,12 +855,12 @@ def unit_economics(s: Statement) -> UnitEconomics:
     )
 
 
-# --- Solishtirish (naqd va kutilayotgan qismlar bilan) ------------------------------------
+# --- Solishtirish (yakunlangan va kutilayotgan qismlar bilan) -----------------------------
 
 
 @dataclass(frozen=True, slots=True)
 class CompareRow:
-    """M5 ustunlari: joriy (jami), shundan naqd va kutilayotgan (ADR-037), tushumga nisbatan %, oldingi davr, farq va
+    """M5 ustunlari: joriy (jami), shundan yakunlangan va kutilayotgan (ADR-037), tushumga nisbatan %, oldingi davr, farq va
     o'zgarish ulushi.
 
     ``change`` = farq / |oldingi davr| (ishorali qiymat bo'yicha: yuqori — yaxshi); oldingi davr nol bo'lsa yoki oldingi
@@ -874,12 +874,12 @@ class CompareRow:
     diff: Money
     change: Decimal | None
     processing: Money = ZERO  # ADR-037: Jarayondagi qism (kutilayotgan)
-    done: Money = ZERO  # naqd qism = joriy − kutilayotgan
+    done: Money = ZERO  # yakunlangan qism = joriy − kutilayotgan
 
 
 def compare(current: Statement, previous: Statement) -> list[CompareRow]:
     """Ikki davr hisobot qatorlari: joriy davrda yo'q qator oldingisida bo'lsa ham ko'rsatiladi. Har qatorda joriy
-    davrning Jarayondagi (kutilayotgan) va naqd qismi — bir xil ``rows()`` kodlari bo'yicha (ADR-037)."""
+    davrning Jarayondagi (kutilayotgan) va yakunlangan qismi — bir xil ``rows()`` kodlari bo'yicha (ADR-037)."""
     cur, prev = dict(current.rows()), dict(previous.rows())
     part = dict(current.processing.rows()) if current.processing is not None else {}
     comparable = not previous.revenue.is_zero()

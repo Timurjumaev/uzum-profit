@@ -1,5 +1,5 @@
-// Bosh sahifa (M4, ADR-037) — "bir qarashda": uch raqam (naqd + kutilayotgan = jami sof foyda), davr chizig'i,
-// kunlik grafik (sof foyda naqd va kutilayotgan qatlamlarda), "Diqqat talab qiladi", eng foydali 5 / zarar 5 SKU va
+// Bosh sahifa (M4, ADR-037) — "bir qarashda": uch raqam (yakunlangan + kutilayotgan = jami sof foyda), davr chizig'i,
+// kunlik grafik (sof foyda yakunlangan va kutilayotgan qatlamlarda), "Diqqat talab qiladi", eng foydali 5 / zarar 5 SKU va
 // qo'shimcha ko'rsatkichlar. Qatorma-qator hisob — Foyda sahifasida. Maket — 04 §7.2 (desktop) / §7.3 (mobil). Davr,
 // do'kon va solishtirish — URL'da (`app/filters`), hamma raqam API'dan (`/dashboard`), bu yerda hisoblash yo'q.
 import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";

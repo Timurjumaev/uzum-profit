@@ -216,7 +216,7 @@ loading, error). `/ui-kit` ichki sahifasida hammasi ko'rinadi (yorug'/qorong'i, 
 ### 6.1 Hisob varag'i (Foyda sahifasi, ADR-037)
 
 ```
-                                    Naqd     Kutilayotgan          Jami   Oldingi davr
+                             Yakunlangan     Kutilayotgan          Jami   Oldingi davr
   Tushum                      125 420 000      61 000 000   186 420 000    165 000 000  ▲13%
 − Uzum komissiyasi            −25 084 000     −12 200 000   −37 284 000    −33 000 000  ▲13%
 − Logistika                    −7 235 750     ≈−1 900 000   ≈−9 135 750     −9 800 000  ▼6,8%
@@ -232,8 +232,8 @@ loading, error). `/ui-kit` ichki sahifasida hammasi ko'rinadi (yorug'/qorong'i, 
   Tannarxsiz 12 ta sotuv (1 240 000 soʻm) hisobga kirmadi   [Tannarx kiritish]
 ```
 Har qator bosiladi → o'ng tomondan drawer: shu summani tashkil qilgan yozuvlar + "?" formula. Keng ekranda yana
-"Tushumga nisbatan" va "Farq"; o'rtada (< 1100 px) naqd, kutilayotgan, jami; tor ekranda (< 640 px) bitta pul ustuni —
-yuqoridagi "Naqd | Kutilayotgan | Jami" almashtirgichi bilan (standart — jami).
+"Tushumga nisbatan" va "Farq"; o'rtada (< 1100 px) yakunlangan, kutilayotgan, jami; tor ekranda (< 640 px) bitta pul
+ustuni — yuqoridagi "Yakunlangan | Kutilayotgan | Jami" almashtirgichi bilan (standart — jami).
 
 ### 6.2 Partiya yo'li
 
@@ -248,14 +248,14 @@ o'tgani va kutilgan sana (F25). Mobilda vertikal. Kechikish bo'lsa joriy nuqta y
 
 ```
 Sof foyda, 1–26-oktabr (?)
-┌ Naqd sof foyda (?) ──┐   ┌ Kutilayotgan sof foyda (?) ┐   ┏ Jami sof foyda (?) ━━━━━┓
-│ 31 508 700 soʻm      │ + ┆ 16 884 300 soʻm            ┆ = ┃ 48 393 000 soʻm         ┃
-│ Yakunlangan: 830     │   ┆ Jarayonda: 410 dona, ...   ┆   ┃ ▲12,4% oldingi davrga   ┃
-│ dona, tushum ...     │   ┆ 90 kunda 87% yakunlangan   ┆   ┃ Marja 25,9%             ┃
-└──────────────────────┘   └┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┘   ┗━━━━━━━━━━━━━━━━━━━━━━━━━┛
+┌ Yakunlangan sof foyda (?) ┐   ┌ Kutilayotgan sof foyda (?) ┐   ┏ Jami sof foyda (?) ━━━━━┓
+│ 31 508 700 soʻm           │ + ┆ 16 884 300 soʻm            ┆ = ┃ 48 393 000 soʻm         ┃
+│ Yakunlangan: 830 dona,    │   ┆ Jarayonda: 410 dona, ...   ┆   ┃ ▲12,4% oldingi davrga   ┃
+│ tushum ...                │   ┆ 90 kunda 87% yakunlangan   ┆   ┃ Marja 25,9%             ┃
+└───────────────────────────┘   └┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┘   ┗━━━━━━━━━━━━━━━━━━━━━━━━━┛
 Qanday hisoblandi — «Foyda» sahifasida
 ```
-Tenglama: naqd + kutilayotgan = jami. Kutilayotgan — shtrix chegara (hali yakuniy emas; rangdan tashqari belgi,
+Tenglama: yakunlangan + kutilayotgan = jami. Kutilayotgan — shtrix chegara (hali yakuniy emas; rangdan tashqari belgi,
 §11), jami — natija chizig'i (`--border-rule`) va kattaroq raqam (≥ 1200 px'da `--type-display`). Summalar rangi —
 ishora bo'yicha (musbat — yashil, manfiy — qizil). Mobilda ustma-ust, "+" va "=" kartochkalar orasida.
 
@@ -287,11 +287,11 @@ Asosiy · Foyda · Ombor · Xaridlar · Yana.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ UCH RAQAM (§6.3): Naqd  +  Kutilayotgan  =  Jami  · Qanday hisoblandi →  │
+│ UCH RAQAM (§6.3): Yakunlangan + Kutilayotgan = Jami · Qanday hisoblandi →│
 ├──────────────────────────────────────────────────────────────────────────┤
-│ Bugun | Kecha | Shu oy | Oy prognozi | O'tgan oy (sof foyda: naqd · kut.)│
+│ Bugun | Kecha | Shu oy | Oy prognozi | O'tgan oy (sof foyda: yak. · kut.)│
 ├──────────────────────────────────────────────────────────────────────────┤
-│ [Sof foyda | Tushum]  Kunlik grafik: naqd + kutilayotgan qatlamlar        │
+│ [Sof foyda | Tushum]  Kunlik grafik: yakunlangan + kutilayotgan qatlamlar │
 ├──────────────────────────────────────────────────────────────────────────┤
 │ Diqqat talab qiladi (ro'yxat, ustuvorlik bo'yicha)                        │
 ├────────────────────────────────────┬─────────────────────────────────────┤
@@ -307,7 +307,7 @@ Foyda sahifasida; bosh sahifa uni takrorlamaydi.
 
 ```
 Sof foyda, oktabr
-[Naqd sof foyda      31 508 700 soʻm]
+[Yakunlangan         31 508 700 soʻm]
    +
 [Kutilayotgan        16 884 300 soʻm]
    =
@@ -320,8 +320,9 @@ Sof foyda, oktabr
 
 ### 7.4 Boshqa sahifalar (qisqa)
 
-- **Foyda va zarar:** yuqorida hisob varag'i to'liq — naqd, kutilayotgan, jami ustunlari (§6.1); ostida sharshara (jami)
-  va kutilayotgan sof foyda bloki; keyin oylar bo'yicha jadval (ustun = oy; sof foyda ostida naqd va kutilayotgan).
+- **Foyda va zarar:** yuqorida hisob varag'i to'liq — yakunlangan, kutilayotgan, jami ustunlari (§6.1); ostida sharshara
+  (jami) va kutilayotgan sof foyda bloki; keyin oylar bo'yicha jadval (ustun = oy; sof foyda ostida yakunlangan va
+  kutilayotgan).
 - **Mahsulotlar:** filtrlar qatori → DataTable; mobilda ro'yxat (rasm, nom, foyda/dona, zaxira kunlari) + bosilsa SKU sahifasi.
 - **SKU sahifasi:** sarlavha (rasm, nom, holat) → KPI qatori → unit kalkulyator (o'ngda) + grafiklar (chapda) →
   lotlar vaqt chizig'i → qaytishlar.
@@ -343,12 +344,13 @@ Bo'sh holat: harakatga taklif. Kechirim so'ralmaydi, noaniq gap yo'q.
 ### 8.2 Atamalar lug'ati (hamma joyda bir xil)
 
 Tushum · Uzum komissiyasi · Logistika · Uzum to'lovi · Tannarx · Yalpi foyda · Uzum xarajatlari ·
-O'z xarajatlarim · Soliq · Sof foyda · Naqd sof foyda · Kutilayotgan sof foyda · Marja · ROI · Reklama ulushi (DRR) ·
+O'z xarajatlarim · Soliq · Sof foyda · Yakunlangan sof foyda · Kutilayotgan sof foyda · Marja · ROI · Reklama ulushi
+(DRR) ·
 Yakunlangan / Jarayonda / Bekor qilingan / Qaytarilgan · Xarid (partiya) · Kargo · Yo'lda · Qoldiq ·
 Zaxira kunlari · Muzlagan pul · Postavka · Kamomad · Jarima · Kompensatsiya · Taxminiy.
 (Rus tilida mos ravishda: Выручка, Комиссия Uzum, Логистика, Выплата Uzum, Себестоимость, ..., Фактическая чистая
-прибыль, Ожидаемая чистая прибыль; lug'at `lib/i18n/glossary` faylida. Hisob varag'i ustunlari qisqa: Naqd ·
-Kutilayotgan · Jami — Факт · Ожидается · Итого.)
+прибыль, Ожидаемая чистая прибыль; lug'at `lib/i18n/glossary` faylida. Hisob varag'i ustunlari qisqa: Yakunlangan ·
+Kutilayotgan · Jami — Факт · Ожидается · Итого. "Naqd" atamasi ishlatilmaydi — ADR-038.)
 
 ### 8.3 O'zbek yozuvi
 

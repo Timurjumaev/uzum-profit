@@ -4,11 +4,11 @@ import type { Pnl, PnlRow, Statement } from "../../lib/api/types";
 import type { WaterfallStep } from "../../components/charts/options";
 import { homeRows, negate, type HomeRow } from "../home/model";
 
-/** Hisob varag'i qatori: qator belgilari + M5 ustunlari — naqd va kutilayotgan qism (ADR-037; jami — `amount`), tushumga
+/** Hisob varag'i qatori: qator belgilari + M5 ustunlari — yakunlangan va kutilayotgan qism (ADR-037; jami — `amount`), tushumga
  * nisbatan, oldingi davr, farq. `estimated` — summada taxminiy qism bor (kutilayotgan logistika, F5). */
 export type PnlLine = HomeRow & { done: string; processing: string; share: string | null; previous: string; diff: string; estimated?: boolean };
 
-/** Hisob varag'i ustuni (ADR-037): naqd, kutilayotgan yoki jami. */
+/** Hisob varag'i ustuni (ADR-037): yakunlangan, kutilayotgan yoki jami. */
 export type Part = "done" | "processing" | "total";
 export const PARTS: readonly Part[] = ["done", "processing", "total"];
 
@@ -131,7 +131,7 @@ export function breakdownLines(t: (key: string) => string, split: boolean): Brea
     { key: "tax", label: t("terms.tax"), op: "−", kind: "row", value: minus((s) => s.tax) },
     { key: "uncovered_expenses", label: t("pnl.uncoveredExpenses"), op: "+", kind: "row", value: (s) => s.uncovered.expenses },
     { key: "net_profit", label: t("terms.netProfit"), op: "=", kind: "total", value: (s) => s.net_profit },
-    // ADR-037: sof foydaning naqd va kutilayotgan qismlari (har ustunda API'dan).
+    // ADR-037: sof foydaning yakunlangan va kutilayotgan qismlari (har ustunda API'dan).
     { key: "net_done", label: t("pnl.views.done"), op: "", kind: "part", value: (s) => s.net_profit_done },
     { key: "net_processing", label: t("pnl.views.processing"), op: "", kind: "part", value: (s) => s.net_profit_processing },
     { key: "margin", label: t("terms.margin"), op: "", kind: "row", value: (s) => s.margin, ratio: true },

@@ -1,5 +1,5 @@
 // Foyda va zarar hisob varag'i (M5, 04 §6.1 + §7.4; ADR-037): to'liq qatorlar (Uzum xarajatlari turlari, o'z xarajatlari
-// toifalari, yalpi foyda) va ustunlar: naqd (Yakunlangan sotuvlar), kutilayotgan (Jarayondagi sotuvlar), jami, tushumga
+// toifalari, yalpi foyda) va ustunlar: yakunlangan (Yakunlangan sotuvlar), kutilayotgan (Jarayondagi sotuvlar), jami, tushumga
 // nisbatan, oldingi davr, farq, o'zgarish (jami bo'yicha). Qator bosilsa — drill-down. Uzum xarajatlari API bergandek
 // (ADR-035), Uzum hali yozmagan logistika taxmini "≈" bilan belgilanadi (tamoyil 9).
 // O'rta ekranda (< 1100 px) solishtirish ustunlari yashiriladi; tor ekranda (< 640 px) bitta pul ustuni — `part`

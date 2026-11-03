@@ -3,7 +3,7 @@
 Bloklar: hisob varag'i (P&L bilan bitta funksiya — ``upapi.reports.cells``, oldingi davr bilan), davr chizig'i
 (bugun, kecha, shu oy, oy prognozi, o'tgan oy — tanlangan davrdan qat'i nazar, do'kon filtri bilan), kunlik grafik,
 eng foydali 5 va zarar 5 SKU, qo'shimcha ko'rsatkichlar (F13–F19, F29) va "Diqqat talab qiladi" sanoqlari.
-Sotuvlar Yakunlangan + Jarayonda (ADR-036); sof foyda har kesimda ikki qismda — naqd va kutilayotgan (ADR-037, F16):
+Sotuvlar Yakunlangan + Jarayonda (ADR-036); sof foyda har kesimda ikki qismda — yakunlangan va kutilayotgan (ADR-037, F16):
 hisobot, davr chizig'i, kunlar; ``expected`` — kutilayotgan qism tafsiloti va R (fakt). To'lov kutilmoqda (F38) — B5 da.
 """
 
@@ -61,9 +61,7 @@ class PeriodTotalOut(BaseModel):
     period: PeriodOut
     revenue: Decimal
     net_profit: Decimal
-    net_profit_done: (
-        Decimal  # ADR-037: naqd (Yakunlangan) + kutilayotgan (Jarayonda) = ``net_profit``
-    )
+    net_profit_done: Decimal  # ADR-037: yakunlangan + kutilayotgan (Jarayonda) = ``net_profit``
     net_profit_processing: Decimal
     units: int
     units_processing: int  # ADR-036: shundan Jarayonda (yakuniy emas)
@@ -86,7 +84,7 @@ class DayOut(BaseModel):
     revenue_done: Decimal  # ADR-036: tushumning Yakunlangan qismi (grafikda qatlam)
     revenue_processing: Decimal  # tushumning Jarayondagi qismi (grafikda ustidagi qatlam)
     net_profit_done: (
-        Decimal  # ADR-037: sof foydaning naqd va kutilayotgan qismlari (grafikda qatlamlar)
+        Decimal  # ADR-037: sof foydaning yakunlangan va kutilayotgan qismlari (grafikda qatlamlar)
     )
     net_profit_processing: Decimal
 

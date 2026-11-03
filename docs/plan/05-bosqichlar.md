@@ -413,6 +413,19 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   ✓ 2026-11-02: F41/F21 — narx bor, qoldiq 0 va partiya yo'q tovarning sotuvi tarixiy narxda ("lot yetmadi", taxminiy);
   `store.link_sales` — sotuv → SKU bir ma'noli bo'lsa nom (harf/bo'sh joysiz), mahsulot ichida nom yoki mahsulotning
   yagona SKU'si bo'yicha; `/opening` da "Faqat narxsiz turlar" filtri.
+- [x] B4.20 "Naqd" → "Yakunlangan" (ADR-038, Temur, 2026-11-03) va xarajatlar vaqti tekshiruvi (07 Q10, Temur savoli:
+  kutilayotgan foydada logistika, reklama va saqlash qaysi kunga yoziladi).
+  ✓ 2026-11-03: UI'da hamma joyda "Yakunlangan sof foyda + Kutilayotgan sof foyda = Jami" (uch raqam, davr plitkalari,
+  grafik legendasi va sarlavhasi, hisob varag'i ustuni va tor ekran almashtirgichi, kesimlarda "shundan yakunlangan",
+  formulalar, sahifa yordami, atamalar), testlar, skrinshot asoslari (home, palette, pnl, ui-kit); hisob, API maydonlari
+  va rus matni ("Факт") o'zgarmadi. Tahlil: logistika ikki marta ayrilmaydi — u sotuv qatorining maydoni va buyurtma
+  kuniga yoziladi, `finance/expenses` dagi logistika qatorlari P&L'ga kirmaydi; saqlash, jarima, pul yechish — Uzum
+  yechgan kunga (davr xarajati); buyurtmaga bog'liq reklama ham hozir yechilgan kunga — Q10. `realcheck` ga uch bo'lim:
+  `logistics_reconcile` (Uzum yechgan logistika ↔ sotuv qatoridagi, holat bo'yicha; bekor qatorda yechilgan — yashirin
+  xarajat), `ads` (kod bo'yicha: "xaridor olganida" matni, `AD#` → sotuv qatori; bog'langanlarda yechilgan kun buyurtma
+  va topshirilgan kunga nisbatan, `AD#` dagi sana nimani bildiradi; matnlar raqamsiz), `expense_dates` (`dateService` ↔
+  `dateCreated`, 60 kunda yechilgan kunlar). **T:** merge va deploy'dan keyin staging'da `realcheck.sh` → xulosa
+  qatorlarini chatga; Q10 qarori.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

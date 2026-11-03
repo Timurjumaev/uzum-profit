@@ -1,11 +1,11 @@
-// Bosh sahifa (M4, ADR-037): uch raqam (naqd + kutilayotgan = jami), formula, Foyda sahifasiga o'tish, mobil, gorizontal
+// Bosh sahifa (M4, ADR-037): uch raqam (yakunlangan + kutilayotgan = jami), formula, Foyda sahifasiga o'tish, mobil, gorizontal
 // skrollsiz (360 px).
 import { expect, test } from "@playwright/test";
 
 import { mockApi } from "./support/api";
 import { isMobile, open } from "./support/page";
 
-test("uch raqam: naqd + kutilayotgan = jami sof foyda; formula; 'Qanday hisoblandi' Foyda sahifasiga", async ({ page }) => {
+test("uch raqam: yakunlangan + kutilayotgan = jami sof foyda; formula; 'Qanday hisoblandi' Foyda sahifasiga", async ({ page }) => {
   await mockApi(page);
   await open(page, "/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^Sof foyda, 1–26-oktabr/);
@@ -13,7 +13,7 @@ test("uch raqam: naqd + kutilayotgan = jami sof foyda; formula; 'Qanday hisoblan
   await expect(page.getByTestId("net-expected")).toHaveText(/16\s884\s300\ssoʻm/);
   await expect(page.getByTestId("net-profit")).toHaveText(/48\s393\s000\ssoʻm/);
   await page.getByRole("button", { name: "Qanday hisoblanadi: Kutilayotgan sof foyda" }).click();
-  await expect(page.getByText(/xuddi naqd kabi/)).toBeVisible();
+  await expect(page.getByText(/xuddi yakunlanganlar kabi/)).toBeVisible();
   await page.keyboard.press("Escape");
   await page.getByRole("link", { name: "Qanday hisoblandi — «Foyda» sahifasida" }).click();
   await expect(page).toHaveURL(/\/pnl/);

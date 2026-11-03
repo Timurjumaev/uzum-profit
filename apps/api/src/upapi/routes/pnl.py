@@ -4,7 +4,7 @@ Hisob varag'i tanlangan davr va oldingi xuddi shu uzunlikdagi davr bilan solisht
 nisbatan, oldingi, farq). Ko'rinishlar (``view``): oylar, kunlar, do'konlar, SKU bo'yicha ustunlar — kataklar
 yig'indisi (ustunlar yig'indisi = jami). SKU ko'rinishida ``unlinked`` — SKU'ga bog'lanmagan sotuvlar, ``null`` —
 taqsimlanmagan (sotuvsiz kun) xarajatlar. Sotuvlar Yakunlangan + Jarayonda
-(ADR-036); har qator va ustun naqd va kutilayotgan qismlarga bo'linadi (ADR-037): ``rows`` da ``done`` /
+(ADR-036); har qator va ustun yakunlangan va kutilayotgan qismlarga bo'linadi (ADR-037): ``rows`` da ``done`` /
 ``processing``, ``expected`` — kutilayotgan sof foyda tafsiloti (F16) va R, ``expected_shops`` — do'konlar bo'yicha;
 "qayta hisoblandi" soni alohida. Uzum xarajatlari API bergandek olinadi (ADR-035), Uzum hali yozmagan Jarayondagi
 logistika — F40 bo'yicha taxminiy (F5); SKU ko'rinishida ustun nomi.

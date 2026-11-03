@@ -1,4 +1,4 @@
-// Uch raqam (ADR-037, M4) — bosh sahifaning asosiy elementi: tanlangan davr uchun Naqd sof foyda (Yakunlangan
+// Uch raqam (ADR-037, M4) — bosh sahifaning asosiy elementi: tanlangan davr uchun Yakunlangan sof foyda (Yakunlangan
 // sotuvlar) + Kutilayotgan sof foyda (Jarayondagi sotuvlar, F16) = Jami sof foyda (F12). Har ikki qism bir xil formula
 // bilan: tushum − komissiya − logistika − tannarx − xarajatlar ulushi − soliq. Hisob varag'i (qatorlar) — Foyda
 // sahifasida. Hamma raqam API'dan (`/dashboard`), bu yerda hisob yo'q (tamoyil 4).
@@ -17,7 +17,7 @@ const tone = (value: string) => (Number(value) < 0 ? "negative" : "positive");
 
 type CardProps = {
   kind: "done" | "expected" | "total";
-  /** Kartochka oldidagi amal belgisi (tenglama: naqd + kutilayotgan = jami). */
+  /** Kartochka oldidagi amal belgisi (tenglama: yakunlangan + kutilayotgan = jami). */
   op?: "+" | "=";
   label: string;
   help: ReactNode;
