@@ -443,6 +443,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- B4.25 (ADR-042, Temur kuzatuvi): logistika endi Uzum **aslida yechgan** summa bo'yicha. Uzum bonusni tovar olib
+  ketilgan kunga qarab bergan, sotuv qatoridagi summa esa buyurtma sanasiga qarab yozilgan: noyabrda olib ketilgan
+  oktabr buyurtmalari (qatorda 0) uchun Uzum logistika yechmoqda, 9–31-oktabrda olib ketilgan oldingi buyurtmalardan
+  esa yechmagan. Hali olib ketilmagan, qatorda 0 sotuvga yana taxminiy logistika qo'shiladi (B4.24 dagi o'chirish xato
+  xulosaga asoslangan edi).
 - B4.24 (ADR-041, sof foyda auditi): kutilayotgan foydaga bonusli oktabr buyurtmalari (Uzum logistikani 0 yozgan —
   bepul) uchun ham taxminiy logistika qo'shilardi (byDurii ~600 ming so'm ortiqcha xarajat) — taxmin o'chirildi,
   logistika Uzum yozgandek. Reklamasi allaqachon yechilgan sotuvga taxminiy reklama ham qo'shilardi — endi bir marta.

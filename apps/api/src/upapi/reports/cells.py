@@ -24,6 +24,7 @@ emas, hamma do'konlarga tushum ulushida taqsimlanadi (filtr bo'yicha natija = do
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
@@ -53,6 +54,7 @@ from upcore.tax import TaxProfile, TaxRegime, daily_rule
 from upapi.calc.costs import day_start
 from upapi.db import models as m
 from upapi.reports.common import Filters
+from upapi.reports.products import load_fees
 
 UZS = Currency.UZS
 UNLINKED = "unlinked"  # SKU'ga bog'lanmagan sotuvlar katagi (``sku_id`` NULL)
@@ -519,11 +521,24 @@ async def tax_profiles(conn: AsyncConnection) -> list[TaxProfile]:
     ]
 
 
+async def expected_fees(
+    conn: AsyncConnection, today: date, keys: list[tuple[str, str]]
+) -> Callable[[str, str], Money | None]:
+    """F40 tariflari (``today`` kungi) Uzum hali yechmagan va qatorda 0 bo'lgan, topshirilmagan Jarayondagi donalar
+    kataklari (do'kon, SKU kaliti) uchun — kutilayotgan logistika taxmini (F5, ADR-037, ADR-042)."""
+    skus = {UUID(sku): UUID(shop) for shop, sku in keys if sku != UNLINKED}
+    shops = {UUID(shop) for shop, sku in keys if sku == UNLINKED}
+    if not skus and not shops:
+        return lambda _shop, _sku: None
+    return (await load_fees(conn, today, skus, shops)).unit
+
+
 async def load_book(conn: AsyncConnection, period: Period, today: date) -> Book:
-    """Davr (masalan, joriy + oldingi davr birga) kataklari butun tashkilot bo'yicha. ``today`` — kutilayotgan reklama
-    ulushi oynasining oxiri (F42). Logistika — Uzum sotuv qatoriga yozgan summa, taxminsiz (ADR-041: Uzum 2026-11
-    dan logistikani buyurtma paytida yozadi; 0 — bepul, masalan oktabr kompensatsiyasi)."""
+    """Davr (masalan, joriy + oldingi davr birga) kataklari butun tashkilot bo'yicha. ``today`` — F40 tarifi va F42
+    ulushi kuni. Logistika (ADR-042) — Uzum aslida yechgani, hali yechilmagan bo'lsa sotuv qatoridagi summa; qatorda 0
+    va hali olib ketilmagan sotuvga — F40 × dona taxmini (Uzum olib ketilganda yechadi)."""
     totals = await _totals(conn, period)
+    due = sorted({(k.shop, k.sku or UNLINKED) for k, t in totals if t.lines_logistics_due})
     cells = build_cells(
         period,
         [],
@@ -531,6 +546,7 @@ async def load_book(conn: AsyncConnection, period: Period, today: date) -> Book:
         await _own(conn, period),
         tax=daily_rule(await tax_profiles(conn)),
         totals=totals,
+        logistics_fee=await expected_fees(conn, today, due),
     )
     return Book(cells)
 
@@ -585,7 +601,7 @@ def sale_line(r: Any) -> SaleLine:
         sell_price=r.sell_price,
         amount=r.amount,
         commission=r.commission,
-        logistics=r.logistics_fee,
+        logistics=r.logistics_effective,  # ADR-042: Uzum yechgan, bo'lmasa qatordagi
         amount_returns=r.amount_returns,
         unit_cost=unit,
         shop=str(r.shop_id),

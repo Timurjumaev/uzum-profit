@@ -6,8 +6,9 @@ eng yangisidan; sahifalash kursor bilan. ``summary`` — filtr (davr, do'kon, SK
 (F17, F18, ``daily_sku_metrics`` dan; holat filtri unga ta'sir qilmaydi).
 
 P&L qatori drill-down'i: ``counted=true`` (Yakunlangan + Jarayonda, ADR-036) qatorlari tushum/komissiya/logistika/
-tannarx yig'indisi = P&L qatori. Logistika — Uzum sotuv qatoriga yozgan summa, taxminsiz (ADR-041; ADR-037 dagi F40
-taxmini o'chirildi — ``logistics_estimated`` doim bo'sh).
+tannarx yig'indisi = P&L qatori. Logistika (ADR-042) — Uzum aslida yechgani, hali yechilmagan bo'lsa sotuv qatoridagi
+summa; qatorda 0 va hali topshirilmagan Jarayondagi sotuvda — F40 × dona taxmini (``logistics_estimated``), Uzum
+to'lovi va yalpi foyda shu bilan — P&L kataklari bilan bir xil.
 """
 
 from __future__ import annotations
@@ -24,15 +25,18 @@ from upcore.metrics import (
     COUNTED,
     StatusGroup,
     cancel_rate,
+    logistics_due,
     return_share,
     status_group,
     statuses,
+    with_expected_logistics,
 )
 from upcore.money import Currency, Money
 
 from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission
 from upapi.calc.costs import day_start
+from upapi.calc.daily import charged_logistics, effective_logistics
 from upapi.db import models as m
 from upapi.reports import cells as rc
 from upapi.reports.common import (
@@ -133,9 +137,11 @@ async def sales(
     if counted:
         wanted = [x for g in sorted(COUNTED) for x in sorted(statuses(g))]
         where.append(func.upper(func.trim(s.c.status)).in_(wanted))
+    x = charged_logistics()
     query = (
-        select(s, c.c.cogs, c.c.flags, c.c.changed_at, c.c.previous_cogs)
+        select(s, c.c.cogs, c.c.flags, c.c.changed_at, c.c.previous_cogs, effective_logistics(s, x))
         .outerjoin(c, c.c.sale_item_id == s.c.id)
+        .outerjoin(x, x.c.sale_item_id == s.c.id)
         .where(*where)
         .order_by(s.c.ordered_at.desc(), s.c.id.desc())
         .limit(limit + 1)
@@ -148,8 +154,11 @@ async def sales(
     rows = rows[:limit]
     recent = now - timedelta(days=rc.RECALC_DAYS)
     lines = [rc.sale_line(r) for r in rows]
+    due = sorted({(x.shop, x.sku) for x in lines if logistics_due(x)})
+    fee = await rc.expected_fees(ctx.conn, f.today, due)
     items = []
-    for r, line in zip(rows, lines, strict=True):
+    for r, raw in zip(rows, lines, strict=True):
+        line, estimate = with_expected_logistics(raw, fee(raw.shop, raw.sku))
         profit = line.gross_profit
         changed = r.changed_at if r.changed_at is not None and r.changed_at >= recent else None
         items.append(
@@ -171,7 +180,7 @@ async def sales(
                 revenue=line.revenue,
                 commission=r.commission,
                 logistics=Money(line.logistics, UZS).amount,
-                logistics_estimated=None,  # ADR-041: logistika — Uzum yozgani, taxminsiz (P&L bilan bir xil)
+                logistics_estimated=None if estimate is None else estimate.amount,
                 payout=line.payout,
                 cogs=r.cogs,
                 gross_profit=None if profit is None else Money(profit, UZS).amount,

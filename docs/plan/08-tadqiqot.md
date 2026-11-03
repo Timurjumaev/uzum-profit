@@ -110,10 +110,10 @@ spetsifikatsiyasi, 2026-aprel asosida).
   "qaytish yo'lida" soni API'da yo'q (faqat taxmin). Temur: Toshkentdagi sotuvchi postavkani qabul vaqtida o'zi topshiradi,
   viloyatdagisi oldindan Uzum logistikasi bilan jo'natadi — dastur uchun ikkalasi bitta joy: "postavkada".
 - Uzum 2026-10-08 da texnik uzilish bo'lgan, 09-da tiklana boshlagan; sotuvchilarga oktabr oxirigacha logistika va
-  saqlash bepul ([gazeta.uz](https://www.gazeta.uz/oz/2026/10/09/uzum-market/)). Real ma'lumot (B4.23 realcheck): bonus
-  **buyurtma sanasiga** qarab — 10–31-oktabr buyurtmalarida logistika 0, 1–8-oktabrniki pullik; 1–8-oktabr buyurtmalari
-  9-oktabrdan keyin olib ketilganda xarajatlar ro'yxatida logistika 0, `sellerProfit` da esa ayirilgan (byDurii 97 qator).
-  2026-11 dan Uzum logistikani buyurtma paytida yozadi (ADR-041).
+  saqlash bepul ([gazeta.uz](https://www.gazeta.uz/oz/2026/10/09/uzum-market/)). Real ma'lumot (B4.23 realcheck, Temur): sotuv
+  qatoridagi logistika **buyurtma sanasiga** qarab (10–31-oktabr buyurtmalari 0), Uzum **aslida yechgani** esa **olib
+  ketilgan sanaga** qarab — 9–31-oktabrda olib ketilganlar 0, noyabrda olib ketilgan oktabr buyurtmalari (qatorda 0) uchun
+  tarif yechilmoqda. 2026-11 buyurtmalarida qatorga logistika buyurtma paytida yoziladi. Hisob — yechilgan summa (ADR-042).
 
 ## 5. Uzum tariflari ([seller.uzum.uz qo'llanmasi](https://seller.uzum.uz/manual/uz/3.tariffs/))
 

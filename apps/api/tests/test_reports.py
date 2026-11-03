@@ -457,10 +457,10 @@ def test_pnl_expected_profit(world: World) -> None:
     assert money(rows["uzum:storage"]["processing"]) == 0  # 15-oktabrda saqlash yo'q
 
 
-def test_no_logistics_estimate(world: World) -> None:
-    """ADR-041 (ADR-037 dagi F40 taxmini o'chirildi): Jarayondagi, hali topshirilmagan va logistikasi 0 sotuv —
-    logistika Uzum yozgandek 0 (2026-11 dan Uzum logistikani buyurtma paytida yozadi; 0 — bepul, masalan oktabr
-    kompensatsiyasi); P&L, kutilayotgan blok va drill-down qatori bir xil, taxmin yo'q."""
+def test_expected_logistics_estimate(world: World) -> None:
+    """F5 (ADR-037, ADR-042): Uzum logistikasini hali yozmagan (topshirilmagan, 0) Jarayondagi sotuv — F40 tarifi × dona
+    (SKU'ning oxirgi pullik Yakunlangan sotuvi: 5 000/dona) taxminiy qo'shiladi; drill-down qatorida ham shu summa,
+    yig'indi qator bilan bir xil; topshirilgan bo'lsa (0 — Uzum bergani) taxmin yo'q."""
     a = world.a
     before = world.get("pnl", **OCT)
 
@@ -475,21 +475,71 @@ def test_no_logistics_estimate(world: World) -> None:
         return world.get("pnl", **OCT)
 
     try:
-        free = resync(0, None)
-        s = free["statement"]
-        assert money(s["logistics_estimated"]) == 0 and s["logistics_missing_lines"] == 0
-        assert money(s["logistics"]) == money(before["statement"]["logistics"]) - D(5_000)
-        assert money(free["expected"]["logistics"]) == 0
-        assert money(free["expected"]["net_profit"]) == money(before["expected"]["net_profit"]) + D(
-            5_000
-        )
+        due = resync(0, None)
+        s = due["statement"]
+        assert money(s["logistics_estimated"]) == D(5_000)
+        assert (s["logistics_estimated_units"], s["logistics_estimated_lines"]) == (1, 1)
+        assert money(s["logistics"]) == money(
+            before["statement"]["logistics"]
+        )  # 5 000 → taxmin 5 000
+        assert money(due["expected"]["logistics_estimated"]) == D(5_000)
+        assert money(due["expected"]["net_profit"]) == D(37_000)
         sales = world.get("sales", counted="true", **OCT)["items"]
         row = next(x for x in sales if x["group"] == "processing")
-        assert money(row["logistics"]) == 0 and row["logistics_estimated"] is None
+        assert money(row["logistics"]) == D(5_000) and money(row["logistics_estimated"]) == D(5_000)
+        assert money(row["payout"]) == D(200_000 - 40_000 - 5_000)
         assert sum(money(x["logistics"]) for x in sales) == money(s["logistics"])
+        assert all(x["logistics_estimated"] is None for x in sales if x["group"] != "processing")
+        free = resync(0, at(d(10, 18)))  # topshirilgan, Uzum 0 yozgan — taxmin yo'q (ADR-035)
+        assert money(free["statement"]["logistics_estimated"]) == 0
+        assert money(free["expected"]["net_profit"]) == D(42_000)
     finally:
         after = resync(5_000, None)
     assert after["statement"] == before["statement"]
+
+
+def test_logistics_is_what_uzum_charged(world: World) -> None:
+    """F5 (ADR-042): sotuv logistikasi — Uzum aslida yechgani (sotuvga bog'langan logistika chiqimlari): qatorda 10 000,
+    Uzum 0 yechgan (bonus olib ketilgan kunga qarab) — 0; qatorda 0, olib ketilgach Uzum 5 250 yechgan — 5 250."""
+    a = world.a
+    before = world.get("pnl", **OCT)["statement"]
+
+    def rebuild() -> dict[str, Any]:
+        a.run(lambda conn: calc.request(conn, world.org_id, calc.Scope.SHOP, a.shop_id, d(10, 1)))
+        assert a.recalc(datetime.now(UTC)).errors == {}
+        return world.get("pnl", **OCT)
+
+    free = world.expense(
+        a, d(10, 9), "logistics", 0, excluded="not_expense", sale_item_id=world.ids["s_oct2"]
+    )
+    a.sql(
+        "UPDATE sale_items SET logistics_fee = 0, issued_at = %s WHERE org_id = %s AND sku_id = %s "
+        "AND (ordered_at AT TIME ZONE 'Asia/Tashkent')::date = %s",
+        [at(d(11, 2)), a.org_id, world.ids["xa"], d(10, 15)],
+    )
+    ((pending,),) = a.sql(
+        "SELECT id FROM sale_items WHERE org_id = %s AND upper(status) = 'PROCESSING'",
+        [world.org_id],
+    )
+    paid = world.expense(
+        a, d(11, 2), "logistics", 5_250, excluded="not_expense", sale_item_id=pending
+    )
+    try:
+        body = rebuild()
+        s = body["statement"]
+        # 2-okt: 10 000 → 0; 15-okt: 5 000 (qatorda) → 0 qatorda, Uzum 5 250 yechgan.
+        assert money(s["logistics"]) == money(before["logistics"]) - D(10_000) + D(250)
+        assert money(s["logistics_estimated"]) == 0
+        assert money(body["expected"]["logistics"]) == D(5_250)
+        sales = world.get("sales", counted="true", **OCT)["items"]
+        assert sum(money(x["logistics"]) for x in sales) == money(s["logistics"])
+    finally:
+        a.sql("DELETE FROM mp_expenses WHERE id IN (%s, %s)", [free, paid])
+        a.sql(
+            "UPDATE sale_items SET logistics_fee = 5000, issued_at = NULL WHERE id = %s", [pending]
+        )
+        after = rebuild()
+    assert after["statement"] == before
 
 
 def _sku_cols(world: World, **period: str) -> dict[str, Any]:

@@ -195,6 +195,21 @@ async def link_expenses(conn: AsyncConnection, shop_id: UUID) -> int:
     return result.rowcount
 
 
+async def logistics_changed_since(
+    conn: AsyncConnection, shop_id: UUID, since: datetime
+) -> datetime | None:
+    """ADR-042: ``since`` dan keyin yozilgan yoki bog'langan logistika chiqimlari tegishli sotuvlarining eng erta
+    buyurtma vaqti (kunlik agregatni shu kundan qayta qurish uchun); yo'q — ``None``."""
+    value: datetime | None = await conn.scalar(
+        text(
+            "SELECT min(s.ordered_at) FROM mp_expenses e JOIN sale_items s ON s.id = e.sale_item_id "
+            "WHERE e.shop_id = :shop AND e.category = 'logistics' AND e.updated_at >= :since"
+        ),
+        {"shop": shop_id, "since": since},
+    )
+    return value
+
+
 async def link_children_skus(conn: AsyncConnection, shop_id: UUID) -> int:
     """Postavka va qaytarish tarkibidagi SKU (SKU keyinroq kelgan bo'lsa)."""
     total = 0
