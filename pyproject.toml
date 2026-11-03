@@ -21,7 +21,7 @@ upbot = { workspace = true }
 dev = [
     "pytest>=8",
     "pytest-cov>=6",
-    "hypothesis>=6",
+    "hypothesis>=6.170.12",
     "httpx>=0.28",
     "ruff>=0.14",
     "mypy>=1.18",
