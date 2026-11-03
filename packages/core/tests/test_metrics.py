@@ -547,3 +547,7 @@ def test_storage_weights() -> None:
     )
     assert w == {"A": Decimal(30), "B": Decimal(25), "D": Decimal(8)}
     assert storage_weights({"A": 2, "B": 3}, {}) == {"A": Decimal(2), "B": Decimal(3)}
+    # ADR-040: faqat pullik saqlashdagi SKU'lar; hech biri topilmasa — hammasi.
+    paid = storage_weights({"A": 2, "B": 3}, {"A": Decimal(10), "B": Decimal(10)}, paid={"B"})
+    assert paid == {"B": Decimal(30)}
+    assert storage_weights({"A": 2}, {}, paid={"Z"}) == {"A": Decimal(2)}

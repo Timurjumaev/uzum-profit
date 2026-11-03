@@ -120,3 +120,50 @@ def standard_fee_of(
         return last_by_sku.get(sku) or typical_by_shop.get(shop)
 
     return fee
+
+
+# --- F43: Uzum pullik saqlash qoidasi (ADR-040) -------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class StorageRule:
+    """Uzum FBO saqlash qoidasi (Uzum qo'llanmasi, Temur, 2026-11-03; tariflar 01.06.2026 dan): aylanma = oxirgi
+    ``window_days`` kundagi o'rtacha qoldiq / shu kunlardagi o'rtacha kunlik sotuv; ``free_turnover_days`` gacha —
+    bepul, oshsa — pullik (SKU ``paidStoragePriceItem`` = litr × kunlik tarif); yangi SKU dastlabki
+    ``new_free_days`` kun bepul (ba'zi toifalarda 60 — hozircha farqlanmaydi)."""
+
+    valid_from: date
+    window_days: int = 15
+    free_turnover_days: int = 60
+    new_free_days: int = 30
+
+
+SEED_STORAGE_RULES: tuple[StorageRule, ...] = (StorageRule(valid_from=date(2026, 6, 1)),)
+
+
+def storage_rule(
+    day: date, rules: Iterable[StorageRule] = SEED_STORAGE_RULES
+) -> StorageRule | None:
+    """F43: kunga amal qiladigan qoida (eng oxirgi ``valid_from ≤ day``); yo'q — ``None``."""
+    valid = [r for r in rules if r.valid_from <= day]
+    return max(valid, key=lambda r: r.valid_from) if valid else None
+
+
+def storage_turnover(avg_stock: Decimal, sold_units: int, window_days: int) -> Decimal | None:
+    """F43: aylanma (kun) = o'rtacha qoldiq / (sotilgan dona / ``window_days``); sotuv yo'q — ``None`` (cheksiz)."""
+    if sold_units <= 0:
+        return None
+    return avg_stock * window_days / sold_units
+
+
+def paid_storage(
+    avg_stock: Decimal, sold_units: int, first_day: date | None, day: date, rule: StorageRule
+) -> bool:
+    """F43: SKU shu kuni pullik saqlashdami — qoldiq bor, yangi emas (``first_day`` — birinchi postavka yoki sotuv;
+    noma'lum — yangi emas deb) va aylanma ``free_turnover_days`` dan oshgan (sotuvsiz — oshgan)."""
+    if avg_stock <= 0:
+        return False
+    if first_day is not None and (day - first_day).days < rule.new_free_days:
+        return False
+    turnover = storage_turnover(avg_stock, sold_units, rule.window_days)
+    return turnover is None or turnover > rule.free_turnover_days

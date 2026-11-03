@@ -396,6 +396,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.23 (ADR-040): saqlash endi Uzum qoidasi bo'yicha faqat pullik saqlashdagi tovarlarga yoziladi (aylanma 60 kundan
+  oshgan, yangi bo'lmagan SKU), qaytim saqlash — qaytgan tovarlarga. Sotilmagan tovar saqlashi kabi sotuvsiz xarajatlar
+  yakunlangan va kutilayotgan qismlarga o'sha kungi tushum ulushida bo'linadi — "Bugun" da yakunlangan sof foyda endi
+  sababsiz manfiy chiqmaydi; "shundan sotuvsiz xarajatlar" izohi olib tashlandi.
 - B4.22: Asosiy sahifada Yakunlangan kartochkasida "shundan sotuvsiz xarajatlar" — yakunlangan sotuv yo'q davrda
   yakunlangan sof foyda nega manfiy ekani (sotilmagan tovarlar saqlashi, sotuv bo'lmagan kun xarajati). Realcheck'ga
   saqlash qoidasi farazlari, jarima → postavka va qaytim saqlash → qaytarish havolalari, Yakunlangan qatorlarda Uzum

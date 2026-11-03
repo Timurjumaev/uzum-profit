@@ -535,22 +535,38 @@ def test_linked_ad_on_order_day(world: World) -> None:
 
 
 def test_storage_split_by_stock(world: World) -> None:
-    """F43 (ADR-039): saqlash — shu kungi qoldiq × saqlash narxi bo'yicha SKU'larga (to'g'ridan-to'g'ri), sotuvi yo'q
-    SKU ham oladi; snapshot yo'q do'kon (B) — odatdagidek tushum ulushida (taqsimlangan)."""
+    """F43 (ADR-040): saqlash — Uzum qoidasi bo'yicha pullik saqlashdagi SKU'larga (aylanma > 60 kun, yangi emas),
+    qoldiq × saqlash narxi; qoida hech kimni topmasa — hamma qoldiq bo'yicha; snapshot yo'q do'kon (B) — tushum
+    ulushida (taqsimlangan). Qaytim saqlash — qaytarishdagi SKU'larga."""
     a, xa, ya = world.a, world.ids["xa"], world.ids["ya"]
     a.sql("UPDATE mp_skus SET storage_price = 2 WHERE id = %s", [xa])
     a.sql("UPDATE mp_skus SET storage_price = 1 WHERE id = %s", [ya])
     snap = a.insert("sku_daily", sku_id=ya, day=d(10, 2), qty_active=30, qty_fbs=0)
+    ret = a.insert(
+        "mp_returns", shop_id=a.shop_id, external_id=7_000_001, type="RETURN", status="ASSEMBLED"
+    )
+    a.insert("mp_return_items", return_id=ret, sku_external_id=12, quantity=1, sku_id=ya)
+    rs = world.expense(
+        a,
+        d(10, 3),
+        "return_storage",
+        1_000,
+        name="7000001 - sonli yukxat boʻyicha qaytarishni saqlash",
+    )
     try:
         cols = _sku_cols(world, **OCT)
-        # 1-okt 12 000 — faqat x da qoldiq; 2-okt 30 000 — x: 10 × 2 = 20, y: 30 × 1 = 30.
-        assert money(cols[str(xa)]["uzum_expenses"]["storage"]) == D(24_000)
-        assert money(cols[str(ya)]["uzum_expenses"]["storage"]) == D(18_000)
+        # 1-okt 12 000: x yangi (birinchi sotuvdan 30 kun o'tmagan) — pullik SKU yo'q, hamma qoldiq bo'yicha → x.
+        # 2-okt 30 000: y — eski, 15 kunda sotuvsiz (aylanma cheksiz) → pullik; x hali yangi → hammasi y ga.
+        assert money(cols[str(xa)]["uzum_expenses"]["storage"]) == D(12_000)
+        assert money(cols[str(ya)]["uzum_expenses"]["storage"]) == D(30_000)
+        assert money(cols[str(ya)]["uzum_expenses"]["return_storage"]) == D(1_000)
         assert "storage" not in cols[str(xa)]["uzum_allocated"]
         assert money(cols[str(world.ids["zb"])]["uzum_allocated"]["storage"]) == D(8_000)
-        assert "unallocated" not in cols or "storage" not in cols["unallocated"]["uzum_expenses"]
         assert money(world.get("pnl", **OCT)["statement"]["uzum_expenses"]["storage"]) == D(50_000)
     finally:
+        a.sql("DELETE FROM mp_expenses WHERE id = %s", [rs])
+        a.sql("DELETE FROM mp_return_items WHERE return_id = %s", [ret])
+        a.sql("DELETE FROM mp_returns WHERE id = %s", [ret])
         a.sql("DELETE FROM sku_daily WHERE id = %s", [snap])
         a.sql("UPDATE mp_skus SET storage_price = NULL WHERE id IN (%s, %s)", [xa, ya])
 

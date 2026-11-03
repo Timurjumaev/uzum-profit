@@ -675,16 +675,22 @@ def _deduct(a: Cell, rule: TaxRule | None) -> None:
         a.deducted = _cents(overhead * a.covered_revenue / a.revenue)
 
 
-def _finish(a: Cell, rule: TaxRule | None) -> None:
+def _finish(a: Cell, rule: TaxRule | None, day_share: Decimal | None = None) -> None:
     """Katak F11 va F15; Jarayondagi qism (ADR-037) katak xarajatlarining (F9, F10) tushum ulushidagi qismini oladi,
-    soliq va F15 — o'z tushumidan. Yakunlangan qism = katak − Jarayondagi qism (``Statement.net_profit_done``)."""
+    soliq va F15 — o'z tushumidan. Yakunlangan qism = katak − Jarayondagi qism (``Statement.net_profit_done``).
+
+    ADR-040: sotuvsiz katak (masalan, o'sha kuni sotilmagan SKU'ning saqlashi) xarajati SKU'da qoladi, qismlarga esa
+    shu kuni do'kon tushumining Jarayondagi ulushida (``day_share``) bo'linadi — do'konning boshqa xarajatlari kabi;
+    do'konda kun bo'yi sotuv bo'lmasa — yakunlangan qismda."""
     _deduct(a, rule)
     if a.revenue == 0:
         a.idle = a.deducted
     p = a.part() if a.pin_processing else a.processing
+    share = p.revenue / a.revenue if p is not None and a.revenue > 0 and p.revenue > 0 else None
+    if a.revenue == 0 and day_share and (a.uzum or a.own):
+        p, share = a.part(), day_share
     if p is None:
         return
-    share = p.revenue / a.revenue if a.revenue > 0 and p.revenue > 0 else None
     if a.uzum and (share is not None or a.pin_processing):
         # ADR-039: bitta sotuvga tegishli xarajat (``pin_*``) bo'linmaydi — o'sha sotuv qismiga.
         pin_p, pin_d = a.pin_processing or {}, a.pin_done or {}
@@ -894,8 +900,15 @@ def build_cells(
                 spread(day, oe.shop, True, oe.category, part)
 
     rule_of = _rules(tax)  # F11 profili sana bo'yicha (upcore.tax), kun bo'yicha keshda
+    # ADR-040: kun × do'kon tushumining Jarayondagi ulushi — sotuvsiz kataklar xarajatini qismlarga bo'lish uchun.
+    day_rev: dict[tuple[date, str], list[Decimal]] = defaultdict(lambda: [_D0, _D0])
     for key, a in acc.items():
-        _finish(a, rule_of(key[0]))
+        day_total = day_rev[key.day, key.shop]
+        day_total[0] += a.processing.revenue if a.processing is not None else _D0
+        day_total[1] += a.revenue
+    for key, a in acc.items():
+        pending, whole = day_rev[key.day, key.shop]
+        _finish(a, rule_of(key[0]), pending / whole if whole > 0 and pending > 0 else None)
     return Cells(period, dict(acc))
 
 
