@@ -456,6 +456,13 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   tashlandi. Logistika — o'zgarishsiz (Uzum `sellerProfit` qatordagi summani ayiradi). Realcheck `storage_rule` ga
   `uzum_rule` modeli. **T:** merge va deploy'dan keyin `realcheck.sh` → fayl chatga (qoida modeli yechilgan summaga
   qanchalik yaqin).
+- [x] B4.24 Sof foyda hisobi auditi (ADR-041; Temur: "100% qayta tekshir", 2026-11-03).
+  ✓ 2026-11-03: ayirish tartibi sof foydaga ta'sir qilmaydi — xossa testi (`test_conservation_every_cost_once`: har
+  xarajat bir marta, yakunlangan + kutilayotgan = jami, kesimlar yig'indisi = jami; 300 tasodifiy holat). Topilgan va
+  tuzatilgan: (1) kutilayotgan logistika taxmini (ADR-037) bonusli oktabr buyurtmalariga (Uzum 0 yozgan — bepul) ~5 250
+  dan qo'shardi (byDurii 115 qator, ~600 ming) — o'chirildi, logistika Uzum yozgandek (core: `logistics_fee` berilmasa
+  taxmin yo'q; API, `/sales`); (2) F42 reklama taxmini reklamasi allaqachon yechilgan sotuvga ham qo'shilardi — endi
+  yo'q. Realcheck: `not_issued_zero_recent` nazorati. Formulalar matni yangilandi.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

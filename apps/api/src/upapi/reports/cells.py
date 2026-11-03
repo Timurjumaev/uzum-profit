@@ -24,14 +24,13 @@ emas, hamma do'konlarga tushum ulushida taqsimlanadi (filtr bo'yicha natija = do
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import Text, and_, case, cast, func, literal, select
+from sqlalchemy import Text, and_, case, cast, exists, func, literal, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.expenses import ExpenseCategory, signed_amount
 from upcore.metrics import (
@@ -54,7 +53,6 @@ from upcore.tax import TaxProfile, TaxRegime, daily_rule
 from upapi.calc.costs import day_start
 from upapi.db import models as m
 from upapi.reports.common import Filters
-from upapi.reports.products import load_fees
 
 UZS = Currency.UZS
 UNLINKED = "unlinked"  # SKU'ga bog'lanmagan sotuvlar katagi (``sku_id`` NULL)
@@ -396,6 +394,12 @@ async def _expected_ads(conn: AsyncConnection, period: Period, today: date) -> l
         select(s.c.shop_id, s.c.sku_id, s.c.ordered_at, s.c.sell_price, s.c.amount).where(
             func.upper(func.trim(s.c.status)) == "PROCESSING",
             s.c.issued_at.is_(None),
+            # B4.24: reklamasi allaqachon yechilgan (bog'langan) sotuvga taxmin qo'shilmaydi — ikki marta bo'lmasin.
+            ~exists().where(
+                e.c.sale_item_id == s.c.id,
+                e.c.category == ExpenseCategory.ADVERTISING.value,
+                e.c.excluded.is_(None),
+            ),
             s.c.amount > 0,
             s.c.ordered_at >= day_start(period.start),
             s.c.ordered_at < day_start(period.end + timedelta(days=1)),
@@ -515,23 +519,11 @@ async def tax_profiles(conn: AsyncConnection) -> list[TaxProfile]:
     ]
 
 
-async def expected_fees(
-    conn: AsyncConnection, today: date, keys: list[tuple[str, str]]
-) -> Callable[[str, str], Money | None]:
-    """F40 tariflari (``today`` kungi) Uzum logistikasini hali yozmagan Jarayondagi donalar kataklari (do'kon, SKU
-    kaliti) uchun — kutilayotgan logistika taxmini (F5, ADR-037)."""
-    skus = {UUID(sku): UUID(shop) for shop, sku in keys if sku != UNLINKED}
-    shops = {UUID(shop) for shop, sku in keys if sku == UNLINKED}
-    if not skus and not shops:
-        return lambda _shop, _sku: None
-    return (await load_fees(conn, today, skus, shops)).unit
-
-
 async def load_book(conn: AsyncConnection, period: Period, today: date) -> Book:
-    """Davr (masalan, joriy + oldingi davr birga) kataklari butun tashkilot bo'yicha. ``today`` — kutilayotgan
-    logistika taxmini tarifi kuni (F40, ADR-037)."""
+    """Davr (masalan, joriy + oldingi davr birga) kataklari butun tashkilot bo'yicha. ``today`` — kutilayotgan reklama
+    ulushi oynasining oxiri (F42). Logistika — Uzum sotuv qatoriga yozgan summa, taxminsiz (ADR-041: Uzum 2026-11
+    dan logistikani buyurtma paytida yozadi; 0 — bepul, masalan oktabr kompensatsiyasi)."""
     totals = await _totals(conn, period)
-    due = sorted({(k.shop, k.sku or UNLINKED) for k, t in totals if t.lines_logistics_due})
     cells = build_cells(
         period,
         [],
@@ -539,7 +531,6 @@ async def load_book(conn: AsyncConnection, period: Period, today: date) -> Book:
         await _own(conn, period),
         tax=daily_rule(await tax_profiles(conn)),
         totals=totals,
-        logistics_fee=await expected_fees(conn, today, due),
     )
     return Book(cells)
 
