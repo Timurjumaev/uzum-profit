@@ -390,3 +390,15 @@ def test_opening_conserves_units(
     )
     assert taken + sum(r.remaining.values()) <= qty + used + back
     assert all(x.flags == {CostFlag.HISTORICAL} for x in out if x.day < o.start)
+
+
+def test_opening_price_without_stock_or_lots_is_estimated_not_missing() -> None:
+    """Narx yozilgan, lekin qoldiq 0 va partiya yo'q: boshlashdan keyingi sotuv tannarxsiz qolmaydi — o'sha kundagi
+    tarixiy narx, "lot yetmadi" belgisi bilan (tamoyil 9: taxmin yashirilmaydi, lekin foydadan tashlanmaydi)."""
+    o = opening(10, 0, (None, 8000), (15, 9000))
+    r = compute_costs([], [Sale("a", d(12), 2), Sale("b", d(20), 3)], FIFO, o)
+    assert r.sales["a"].cost == uzs(2 * 8000) and r.sales["a"].flags == {CostFlag.LOT_SHORTAGE}
+    assert r.sales["b"].cost == uzs(3 * 9000) and r.sales["b"].flags == {CostFlag.LOT_SHORTAGE}
+    # Narx ham yo'q — avvalgidek tannarx yo'q.
+    r = compute_costs([], [Sale("c", d(12), 1)], FIFO, opening(10, 0))
+    assert r.sales["c"].cost is None and r.sales["c"].flags == {CostFlag.NO_LOTS}

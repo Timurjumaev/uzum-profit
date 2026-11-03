@@ -645,3 +645,63 @@ def test_benchmark_10k_sales_item(org: Org) -> None:
     result = org.recalc()
     assert time.perf_counter() - start < 3.0
     assert result.costs_written == 10_000
+
+
+# --- Narx yozilgan, lekin partiya/qoldiq yo'q; sotuv → SKU bog'lanishi --------------------------------
+
+
+def test_opening_price_covers_sales_without_stock_or_lots(org: Org) -> None:
+    """Tovarga narx yozilgan, qoldiq 0, partiya yo'q — boshlashdan keyingi sotuv tannarxsiz qolmaydi (taxminiy)."""
+    item, sku = org.item("Narxli")
+    org.sql("UPDATE orgs SET cost_start_on = %s WHERE id = %s", [d(10, 1), org.org_id])
+    org.insert("item_costs", item_id=item, valid_from=None, unit_cost=D(50_000))
+    before = org.sale(sku, d(9, 20), 2)
+    after = org.sale(sku, d(10, 10), 3)
+    org.request(calc.Scope.SHOP, org.shop_id)
+    org.recalc()
+    costs = org.costs()
+    assert costs[before][0] == D(100_000) and costs[before][2] == ["historical"]
+    assert costs[after][0] == D(150_000) and costs[after][2] == ["lot_shortage"]
+
+
+def test_link_sales_fallbacks(org: Org) -> None:
+    """Nom aynan mos kelmasa ham sotuv SKU'ga bog'lanadi (bir ma'noli bo'lsa); ikki ma'noli — bog'lanmaydi."""
+    import asyncio
+
+    from upapi.sync import store
+
+    product = org.insert("mp_products", shop_id=org.shop_id, external_id=900, title="Mahsulot")
+    lone = org.insert("mp_products", shop_id=org.shop_id, external_id=901, title="Yagona")
+    pair = org.insert("mp_products", shop_id=org.shop_id, external_id=902, title="Juft")
+
+    def sku(code: str, prod: uuid.UUID, ext: int) -> uuid.UUID:
+        return org.insert(
+            "mp_skus", shop_id=org.shop_id, external_id=ext, sku_code=code, product_id=prod
+        )
+
+    exact = sku("Qora - M", product, 9001)
+    sku("Qora - L", product, 9002)
+    only = sku("Oq - XL", lone, 9003)
+    sku("Ko'k - S", pair, 9004)
+    sku("Ko'k - M", pair, 9005)
+    cases = {
+        "exact": org.sale(None, d(10, 1), sku_title="Qora - M"),
+        "spaces_case": org.sale(None, d(10, 1), sku_title=" qora - l "),
+        "renamed_single": org.sale(None, d(10, 1), sku_title="Eski nom", product_external_id=901),
+        "ambiguous": org.sale(None, d(10, 1), sku_title="Eski nom", product_external_id=902),
+        "unknown": org.sale(None, d(10, 1), sku_title="Noma'lum"),
+    }
+
+    async def main() -> int:
+        engine = make_engine(org.db["app"])
+        try:
+            async with org_transaction(engine, org.org_id) as conn:
+                return (await store.link_sales(conn, org.shop_id))[0]
+        finally:
+            await engine.dispose()
+
+    assert asyncio.run(main()) == 3
+    linked = dict(org.sql("SELECT id, sku_id FROM sale_items WHERE shop_id = %s", [org.shop_id]))
+    assert linked[cases["exact"]] == exact and linked[cases["renamed_single"]] == only
+    assert linked[cases["spaces_case"]] is not None
+    assert linked[cases["ambiguous"]] is None and linked[cases["unknown"]] is None

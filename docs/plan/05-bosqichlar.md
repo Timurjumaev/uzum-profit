@@ -409,6 +409,10 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   logistika 0 / > 0). ✓ 2026-11-02 realcheck (Temur): `dateIssued` ishonchli, qoida tasdiqlandi — bonus olib ketilgan kunga qarab, olib
   ketilgan va 0 — haqiqiy 0, olib ketilmagan va 0 — taxmin. **Qoldi:** kutilayotgan foyda "qachon pulga aylanadi"
   (to'lov sanasi bo'yicha) — B5.7 Pul oqimi bilan.
+- [x] B4.19 Tannarxsiz sotuvlar tuzatishi (Temur, 2026-11-02: byDurii — "Narx yozilgan 166 / 169", "4 ta sotuv tannarxsiz").
+  ✓ 2026-11-02: F41/F21 — narx bor, qoldiq 0 va partiya yo'q tovarning sotuvi tarixiy narxda ("lot yetmadi", taxminiy);
+  `store.link_sales` — sotuv → SKU bir ma'noli bo'lsa nom (harf/bo'sh joysiz), mahsulot ichida nom yoki mahsulotning
+  yagona SKU'si bo'yicha; `/opening` da "Faqat narxsiz turlar" filtri.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

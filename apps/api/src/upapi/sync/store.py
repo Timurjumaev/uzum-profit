@@ -132,22 +132,49 @@ async def upsert_shops(
 # --- Bog'lanishlar -------------------------------------------------------------------------------
 
 
+# Sotuv qatorini SKU'ga bog'lash bosqichlari (har biri — faqat bir ma'noli moslik; oldingisi bog'lamaganlar uchun):
+# 1) ``skuTitle`` = ``skuFullTitle`` (legacy kabi) — do'kon ichida; 2) shu, lekin bo'sh joy va harf katta-kichikligidan
+# qat'i nazar; 3) mahsulot (``productId``) ichida shu nom; 4) mahsulotning yagona SKU'si (nomi o'zgargan/bo'sh bo'lsa ham).
+# Bog'lanmagan sotuv tannarxsiz qoladi ("no_item"), shuning uchun mos kelmaslik sababi — nom emas, bir ma'nolilik.
+_NORM = "lower(btrim(%s))"
+_LINK_STEPS = (
+    # 1. aniq nom, do'konda bir ma'noli
+    "k.sku_code = s.sku_title AND NOT EXISTS (SELECT 1 FROM mp_skus d WHERE d.shop_id = k.shop_id "
+    "AND d.sku_code = k.sku_code AND d.id <> k.id)",
+    # 2. nom (bo'sh joy / katta-kichik harf farqisiz), do'konda bir ma'noli
+    f"{_NORM % 'k.sku_code'} = {_NORM % 's.sku_title'} AND NOT EXISTS (SELECT 1 FROM mp_skus d "
+    f"WHERE d.shop_id = k.shop_id AND {_NORM % 'd.sku_code'} = {_NORM % 'k.sku_code'} AND d.id <> k.id)",
+    # 3. mahsulot ichida aniq nom, mahsulotda bir ma'noli
+    "s.product_external_id IS NOT NULL AND k.product_id IN (SELECT p.id FROM mp_products p "
+    "WHERE p.shop_id = s.shop_id AND p.external_id = s.product_external_id) "
+    f"AND {_NORM % 'k.sku_code'} = {_NORM % 's.sku_title'} AND NOT EXISTS (SELECT 1 FROM mp_skus d "
+    f"WHERE d.product_id = k.product_id AND {_NORM % 'd.sku_code'} = {_NORM % 'k.sku_code'} AND d.id <> k.id)",
+    # 4. mahsulotning yagona SKU'si
+    "s.product_external_id IS NOT NULL AND k.product_id IN (SELECT p.id FROM mp_products p "
+    "WHERE p.shop_id = s.shop_id AND p.external_id = s.product_external_id) "
+    "AND NOT EXISTS (SELECT 1 FROM mp_skus d WHERE d.product_id = k.product_id AND d.id <> k.id)",
+)
+
+
 async def link_sales(conn: AsyncConnection, shop_id: UUID) -> tuple[int, datetime | None]:
-    """Sotuv qatori → SKU: ``skuTitle`` = ``skuFullTitle`` (legacy kabi), faqat do'kon ichida bir ma'noli kod.
-    Bog'langan qator qayta bog'lanmaydi. Qaytadi: bog'langanlar soni va eng erta buyurtma vaqti (qayta hisob uchun)."""
-    row = (
-        await conn.execute(
-            text(
-                "WITH linked AS (UPDATE sale_items s SET sku_id = k.id, updated_at = now() FROM mp_skus k "
-                "WHERE s.shop_id = :shop AND s.sku_id IS NULL AND k.shop_id = s.shop_id "
-                "AND k.sku_code = s.sku_title AND NOT EXISTS (SELECT 1 FROM mp_skus d "
-                "WHERE d.shop_id = k.shop_id AND d.sku_code = k.sku_code AND d.id <> k.id) "
-                "RETURNING s.ordered_at) SELECT count(*), min(ordered_at) FROM linked"
-            ),
-            {"shop": shop_id},
-        )
-    ).one()
-    return int(row[0]), row[1]
+    """Sotuv qatori → SKU (:data:`_LINK_STEPS` tartibida, faqat bir ma'noli moslik). Bog'langan qator qayta
+    bog'lanmaydi. Qaytadi: bog'langanlar soni va eng erta buyurtma vaqti (qayta hisob uchun)."""
+    total, earliest = 0, None
+    for condition in _LINK_STEPS:
+        row = (
+            await conn.execute(
+                text(
+                    "WITH linked AS (UPDATE sale_items s SET sku_id = k.id, updated_at = now() FROM mp_skus k "
+                    "WHERE s.shop_id = :shop AND s.sku_id IS NULL AND k.shop_id = s.shop_id "
+                    f"AND {condition} RETURNING s.ordered_at) SELECT count(*), min(ordered_at) FROM linked"
+                ),
+                {"shop": shop_id},
+            )
+        ).one()
+        total += int(row[0])
+        if row[1] is not None and (earliest is None or row[1] < earliest):
+            earliest = row[1]
+    return total, earliest
 
 
 async def link_expenses(conn: AsyncConnection, shop_id: UUID) -> int:

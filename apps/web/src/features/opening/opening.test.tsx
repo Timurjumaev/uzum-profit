@@ -78,6 +78,22 @@ describe("boshlang'ich holat", () => {
     await waitFor(() => expect(api.bodiesOf(PUT)).toEqual([{ start_on: null, rows: [] }]));
   });
 
+  it("\"Faqat narxsiz turlar\" filtri: narxi borlar yashiriladi; hammasida narx bo'lsa — filtr yo'q", async () => {
+    renderPage({
+      [ROUTE]: () =>
+        json(200, data({ rows: [openingRow({ prices: [{ valid_from: null, unit_cost: "5000.00" }] }), openingRow({ item_id: "item-2", name: "Sumka", skus: ["Sumka-1"] })] })),
+    });
+    await screen.findByText("Sumka");
+    expect(screen.getByText("Soat-qora")).toBeTruthy();
+    fireEvent.click(screen.getByLabelText("Faqat narxsiz turlar (1)"));
+    expect(screen.queryByText("Soat-qora")).toBeNull();
+    expect(screen.getByText("Sumka-1")).toBeTruthy();
+    cleanup();
+    renderPage({ [ROUTE]: () => json(200, data({ rows: [openingRow({ prices: [{ valid_from: null, unit_cost: "5000.00" }] })] })) });
+    await screen.findByText("Soat-qora");
+    expect(screen.queryByLabelText(/Faqat narxsiz turlar/)).toBeNull();
+  });
+
   it("buxgalter faqat ko'radi", async () => {
     renderPage({}, "accountant");
     await screen.findByText("Soat");
