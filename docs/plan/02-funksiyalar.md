@@ -338,10 +338,13 @@ Uzum `amount` = 0, `commission`, `logisticDeliveryFee`, `sellerProfit` = 0 berad
 
 **F4. Uzum komissiyasi** = Σ `commission` (Yakunlangan + Jarayonda).
 
-**F5. Logistika** = Σ `logisticDeliveryFee` (Yakunlangan + Jarayonda) — Uzum sotuv qatoriga yozgan summa, taxminsiz
-(ADR-041). Xarajatlardagi logistika kodlari qayta ayrilmaydi. 2026-11 dan Uzum logistikani buyurtma paytida yozadi; 0 —
-bepul (ADR-035; masalan, 10–31-oktabr buyurtmalariga Uzum kompensatsiyasi — bonus buyurtma sanasiga qarab). ADR-037
-dagi F40 × dona taxmini o'chirildi; realcheck `not_issued_zero_recent` Uzum bu tartibni o'zgartirsa ko'rsatadi.
+**F5. Logistika** (ADR-042) = Σ sotuv logistikasi (Yakunlangan + Jarayonda): Uzum shu sotuv uchun **aslida yechgan**
+summa — sotuv qatoriga bog'langan logistika chiqimlari (`finance/expenses`, `externalId` = sotuv qatori); hali
+yechilmagan bo'lsa — qatordagi `logisticDeliveryFee`; qatorda 0 va tovar hali olib ketilmagan (`dateIssued` yo'q)
+Jarayondagi sotuvga — **kutilayotgan logistika** = F40 tarifi × dona, "taxminiy" (ADR-037). Uzum logistikani tovar olib
+ketilganda yechadi va bonusni olib ketilgan kunga qarab beradi (9–31-oktabr — 0), qatordagi summa esa buyurtma sanasiga
+qarab yozilgan — o'tish davrida ular farq qiladi, haqiqiy pul — yechilgani. `finance/expenses` dagi logistika qatorlari
+F9 ga qayta kirmaydi. Bekor bo'lgan sotuv hisobga kirmaydi (Uzum yechgan logistikani qaytaradi).
 
 **F6. Uzum to'lovi** = F3 − F4 − F5. `sellerProfit` kelgan qatorlarda solishtiriladi; farq > 1 so'm bo'lsa log.
 

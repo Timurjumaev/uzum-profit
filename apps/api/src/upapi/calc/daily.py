@@ -22,7 +22,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import delete, insert, select
+from sqlalchemy import delete, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.expenses import ExpenseCategory, signed_amount
 from upcore.metrics import SaleLine, business_date, sale_totals
@@ -63,10 +63,36 @@ async def _ads(conn: AsyncConnection, shop_id: UUID, since: date | None) -> dict
     return out
 
 
+def charged_logistics() -> Any:
+    """ADR-042: Uzum sotuv qatori uchun aslida yechgan logistika — ``finance/expenses`` dagi, sotuv qatoriga bog'langan
+    logistika chiqimlari yig'indisi (status bekor qilinganlari hisobga olinmaydi). Uzum logistikani tovar olib
+    ketilganda yechadi va bonusni olib ketilgan kunga qarab beradi (9–31-oktabr — 0, noyabrda — tarif), sotuv qatoridagi
+    ``logisticDeliveryFee`` esa buyurtma sanasiga qarab yozilgan — o'tish davrida ular farq qiladi."""
+    e = m.mp_expenses
+    return (
+        select(e.c.sale_item_id, func.sum(e.c.amount).label("charged"))
+        .where(
+            e.c.category == ExpenseCategory.LOGISTICS.value,
+            e.c.type == "OUTCOME",
+            e.c.sale_item_id.is_not(None),
+            e.c.excluded.is_distinct_from("status"),
+        )
+        .group_by(e.c.sale_item_id)
+        .subquery()
+    )
+
+
+def effective_logistics(s: Any, x: Any) -> Any:
+    """F5 (ADR-042): sotuv logistikasi — Uzum yechgan bo'lsa yechgani, hali yechmagan bo'lsa sotuv qatoridagi summa
+    (Uzum buyurtma paytida yozgan; 0 va topshirilmagan — F40 taxmini, ``upcore.metrics.logistics_due``)."""
+    return func.coalesce(x.c.charged, s.c.logistics_fee).label("logistics_effective")
+
+
 async def _sales(
     conn: AsyncConnection, shop_id: UUID, since: date | None
 ) -> dict[Key, list[SaleLine]]:
     s, c = m.sale_items, m.sale_costs
+    x = charged_logistics()
     query = (
         select(
             s.c.sku_id,
@@ -75,13 +101,14 @@ async def _sales(
             s.c.sell_price,
             s.c.amount,
             s.c.commission,
-            s.c.logistics_fee,
+            effective_logistics(s, x),
             s.c.amount_returns,
             s.c.issued_at,
             c.c.cogs,
             c.c.flags,
         )
         .outerjoin(c, c.c.sale_item_id == s.c.id)
+        .outerjoin(x, x.c.sale_item_id == s.c.id)
         .where(s.c.shop_id == shop_id)
     )
     if since is not None:
@@ -100,7 +127,7 @@ async def _sales(
                 sell_price=r.sell_price,
                 amount=r.amount,
                 commission=r.commission,
-                logistics=r.logistics_fee,
+                logistics=r.logistics_effective,
                 amount_returns=r.amount_returns,
                 unit_cost=unit,
                 estimated=bool(r.flags),

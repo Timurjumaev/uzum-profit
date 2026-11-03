@@ -764,8 +764,16 @@ async def _write_expenses(run: _Run, shop: ShopRef, page: Any, save_cursor: bool
 
 async def _expenses(run: _Run) -> None:
     await _timeline(run, run.client.expenses, _write_expenses)
+    shop = run.task.shops[0]
     async with run.write() as conn:
-        await store.link_expenses(conn, run.task.shops[0].id)
+        await store.link_expenses(conn, shop.id)
+        # ADR-042: sotuv logistikasi — Uzum yechgani; yechim (yoki bog'lanish) o'zgargan sotuvlar kunidan agregat
+        # qayta quriladi (xarajat kuni emas — sotuv buyurtma kuni ancha oldin bo'lishi mumkin).
+        since = await store.logistics_changed_since(
+            conn, shop.id, run.started - timedelta(minutes=5)
+        )
+        if since is not None:
+            await calc.request(conn, run.org_id, calc.Scope.METRICS, shop.id, _day(since))
 
 
 async def _products(run: _Run) -> None:

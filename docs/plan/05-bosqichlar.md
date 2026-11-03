@@ -463,6 +463,11 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   dan qo'shardi (byDurii 115 qator, ~600 ming) — o'chirildi, logistika Uzum yozgandek (core: `logistics_fee` berilmasa
   taxmin yo'q; API, `/sales`); (2) F42 reklama taxmini reklamasi allaqachon yechilgan sotuvga ham qo'shilardi — endi
   yo'q. Realcheck: `not_issued_zero_recent` nazorati. Formulalar matni yangilandi.
+- [x] B4.25 Logistika — Uzum aslida yechgan summa (ADR-042; Temur kuzatuvi, 2026-11-03).
+  ✓ 2026-11-03: sotuv logistikasi = sotuvga bog'langan logistika chiqimlari (yo'q bo'lsa qatordagi summa; qatorda 0 va
+  olib ketilmagan — F40 taxmini, ADR-037 qaytdi) — `upapi.calc.daily.effective_logistics` (kunlik agregat, P&L, `/sales`);
+  sinxron yechim o'zgargan sotuvlar kunidan agregatni qayta quradi; migratsiya 0014 — to'liq qayta qurish. ADR-041 ning
+  "bonus buyurtma sanasiga qarab" xulosasi tuzatildi (Uzum olib ketilgan kunga qarab yechadi).
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.
