@@ -64,6 +64,8 @@ class StatementOut(BaseModel):
     logistics_missing_lines: int
     # ADR-039: Uzum xarajatlarining taxminiy qismi turlar bo'yicha (F42 kutilayotgan reklama, "≈").
     uzum_estimated: dict[str, Decimal]
+    # B4.22: sotuvsiz kataklar xarajati (yakunlangan qismda): sotilmagan tovar saqlashi, sotuvsiz kun xarajatlari.
+    idle_expenses: Decimal
     uncovered: UncoveredOut
     direct_total: Decimal  # ADR-026
     allocated_total: Decimal
@@ -108,6 +110,7 @@ class StatementOut(BaseModel):
             logistics_estimated_lines=s.logistics_estimated_lines,
             logistics_missing_lines=s.logistics_missing_lines,
             uzum_estimated={c.value: a.amount for c, a in sorted(s.uzum_estimated.items())},
+            idle_expenses=s.idle_expenses.amount,
             uncovered=UncoveredOut(
                 lines=s.uncovered_lines,
                 revenue=s.uncovered_revenue.amount,

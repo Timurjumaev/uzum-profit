@@ -3187,6 +3187,8 @@ export interface components {
             uzum_estimated: {
                 [key: string]: string;
             };
+            /** Idle Expenses */
+            idle_expenses: string;
             uncovered: components["schemas"]["UncoveredOut"];
             /** Direct Total */
             direct_total: string;

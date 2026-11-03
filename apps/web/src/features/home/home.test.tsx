@@ -104,6 +104,14 @@ describe("uch raqam (ADR-037)", () => {
     expect(card("net-expected").getByText("Yakunlanish ulushi uchun maʼlumot hali kam")).toBeTruthy();
   });
 
+  it("yakunlangan sotuvsiz davrda yakunlangan manfiy — sababi aytiladi (sotuvsiz xarajatlar, B4.22)", async () => {
+    const base = dashboardData();
+    const statement = { ...base.statement, units_done: 0, net_profit_done: "-5216.00", idle_expenses: "5216.00" };
+    await renderHome("/", { [DASHBOARD_ROUTE]: () => json(200, dashboardData({ statement })) });
+    expect(card("net-done").getByText("Bu davrda yakunlangan sotuv hali yoʻq")).toBeTruthy();
+    expect(norm(card("net-done").getByText(/^Shundan sotuvsiz xarajatlar/).textContent!)).toContain(m("-5216.00"));
+  });
+
   it("kutilayotgan reklama taxmini (F42) kartochkada aytiladi", async () => {
     const base = dashboardData();
     const expected = { ...base.expected, uzum_estimated: { advertising: "6000.00" } };

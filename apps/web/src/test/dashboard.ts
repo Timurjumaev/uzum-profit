@@ -49,6 +49,7 @@ const statement = (): Dashboard["statement"] => ({
   logistics_estimated_lines: 360,
   logistics_missing_lines: 0,
   uzum_estimated: {},
+  idle_expenses: "0.00",
   uncovered: { lines: 0, revenue: "0.00", payout: "0.00", expenses: "0.00", share: "0.000000" },
   direct_total: "0.00",
   allocated_total: "0.00",

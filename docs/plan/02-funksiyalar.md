@@ -374,7 +374,9 @@ bazaviy 4% / 15% — 08-tadqiqot.md, buxgalter bilan tasdiqlanadi).
 **F12. Sof foyda** = F8 − F9 − F10 − F11. Ikki qismda (ADR-037, ADR-038): **yakunlangan** (Yakunlangan sotuvlar) +
 **kutilayotgan**
 (Jarayondagi sotuvlar, F16) = F12. F9, F10 har katakda (kun × do'kon × SKU) qismlarga tushum ulushida bo'linadi, F11 —
-har qismning o'z tushumidan, F15 — har qismda; sotuvsiz kun xarajati — yakunlangan qismda; yakunlangan = F12 − kutilayotgan.
+har qismning o'z tushumidan, F15 — har qismda; sotuvsiz katak xarajati (sotuv bo'lmagan kun, F43 da sotilmagan tovar
+saqlashi) — yakunlangan qismda va alohida ko'rsatiladi ("shundan sotuvsiz xarajatlar", B4.22): yakunlangan sotuv yo'q
+davrda yakunlangan sof foyda shu sababli manfiy bo'ladi; yakunlangan = F12 − kutilayotgan.
 
 **F13. Marja** = F12 / (tannarxi ma'lum qatorlar tushumi) — F15 bilan bir asosda (ADR-024); qamrov 100% bo'lsa
 F12 / F3. Marja yonida doim **tannarxsiz qism ulushi** = 1 − F15 alohida ko'rsatiladi (0% bo'lsa yashiriladi).

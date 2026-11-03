@@ -346,6 +346,7 @@ export const uzLatn = {
     summary: {
       doneNote: "Yakunlangan sotuvlar: {{units}} dona, tushum {{revenue}}",
       doneEmpty: "Bu davrda yakunlangan sotuv hali yoʻq",
+      idle: "Shundan sotuvsiz xarajatlar {{amount}} — sotilmagan tovarlar saqlashi va sotuv boʻlmagan kunlar xarajati",
       expectedNote: "Jarayonda: {{units}} dona, tushum {{revenue}}",
       expectedEmpty: "Jarayondagi sotuv yoʻq",
       rate: "Oxirgi 90 kunda bunday sotuvlarning {{rate}} yakunlangan",
@@ -475,7 +476,7 @@ export const uzLatn = {
       cancel: { code: "F17", formula: "Bekor / (Yakunlangan + Bekor), dona boʻyicha", source: "Uzum sotuvlari" },
       returns: { code: "F18", formula: "Qaytgan / (sotilgan + qaytgan)", source: "Uzum sotuvlari" },
       drr: { code: "F19", formula: "Reklama xarajati / tushum", source: "Uzum xarajatlari" },
-      netDone: { code: "F12", formula: "Yakunlangan sotuvlar: tushum − komissiya − logistika − tannarx − Uzum va oʻz xarajatlari ulushi − soliq. Sotuvsiz kunlar xarajati ham shu yerda", source: "Uzum sotuvlari va xarajatlari, xaridlar" },
+      netDone: { code: "F12", formula: "Yakunlangan sotuvlar: tushum − komissiya − logistika − tannarx − Uzum va oʻz xarajatlari ulushi − soliq. Sotuvsiz xarajatlar (sotilmagan tovarlar saqlashi, sotuv boʻlmagan kunlar) ham shu yerda — ular hech qaysi kutilayotgan sotuvga tegishli emas", source: "Uzum sotuvlari va xarajatlari, xaridlar" },
       netExpected: {
         code: "F16",
         formula: "Jarayondagi sotuvlar, xuddi yakunlanganlar kabi: tushum − komissiya − logistika − tannarx − xarajatlar ulushi (tushumga nisbatan) − soliq",

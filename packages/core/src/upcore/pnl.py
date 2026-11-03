@@ -169,6 +169,9 @@ class Cell:
     own_alloc: dict[str, Decimal] | None = None
     tax: Decimal = _D0
     deducted: Decimal = _D0
+    idle: Decimal = (
+        _D0  # B4.22: sotuvsiz katakda ayrilgan xarajat (sotilmagan tovar saqlashi, sotuvsiz kun)
+    )
     # F5 (ADR-037): kutilayotgan logistika taxmini (F40 × dona) va uning asosi; tarif noma'lum qatorlar soni.
     logistics_est: Decimal = _D0
     units_est: int = 0
@@ -294,6 +297,9 @@ class Statement:
     logistics_missing_lines: int = 0
     # ADR-039: Uzum xarajatlarining taxminiy qismi turlar bo'yicha (F42 kutilayotgan reklama).
     uzum_estimated: Mapping[ExpenseCategory, Money] = field(default_factory=dict)
+    # B4.22: shundan sotuvsiz kataklarda ayrilgan xarajat — yakunlangan qismda (sotilmagan tovar saqlashi, F43; sotuvsiz
+    # kun xarajati). Yakunlangan sotuv yo'q davrda ham yakunlangan sof foyda shu sababli manfiy bo'ladi.
+    idle_expenses: Money = ZERO
 
     @property
     def uzum_estimated_total(self) -> Money:
@@ -506,7 +512,7 @@ class Cells:
 def _roll(cells: Iterable[Cell]) -> Cell:
     """Kataklar yig'indisi (xom): kesim natijasi va kesimlar jami uchun (Jarayondagi qismlar ham yig'iladi)."""
     revenue = commission = logistics = cogs = covered_revenue = covered_payout = _D0
-    tax = deducted = logistics_est = _D0
+    tax = deducted = logistics_est = idle = _D0
     units = lines = uncovered = covered_units = 0
     units_est = lines_est = lines_est_missing = 0
     uzum: dict[ExpenseCategory, Decimal] = {}
@@ -524,6 +530,7 @@ def _roll(cells: Iterable[Cell]) -> Cell:
         covered_payout += c.covered_payout
         tax += c.tax
         deducted += c.deducted
+        idle += c.idle
         units += c.units
         lines += c.lines
         uncovered += c.uncovered_lines
@@ -567,6 +574,7 @@ def _roll(cells: Iterable[Cell]) -> Cell:
         own_alloc=own_alloc,
         tax=tax,
         deducted=deducted,
+        idle=idle,
         logistics_est=logistics_est,
         units_est=units_est,
         lines_est=lines_est,
@@ -603,6 +611,7 @@ def _statement(c: Cell) -> Statement:
         logistics_estimated_lines=c.lines_est,
         logistics_missing_lines=c.lines_est_missing,
         uzum_estimated=_money_map(c.uzum_est or {}),
+        idle_expenses=_uzs(c.idle),
     )
 
 
@@ -670,6 +679,8 @@ def _finish(a: Cell, rule: TaxRule | None) -> None:
     """Katak F11 va F15; Jarayondagi qism (ADR-037) katak xarajatlarining (F9, F10) tushum ulushidagi qismini oladi,
     soliq va F15 — o'z tushumidan. Yakunlangan qism = katak − Jarayondagi qism (``Statement.net_profit_done``)."""
     _deduct(a, rule)
+    if a.revenue == 0:
+        a.idle = a.deducted
     p = a.part() if a.pin_processing else a.processing
     if p is None:
         return

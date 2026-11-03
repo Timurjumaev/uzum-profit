@@ -12797,6 +12797,10 @@
             "type": "object",
             "title": "Uzum Estimated"
           },
+          "idle_expenses": {
+            "type": "string",
+            "title": "Idle Expenses"
+          },
           "uncovered": {
             "$ref": "#/components/schemas/UncoveredOut"
           },
@@ -12872,6 +12876,7 @@
           "logistics_estimated_lines",
           "logistics_missing_lines",
           "uzum_estimated",
+          "idle_expenses",
           "uncovered",
           "direct_total",
           "allocated_total",

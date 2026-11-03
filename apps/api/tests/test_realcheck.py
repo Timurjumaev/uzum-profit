@@ -401,6 +401,14 @@ def test_expense_timing_checks(db: dict[str, str]) -> None:
     days = checks["storage_model"]["days"]
     assert [x["charged"] for x in days] == ["1500", "1500"]
 
+    # B4.22: saqlash qoidasi farazlari, jarima / qaytim saqlash havolalari, Yakunlangan qatorlarda Uzum to'lagani.
+    rule = checks["storage_rule"]
+    assert rule["charged_avg"] == "1500" and len(rule["charged_days"]) == 2
+    assert {"all", "turnover_excess_60", "turnover_whole_60", "age_60"} <= set(rule["models"])
+    links = checks["expense_links"]
+    assert links["fines"]["fines"] == 1 and links["return_storage"]["rows"] == 0
+    assert checks["logistics_payout"]["lines"] == 0
+
 
 def test_sync_errors_reported(db: dict[str, str]) -> None:
     fake = seller(shops=BOTH, fail={"expenses": "server"})
