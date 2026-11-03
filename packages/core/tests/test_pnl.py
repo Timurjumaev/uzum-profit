@@ -1,4 +1,5 @@
 import time
+from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
@@ -6,7 +7,7 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from upcore.expenses import ExpenseCategory, classify_expenses
-from upcore.metrics import ManualExpense, Period, SaleLine, profit_summary
+from upcore.metrics import ManualExpense, Period, SaleLine, own_expense_in_period, profit_summary
 from upcore.money import Money, total
 from upcore.pnl import (
     CellKey,
@@ -302,8 +303,8 @@ def test_expected_logistics_estimate() -> None:
     a = cells.items[CellKey(d(3), "S1", "A")]
     assert a.logistics_estimated == uzs(8_000) and a.logistics_estimated_units == 2
     assert cells.items[CellKey(d(3), "S1", "B")].logistics_missing_lines == 1
-    # Tarif berilmasa — hamma Uzum yozmagan qator "tarifi noma'lum".
-    assert plain.logistics_estimated == uzs(0) and plain.logistics_missing_lines == 3
+    # ADR-041: tarif funksiyasi berilmasa — taxmin o'chiq (Uzum logistikani buyurtma paytida yozadi, 0 — bepul).
+    assert plain.logistics_estimated == uzs(0) and plain.logistics_missing_lines == 0
 
 
 # --- Xossalar va tezlik ----------------------------------------------------------------------
@@ -603,3 +604,103 @@ def test_idle_expenses_in_done_part() -> None:
     # faqat do'konda sotuv bo'lmagan kun xarajati.
     assert s.net_profit_done == uzs(-1_000) and s.units_done == 0
     assert s.processing is not None and s.processing.uzum_expenses[C.STORAGE] == uzs(5_000)
+
+
+@settings(max_examples=300, deadline=None)
+@given(
+    st.lists(
+        st.tuples(
+            st.integers(1, 10),
+            st.sampled_from(["A", "B", "C"]),
+            st.sampled_from(["S1", "S2"]),
+            st.integers(1, 10**6),
+            st.integers(1, 3),
+            st.sampled_from(["TO_WITHDRAW", "PROCESSING", "CANCELED"]),
+        ),
+        max_size=20,
+    ),
+    st.lists(
+        st.tuples(
+            st.integers(1, 10),
+            st.sampled_from(["S1", "S2"]),
+            st.sampled_from(list(C)),
+            st.integers(-(10**5), 10**6),
+            st.sampled_from(["shop", "sku_done", "sku_proc", "estimate", "weights"]),
+            st.sampled_from(["A", "B", "C", "D"]),
+        ),
+        max_size=15,
+    ),
+    st.lists(
+        st.tuples(
+            st.integers(1, 10),
+            st.integers(0, 5),
+            st.integers(1, 10**6),
+            st.sampled_from(["org", "shop", "sku", "item"]),
+        ),
+        max_size=4,
+    ),
+    st.sampled_from([D(0), D(1), D(4)]),
+)
+def test_conservation_every_cost_once(
+    raw_sales: list, raw_exp: list, raw_own: list, rate: Decimal
+) -> None:
+    """Hisobning yuragi (B4.24 tekshiruvi): har qanday sotuv va xarajat to'plamida (bog'langan, taxminiy, og'irlikli,
+    do'kon, tovar SKU'lari, sotuvsiz kun) sof foyda = tushum − komissiya − logistika − tannarx − davrdagi HAR BIR
+    Uzum xarajati bir marta − o'z xarajatlari − soliq (hamma sotuv tannarxli — F15 = 100%). Xarajat ayirish tartibi
+    (yalpi foydadan oldin yoki keyin) natijaga ta'sir qilmaydi; yakunlangan + kutilayotgan = jami; kesimlar yig'indisi
+    = jami."""
+    period = Period(d(1), d(10))
+    lines = [
+        sale(dd, sku, shop, price, qty, 40_000, status, issued=True)
+        for dd, sku, shop, price, qty, status in raw_sales
+    ]
+    lines = [
+        replace(x, amount=0, commission=D(0), logistics=D(0)) if x.status == "CANCELED" else x
+        for x in lines
+    ]
+    exp = []
+    for dd, shop, cat, amount, mode, sku in raw_exp:
+        money = uzs(amount)
+        if mode == "shop":
+            exp.append(ExpenseItem(d(dd), shop, cat, money))
+        elif mode == "weights":
+            exp.append(ExpenseItem(d(dd), shop, cat, money, weights={sku: D(1), "Z": D(2)}))
+        else:
+            exp.append(
+                ExpenseItem(
+                    d(dd),
+                    shop,
+                    cat,
+                    money,
+                    sku=sku,
+                    processing=mode != "sku_done",
+                    estimated=mode == "estimate",
+                )
+            )
+    own = []
+    for dd, length, amount, scope in raw_own:
+        m = ManualExpense(uzs(amount), d(dd), min(d(dd) + timedelta(days=length), d(10)))
+        if scope == "org":
+            own.append(OwnExpense(m, "ijara"))
+        elif scope == "shop":
+            own.append(OwnExpense(m, "ijara", "S1"))
+        elif scope == "sku":
+            own.append(OwnExpense(m, "qadoq", "S2", "B"))
+        else:
+            own.append(OwnExpense(m, "kargo", skus=(("S1", "A"), ("S2", "C"))))
+    cells = build_cells(period, lines, exp, own, TaxRule(rate))
+    s = cells.statement()
+    live = [x for x in lines if x.status != "CANCELED"]
+    revenue = sum((x.revenue for x in live), D(0))
+    fees = sum((x.commission + x.logistics for x in live), D(0))
+    cogs = sum((x.cogs or D(0) for x in live), D(0))
+    uzum = sum((e.amount.amount for e in exp), D(0))
+    own_total = sum((own_expense_in_period(o.expense, period).amount for o in own), D(0))
+    assert s.revenue.amount == revenue and s.cogs.amount == cogs
+    assert s.uzum_total.amount == uzum and s.own_total.amount == own_total
+    assert s.net_profit.amount == revenue - fees - cogs - uzum - own_total - s.tax.amount
+    # Ayirish tartibi: yalpi foyda (F8) dan keyin xarajatlar = tushumdan hammasini birga ayirish.
+    assert s.gross_profit.amount - uzum - own_total - s.tax.amount == s.net_profit.amount
+    assert s.net_profit_done + s.net_profit_processing == s.net_profit
+    for view in (cells.by_sku(), cells.by_day(), cells.by_shop()):
+        assert total([x.net_profit for x in view.values()], "UZS") == s.net_profit

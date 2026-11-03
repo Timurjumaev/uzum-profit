@@ -6,8 +6,8 @@ eng yangisidan; sahifalash kursor bilan. ``summary`` — filtr (davr, do'kon, SK
 (F17, F18, ``daily_sku_metrics`` dan; holat filtri unga ta'sir qilmaydi).
 
 P&L qatori drill-down'i: ``counted=true`` (Yakunlangan + Jarayonda, ADR-036) qatorlari tushum/komissiya/logistika/
-tannarx yig'indisi = P&L qatori. Uzum logistikasini hali yozmagan Jarayondagi qatorda logistika — F40 × dona taxmini
-(``logistics_estimated``, ADR-037), Uzum to'lovi va yalpi foyda shu bilan — P&L kataklari bilan bir xil tarif.
+tannarx yig'indisi = P&L qatori. Logistika — Uzum sotuv qatoriga yozgan summa, taxminsiz (ADR-041; ADR-037 dagi F40
+taxmini o'chirildi — ``logistics_estimated`` doim bo'sh).
 """
 
 from __future__ import annotations
@@ -24,11 +24,9 @@ from upcore.metrics import (
     COUNTED,
     StatusGroup,
     cancel_rate,
-    logistics_due,
     return_share,
     status_group,
     statuses,
-    with_expected_logistics,
 )
 from upcore.money import Currency, Money
 
@@ -150,11 +148,8 @@ async def sales(
     rows = rows[:limit]
     recent = now - timedelta(days=rc.RECALC_DAYS)
     lines = [rc.sale_line(r) for r in rows]
-    due = sorted({(x.shop, x.sku) for x in lines if logistics_due(x)})
-    fee = await rc.expected_fees(ctx.conn, f.today, due)
     items = []
-    for r, raw in zip(rows, lines, strict=True):
-        line, estimate = with_expected_logistics(raw, fee(raw.shop, raw.sku))
+    for r, line in zip(rows, lines, strict=True):
         profit = line.gross_profit
         changed = r.changed_at if r.changed_at is not None and r.changed_at >= recent else None
         items.append(
@@ -176,7 +171,7 @@ async def sales(
                 revenue=line.revenue,
                 commission=r.commission,
                 logistics=Money(line.logistics, UZS).amount,
-                logistics_estimated=None if estimate is None else estimate.amount,
+                logistics_estimated=None,  # ADR-041: logistika — Uzum yozgani, taxminsiz (P&L bilan bir xil)
                 payout=line.payout,
                 cogs=r.cogs,
                 gross_profit=None if profit is None else Money(profit, UZS).amount,

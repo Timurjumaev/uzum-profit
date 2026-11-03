@@ -333,23 +333,29 @@ async def logistics_check(conn: AsyncConnection, shop: UUID) -> dict[str, Any]:
     )
 
 
-async def processing_logistics_check(conn: AsyncConnection, shop: UUID) -> dict[str, Any]:
-    """ADR-037: Uzum Jarayondagi qatorga logistikani qachon yozadi — ``dateIssued`` (topshirilgan) × logistika (0 / > 0).
-    Kutilayotgan logistika taxmini (F5) "topshirilmagan va 0" qatorlarga qo'shiladi; "topshirilgan va 0" — Uzum bergani.
+async def processing_logistics_check(
+    conn: AsyncConnection, shop: UUID, now: datetime | None = None
+) -> dict[str, Any]:
+    """Uzum Jarayondagi qatorga logistikani qachon yozadi — ``dateIssued`` (topshirilgan) × logistika (0 / > 0).
+    ADR-041: logistika taxmini o'chiq (Uzum 2026-11 dan buyurtma paytida yozadi) — ``not_issued_zero_recent`` (oxirgi 7
+    kun buyurtmalari, topshirilmagan va 0) 0 bo'lishi kerak; ko'paysa Uzum yana olib ketilganda yoza boshlagan.
     Yakunlangan qatorlarda ``dateIssued`` bo'shligi — maydon ishonchliligini ko'rsatadi."""
     processing = "upper(trim(status)) = 'PROCESSING'"
-    return await _scalar_row(
-        conn,
+    sql = (
         f"SELECT count(*) FILTER (WHERE {processing}) AS processing, "
         f"count(*) FILTER (WHERE {processing} AND issued_at IS NULL AND logistics_fee = 0) AS not_issued_zero, "
+        f"count(*) FILTER (WHERE {processing} AND issued_at IS NULL AND logistics_fee = 0 "
+        "AND ordered_at >= :since) AS not_issued_zero_recent, "
         f"count(*) FILTER (WHERE {processing} AND issued_at IS NULL AND logistics_fee > 0) AS not_issued_paid, "
         f"count(*) FILTER (WHERE {processing} AND issued_at IS NOT NULL AND logistics_fee = 0) AS issued_zero, "
         f"count(*) FILTER (WHERE {processing} AND issued_at IS NOT NULL AND logistics_fee > 0) AS issued_paid, "
         "count(*) FILTER (WHERE upper(trim(status)) = 'TO_WITHDRAW') AS completed, "
         "count(*) FILTER (WHERE upper(trim(status)) = 'TO_WITHDRAW' AND issued_at IS NULL) AS completed_not_issued "
-        "FROM sale_items WHERE shop_id = :s",
-        shop,
+        "FROM sale_items WHERE shop_id = :s"
     )
+    since = (now or datetime.now(UTC)) - timedelta(days=7)
+    row = (await conn.execute(text(sql), {"s": shop, "since": since})).mappings().one()
+    return dict(row)
 
 
 _NET = "CASE WHEN e.type = 'OUTCOME' THEN e.amount ELSE -e.amount END"  # F9 ishorasi: chiqim +, qaytim −
@@ -920,7 +926,7 @@ async def shop_report(
             "invoices": await invoices_check(conn, shop.id),
             "returns": await returns_check(conn, shop.id),
             "logistics": await logistics_check(conn, shop.id),
-            "processing_logistics": await processing_logistics_check(conn, shop.id),
+            "processing_logistics": await processing_logistics_check(conn, shop.id, now),
             "logistics_reconcile": await logistics_reconcile_check(conn, shop.id),
             "ads": await ads_check(conn, shop.id),
             "expense_dates": await expense_dates_check(conn, shop.id, now),
@@ -1002,7 +1008,8 @@ def summary(report: dict[str, Any]) -> list[str]:
                 f"postavka tarkibi {inv['items_linked']}/{inv['items']} SKU'ga bog'langan; "
                 f"qaytarishlar {ret['returns']}; logistika {lg['linked']}/{lg['expenses']} sotuvga "
                 f"bog'langan; jarayonda {pl['processing']} qator (topshirilmagan va logistika 0: "
-                f"{pl['not_issued_zero']}, topshirilgan va 0: {pl['issued_zero']}); "
+                f"{pl['not_issued_zero']}, shundan oxirgi 7 kun buyurtmalari: {pl['not_issued_zero_recent']} — "
+                f"ADR-041 tekshiruvi, 0 bo'lishi kerak; topshirilgan va 0: {pl['issued_zero']}); "
                 f"logistika qator ↔ yechilgan farqi: {sum(r['differ'] for r in rec)} qator, bekor "
                 f"qatorlarda yechilgan {canceled['expense_net'] if canceled else '0'} so'm; "
                 f"reklama {sum(r['n'] for r in ads)} qator, shundan buyurtmaga bog'liq matn "

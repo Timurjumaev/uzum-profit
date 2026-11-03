@@ -460,7 +460,7 @@ export const uzLatn = {
     formula: {
       revenue: { code: "F3", formula: "Σ sotuv narxi × dona (Yakunlangan va Jarayondagi sotuvlar)", source: "Uzum sotuvlari" },
       commission: { code: "F4", formula: "Σ Uzum komissiyasi (Yakunlangan va Jarayondagi sotuvlar)", source: "Uzum sotuvlari" },
-      logistics: { code: "F5", formula: "Σ logistika (Yakunlangan va Jarayondagi sotuvlar). Uzum logistikani tovar topshirilganda yozadi — undan oldingi Jarayondagi sotuvga oxirgi pullik tarif × dona taxminiy qoʻshiladi", source: "Uzum sotuvlari, F40 tarifi" },
+      logistics: { code: "F5", formula: "Σ logistika (Yakunlangan va Jarayondagi sotuvlar) — Uzum sotuvga yozgan summa (buyurtma paytida yoziladi); 0 — bepul (masalan, oktabr kompensatsiyasi)", source: "Uzum sotuvlari" },
       payout: { code: "F6", formula: "Tushum − komissiya − logistika", source: "Uzum sotuvlari" },
       grossProfit: { code: "F8", formula: "Uzum toʻlovi − tannarx (tannarxi maʼlum sotuvlar)", source: "Yuqoridagi qatorlar" },
       cogs: { code: "F7", formula: "Σ birlik tannarxi × dona (tannarxi maʼlum sotuvlar)", source: "Xaridlar va partiyalar" },
@@ -480,7 +480,7 @@ export const uzLatn = {
         code: "F16",
         formula: "Jarayondagi sotuvlar, xuddi yakunlanganlar kabi: tushum − komissiya − logistika − tannarx − xarajatlar ulushi (tushumga nisbatan) − soliq",
         source: "Uzum sotuvlari (Jarayonda)",
-        estimated: "Mijoz olib ketmasa yoki 10 kun ichida qaytarsa kamayadi. Uzum hali yozmagan logistika — oxirgi pullik tarif boʻyicha, buyurtmaga bogʻliq reklama — oxirgi 30 kundagi ulush boʻyicha taxminiy.",
+        estimated: "Mijoz olib ketmasa yoki 10 kun ichida qaytarsa kamayadi. Buyurtmaga bogʻliq reklama Uzum tovar topshirilganda yechadi — undan oldin oxirgi 30 kundagi ulush boʻyicha taxminiy.",
       },
       netTotal: { code: "F12", formula: "Yakunlangan sof foyda + kutilayotgan sof foyda", source: "Yuqoridagi ikki raqam" },
       frozen: { code: "F29", formula: "Σ qoldiq × partiya narxi (Uzum ombori, brak, FBS)", source: "Qoldiq va xaridlar" },

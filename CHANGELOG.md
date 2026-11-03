@@ -443,6 +443,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- B4.24 (ADR-041, sof foyda auditi): kutilayotgan foydaga bonusli oktabr buyurtmalari (Uzum logistikani 0 yozgan —
+  bepul) uchun ham taxminiy logistika qo'shilardi (byDurii ~600 ming so'm ortiqcha xarajat) — taxmin o'chirildi,
+  logistika Uzum yozgandek. Reklamasi allaqachon yechilgan sotuvga taxminiy reklama ham qo'shilardi — endi bir marta.
+  Har xarajat bir marta ayirilishi xossa testi bilan qotirildi.
 - B4.19: "Tannarxsiz sotuvlar hisobga kirmadi", garchi hamma tovarga narx yozilgan bo'lsa ham (Temur, byDurii). Sabablar:
   (1) narx yozilgan, lekin boshlash kunidagi qoldiq 0 va partiya yo'q tovar sotilsa — sotuv tannarxsiz qolardi
   ("lot yo'q"); endi o'sha kundagi tarixiy narx, "lot yetmadi" (taxminiy) belgisi bilan hisoblanadi (F21, F41);

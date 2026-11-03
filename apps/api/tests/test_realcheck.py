@@ -239,6 +239,7 @@ def test_processing_logistics_check(db: dict[str, str]) -> None:
     assert pl == {
         "processing": 4,
         "not_issued_zero": 1,
+        "not_issued_zero_recent": 1,
         "not_issued_paid": 1,
         "issued_zero": 1,
         "issued_paid": 1,

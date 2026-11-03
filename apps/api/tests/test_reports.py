@@ -457,10 +457,10 @@ def test_pnl_expected_profit(world: World) -> None:
     assert money(rows["uzum:storage"]["processing"]) == 0  # 15-oktabrda saqlash yo'q
 
 
-def test_expected_logistics_estimate(world: World) -> None:
-    """F5 (ADR-037): Uzum logistikasini hali yozmagan (topshirilmagan, 0) Jarayondagi sotuv — F40 tarifi × dona
-    (SKU'ning oxirgi pullik Yakunlangan sotuvi: 5 000/dona) taxminiy qo'shiladi; drill-down qatorida ham shu summa,
-    yig'indi qator bilan bir xil; topshirilgan bo'lsa (0 — Uzum bergani) taxmin yo'q."""
+def test_no_logistics_estimate(world: World) -> None:
+    """ADR-041 (ADR-037 dagi F40 taxmini o'chirildi): Jarayondagi, hali topshirilmagan va logistikasi 0 sotuv —
+    logistika Uzum yozgandek 0 (2026-11 dan Uzum logistikani buyurtma paytida yozadi; 0 — bepul, masalan oktabr
+    kompensatsiyasi); P&L, kutilayotgan blok va drill-down qatori bir xil, taxmin yo'q."""
     a = world.a
     before = world.get("pnl", **OCT)
 
@@ -475,24 +475,18 @@ def test_expected_logistics_estimate(world: World) -> None:
         return world.get("pnl", **OCT)
 
     try:
-        due = resync(0, None)
-        s = due["statement"]
-        assert money(s["logistics_estimated"]) == D(5_000)
-        assert (s["logistics_estimated_units"], s["logistics_estimated_lines"]) == (1, 1)
-        assert money(s["logistics"]) == money(
-            before["statement"]["logistics"]
-        )  # 5 000 → taxmin 5 000
-        assert money(due["expected"]["logistics_estimated"]) == D(5_000)
-        assert money(due["expected"]["net_profit"]) == D(37_000)
+        free = resync(0, None)
+        s = free["statement"]
+        assert money(s["logistics_estimated"]) == 0 and s["logistics_missing_lines"] == 0
+        assert money(s["logistics"]) == money(before["statement"]["logistics"]) - D(5_000)
+        assert money(free["expected"]["logistics"]) == 0
+        assert money(free["expected"]["net_profit"]) == money(before["expected"]["net_profit"]) + D(
+            5_000
+        )
         sales = world.get("sales", counted="true", **OCT)["items"]
         row = next(x for x in sales if x["group"] == "processing")
-        assert money(row["logistics"]) == D(5_000) and money(row["logistics_estimated"]) == D(5_000)
-        assert money(row["payout"]) == D(200_000 - 40_000 - 5_000)
+        assert money(row["logistics"]) == 0 and row["logistics_estimated"] is None
         assert sum(money(x["logistics"]) for x in sales) == money(s["logistics"])
-        assert all(x["logistics_estimated"] is None for x in sales if x["group"] != "processing")
-        free = resync(0, at(d(10, 18)))  # topshirilgan, Uzum 0 yozgan — taxmin yo'q (ADR-035)
-        assert money(free["statement"]["logistics_estimated"]) == 0
-        assert money(free["expected"]["net_profit"]) == D(42_000)
     finally:
         after = resync(5_000, None)
     assert after["statement"] == before["statement"]
@@ -592,6 +586,18 @@ def test_expected_ads_estimate(world: World) -> None:
         assert money(rows["uzum:advertising"]["processing"]) == D("-6666.60")
         uzum = {c["category"]: money(c["amount"]) for c in world.get("expenses", **OCT)["uzum"]}
         assert uzum["advertising"] == D(20_000)  # taxmin — Uzum yechgan summa emas
+        # B4.24: reklamasi allaqachon yechilgan (bog'langan) Jarayondagi sotuvga taxmin qo'shilmaydi — bir marta.
+        ((pending,),) = a.sql(
+            "SELECT id FROM sale_items WHERE org_id = %s AND upper(status) = 'PROCESSING'",
+            [world.org_id],
+        )
+        ad = world.expense(a, d(10, 16), "advertising", 3_000, sale_item_id=pending)
+        try:
+            once = world.get("pnl", **OCT)["statement"]
+            assert once["uzum_estimated"] == {}
+            assert money(once["uzum_expenses"]["advertising"]) == D(23_000)
+        finally:
+            a.sql("DELETE FROM mp_expenses WHERE id = %s", [ad])
     finally:
         a.sql("UPDATE sale_items SET issued_at = NULL WHERE id = %s", [world.ids["s_oct10"]])
     assert world.get("pnl", **OCT)["statement"] == before["statement"]
