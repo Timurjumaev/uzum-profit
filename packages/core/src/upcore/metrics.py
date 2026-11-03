@@ -577,6 +577,44 @@ def sku_acos(
     return result, zero if can_split else unlinked_ads
 
 
+# --- F42, F43: buyurtmaga bog'liq reklama va saqlash SKU bo'yicha (ADR-039) ----------------------
+
+
+def ad_rate(ads: DecimalLike, revenue: DecimalLike) -> Decimal | None:
+    """F42. Buyurtmaga bog'liq reklama ulushi = oxirgi 30 kunda topshirilgan sotuvlarga yechilgan reklama ("Xaridor
+    tovarni olganida ... yechib oldik", sotuv qatoriga bog'langan) / shu sotuvlar tushumi (SKU bo'yicha; SKU'da
+    topshirilgan sotuv bo'lmasa — do'kon bo'yicha). Tushum 0 bo'lsa ``None`` — taxmin qilinmaydi."""
+    return ratio(ads, revenue)
+
+
+def expected_ads(rate: DecimalLike, revenue: DecimalLike) -> Money:
+    """F42. Kutilayotgan reklama (taxminiy, "≈") = ulush × hali topshirilmagan Jarayondagi sotuv tushumi — Uzum bu
+    reklamani tovar topshirilganda yechadi, undan oldin uni sotuvga taxminan yozamiz (logistika kabi, ADR-037)."""
+    return Money(quantize(to_decimal(rate) * to_decimal(revenue), UZS.places), UZS)
+
+
+def storage_weights(
+    stock: Mapping[str, int], prices: Mapping[str, DecimalLike | None]
+) -> dict[str, Decimal]:
+    """F43. Kunlik saqlash xarajatini SKU'larga bo'lish og'irligi = shu kungi Uzum omboridagi qoldiq × SKU saqlash
+    narxi (Uzum ``paidStoragePriceItem``, dona/kun). Narxi noma'lum SKU — narxi ma'lum SKU'lar o'rtachasi bilan; hech
+    birida narx yo'q — faqat qoldiq. Qoldig'i 0 SKU og'irliksiz (saqlash unga tushmaydi)."""
+    known = [
+        to_decimal(p)
+        for s, p in prices.items()
+        if p is not None and to_decimal(p) > 0 and stock.get(s, 0) > 0
+    ]
+    fallback = sum(known, Decimal(0)) / len(known) if known else Decimal(1)
+    out: dict[str, Decimal] = {}
+    for sku, qty in stock.items():
+        if qty <= 0:
+            continue
+        price = prices.get(sku)
+        unit = to_decimal(price) if price is not None and to_decimal(price) > 0 else fallback
+        out[sku] = unit * qty
+    return out
+
+
 # --- M4, M6: oy prognozi va SKU holat belgisi -------------------------------------------------
 
 

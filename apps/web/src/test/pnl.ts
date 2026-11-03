@@ -42,6 +42,7 @@ export function pnlStatement(over: Partial<Statement> = {}): Statement {
     logistics_estimated_units: 4,
     logistics_estimated_lines: 3,
     logistics_missing_lines: 0,
+    uzum_estimated: {},
     uncovered: { lines: 4, revenue: "1000000.00", payout: "750000.00", expenses: "60000.00", share: "0.100000" },
     direct_total: "250000.00",
     allocated_total: "250000.00",
@@ -83,6 +84,7 @@ export function expectedPart(over: Partial<ExpectedPart> = {}): ExpectedPart {
     logistics_estimated: "40000.00",
     logistics_estimated_units: 4,
     logistics_missing_lines: 0,
+    uzum_estimated: {},
     rate: "0.850000",
     ...over,
   };

@@ -498,6 +498,89 @@ def test_expected_logistics_estimate(world: World) -> None:
     assert after["statement"] == before["statement"]
 
 
+def _sku_cols(world: World, **period: str) -> dict[str, Any]:
+    return {c["key"]: c["statement"] for c in world.get("pnl", view="sku", **period)["columns"]}
+
+
+def test_linked_ad_on_order_day(world: World) -> None:
+    """ADR-039 (07 Q10): sotuvga bog'langan reklama — 18-oktabrda yechilgan, buyurtma 2-oktabr — P&L'da va
+    ``/expenses`` da buyurtma kuniga, o'sha SKU'ga va sotuv qismiga (Yakunlangan) yoziladi."""
+    a, xa = world.a, str(world.ids["xa"])
+    early = {"start": "2026-10-01", "end": "2026-10-05"}
+    late = {"start": "2026-10-15", "end": "2026-10-20"}
+    before = world.get("pnl", **early)["statement"]
+    before_late = world.get("pnl", **late)["statement"]
+    before_xa = _sku_cols(world, **early)[xa]
+    ad = world.expense(a, d(10, 18), "advertising", 7_000, sale_item_id=world.ids["s_oct2"])
+    try:
+        s = world.get("pnl", **early)["statement"]
+        assert money(s["uzum_expenses"]["advertising"]) == (
+            money(before["uzum_expenses"].get("advertising")) + 7_000
+        )
+        assert money(s["net_profit_done"]) == money(before["net_profit_done"]) - 7_000
+        assert s["net_profit_processing"] == before["net_profit_processing"]
+        assert (
+            world.get("pnl", **late)["statement"]["uzum_expenses"] == before_late["uzum_expenses"]
+        )
+        col = _sku_cols(world, **early)[xa]
+        assert money(col["uzum_direct"]) == money(before_xa["uzum_direct"]) + 7_000
+        body = world.get("expenses", **early)
+        row = next(i for i in body["items"] if i["id"] == str(ad))
+        assert (row["day"], row["order_date"]) == ("2026-10-18", "2026-10-02")
+        uzum = {c["category"]: money(c["amount"]) for c in body["uzum"]}
+        assert uzum == {k: money(v) for k, v in s["uzum_expenses"].items()}
+        assert str(ad) not in {i["id"] for i in world.get("expenses", **late)["items"]}
+    finally:
+        a.sql("DELETE FROM mp_expenses WHERE id = %s", [ad])
+
+
+def test_storage_split_by_stock(world: World) -> None:
+    """F43 (ADR-039): saqlash — shu kungi qoldiq × saqlash narxi bo'yicha SKU'larga (to'g'ridan-to'g'ri), sotuvi yo'q
+    SKU ham oladi; snapshot yo'q do'kon (B) — odatdagidek tushum ulushida (taqsimlangan)."""
+    a, xa, ya = world.a, world.ids["xa"], world.ids["ya"]
+    a.sql("UPDATE mp_skus SET storage_price = 2 WHERE id = %s", [xa])
+    a.sql("UPDATE mp_skus SET storage_price = 1 WHERE id = %s", [ya])
+    snap = a.insert("sku_daily", sku_id=ya, day=d(10, 2), qty_active=30, qty_fbs=0)
+    try:
+        cols = _sku_cols(world, **OCT)
+        # 1-okt 12 000 — faqat x da qoldiq; 2-okt 30 000 — x: 10 × 2 = 20, y: 30 × 1 = 30.
+        assert money(cols[str(xa)]["uzum_expenses"]["storage"]) == D(24_000)
+        assert money(cols[str(ya)]["uzum_expenses"]["storage"]) == D(18_000)
+        assert "storage" not in cols[str(xa)]["uzum_allocated"]
+        assert money(cols[str(world.ids["zb"])]["uzum_allocated"]["storage"]) == D(8_000)
+        assert "unallocated" not in cols or "storage" not in cols["unallocated"]["uzum_expenses"]
+        assert money(world.get("pnl", **OCT)["statement"]["uzum_expenses"]["storage"]) == D(50_000)
+    finally:
+        a.sql("DELETE FROM sku_daily WHERE id = %s", [snap])
+        a.sql("UPDATE mp_skus SET storage_price = NULL WHERE id IN (%s, %s)", [xa, ya])
+
+
+def test_expected_ads_estimate(world: World) -> None:
+    """F42 (ADR-039): hali topshirilmagan Jarayondagi sotuvga kutilayotgan reklama — SKU'ning oxirgi 30 kunda
+    topshirilgan sotuvlaridagi bog'liq reklama ulushi (20 000 / 600 000) × tushum (200 000), "≈"; Uzum yechgan
+    xarajatlar ro'yxatida yo'q."""
+    a = world.a
+    before = world.get("pnl", **OCT)
+    a.sql(
+        "UPDATE sale_items SET issued_at = %s WHERE id = %s",
+        [datetime.now(UTC), world.ids["s_oct10"]],
+    )
+    try:
+        body = world.get("pnl", **OCT)
+        s, e = body["statement"], body["expected"]
+        assert money(s["uzum_estimated"]["advertising"]) == D("6666.60")
+        assert money(e["uzum_estimated"]["advertising"]) == D("6666.60")
+        assert money(e["net_profit"]) == money(before["expected"]["net_profit"]) - D("6666.60")
+        assert money(s["uzum_expenses"]["advertising"]) == D("26666.60")
+        rows = {r["code"]: r for r in body["rows"]}
+        assert money(rows["uzum:advertising"]["processing"]) == D("-6666.60")
+        uzum = {c["category"]: money(c["amount"]) for c in world.get("expenses", **OCT)["uzum"]}
+        assert uzum["advertising"] == D(20_000)  # taxmin — Uzum yechgan summa emas
+    finally:
+        a.sql("UPDATE sale_items SET issued_at = NULL WHERE id = %s", [world.ids["s_oct10"]])
+    assert world.get("pnl", **OCT)["statement"] == before["statement"]
+
+
 def test_processing_sale_leaves_when_canceled(world: World) -> None:
     """ADR-036: Jarayondagi sotuv bekor bo'lsa (Uzum qatorni 0 qilib beradi) — sinxrondan keyingi qayta hisobda
     tushum va foydadan o'zi chiqadi; Yakunlangan bo'lsa — "shundan jarayonda" dan chiqadi, summa o'zgarmaydi."""

@@ -747,3 +747,45 @@ def test_product_without_id_is_skipped(db: dict[str, str]) -> None:
         runs = by_kind(sync(run, account, kinds=[eng.Kind.PRODUCTS]), account.shops[A])
     assert (runs["products"].status, runs["products"].error) == ("warning", "skipped:1")
     assert count(db, "mp_products", account) == 1
+
+
+def test_ad_expense_links_to_its_sale(db: dict[str, str]) -> None:
+    """ADR-039: buyurtmaga bog'liq reklama (``AD#<sotuv qatori id>-...``) sotuv qatoriga bog'lanadi — P&L uni shu
+    sotuvning buyurtma kuniga yozadi; ``AD#`` siz reklama bog'lanmaydi."""
+    ad = "Buyurtmalarni ko'paytirish to'lovi. Xaridor tovarni olganida 1881.5 so'm yechib oldik"
+    fake = seller(
+        shops=BOTH,
+        expenses={
+            A: [
+                sf.expense(
+                    201,
+                    A,
+                    NOW - timedelta(days=1),
+                    "У000120",
+                    1_881,
+                    name=ad,
+                    externalId="AD#1-1-2026-10-23",
+                ),
+                sf.expense(
+                    202,
+                    A,
+                    NOW - timedelta(days=1),
+                    "У000120",
+                    500,
+                    name="Reklama",
+                    externalId="ID202",
+                ),
+            ],
+            B: [],
+        },
+    )
+    with runtime(db, fake) as run:
+        account = create_account(db, sf.settings_for(db), TOKEN, [A, B])
+        sync(run, account, trigger=eng.Trigger.CONNECT)
+    rows = admin(
+        db,
+        "SELECT e.external_id, s.external_id, e.amount FROM mp_expenses e LEFT JOIN sale_items s "
+        "ON s.id = e.sale_item_id WHERE e.org_id = %s AND e.category = 'advertising' ORDER BY 1",
+        [account.org_id],
+    )
+    assert [(r[0], r[1], str(r[2])) for r in rows] == [(201, 1, "1881.50"), (202, None, "500.00")]

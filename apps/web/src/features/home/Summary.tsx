@@ -94,6 +94,9 @@ export function Summary({ data, costAction }: Props) {
               {e.logistics_estimated_units > 0 && (
                 <p className="caption">{t("home.summary.logistics", { units: f.number(e.logistics_estimated_units) })}</p>
               )}
+              {Number(e.uzum_estimated.advertising ?? 0) !== 0 && (
+                <p className="caption">{t("home.summary.ads", { amount: f.money(e.uzum_estimated.advertising!) })}</p>
+              )}
             </>
           ) : (
             <p className="caption">{t("home.summary.expectedEmpty")}</p>

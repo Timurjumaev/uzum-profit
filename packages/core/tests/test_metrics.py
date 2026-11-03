@@ -527,3 +527,23 @@ def test_late_cancel_share() -> None:
     assert late_cancel_share(40, 10) == Decimal("0.25")
     assert late_cancel_share(5, 5) == Decimal("1")
     assert late_cancel_share(0, 0) is None
+
+
+def test_ad_rate_and_expected_ads() -> None:
+    """F42 (ADR-039): buyurtmaga bog'liq reklama ulushi va kutilayotgan reklama taxmini."""
+    from upcore.metrics import ad_rate, expected_ads
+
+    assert ad_rate(Decimal("1882.50"), Decimal("37650")) == Decimal("0.05")
+    assert ad_rate(1, 0) is None
+    assert expected_ads(Decimal("0.05"), Decimal("123457")) == Money.of("6172.85", "UZS")
+
+
+def test_storage_weights() -> None:
+    """F43 (ADR-039): qoldiq × saqlash narxi; narxi noma'lum — ma'lumlar o'rtachasi; narx yo'q — faqat qoldiq."""
+    from upcore.metrics import storage_weights
+
+    w = storage_weights(
+        {"A": 10, "B": 5, "C": 0, "D": 2}, {"A": Decimal(3), "B": Decimal(5), "D": None}
+    )
+    assert w == {"A": Decimal(30), "B": Decimal(25), "D": Decimal(8)}
+    assert storage_weights({"A": 2, "B": 3}, {}) == {"A": Decimal(2), "B": Decimal(3)}

@@ -23,6 +23,7 @@ export function uzumItem(over: Partial<Item> = {}): Item {
     external_id: 1,
     created_on: "2026-10-06T07:00:00Z",
     day: "2026-10-06",
+    order_date: null,
     code: "C000010",
     raw_code: "C000010",
     category: "fine",

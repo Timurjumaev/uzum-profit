@@ -426,6 +426,18 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   va topshirilgan kunga nisbatan, `AD#` dagi sana nimani bildiradi; matnlar raqamsiz), `expense_dates` (`dateService` ↔
   `dateCreated`, 60 kunda yechilgan kunlar). **T:** merge va deploy'dan keyin staging'da `realcheck.sh` → xulosa
   qatorlarini chatga; Q10 qarori.
+- [x] B4.21 Xarajat o'z sotuvi va SKU'siga (ADR-039; Temur: Q10 "ha" va "har chiqim o'z SKU'siga", 2026-11-03).
+  ✓ 2026-11-03: buyurtmaga bog'liq reklama (`AD#` → sotuv qatori, `store.link_expenses`) P&L'da o'sha sotuvning buyurtma
+  kuni, SKU'si va qismiga (`ExpenseItem.processing`), `/expenses` ham shu kun bilan (qatorda `order_date`); hali
+  topshirilmagan Jarayondagi sotuvga kutilayotgan reklama F42 (SKU / do'kon ulushi, oxirgi 30 kun) "≈" bilan — hisob
+  varag'i, kutilayotgan blok, Asosiy kartochka, drill-down; saqlash F43 — SKU'larga qoldiq × saqlash narxi (`sku_daily`,
+  `paidStoragePriceItem`), sotuvi yo'q SKU ham oladi; bir necha SKU'li tovarga bog'langan o'z xarajati — shu SKU'larga.
+  `realcheck` ga: `expense_refs` (boshqa turlar matni / `externalId`, sotuv / SKU / mahsulotga mosligi),
+  `logistics_differ` (qatordagi va yechilgan logistika farqi namunalari, qaytim qatorlari ko'rinishi), `storage_model`
+  (Uzum yechgani ↔ qoldiq × narx). B4.20 realcheck natijasi: reklama 100% buyurtmaga bog'liq va bog'landi; bekor
+  qatorlar logistikasi to'liq qaytarilgan (qaytim summasi = yechilgan); Yakunlangan qatorlarda qatordagi logistika
+  Uzum yechganidan ~575 ming so'm ko'p (97 qator) — `logistics_differ` bilan aniqlanadi. **T:** merge va deploy'dan
+  keyin `realcheck.sh` → xulosa chatga.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

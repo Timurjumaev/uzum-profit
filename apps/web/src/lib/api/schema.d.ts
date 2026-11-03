@@ -1485,8 +1485,8 @@ export interface components {
         /**
          * ExpectedOut
          * @description F16 (ADR-037): kutilayotgan sof foyda — Jarayondagi sotuvlar qismi (mijoz hali olmagan yoki qaytarish muddati
-         *     tugamagan): tushumdan komissiya, logistika (Uzum hali yozmagani — F40 bo'yicha taxminiy), tannarx va katak
-         *     xarajatlarining tushum ulushidagi qismi ayrilgan. ``rate`` — fakt (oxirgi 90 kunda yakuniy holatga yetganlarning
+         *     tugamagan): tushumdan komissiya, logistika (Uzum hali yozmagani — F40 bo'yicha taxminiy), tannarx, o'z reklamasi
+         *     (yechilgani va hali topshirilmaganlarga F42 taxmini) va katak xarajatlarining tushum ulushidagi qismi ayrilgan. ``rate`` — fakt (oxirgi 90 kunda yakuniy holatga yetganlarning
          *     Yakunlangan ulushi), summaga ko'paytirilmaydi; ma'lumot kam bo'lsa ``None``.
          */
         ExpectedOut: {
@@ -1514,6 +1514,10 @@ export interface components {
             logistics_estimated_units: number;
             /** Logistics Missing Lines */
             logistics_missing_lines: number;
+            /** Uzum Estimated */
+            uzum_estimated: {
+                [key: string]: string;
+            };
             /** Rate */
             rate: string | null;
         };
@@ -1543,6 +1547,10 @@ export interface components {
             logistics_estimated_units: number;
             /** Logistics Missing Lines */
             logistics_missing_lines: number;
+            /** Uzum Estimated */
+            uzum_estimated: {
+                [key: string]: string;
+            };
             /** Rate */
             rate: string | null;
             /**
@@ -1575,6 +1583,8 @@ export interface components {
              * Format: date
              */
             day: string;
+            /** Order Date */
+            order_date: string | null;
             /** Code */
             code: string | null;
             /** Raw Code */
@@ -3173,6 +3183,10 @@ export interface components {
             logistics_estimated_lines: number;
             /** Logistics Missing Lines */
             logistics_missing_lines: number;
+            /** Uzum Estimated */
+            uzum_estimated: {
+                [key: string]: string;
+            };
             uncovered: components["schemas"]["UncoveredOut"];
             /** Direct Total */
             direct_total: string;

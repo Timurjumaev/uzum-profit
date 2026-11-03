@@ -62,6 +62,8 @@ class StatementOut(BaseModel):
     logistics_estimated_units: int
     logistics_estimated_lines: int
     logistics_missing_lines: int
+    # ADR-039: Uzum xarajatlarining taxminiy qismi turlar bo'yicha (F42 kutilayotgan reklama, "≈").
+    uzum_estimated: dict[str, Decimal]
     uncovered: UncoveredOut
     direct_total: Decimal  # ADR-026
     allocated_total: Decimal
@@ -105,6 +107,7 @@ class StatementOut(BaseModel):
             logistics_estimated_units=s.logistics_estimated_units,
             logistics_estimated_lines=s.logistics_estimated_lines,
             logistics_missing_lines=s.logistics_missing_lines,
+            uzum_estimated={c.value: a.amount for c, a in sorted(s.uzum_estimated.items())},
             uncovered=UncoveredOut(
                 lines=s.uncovered_lines,
                 revenue=s.uncovered_revenue.amount,
@@ -153,8 +156,8 @@ class RowOut(BaseModel):
 
 class ExpectedOut(BaseModel):
     """F16 (ADR-037): kutilayotgan sof foyda — Jarayondagi sotuvlar qismi (mijoz hali olmagan yoki qaytarish muddati
-    tugamagan): tushumdan komissiya, logistika (Uzum hali yozmagani — F40 bo'yicha taxminiy), tannarx va katak
-    xarajatlarining tushum ulushidagi qismi ayrilgan. ``rate`` — fakt (oxirgi 90 kunda yakuniy holatga yetganlarning
+    tugamagan): tushumdan komissiya, logistika (Uzum hali yozmagani — F40 bo'yicha taxminiy), tannarx, o'z reklamasi
+    (yechilgani va hali topshirilmaganlarga F42 taxmini) va katak xarajatlarining tushum ulushidagi qismi ayrilgan. ``rate`` — fakt (oxirgi 90 kunda yakuniy holatga yetganlarning
     Yakunlangan ulushi), summaga ko'paytirilmaydi; ma'lumot kam bo'lsa ``None``."""
 
     units: int
@@ -169,6 +172,7 @@ class ExpectedOut(BaseModel):
     logistics_estimated: Decimal
     logistics_estimated_units: int
     logistics_missing_lines: int
+    uzum_estimated: dict[str, Decimal]  # ADR-039: F42 kutilayotgan reklama (taxminiy)
     rate: Decimal | None
 
     @classmethod
@@ -189,6 +193,7 @@ class ExpectedOut(BaseModel):
                 logistics_estimated=zero,
                 logistics_estimated_units=0,
                 logistics_missing_lines=0,
+                uzum_estimated={},
                 rate=rate,
             )
         return cls(
@@ -204,5 +209,6 @@ class ExpectedOut(BaseModel):
             logistics_estimated=p.logistics_estimated.amount,
             logistics_estimated_units=p.logistics_estimated_units,
             logistics_missing_lines=p.logistics_missing_lines,
+            uzum_estimated={c.value: a.amount for c, a in sorted(p.uzum_estimated.items())},
             rate=rate,
         )

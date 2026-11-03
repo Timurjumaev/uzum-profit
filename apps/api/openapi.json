@@ -7277,6 +7277,13 @@
             "type": "integer",
             "title": "Logistics Missing Lines"
           },
+          "uzum_estimated": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Uzum Estimated"
+          },
           "rate": {
             "anyOf": [
               {
@@ -7303,10 +7310,11 @@
           "logistics_estimated",
           "logistics_estimated_units",
           "logistics_missing_lines",
+          "uzum_estimated",
           "rate"
         ],
         "title": "ExpectedOut",
-        "description": "F16 (ADR-037): kutilayotgan sof foyda — Jarayondagi sotuvlar qismi (mijoz hali olmagan yoki qaytarish muddati\ntugamagan): tushumdan komissiya, logistika (Uzum hali yozmagani — F40 bo'yicha taxminiy), tannarx va katak\nxarajatlarining tushum ulushidagi qismi ayrilgan. ``rate`` — fakt (oxirgi 90 kunda yakuniy holatga yetganlarning\nYakunlangan ulushi), summaga ko'paytirilmaydi; ma'lumot kam bo'lsa ``None``."
+        "description": "F16 (ADR-037): kutilayotgan sof foyda — Jarayondagi sotuvlar qismi (mijoz hali olmagan yoki qaytarish muddati\ntugamagan): tushumdan komissiya, logistika (Uzum hali yozmagani — F40 bo'yicha taxminiy), tannarx, o'z reklamasi\n(yechilgani va hali topshirilmaganlarga F42 taxmini) va katak xarajatlarining tushum ulushidagi qismi ayrilgan. ``rate`` — fakt (oxirgi 90 kunda yakuniy holatga yetganlarning\nYakunlangan ulushi), summaga ko'paytirilmaydi; ma'lumot kam bo'lsa ``None``."
       },
       "ExpectedShopOut": {
         "properties": {
@@ -7358,6 +7366,13 @@
             "type": "integer",
             "title": "Logistics Missing Lines"
           },
+          "uzum_estimated": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Uzum Estimated"
+          },
           "rate": {
             "anyOf": [
               {
@@ -7389,6 +7404,7 @@
           "logistics_estimated",
           "logistics_estimated_units",
           "logistics_missing_lines",
+          "uzum_estimated",
           "rate",
           "shop_id"
         ],
@@ -7419,6 +7435,18 @@
             "type": "string",
             "format": "date",
             "title": "Day"
+          },
+          "order_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Date"
           },
           "code": {
             "anyOf": [
@@ -7522,6 +7550,7 @@
           "external_id",
           "created_on",
           "day",
+          "order_date",
           "code",
           "raw_code",
           "category",
@@ -12761,6 +12790,13 @@
             "type": "integer",
             "title": "Logistics Missing Lines"
           },
+          "uzum_estimated": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Uzum Estimated"
+          },
           "uncovered": {
             "$ref": "#/components/schemas/UncoveredOut"
           },
@@ -12835,6 +12871,7 @@
           "logistics_estimated_units",
           "logistics_estimated_lines",
           "logistics_missing_lines",
+          "uzum_estimated",
           "uncovered",
           "direct_total",
           "allocated_total",

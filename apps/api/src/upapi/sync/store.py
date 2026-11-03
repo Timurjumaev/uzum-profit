@@ -178,12 +178,14 @@ async def link_sales(conn: AsyncConnection, shop_id: UUID) -> tuple[int, datetim
 
 
 async def link_expenses(conn: AsyncConnection, shop_id: UUID) -> int:
-    """Logistika xarajati → sotuv qatori (``externalId`` = buyurtma qatori id'si, F9 bog'lanishi)."""
+    """Xarajat → sotuv qatori (F9 bog'lanishi): logistika (``externalId`` = sotuv qatori id'si) va buyurtmaga bog'liq
+    reklama (``AD#<sotuv qatori id>-...``, ADR-039 — B4.20 realcheck: 571/571 bog'landi). Bog'langan reklama P&L'da
+    o'sha sotuvning buyurtma kuni, SKU'si va qismiga yoziladi (``upapi.reports.cells``)."""
     result = await conn.execute(
         text(
             "UPDATE mp_expenses e SET sale_item_id = s.id, updated_at = now() FROM sale_items s "
             "WHERE e.shop_id = :shop AND e.sale_item_id IS NULL AND e.item_external_id IS NOT NULL "
-            "AND e.category IN ('logistics', 'logistics_refund') "
+            "AND e.category IN ('logistics', 'logistics_refund', 'advertising') "
             "AND s.shop_id = e.shop_id AND s.external_id = e.item_external_id "
             "AND NOT EXISTS (SELECT 1 FROM sale_items d WHERE d.shop_id = s.shop_id "
             "AND d.external_id = s.external_id AND d.id <> s.id)"
