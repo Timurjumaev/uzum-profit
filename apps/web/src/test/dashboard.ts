@@ -118,18 +118,78 @@ export function dashboardData(over: Partial<Dashboard> = {}, ago: (minutes: numb
       { sku_id: "d2", shop_id: SHOP_A, title: null, product_title: "Hamyon", units: 80, revenue: "12000000.00", net_profit: "3000000.00", margin: "0.250000" },
     ],
     bottom: [{ sku_id: "d3", shop_id: SHOP_B, title: "Kamar L", product_title: "Kamar", units: 9, revenue: "900000.00", net_profit: "-250000.00", margin: "-0.277000" }],
+    summary: summaryData(),
     kpis: {
-      margin: "0.259400",
       uncovered_share: "0.000000",
-      roi: "0.619000",
-      cancel_share: "0.040000",
-      return_share: "0.021000",
-      drr: "0.032200",
       frozen_money: "92000000.00",
       in_transit_value: "31000000.00",
       average_days_to_sell: "41.50",
     },
     attention: { uncosted_lines: 0, uncosted_revenue: "0.00", loss_skus: 1, stock_critical: 2, stock_high: 3, recalculated: 0 },
+    ...over,
+  };
+}
+
+type Summary = Dashboard["summary"];
+type SummaryCard = Summary["groups"][number]["cards"][number];
+
+const POINTS = ["2026-10-24", "2026-10-25", "2026-10-26"];
+
+function card(key: string, formula: string, unit: SummaryCard["unit"], value: string | null, previous: string | null, change: string | null, good: SummaryCard["good"], series: (string | null)[] = [value, value, value]): SummaryCard {
+  return { key, formula, unit, value, previous, change, good, warn: false, series };
+}
+
+/** KPI sarhisob (ADR-043): 4 guruh, 24 kartochka. Yalpi = tushum + bekor + qaytarish (so'mda va donada). */
+export function summaryData(over: Partial<Summary> = {}): Summary {
+  return {
+    bucket: "day",
+    points: POINTS,
+    groups: [
+      {
+        key: "orders",
+        cards: [
+          card("gross_revenue", "F44", "money", "215420000.00", "206000000.00", "0.045728", "up"),
+          card("revenue", "F3", "money", "186420000.00", "190000000.00", "-0.018842", "up", ["6000000.00", "7100000.00", "5200000.00"]),
+          card("units", "F3", "count", "1240", "1300", "-0.046154", "up"),
+          card("orders", "F45", "count", "1610", "1580", "0.018987", "up"),
+          card("orders_net", "F45", "count", "1102", "1150", "-0.041739", "up"),
+          card("net_order_share", "F45", "ratio", "0.684472", "0.727848", "-0.043376", "up"),
+        ],
+      },
+      {
+        key: "uzum",
+        cards: [
+          card("uzum_costs", "F46", "money", "52300000.00", "50100000.00", "0.043912", "down"),
+          card("uzum_costs_share", "F46", "ratio", "0.280549", "0.263684", "0.016865", "down"),
+          card("after_uzum", "F47", "money", "134120000.00", "139900000.00", "-0.041315", "up"),
+          card("drr", "F19", "ratio", "0.032200", "0.030000", "0.002200", "down"),
+          card("net_profit", "F12", "money", "48393000.00", "43012000.00", "0.125105", "up"),
+          card("margin", "F13", "ratio", "0.259400", "0.226400", "0.033000", "up"),
+          card("roi", "F14", "ratio", "0.619000", "0.580000", "0.039000", "up"),
+        ],
+      },
+      {
+        key: "returns",
+        cards: [
+          card("return_units", "F18", "count", "61", "70", "-0.128571", "down"),
+          card("return_revenue", "F18", "money", "9150000.00", "10500000.00", "-0.128571", "down"),
+          card("return_share", "F18", "ratio", "0.046959", "0.051095", "-0.004136", "down"),
+          card("return_revenue_share", "F18", "ratio", "0.046783", "0.052369", "-0.005586", "down"),
+          card("cancel_units", "F17", "count", "290", "250", "0.160000", "down"),
+          card("cancel_revenue", "F17", "money", "19850000.00", "5500000.00", "2.609091", "down"),
+          card("cancel_share", "F17", "ratio", "0.181141", "0.155280", "0.025861", "down"),
+          card("cancel_revenue_share", "F17", "ratio", "0.092146", "0.026699", "0.065447", "down"),
+        ],
+      },
+      {
+        key: "average",
+        cards: [
+          card("average_check", "F48", "money", "169165.15", "165217.39", "0.023895", "up"),
+          card("average_price", "F48", "money", "150338.71", "146153.85", "0.028633", null),
+          card("units_per_order", "F48", "number", "1.125227", "1.130435", "-0.004607", "up"),
+        ],
+      },
+    ],
     ...over,
   };
 }

@@ -1,5 +1,6 @@
-// Bekor va qaytish tahlili (M7): ulush (F17 / F18), topshirilgandan keyin bekor, qaytim saqlash xarajati, kunlik trend,
-// sabablar (`returnCause`) va SKU bo'yicha jadval. Hamma raqam API'dan (`/orders/analysis`).
+// Bekor va qaytarish tahlili (M7, ADR-043): ulush (F17 / F18), dona va summa, qaytim saqlash xarajati, kunlik trend,
+// sabablar (`returnCause`) va SKU bo'yicha jadval. Bekor — mijozga topshirilmagan, qaytarish — mijoz olgan va qaytargan.
+// Hamma raqam API'dan (`/orders/analysis`).
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -65,15 +66,9 @@ export function Analysis({ orgId, params, kind }: Props) {
     <div className="orders-analysis">
       <div className="orders-kpis">
         <Kpi label={t(`orders.${kind}.share`)} value={share(cancel ? s.cancel_share : s.return_share)} good="down" help={help} />
-        <Kpi label={t(`orders.${kind}.units`)} value={f.number(cancel ? s.canceled : s.returns)} good="down" />
-        {cancel ? (
-          <Kpi
-            label={t("orders.cancel.afterIssue")}
-            value={f.number(s.canceled_after_issue)}
-            good="down"
-            note={s.after_issue_share === null ? undefined : t("orders.cancel.afterIssueNote", { share: f.percent(s.after_issue_share) })}
-          />
-        ) : (
+        <Kpi label={t(`orders.${kind}.units`)} value={f.number(cancel ? s.canceled : s.returns)} good="down" note={t(`orders.${kind}.note`)} />
+        <Kpi label={t(`orders.${kind}.revenue`)} value={f.money(cancel ? s.cancel_revenue : s.return_revenue)} good="down" />
+        {!cancel && (
           <Kpi
             label={t("orders.returns.storageCost")}
             value={f.money(s.return_storage_cost)}

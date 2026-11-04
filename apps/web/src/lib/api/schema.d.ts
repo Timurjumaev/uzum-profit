@@ -1080,6 +1080,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/settings/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Alerts
+         * @description Bosh sahifadagi bekor va qaytarish ulushi kartochkasi shu chegaradan oshsa belgilanadi. Kodda standart yo'q.
+         */
+        put: operations["set_alerts_api_v1_orgs__org_id__settings_alerts_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/items/{item_id}/stock-moves": {
         parameters: {
             query?: never;
@@ -1200,6 +1220,26 @@ export interface components {
             quota_remaining: number | null;
             /** Checked At */
             checked_at: string | null;
+        };
+        /**
+         * AlertsIn
+         * @description Bekor (F17) va qaytarish (F18) ulushi chegarasi; ``null`` — o'chirish.
+         */
+        AlertsIn: {
+            /** Cancel Share */
+            cancel_share?: number | string | null;
+            /** Return Share */
+            return_share?: number | string | null;
+        };
+        /**
+         * AlertsOut
+         * @description ADR-043: ogohlantirish chegaralari (ulush, 0..1); ``null`` — sozlanmagan (ogohlantirish yo'q).
+         */
+        AlertsOut: {
+            /** Cancel Share */
+            cancel_share: string | null;
+            /** Return Share */
+            return_share: string | null;
         };
         /**
          * AllocationBase
@@ -1457,6 +1497,7 @@ export interface components {
             top: components["schemas"]["SkuBriefOut"][];
             /** Bottom */
             bottom: components["schemas"]["SkuBriefOut"][];
+            summary: components["schemas"]["KpiSummaryOut"];
             kpis: components["schemas"]["KpiOut"];
             attention: components["schemas"]["AttentionOut"];
         };
@@ -1805,26 +1846,67 @@ export interface components {
             /** Http Status */
             http_status: number | null;
         };
+        /**
+         * KpiCardOut
+         * @description KPI sarhisob kartochkasi (ADR-043). ``change`` — pul va sonlarda nisbiy o'zgarish, ulushlarda (``ratio``) — farq
+         *     punktda; oldingi davr 0 yoki yo'q — ``null``. ``good`` — qaysi yo'nalish yaxshi (rang), ``warn`` — sozlamadagi
+         *     chegaradan oshgan. ``series`` — ``KpiSummaryOut.points`` bo'laklaridagi qiymatlar (trend chizig'i).
+         */
+        KpiCardOut: {
+            /** Key */
+            key: string;
+            /** Formula */
+            formula: string;
+            /**
+             * Unit
+             * @enum {string}
+             */
+            unit: "money" | "count" | "ratio" | "number";
+            /** Value */
+            value: string | null;
+            /** Previous */
+            previous: string | null;
+            /** Change */
+            change: string | null;
+            /** Good */
+            good: ("up" | "down") | null;
+            /**
+             * Warn
+             * @default false
+             */
+            warn: boolean;
+            /** Series */
+            series: (string | null)[];
+        };
+        /** KpiGroupOut */
+        KpiGroupOut: {
+            /** Key */
+            key: string;
+            /** Cards */
+            cards: components["schemas"]["KpiCardOut"][];
+        };
         /** KpiOut */
         KpiOut: {
-            /** Margin */
-            margin: string | null;
             /** Uncovered Share */
             uncovered_share: string;
-            /** Roi */
-            roi: string | null;
-            /** Cancel Share */
-            cancel_share: string | null;
-            /** Return Share */
-            return_share: string | null;
-            /** Drr */
-            drr: string | null;
             /** Frozen Money */
             frozen_money: string;
             /** In Transit Value */
             in_transit_value: string;
             /** Average Days To Sell */
             average_days_to_sell: string | null;
+        };
+        /** KpiSummaryOut */
+        KpiSummaryOut: {
+            /**
+             * Bucket
+             * @enum {string}
+             */
+            bucket: "day" | "week" | "month";
+            /** Points */
+            points: string[];
+            /** Groups */
+            groups: components["schemas"]["KpiGroupOut"][];
         };
         /** LeadOut */
         LeadOut: {
@@ -2245,10 +2327,10 @@ export interface components {
             cancel_share: string | null;
             /** Return Share */
             return_share: string | null;
-            /** Canceled After Issue */
-            canceled_after_issue: number;
-            /** After Issue Share */
-            after_issue_share: string | null;
+            /** Cancel Revenue */
+            cancel_revenue: string;
+            /** Return Revenue */
+            return_revenue: string;
             /** Return Storage Cost */
             return_storage_cost: string;
         };
@@ -2872,6 +2954,7 @@ export interface components {
             /** Payout Terms */
             payout_terms: components["schemas"]["PayoutTermsOut"][];
             inventory: components["schemas"]["InventorySettingsOut"];
+            alerts: components["schemas"]["AlertsOut"];
         };
         /** ShopOut */
         ShopOut: {
@@ -6810,6 +6893,50 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["InventorySettingsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    set_alerts_api_v1_orgs__org_id__settings_alerts_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlertsIn"];
             };
         };
         responses: {

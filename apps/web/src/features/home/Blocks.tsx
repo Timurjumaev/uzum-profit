@@ -211,13 +211,12 @@ export function SkuLists({ top, bottom }: { top: Brief[]; bottom: Brief[] }) {
   );
 }
 
-// --- Qo'shimcha ko'rsatkichlar -------------------------------------------------------------------------------------
+// --- Tovardagi pul (F29) — KPI sarhisobdan tashqari: davrga emas, bugungi holatga bog'liq --------------------------
 
 export function Kpis({ data }: { data: Dashboard }) {
   const { t } = useTranslation();
   const f = useFormat();
   const k = data.kpis;
-  const percent = (v: string | null) => (v === null ? "—" : f.percent(v));
   const help = (key: string, metric: string) => (
     <FormulaPopover
       metric={metric}
@@ -226,18 +225,12 @@ export function Kpis({ data }: { data: Dashboard }) {
       source={t(`home.formula.${key}.source`)}
     />
   );
-  const uncovered = Number(k.uncovered_share) > 0 ? t("home.kpis.uncovered", { share: f.percent(k.uncovered_share) }) : undefined;
   return (
     <section aria-labelledby="home-kpis" className="home-kpis">
       <h2 id="home-kpis" className="h3">
         {t("home.kpis.title")}
       </h2>
       <div className="home-kpis__grid">
-        <Kpi label={t("home.kpis.margin")} value={percent(k.margin)} note={k.margin === null ? t("home.kpis.noCostedSales") : uncovered} help={help("margin", t("home.kpis.margin"))} />
-        <Kpi label={t("home.kpis.roi")} value={percent(k.roi)} help={help("roi", t("home.kpis.roi"))} />
-        <Kpi label={t("home.kpis.cancel")} value={percent(k.cancel_share)} good="down" help={help("cancel", t("home.kpis.cancel"))} />
-        <Kpi label={t("home.kpis.returns")} value={percent(k.return_share)} good="down" help={help("returns", t("home.kpis.returns"))} />
-        <Kpi label={t("home.kpis.drr")} value={percent(k.drr)} good="down" help={help("drr", t("home.kpis.drr"))} />
         <Kpi
           label={t("home.kpis.frozen")}
           value={f.money(k.frozen_money)}

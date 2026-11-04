@@ -1,7 +1,8 @@
 // Bosh sahifa (M4, ADR-037) — "bir qarashda": uch raqam (yakunlangan + kutilayotgan = jami sof foyda), davr chizig'i,
-// kunlik grafik (sof foyda yakunlangan va kutilayotgan qatlamlarda), "Diqqat talab qiladi", eng foydali 5 / zarar 5 SKU va
-// qo'shimcha ko'rsatkichlar. Qatorma-qator hisob — Foyda sahifasida. Maket — 04 §7.2 (desktop) / §7.3 (mobil). Davr,
-// do'kon va solishtirish — URL'da (`app/filters`), hamma raqam API'dan (`/dashboard`), bu yerda hisoblash yo'q.
+// KPI sarhisob (ADR-043: buyurtmadan sof foydagacha yo'l va 4 guruh kartochka oldingi davr bilan), kunlik grafik (sof foyda
+// yakunlangan va kutilayotgan qatlamlarda), "Diqqat talab qiladi", eng foydali 5 / zarar 5 SKU va tovardagi pul.
+// Qatorma-qator hisob — Foyda sahifasida. Maket — 04 §7.2 (desktop) / §7.3 (mobil). Davr, do'kon va solishtirish —
+// URL'da (`app/filters`), hamma raqam API'dan (`/dashboard`), bu yerda hisoblash yo'q.
 import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
@@ -13,6 +14,7 @@ import { currentOrg, dashboardQuery, meQuery, syncQuery } from "../../app/query"
 import { Banner, Button, EmptyState, Skeleton } from "../../components/ui";
 import { syncSummary } from "../../lib/sync";
 import { Attention, DailyChart, Kpis, PeriodStrip, SkuLists } from "./Blocks";
+import { KpiSummary } from "./KpiSummary";
 import { attentionItems } from "./model";
 import { Summary } from "./Summary";
 
@@ -76,6 +78,7 @@ export function Home() {
         }
       />
       <PeriodStrip data={data} />
+      <KpiSummary data={data} />
       <DailyChart data={data} />
       <Attention items={attention} />
       <SkuLists top={data.top} bottom={data.bottom} />

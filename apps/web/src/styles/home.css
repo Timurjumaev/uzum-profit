@@ -182,6 +182,286 @@
   justify-self: start;
 }
 
+/* --- KPI sarhisob (ADR-043): yo'l + 4 guruh kartochka; radius yo'q, faqat tokenlar --- */
+.home-kpi {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.home-kpi__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+
+.home-kpi__head h2 {
+  margin: 0;
+}
+
+.home-kpi__periods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.home-kpi__period {
+  padding: 2px var(--space-2);
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+  white-space: nowrap;
+}
+
+.home-kpi__period strong {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* "Buyurtmadan sof foydagacha" — yotiq chiziqlar (04 §5.1: ulushlar uchun yotiq ustunlar), yalpi summaga nisbatan. */
+.home-flow {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+}
+
+.home-flow figcaption {
+  color: var(--text-secondary);
+}
+
+.home-flow ol {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-flow__step {
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr) auto;
+  grid-template-areas:
+    "op name value"
+    ". bar bar";
+  align-items: center;
+  gap: 2px var(--space-2);
+}
+
+@media (min-width: 768px) {
+  .home-flow__step {
+    grid-template-columns: 1.25rem minmax(9rem, 13rem) minmax(0, 1fr) minmax(9rem, auto);
+    grid-template-areas: "op name bar value";
+  }
+}
+
+.home-flow__op {
+  grid-area: op;
+  color: var(--text-secondary);
+  font: var(--type-body-strong);
+  text-align: center;
+}
+
+.home-flow__name {
+  grid-area: name;
+  font: var(--type-body);
+}
+
+.home-flow__value {
+  grid-area: value;
+  font: var(--type-body-strong);
+  white-space: nowrap;
+}
+
+.home-flow__bar {
+  grid-area: bar;
+  display: block;
+  block-size: 10px;
+  background: var(--bg-raised);
+}
+
+.home-flow__bar > span {
+  display: block;
+  block-size: 100%;
+  background: var(--chart-1);
+}
+
+.home-flow__step--gross_revenue .home-flow__bar > span {
+  background: var(--text-secondary);
+}
+
+.home-flow__step--cancel_revenue .home-flow__bar > span {
+  background: var(--chart-4);
+}
+
+.home-flow__step--return_revenue .home-flow__bar > span {
+  background: var(--chart-2);
+}
+
+.home-flow__step--uzum_costs .home-flow__bar > span {
+  background: var(--chart-7);
+}
+
+.home-flow__step--after_uzum .home-flow__bar > span {
+  background: var(--chart-3);
+}
+
+.home-flow__step--revenue .home-flow__name,
+.home-flow__step--after_uzum .home-flow__name,
+.home-flow__step--net_profit .home-flow__name {
+  font: var(--type-body-strong);
+}
+
+.home-flow__step--net_profit .home-flow__bar > span {
+  background: var(--positive-text);
+}
+
+.home-flow__step--net_profit.is-negative .home-flow__bar > span {
+  background: var(--negative-text);
+}
+
+.home-flow__step--net_profit.is-negative .home-flow__value {
+  color: var(--negative-text);
+}
+
+.home-flow > .caption {
+  margin: 0;
+}
+
+.home-kpi__group {
+  display: grid;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.home-kpi__group-title {
+  margin: 0;
+  padding-block-end: var(--space-1);
+  border-block-end: 1px solid var(--border-hairline);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.home-kpi__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Telefonda 2 ustun (360 px da ham): son va ulush kartochkalari yonma-yon, pul kartochkalari — to'liq kenglikda. */
+@media (max-width: 599px) {
+  .home-kpi__cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-flow: row dense; /* to'liq kenglikdagi pul kartochkasi orasida yolg'iz ulush kartochkasi qolmasin */
+    gap: var(--space-2);
+  }
+
+  .home-card {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .home-card--money {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Keng ekranda guruhlar yolg'iz kartochkasiz: buyurtmalar 3 × 2, Uzum va foyda 4 × 2 (sof foyda — 2 ustun), qaytarilgan
+   va bekor qilingan 4 × 2 (yuqori qator qaytarish, pastki — bekor, bir xil tartibda), o'rtacha 3. */
+@media (min-width: 1100px) {
+  .home-kpi__group--orders .home-kpi__cards,
+  .home-kpi__group--average .home-kpi__cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .home-kpi__group--uzum .home-kpi__cards,
+  .home-kpi__group--returns .home-kpi__cards {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .home-kpi__group--uzum .home-card--wide {
+    grid-column: span 2;
+  }
+}
+
+.home-card {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  min-inline-size: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+}
+
+.home-card > p {
+  margin: 0;
+}
+
+.home-card__label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--text-secondary);
+}
+
+.home-card__value.num {
+  font: var(--type-h2);
+  text-align: start;
+  white-space: nowrap;
+}
+
+.home-card--key {
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.home-card--key .home-card__value.num {
+  font: var(--type-h1);
+  letter-spacing: var(--tracking-h1);
+}
+
+.home-card__delta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+}
+
+.home-card__change {
+  font: var(--type-label);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.home-card--warn {
+  border-color: var(--warning-text);
+  background: var(--warning-bg);
+}
+
+.home-card__warn {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--warning-text);
+}
+
+.home-card__link {
+  color: var(--accent-text);
+}
+
+.home-card .ui-spark {
+  margin-block-start: var(--space-1);
+}
+
 /* --- Diqqat talab qiladi --- */
 .home-attention h2,
 .home-kpis h2 {

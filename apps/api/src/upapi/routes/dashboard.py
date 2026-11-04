@@ -2,7 +2,8 @@
 
 Bloklar: hisob varag'i (P&L bilan bitta funksiya — ``upapi.reports.cells``, oldingi davr bilan), davr chizig'i
 (bugun, kecha, shu oy, oy prognozi, o'tgan oy — tanlangan davrdan qat'i nazar, do'kon filtri bilan), kunlik grafik,
-eng foydali 5 va zarar 5 SKU, qo'shimcha ko'rsatkichlar (F13–F19, F29) va "Diqqat talab qiladi" sanoqlari.
+eng foydali 5 va zarar 5 SKU, KPI sarhisob (ADR-043: 4 guruh, har kartochkada joriy va oldingi davr, o'zgarish va trend
+nuqtalari), ombor ko'rsatkichlari (F29) va "Diqqat talab qiladi" sanoqlari.
 Sotuvlar Yakunlangan + Jarayonda (ADR-036); sof foyda har kesimda ikki qismda — yakunlangan va kutilayotgan (ADR-037, F16):
 hisobot, davr chizig'i, kunlar; ``expected`` — kutilayotgan qism tafsiloti va R (fakt). To'lov kutilmoqda (F38) — B5 da.
 """
@@ -11,9 +12,10 @@ from __future__ import annotations
 
 import calendar
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
@@ -21,17 +23,19 @@ from pydantic import BaseModel
 from upcore.expenses import ExpenseCategory
 from upcore.inventory import StockStatus
 from upcore.metrics import (
+    OrderFlow,
     Period,
     ProfitLabel,
-    cancel_rate,
     drr,
     profit_label,
-    return_share,
+    relative_change,
     run_rate,
+    share_change,
 )
 from upcore.money import Currency, Money, total
 from upcore.pnl import CellKey, Cells, Statement, compare
 
+from upapi import orgsettings
 from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission
 from upapi.reports import cells as rc
@@ -100,13 +104,38 @@ class SkuBriefOut(BaseModel):
     margin: Decimal | None
 
 
+Unit = Literal["money", "count", "ratio", "number"]
+
+
+class KpiCardOut(BaseModel):
+    """KPI sarhisob kartochkasi (ADR-043). ``change`` — pul va sonlarda nisbiy o'zgarish, ulushlarda (``ratio``) — farq
+    punktda; oldingi davr 0 yoki yo'q — ``null``. ``good`` — qaysi yo'nalish yaxshi (rang), ``warn`` — sozlamadagi
+    chegaradan oshgan. ``series`` — ``KpiSummaryOut.points`` bo'laklaridagi qiymatlar (trend chizig'i)."""
+
+    key: str
+    formula: str  # F-raqam (02-funksiyalar.md)
+    unit: Unit
+    value: Decimal | None
+    previous: Decimal | None
+    change: Decimal | None
+    good: Literal["up", "down"] | None
+    warn: bool = False
+    series: list[Decimal | None]
+
+
+class KpiGroupOut(BaseModel):
+    key: str  # orders / uzum / returns / average
+    cards: list[KpiCardOut]
+
+
+class KpiSummaryOut(BaseModel):
+    bucket: Literal["day", "week", "month"]  # trend nuqtasi kattaligi (davr uzunligiga qarab)
+    points: list[date]  # bo'laklar boshi
+    groups: list[KpiGroupOut]
+
+
 class KpiOut(BaseModel):
-    margin: Decimal | None  # F13
-    uncovered_share: Decimal  # 1 − F15 (marja yonida)
-    roi: Decimal | None  # F14
-    cancel_share: Decimal | None  # F17
-    return_share: Decimal | None  # F18
-    drr: Decimal | None  # F19
+    uncovered_share: Decimal  # 1 − F15 (marja kartochkasi yonida)
     frozen_money: Decimal  # F29 (Uzum FBO + FBS + brak + o'z omborim, lot narxida)
     in_transit_value: Decimal  # F29 "yo'lda" (Xitoyda buyurtma qilingan + yo'lda)
     average_days_to_sell: Decimal | None  # F29
@@ -133,6 +162,7 @@ class DashboardOut(BaseModel):
     daily: list[DayOut]
     top: list[SkuBriefOut]
     bottom: list[SkuBriefOut]
+    summary: KpiSummaryOut
     kpis: KpiOut
     attention: AttentionOut
 
@@ -154,6 +184,157 @@ def _total(key: str, period: Period, s: Statement) -> PeriodTotalOut:
         units_processing=s.units_processing,
         revenue_processing=s.revenue_processing.amount,
     )
+
+
+type Bucket = Literal["day", "week", "month"]
+DAY_POINTS = 62  # shundan uzun davr — haftalik, 366 kundan uzun — oylik nuqtalar
+
+
+def _buckets(period: Period) -> tuple[Bucket, Callable[[date], date]]:
+    """Trend nuqtalari: davr ≤ 62 kun — kunlik, ≤ 366 — 7 kunlik bo'laklar (davr boshidan), undan uzun — oylik."""
+    if period.days <= DAY_POINTS:
+        return "day", lambda d: d
+    if period.days <= 366:
+        return "week", lambda d: period.start + timedelta(days=(d - period.start).days // 7 * 7)
+    return "month", lambda d: d.replace(day=1)
+
+
+@dataclass(frozen=True, slots=True)
+class _Slice:
+    """Bitta kesim (davr yoki trend bo'lagi) uchun kartochka manbalari."""
+
+    s: Statement
+    flow: OrderFlow
+
+    @property
+    def ads(self) -> Money:
+        return self.s.uzum_expenses.get(ExpenseCategory.ADVERTISING, Money.zero(UZS))
+
+
+def _money(m: Money | None) -> Decimal | None:
+    return None if m is None else m.amount
+
+
+# Kartochkalar (ADR-043): guruh → (kalit, F-raqam, birlik, yaxshi yo'nalish, qiymat, ogohlantirish kaliti).
+type Getter = Callable[[_Slice], Decimal | int | None]
+CARDS: list[
+    tuple[
+        str,
+        list[tuple[str, str, Unit, Literal["up", "down"] | None, Getter, orgsettings.Alert | None]],
+    ]
+] = [
+    (
+        "orders",
+        [
+            ("gross_revenue", "F44", "money", "up", lambda x: x.flow.gross_revenue.amount, None),
+            ("revenue", "F3", "money", "up", lambda x: x.s.revenue.amount, None),
+            ("units", "F3", "count", "up", lambda x: x.s.units, None),
+            ("orders", "F45", "count", "up", lambda x: x.flow.orders, None),
+            ("orders_net", "F45", "count", "up", lambda x: x.flow.orders_net, None),
+            ("net_order_share", "F45", "ratio", "up", lambda x: x.flow.net_order_share, None),
+        ],
+    ),
+    (
+        "uzum",
+        [
+            ("uzum_costs", "F46", "money", "down", lambda x: x.s.uzum_costs.amount, None),
+            ("uzum_costs_share", "F46", "ratio", "down", lambda x: x.s.uzum_costs_share, None),
+            ("after_uzum", "F47", "money", "up", lambda x: x.s.after_uzum.amount, None),
+            ("drr", "F19", "ratio", "down", lambda x: drr(x.ads, x.s.revenue), None),
+            ("net_profit", "F12", "money", "up", lambda x: x.s.net_profit.amount, None),
+            ("margin", "F13", "ratio", "up", lambda x: x.s.margin, None),
+            ("roi", "F14", "ratio", "up", lambda x: x.s.roi, None),
+        ],
+    ),
+    (
+        "returns",
+        [
+            ("return_units", "F18", "count", "down", lambda x: x.flow.return_units, None),
+            (
+                "return_revenue",
+                "F18",
+                "money",
+                "down",
+                lambda x: x.flow.return_revenue.amount,
+                None,
+            ),
+            ("return_share", "F18", "ratio", "down", lambda x: x.flow.return_share, "return_share"),
+            (
+                "return_revenue_share",
+                "F18",
+                "ratio",
+                "down",
+                lambda x: x.flow.return_revenue_share,
+                None,
+            ),
+            ("cancel_units", "F17", "count", "down", lambda x: x.flow.cancel_units, None),
+            (
+                "cancel_revenue",
+                "F17",
+                "money",
+                "down",
+                lambda x: x.flow.cancel_revenue.amount,
+                None,
+            ),
+            ("cancel_share", "F17", "ratio", "down", lambda x: x.flow.cancel_share, "cancel_share"),
+            (
+                "cancel_revenue_share",
+                "F17",
+                "ratio",
+                "down",
+                lambda x: x.flow.cancel_revenue_share,
+                None,
+            ),
+        ],
+    ),
+    (
+        "average",
+        [
+            ("average_check", "F48", "money", "up", lambda x: _money(x.flow.average_check), None),
+            ("average_price", "F48", "money", None, lambda x: _money(x.flow.average_price), None),
+            ("units_per_order", "F48", "number", "up", lambda x: x.flow.units_per_order, None),
+        ],
+    ),
+]
+
+
+def _dec(value: Decimal | int | None) -> Decimal | None:
+    return None if value is None else Decimal(value)
+
+
+def _summary(
+    cur: _Slice,
+    prev: _Slice,
+    comparable: bool,
+    bucket: Bucket,
+    points: list[date],
+    slices: dict[date, _Slice],
+    cfg: orgsettings.OrgSettings,
+) -> KpiSummaryOut:
+    groups = []
+    for group, cards in CARDS:
+        out = []
+        for key, code, unit, good, get, alert in cards:
+            value, before = _dec(get(cur)), _dec(get(prev)) if comparable else None
+            if unit == "ratio":
+                change = share_change(value, before)
+            else:
+                change = None if value is None or before is None else relative_change(value, before)
+            out.append(
+                KpiCardOut(
+                    key=key,
+                    formula=code,
+                    unit=unit,
+                    value=value,
+                    previous=before,
+                    change=change,
+                    good=good,
+                    warn=alert is not None and cfg.over(alert, value),
+                    series=[_dec(get(slices[point])) for point in points],
+                )
+            )
+        groups.append(KpiGroupOut(key=group, cards=out))
+    return KpiSummaryOut(bucket=bucket, points=points, groups=groups)
 
 
 @router.get("/orgs/{org_id}/dashboard", response_model=DashboardOut)
@@ -222,8 +403,42 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
             margin=st.margin,
         )
 
-    sums = (await rc.sale_sums(conn, f)).get(None, rc.SaleSums())
-    ads = s.uzum_expenses.get(ExpenseCategory.ADVERTISING, Money.zero(UZS))
+    # KPI sarhisob (ADR-043): joriy va oldingi davr bitta so'rovda (kunlar bo'yicha), trend — bo'laklar bo'yicha.
+    both = rc.span(previous, f.period)
+    flows = await rc.sale_sums(conn, f, by_day=True, period=both)
+    counts = await rc.order_counts(conn, f, both)
+
+    flow_days = {
+        day: flows.get(day, OrderFlow())
+        + OrderFlow(orders=counts.get(day, (0, 0))[0], orders_net=counts.get(day, (0, 0))[1])
+        for day in set(flows) | set(counts)
+    }
+
+    def flow_of(days: Callable[[date], bool]) -> OrderFlow:
+        return sum((v for day, v in flow_days.items() if days(day)), OrderFlow())
+
+    bucket, bucket_of = _buckets(f.period)
+    points = sorted({bucket_of(f.period.start + timedelta(days=i)) for i in range(f.period.days)})
+    statements = cur.by(lambda k: bucket_of(k.day))
+    bucket_flows: dict[date, OrderFlow] = {}
+    for day, v in flow_days.items():
+        if day in f.period:
+            key = bucket_of(day)
+            bucket_flows[key] = bucket_flows.get(key, OrderFlow()) + v
+    prev_flow = flow_of(lambda d: d in previous)
+    summary = _summary(
+        _Slice(s, flow_of(lambda d: d in f.period)),
+        _Slice(p, prev_flow),
+        # Oldingi davrda faoliyat bo'lmasa (do'kon hali ulanmagan) foiz ma'nosiz — CompareRow kabi.
+        comparable=not (p.revenue.is_zero() and prev_flow.gross_units == 0),
+        bucket=bucket,
+        points=points,
+        slices={
+            point: _Slice(statements.get(point, empty), bucket_flows.get(point, OrderFlow()))
+            for point in points
+        },
+        cfg=await orgsettings.load(conn),
+    )
     rates = await rc.realization(conn, f)
     stock = await load_stock(conn, sorted(f.shops, key=str) if f.shops else None, today)
     statuses = [x.status for x in stock.skus.values()]
@@ -248,13 +463,9 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
         daily=daily,
         top=[brief(k, v) for k, v in top],
         bottom=[brief(k, v) for k, v in bottom],
+        summary=summary,
         kpis=KpiOut(
-            margin=s.margin,
             uncovered_share=s.uncovered_share,
-            roi=s.roi,
-            cancel_share=cancel_rate(sums.units, sums.canceled),
-            return_share=return_share(sums.units, sums.returns),
-            drr=drr(ads, s.revenue),
             frozen_money=on_hand.amount,
             in_transit_value=in_transit.amount,
             average_days_to_sell=stock.average_days,

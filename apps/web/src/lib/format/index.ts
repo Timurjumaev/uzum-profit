@@ -132,6 +132,16 @@ export function formatChange(ratio: Numeric): string {
   return text === "0%" ? text : `▲${NARROW}${text}`;
 }
 
+const POINTS: Record<Lang, string> = { "uz-Latn": "punkt", "uz-Cyrl": "пункт", ru: "п.п." };
+
+/** Ulush o'zgarishi punktda (ADR-043): `▲ 3,2 punkt` / `▼ 1,5 п.п.`; nol — `0 punkt`. Kirish — kasr farqi (0,032). */
+export function formatPoints(diff: Numeric, lang: Lang): string {
+  const text = formatPercent(diff).slice(0, -1);
+  const unit = `${NBSP}${POINTS[lang]}`;
+  if (text.startsWith(MINUS)) return `▼${NARROW}${text.slice(1)}${unit}`;
+  return text === "0" ? `0${unit}` : `▲${NARROW}${text}${unit}`;
+}
+
 // --- Sanalar (Toshkent, F1) -------------------------------------------------------------------------
 
 type Ymd = { y: number; m: number; d: number };
@@ -239,6 +249,7 @@ export function formatterFor(lang: Lang) {
     compact: (value: Numeric) => formatCompact(value, lang),
     percent: formatPercent,
     change: formatChange,
+    points: (diff: Numeric) => formatPoints(diff, lang),
     date: formatDate,
     day: (value: string | Date) => formatDay(value, lang),
     period: (start: string | Date, end: string | Date) => formatPeriod(start, end, lang),

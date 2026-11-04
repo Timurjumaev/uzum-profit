@@ -1,7 +1,7 @@
 # 02. Funksiyalar: modullar, qabul mezonlari, formulalar
 
 Bu fayl dastur NIMA qilishini belgilaydi. Har modulda: vazifasi, ekranlari, funksiyalari (qaysi bosqichda),
-qabul mezonlari. Oxirida **formulalar lug'ati (F1–F43)**: dasturdagi har bir raqam shu yerdagi bitta formuladan
+qabul mezonlari. Oxirida **formulalar lug'ati (F1–F48)**: dasturdagi har bir raqam shu yerdagi bitta formuladan
 hisoblanadi. Kodda formula funksiyasi docstring'ida `F12` kabi raqam bilan belgilanadi.
 
 Belgilar: **[B4]** = shu bosqichda quriladi (05-bosqichlar.md). **[Keyin]** = ommaviy chiqishdan keyin.
@@ -109,8 +109,17 @@ Bloklar (joylashuvi 04-dizayn.md §7.2 desktop, §7.3 mobil):
 4. **Diqqat talab qiladi** (ustuvorlik bo'yicha): tannarxsiz sotuvlar, tugayotgan tovar, zarar bilan sotilayotgan
    SKU, yangi jarimalar, kechikayotgan kargo, sinxron xatosi, Uzum to'lovi kutilmoqda.
 5. **Eng foydali 5 / zarar 5 SKU.**
-6. **Qo'shimcha ko'rsatkichlar:** marja (yonida tannarxsiz qism ulushi, F13), ROI, bekor %, qaytish %, reklama ulushi (DRR), muzlagan pul, yo'ldagi
-   tovar qiymati.
+6. **KPI sarhisob** (ADR-043; davr chizig'idan keyin): "Buyurtmadan sof foydagacha" yo'li (yalpi buyurtmalar summasi →
+   − bekor → − qaytarish → = tushum → − Uzum ushlab qolgan → = Uzumdan keyin qoladi → sof foyda) va 4 guruh, 24 kartochka:
+   **buyurtmalar va tushum** (yalpi summa F44, tushum F3, sotilgan dona, yalpi va sof buyurtmalar, sof ulushi — F45),
+   **Uzum ushlab qolgani va foyda** (F46 va ulushi, F47, DRR, sof foyda, marja — yonida tannarxsiz qism ulushi, ROI),
+   **qaytarilgan va bekor qilingan** (dona, summa, soni va summasi bo'yicha ulush — F18, F17), **o'rtacha** (F48: chek,
+   tovar narxi, buyurtmadagi tovarlar). Har kartochkada: qiymat, oldingi davr qiymati, o'zgarish (pul va sonda nisbiy,
+   ulushda — punkt; rang = yo'nalish × yaxshimi), trend nuqtalari (davr ≤ 62 kun — kunlik, ≤ 366 — haftalik, undan uzun —
+   oylik), formula ("?"). Bekor va qaytarish ulushi sozlamadagi chegaradan oshsa — ogohlantirish (M16).
+7. **Tovardagi pul:** muzlagan pul, yo'ldagi tovar qiymati (bugungi holat, davrga bog'liq emas).
+8. **Yo'qotishlar va imkoniyat** [B4.27]: formula bilan (AI'siz, ADR-021) — qaytarish xarajati, zarardagi SKU, tannarxsiz
+   sotuvlar; bekor summasi yo'qotish sifatida sanalmaydi (tovar qaytadi).
 
 Qabul mezonlari: 1 yillik, 50 000 sotuv qatori bilan javob p95 < 700 ms; davr va do'kon tanlovi URL'da
 (havolani ulashsa shu ko'rinish ochiladi); 360 px kenglikda gorizontal skroll yo'q.
@@ -161,8 +170,9 @@ Qabul mezonlari: 2 000 SKU'li jadval virtual skroll bilan silliq; har raqam yoni
 ## M7. Buyurtmalar, bekor va qaytishlar [B4; FBS B5]
 
 - Sotuv qatorlari ro'yxati: sana, holat, SKU, dona, narx, komissiya, logistika, Uzum to'lovi, tannarx, foyda.
-- Bekor tahlili: ulush (F17), topshirilgandan keyin bekor, SKU bo'yicha, trend.
-- Qaytish tahlili: ulush (F18), sabab (`returnCause`), SKU bo'yicha, qaytish xarajati (qaytim saqlash C000004).
+- Bekor tahlili (ADR-043 — mijozga topshirilmagan): ulush (F17), dona va summa, sabab, SKU bo'yicha, trend.
+- Qaytarish tahlili (mijoz olgan yoki punktda ko'rib rad etgan va qaytargan): ulush (F18), dona va summa, sabab
+  (`returnCause`), SKU bo'yicha, qaytarish xarajati (qaytim saqlash C000004).
 - FBS (do'konda bo'lsa): faol buyurtmalar, `acceptUntil` / `deliverUntil` muddatlari, kechikish xavfi [B5].
   FBS buyurtmani tasdiqlash / yorliq chop etish [Keyin].
 
@@ -327,8 +337,8 @@ Yakunlangan sana Open API'da yo'q (FBO uchun), shuning uchun yagona asos — buy
 
 **F2. Holatlar.** Yakunlangan = `TO_WITHDRAW`; Jarayonda = `PROCESSING`; Bekor = `CANCELED`. **Hisobga olinadigan**
 (F3–F8, F12–F15) = Yakunlangan + Jarayonda (ADR-036): Jarayondagi qator Uzum hozir bergan qiymatlar bilan kiradi va
-har kesimda alohida ko'rsatiladi ("shundan jarayonda"); bekor bo'lsa Uzum uni 0 qiladi — o'zi chiqadi. F16 (R), F17,
-F18 — faqat yakuniy holatlar;
+har kesimda alohida ko'rsatiladi ("shundan jarayonda"); bekor bo'lsa Uzum uni 0 qiladi — o'zi chiqadi. F16 (R) — faqat yakuniy holatlar;
+F17, F18 — Bekor holat topshirilgan / topshirilmagan bo'yicha ikkiga bo'linadi (ADR-043);
 Qisman bekor = `PARTIALLY_CANCELLED` (qolgan `amount` yakunlangan sifatida; Temurning real ma'lumotida bunday qator
 yo'q — taxmin, birinchi real qatorda `scripts/compare_staging.py` tekshiradi). Real ma'lumot (B2.11): Bekor qatorda
 Uzum `amount` = 0, `commission`, `logisticDeliveryFee`, `sellerProfit` = 0 beradi, bekor qilingan dona — `amountReturns`.
@@ -395,10 +405,16 @@ F11 (o'z tushumidan), F15 qamrovi bilan. R = tanlangan do'konlarning oxirgi 90 k
 ichida Yakunlangan ulushi — **fakt** sifatida ko'rsatiladi ("bunday sotuvlarning X% yakunlangan"), summaga
 ko'paytirilmaydi. Ma'lumot kam bo'lsa (< 50 dona) R ko'rsatilmaydi.
 
-**F17. Bekor ulushi** = Bekor / (Yakunlangan + Bekor), dona bo'yicha. Bekor dona = `amount` + `amountReturns` (F2).
+**F17. Bekor** (ADR-043) — Bekor holatdagi qator, tovar xaridorga **topshirilmagan** (`dateIssued` yo'q): mijoz olib
+ketmagan, buyurtmani bekor qilgan yoki tovar yetib kelmagan. Bekor dona = `amount` + `amountReturns` (F2), summa =
+`sellPrice` × dona. **Bekor ulushi** (soni) = bekor dona / yalpi dona (F44); (summa) = bekor summasi / yalpi buyurtmalar
+summasi (F44).
 
-**F18. Qaytish ulushi** = qaytgan / (sotilgan + qaytgan) — Uzum ta'rifi (SKU `quantityReturned`, `quantitySold`);
-davr bo'yicha esa Yakunlangan qatorlardagi `amountReturns` dan (Bekor qatorniki — bekor qilingan dona, qaytish emas).
+**F18. Qaytarish** (ADR-043) — Bekor holatdagi qator, tovar xaridorga **topshirilgan** (`dateIssued` bor: mijoz olgan
+yoki punktda ko'rib rad etgan — Temur: ko'rish uchun berilganda logistika yechiladi, rad etilsa qaytariladi; realcheck
+`cancel_split` tekshiradi), va Yakunlangan qatordagi `amountReturns` (qisman qaytarish). **Qaytarilish ulushi** (soni) =
+qaytgan / (sotilgan + qaytgan) — Uzum ta'rifi (SKU `quantityReturned`, `quantitySold`), sotilgan = F3 donasi (Yakunlangan
++ Jarayonda); (summa) = qaytarish summasi / (F3 + qaytarish summasi).
 
 **F19. Reklama ulushi (DRR)** = reklama / F3. SKU ACOS = SKU'ga bog'langan reklama (AD#id → sotuv qatori) /
 SKU tushumi. Bog'lanmagan reklama SKU'larga tushum ulushi bo'yicha taqsimlanadi (sozlamada o'chirish mumkin).
@@ -523,3 +539,20 @@ narxlar o'rtachasi). Qoida hech kimni topmasa (ma'lumot kam) — hamma qoldiq bo
 ulushida (ADR-026). Bu qism SKU'ning to'g'ridan-to'g'ri xarajati. Qoida — `upcore.tariffs.StorageRule` (sana bo'yicha).
 Realcheck `storage_rule` — Uzum yechgani ↔ modellar (`uzum_rule`). Qaytim saqlash — qaytarishdagi SKU'larga dona
 bo'yicha (ADR-040).
+
+**F44. Yalpi buyurtmalar summasi (GMV)** (ADR-043) = F3 + bekor summasi (F17) + qaytarish summasi (F18) = Σ `sellPrice` ×
+(`amount` + `amountReturns`) hamma ma'lum holatlar bo'yicha (noma'lum holat — hech qaysi). Yalpi dona — xuddi shunday.
+Yalpi − bekor − qaytarish = F3 (tushum, "sof GMV") har doim aniq. Kun — buyurtma sanasi (F1).
+
+**F45. Buyurtmalar** (ADR-043): yalpi = davrdagi `orderId` soni (do'kon bo'yicha, ma'lum holatlar); sof = kamida bitta
+hisobga olinadigan (Yakunlangan + Jarayonda) donasi bor buyurtma; sof ulushi = sof / yalpi. Buyurtma bitta kunga va
+do'konga tegishli — kunlar yig'indisi davr soniga teng.
+
+**F46. Uzum ushlab qolgan** (ADR-043) = F4 + F5 + F9 — tushumdan Uzum olib qolgan pul (F9 "Uzum xarajatlari"dan keng:
+komissiya va logistika ham). Ulushi = F46 / F3.
+
+**F47. Uzumdan keyin qoladi** (ADR-043) = F3 − F46 (= F6 − F9): tannarx, o'z xarajatlari va soliq hali ayrilmagan.
+Raqobatchilardagi so'mdagi "marja" shu raqam; bizda foyda — faqat F12.
+
+**F48. O'rtacha ko'rsatkichlar** (ADR-043): o'rtacha chek = F3 / sof buyurtmalar (F45); o'rtacha tovar narxi = F3 /
+sotilgan dona; buyurtmadagi tovarlar = sotilgan dona / sof buyurtmalar. Maxraj 0 — "—".

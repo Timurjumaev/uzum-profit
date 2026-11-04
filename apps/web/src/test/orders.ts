@@ -65,13 +65,13 @@ export function analysisData(over: Partial<Analysis> = {}): Analysis {
   return {
     meta,
     summary: {
-      units: 13,
-      canceled: 5,
-      returns: 3,
-      cancel_share: "0.277778",
-      return_share: "0.187500",
-      canceled_after_issue: 2,
-      after_issue_share: "0.400000",
+      units: 14,
+      canceled: 3,
+      returns: 5,
+      cancel_share: "0.136364",
+      return_share: "0.263158",
+      cancel_revenue: "600000.00",
+      return_revenue: "1000000.00",
       return_storage_cost: "49000.00",
     },
     daily: [

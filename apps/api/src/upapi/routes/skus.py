@@ -32,9 +32,7 @@ from sqlalchemy import func, select
 from upcore.metrics import (
     ProfitLabel,
     StatusGroup,
-    cancel_rate,
     profit_label,
-    return_share,
     statuses,
 )
 from upcore.money import Currency, Money, quantize
@@ -175,8 +173,8 @@ def _row(
         uncovered_share=s.uncovered_share,
         uncovered_lines=s.uncovered_lines,
         roi=s.roi,
-        return_share=return_share(n.units, n.returns),
-        cancel_share=cancel_rate(n.units, n.canceled),
+        return_share=n.return_share,
+        cancel_share=n.cancel_share,
         label=profit_label(s.net_profit, s.margin),
         stock=st.stock if st else 0,
         days_of_stock=st.days_of_stock if st else None,

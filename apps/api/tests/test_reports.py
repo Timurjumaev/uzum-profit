@@ -746,11 +746,43 @@ def test_dashboard_blocks(world: World) -> None:
     today = datetime.now(TASHKENT).date()
     assert periods["this_month"]["period"]["start"] == today.replace(day=1).isoformat()
     assert dash["forecast"]["revenue"] is not None
-    kpis = dash["kpis"]
-    # F17: bekor 1 / (yakunlangan 12 + 1); F18: qaytgan 1 / (12 + 1) — Jarayondagi kirmaydi (ADR-036);
-    # F19: reklama 20 000 / 2 000 000.
-    assert D(kpis["cancel_share"]) == D("0.076923") and D(kpis["return_share"]) == D("0.076923")
-    assert D(kpis["drr"]) == D("0.010000")
+    # KPI sarhisob (ADR-043): 4 guruh, har kartochkada joriy, oldingi, o'zgarish va trend.
+    summary = dash["summary"]
+    assert [g["key"] for g in summary["groups"]] == ["orders", "uzum", "returns", "average"]
+    assert sum(len(g["cards"]) for g in summary["groups"]) == 24
+    cards = {c["key"]: c for g in summary["groups"] for c in g["cards"]}
+    assert summary["bucket"] == "day" and len(summary["points"]) == 20
+    assert all(len(c["series"]) == 20 for c in cards.values())
+
+    def val(key: str) -> D:
+        return D(cards[key]["value"])
+
+    # Sotilgan: 12 yakunlangan + 1 Jarayonda = 13; bekor (topshirilmagan) 1; qaytarish (amountReturns) 1 → yalpi 15.
+    # F17: 1 / 15; F18: 1 / (13 + 1); F19: reklama 20 000 / 2 000 000.
+    assert val("units") == 13 and val("cancel_units") == 1 and val("return_units") == 1
+    assert val("cancel_share") == D("0.066667") and val("return_share") == D("0.071429")
+    assert val("cancel_revenue") == D(200_000) and val("return_revenue") == D(200_000)
+    assert val("gross_revenue") == val("revenue") + val("cancel_revenue") + val("return_revenue")
+    assert val("drr") == D("0.010000")
+    # F45: oktabrda 8 ta buyurtma (har sotuv — alohida buyurtma), shundan bekor qilingani sof emas.
+    assert val("orders") == 8 and val("orders_net") == 7 and val("net_order_share") == D("0.875000")
+    assert val("average_check") == (val("revenue") / 7).quantize(D("0.01"))
+    assert val("units_per_order") == D("1.857143")  # 13 / 7
+    # F46, F47: Uzum xarajatlari = komissiya + logistika + F9; Uzumdan keyin qoladi = tushum − F46.
+    rows = {r["code"]: money(r["amount"]) for r in dash["rows"]}
+    uzum = sum((v for k, v in rows.items() if k.startswith("uzum:")), D(0))
+    assert val("uzum_costs") == -(rows["commission"] + rows["logistics"]) - uzum
+    assert val("after_uzum") == val("revenue") - val("uzum_costs")
+    assert val("net_profit") == money(dash["statement"]["net_profit"])
+    # Oldingi davr (11–30 sentabr): 1 buyurtma, 2 dona; o'zgarish — nisbiy, ulushlarda — punkt.
+    assert D(cards["orders"]["previous"]) == 1 and D(cards["orders"]["change"]) == 7
+    assert cards["cancel_share"]["previous"] == "0.000000"
+    assert cards["cancel_share"]["change"] == "0.066667"
+    assert cards["cancel_share"]["good"] == "down" and cards["revenue"]["good"] == "up"
+    assert not any(c["warn"] for c in cards.values())  # chegara sozlanmagan
+    # Trend nuqtalari yig'indisi davr qiymatiga teng (additiv kartochkalar).
+    for key in ("revenue", "units", "orders", "cancel_units", "return_revenue"):
+        assert sum(D(x) for x in cards[key]["series"]) == val(key)
     # ADR-037: kutilayotgan sof foyda (F16) — hisobot, davr chizig'i va kunlarda yakunlangan + kutilayotgan = jami.
     assert money(dash["expected"]["net_profit"]) == D(37_000)
     st = dash["statement"]
@@ -770,6 +802,7 @@ def test_dashboard_blocks(world: World) -> None:
         money(oct15["net_profit_processing"]) == D(37_000) and money(oct15["net_profit_done"]) == 0
     )
     # F29: X — 100 000 × (80 + 5 + 2), Z — 50 000 × 40; yo'lda 20 × 120 000.
+    kpis = dash["kpis"]
     assert money(kpis["frozen_money"]) == D(
         13_500_000
     )  # + o'z omborim: Chiroq 2 500 000, Lampa 300 000
@@ -800,8 +833,8 @@ def test_skus_table(world: World) -> None:
     assert money(xa["logistics_per_unit"]) == D(5_000)
     assert money(xa["cogs_per_unit"]) == D(100_000)
     assert money(xa["ads_per_unit"]) == D("2857.14")  # 20 000 / 7
-    assert D(xa["return_share"]) == D("0.142857")  # 1 / (yakunlangan 6 + 1)
-    assert D(xa["cancel_share"]) == D("0.142857")
+    assert D(xa["return_share"]) == D("0.125000")  # 1 / (sotilgan 7 + 1), ADR-043
+    assert D(xa["cancel_share"]) == D("0.111111")  # 1 / yalpi 9
     assert xa["stock"] == 85 and xa["abc"] in ("A", "B", "C") and xa["rank"] == "A"
     assert xa["label"] in ("profitable", "borderline", "loss")
     ya = rows[str(world.ids["ya"])]
@@ -866,17 +899,17 @@ def test_sales_filters_and_summary(world: World) -> None:
     assert len(all_["items"]) == 8
     groups = {i["group"] for i in all_["items"]}
     assert groups == {"completed", "processing", "canceled"}
-    assert all_["summary"] == {
-        "units": 12,
+    assert all_["summary"] == {  # ADR-043: sotilgan = Yakunlangan + Jarayonda, yalpi = 13 + 1 + 1
+        "units": 13,
         "canceled": 1,
         "returns": 1,
-        "cancel_share": "0.076923",
-        "return_share": "0.076923",
+        "cancel_share": "0.066667",
+        "return_share": "0.071429",
     }
     canceled = world.get("sales", group="canceled", **OCT)["items"]
     assert len(canceled) == 1 and canceled[0]["amount"] == 1
     xa = world.get("sales", sku=str(world.ids["xa"]), **OCT)
-    assert len(xa["items"]) == 5 and xa["summary"]["units"] == 6
+    assert len(xa["items"]) == 5 and xa["summary"]["units"] == 7  # + Jarayonda (ADR-043)
     unlinked = world.get("sales", unlinked=True, **OCT)
     assert [i["sku_title"] for i in unlinked["items"]] == ["Noma'lum"]
     assert world.get("sales", group="unknown", **OCT)["items"] == []
@@ -1184,3 +1217,25 @@ def test_benchmark_dashboard_year(db: dict[str, str]) -> None:
                 assert body["total"] == 300
             p95 = sorted(times[1:])[-1]
             assert p95 < LIMIT, (path, [round(t, 3) for t in times])
+
+
+def test_summary_buckets() -> None:
+    """ADR-043: trend nuqtalari — ≤ 62 kun kunlik, ≤ 366 kun 7 kunlik (davr boshidan), undan uzun — oylik."""
+    from upapi.routes.dashboard import _buckets
+    from upcore.metrics import Period
+
+    kind, of = _buckets(Period(d(10, 1), d(10, 31)))
+    assert kind == "day" and of(d(10, 7)) == d(10, 7)
+    kind, of = _buckets(Period(d(7, 1), d(10, 31)))
+    assert kind == "week" and of(d(7, 7)) == d(7, 1) and of(d(7, 8)) == d(7, 8)
+    kind, of = _buckets(Period(date(2025, 1, 1), d(10, 31)))
+    assert kind == "month" and of(d(10, 17)) == d(10, 1)
+
+
+def test_dashboard_weekly_summary(world: World) -> None:
+    dash = world.get("dashboard", start="2026-08-01", end="2026-10-20")
+    summary = dash["summary"]
+    assert summary["bucket"] == "week" and summary["points"][0] == "2026-08-01"
+    cards = {c["key"]: c for g in summary["groups"] for c in g["cards"]}
+    for key in ("revenue", "units", "orders"):
+        assert sum(D(x) for x in cards[key]["series"]) == D(cards[key]["value"])

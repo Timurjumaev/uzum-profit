@@ -9,6 +9,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { App, createAppState } from "../../App";
 import { todayTashkent } from "../../lib/dates";
 import {
+  ALERT_SETTINGS_ROUTE,
   COST_METHOD_ROUTE,
   INVENTORY_SETTINGS_ROUTE,
   json,
@@ -61,7 +62,7 @@ describe("sahifa", () => {
     await renderSettings();
     await ready();
     expect(screen.queryByText(/Sahifa qurilmoqda/)).toBeNull();
-    for (const title of ["Tannarx usuli", "Soliq profili", "Uzum toʻlov jadvali", "Muddatlar va qamrov", "Doʻkonlar"]) {
+    for (const title of ["Tannarx usuli", "Soliq profili", "Uzum toʻlov jadvali", "Muddatlar va qamrov", "Ogohlantirish chegaralari", "Doʻkonlar"]) {
       expect(screen.getByRole("heading", { level: 2, name: title })).toBeTruthy();
     }
     expect(screen.queryByRole("heading", { level: 2, name: "Uzum bonuslari" })).toBeNull();
@@ -227,6 +228,36 @@ describe("muddatlar va qamrov", () => {
     expect(bodiesOf(api, INVENTORY_SETTINGS_ROUTE)[1]).toEqual({});
     await waitFor(() => expect((within(box).getByLabelText("A sinfi") as HTMLInputElement).value).toBe("60"));
     expect((within(box).getByLabelText(/^Tayyorlash/) as HTMLInputElement).value).toBe("");
+  });
+});
+
+describe("ogohlantirish chegaralari (ADR-043)", () => {
+  it("foizda kiritiladi, ulush bo'lib yuboriladi; bo'sh — o'chirish; 100% dan katta — saqlab bo'lmaydi", async () => {
+    const saved = settingsData({ alerts: { cancel_share: "0.300000", return_share: null } });
+    const { api } = await renderSettings({ [ALERT_SETTINGS_ROUTE]: () => json(200, saved) });
+    await ready();
+    const box = section("Ogohlantirish chegaralari");
+    const save = within(box).getByRole("button", { name: "Saqlash" }) as HTMLButtonElement;
+    const cancel = within(box).getByLabelText(/^Bekor boʻlish ulushi/) as HTMLInputElement;
+    expect(cancel.value).toBe("");
+    fireEvent.change(cancel, { target: { value: "120" } });
+    expect(save.disabled).toBe(true);
+    expect(within(box).getByText("Chegara 0 dan katta va 100% dan oshmasligi kerak.")).toBeTruthy();
+    fireEvent.change(cancel, { target: { value: "30" } });
+    fireEvent.change(within(box).getByLabelText(/^Qaytarilish ulushi/), { target: { value: "7,5" } });
+    expect(save.disabled).toBe(false);
+    fireEvent.click(save);
+    await waitFor(() => expect(bodiesOf(api, ALERT_SETTINGS_ROUTE)).toHaveLength(1));
+    expect(bodiesOf(api, ALERT_SETTINGS_ROUTE)[0]).toEqual({ cancel_share: "0.3", return_share: "0.075" });
+  });
+
+  it("saqlangan chegara foizda ko'rinadi; buxgalter faqat ko'radi", async () => {
+    await renderSettings({ [SETTINGS_ROUTE]: () => json(200, settingsData({ alerts: { cancel_share: "0.250000", return_share: "0.050000" } })) }, "accountant");
+    await ready();
+    const box = section("Ogohlantirish chegaralari");
+    expect((within(box).getByLabelText(/^Bekor boʻlish ulushi/) as HTMLInputElement).value).toBe("25");
+    expect((within(box).getByLabelText(/^Qaytarilish ulushi/) as HTMLInputElement).value).toBe("5");
+    expect(within(box).queryByRole("button", { name: "Saqlash" })).toBeNull();
   });
 });
 

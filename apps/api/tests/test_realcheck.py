@@ -249,6 +249,57 @@ def test_processing_logistics_check(db: dict[str, str]) -> None:
     assert any("topshirilmagan va logistika 0: 1" in line for line in rc.summary(report))
 
 
+def test_cancel_split_check(db: dict[str, str]) -> None:
+    """ADR-043: Bekor holat topshirilgan (qaytarish) / topshirilmagan (bekor) bo'yicha — dona, summa, logistika yechilgan va
+    qaytarilgani (punktda ko'rib rad etish: yechilib, darhol qaytariladimi)."""
+    when = NOW - 10 * DAY
+    canceled = {"status": "CANCELED", "amount": 0, "commission": 0, "sellerProfit": 0}
+    fake = seller(
+        shops=BOTH,
+        orders={
+            A: [
+                sf.order(1, A, when, **canceled, amountReturns=2, logisticDeliveryFee=0),
+                sf.order(
+                    2,
+                    A,
+                    when,
+                    price=50_000,
+                    **canceled,
+                    amountReturns=1,
+                    logisticDeliveryFee=0,
+                    dateIssued=sf.ms(NOW - 8 * DAY),
+                    returnCause="Tovar to'g'ri kelmadi",
+                ),
+                sf.order(3, A, when, amountReturns=1),  # Yakunlangan, qisman qaytgan
+            ],
+            B: [],
+        },
+        expenses={
+            A: [
+                sf.expense(301, A, NOW - 8 * DAY, "logistics-volume", 4_000, externalId="2"),
+                sf.expense(302, A, NOW - 8 * DAY, "return-logistics-volume", 4_000, externalId="2"),
+            ],
+            B: [],
+        },
+    )
+    _, report = synced(db, fake)
+    split = shop(report, A)["checks"]["cancel_split"]
+    rows = {r["issued"]: r for r in split["by_month"]}
+    assert (rows[False]["lines"], rows[False]["units"], rows[False]["revenue"]) == (1, 2, "200000")
+    assert rows[False]["charged_lines"] == 0 and rows[False]["refunded"] == "0"
+    issued = rows[True]
+    assert (issued["units"], issued["revenue"], issued["zero_price"]) == (1, "50000", 0)
+    assert (issued["charged"], issued["refunded"], issued["charged_and_refunded"]) == (
+        "4000",
+        "4000",
+        1,
+    )
+    assert split["causes"]["issued"] == [{"cause": "Tovar to'g'ri kelmadi", "units": 1}]
+    assert split["causes"]["not_issued"][0]["units"] == 2
+    assert split["not_canceled_with_returns"] == {"lines": 1, "units": 1}
+    assert any("topshirilgan — qaytarish 1 dona" in line for line in rc.summary(report))
+
+
 def test_expense_timing_checks(db: dict[str, str]) -> None:
     """B4.20 (07 Q10): Uzum yechgan logistika ↔ sotuv qatori (bekor qatorda yechilgan — yashirin), buyurtmaga bog'liq
     reklama ("xaridor olganida", ``AD#<qator id>``) — yechilgan kun buyurtma va topshirilgan kunga nisbatan,

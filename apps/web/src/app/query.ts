@@ -3,7 +3,7 @@
 import { infiniteQueryOptions, MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
-import type { ComponentIn, ComponentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, OpeningIn } from "../lib/api/types";
+import type { ComponentIn, ComponentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, OpeningIn } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -405,6 +405,10 @@ export const deletePayoutSchedule = (orgId: string, id: string) =>
 
 export const setInventorySettings = (orgId: string, body: InventorySettingsIn) =>
   unwrap(api.PUT("/api/v1/orgs/{org_id}/settings/inventory", { params: orgPath(orgId), body }));
+
+/** ADR-043: bekor va qaytarish ulushi ogohlantirish chegaralari (kasr, 0..1; `null` — o'chirish). */
+export const setAlertSettings = (orgId: string, body: AlertsIn) =>
+  unwrap(api.PUT("/api/v1/orgs/{org_id}/settings/alerts", { params: orgPath(orgId), body }));
 
 // --- Boshlang'ich holat (F41, ADR-033) ---------------------------------------------------------------------------
 

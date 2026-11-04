@@ -1,7 +1,7 @@
 """Kunlik agregat ``daily_sku_metrics`` (03 §5, §11): do'kon × SKU × Toshkent kuni — bosh sahifa va P&L tezligi uchun.
 
 Manba: ``sale_items`` (hamma holatlar), ``sale_costs`` (F21) va reklama xarajatlari (``mp_expenses``, toifa
-``advertising``, P&L'ga kiradiganlari). Yig'indilar ``upcore.metrics.sale_totals`` dan (F3–F8, F15, F17, F18, F22) —
+``advertising``, P&L'ga kiradiganlari). Yig'indilar ``upcore.metrics.sale_totals`` dan (F3–F8, F15, F17, F18, F22, F44 — ADR-043) —
 SQL'da formula yo'q. Hamma ustunlar additiv: davr natijasi = kunlar yig'indisi. Sotuvlar — Yakunlangan + Jarayonda
 (ADR-036), Jarayondagi qismi har pul ustuni bo'yicha alohida (``*_processing``, ADR-037) va Uzum logistikasini hali
 yozmagan Jarayondagi qatorlar donasi (``*_logistics_due`` — F5 taxmini asosi; summa o'qishda F40 bilan).
@@ -184,6 +184,10 @@ async def rebuild_shop(
                 "units_logistics_due": t.units_logistics_due,
                 "units_logistics_due_costed": t.units_logistics_due_costed,
                 "lines_logistics_due": t.lines_logistics_due,
+                "canceled_issued": t.canceled_issued,
+                "canceled_revenue": t.canceled_revenue.amount,
+                "canceled_issued_revenue": t.canceled_issued_revenue.amount,
+                "returns_revenue": t.returns_revenue.amount,
             }
         )
     for start in range(0, len(rows), 2_000):

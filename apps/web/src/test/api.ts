@@ -92,6 +92,7 @@ export const stockMoveDeleteRoute = (id: string) => `DELETE /api/v1/orgs/${ORG_I
 export const SETTINGS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/settings`;
 export const COST_METHOD_ROUTE = `PUT /api/v1/orgs/${ORG_ID}/settings/cost-method`;
 export const INVENTORY_SETTINGS_ROUTE = `PUT /api/v1/orgs/${ORG_ID}/settings/inventory`;
+export const ALERT_SETTINGS_ROUTE = `PUT /api/v1/orgs/${ORG_ID}/settings/alerts`;
 export const TAX_CREATE_ROUTE = `POST /api/v1/orgs/${ORG_ID}/tax-profiles`;
 export const taxRoute = (method: "PATCH" | "DELETE", id: string) => `${method} /api/v1/orgs/${ORG_ID}/tax-profiles/${id}`;
 export const PAYOUT_CREATE_ROUTE = `POST /api/v1/orgs/${ORG_ID}/payout-schedules`;

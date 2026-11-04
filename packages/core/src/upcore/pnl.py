@@ -344,6 +344,22 @@ class Statement:
         return total(list(self.uzum_expenses.values()), UZS)
 
     @property
+    def uzum_costs(self) -> Money:
+        """F46 (ADR-043). Uzum ushlab qolgan = F4 + F5 + F9 — tushumdan (F3) Uzum olib qolgan pul (F9 "Uzum xarajatlari"dan
+        keng: komissiya va logistika ham)."""
+        return self.commission + self.logistics + self.uzum_total
+
+    @property
+    def uzum_costs_share(self) -> Decimal | None:
+        """F46. Uzum ushlab qolgan ulushi = F46 / F3."""
+        return ratio(self.uzum_costs.amount, self.revenue.amount)
+
+    @property
+    def after_uzum(self) -> Money:
+        """F47 (ADR-043). Uzumdan keyin qoladi = F3 − F46 (= F6 − F9); tannarx, o'z xarajatlari va soliq ayrilmagan."""
+        return self.revenue - self.uzum_costs
+
+    @property
     def own_total(self) -> Money:
         return total(list(self.own_expenses.values()), UZS)
 

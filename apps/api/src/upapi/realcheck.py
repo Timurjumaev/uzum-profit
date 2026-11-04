@@ -15,6 +15,8 @@ Sinxronlangan ma'lumotdan JSON chiqaradi (stdout; xulosa — stderr):
   maydonlar ma'nosini real ma'lumotda aniqlash uchun; faqat yig'indilar, nom va shaxsiy ma'lumot yo'q;
 - **xarajatlar SKU va sotuvga** (B4.21, ADR-039) — boshqa xarajat turlarining matn / ``externalId`` ko'rinishlari va
   sotuv / SKU / mahsulotga mosligi, logistika farqi namunalari, saqlash ↔ qoldiq × narx modeli;
+- **bekor va qaytarish** (ADR-043) — Bekor holat topshirilgan / topshirilmagan bo'yicha oyma-oy (dona, summa, logistika
+  yechilgan va qaytarilgani, sabablar) va ``/v1/return`` donalari — Uzum kabineti bilan solishtirish uchun;
 - **xarajatlar vaqti va bog'lanishi** (B4.20, 07 Q10) — Uzum yechgan logistika ↔ sotuv qatoridagi logistika (holat
   bo'yicha), reklama turlari (buyurtmaga bog'liq "xaridor olganida" turi, ``AD#`` → sotuv qatori, yechilgan kun
   buyurtma va topshirilgan kunga nisbatan), ``dateService`` ↔ ``dateCreated`` farqi va saqlash yechiladigan kunlar.
@@ -391,6 +393,80 @@ async def logistics_reconcile_check(conn: AsyncConnection, shop: UUID) -> dict[s
             {**dict(r._mapping), "line_fee": money(r.line_fee), "expense_net": money(r.expense_net)}
             for r in rows
         ]
+    }
+
+
+async def cancel_split_check(conn: AsyncConnection, shop: UUID) -> dict[str, Any]:
+    """ADR-043 tekshiruvi: Bekor holatdagi qatorlar topshirilgan (``dateIssued`` bor — qaytarish, F18) va topshirilmagan
+    (bekor, F17) bo'yicha, oy kesimida (buyurtma sanasi, F1) — Uzum kabinetidagi qaytarish va bekor sonlari bilan
+    solishtirish uchun. Har guruhda: qatorlar, dona, summa (``sellPrice`` × dona), narxi 0 qatorlar va sotuvga bog'langan
+    logistika: yechilgan (chiqim), qaytarilgan (kirim yoki ``logistics_refund``) va ikkalasi bor qatorlar — punktda ko'rib
+    rad etilganda logistika yechilib, darhol qaytariladimi (Temur, 2026-11-04). Sabablar — Uzum ``returnCause`` matni
+    (standart iboralar, shaxsiy ma'lumot yo'q). ``/v1/return`` dagi RETURN donalari ham oy bo'yicha (taqqoslash)."""
+    month = "to_char(" + _day("s.ordered_at") + ", 'YYYY-MM')"
+    rows = await conn.execute(
+        text(
+            "WITH x AS (SELECT e.sale_item_id AS id, "
+            "sum(e.amount) FILTER (WHERE e.type = 'OUTCOME' AND e.category = 'logistics') AS charged, "
+            "sum(e.amount) FILTER (WHERE e.type = 'INCOME' OR e.category = 'logistics_refund') AS refunded "
+            "FROM mp_expenses e WHERE e.shop_id = :s AND e.sale_item_id IS NOT NULL "
+            "AND e.category IN ('logistics', 'logistics_refund') AND e.excluded IS DISTINCT FROM 'status' "
+            "GROUP BY 1) "
+            f"SELECT {month} AS month, (s.issued_at IS NOT NULL) AS issued, count(*) AS lines, "
+            "coalesce(sum(s.amount + s.amount_returns), 0) AS units, "
+            "coalesce(sum(s.sell_price * (s.amount + s.amount_returns)), 0) AS revenue, "
+            "count(*) FILTER (WHERE s.sell_price = 0) AS zero_price, "
+            "count(x.charged) AS charged_lines, coalesce(sum(x.charged), 0) AS charged, "
+            "count(x.refunded) AS refunded_lines, coalesce(sum(x.refunded), 0) AS refunded, "
+            "count(*) FILTER (WHERE x.charged IS NOT NULL AND x.refunded IS NOT NULL) AS charged_and_refunded "
+            "FROM sale_items s LEFT JOIN x ON x.id = s.id "
+            "WHERE s.shop_id = :s AND upper(trim(s.status)) = 'CANCELED' GROUP BY 1, 2 ORDER BY 1, 2"
+        ),
+        {"s": shop},
+    )
+    by_month = [
+        {
+            **dict(r._mapping),
+            "revenue": money(r.revenue),
+            "charged": money(r.charged),
+            "refunded": money(r.refunded),
+        }
+        for r in rows
+    ]
+    causes = await conn.execute(
+        text(
+            "SELECT (issued_at IS NOT NULL) AS issued, coalesce(return_cause, '<null>') AS cause, "
+            "sum(amount + amount_returns) AS units FROM sale_items "
+            "WHERE shop_id = :s AND upper(trim(status)) = 'CANCELED' GROUP BY 1, 2 ORDER BY 3 DESC"
+        ),
+        {"s": shop},
+    )
+    top: dict[str, list[dict[str, Any]]] = {"issued": [], "not_issued": []}
+    for r in causes:
+        bucket = top["issued" if r.issued else "not_issued"]
+        if len(bucket) < SAMPLE:
+            bucket.append({"cause": r.cause[:80], "units": int(r.units)})
+    partial = await _scalar_row(
+        conn,
+        "SELECT count(*) AS lines, coalesce(sum(amount_returns), 0) AS units FROM sale_items "
+        "WHERE shop_id = :s AND upper(trim(status)) IN ('TO_WITHDRAW', 'PARTIALLY_CANCELLED', 'PROCESSING') "
+        "AND amount_returns > 0",
+        shop,
+    )
+    returns = await conn.execute(
+        text(
+            "SELECT to_char(" + _day("r.created_on") + ", 'YYYY-MM') AS month, r.type, "
+            "count(DISTINCT r.id) AS returns, coalesce(sum(i.quantity), 0) AS units "
+            "FROM mp_returns r LEFT JOIN mp_return_items i ON i.return_id = r.id "
+            "WHERE r.shop_id = :s GROUP BY 1, 2 ORDER BY 1, 2"
+        ),
+        {"s": shop},
+    )
+    return {
+        "by_month": by_month,
+        "causes": top,
+        "not_canceled_with_returns": partial,
+        "uzum_returns_by_month": [dict(r._mapping) for r in returns],
     }
 
 
@@ -928,6 +1004,7 @@ async def shop_report(
             "logistics": await logistics_check(conn, shop.id),
             "processing_logistics": await processing_logistics_check(conn, shop.id, now),
             "logistics_reconcile": await logistics_reconcile_check(conn, shop.id),
+            "cancel_split": await cancel_split_check(conn, shop.id),
             "ads": await ads_check(conn, shop.id),
             "expense_dates": await expense_dates_check(conn, shop.id, now),
             "expense_refs": await expense_refs_check(conn, shop.id),
@@ -998,6 +1075,14 @@ def summary(report: dict[str, Any]) -> list[str]:
             ads = checks["ads"]["by_code"]
             rec = checks["logistics_reconcile"]["by_status"]
             canceled = next((r for r in rec if r["status"] == "CANCELED"), None)
+            split = checks["cancel_split"]["by_month"]
+
+            def part(issued: bool, split: list[dict[str, Any]] = split) -> str:
+                rows = [r for r in split if r["issued"] is issued]
+                units = sum(int(r["units"]) for r in rows)
+                both = sum(int(r["charged_and_refunded"]) for r in rows)
+                return f"{units} dona (logistika yechilib qaytarilgan {both} qator)"
+
             storage = next(
                 (r for r in checks["expense_dates"]["by_category"] if r["category"] == "storage"),
                 None,
@@ -1012,6 +1097,8 @@ def summary(report: dict[str, Any]) -> list[str]:
                 f"ADR-041 tekshiruvi, 0 bo'lishi kerak; topshirilgan va 0: {pl['issued_zero']}); "
                 f"logistika qator ↔ yechilgan farqi: {sum(r['differ'] for r in rec)} qator, bekor "
                 f"qatorlarda yechilgan {canceled['expense_net'] if canceled else '0'} so'm; "
+                f"bekor holat (ADR-043): topshirilgan — qaytarish {part(True)}, topshirilmagan — bekor "
+                f"{part(False)}; "
                 f"reklama {sum(r['n'] for r in ads)} qator, shundan buyurtmaga bog'liq matn "
                 f"{sum(r['per_order_text'] for r in ads)}, sotuvga bog'langan {sum(r['linked'] for r in ads)}; "
                 f"saqlash 60 kunda {storage['days_60d'] if storage else 0} kun yechilgan, model bilan "

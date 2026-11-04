@@ -24,9 +24,7 @@ from sqlalchemy import and_, func, or_, select
 from upcore.metrics import (
     COUNTED,
     StatusGroup,
-    cancel_rate,
     logistics_due,
-    return_share,
     status_group,
     statuses,
     with_expected_logistics,
@@ -191,7 +189,7 @@ async def sales(
         )
 
     t = (await rc.sale_sums(ctx.conn, f, sku=sku, unlinked=unlinked)).get(None, rc.SaleSums())
-    units, canceled, returns = t.units, t.canceled, t.returns
+    units, canceled, returns = t.units, t.cancel_units, t.return_units  # ADR-043
     tail = rows[-1] if rows else None
     return SalesOut(
         meta=await meta(ctx.conn, f, KINDS),
@@ -203,7 +201,7 @@ async def sales(
             units=units,
             canceled=canceled,
             returns=returns,
-            cancel_share=cancel_rate(units, canceled),
-            return_share=return_share(units, returns),
+            cancel_share=t.cancel_share,
+            return_share=t.return_share,
         ),
     )

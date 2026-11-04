@@ -11,6 +11,7 @@ commitdan keyin ``calc.org`` ishi (P&L'da "qayta hisoblandi"). Sinxron sozlamaga
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import date
 from decimal import Decimal
 from typing import Annotated, Any, Literal
@@ -76,6 +77,13 @@ class InventorySettingsOut(BaseModel):
     cover_defaults: dict[str, int]
 
 
+class AlertsOut(BaseModel):
+    """ADR-043: ogohlantirish chegaralari (ulush, 0..1); ``null`` — sozlanmagan (ogohlantirish yo'q)."""
+
+    cancel_share: Decimal | None
+    return_share: Decimal | None
+
+
 class SettingsOut(BaseModel):
     cost_method: Literal["fifo", "average"]
     tax_profiles: list[TaxProfileOut]
@@ -83,6 +91,7 @@ class SettingsOut(BaseModel):
     payout_schedules: list[PayoutScheduleOut]
     payout_terms: list[PayoutTermsOut]
     inventory: InventorySettingsOut
+    alerts: AlertsOut
 
 
 class CostMethodIn(BaseModel):
@@ -118,6 +127,16 @@ class InventorySettingsIn(BaseModel):
 
     lead_days: dict[str, Annotated[int, Field(ge=0, le=orgsettings.MAX_LEAD_DAYS)]] | None = None
     cover_days: dict[str, Annotated[int, Field(ge=0, le=orgsettings.MAX_COVER_DAYS)]] | None = None
+
+
+Share = Annotated[Decimal, Field(gt=0, le=1, max_digits=7, decimal_places=6)]
+
+
+class AlertsIn(BaseModel):
+    """Bekor (F17) va qaytarish (F18) ulushi chegarasi; ``null`` — o'chirish."""
+
+    cancel_share: Share | None = None
+    return_share: Share | None = None
 
 
 def _plain(values: dict[str, Any]) -> dict[str, Any]:
@@ -177,6 +196,10 @@ async def _read(ctx: OrgContext) -> SettingsOut:
             lead_days=dict(cfg.lead_days) or None,
             cover_days={k.value: effective[k] for k in AbcClass},
             cover_defaults={k.value: DEFAULT.cover_days[k] for k in AbcClass},
+        ),
+        alerts=AlertsOut(
+            cancel_share=cfg.alerts.get("cancel_share"),
+            return_share=cfg.alerts.get("return_share"),
         ),
     )
 
@@ -333,7 +356,8 @@ async def set_inventory(body: InventorySettingsIn, ctx: Manager) -> SettingsOut:
         raise AppError("bad_cover_days", 422, detail="A, B va C kerak")
     o = m.orgs
     before = orgsettings.parse(await ctx.conn.scalar(select(o.c.settings)))
-    after = orgsettings.OrgSettings(
+    after = replace(
+        before,
         lead_days=dict(lead) if lead else {},
         cover_days={AbcClass(k): v for k, v in cover.items()} if cover else {},
     )
@@ -343,6 +367,30 @@ async def set_inventory(body: InventorySettingsIn, ctx: Manager) -> SettingsOut:
         )
         await ctx.audit(
             "settings.inventory",
+            "org",
+            ctx.org_id,
+            before=orgsettings.dump(before),
+            after=orgsettings.dump(after),
+        )
+    return await _read(ctx)
+
+
+# --- Ogohlantirish chegaralari (ADR-043) --------------------------------------------------------
+
+
+@router.put("/orgs/{org_id}/settings/alerts", response_model=SettingsOut)
+async def set_alerts(body: AlertsIn, ctx: Manager) -> SettingsOut:
+    """Bosh sahifadagi bekor va qaytarish ulushi kartochkasi shu chegaradan oshsa belgilanadi. Kodda standart yo'q."""
+    o = m.orgs
+    before = orgsettings.parse(await ctx.conn.scalar(select(o.c.settings)))
+    values = {"cancel_share": body.cancel_share, "return_share": body.return_share}
+    after = replace(before, alerts={k: v for k, v in values.items() if v is not None})
+    if after != before:
+        await ctx.conn.execute(
+            update(o).values(settings=orgsettings.dump(after), updated_at=func.now())
+        )
+        await ctx.audit(
+            "settings.alerts",
             "org",
             ctx.org_id,
             before=orgsettings.dump(before),
