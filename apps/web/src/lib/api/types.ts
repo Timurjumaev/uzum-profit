@@ -47,6 +47,7 @@ export type ComponentKind = Schemas["ComponentKind"];
 export type AllocationBase = Schemas["AllocationBase"];
 export type PurchaseIn = Schemas["PurchaseIn"];
 export type PurchasePatch = Schemas["PurchasePatch"];
+export type PickerRow = Schemas["PickerRowOut"];
 export type LineIn = Schemas["LineIn"];
 export type LinePatch = Schemas["LinePatch"];
 export type ComponentIn = Schemas["ComponentIn"];

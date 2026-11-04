@@ -192,6 +192,14 @@ export const itemsQuery = (orgId: string, q: string) =>
     queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/items", { params: { path: { org_id: orgId }, query: { q: q || undefined } } })),
   });
 
+/** Xarid tovari uchun tanlov: hamma SKU (holatidan qat'i nazar) va SKU'siz tovarlar. */
+export const skuPickerQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "sku-picker"],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/sku-picker", { params: { path: { org_id: orgId } } })),
+    staleTime: 60_000,
+  });
+
 /** SKU ↔ tovar: mavjud tovarga, yangi tovar sifatida yoki ajratish (`mode: none`). */
 export const linkItem = (orgId: string, skuId: string, body: ItemLinkIn) =>
   unwrap(api.PUT("/api/v1/orgs/{org_id}/skus/{sku_id}/item", { params: { path: { org_id: orgId, sku_id: skuId } }, body }));
@@ -304,6 +312,10 @@ export const copyPurchase = (orgId: string, purchaseId: string) =>
 
 export const createLine = (orgId: string, purchaseId: string, body: LineIn) =>
   unwrap(api.POST("/api/v1/orgs/{org_id}/purchases/{purchase_id}/lines", { params: purchasePath(orgId, purchaseId), body }));
+
+/** Bir nechta tovarni birdaniga qo'shish (hammasi yoki hech biri). */
+export const createLines = (orgId: string, purchaseId: string, lines: LineIn[]) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/purchases/{purchase_id}/lines/bulk", { params: purchasePath(orgId, purchaseId), body: { lines } }));
 
 export const updateLine = (orgId: string, purchaseId: string, lineId: string, body: LinePatch) =>
   unwrap(

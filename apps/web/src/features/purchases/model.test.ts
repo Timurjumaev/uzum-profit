@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { changedDates, datesInOrder, GROUP_STAGES, isEstimated, nextStage, timelineStages, visibleFlags } from "./model";
+import type { PickerRow } from "../../lib/api/types";
+import { changedDates, datesInOrder, GROUP_STAGES, isEstimated, nextStage, pickerKey, pickerLabel, pickerOptions, timelineStages, visibleFlags } from "./model";
 
 describe("xarid modeli", () => {
   it("keyingi bosqich: qoralama → buyurtma; yopilgan — yo'q", () => {
@@ -42,5 +43,24 @@ describe("xarid modeli", () => {
       { label: "SHIPPED", state: "current", date: "2026-10-12", days: 11, expected: "2026-10-28", delayed: true },
       { label: "ARRIVED", state: "upcoming", date: undefined, days: undefined, expected: undefined, delayed: false },
     ]);
+  });
+
+  it("SKU tanlovi: hech narsa yashirilmaydi, hint — variant, do'kon, qoldiq, holat, takror belgisi", () => {
+    const row = (over: Partial<PickerRow>): PickerRow => ({ sku_id: null, item_id: null, item_name: null, shop_id: null, shop: null, product_title: null, title: null, article: null, image_url: null, stock: null, sold: null, status: null, ...over });
+    const rows = [
+      row({ sku_id: "s1", item_id: "i1", product_title: "Koʻylak", title: "Koʻylak-Qora-M", shop: "byDurii", stock: 5, status: "ACTIVE", article: "KY-1" }),
+      row({ sku_id: "s2", title: "Arxiv", stock: 0, status: "ARCHIVED" }),
+      row({ item_id: "i9", item_name: "Eski tovar" }),
+    ];
+    const t = (key: string, o?: Record<string, unknown>) => (o?.count !== undefined ? `${key}:${String(o.count)}` : key);
+    const options = pickerOptions(rows, t, new Set(["i1"]));
+    expect(options).toHaveLength(3);
+    expect(options.map((o) => o.value)).toEqual(["sku:s1", "sku:s2", "item:i9"]);
+    expect(options[0]).toMatchObject({ label: "Koʻylak", hint: "Koʻylak-Qora-M · byDurii · purchases.lines.stock:5 · ACTIVE · purchases.lines.inPurchase" });
+    expect(options[0]!.keywords).toContain("KY-1");
+    expect(options[1]).toMatchObject({ label: "Arxiv", hint: "purchases.lines.noStock · ARCHIVED" });
+    expect(options[2]).toMatchObject({ label: "Eski tovar", hint: "purchases.lines.withoutSku" });
+    expect(pickerKey(rows[2]!)).toBe("item:i9");
+    expect(pickerLabel(row({}))).toBe("—");
   });
 });

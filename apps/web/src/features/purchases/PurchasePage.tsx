@@ -317,7 +317,15 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
       {editing?.kind === "header" && <PurchaseForm orgId={orgId} detail={detail} onClose={() => setEditing(null)} onSaved={(d) => void applied(d, t("purchases.saved"))} />}
       {editing?.kind === "dates" && <DatesForm orgId={orgId} detail={detail} onClose={() => setEditing(null)} onSaved={(d) => void applied(d, t("purchases.saved"))} />}
       {editing?.kind === "line" && (
-        <LineForm orgId={orgId} purchaseId={p.id} line={editing.line} amounts={amounts} onClose={() => setEditing(null)} onSaved={(d) => void applied(d, t("purchases.lines.saved"))} />
+        <LineForm
+          orgId={orgId}
+          purchaseId={p.id}
+          line={editing.line}
+          existing={detail.lines}
+          amounts={amounts}
+          onClose={() => setEditing(null)}
+          onSaved={(d, count) => void applied(d, count > 1 ? t("purchases.lines.savedMany", { count }) : t("purchases.lines.saved"))}
+        />
       )}
       {editing?.kind === "component" && (
         <ComponentForm

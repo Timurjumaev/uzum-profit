@@ -529,6 +529,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/sku-picker": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sku Picker
+         * @description Xarid qatoriga tanlanadigan hamma narsa: org'ning barcha SKU'lari (do'kon, mahsulot, variant, qoldiq, holat)
+         *     va SKU'siz qolgan tovarlar. Hech narsa holat bo'yicha yashirilmaydi — "mening SKU'm yo'q" xatosi bo'lmasin.
+         */
+        get: operations["sku_picker_api_v1_orgs__org_id__sku_picker_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/skus/{sku_id}/item": {
         parameters: {
             query?: never;
@@ -892,6 +913,26 @@ export interface paths {
         put?: never;
         /** Create Line */
         post: operations["create_line_api_v1_orgs__org_id__purchases__purchase_id__lines_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/purchases/{purchase_id}/lines/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Lines
+         * @description Bir nechta tovar birdaniga (xitoy partiyasida 10–30 variant): hammasi yoki hech biri.
+         */
+        post: operations["create_lines_api_v1_orgs__org_id__purchases__purchase_id__lines_bulk_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1935,11 +1976,14 @@ export interface components {
         };
         /**
          * LineIn
-         * @description Qator: mavjud tovar (``item_id``) yoki "yangi tovar" (``temp_name``, havola, rasm).
+         * @description Xarid tovari (qator): mavjud tovar (``item_id``), SKU (``sku_id`` — tovari bo'lmasa yaratiladi) yoki "yangi
+         *     tovar" (``temp_name``, havola, rasm). ``item_id`` va ``sku_id`` birga berilmaydi.
          */
         LineIn: {
             /** Item Id */
             item_id?: string | null;
+            /** Sku Id */
+            sku_id?: string | null;
             /** Temp Name */
             temp_name?: string | null;
             /** Url */
@@ -2003,6 +2047,8 @@ export interface components {
         LinePatch: {
             /** Item Id */
             item_id?: string | null;
+            /** Sku Id */
+            sku_id?: string | null;
             /** Temp Name */
             temp_name?: string | null;
             /** Url */
@@ -2022,6 +2068,14 @@ export interface components {
             unit_weight?: number | string | null;
             /** Unit Volume */
             unit_volume?: number | string | null;
+        };
+        /**
+         * LinesIn
+         * @description Bir nechta tovarni birdaniga qo'shish (bitta tranzaksiya, bitta qayta hisob).
+         */
+        LinesIn: {
+            /** Lines */
+            lines: components["schemas"]["LineIn"][];
         };
         /**
          * LinkedItemOut
@@ -2600,6 +2654,48 @@ export interface components {
          * @enum {string}
          */
         Permission: "view_finance" | "view_purchases" | "manage_purchases" | "view_purchase_amounts" | "view_settings" | "manage_settings" | "manage_accounts" | "manage_members" | "manage_billing" | "delete_org" | "view_audit" | "export" | "export_inventory";
+        /**
+         * PickerOut
+         * @description Hamma SKU (holatidan qat'i nazar — arxivlangan va bloklangan ham): avval qoldig'i yoki sotuvi bor, keyin
+         *     qolganlari. ``truncated`` — ro'yxat ``MAX_PICKER`` dan oshdi.
+         */
+        PickerOut: {
+            /** Rows */
+            rows: components["schemas"]["PickerRowOut"][];
+            /** Truncated */
+            truncated: boolean;
+        };
+        /**
+         * PickerRowOut
+         * @description Xarid qatori uchun tanlov qatori: SKU (``sku_id``) yoki SKU'siz tovar (``sku_id`` — ``null``). ``item_id`` —
+         *     SKU bog'langan tovar (``null`` — tovari yo'q: tanlanganda yaratiladi).
+         */
+        PickerRowOut: {
+            /** Sku Id */
+            sku_id: string | null;
+            /** Item Id */
+            item_id: string | null;
+            /** Item Name */
+            item_name: string | null;
+            /** Shop Id */
+            shop_id: string | null;
+            /** Shop */
+            shop: string | null;
+            /** Product Title */
+            product_title: string | null;
+            /** Title */
+            title: string | null;
+            /** Article */
+            article: string | null;
+            /** Image Url */
+            image_url: string | null;
+            /** Stock */
+            stock: number | null;
+            /** Sold */
+            sold: number | null;
+            /** Status */
+            status: string | null;
+        };
         /** PnlOut */
         PnlOut: {
             meta: components["schemas"]["Meta"];
@@ -5153,6 +5249,46 @@ export interface operations {
             };
         };
     };
+    sku_picker_api_v1_orgs__org_id__sku_picker_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PickerOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     link_item_api_v1_orgs__org_id__skus__sku_id__item_put: {
         parameters: {
             query?: never;
@@ -6329,6 +6465,51 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["LineIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_lines_api_v1_orgs__org_id__purchases__purchase_id__lines_bulk_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                purchase_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinesIn"];
             };
         };
         responses: {

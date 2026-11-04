@@ -394,6 +394,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   olganida" turi, `AD#` → sotuv qatori, yechilgan kun buyurtma va topshirilgan kunga nisbatan), `dateService` ↔
   `dateCreated` farqi va saqlash yechiladigan kunlar; faqat yig'indilar, matnlar raqamsiz.
 
+- B4.28 (ADR-044, Temur talabi): xarid tovarini **hamma SKU'dan** tanlash — `GET /sku-picker` (do'kon, mahsulot, variant,
+  qoldiq, Uzum holati; arxivlangan va bloklangan ham; avval qoldig'i yoki sotuvi borlari) va SKU'siz tovarlar;
+  `LineIn.sku_id` (tovari yo'q SKU'ga tovar o'zi yaratiladi) va `POST /purchases/{id}/lines/bulk` (bir nechta tovar
+  bitta tranzaksiyada); shaklda bir nechta SKU tanlash va takror belgisi.
+
 - B4.26 (ADR-043, Temur talabi — Robohub tahlili): bosh sahifada **KPI sarhisob** — "Buyurtmadan sof foydagacha" yo'li
   va 4 guruh × 24 kartochka (buyurtmalar va tushum; Uzum ushlab qolgani va foyda; qaytarilgan va bekor qilingan;
   o'rtacha), har birida oldingi davr qiymati, o'zgarish (ulushda — punkt), trend chizig'i va formula. Yangi formulalar
@@ -401,6 +406,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   bekor va qaytarish ulushi ogohlantirish chegaralari (`PUT /settings/alerts`), realcheck `cancel_split`.
 
 ### O'zgartirildi
+
+- B4.28 (ADR-044): xarid sahifasidagi «Qatorlar» → **«Partiyadagi tovarlar»** («Tovar qo'shish»; xarajatda «Tovarlarga
+  taqsimlash»), ruscha «Товары в партии». Tovar ro'yxati `items` o'rniga SKU'lardan — bog'lanmagan SKU'lar ham chiqadi.
 
 - B4.26 (ADR-043): Uzum "bekor" qatori ikkiga — mijozga topshirilgan (`dateIssued`) — **qaytarish** (F18), topshirilmagan —
   **bekor** (F17). F17 = bekor / yalpi dona, F18 = qaytgan / (sotilgan + qaytgan), sotilgan — Yakunlangan + Jarayonda.

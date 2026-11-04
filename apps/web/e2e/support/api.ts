@@ -246,6 +246,23 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
     if (key === `GET /orgs/${ORG_ID}/inventory`) return json(route, 200, inventoryData());
     if (key === `GET /orgs/${ORG_ID}/purchases`) return json(route, 200, { items: [purchaseRow()], amounts: true });
     if (key === `GET /orgs/${ORG_ID}/purchases/${PURCHASE_1}`) return json(route, 200, purchaseDetail());
+    if (key === `GET /orgs/${ORG_ID}/sku-picker`) {
+      const row = (n: number, status: string, stock: number) => ({
+        sku_id: `a000000${n}-0000-4000-8000-000000000000`,
+        item_id: null,
+        item_name: null,
+        shop_id: SHOP_A,
+        shop: "byDurii",
+        product_title: "Uzun nomli mahsulot: AirPods himoya gʻilofi silikon",
+        title: `AIRGILOF-RANG-${n}`,
+        article: null,
+        image_url: null,
+        stock,
+        sold: stock,
+        status,
+      });
+      return json(route, 200, { rows: [row(1, "ACTIVE", 12), row(2, "ARCHIVED", 0), row(3, "BLOCKED", 0)], truncated: false });
+    }
     if (key === `GET /orgs/${ORG_ID}/suppliers` || key === `GET /orgs/${ORG_ID}/carriers`) return json(route, 200, []);
     if (key === `POST /orgs/${ORG_ID}/sync/refresh`) return json(route, 202, { queued: 3 });
     if (key === `POST /orgs/${ORG_ID}/accounts`) {

@@ -43,6 +43,7 @@ from upapi.errors import AppError
 from upapi.logs import get_logger
 from upapi.reports import purchases as rp
 from upapi.reports.common import today
+from upapi.routes.items import item_of_sku
 
 router = APIRouter(tags=["purchases"])
 Viewer = Annotated[OrgContext, Depends(require(Permission.VIEW_PURCHASES))]
@@ -81,10 +82,15 @@ class PurchasePatch(BaseModel):
     )
 
 
+MAX_BULK = 100
+
+
 class LineIn(BaseModel):
-    """Qator: mavjud tovar (``item_id``) yoki "yangi tovar" (``temp_name``, havola, rasm)."""
+    """Xarid tovari (qator): mavjud tovar (``item_id``), SKU (``sku_id`` — tovari bo'lmasa yaratiladi) yoki "yangi
+    tovar" (``temp_name``, havola, rasm). ``item_id`` va ``sku_id`` birga berilmaydi."""
 
     item_id: UUID | None = None
+    sku_id: UUID | None = None
     temp_name: Annotated[str | None, Field(max_length=200)] = None
     url: Url = None
     image_url: Url = None
@@ -97,8 +103,15 @@ class LineIn(BaseModel):
     unit_volume: Measure | None = None  # m³ / dona
 
 
+class LinesIn(BaseModel):
+    """Bir nechta tovarni birdaniga qo'shish (bitta tranzaksiya, bitta qayta hisob)."""
+
+    lines: Annotated[list[LineIn], Field(min_length=1, max_length=MAX_BULK)]
+
+
 class LinePatch(BaseModel):
     item_id: UUID | None = None
+    sku_id: UUID | None = None
     temp_name: Annotated[str | None, Field(max_length=200)] = None
     url: Url = None
     image_url: Url = None
@@ -526,6 +539,31 @@ async def _check_shares_targets(
         raise AppError("line_not_found", 404, detail="komponent boshqa xarid qatoriga tegishli")
 
 
+async def _resolve_item(ctx: OrgContext, values: dict[str, Any]) -> None:
+    """``sku_id`` → ``item_id`` (tovari yo'q SKU'ga tovar yaratiladi); ``sku_id`` ustuni yo'q — qatorga yozilmaydi."""
+    sku_id = values.pop("sku_id", None)
+    if sku_id is None:
+        return
+    if values.get("item_id") is not None:
+        raise AppError("bad_line", 422, detail="item_id va sku_id birga berilmaydi")
+    values["item_id"] = await item_of_sku(ctx, sku_id)
+
+
+async def _add_line(ctx: OrgContext, purchase_id: UUID, body: LineIn) -> UUID:
+    values = body.model_dump()
+    if values["unit_price"] is not None:
+        _require_amounts(ctx)
+    await _resolve_item(ctx, values)
+    _check_line(values)
+    await _exists(ctx, m.items, values.get("item_id"), "item_not_found")
+    pl = m.purchase_lines
+    line_id: UUID = await ctx.conn.scalar(
+        insert(pl).values(org_id=ctx.org_id, purchase_id=purchase_id, **values).returning(pl.c.id)
+    )
+    await ctx.audit("purchase_line.create", "purchase_line", line_id, after=_plain(values))
+    return line_id
+
+
 @router.post(
     "/orgs/{org_id}/purchases/{purchase_id}/lines",
     response_model=rp.PurchaseDetailOut,
@@ -539,16 +577,27 @@ async def create_line(
     background: BackgroundTasks,
 ) -> rp.PurchaseDetailOut:
     await _purchase(ctx, purchase_id)
-    values = body.model_dump()
-    if values["unit_price"] is not None:
-        _require_amounts(ctx)
-    _check_line(values)
-    await _exists(ctx, m.items, body.item_id, "item_not_found")
-    pl = m.purchase_lines
-    line_id = await ctx.conn.scalar(
-        insert(pl).values(org_id=ctx.org_id, purchase_id=purchase_id, **values).returning(pl.c.id)
-    )
-    await ctx.audit("purchase_line.create", "purchase_line", line_id, after=_plain(values))
+    await _add_line(ctx, purchase_id, body)
+    await _changed(ctx, request, background, purchase_id)
+    return await _detail(ctx, purchase_id)
+
+
+@router.post(
+    "/orgs/{org_id}/purchases/{purchase_id}/lines/bulk",
+    response_model=rp.PurchaseDetailOut,
+    status_code=201,
+)
+async def create_lines(
+    purchase_id: UUID,
+    body: LinesIn,
+    ctx: Manager,
+    request: Request,
+    background: BackgroundTasks,
+) -> rp.PurchaseDetailOut:
+    """Bir nechta tovar birdaniga (xitoy partiyasida 10–30 variant): hammasi yoki hech biri."""
+    await _purchase(ctx, purchase_id)
+    for line in body.lines:
+        await _add_line(ctx, purchase_id, line)
     await _changed(ctx, request, background, purchase_id)
     return await _detail(ctx, purchase_id)
 
@@ -571,6 +620,10 @@ async def update_line(
         raise AppError("bad_line", 422, detail="ordered_qty bo'sh bo'lmaydi")
     if {"unit_price", "currency"} & set(values):
         _require_amounts(ctx)
+    if values.get("sku_id") is None:
+        values.pop("sku_id", None)
+    else:
+        await _resolve_item(ctx, values)
     merged = {**row._asdict(), **values}
     _check_line(merged)
     await _exists(ctx, m.items, values.get("item_id"), "item_not_found")

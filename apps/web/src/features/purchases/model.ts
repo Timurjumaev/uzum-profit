@@ -2,7 +2,7 @@
 // belgilar (F22). Hisob yo'q — birlik tannarx, kurs va kutilgan sana API'dan (tamoyil 4).
 import type { Stage } from "../../components/ui";
 import type { PurchaseGroup } from "../../app/search";
-import type { AllocationBase, ComponentKind, PurchaseStage, StageMark } from "../../lib/api/types";
+import type { AllocationBase, ComponentKind, PickerRow, PurchaseStage, StageMark } from "../../lib/api/types";
 
 /** Sanasi bor bosqichlar tartib bilan (qoralamadan keyin). */
 export const DATED_STAGES: PurchaseStage[] = ["ordered", "paid", "cn_warehouse", "shipped", "arrived", "received", "sent_to_uzum", "closed"];
@@ -72,4 +72,41 @@ export function datesInOrder(dates: Partial<Record<PurchaseStage, string | null 
     last = d;
   }
   return true;
+}
+
+// --- Tovar tanlash (SKU) ------------------------------------------------------------------------------------------
+
+type Translate = (key: string, options?: Record<string, unknown>) => string;
+
+/** Tanlov qatori kaliti: SKU yoki SKU'siz tovar (`value` sifatida ham ishlatiladi). */
+export function pickerKey(row: PickerRow): string {
+  return row.sku_id ? `sku:${row.sku_id}` : `item:${row.item_id}`;
+}
+
+/** Asosiy nom: mahsulot (Uzum kartochkasi), yo'q bo'lsa tovar yoki SKU nomi. */
+export function pickerLabel(row: PickerRow): string {
+  return row.product_title || row.item_name || row.title || "—";
+}
+
+/**
+ * SKU ro'yxatidan tanlov variantlari. Hech narsa holat bo'yicha yashirilmaydi: arxivlangan va bloklangan SKU ham
+ * chiqadi, holati belgi bo'lib ko'rinadi (Uzum qiymati o'zgartirilmaydi). `taken` — partiyada allaqachon bor tovarlar.
+ */
+export function pickerOptions(rows: readonly PickerRow[], t: Translate, taken: ReadonlySet<string>) {
+  return rows.map((row) => {
+    const label = pickerLabel(row);
+    const parts: string[] = [];
+    if (row.title && row.title !== label) parts.push(row.title);
+    if (row.shop) parts.push(row.shop);
+    if (!row.sku_id) parts.push(t("purchases.lines.withoutSku"));
+    else if (row.stock !== null) parts.push(row.stock > 0 ? t("purchases.lines.stock", { count: row.stock }) : t("purchases.lines.noStock"));
+    if (row.status) parts.push(row.status);
+    if (row.item_id && taken.has(row.item_id)) parts.push(t("purchases.lines.inPurchase"));
+    return {
+      value: pickerKey(row),
+      label,
+      hint: parts.join(" · "),
+      keywords: [row.title, row.article, row.item_name, row.shop].filter(Boolean).join(" "),
+    };
+  });
 }

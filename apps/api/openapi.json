@@ -2004,6 +2004,60 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/sku-picker": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Sku Picker",
+        "description": "Xarid qatoriga tanlanadigan hamma narsa: org'ning barcha SKU'lari (do'kon, mahsulot, variant, qoldiq, holat)\nva SKU'siz qolgan tovarlar. Hech narsa holat bo'yicha yashirilmaydi — \"mening SKU'm yo'q\" xatosi bo'lmasin.",
+        "operationId": "sku_picker_api_v1_orgs__org_id__sku_picker_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PickerOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/skus/{sku_id}/item": {
       "put": {
         "tags": [
@@ -4841,6 +4895,80 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/LineIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseDetailOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/purchases/{purchase_id}/lines/bulk": {
+      "post": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "Create Lines",
+        "description": "Bir nechta tovar birdaniga (xitoy partiyasida 10–30 variant): hammasi yoki hech biri.",
+        "operationId": "create_lines_api_v1_orgs__org_id__purchases__purchase_id__lines_bulk_post",
+        "parameters": [
+          {
+            "name": "purchase_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Purchase Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinesIn"
               }
             }
           }
@@ -8599,6 +8727,18 @@
             ],
             "title": "Item Id"
           },
+          "sku_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku Id"
+          },
           "temp_name": {
             "anyOf": [
               {
@@ -8727,7 +8867,7 @@
           "ordered_qty"
         ],
         "title": "LineIn",
-        "description": "Qator: mavjud tovar (``item_id``) yoki \"yangi tovar\" (``temp_name``, havola, rasm)."
+        "description": "Xarid tovari (qator): mavjud tovar (``item_id``), SKU (``sku_id`` — tovari bo'lmasa yaratiladi) yoki \"yangi\ntovar\" (``temp_name``, havola, rasm). ``item_id`` va ``sku_id`` birga berilmaydi."
       },
       "LineOut": {
         "properties": {
@@ -8931,6 +9071,18 @@
             ],
             "title": "Item Id"
           },
+          "sku_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku Id"
+          },
           "temp_name": {
             "anyOf": [
               {
@@ -9063,6 +9215,25 @@
         },
         "type": "object",
         "title": "LinePatch"
+      },
+      "LinesIn": {
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/LineIn"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Lines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lines"
+        ],
+        "title": "LinesIn",
+        "description": "Bir nechta tovarni birdaniga qo'shish (bitta tranzaksiya, bitta qayta hisob)."
       },
       "LinkedItemOut": {
         "properties": {
@@ -10792,6 +10963,184 @@
           "export_inventory"
         ],
         "title": "Permission"
+      },
+      "PickerOut": {
+        "properties": {
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/PickerRowOut"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "truncated": {
+            "type": "boolean",
+            "title": "Truncated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rows",
+          "truncated"
+        ],
+        "title": "PickerOut",
+        "description": "Hamma SKU (holatidan qat'i nazar — arxivlangan va bloklangan ham): avval qoldig'i yoki sotuvi bor, keyin\nqolganlari. ``truncated`` — ro'yxat ``MAX_PICKER`` dan oshdi."
+      },
+      "PickerRowOut": {
+        "properties": {
+          "sku_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku Id"
+          },
+          "item_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          },
+          "item_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Name"
+          },
+          "shop_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shop Id"
+          },
+          "shop": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shop"
+          },
+          "product_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Title"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "article": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Article"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stock"
+          },
+          "sold": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sold"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku_id",
+          "item_id",
+          "item_name",
+          "shop_id",
+          "shop",
+          "product_title",
+          "title",
+          "article",
+          "image_url",
+          "stock",
+          "sold",
+          "status"
+        ],
+        "title": "PickerRowOut",
+        "description": "Xarid qatori uchun tanlov qatori: SKU (``sku_id``) yoki SKU'siz tovar (``sku_id`` — ``null``). ``item_id`` —\nSKU bog'langan tovar (``null`` — tovari yo'q: tanlanganda yaratiladi)."
       },
       "PnlOut": {
         "properties": {

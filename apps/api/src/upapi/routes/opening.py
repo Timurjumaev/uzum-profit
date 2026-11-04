@@ -42,6 +42,7 @@ from upapi.db import models as m
 from upapi.errors import AppError
 from upapi.reports.common import sku_catalog, today
 from upapi.reports.stock import inbound_by_sku
+from upapi.routes.items import item_of_sku
 from upapi.routes.purchases import _kick
 
 router = APIRouter(tags=["costing"])
@@ -312,23 +313,9 @@ async def _item_for(ctx: OrgContext, row: OpeningRowIn) -> UUID:
         if found is None:
             raise AppError("item_not_found", 404)
         return row.item_id
-    k = m.mp_skus
-    sku = (await ctx.conn.execute(select(k).where(k.c.id == row.sku_id))).first()
-    if sku is None:
+    if row.sku_id is None:
         raise AppError("sku_not_found", 404)
-    if sku.item_id is not None:
-        return UUID(str(sku.item_id))
-    info = (await sku_catalog(ctx.conn, ids=[sku.id]))[sku.id]
-    name = (info.product_title or info.title or "").strip() or "—"
-    item_id: UUID = await ctx.conn.scalar(
-        insert(m.items).values(org_id=ctx.org_id, name=name).returning(m.items.c.id)
-    )
-    await ctx.conn.execute(
-        update(k).where(k.c.id == sku.id).values(item_id=item_id, updated_at=func.now())
-    )
-    await ctx.audit("item.create", "item", item_id, after={"name": name, "sku_id": str(sku.id)})
-    await calc.request(ctx.conn, ctx.org_id, calc.Scope.SHOP, sku.shop_id)
-    return item_id
+    return await item_of_sku(ctx, row.sku_id)
 
 
 @router.put("/orgs/{org_id}/opening", response_model=OpeningOut)

@@ -447,3 +447,106 @@ def test_copy_and_delete(world: World) -> None:
     )
     assert remaining[0][0] == 0
     assert send(w, "GET", f"purchases/{pid}").status_code == 404
+
+
+def test_sku_picker_lists_every_sku_and_lines_from_skus(world: World) -> None:
+    """Tanlov hamma SKU'ni ko'rsatadi (tovarsiz, arxivlangan, bloklangan ham); SKU tanlansa tovar yaratiladi,
+    bor bo'lsa ishlatiladi; ommaviy qo'shish — hammasi yoki hech biri."""
+    w, a = world, world.a
+    product = a.insert("mp_products", shop_id=a.shop_id, external_id=7_001, title="Ko'ylak")
+    a_sku = a.insert(
+        "mp_skus",
+        shop_id=a.shop_id,
+        external_id=7_101,
+        product_id=product,
+        sku_code="Ko'ylak-Qora-M",
+        status="ACTIVE",
+        qty_active=5,
+    )
+    archived = a.insert(
+        "mp_skus",
+        shop_id=a.shop_id,
+        external_id=7_102,
+        product_id=product,
+        sku_code="Ko'ylak-Oq-L",
+        status="ARCHIVED",
+    )
+    blocked = a.insert(
+        "mp_skus",
+        shop_id=a.shop_id,
+        external_id=7_103,
+        sku_code="Bloklangan",
+        status="BLOCKED",
+    )
+    orphan = a.insert("items", name="SKU'siz tovar")
+    rows = ok(send(w, "GET", "sku-picker"))
+    assert rows["truncated"] is False
+    by_sku = {r["sku_id"]: r for r in rows["rows"] if r["sku_id"]}
+    assert {str(a_sku), str(archived), str(blocked), str(w.ids["sku"])} <= set(by_sku)
+    assert (
+        by_sku[str(archived)]["status"] == "ARCHIVED" and by_sku[str(archived)]["item_id"] is None
+    )
+    assert by_sku[str(a_sku)]["product_title"] == "Ko'ylak" and by_sku[str(a_sku)]["stock"] == 5
+    assert by_sku[str(w.ids["sku"])]["item_id"] == str(w.ids["item"])
+    assert any(r["sku_id"] is None and r["item_id"] == str(orphan) for r in rows["rows"])
+    order = [r["sku_id"] for r in rows["rows"]]
+    assert order.index(str(a_sku)) < order.index(str(archived))  # qoldig'i borlar oldinda
+    assert send(w, "GET", "sku-picker", role="accountant").status_code == 403
+
+    pid = new_purchase(w, title="SKU'dan")["purchase"]["id"]
+    items_before = a.sql("SELECT count(*) FROM items WHERE org_id = %s", [a.org_id])[0][0]
+    det = ok(send(w, "POST", f"purchases/{pid}/lines", sku_id=str(archived), ordered_qty=10), 201)
+    made = a.sql(
+        "SELECT item_id, (SELECT name FROM items i WHERE i.id = k.item_id) FROM mp_skus k WHERE id = %s",
+        [archived],
+    )[0]
+    assert (
+        made[0] is not None and made[1] == "Ko'ylak"
+    )  # tovar nomi — mahsulot (Uzum kartochkasi) nomi
+    assert det["lines"][0]["item_id"] == str(made[0])
+    # Tovari bor SKU — o'sha tovar, yangisi yaratilmaydi.
+    det = ok(
+        send(w, "POST", f"purchases/{pid}/lines", sku_id=str(w.ids["sku"]), ordered_qty=3), 201
+    )
+    assert det["lines"][1]["item_id"] == str(w.ids["item"])
+    assert (
+        a.sql("SELECT count(*) FROM items WHERE org_id = %s", [a.org_id])[0][0] == items_before + 1
+    )
+
+    # Ommaviy: ikkita SKU bitta so'rovda (har SKU — alohida tovar).
+    det = ok(
+        send(
+            w,
+            "POST",
+            f"purchases/{pid}/lines/bulk",
+            lines=[
+                {"sku_id": str(a_sku), "ordered_qty": 4, "variant": "M"},
+                {"sku_id": str(blocked), "ordered_qty": 6},
+            ],
+        ),
+        201,
+    )
+    assert len(det["lines"]) == 4
+    name_of = "SELECT name FROM items WHERE id = (SELECT item_id FROM mp_skus WHERE id = %s)"
+    assert a.sql(name_of, [a_sku])[0][0] == "Ko'ylak"
+    assert a.sql(name_of, [blocked])[0][0] == "Bloklangan"  # mahsulotsiz SKU — SKU nomi
+    # Hammasi yoki hech biri: oxirgisi noto'g'ri — oldingilari ham yozilmaydi.
+    r = send(
+        w,
+        "POST",
+        f"purchases/{pid}/lines/bulk",
+        lines=[
+            {"temp_name": "Yangi", "ordered_qty": 1},
+            {"sku_id": str(uuid.uuid4()), "ordered_qty": 1},
+        ],
+    )
+    assert r.status_code == 404
+    assert len(ok(send(w, "GET", f"purchases/{pid}"))["lines"]) == 4
+    # Tekshiruvlar: ikkalasi birga, bo'sh ro'yxat, boshqa tashkilot SKU'si.
+    both = {"sku_id": str(a_sku), "item_id": str(w.ids["item"]), "ordered_qty": 1}
+    assert send(w, "POST", f"purchases/{pid}/lines", **both).status_code == 422
+    assert send(w, "POST", f"purchases/{pid}/lines/bulk", lines=[]).status_code == 422
+    # Tahrirda SKU tanlansa — qator tovari almashadi.
+    line = det["lines"][0]["id"]
+    det = ok(send(w, "PATCH", f"purchases/{pid}/lines/{line}", sku_id=str(w.ids["sku2"])))
+    assert next(x for x in det["lines"] if x["id"] == line)["item_id"] == str(w.ids["item2"])

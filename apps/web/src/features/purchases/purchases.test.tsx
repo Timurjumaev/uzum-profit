@@ -1,5 +1,5 @@
 // Xaridlar (M9, B4.6): ro'yxat (bosqich guruhi URL'da, ixcham Partiya yo'li, taxminiy "~"), yangi xarid (yetkazib
-// beruvchi nomi bilan), xarid sahifasi (Partiya yo'li, qatorlar, komponentlar va kurs, tannarx tarkibi, bannerlar),
+// beruvchi nomi bilan), xarid sahifasi (Partiya yo'li, tovarlar, komponentlar va kurs, tannarx tarkibi, bannerlar),
 // tahrirlar tanasi, omborchi — summasiz. Butun ilova soxta API ustida.
 import { createMemoryHistory } from "@tanstack/react-router";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
@@ -11,7 +11,6 @@ import { todayTashkent } from "../../lib/dates";
 import { formatterFor } from "../../lib/format";
 import {
   CARRIERS_ROUTE,
-  ITEMS_ROUTE,
   json,
   ME,
   ME_ROUTE,
@@ -21,16 +20,29 @@ import {
   purchaseRoute,
   PURCHASES_ROUTE,
   purchaseSubRoute,
+  SKU_PICKER_ROUTE,
   SUPPLIER_CREATE_ROUTE,
   SUPPLIERS_ROUTE,
   type Routes,
 } from "../../test/api";
-import { component, COMP_GOODS, line, LINE_1, PURCHASE_1, PURCHASE_2, purchaseDetail, purchaseRow, timeline } from "../../test/purchases";
+import type { PickerRow } from "../../lib/api/types";
+import { component, COMP_GOODS, ITEM_1, line, LINE_1, PURCHASE_1, PURCHASE_2, purchaseDetail, purchaseRow, timeline } from "../../test/purchases";
 
 const f = formatterFor("uz-Latn");
 const norm = (text: string) => text.replace(/[\u00A0\u202F]/g, " ");
 const n = (value: string) => norm(f.money(value, { unit: false }));
 const DETAIL = `/purchases/${PURCHASE_1}`;
+const SKU_ACTIVE = "a1111111-1111-4111-8111-111111111111";
+const SKU_ARCHIVED = "a2222222-2222-4222-8222-222222222222";
+const SKU_BLOCKED = "a3333333-3333-4333-8333-333333333333";
+const pickerRow = (over: Partial<PickerRow>): PickerRow => ({ sku_id: null, item_id: null, item_name: null, shop_id: "b1111111-1111-4111-8111-111111111111", shop: "byDurii", product_title: null, title: null, article: null, image_url: null, stock: null, sold: null, status: null, ...over });
+// Tovari bor (Mashina — partiyada ham bor), tovarsiz arxivlangan va bloklangan SKU, SKU'siz tovar.
+const PICKER_ROWS: PickerRow[] = [
+  pickerRow({ sku_id: SKU_ACTIVE, item_id: ITEM_1, item_name: "Mashina", product_title: "Mashina", title: "Mashina-Qizil", stock: 12, sold: 40, status: "ACTIVE" }),
+  pickerRow({ sku_id: SKU_ARCHIVED, product_title: "Koʻylak", title: "Koʻylak-Oq-L", stock: 0, sold: 0, status: "ARCHIVED" }),
+  pickerRow({ sku_id: SKU_BLOCKED, title: "Bloklangan sumka", stock: 0, sold: 0, status: "BLOCKED", shop: "EL-ONE" }),
+  pickerRow({ item_id: "c3333333-3333-4333-8333-333333333333", item_name: "Eski tovar", shop: null, shop_id: null }),
+];
 
 afterEach(() => {
   cleanup();
@@ -43,7 +55,7 @@ async function renderAt(path: string, routes: Routes = {}, role = "owner") {
     [purchaseRoute("GET", PURCHASE_1)]: () => json(200, purchaseDetail()),
     [SUPPLIERS_ROUTE]: () => json(200, [{ id: "s1", name: "Yiwu Toys", platform: "1688" }]),
     [CARRIERS_ROUTE]: () => json(200, []),
-    [ITEMS_ROUTE]: () => json(200, { items: [{ id: "e1111111-1111-4111-8111-111111111111", name: "Mashina", image_url: null, sku_count: 1 }] }),
+    [SKU_PICKER_ROUTE]: () => json(200, { rows: PICKER_ROWS, truncated: false }),
     [ME_ROUTE]: () => json(200, { ...ME, orgs: [{ ...ME.orgs[0]!, role }] }),
     ...routes,
   });
@@ -118,13 +130,13 @@ describe("xaridlar ro'yxati", () => {
 });
 
 describe("xarid sahifasi", () => {
-  it("Partiya yo'li, qatorlar (kamomad, qabul qilinmagan, havola), komponent kursi, tannarx tarkibi", async () => {
+  it("Partiya yo'li, tovarlar (kamomad, qabul qilinmagan, havola), komponent kursi, tannarx tarkibi", async () => {
     await renderAt(DETAIL);
     expect((await screen.findByRole("heading", { level: 1 })).textContent).toBe("Oktabr partiyasi");
     const path = screen.getByRole("list", { name: "Partiya yoʻli" });
     expect(within(path).getAllByRole("listitem")).toHaveLength(8);
     expect(norm(path.textContent!)).toContain("kutilmoqda ~28.10");
-    const lines = screen.getByRole("table", { name: "Qatorlar" });
+    const lines = screen.getByRole("table", { name: "Partiyadagi tovarlar" });
     expect(within(lines).getByText("kamomad 2")).toBeTruthy();
     expect(within(lines).getByText("qabul qilinmagan")).toBeTruthy();
     expect(within(lines).getByRole("link", { name: /Havola/ }).getAttribute("href")).toBe("https://detail.1688.com/offer/1.html");
@@ -161,11 +173,11 @@ describe("xarid sahifasi", () => {
     expect(bodiesOf(api, purchaseRoute("PATCH", PURCHASE_1))[0]).toEqual({ dates: { paid: null, arrived: "2026-10-27" } });
   });
 
-  it("qator qo'shish: yangi tovar (havola, variant), qabul bo'sh — null", async () => {
+  it("tovar qo'shish: yangi tovar (havola, variant), qabul bo'sh — null", async () => {
     const route = purchaseSubRoute("POST", PURCHASE_1, "lines");
     const { api } = await renderAt(DETAIL, { [route]: () => json(201, purchaseDetail()) });
-    fireEvent.click(await screen.findByRole("button", { name: "Qator qoʻshish" }));
-    const dialog = await screen.findByRole("dialog", { name: "Yangi qator" });
+    fireEvent.click(await screen.findByRole("button", { name: "Tovar qoʻshish" }));
+    const dialog = await screen.findByRole("dialog", { name: "Tovar qoʻshish" });
     fireEvent.click(within(dialog).getByRole("radio", { name: "Yangi tovar" }));
     fireEvent.change(within(dialog).getByLabelText("Tovar nomi (vaqtincha)"), { target: { value: "Ayiqcha" } });
     fireEvent.change(within(dialog).getByLabelText(/^Tovar sahifasi/), { target: { value: "https://detail.1688.com/offer/2.html" } });
@@ -191,7 +203,41 @@ describe("xarid sahifasi", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
 
-  it("xarajat: kartadan yechilgan summa (effektiv kurs), tanlangan qatorlar; tahrirlash va o'chirish", async () => {
+  it("tovar qo'shish: hamma SKU ro'yxatda (arxivlangan va bloklangan ham), bir nechtasi bitta so'rovda", async () => {
+    const route = purchaseSubRoute("POST", PURCHASE_1, "lines/bulk");
+    const { api } = await renderAt(DETAIL, { [route]: () => json(201, purchaseDetail()) });
+    fireEvent.click(await screen.findByRole("button", { name: "Tovar qoʻshish" }));
+    const dialog = await screen.findByRole("dialog", { name: "Tovar qoʻshish" });
+    const box = await within(dialog).findByRole("combobox", { name: "Tovar" });
+    await waitFor(() => expect((box as HTMLInputElement).disabled).toBe(false));
+    fireEvent.focus(box);
+    const options = within(await screen.findByRole("listbox")).getAllByRole("option");
+    expect(options).toHaveLength(PICKER_ROWS.length); // hech narsa holat bo'yicha yashirilmagan
+    const texts = options.map((o) => o.textContent ?? "");
+    expect(texts.find((x) => x.includes("ARCHIVED"))).toContain("Koʻylak");
+    expect(texts.find((x) => x.includes("BLOCKED"))).toContain("EL-ONE");
+    expect(texts.find((x) => x.includes("Mashina"))).toContain("partiyada bor");
+    expect(texts.find((x) => x.includes("Eski tovar"))).toContain("SKUʼsiz tovar");
+    fireEvent.mouseDown(options.find((o) => o.textContent?.includes("ARCHIVED"))!);
+    fireEvent.focus(box);
+    fireEvent.mouseDown(within(await screen.findByRole("listbox")).getAllByRole("option").find((o) => o.textContent?.includes("BLOCKED"))!);
+    const qty = within(dialog).getAllByLabelText("Dona");
+    expect(qty).toHaveLength(2);
+    fireEvent.change(qty[0]!, { target: { value: "10" } });
+    fireEvent.change(qty[1]!, { target: { value: "20" } });
+    fireEvent.change(within(dialog).getByLabelText(/^Dona narxi/), { target: { value: "3" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "2 ta tovar qoʻshish" }));
+    await waitFor(() => expect(bodiesOf(api, route)).toHaveLength(1));
+    expect(bodiesOf(api, route)[0]).toMatchObject({
+      lines: [
+        { sku_id: SKU_ARCHIVED, ordered_qty: 10, unit_price: "3", currency: "CNY" },
+        { sku_id: SKU_BLOCKED, ordered_qty: 20, unit_price: "3", currency: "CNY" },
+      ],
+    });
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("xarajat: kartadan yechilgan summa (effektiv kurs), tanlangan tovarlar; tahrirlash va o'chirish", async () => {
     const post = purchaseSubRoute("POST", PURCHASE_1, "components");
     const patch = purchaseSubRoute("PATCH", PURCHASE_1, `components/${COMP_GOODS}`);
     const del = purchaseSubRoute("DELETE", PURCHASE_1, `components/${COMP_GOODS}`);
@@ -206,7 +252,7 @@ describe("xarid sahifasi", () => {
     fireEvent.change(within(dialog).getByLabelText(/^Summa/), { target: { value: "1000" } });
     fireEvent.click(within(dialog).getByRole("radio", { name: "Kartadan yechilgan summadan" }));
     fireEvent.change(within(dialog).getByLabelText(/^Kartadan yechilgan summa\s*$/), { target: { value: "142,50" } });
-    fireEvent.click(within(dialog).getByRole("checkbox", { name: "Hamma qatorlar" }));
+    fireEvent.click(within(dialog).getByRole("checkbox", { name: "Hamma tovarlar" }));
     fireEvent.click(within(dialog).getByRole("checkbox", { name: /Yangi oʻyinchoq/ }));
     fireEvent.click(within(dialog).getByRole("button", { name: "Xaridni saqlash" }));
     await waitFor(() => expect(bodiesOf(api, post)).toHaveLength(1));
@@ -246,8 +292,8 @@ describe("xarid sahifasi", () => {
     });
     expect(await screen.findByText(/Tannarxni hisoblab boʻlmadi: customs/)).toBeTruthy();
     expect(screen.getByText("Sotuvlar tannarxi qayta hisoblanmoqda")).toBeTruthy();
-    fireEvent.click(within(screen.getByRole("table", { name: "Qatorlar" })).getByRole("button", { name: "Oʻchirish: Mashina" }));
-    expect(await screen.findByText(/Bu qator xarajatda alohida tanlangan/)).toBeTruthy();
+    fireEvent.click(within(screen.getByRole("table", { name: "Partiyadagi tovarlar" })).getByRole("button", { name: "Oʻchirish: Mashina" }));
+    expect(await screen.findByText(/Bu tovar xarajatda alohida tanlangan/)).toBeTruthy();
   });
 
   it("omborchi: summasiz (narx, komponentlar, tannarx yo'q), qabul donasini kiritadi — narx yuborilmaydi", async () => {
@@ -260,12 +306,12 @@ describe("xarid sahifasi", () => {
     });
     const route = purchaseSubRoute("PATCH", PURCHASE_1, `lines/${LINE_1}`);
     const { api } = await renderAt(DETAIL, { [purchaseRoute("GET", PURCHASE_1)]: () => json(200, hidden), [route]: () => json(200, hidden) }, "warehouse");
-    const lines = await screen.findByRole("table", { name: "Qatorlar" });
+    const lines = await screen.findByRole("table", { name: "Partiyadagi tovarlar" });
     expect(within(lines).queryByRole("columnheader", { name: "Narx" })).toBeNull();
     expect(screen.queryByRole("table", { name: "Xarajat komponentlari" })).toBeNull();
     expect(screen.getByText("Summalar koʻrinmaydi.")).toBeTruthy();
     fireEvent.click(within(lines).getByRole("button", { name: "Tahrirlash: Mashina" }));
-    const dialog = await screen.findByRole("dialog", { name: "Qatorni tahrirlash" });
+    const dialog = await screen.findByRole("dialog", { name: "Tovarni tahrirlash" });
     expect(within(dialog).queryByLabelText(/^Dona narxi/)).toBeNull();
     fireEvent.change(within(dialog).getByLabelText(/^Qabul qilingan dona/), { target: { value: "100" } });
     fireEvent.click(within(dialog).getByRole("button", { name: "Xaridni saqlash" }));
@@ -292,7 +338,7 @@ describe("xarid sahifasi", () => {
 
   it("a11y: jiddiy buzilish yo'q", async () => {
     await renderAt(DETAIL);
-    await screen.findByRole("table", { name: "Qatorlar" });
+    await screen.findByRole("table", { name: "Partiyadagi tovarlar" });
     const result = await axe.run(document.body, { rules: { "color-contrast": { enabled: false }, region: { enabled: false } } });
     expect(result.violations.filter((v) => v.impact === "critical" || v.impact === "serious")).toEqual([]);
   });

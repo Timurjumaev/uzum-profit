@@ -67,6 +67,7 @@ export function Combobox({ label, help, options, value, onValueChange, placehold
               setOpen(true);
             }}
             onFocus={() => setOpen(true)}
+            onClick={() => setOpen(true)} // tanlangach maydon fokusda qoladi — bosish ro'yxatni qayta ochadi
             onBlur={() => {
               setOpen(false);
               setQuery(null);

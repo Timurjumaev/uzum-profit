@@ -361,7 +361,7 @@ Sof foyda, oktabr
 - **Mahsulotlar:** filtrlar qatori → DataTable; mobilda ro'yxat (rasm, nom, foyda/dona, zaxira kunlari) + bosilsa SKU sahifasi.
 - **SKU sahifasi:** sarlavha (rasm, nom, holat) → KPI qatori → unit kalkulyator (o'ngda) + grafiklar (chapda) →
   lotlar vaqt chizig'i → qaytishlar.
-- **Xaridlar:** ro'yxat (Partiya yo'li ixcham ko'rinishda) → xarid sahifasi: Partiya yo'li, qatorlar jadvali,
+- **Xaridlar:** ro'yxat (Partiya yo'li ixcham ko'rinishda) → xarid sahifasi: Partiya yo'li, «Partiyadagi tovarlar» jadvali,
   xarajat komponentlari, birlik tannarx tarkibi (o'ngda doim ko'rinadi).
 - **Ombor:** holat bo'yicha guruhlar (Kritik → Yaxshi), har qatorda joylar bo'yicha qoldiq; tepada muzlagan pul
   va yo'ldagi tovar.
