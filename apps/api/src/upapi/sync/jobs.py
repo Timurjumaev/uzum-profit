@@ -20,6 +20,7 @@ orqali qo'yadi.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import date
 from typing import Any
 from uuid import UUID
 
@@ -110,6 +111,18 @@ async def defer_calc(app: App, org_id: UUID) -> bool:
     return True
 
 
+async def defer_fx(app: App, since: date) -> bool:
+    """Kerakli sanagacha kurs arxivini to'ldirish (xarid saqlanganda kursi yo'q bo'lsa). ``False`` — shu sana uchun
+    allaqachon navbatda."""
+    try:
+        await app.configure_task(FX, queueing_lock=f"{FX}:{since.isoformat()}").defer_async(
+            since=since.isoformat()
+        )
+    except AlreadyEnqueued:
+        return False
+    return True
+
+
 async def request_full_rebuild(engine: AsyncEngine, org_id: UUID) -> None:
     async with org_transaction(engine, org_id) as conn:
         await calc.request_full(conn, org_id)
@@ -136,8 +149,18 @@ def build_app(connector: BaseConnector) -> App:
         pass_context=True,
         retry=RetryStrategy(max_attempts=3, wait=300),
     )
-    async def fx_cbu(context: JobContext, timestamp: int) -> dict[str, Any]:
-        result = await sync_fx(runtime(context))
+    async def fx_cbu(
+        context: JobContext, timestamp: int = 0, since: str | None = None
+    ) -> dict[str, Any]:
+        result = await sync_fx(
+            runtime(context), None if since is None else date.fromisoformat(since)
+        )
+        if since is not None and result.archived:
+            # Yetishmagan kurslar keldi: kursi yo'q deb hisoblanmay qolgan lotlar va sotuvlar qayta quriladi.
+            rt = runtime(context)
+            for org_id in sorted({org for org, _ in await due_accounts(rt.engine)}):
+                await request_full_rebuild(rt.engine, org_id)
+                await defer_calc(context.app, org_id)
         return {"latest": result.latest, "archived": result.archived, "days": result.days_filled}
 
     @app.task(name=ACCOUNT, queue=QUEUE, pass_context=True)
@@ -210,6 +233,10 @@ class JobQueue:
         ishchi so'rovni ko'rmay "bo'sh navbat" deb tugatishi mumkin."""
         await self._ensure_open()
         return await defer_calc(self.app, org_id)
+
+    async def defer_fx(self, since: date) -> bool:
+        await self._ensure_open()
+        return await defer_fx(self.app, since)
 
     async def _ensure_open(self) -> None:
         if not self._open:

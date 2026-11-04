@@ -550,3 +550,27 @@ def test_sku_picker_lists_every_sku_and_lines_from_skus(world: World) -> None:
     line = det["lines"][0]["id"]
     det = ok(send(w, "PATCH", f"purchases/{pid}/lines/{line}", sku_id=str(w.ids["sku2"])))
     assert next(x for x in det["lines"] if x["id"] == line)["item_id"] == str(w.ids["item2"])
+
+
+def test_missing_rate_date_queues_cbu_archive_job(world: World) -> None:
+    """To'lov sanasi kursi bazada yo'q bo'lsa — xarid saqlanganda `fx.cbu` ishi `since` bilan qo'yiladi; kurs
+    yetarli bo'lsa — yo'q."""
+    w = world
+    jobs = w.api.jobs.app.connector.jobs  # type: ignore[attr-defined]
+
+    def fx_jobs() -> list[dict[str, Any]]:
+        return [j["args"] for j in jobs.values() if j["task_name"] == "fx.cbu"]
+
+    pid = new_purchase(w, title="Kurs yo'q", dates={"ordered": "2026-08-01"})["purchase"]["id"]
+    comp = {"kind": "goods", "amount": "830", "currency": "CNY"}
+    ok(send(w, "POST", f"purchases/{pid}/components", **comp, paid_on="2026-09-30"), 201)
+    assert fx_jobs() == []  # 2026-09-30 kursi bor (fixture)
+    ok(send(w, "POST", f"purchases/{pid}/components", **comp, paid_on="2026-08-01"), 201)
+    assert fx_jobs() == [{"since": "2026-08-01"}]
+    ok(
+        send(w, "POST", f"purchases/{pid}/components", kind="cargo", amount="5", currency="UZS"),
+        201,
+    )
+    assert fx_jobs() == [
+        {"since": "2026-08-01"}
+    ]  # so'm kurs talab qilmaydi; navbatda allaqachon bor

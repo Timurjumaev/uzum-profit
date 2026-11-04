@@ -461,6 +461,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- B4.29: xarid sahifasida "CNY uchun ... sanasigacha kurs yo'q" — CBU arxivi bitta global eng eski kundan orqaga yurar edi,
+  shuning uchun tarixi uzoq valyuta (USD) boshqasining (CNY) bo'shlig'ini yopmasdi. Endi arxiv eng kam to'lgan valyutadan
+  boshlanadi; xarid saqlanganda kerakli sana kursi yo'q bo'lsa `fx.cbu` ishi `since` bilan qo'yiladi (sanadan 10 kun
+  oldingacha cheklovsiz), keyin hisob qayta quriladi.
+
 - B4.26: qaytish ulushi faqat Yakunlangan qatorlardagi `amountReturns` dan hisoblanardi (real ma'lumotda doim 0), bekor
   ulushi esa mijoz olib qaytargan tovarlarni ham sanardi — ADR-043 bilan tuzatildi.
 - B4.25 (ADR-042, Temur kuzatuvi): logistika endi Uzum **aslida yechgan** summa bo'yicha. Uzum bonusni tovar olib
