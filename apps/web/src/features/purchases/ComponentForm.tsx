@@ -6,9 +6,8 @@ import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
-import { createComponent, updateComponent } from "../../app/query";
 import { Banner, Button, Dialog, MoneyInput, NumberInput, Select, TextInput } from "../../components/ui";
-import type { AllocationBase, ComponentKind, CostComponent, PurchaseDetail, PurchaseLine } from "../../lib/api/types";
+import type { AllocationBase, ComponentIn, ComponentKind, ComponentPatch, CostComponent, PurchaseLine } from "../../lib/api/types";
 import { ALLOCATIONS, COMPONENT_KINDS, CURRENCIES, type CurrencyCode } from "./model";
 
 type RateMode = "cbu" | "manual" | "effective";
@@ -27,7 +26,7 @@ type Draft = {
   shares: Record<string, string | null>;
 };
 
-function draftOf(c: CostComponent | null, lines: PurchaseLine[]): Draft {
+function draftOf(c: CostComponent | null, lines: ComponentLine[]): Draft {
   return {
     kind: (c?.kind as ComponentKind | undefined) ?? "goods",
     amount: c?.amount ?? null,
@@ -46,9 +45,20 @@ function draftOf(c: CostComponent | null, lines: PurchaseLine[]): Draft {
 
 export const lineLabel = (l: PurchaseLine) => [l.item_name ?? l.temp_name ?? "—", l.variant].filter(Boolean).join(" · ");
 
-type Props = { orgId: string; purchaseId: string; component: CostComponent | null; lines: PurchaseLine[]; onClose: () => void; onSaved: (d: PurchaseDetail) => void };
+/** Taqsimot nishonlari: xarid qatorlari yoki (kargoda) kargodagi hamma xaridlarning tovarlari. */
+export type ComponentLine = { id: string; label: string };
+export const componentLines = (lines: PurchaseLine[]): ComponentLine[] => lines.map((l) => ({ id: l.id, label: lineLabel(l) }));
 
-export function ComponentForm({ orgId, purchaseId, component, lines, onClose, onSaved }: Props) {
+type Props<D> = {
+  component: CostComponent | null;
+  lines: ComponentLine[];
+  /** Saqlash: yangi (`id` yo'q) yoki mavjud komponent — xarid yoki kargo API'si (shakl egasini bilmaydi). */
+  submit: (body: ComponentIn & ComponentPatch, id: string | null) => Promise<D>;
+  onClose: () => void;
+  onSaved: (d: D) => void;
+};
+
+export function ComponentForm<D>({ component, lines, submit: send, onClose, onSaved }: Props<D>) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState(() => draftOf(component, lines));
   const patch = (x: Partial<Draft>) => setDraft((d) => ({ ...d, ...x }));
@@ -77,7 +87,7 @@ export function ComponentForm({ orgId, purchaseId, component, lines, onClose, on
         lines: draft.all ? null : draft.lines,
         shares: draft.allocation === "manual" ? Object.fromEntries(targets.map((id) => [id, draft.shares[id]!])) : {},
       };
-      return component ? updateComponent(orgId, purchaseId, component.id, body) : createComponent(orgId, purchaseId, body);
+      return send(body as ComponentIn & ComponentPatch, component?.id ?? null);
     },
     onSuccess: onSaved,
   });
@@ -147,7 +157,7 @@ export function ComponentForm({ orgId, purchaseId, component, lines, onClose, on
           {!draft.all &&
             lines.map((l) => (
               <label key={l.id}>
-                <input type="checkbox" checked={draft.lines.includes(l.id)} onChange={(e) => toggle(l.id, e.target.checked)} /> {lineLabel(l)}
+                <input type="checkbox" checked={draft.lines.includes(l.id)} onChange={(e) => toggle(l.id, e.target.checked)} /> {l.label}
               </label>
             ))}
         </fieldset>
@@ -159,7 +169,7 @@ export function ComponentForm({ orgId, purchaseId, component, lines, onClose, on
               .map((l) => (
                 <NumberInput
                   key={l.id}
-                  label={t("purchases.components.share", { name: lineLabel(l) })}
+                  label={t("purchases.components.share", { name: l.label })}
                   value={draft.shares[l.id] ?? null}
                   onValueChange={(v) => patch({ shares: { ...draft.shares, [l.id]: v } })}
                 />

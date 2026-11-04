@@ -133,10 +133,11 @@ logistika, `sellerProfit`, `amountReturns`, `returnCause`, `purchasePrice` — f
 `expense_codes` (global lug'at: kod → toifa, nomlar uz/ru, P&L'ga kiradimi), `fbo_invoices` + `fbo_invoice_items`,
 `mp_returns` + `mp_return_items`, `fbs_orders` [B5] (xaridor shaxsiy ma'lumoti SAQLANMAYDI).
 
-**Xarid va ombor (sotuvchi kiritadi):** `suppliers`, `carriers`, `purchases` (holat va bosqich sanalari,
-`legacy_batch_id`), `purchase_lines` (tovar yoki vaqtinchalik nom/havola/rasm, variant, buyurtma va qabul donasi,
+**Xarid va ombor (sotuvchi kiritadi):** `suppliers`, `carriers`, `shipments` (kargo: nomi, kompaniya, Xitoy omborida /
+yo'lda / keldi sanalari; ADR-046), `purchases` (holat va bosqich sanalari, `shipment_id`, `legacy_batch_id`), `purchase_lines` (tovar yoki vaqtinchalik nom/havola/rasm, variant, buyurtma va qabul donasi,
 narx, valyuta, dona vazni/hajmi), `cost_components` (tur, summa, valyuta, to'lov sanasi, hisob, kurs rejimi
-va qiymati, yechilgan summa, taqsimot asosi, tegishli qatorlar, qo'lda ulushlar), `stock_moves` (o'z ombor
+va qiymati, yechilgan summa, taqsimot asosi, tegishli qatorlar, qo'lda ulushlar; `purchase_id` yoki `shipment_id` —
+aynan bittasi), `stock_moves` (o'z ombor
 harakatlari: qabul, Uzumga o'tkazish, tuzatish, hisobdan chiqarish), `fx_rates` (sana, valyuta, kurs, manba).
 
 **Hosila (hisoblangan) jadvallar:** `lots` (xarid qatoridan: effektiv sana, dona, birlik tannarx, belgilar),
@@ -253,7 +254,7 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
 ## 9. Frontend arxitekturasi
 
 - SPA, marshrutlar: `/login`, `/onboarding`, `/` (bosh sahifa), `/pnl`, `/products`, `/products/:id`, `/orders`,
-  `/expenses`, `/purchases`, `/purchases/:id`, `/suppliers`, `/inventory`, `/inventory/reorder`, `/inventory/supplies`,
+  `/expenses`, `/purchases`, `/purchases/:id`, `/shipments`, `/shipments/:id`, `/suppliers`, `/inventory`, `/inventory/reorder`, `/inventory/supplies`,
   `/cash`, `/goals`, `/calculator`, `/reports`, `/settings/*`, `/billing`, `/status` (ma'lumotlar holati), `/admin/*`.
 - Server holati — TanStack Query (staleTime 60 s, sinxrondan keyin invalidatsiya); filtrlar va davr — URL'da.
 - Komponentlar: `components/ui` (shadcn asosida, tokenlar bilan), `components/charts` (ECharts o'ramlari),

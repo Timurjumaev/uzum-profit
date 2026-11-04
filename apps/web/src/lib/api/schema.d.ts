@@ -995,6 +995,81 @@ export interface paths {
         patch: operations["update_component_api_v1_orgs__org_id__purchases__purchase_id__components__component_id__patch"];
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/shipments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Shipments
+         * @description Kargolar (yangisi birinchi): xaridlar soni, dona va (summalar ruxsati bilan) kargo xarajatlari jami.
+         */
+        get: operations["list_shipments_api_v1_orgs__org_id__shipments_get"];
+        put?: never;
+        /** Create Shipment */
+        post: operations["create_shipment_api_v1_orgs__org_id__shipments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/shipments/{shipment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Shipment */
+        get: operations["get_shipment_api_v1_orgs__org_id__shipments__shipment_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Shipment */
+        delete: operations["delete_shipment_api_v1_orgs__org_id__shipments__shipment_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Shipment */
+        patch: operations["update_shipment_api_v1_orgs__org_id__shipments__shipment_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/shipments/{shipment_id}/components": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Component */
+        post: operations["create_component_api_v1_orgs__org_id__shipments__shipment_id__components_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/shipments/{shipment_id}/components/{component_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Component */
+        delete: operations["delete_component_api_v1_orgs__org_id__shipments__shipment_id__components__component_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Component */
+        patch: operations["update_component_api_v1_orgs__org_id__shipments__shipment_id__components__component_id__patch"];
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/settings": {
         parameters: {
             query?: never;
@@ -2766,6 +2841,8 @@ export interface components {
             lines: components["schemas"]["LineOut"][];
             /** Components */
             components: components["schemas"]["ComponentOut"][];
+            /** Shipment Components */
+            shipment_components: components["schemas"]["ComponentOut"][];
             /** By Kind */
             by_kind: {
                 [key: string]: string;
@@ -2781,6 +2858,8 @@ export interface components {
             supplier_id?: string | null;
             /** Carrier Id */
             carrier_id?: string | null;
+            /** Shipment Id */
+            shipment_id?: string | null;
             /** Note */
             note?: string | null;
             /** Dates */
@@ -2809,6 +2888,10 @@ export interface components {
             carrier_id: string | null;
             /** Carrier Name */
             carrier_name: string | null;
+            /** Shipment Id */
+            shipment_id: string | null;
+            /** Shipment Name */
+            shipment_name: string | null;
             /** Dates */
             dates: {
                 [key: string]: string | null;
@@ -2847,6 +2930,8 @@ export interface components {
             supplier_id?: string | null;
             /** Carrier Id */
             carrier_id?: string | null;
+            /** Shipment Id */
+            shipment_id?: string | null;
             /** Note */
             note?: string | null;
             /** Dates */
@@ -3053,6 +3138,153 @@ export interface components {
             payout_terms: components["schemas"]["PayoutTermsOut"][];
             inventory: components["schemas"]["InventorySettingsOut"];
             alerts: components["schemas"]["AlertsOut"];
+        };
+        /** ShipmentDetailOut */
+        ShipmentDetailOut: {
+            shipment: components["schemas"]["ShipmentOut"];
+            /** Amounts */
+            amounts: boolean;
+            /** Purchases */
+            purchases: components["schemas"]["ShipmentPurchaseOut"][];
+            /** Lines */
+            lines: components["schemas"]["ShipmentLineOut"][];
+            /** Components */
+            components: components["schemas"]["ComponentOut"][];
+            /** By Kind */
+            by_kind: {
+                [key: string]: string;
+            };
+            /** Error */
+            error: string | null;
+            /** Recalc Pending */
+            recalc_pending: boolean;
+        };
+        /** ShipmentIn */
+        ShipmentIn: {
+            /** Title */
+            title?: string | null;
+            /** Carrier Id */
+            carrier_id?: string | null;
+            /** Cn Warehouse On */
+            cn_warehouse_on?: string | null;
+            /** Shipped On */
+            shipped_on?: string | null;
+            /** Arrived On */
+            arrived_on?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** ShipmentLineOut */
+        ShipmentLineOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Purchase Id
+             * Format: uuid
+             */
+            purchase_id: string;
+            /** Purchase Title */
+            purchase_title: string | null;
+            /** Name */
+            name: string | null;
+            /** Qty */
+            qty: number;
+            /** Unit Weight */
+            unit_weight: string | null;
+            /** Unit Volume */
+            unit_volume: string | null;
+            /** Share */
+            share: string | null;
+            /** Share Per Unit */
+            share_per_unit: string | null;
+            /** Flags */
+            flags: string[];
+        };
+        /** ShipmentOut */
+        ShipmentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string | null;
+            /** Carrier Id */
+            carrier_id: string | null;
+            /** Carrier Name */
+            carrier_name: string | null;
+            /** Cn Warehouse On */
+            cn_warehouse_on: string | null;
+            /** Shipped On */
+            shipped_on: string | null;
+            /** Arrived On */
+            arrived_on: string | null;
+            /** Note */
+            note: string | null;
+            /** Purchase Count */
+            purchase_count: number;
+            /** Units */
+            units: number;
+            /** Total */
+            total: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * ShipmentPatch
+         * @description Faqat berilgan maydonlar o'zgaradi; ``null`` — qiymatni (sanani) o'chirish.
+         */
+        ShipmentPatch: {
+            /** Title */
+            title?: string | null;
+            /** Carrier Id */
+            carrier_id?: string | null;
+            /** Cn Warehouse On */
+            cn_warehouse_on?: string | null;
+            /** Shipped On */
+            shipped_on?: string | null;
+            /** Arrived On */
+            arrived_on?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** ShipmentPurchaseOut */
+        ShipmentPurchaseOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string | null;
+            /** Supplier Name */
+            supplier_name: string | null;
+            stage: components["schemas"]["Stage"];
+            /** Line Count */
+            line_count: number;
+            /** Units */
+            units: number;
+            /** Share */
+            share: string | null;
+            /** Total */
+            total: string | null;
+            /** Unit Cost */
+            unit_cost: string | null;
+            /** Error */
+            error: string | null;
+        };
+        /** ShipmentsOut */
+        ShipmentsOut: {
+            /** Items */
+            items: components["schemas"]["ShipmentOut"][];
+            /** Amounts */
+            amounts: boolean;
         };
         /** ShopOut */
         ShopOut: {
@@ -6743,6 +6975,348 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PurchaseDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_shipments_api_v1_orgs__org_id__shipments_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShipmentsOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_shipment_api_v1_orgs__org_id__shipments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShipmentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShipmentDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_shipment_api_v1_orgs__org_id__shipments__shipment_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shipment_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShipmentDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    delete_shipment_api_v1_orgs__org_id__shipments__shipment_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shipment_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    update_shipment_api_v1_orgs__org_id__shipments__shipment_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shipment_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShipmentPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShipmentDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_component_api_v1_orgs__org_id__shipments__shipment_id__components_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shipment_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ComponentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShipmentDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    delete_component_api_v1_orgs__org_id__shipments__shipment_id__components__component_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shipment_id: string;
+                component_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShipmentDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    update_component_api_v1_orgs__org_id__shipments__shipment_id__components__component_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shipment_id: string;
+                component_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ComponentPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShipmentDetailOut"];
                 };
             };
             /** @description Validatsiya xatosi */

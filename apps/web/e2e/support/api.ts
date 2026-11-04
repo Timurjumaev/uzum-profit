@@ -9,6 +9,7 @@ import { pnlData, skuColumns } from "../../src/test/pnl";
 import { openingData, openingRow } from "../../src/test/opening";
 import { settingsData } from "../../src/test/settings";
 import { PURCHASE_1, purchaseDetail, purchaseRow } from "../../src/test/purchases";
+import { SHIPMENT_1, shipmentDetail, shipmentRow } from "../../src/test/shipments";
 
 /** Qotirilgan vaqt (Toshkent). */
 export const NOW = new Date("2026-10-26T14:00:00+05:00");
@@ -263,6 +264,8 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
       });
       return json(route, 200, { rows: [row(1, "ACTIVE", 12), row(2, "ARCHIVED", 0), row(3, "BLOCKED", 0)], truncated: false });
     }
+    if (key === `GET /orgs/${ORG_ID}/shipments`) return json(route, 200, { items: [shipmentRow()], amounts: true });
+    if (key === `GET /orgs/${ORG_ID}/shipments/${SHIPMENT_1}`) return json(route, 200, shipmentDetail());
     if (key === `GET /orgs/${ORG_ID}/suppliers` || key === `GET /orgs/${ORG_ID}/carriers`) return json(route, 200, []);
     if (key === `POST /orgs/${ORG_ID}/sync/refresh`) return json(route, 202, { queued: 3 });
     if (key === `POST /orgs/${ORG_ID}/accounts`) {

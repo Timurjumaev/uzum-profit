@@ -505,6 +505,16 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   zaxiradan ustun. Testlar: `test_fx` (zaxira, ko'zgu, ikkala manba yo'q, CBU qaytsa), `test_purchases`, core, web.
   **T:** deploy'dan keyin kursi yo'q xaridda komponentni qayta saqlash (yoki worker 09:05 / 16:05 da o'zi to'ldiradi), so'ng
   `fxcheck.sh` bilan `fx_rates` da `market` qatorlarini ko'rish.
+- [x] B4.31 Kargo: bitta kargo — ko'p xarid (ADR-046; Temur taklifi, 2026-11-04).
+  ✓ 2026-11-04: `shipments` jadvali, `purchases.shipment_id`, `cost_components.shipment_id` (xarajat yoki xaridniki, yoki
+  kargoniki — CHECK; migratsiya 0017); `upcore.purchasing.compute_shipment_lots` / `compute_shipment_shares` — kargo xarajati
+  hamma xaridlarning hamma tovarlariga bitta taqsimotda (yig'indi tiyinigacha, xossa testi); `upapi.calc.lots`
+  (`evaluate_shipment`, `rebuild_lots` qo'shni xaridlarni o'zi oladi; biror xarid hisoblanmasa butun kargo xato bilan);
+  `/shipments` (CRUD, xarajatlar, xaridlar va tovarlar bo'yicha ulush), `/purchases` (`shipment_id`, kargodan sanalar,
+  `shipment_components`); ekranlar: Kargolar ro'yxati va sahifasi, xarid shaklida kargo tanlovi, xarid sahifasida kargo
+  bloki; "Yangi kargo…" (kompaniya) → "Yangi kompaniya…". Testlar: core (taqsimot, xossa), API (`test_shipments`, 5),
+  web (`shipments.test`, 11), e2e (kargo sahifasi, 360 px). **T:** staging'da kargo yaratib 2 ta xaridni bog'lash, kargo
+  narxini kiritish va xaridlardagi tannarxni tekshirish.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

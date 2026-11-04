@@ -362,7 +362,10 @@ Sof foyda, oktabr
 - **SKU sahifasi:** sarlavha (rasm, nom, holat) → KPI qatori → unit kalkulyator (o'ngda) + grafiklar (chapda) →
   lotlar vaqt chizig'i → qaytishlar.
 - **Xaridlar:** ro'yxat (Partiya yo'li ixcham ko'rinishda) → xarid sahifasi: Partiya yo'li, «Partiyadagi tovarlar» jadvali,
-  xarajat komponentlari, birlik tannarx tarkibi (o'ngda doim ko'rinadi).
+  xarajat komponentlari, birlik tannarx tarkibi (o'ngda doim ko'rinadi). **Kargolar** (ADR-046): Xaridlar sarlavhasidagi
+  havola → ro'yxat (sanalar, xaridlar soni, dona, kargo xarajati) → kargo sahifasi: kargodagi xaridlar (kargo ulushi
+  bilan), kargo xarajatlari (kurs bilan), tovarlar va dona boshiga ulush, o'ngda jami; xarid sahifasida kargo nomi va
+  kargodan xarajatlar (faqat o'qish).
 - **Ombor:** holat bo'yicha guruhlar (Kritik → Yaxshi), har qatorda joylar bo'yicha qoldiq; tepada muzlagan pul
   va yo'ldagi tovar.
 - **Pul oqimi:** 90 kunlik prognoz grafigi (bitta o'q, so'm) + to'lov kalendari ro'yxati.

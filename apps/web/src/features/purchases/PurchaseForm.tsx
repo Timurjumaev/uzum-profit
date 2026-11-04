@@ -5,7 +5,7 @@ import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
-import { carriersQuery, createCarrier, createPurchase, createSupplier, suppliersQuery, updatePurchase } from "../../app/query";
+import { carriersQuery, createCarrier, createPurchase, createSupplier, shipmentsQuery, suppliersQuery, updatePurchase } from "../../app/query";
 import { Banner, Button, Dialog, Select, TextInput, useToast } from "../../components/ui";
 import type { PurchaseDetail } from "../../lib/api/types";
 import { todayTashkent } from "../../lib/dates";
@@ -13,7 +13,7 @@ import { todayTashkent } from "../../lib/dates";
 const NONE = "";
 const NEW = "__new";
 
-type Draft = { title: string; supplier: string; newSupplier: string; carrier: string; newCarrier: string; orderedOn: string; note: string };
+type Draft = { title: string; supplier: string; newSupplier: string; carrier: string; newCarrier: string; shipment: string; orderedOn: string; note: string };
 
 export function PurchaseForm({ orgId, detail, onClose, onSaved }: { orgId: string; detail: PurchaseDetail | null; onClose: () => void; onSaved: (detail: PurchaseDetail) => void }) {
   const { t } = useTranslation();
@@ -21,6 +21,7 @@ export function PurchaseForm({ orgId, detail, onClose, onSaved }: { orgId: strin
   const client = useQueryClient();
   const suppliers = useQuery(suppliersQuery(orgId));
   const carriers = useQuery(carriersQuery(orgId));
+  const shipments = useQuery(shipmentsQuery(orgId));
   const p = detail?.purchase;
   const [draft, setDraft] = useState<Draft>({
     title: p?.title ?? "",
@@ -28,6 +29,7 @@ export function PurchaseForm({ orgId, detail, onClose, onSaved }: { orgId: strin
     newSupplier: "",
     carrier: p?.carrier_id ?? NONE,
     newCarrier: "",
+    shipment: p?.shipment_id ?? NONE,
     orderedOn: detail ? "" : todayTashkent(),
     note: p?.note ?? "",
   });
@@ -41,12 +43,15 @@ export function PurchaseForm({ orgId, detail, onClose, onSaved }: { orgId: strin
       if (draft.carrier === NEW) carrier_id = (await createCarrier(orgId, draft.newCarrier.trim())).id;
       const title = draft.title.trim() || null;
       const note = draft.note.trim() || null;
-      if (detail) return updatePurchase(orgId, detail.purchase.id, { title, supplier_id, carrier_id, note });
-      return createPurchase(orgId, { title, supplier_id, carrier_id, note, dates: draft.orderedOn ? { ordered: draft.orderedOn } : {} });
+      const shipment_id = draft.shipment === NONE ? null : draft.shipment;
+      // Kargo: faqat o'zgargan bo'lsa yuboriladi (bog'langanda kargo sanalari xaridga ko'chadi, ajratilganda o'z holicha qoladi).
+      if (detail) return updatePurchase(orgId, detail.purchase.id, { title, supplier_id, carrier_id, note, ...(shipment_id !== (p?.shipment_id ?? null) ? { shipment_id } : {}) });
+      return createPurchase(orgId, { title, supplier_id, carrier_id, ...(shipment_id ? { shipment_id } : {}), note, dates: draft.orderedOn ? { ordered: draft.orderedOn } : {} });
     },
     onSuccess: async (saved) => {
       await client.invalidateQueries({ queryKey: ["orgs", orgId, "purchases"] });
       await client.invalidateQueries({ queryKey: ["orgs", orgId, "suppliers"] });
+      await client.invalidateQueries({ queryKey: ["orgs", orgId, "shipments"] });
       await client.invalidateQueries({ queryKey: ["orgs", orgId, "carriers"] });
       toast.show(t(detail ? "purchases.saved" : "purchases.created"), "positive");
       onSaved(saved);
@@ -84,6 +89,13 @@ export function PurchaseForm({ orgId, detail, onClose, onSaved }: { orgId: strin
         {draft.supplier === NEW && <TextInput label={t("purchases.fields.newSupplierName")} value={draft.newSupplier} onValueChange={(newSupplier) => patch({ newSupplier })} maxLength={200} />}
         <Select label={t("purchases.fields.carrier")} value={draft.carrier} onValueChange={(carrier) => patch({ carrier })} options={options(carriers.data, t("purchases.fields.newCarrier"))} />
         {draft.carrier === NEW && <TextInput label={t("purchases.fields.newCarrierName")} value={draft.newCarrier} onValueChange={(newCarrier) => patch({ newCarrier })} maxLength={200} />}
+        <Select
+          label={t("shipments.field")}
+          help={t("shipments.fieldHint")}
+          value={draft.shipment}
+          onValueChange={(shipment) => patch({ shipment })}
+          options={[{ value: NONE, label: t("shipments.none") }, ...(shipments.data?.items ?? []).map((x) => ({ value: x.id, label: x.title || t("shipments.untitled") }))]}
+        />
         {!detail && <TextInput label={t("purchases.fields.orderedOn")} type="date" optional value={draft.orderedOn} onValueChange={(orderedOn) => patch({ orderedOn })} />}
         <TextInput label={t("purchases.fields.note")} optional value={draft.note} onValueChange={(note) => patch({ note })} maxLength={500} />
       </form>

@@ -3,7 +3,7 @@
 import { infiniteQueryOptions, MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
-import type { ComponentIn, ComponentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, OpeningIn } from "../lib/api/types";
+import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, OpeningIn } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -347,6 +347,50 @@ export const deleteComponent = (orgId: string, purchaseId: string, componentId: 
   unwrap(
     api.DELETE("/api/v1/orgs/{org_id}/purchases/{purchase_id}/components/{component_id}", {
       params: { path: { org_id: orgId, purchase_id: purchaseId, component_id: componentId } },
+    }),
+  );
+
+// --- Kargolar (M9, B4.31, ADR-046): bitta kargo — ko'p xarid --------------------------------------------------------
+
+export const shipmentsQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "shipments", "list"],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/shipments", { params: { path: { org_id: orgId } } })),
+  });
+
+/** Kargo sahifasi: xaridlar (kargo ulushi bilan), xarajatlar, tovarlar (ulush har tovarga). */
+export const shipmentQuery = (orgId: string, shipmentId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "shipments", "one", shipmentId],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/shipments/{shipment_id}", { params: { path: { org_id: orgId, shipment_id: shipmentId } } })),
+  });
+
+const shipmentPath = (orgId: string, shipmentId: string) => ({ path: { org_id: orgId, shipment_id: shipmentId } });
+
+export const createShipment = (orgId: string, body: ShipmentIn) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/shipments", { params: { path: { org_id: orgId } }, body }));
+
+export const updateShipment = (orgId: string, shipmentId: string, body: ShipmentPatch) =>
+  unwrap(api.PATCH("/api/v1/orgs/{org_id}/shipments/{shipment_id}", { params: shipmentPath(orgId, shipmentId), body }));
+
+export const deleteShipment = (orgId: string, shipmentId: string) =>
+  unwrap(api.DELETE("/api/v1/orgs/{org_id}/shipments/{shipment_id}", { params: shipmentPath(orgId, shipmentId) }));
+
+export const createShipmentComponent = (orgId: string, shipmentId: string, body: ComponentIn) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/shipments/{shipment_id}/components", { params: shipmentPath(orgId, shipmentId), body }));
+
+export const updateShipmentComponent = (orgId: string, shipmentId: string, componentId: string, body: ComponentPatch) =>
+  unwrap(
+    api.PATCH("/api/v1/orgs/{org_id}/shipments/{shipment_id}/components/{component_id}", {
+      params: { path: { org_id: orgId, shipment_id: shipmentId, component_id: componentId } },
+      body,
+    }),
+  );
+
+export const deleteShipmentComponent = (orgId: string, shipmentId: string, componentId: string) =>
+  unwrap(
+    api.DELETE("/api/v1/orgs/{org_id}/shipments/{shipment_id}/components/{component_id}", {
+      params: { path: { org_id: orgId, shipment_id: shipmentId, component_id: componentId } },
     }),
   );
 

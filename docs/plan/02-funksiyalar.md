@@ -193,6 +193,11 @@ xarajatni to'g'ri yig'ish va tovarlarga to'g'ri bo'lish.
 - **Yetkazib beruvchilar:** nomi, platforma (1688, Pinduoduo, Taobao, WeChat, mahalliy, boshqa), aloqa, valyuta,
   o'rtacha tayyorlash muddati (o'rganiladi), izoh.
 - **Kargo kompaniyalari:** nomi, narx usuli (kg / m³ / dona / aralash), valyuta, o'rtacha yo'l muddati (o'rganiladi).
+- **Kargo (jo'natma; ADR-046):** bitta kargo — ko'p xarid (katta sotuvchi 10 yetkazib beruvchidan bitta presslangan o'ramda olib
+  keladi). Nomi, kargo kompaniyasi, **Xitoy omborida / yo'lda / Toshkentga keldi sanalari** (kargoga bog'langan hamma
+  xaridga o'tadi) va **kargo xarajatlari** (kargo, bojxona, yorliq ...): ular kargodagi **hamma xaridlarning hamma
+  tovarlariga** bitta taqsimotda bo'linadi (dona / vazn / hajm / qiymat / qo'lda). Xarid faqat bitta kargoga tegishli
+  (ixtiyoriy); kargosiz xarid avvalgidek. Kargo sahifasida har xaridga va har tovarga tushgan ulush ko'rinadi.
 - **Xarid (partiya) hayoti:** Qoralama → Buyurtma berildi → To'landi → Xitoy omborida → Yo'lda → Toshkentga keldi →
   Qabul qilindi → Uzumga yuborildi → Yopildi. Har bosqich ixtiyoriy, sanasi yoziladi, vaqt chizig'ida ko'rinadi.
   Legacy'dagi kabi bosqichma-bosqich to'ldiriladi: avval faqat tovar summasi, keyin tovarlar, keyin kargo.
@@ -427,7 +432,8 @@ SKU tushumi. Bog'lanmagan reklama SKU'larga tushum ulushi bo'yicha taqsimlanadi 
 **F20. Xarid (lot) birlik tannarxi.** Har komponent: summa × kurs → so'm; taqsimot asosiga ko'ra qatorlarga
 bo'linadi (dona / vazn / hajm / qiymat / qo'lda); qatorning birlik tannarxi = qatorga tushgan komponentlar
 yig'indisi / qabul qilingan dona (hali qabul qilinmagan bo'lsa buyurtma qilingan dona, "taxminiy"). Yaxlitlash
-qoldig'i eng katta qatorga. Kurs: CBU (to'lov sanasi, dam olish kunida oxirgi ish kuni), qo'lda, yoki yechilgan
+qoldig'i eng katta qatorga (kargo komponenti — butun kargo bo'yicha eng katta qatorga: kargodagi xaridlarga tushgan ulushlar
+yig'indisi kargo summasiga tiyinigacha teng, ADR-046). Kurs: CBU (to'lov sanasi, dam olish kunida oxirgi ish kuni), qo'lda, yoki yechilgan
 summadan effektiv kurs. CBU serverdan ochilmasa — zaxira bozor kursi (ADR-045): bir kunda CBU bo'lsa u ustun, hisobda `market_rate` belgisi (taxminiy).
 
 **F21. Sotuv tannarxi.** Hodisalar sana tartibida: lot kirimi (+), sotuv (−), sotuvga yaroqli qaytish (+, o'sha
