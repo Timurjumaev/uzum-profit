@@ -1480,6 +1480,8 @@ export interface components {
             applied_rate: string | null;
             /** Rate Day */
             rate_day: string | null;
+            /** Rate Source */
+            rate_source: string | null;
             /** Amount Uzs */
             amount_uzs: string | null;
             /** Error */

@@ -70,6 +70,9 @@ class Flag(StrEnum):
     CARGO_MISSING = "cargo_missing"  # kargo kiritilmagan
     NOT_RECEIVED = "not_received"  # qabul qilinmagan: buyurtma donasi bilan hisoblandi
     CBU_RATE = "cbu_rate"  # kurs qo'lda emas, CBU (haqiqiy to'langan kurs emas)
+    MARKET_RATE = (
+        "market_rate"  # kurs bozor kursi, CBU emas (CBU serverdan ochilmadi, ADR-045) — taxminiy
+    )
     BASE_FALLBACK = "base_fallback"  # vazn/hajm/qiymat yo'q — dona bo'yicha bo'lindi
 
 
@@ -228,6 +231,7 @@ def compute_lots(purchase: Purchase) -> list[LotCost]:
             raise PurchaseError(f"{component.kind}: summani bo'ladigan qator yo'q (dona 0)")
         weights, fallback = _weights(component, targets, purchase.goods_rate)
         cbu = component.rate is not None and component.rate.source is RateSource.CBU
+        market = component.rate is not None and component.rate.source is RateSource.MARKET
         for line, share in zip(targets, allocate(amount, weights), strict=True):
             bucket = parts[line.id]
             bucket[component.kind] = bucket.get(component.kind, Money.zero(UZS)) + share
@@ -235,6 +239,8 @@ def compute_lots(purchase: Purchase) -> list[LotCost]:
                 flags[line.id].add(Flag.BASE_FALLBACK)
             if cbu:
                 flags[line.id].add(Flag.CBU_RATE)
+            if market:
+                flags[line.id].add(Flag.MARKET_RATE)
 
     has_cargo = any(c.kind is ComponentKind.CARGO for c in purchase.components)
     result = []

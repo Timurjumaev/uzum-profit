@@ -104,6 +104,9 @@ class ComponentOut(BaseModel):
     shares: dict[str, Decimal]
     applied_rate: Decimal | None
     rate_day: date | None
+    rate_source: (
+        str | None
+    )  # ``cbu`` / ``market`` (zaxira, rasmiy emas) / ``manual`` / ``effective``
     amount_uzs: Decimal | None
     error: str | None
 
@@ -327,6 +330,7 @@ class Book:
             shares=shares,
             applied_rate=None if rate is None else rate.rate,
             rate_day=None if rate is None else rate.day,
+            rate_source=None if rate is None else rate.source.value,
             amount_uzs=uzs,
             error=error,
         )

@@ -237,6 +237,19 @@ describe("xarid sahifasi", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
 
+  it("zaxira bozor kursi: kurs yonida «bozor kursi, Markaziy bank emas», lotda taxminiy belgi", async () => {
+    const detail = purchaseDetail({
+      components: [component({ applied_rate: "1650.500000", rate_source: "market", rate_day: "2026-10-03" })],
+      purchase: purchaseRow({ flags: ["market_rate"] }),
+      lines: [line({ flags: ["market_rate"] })],
+    });
+    await renderAt(DETAIL, { [purchaseRoute("GET", PURCHASE_1)]: () => json(200, detail) });
+    const comps = await screen.findByRole("table", { name: "Xarajat komponentlari" });
+    expect(within(comps).getByText(/bozor kursi, Markaziy bank emas/)).toBeTruthy();
+    expect(within(comps).queryByText(/Markaziy bank\b(?! emas)/)).toBeNull();
+    expect(screen.getByText(/Markaziy bank kursi serverga yetib kelmadi/)).toBeTruthy();
+  });
+
   it("xarajat: kartadan yechilgan summa (effektiv kurs), tanlangan tovarlar; tahrirlash va o'chirish", async () => {
     const post = purchaseSubRoute("POST", PURCHASE_1, "components");
     const patch = purchaseSubRoute("PATCH", PURCHASE_1, `components/${COMP_GOODS}`);

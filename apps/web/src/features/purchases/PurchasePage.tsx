@@ -170,7 +170,7 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
     if (c.applied_rate === null) return "—";
     return t("purchases.components.rateOn", {
       rate: f.number(c.applied_rate, { digits: 2, trim: true }),
-      mode: t(`purchases.components.rateLabel.${c.rate_mode}`),
+      mode: t(`purchases.components.rateLabel.${c.rate_mode === "cbu" && c.rate_source === "market" ? "market" : c.rate_mode}`),
       date: c.rate_day ? f.date(c.rate_day) : "",
     });
   };

@@ -109,6 +109,11 @@ class Settings(BaseSettings):
 
     # CBU kurslari (B2.7, F20): kuniga 2 marta (Toshkent vaqti 09:05 va 16:05), arxiv orqaga to'ldiriladi.
     cbu_url: str = "https://cbu.uz/uz/arkhiv-kursov-valyut/json/"
+    # Zaxira (ADR-045): cbu.uz ochilmasa (staging AWS'dan ochilmaydi) bozor kursi, kuniga bitta fayl; bo'sh — zaxirasiz.
+    fx_market_urls: list[str] = [
+        "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@{date}/v1/currencies/{ccy}.json",
+        "https://{date}.currency-api.pages.dev/v1/currencies/{ccy}.json",
+    ]
     fx_currencies: list[str] = ["USD", "CNY", "RUB", "EUR"]
     fx_timeout_seconds: float = 20
     fx_backfill_days: int = 730
@@ -144,6 +149,8 @@ class Settings(BaseSettings):
             out.append("UP_TOKEN_KEY_VERSION: bunday versiya UP_TOKEN_KEYS ichida yo'q")
         if not self.cbu_url.startswith("https://"):
             out.append("UP_CBU_URL: faqat https://")
+        if any(not u.startswith("https://") for u in self.fx_market_urls):
+            out.append("UP_FX_MARKET_URLS: faqat https://")
         if not self.uzum_base_url.startswith("https://"):
             out.append("UP_UZUM_BASE_URL: faqat https://")
         if not self.secure_cookies:

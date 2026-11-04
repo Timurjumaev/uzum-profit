@@ -68,7 +68,7 @@ boshlanadi va qolgan joydan davom etadi; tannarxsiz ham bosh sahifa ishlaydi (ta
 | Postavka tarkibi | `GET /v1/shop/{id}/invoice/products?invoiceId=` | yangi yoki holati o'zgarganda | bir marta |
 | Qaytarishlar | `GET /v1/return`, `/v1/shop/{id}/return` | soatiga 1 | `dateFrom` bilan |
 | FBS buyurtmalar | `GET /v2/fbs/orders` (size≤50) | faqat do'konda FBS bo'lsa | holat bo'yicha [B5] |
-| CBU kurslari | cbu.uz JSON | kuniga 2 | arxiv sana bo'yicha |
+| CBU kurslari | cbu.uz JSON | kuniga 2 | arxiv sana bo'yicha; cbu.uz ochilmasa — zaxira bozor kursi (ADR-045) |
 
 - **Birinchi ulanish:** butun tarix (2020-01-01 dan, Uzum qancha bersa). Legacy'dagi mantiq saqlanadi:
   har do'kon uchun "tarix: to'liq / cheklangan" belgisi.
@@ -428,7 +428,7 @@ SKU tushumi. Bog'lanmagan reklama SKU'larga tushum ulushi bo'yicha taqsimlanadi 
 bo'linadi (dona / vazn / hajm / qiymat / qo'lda); qatorning birlik tannarxi = qatorga tushgan komponentlar
 yig'indisi / qabul qilingan dona (hali qabul qilinmagan bo'lsa buyurtma qilingan dona, "taxminiy"). Yaxlitlash
 qoldig'i eng katta qatorga. Kurs: CBU (to'lov sanasi, dam olish kunida oxirgi ish kuni), qo'lda, yoki yechilgan
-summadan effektiv kurs.
+summadan effektiv kurs. CBU serverdan ochilmasa — zaxira bozor kursi (ADR-045): bir kunda CBU bo'lsa u ustun, hisobda `market_rate` belgisi (taxminiy).
 
 **F21. Sotuv tannarxi.** Hodisalar sana tartibida: lot kirimi (+), sotuv (−), sotuvga yaroqli qaytish (+, o'sha
 lot narxida), brak / yo'qotish (−).

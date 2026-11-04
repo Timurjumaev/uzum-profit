@@ -91,6 +91,7 @@ export function component(over: Partial<S["ComponentOut"]> = {}): S["ComponentOu
     shares: {},
     applied_rate: "1800.000000",
     rate_day: "2026-10-03",
+    rate_source: "cbu",
     amount_uzs: "2664000.00",
     error: null,
     ...over,

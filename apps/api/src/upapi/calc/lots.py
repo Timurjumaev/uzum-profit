@@ -29,7 +29,7 @@ from uuid import UUID
 
 from sqlalchemy import Row, delete, insert, select
 from sqlalchemy.ext.asyncio import AsyncConnection
-from upcore.fx import FxError, FxRate, effective_fx_rate, manual_rate, rate_on
+from upcore.fx import FxError, FxRate, RateSource, effective_fx_rate, manual_rate, rate_on
 from upcore.money import Currency, Money, MoneyError, round_rate, to_decimal
 from upcore.purchasing import (
     AllocationBase,
@@ -63,12 +63,19 @@ class Rates:
         for ccy in wanted:
             self._cache[ccy] = []
         rows = await self.conn.execute(
-            select(m.fx_rates.c.day, m.fx_rates.c.currency, m.fx_rates.c.rate).where(
-                m.fx_rates.c.source == "cbu", m.fx_rates.c.currency.in_([c.value for c in wanted])
+            select(
+                m.fx_rates.c.day, m.fx_rates.c.currency, m.fx_rates.c.rate, m.fx_rates.c.source
+            ).where(
+                m.fx_rates.c.source.in_([RateSource.CBU.value, RateSource.MARKET.value]),
+                m.fx_rates.c.currency.in_([c.value for c in wanted]),
             )
         )
-        for r in rows:
-            self._cache[Currency(r.currency)].append(FxRate(r.day, Currency(r.currency), r.rate))
+        for r in (
+            rows
+        ):  # bir kunda CBU bor bo'lsa — u ustun (``rate_on``); bozor kursi faqat bo'shliqni yopadi
+            self._cache[Currency(r.currency)].append(
+                FxRate(r.day, Currency(r.currency), r.rate, RateSource(r.source))
+            )
 
     def cbu(self, currency: Currency, day: date | None) -> FxRate:
         return rate_on(self._cache.get(currency, ()), currency, day or self.today).rate
