@@ -28,6 +28,7 @@ export function settingsData(over: Partial<S["SettingsOut"]> = {}): S["SettingsO
       cover_days: { A: 60, B: 30, C: 14 },
       cover_defaults: { A: 60, B: 30, C: 14 },
     },
+    alerts: { cancel_share: null, return_share: null },
     ...over,
   };
 }

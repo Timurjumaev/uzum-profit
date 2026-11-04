@@ -252,15 +252,54 @@ describe("eng foydali 5 / zarar 5 va ko'rsatkichlar", () => {
     expect(screen.getByText("Zarar qilayotgan SKU yoʻq.")).toBeTruthy();
   });
 
-  it("ko'rsatkichlar: marja, ROI, bekor %, qaytish %, DRR, muzlagan pul, yo'ldagi tovar", async () => {
+  it("KPI sarhisob (ADR-043): 4 guruh, 24 kartochka — qiymat, oldingi davr, o'zgarish (ulushda punkt), rang", async () => {
     await renderHome();
-    const kpis = within(screen.getByRole("region", { name: "Qoʻshimcha koʻrsatkichlar" }));
+    const region = within(screen.getByRole("region", { name: "Koʻrsatkichlar sarhisobi" }));
+    for (const name of ["Buyurtmalar va tushum", "Uzum ushlab qolgani va foyda", "Qaytarilgan va bekor qilingan", "Oʻrtacha koʻrsatkichlar"]) {
+      expect(region.getByRole("heading", { name })).toBeTruthy();
+    }
+    expect(region.getAllByRole("listitem").filter((li) => li.classList.contains("home-card"))).toHaveLength(24);
+    const kpi = (key: string) => screen.getByTestId(`kpi-${key}`);
+    const value = (key: string) => norm(kpi(key).querySelector(".home-card__value")!.textContent ?? "");
+    expect(value("revenue")).toBe(m("186420000.00"));
+    expect(value("gross_revenue")).toBe(m("215420000.00"));
+    expect(value("orders")).toBe("1 610");
+    expect(value("units_per_order")).toBe("1,13");
+    expect(value("cancel_share")).toBe(norm(f.percent("0.181141")));
+    expect(norm(kpi("revenue").textContent ?? "")).toContain(`oldingi: ${m("190000000.00")}`);
+    // Tushum kamaydi — yomon (qizil); bekor ulushi o'sdi — punktda, yomon; xarajat ulushi o'sdi — yomon.
+    const change = (key: string) => kpi(key).querySelector(".home-card__change")!;
+    expect(norm(change("revenue").textContent ?? "")).toBe("▼ 1,9%");
+    expect(change("revenue").className).toContain("ui-text--negative");
+    expect(norm(change("cancel_share").textContent ?? "")).toBe("▲ 2,6 punkt");
+    expect(change("cancel_share").className).toContain("ui-text--negative");
+    expect(change("uzum_costs_share").className).toContain("ui-text--negative");
+    expect(change("net_profit").className).toContain("ui-text--positive");
+    expect(kpi("average_price").querySelector(".home-card__change")!.className).toContain("ui-text--neutral");
+    // Asosiy kartochkalar ajratilgan; har kartochkada formula.
+    expect(kpi("revenue").className).toContain("home-card--key");
+    expect(kpi("net_profit").className).toContain("home-card--key");
+    fireEvent.click(within(kpi("cancel_share")).getByRole("button", { name: /Bekor boʻlish ulushi \(soni\)/ }));
+    expect(screen.getByText(/F17/)).toBeTruthy();
+    // Davrlar: joriy va oldingi.
+    expect(region.getByText(/Joriy davr/)).toBeTruthy();
+    expect(region.getByText(/Oldingi davr/)).toBeTruthy();
+  });
+
+  it("buyurtmadan sof foydagacha yo'li: yalpi → bekor → qaytarish → tushum → Uzum → qoladi → sof foyda", async () => {
+    await renderHome();
+    const flow = screen.getByRole("figure", { name: "Buyurtmadan sof foydagacha" });
+    const steps = [...flow.querySelectorAll(".home-flow__step")].map((li) => norm(li.querySelector(".home-flow__name")!.textContent ?? ""));
+    expect(steps).toEqual(["Buyurtmalar summasi", "Bekor qilingan", "Qaytarilgan", "Tushum", "Uzum ushlab qolgan", "Uzumdan keyin qoladi", "Sof foyda"]);
+    const first = flow.querySelector<HTMLElement>(".home-flow__step--gross_revenue .home-flow__bar > span")!;
+    expect(first.style.inlineSize).toBe("100%");
+    expect(norm(flow.querySelector(".home-flow__step--revenue .home-flow__value")!.textContent ?? "")).toBe(m("186420000.00"));
+  });
+
+  it("tovardagi pul: muzlagan pul va yo'ldagi tovar (davrga bog'liq emas)", async () => {
+    await renderHome();
+    const kpis = within(screen.getByRole("region", { name: "Tovardagi pul" }));
     const value = (label: string) => norm(kpis.getByText(label).closest(".ui-kpi")!.querySelector(".kpi")!.textContent ?? "");
-    expect(value("Marja")).toBe(norm(f.percent("0.259400")));
-    expect(value("ROI")).toBe(norm(f.percent("0.619000")));
-    expect(value("Bekor boʻlish")).toBe(norm(f.percent("0.040000")));
-    expect(value("Qaytarilish")).toBe(norm(f.percent("0.021000")));
-    expect(value("Reklama ulushi (DRR)")).toBe(norm(f.percent("0.032200")));
     expect(value("Muzlagan pul")).toBe(m("92000000.00"));
     expect(value("Yoʻldagi tovar qiymati")).toBe(m("31000000.00"));
     expect(kpis.getByText("oʻrtacha sotilish: 42 kun")).toBeTruthy();
@@ -268,21 +307,24 @@ describe("eng foydali 5 / zarar 5 va ko'rsatkichlar", () => {
     expect(kpis.queryByText("Jarayondagi sotuvlar")).toBeNull();
   });
 
-  it("tannarxsiz qism marja yonida; ma'lumot yo'q — '—' va sababi (taxmin yashirilmaydi)", async () => {
+  it("tannarxsiz qism marja kartochkasida; qiymat yo'q — '—'; chegaradan oshgan ulush ogohlantiriladi", async () => {
     const base = dashboardData();
-    const data = dashboardData({
-      kpis: {
-        ...base.kpis,
-        margin: "0.300000",
-        uncovered_share: "0.250000",
-        roi: null,
-        drr: null,
-      },
-    });
+    const groups = base.summary.groups.map((g) => ({
+      ...g,
+      cards: g.cards.map((c) =>
+        c.key === "roi" ? { ...c, value: null, previous: null, change: null, series: [null, null, null] } : c.key === "cancel_share" ? { ...c, warn: true } : c,
+      ),
+    }));
+    const data = dashboardData({ kpis: { ...base.kpis, uncovered_share: "0.250000" }, summary: { ...base.summary, groups } });
     await renderHome("/", { [DASHBOARD_ROUTE]: () => json(200, data) });
-    const kpis = within(screen.getByRole("region", { name: "Qoʻshimcha koʻrsatkichlar" }));
-    expect(kpis.getByText("Tannarxsiz qism: 25%")).toBeTruthy();
-    expect(kpis.getByText("ROI").closest(".ui-kpi")!.querySelector(".kpi")!.textContent).toBe("—");
+    const kpi = (key: string) => screen.getByTestId(`kpi-${key}`);
+    expect(within(kpi("margin")).getByText("Tannarxsiz qism: 25%")).toBeTruthy();
+    expect(kpi("roi").querySelector(".home-card__value")!.textContent).toBe("—");
+    expect(kpi("roi").querySelector(".home-card__change")).toBeNull();
+    expect(kpi("cancel_share").className).toContain("home-card--warn");
+    expect(within(kpi("cancel_share")).getByText(/Sozlangan chegaradan yuqori/)).toBeTruthy();
+    expect(within(kpi("cancel_share")).getByRole("link", { name: "Chegarani oʻzgartirish" }).getAttribute("href")).toContain("/settings");
+    expect(kpi("return_share").className).not.toContain("home-card--warn");
   });
 });
 

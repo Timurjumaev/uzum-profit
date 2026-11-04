@@ -1,4 +1,5 @@
-"""B4.4 ``/orders/analysis`` (haqiqiy PostgreSQL): bekor (F17) va qaytish (F18) tahlili, sabablar, qaytim saqlash.
+"""B4.4 ``/orders/analysis`` (haqiqiy PostgreSQL): bekor (F17) va qaytarish (F18) tahlili, sabablar, qaytim saqlash.
+ADR-043: topshirilgan (``issued_at`` bor) Bekor qator — qaytarish, topshirilmagani — bekor.
 
 Ma'lumot ``test_reports`` dagi kabi superuser bilan yoziladi; hosila jadvallar haqiqiy hisob ishi bilan quriladi.
 """
@@ -36,7 +37,7 @@ def _populate(w: World) -> None:
     w.ids["ya"] = a.insert("mp_skus", shop_id=a.shop_id, external_id=12, sku_code="Krujka")
     w.ids["zb"] = b.insert("mp_skus", shop_id=b.shop_id, external_id=21, sku_code="Chiroq")
     xa, ya = w.ids["xa"], w.ids["ya"]
-    # X: 6 dona yakunlangan, 2 qaytgan (sabablar), 2 bekor (1 tasi topshirilgandan keyin).
+    # X: 6 dona yakunlangan, 2 qaytgan (sabablar), Bekor holatda 2 (1 tasi topshirilgan — qaytarish, ADR-043).
     a.sale(xa, d(10, 2), 3, amount_returns=1, return_cause="Sifat yomon")
     a.sale(xa, d(10, 3), 3, amount_returns=1, return_cause="Sifat yomon")
     a.sale(xa, d(10, 4), 0, "CANCELED", amount_returns=1, return_cause="Mijoz fikrini o'zgartirdi")
@@ -49,7 +50,7 @@ def _populate(w: World) -> None:
         issued_at=at(d(10, 5)),
         return_cause="Mijoz fikrini o'zgartirdi",
     )
-    a.sale(xa, d(10, 6), 1, "PROCESSING")  # na bekor, na yakunlangan
+    a.sale(xa, d(10, 6), 1, "PROCESSING")  # sotilgan (ADR-036), na bekor, na qaytarish
     # Y: 2 yakunlangan, qaytish yo'q, 2 bekor (sabab ko'rsatilmagan).
     a.sale(ya, d(10, 3), 2)
     a.sale(ya, d(10, 7), 0, "CANCELED", amount_returns=2)
@@ -57,7 +58,7 @@ def _populate(w: World) -> None:
     a.sale(None, d(10, 4), 1, amount_returns=1)
     # Boshqa davr (sentabr) — oktabr tahlilida ko'rinmasin.
     a.sale(xa, d(9, 20), 5, amount_returns=5, return_cause="Sentabr")
-    # B do'koni: 4 dona yakunlangan, 1 bekor.
+    # B do'koni: 4 dona yakunlangan, 1 qaytarish (topshirilgan Bekor qator).
     b.sale(w.ids["zb"], d(10, 2), 4)
     b.sale(w.ids["zb"], d(10, 3), 0, "CANCELED", amount_returns=1, issued_at=at(d(10, 3)))
 
@@ -104,35 +105,43 @@ def causes(rows: list[dict[str, Any]]) -> dict[str | None, int]:
 
 def test_summary_shares_and_costs(world: World) -> None:
     s = world.get("orders/analysis", **OCT)["summary"]
-    # Yakunlangan: X 6 + Y 2 + bog'lanmagan 1 + B 4 = 13; bekor: 1+1+2+1 = 5; qaytgan: 1+1+1 = 3 (+ bekor qatorlarniki emas).
-    assert (s["units"], s["canceled"], s["returns"]) == (13, 5, 3)
-    assert s["cancel_share"] == "0.277778"  # 5 / 18  (F17)
-    assert s["return_share"] == "0.187500"  # 3 / 16  (F18)
-    assert s["canceled_after_issue"] == 2 and s["after_issue_share"] == "0.400000"
+    # Sotilgan (Yakunlangan + Jarayonda): X 7 + Y 2 + bog'lanmagan 1 + B 4 = 14; bekor (topshirilmagan): 1 + 2 = 3;
+    # qaytarish: Yakunlangan qatorlardagi 1+1+1 va topshirilgan Bekor qatorlar 1+1 = 5. Yalpi = 14 + 3 + 5 = 22.
+    assert (s["units"], s["canceled"], s["returns"]) == (14, 3, 5)
+    assert s["cancel_share"] == "0.136364"  # 3 / 22  (F17)
+    assert s["return_share"] == "0.263158"  # 5 / (14 + 5)  (F18)
+    # Summalar: test sotuvi narxi 200 000 (test_calc.Org.sale).
+    assert D(s["cancel_revenue"]) == D(600_000) and D(s["return_revenue"]) == D(1_000_000)
     assert D(s["return_storage_cost"]) == D(49_000)  # 30 000 + 20 000 − 5 000 + 4 000
 
 
 def test_shop_filter(world: World) -> None:
     s = world.get("orders/analysis", shop=str(world.b.shop_id), **OCT)["summary"]
-    assert (s["units"], s["canceled"], s["returns"]) == (4, 1, 0)
-    assert s["canceled_after_issue"] == 1 and s["after_issue_share"] == "1.000000"
+    assert (s["units"], s["canceled"], s["returns"]) == (4, 0, 1)
+    assert s["cancel_share"] == "0.000000" and s["return_share"] == "0.200000"
     assert D(s["return_storage_cost"]) == D(4_000)
 
 
 def test_causes(world: World) -> None:
     out = world.get("orders/analysis", **OCT)
-    assert causes(out["return_causes"]) == {"Sifat yomon": 2, None: 1}
-    # Eng ko'pi birinchi; bir xil bo'lsa sababsizi oxirda.
-    assert [r["cause"] for r in out["return_causes"]] == ["Sifat yomon", None]
-    assert causes(out["cancel_causes"]) == {"Mijoz fikrini o'zgartirdi": 2, None: 3}
+    # Qaytarish sabablari: Yakunlangan qatorlar va topshirilgan Bekor qatorlar birga (ADR-043).
+    assert causes(out["return_causes"]) == {
+        "Sifat yomon": 2,
+        None: 2,
+        "Mijoz fikrini o'zgartirdi": 1,
+    }
+    assert out["return_causes"][-1]["cause"] == "Mijoz fikrini o'zgartirdi"  # eng ko'pi birinchi
+    assert causes(out["cancel_causes"]) == {"Mijoz fikrini o'zgartirdi": 1, None: 2}
 
 
 def test_by_sku(world: World) -> None:
     rows = world.get("orders/analysis", **OCT)["by_sku"]
     assert [r["title"] for r in rows] == ["Mashina", "Krujka", "Chiroq", None]
     x = rows[0]
-    assert (x["units"], x["canceled"], x["returns"]) == (6, 2, 2)
-    assert x["cancel_share"] == "0.250000" and x["return_share"] == "0.250000"
+    assert (x["units"], x["canceled"], x["returns"]) == (7, 1, 3)
+    assert (
+        x["cancel_share"] == "0.090909" and x["return_share"] == "0.300000"
+    )  # 1 / 11, 3 / (7 + 3)
     assert rows[3]["sku_id"] is None  # bog'lanmagan sotuvlar alohida qatorda
     assert rows[3]["returns"] == 1
 
@@ -145,7 +154,8 @@ def test_daily_trend_sums_to_summary(world: World) -> None:
     assert sum(x["canceled"] for x in days) == out["summary"]["canceled"]
     assert sum(x["returns"] for x in days) == out["summary"]["returns"]
     oct4 = next(x for x in days if x["day"] == "2026-10-04")
-    assert oct4["units"] == 1 and oct4["canceled"] == 1 and oct4["cancel_share"] == "0.500000"
+    assert oct4["units"] == 1 and oct4["canceled"] == 1 and oct4["returns"] == 1
+    assert oct4["cancel_share"] == "0.333333"  # 1 / (1 + 1 + 1)
 
 
 def test_period_excludes_other_months(world: World) -> None:
@@ -169,5 +179,5 @@ def test_other_org_is_invisible(world: World) -> None:
     r = world.call("orders/analysis", org=uuid.uuid4(), **OCT)
     assert r.status_code in (403, 404)
     assert (
-        world.get("orders/analysis", **OCT)["summary"]["returns"] == 3
+        world.get("orders/analysis", **OCT)["summary"]["returns"] == 5
     )  # boshqa tashkilotning 9 tasi yo'q

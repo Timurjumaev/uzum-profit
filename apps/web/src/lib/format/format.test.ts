@@ -10,6 +10,7 @@ import {
   formatNumber,
   formatPercent,
   formatPeriod,
+  formatPoints,
   formatRelative,
   formatterFor,
   formatWeekday,
@@ -77,6 +78,10 @@ describe("sonlar (04 §8.4)", () => {
     expect(formatChange("0.124")).toBe("▲ 12,4%");
     expect(formatChange("-0.031")).toBe("▼ 3,1%");
     expect(formatChange("0")).toBe("0%");
+    // ADR-043: ulushlar o'zgarishi — punktda.
+    expect(formatPoints("0.031800", "uz-Latn")).toBe(`▲\u202F3,2${NBSP}punkt`);
+    expect(formatPoints("-0.015", "ru")).toBe(`▼\u202F1,5${NBSP}п.п.`);
+    expect(formatPoints("0", "uz-Cyrl")).toBe(`0${NBSP}пункт`);
   });
 });
 

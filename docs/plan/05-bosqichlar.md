@@ -468,6 +468,20 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   olib ketilmagan — F40 taxmini, ADR-037 qaytdi) — `upapi.calc.daily.effective_logistics` (kunlik agregat, P&L, `/sales`);
   sinxron yechim o'zgargan sotuvlar kunidan agregatni qayta quradi; migratsiya 0014 — to'liq qayta qurish. ADR-041 ning
   "bonus buyurtma sanasiga qarab" xulosasi tuzatildi (Uzum olib ketilgan kunga qarab yechadi).
+- [x] B4.26 Bekor va qaytarish alohida; bosh sahifada KPI sarhisob (ADR-043; Temur, 2026-11-04 — Robohub tahlili).
+  ✓ 2026-11-04: Bekor holat topshirilgan (`dateIssued` — qaytarish, F18) / topshirilmagan (bekor, F17) bo'yicha ikkiga;
+  F44–F48 (yalpi summa va dona, buyurtmalar, Uzum ushlab qolgan, Uzumdan keyin qoladi, o'rtacha chek / narx / buyurtmadagi
+  tovarlar) — `upcore.metrics.OrderFlow`, `upcore.pnl.Statement`; migratsiya 0015 (`daily_sku_metrics`: topshirilgan bekor
+  dona va summalar, to'liq qayta qurish). `/dashboard` → `summary`: 4 guruh × 24 kartochka (joriy, oldingi, o'zgarish —
+  ulushda punkt, trend nuqtalari kunlik / haftalik / oylik, ogohlantirish); bosh sahifada "Buyurtmadan sof foydagacha" yo'li
+  va kartochkalar (04 §6.4), "Qo'shimcha ko'rsatkichlar" → "Tovardagi pul". Buyurtmalar sahifasi (bekor / qaytarish: dona,
+  summa, sabab), `/sales`, `/skus` — yangi F17/F18. Sozlamalar → "Ogohlantirish chegaralari" (`PUT /settings/alerts`).
+  Realcheck `cancel_split`: bekor holat oyma-oy topshirilgan / topshirilmagan, logistika yechilgan va qaytarilgani, sabablar,
+  `/v1/return` donalari. **Topildi:** eski qaytish % faqat Yakunlangan `amountReturns` dan (real ma'lumotda doim 0), bekor %
+  qaytarishlarni ham sanardi. **T:** staging'da realcheck → Uzum kabinetidagi oktabr qaytarish va bekor sonlari bilan
+  solishtirish; xohlasa — Sozlamalarda chegaralar.
+- [ ] B4.27 "Yo'qotishlar va imkoniyat" bloki (ADR-043 (5), AI'siz, formula bilan): qaytarish xarajati, zarardagi SKU,
+  tannarxsiz sotuvlar; bekor summasi yo'qotish emas.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

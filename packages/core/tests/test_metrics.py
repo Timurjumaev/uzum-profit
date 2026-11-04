@@ -360,23 +360,26 @@ def test_with_expected_logistics() -> None:
 
 
 def test_cancel_and_return_share() -> None:
+    """ADR-043: Bekor holat ikkiga bo'linadi — topshirilmagan (bekor, F17) va topshirilgan (qaytarish, F18)."""
     lines = [
-        line(amount=8, returns=1),
-        line("CANCELED", amount=2),
-        line("PROCESSING", amount=5, returns=1),
+        line(amount=8, returns=1),  # Yakunlangan, 1 dona qisman qaytgan
+        line("CANCELED", amount=0, returns=2),  # bekor: olib ketilmagan
+        line("CANCELED", amount=0, returns=1, issued=True),  # qaytarish: mijoz olgan va qaytargan
+        line("PROCESSING", amount=5),
     ]
-    assert cancel_share(lines) == D("0.2")
+    # Yalpi dona = 8 + 1 + 2 + 1 + 5 = 17; bekor = 2.
+    assert cancel_share(lines) == D("0.117647")
     assert cancel_share([]) is None
-    # Qaytgan — faqat Yakunlangan qatorlarnikidan: 1 / (8 + 1); Jarayondagi qator hisobga kirmaydi.
-    assert period_return_share(lines) == D("0.111111")
+    # Qaytgan = 1 (topshirilgan Bekor) + 1 (Yakunlangan amountReturns); sotilgan = 8 + 5.
+    assert period_return_share(lines) == D("0.133333")
     assert return_share(sold=95, returned=5) == D("0.05")
     assert return_share(0, 0) is None
 
 
 def test_real_canceled_line_shape() -> None:
     """B2.11 (Temurning real ma'lumoti, 905 ta CANCELED qator): Uzum bekor qatorda ``amount`` = 0, ``commission``,
-    ``logisticDeliveryFee``, ``sellerProfit`` = 0 beradi, bekor qilingan dona ``amountReturns`` da. Bekor dona F17 va
-    F16 ga kiradi, F18 (qaytish) ga kirmaydi."""
+    ``logisticDeliveryFee``, ``sellerProfit`` = 0 beradi, bekor qilingan dona ``amountReturns`` da. Topshirilmagan
+    bekor dona F17 va F16 ga kiradi, F18 (qaytarish) ga kirmaydi (ADR-043)."""
     real = SaleLine(
         "A", date(2026, 10, 1), "CANCELED", D(92_000), 0, D(0), D(0), D(0), amount_returns=2
     )
@@ -386,8 +389,55 @@ def test_real_canceled_line_shape() -> None:
     assert cancel_share(lines) == D("0.5")  # 2 / (2 + 2)
     assert period_return_share(lines) == 0
     t = sale_totals(lines)
-    assert (t.units, t.canceled, t.returns) == (2, 2, 0)
+    assert (t.units, t.canceled, t.returns, t.canceled_issued) == (2, 2, 0, 0)
+    assert t.canceled_revenue == uzs(184_000) and t.canceled_issued_revenue == uzs(0)
     assert payout_mismatches([real]) == []
+
+
+def test_order_flow() -> None:
+    """F17, F18, F44, F45, F48 (ADR-043): yalpi = sof + bekor + qaytarish (dona va so'mda), har doim aniq."""
+    from upcore.metrics import OrderFlow, order_flow, relative_change
+
+    lines = [
+        line(price=100_000, amount=3, returns=1),  # sotilgan 3, qisman qaytgan 1
+        line("PROCESSING", price=50_000, amount=2),
+        line("CANCELED", price=80_000, amount=0, returns=2),  # bekor
+        line("CANCELED", price=60_000, amount=0, returns=1, issued=True),  # qaytarish
+        line(
+            "SOMETHING_NEW", price=1_000_000, amount=9
+        ),  # noma'lum holat — hech qaysi hisobga kirmaydi
+    ]
+    flow = order_flow(sale_totals(lines), orders=6, orders_net=3)
+    assert flow.revenue == uzs(400_000) and flow.units == 5
+    assert (flow.cancel_units, flow.cancel_revenue) == (2, uzs(160_000))
+    assert (flow.return_units, flow.return_revenue) == (2, uzs(160_000))
+    assert flow.gross_units == 9 == flow.units + flow.cancel_units + flow.return_units
+    assert flow.gross_revenue == uzs(720_000)
+    assert flow.gross_revenue - flow.cancel_revenue - flow.return_revenue == flow.revenue
+    assert flow.cancel_share == D("0.222222")  # 2 / 9
+    assert flow.cancel_revenue_share == D("0.222222")  # 160 / 720
+    assert flow.return_share == D("0.285714")  # 2 / (5 + 2)
+    assert flow.return_revenue_share == D("0.285714")  # 160 / (400 + 160)
+    assert flow.net_order_share == D("0.5")
+    assert flow.average_check == uzs("133333.33")
+    assert flow.average_price == uzs(80_000)
+    assert flow.units_per_order == D("1.666667")
+    # Additiv: ikki bo'lak yig'indisi butunga teng.
+    half = order_flow(sale_totals(lines[:2]), orders=2, orders_net=2) + order_flow(
+        sale_totals(lines[2:]), orders=4, orders_net=1
+    )
+    assert half == flow
+    empty = OrderFlow()
+    assert empty.cancel_share is None and empty.average_check is None
+    assert empty.average_price is None and empty.units_per_order is None
+    assert empty.net_order_share is None and empty.return_revenue_share is None
+    assert relative_change(110, 100) == D("0.1")
+    assert relative_change(-50, -100) == D("0.5")  # zarar kamaydi — yaxshilanish
+    assert relative_change(5, 0) is None
+    from upcore.metrics import share_change
+
+    assert share_change(D("0.3221"), D("0.2903")) == D("0.0318")
+    assert share_change(None, D("0.1")) is None and share_change(D("0.1"), None) is None
 
 
 # F19 ------------------------------------------------------------------------------------------
@@ -477,7 +527,7 @@ def test_unit_rates_match_line_rates() -> None:
         SaleLine("A", date(2026, 10, 1), "TO_WITHDRAW", Decimal(1), 30),
         SaleLine("A", date(2026, 10, 1), "CANCELED", Decimal(1), 30),
     ]
-    assert cancel_rate(30, 30) == cancel_share(lines) == Decimal("0.5")
+    assert cancel_rate(30, 60) == cancel_share(lines) == Decimal("0.5")
     assert realization_rate_units(30, 30) == realization_rate(lines) == Decimal("0.5")
     assert realization_rate_units(30, 19) is None  # 49 < 50
     assert cancel_rate(0, 0) is None
@@ -518,15 +568,6 @@ def test_line_gross_profit() -> None:
         unit_cost=Decimal(50),
     )
     assert costed.gross_profit == Decimal(70)  # 200 − 20 − 10 − 100
-
-
-def test_late_cancel_share() -> None:
-    """F17 qismi: topshirilgandan keyin bekor ulushi (Bekor dona ichida)."""
-    from upcore.metrics import late_cancel_share
-
-    assert late_cancel_share(40, 10) == Decimal("0.25")
-    assert late_cancel_share(5, 5) == Decimal("1")
-    assert late_cancel_share(0, 0) is None
 
 
 def test_ad_rate_and_expected_ads() -> None:

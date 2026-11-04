@@ -73,3 +73,26 @@ export function inventoryBody(lead: LeadDraft, cover: CoverDraft): InventorySett
 export function termsDays(days: number[] | null): string {
   return days ? days.join(", ") : "";
 }
+
+// --- Ogohlantirish chegaralari (ADR-043): foizda kiritiladi ("30"), API'ga ulush ("0.3") — vergul siljishi, float'siz ---
+
+function shift(value: string, places: number): string {
+  const negative = value.startsWith("-");
+  const [int = "0", frac = ""] = (negative ? value.slice(1) : value).split(".");
+  const digits = int + frac;
+  const point = int.length + places;
+  const padded = point <= 0 ? "0".repeat(1 - point) + digits : digits.padEnd(point, "0");
+  const at = Math.max(point, 1);
+  const whole = padded.slice(0, at).replace(/^0+(?=\d)/, "");
+  const rest = padded.slice(at).replace(/0+$/, "");
+  return (negative ? "-" : "") + whole + (rest ? `.${rest}` : "");
+}
+
+/** "0.300000" → "30"; `null` → `null`. */
+export const shareToPercent = (share: string | null): string | null => (share === null ? null : shift(share, 2));
+
+/** "30" → "0.3"; `null` → `null`. */
+export const percentToShare = (percent: string | null): string | null => (percent === null ? null : shift(percent, -2));
+
+/** Chegara 0 dan katta va 100% dan oshmasligi kerak (bo'sh — o'chirilgan). */
+export const alertValid = (percent: string | null): boolean => percent === null || (Number(percent) > 0 && Number(percent) <= 100);

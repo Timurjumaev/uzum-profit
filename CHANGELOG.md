@@ -394,8 +394,18 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   olganida" turi, `AD#` → sotuv qatori, yechilgan kun buyurtma va topshirilgan kunga nisbatan), `dateService` ↔
   `dateCreated` farqi va saqlash yechiladigan kunlar; faqat yig'indilar, matnlar raqamsiz.
 
+- B4.26 (ADR-043, Temur talabi — Robohub tahlili): bosh sahifada **KPI sarhisob** — "Buyurtmadan sof foydagacha" yo'li
+  va 4 guruh × 24 kartochka (buyurtmalar va tushum; Uzum ushlab qolgani va foyda; qaytarilgan va bekor qilingan;
+  o'rtacha), har birida oldingi davr qiymati, o'zgarish (ulushda — punkt), trend chizig'i va formula. Yangi formulalar
+  F44–F48 (`upcore.metrics.OrderFlow`, `Statement.uzum_costs` / `after_uzum`), `/dashboard` → `summary`, sozlamalarda
+  bekor va qaytarish ulushi ogohlantirish chegaralari (`PUT /settings/alerts`), realcheck `cancel_split`.
+
 ### O'zgartirildi
 
+- B4.26 (ADR-043): Uzum "bekor" qatori ikkiga — mijozga topshirilgan (`dateIssued`) — **qaytarish** (F18), topshirilmagan —
+  **bekor** (F17). F17 = bekor / yalpi dona, F18 = qaytgan / (sotilgan + qaytgan), sotilgan — Yakunlangan + Jarayonda.
+  Buyurtmalar sahifasi, sotuvlar ro'yxati va SKU jadvali shu ta'rif bilan; "topshirilgandan keyin bekor" o'rniga dona va
+  summa. "Qo'shimcha ko'rsatkichlar" bloki "Tovardagi pul" bo'ldi (qolganlari KPI sarhisobda). Migratsiya 0015.
 - B4.23 (ADR-040): saqlash endi Uzum qoidasi bo'yicha faqat pullik saqlashdagi tovarlarga yoziladi (aylanma 60 kundan
   oshgan, yangi bo'lmagan SKU), qaytim saqlash — qaytgan tovarlarga. Sotilmagan tovar saqlashi kabi sotuvsiz xarajatlar
   yakunlangan va kutilayotgan qismlarga o'sha kungi tushum ulushida bo'linadi — "Bugun" da yakunlangan sof foyda endi
@@ -443,6 +453,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- B4.26: qaytish ulushi faqat Yakunlangan qatorlardagi `amountReturns` dan hisoblanardi (real ma'lumotda doim 0), bekor
+  ulushi esa mijoz olib qaytargan tovarlarni ham sanardi — ADR-043 bilan tuzatildi.
 - B4.25 (ADR-042, Temur kuzatuvi): logistika endi Uzum **aslida yechgan** summa bo'yicha. Uzum bonusni tovar olib
   ketilgan kunga qarab bergan, sotuv qatoridagi summa esa buyurtma sanasiga qarab yozilgan: noyabrda olib ketilgan
   oktabr buyurtmalari (qatorda 0) uchun Uzum logistika yechmoqda, 9–31-oktabrda olib ketilgan oldingi buyurtmalardan

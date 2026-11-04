@@ -259,6 +259,37 @@ Tenglama: yakunlangan + kutilayotgan = jami. Kutilayotgan — shtrix chegara (ha
 §11), jami — natija chizig'i (`--border-rule`) va kattaroq raqam (≥ 1200 px'da `--type-display`). Summalar rangi —
 ishora bo'yicha (musbat — yashil, manfiy — qizil). Mobilda ustma-ust, "+" va "=" kartochkalar orasida.
 
+### 6.4 KPI sarhisob (bosh sahifa, ADR-043)
+
+```
+Koʻrsatkichlar sarhisobi                      [Joriy davr: 1–26-oktabr] [Oldingi davr: 5–30-sentabr]
+┌ Buyurtmadan sof foydagacha ─────────────────────────────────────────────────────────────────┐
+│   Buyurtmalar summasi   ████████████████████████████████████████████████   215 420 000 soʻm │
+│ − Bekor qilingan        ████                                                19 850 000 soʻm │
+│ − Qaytarilgan           ██                                                   9 150 000 soʻm │
+│ = Tushum                ████████████████████████████████████████           186 420 000 soʻm │
+│ − Uzum ushlab qolgan    ███████████                                         52 300 000 soʻm │
+│ = Uzumdan keyin qoladi  ██████████████████████████████                     134 120 000 soʻm │
+│ = Sof foyda             ███████████                                         48 393 000 soʻm │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
+BUYURTMALAR VA TUSHUM
+┌ Buyurtmalar summasi (GMV) (?) ┐ ┃ Tushum (sof GMV) (?) ┃ ┌ Sotilgan tovarlar (?) ┐
+│ 215 420 000 soʻm              │ ┃ 186 420 000 soʻm     ┃ │ 1 240                 │
+│ ▲4,6%  oldingi: 206 000 000   │ ┃ ▼1,9%  oldingi: ...  ┃ │ ▼4,6%  oldingi: 1 300 │
+│ ╱╲__╱ (trend)                 │ ┃ ╱╲__╱                ┃ │ ╱╲__╱                 │
+```
+- Yo'l: yotiq chiziqlar (§5.1 — ulushlar uchun yotiq ustunlar), uzunligi yalpi summaga nisbatan; ranglar `--chart-*`,
+  sof foyda — `positive-text` (manfiy bo'lsa `negative-text`). Mobilda nom va summa bir qatorda, chiziq ostida.
+- Guruh sarlavhasi — `label`, katta harf, `text-secondary`, ostida hairline. Kartochka: radius yo'q, hairline chegara;
+  qiymat `type-h2`, asosiy kartochkalar (tushum, sof foyda) — `type-h1`, chap tomonda 3 px `accent` chiziq.
+- O'zgarish: pul va sonda `▲ 4,6%`, ulushda `▲ 3,2 punkt` (§8.4); rang = yo'nalish × yaxshimi (xarajat, bekor, qaytarish
+  ulushi o'sishi — qizil); yaxshi yo'nalishi yo'q (o'rtacha tovar narxi) — neytral. Oldingi davr qiymati `caption`.
+- Ogohlantirish (sozlamadagi chegaradan oshgan ulush): `warning-bg` fon, `warning-text` chegara, ikon + matn + "Chegarani
+  o'zgartirish" havolasi (rang yolg'iz emas, §11).
+- Joylashuv: ≥ 1100 px — buyurtmalar 3 × 2, Uzum ushlab qolgani va foyda 4 × 2 (sof foyda 2 ustun), qaytarilgan va bekor
+  qilingan 4 × 2 (yuqori qator qaytarish, pastki — bekor, bir xil tartibda), o'rtacha 3; o'rtada — avtomatik to'r;
+  < 600 px — 2 ustun, pul kartochkalari to'liq kenglikda.
+
 ## 7. Sahifa maketlari
 
 ### 7.1 Umumiy karkas
@@ -291,16 +322,19 @@ Asosiy · Foyda · Ombor · Xaridlar · Yana.
 ├──────────────────────────────────────────────────────────────────────────┤
 │ Bugun | Kecha | Shu oy | Oy prognozi | O'tgan oy (sof foyda: yak. · kut.)│
 ├──────────────────────────────────────────────────────────────────────────┤
+│ KPI SARHISOB (§6.4): buyurtmadan sof foydagacha yo'l + 4 guruh kartochka  │
+├──────────────────────────────────────────────────────────────────────────┤
 │ [Sof foyda | Tushum]  Kunlik grafik: yakunlangan + kutilayotgan qatlamlar │
 ├──────────────────────────────────────────────────────────────────────────┤
 │ Diqqat talab qiladi (ro'yxat, ustuvorlik bo'yicha)                        │
 ├────────────────────────────────────┬─────────────────────────────────────┤
 │ Eng foydali 5                      │ Zarar qilayotgan 5                  │
 ├────────────────────────────────────┴─────────────────────────────────────┤
-│ Marja · ROI · Bekor % · Qaytish % · DRR · Muzlagan pul · Yo'ldagi tovar   │
+│ Tovardagi pul: Muzlagan pul · Yo'ldagi tovar                              │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
-(Oxirgi qatordagi ko'rsatkichlar alohida KPI elementlari, nuqta bilan ulangan matn emas.) Hisob varag'i (§6.1) —
+(Oxirgi qatordagi ko'rsatkichlar alohida KPI elementlari, nuqta bilan ulangan matn emas. Marja, ROI, bekor va qaytarish
+ulushi, DRR — KPI sarhisobda, ADR-043.) Hisob varag'i (§6.1) —
 Foyda sahifasida; bosh sahifa uni takrorlamaydi.
 
 ### 7.3 Bosh sahifa (mobil, 390 px)
@@ -313,6 +347,7 @@ Sof foyda, oktabr
    =
 [Jami sof foyda      48 393 000 soʻm  ▲12,4%]
 [Bugun | Kecha | Oy prognozi] (gorizontal skroll)
+[KPI sarhisob: yo'l (nom · summa, ostida chiziq), kartochkalar 2 ustun, pul — to'liq kenglik]
 [Kunlik grafik — Sof foyda | Tushum]
 [Diqqat talab qiladi]
 [Eng foydali / Zarar — tab]
@@ -346,7 +381,8 @@ Bo'sh holat: harakatga taklif. Kechirim so'ralmaydi, noaniq gap yo'q.
 Tushum · Uzum komissiyasi · Logistika · Uzum to'lovi · Tannarx · Yalpi foyda · Uzum xarajatlari ·
 O'z xarajatlarim · Soliq · Sof foyda · Yakunlangan sof foyda · Kutilayotgan sof foyda · Marja · ROI · Reklama ulushi
 (DRR) ·
-Yakunlangan / Jarayonda / Bekor qilingan / Qaytarilgan · Xarid (partiya) · Kargo · Yo'lda · Qoldiq ·
+Yakunlangan / Jarayonda / Bekor qilingan / Qaytarilgan · Buyurtmalar summasi (GMV) · Uzum ushlab qolgan · Uzumdan keyin
+qoladi · O'rtacha chek · Xarid (partiya) · Kargo · Yo'lda · Qoldiq ·
 Zaxira kunlari · Muzlagan pul · Postavka · Kamomad · Jarima · Kompensatsiya · Taxminiy.
 (Rus tilida mos ravishda: Выручка, Комиссия Uzum, Логистика, Выплата Uzum, Себестоимость, ..., Фактическая чистая
 прибыль, Ожидаемая чистая прибыль; lug'at `lib/i18n/glossary` faylida. Hisob varag'i ustunlari qisqa: Yakunlangan ·
@@ -369,7 +405,7 @@ Kutilayotgan · Jami — Факт · Ожидается · Итого. "Naqd" at
 | Pul | `48 357 200 soʻm`; jadvalda valyutasiz | `48 357 200 сум` |
 | Valyuta | `142,50 $`, `1 000 ¥` (CNY) | `142,50 $`, `1 000 ¥` |
 | Ixcham | `850 ming`, `1,2 mln`, `3,4 mlrd` | `850 тыс.`, `1,2 млн`, `3,4 млрд` |
-| Foiz | `12,5%`; o'zgarish `▲ 12,4%` / `▼ 3,1%` | xuddi shunday |
+| Foiz | `12,5%`; o'zgarish `▲ 12,4%` / `▼ 3,1%`; ulush o'zgarishi `▲ 3,2 punkt` | xuddi shunday; `▲ 3,2 п.п.` |
 | Sana | `23.10.2026`; matnda `23-oktabr` | `23.10.2026`; `23 октября` |
 | Davr | `1–31-oktabr` | `1–31 октября` |
 | Nisbiy vaqt | `3 daqiqa oldin` | `3 минуты назад` |

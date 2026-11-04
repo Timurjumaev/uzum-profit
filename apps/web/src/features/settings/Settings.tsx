@@ -8,6 +8,7 @@ import { errorText } from "../../app/errors";
 import { currentOrg, meQuery, settingsQuery } from "../../app/query";
 import { Banner, Button, Skeleton, PageHelp } from "../../components/ui";
 import { CostMethod } from "./CostMethod";
+import { AlertSettings } from "./AlertSettings";
 import { InventorySettings } from "./InventorySettings";
 import { Payouts } from "./Payouts";
 import { Shops } from "./Shops";
@@ -45,6 +46,7 @@ export function Settings() {
           <TaxProfiles orgId={org.id} data={data} canManage={canManage} />
           <Payouts orgId={org.id} data={data} canManage={canManage} />
           <InventorySettings orgId={org.id} data={data.inventory} canManage={canManage} />
+          <AlertSettings orgId={org.id} data={data.alerts} canManage={canManage} />
           <Shops orgId={org.id} canEdit={org.role === "owner"} />
         </>
       )}

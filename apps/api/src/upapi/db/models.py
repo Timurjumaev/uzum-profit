@@ -652,6 +652,11 @@ daily_sku_metrics = tenant(
     Column("units_logistics_due", Integer, nullable=False, server_default="0"),
     Column("units_logistics_due_costed", Integer, nullable=False, server_default="0"),
     Column("lines_logistics_due", Integer, nullable=False, server_default="0"),
+    # ADR-043: Bekor holat ikkiga — topshirilgan (qaytarish, F18) va topshirilmagan (bekor, F17); summalar F44 uchun.
+    Column("canceled_issued", Integer, nullable=False, server_default="0"),
+    Column("canceled_revenue", UZS, nullable=False, server_default="0"),
+    Column("canceled_issued_revenue", UZS, nullable=False, server_default="0"),
+    Column("returns_revenue", UZS, nullable=False, server_default="0"),
     UniqueConstraint("org_id", "shop_id", "sku_id", "day", postgresql_nulls_not_distinct=True),
     refs={"shop_id": ("shops", False), "sku_id": ("mp_skus", True)},
 )

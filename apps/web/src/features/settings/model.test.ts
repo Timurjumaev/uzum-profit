@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { settingsData, TAX_1, TAX_2 } from "../../test/settings";
-import { activeTax, coverDraft, inventoryBody, inventoryState, leadDraft, taxBody, taxDraft, taxValid, termsDays } from "./model";
+import { activeTax, alertValid, coverDraft, inventoryBody, inventoryState, leadDraft, percentToShare, shareToPercent, taxBody, taxDraft, taxValid, termsDays } from "./model";
 
 const today = "2026-10-31";
 
@@ -72,5 +72,28 @@ describe("muddatlar va qamrov", () => {
   it("to'lov shartlari: oy kunlari matni", () => {
     expect(termsDays([7, 14, 21, 28])).toBe("7, 14, 21, 28");
     expect(termsDays(null)).toBe("");
+  });
+});
+
+describe("ogohlantirish chegaralari (ADR-043)", () => {
+  it("foiz ↔ ulush — vergul siljishi (float xatosi yo'q)", () => {
+    expect(shareToPercent("0.300000")).toBe("30");
+    expect(shareToPercent("0.075")).toBe("7.5");
+    expect(shareToPercent("1")).toBe("100");
+    expect(shareToPercent("0.000500")).toBe("0.05");
+    expect(shareToPercent(null)).toBeNull();
+    expect(percentToShare("30")).toBe("0.3");
+    expect(percentToShare("7.5")).toBe("0.075");
+    expect(percentToShare("0.07")).toBe("0.0007");
+    expect(percentToShare("100")).toBe("1");
+    expect(percentToShare(null)).toBeNull();
+  });
+
+  it("chegara: (0; 100]; bo'sh — to'g'ri (o'chirilgan)", () => {
+    expect(alertValid(null)).toBe(true);
+    expect(alertValid("30")).toBe(true);
+    expect(alertValid("100")).toBe(true);
+    expect(alertValid("0")).toBe(false);
+    expect(alertValid("101")).toBe(false);
   });
 });

@@ -138,16 +138,17 @@ describe("roʻyxat", () => {
 });
 
 describe("tahlil", () => {
-  it("bo'limlar URL'da; bekor: ulush, topshirilgandan keyin, sabablar, SKU bo'yicha", async () => {
+  it("bo'limlar URL'da; bekor (ADR-043 — mijozga topshirilmagan): ulush, dona va summa, sabablar, SKU bo'yicha", async () => {
     const { history } = await renderAt(PATH);
     await screen.findByRole("table", { name: CAPTION });
     fireEvent.click(screen.getByRole("tab", { name: "Bekor boʻlish" }));
     await waitFor(() => expect(history.location.search).toContain("tab=cancel"));
     const panel = await screen.findByRole("tabpanel");
     await within(panel).findByRole("table", { name: "Bekor sabablari" });
-    expect(within(panel).getByText(f.percent("0.277778"))).toBeTruthy();
-    expect(within(panel).getByText("Topshirilgandan keyin bekor")).toBeTruthy();
-    expect(norm(panel.textContent!)).toContain(f.percent("0.400000"));
+    expect(within(panel).getByText(f.percent("0.136364"))).toBeTruthy();
+    expect(within(panel).getByText("Bekor qilingan summa")).toBeTruthy();
+    expect(norm(panel.textContent!)).toContain(norm(f.money("600000.00")));
+    expect(within(panel).getByText(/Mijozga topshirilmagan/)).toBeTruthy();
     const causes = within(panel).getByRole("table", { name: "Bekor sabablari" });
     expect(within(causes).getByText("Mijoz fikrini oʻzgartirdi")).toBeTruthy();
     const skus = within(panel).getByRole("table", { name: "SKU boʻyicha" });
@@ -156,13 +157,14 @@ describe("tahlil", () => {
     expect(within(skus).queryByText("SKU bogʻlanmagan")).toBeNull();
   });
 
-  it("qaytish: ulush, qaytim saqlash xarajati, sabab (sababsiz — 'Sabab ko'rsatilmagan'), bog'lanmagan SKU", async () => {
+  it("qaytarish: ulush, summa, qaytim saqlash xarajati, sabab (sababsiz — 'Sabab ko'rsatilmagan'), bog'lanmagan SKU", async () => {
     await renderAt(`${PATH}&tab=returns`);
     const panel = await screen.findByRole("tabpanel");
-    await within(panel).findByRole("table", { name: "Qaytish sabablari" });
-    expect(within(panel).getByText(f.percent("0.187500"))).toBeTruthy();
+    await within(panel).findByRole("table", { name: "Qaytarish sabablari" });
+    expect(within(panel).getByText(f.percent("0.263158"))).toBeTruthy();
     expect(norm(panel.textContent!)).toContain(norm(f.money("49000.00")));
-    const causes = within(panel).getByRole("table", { name: "Qaytish sabablari" });
+    expect(norm(panel.textContent!)).toContain(norm(f.money("1000000.00")));
+    const causes = within(panel).getByRole("table", { name: "Qaytarish sabablari" });
     expect(within(causes).getByText("Sifat yomon")).toBeTruthy();
     expect(within(causes).getByText("Sabab koʻrsatilmagan")).toBeTruthy();
     const skus = within(panel).getByRole("table", { name: "SKU boʻyicha" });
@@ -175,7 +177,7 @@ describe("tahlil", () => {
     await screen.findByRole("table", { name: CAPTION });
     cleanup();
     const empty = analysisData({
-      summary: { units: 0, canceled: 0, returns: 0, cancel_share: null, return_share: null, canceled_after_issue: 0, after_issue_share: null, return_storage_cost: "0.00" },
+      summary: { units: 0, canceled: 0, returns: 0, cancel_share: null, return_share: null, cancel_revenue: "0.00", return_revenue: "0.00", return_storage_cost: "0.00" },
       daily: [],
       by_sku: [],
       return_causes: [],

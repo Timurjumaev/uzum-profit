@@ -265,8 +265,8 @@ class SaleTotals:
     revenue_costed: Money  # F15 surati: tannarxi ma'lum qatorlar tushumi
     payout_costed: Money  # F6 tannarxi ma'lum qatorlar bo'yicha; F8 = payout_costed − cogs
     cogs_estimated: Money  # F22: taxminiy belgili qatorlar tannarxi (F7 ning qismi)
-    returns: int  # F18 surati: Yakunlangan qatorlardagi Σ ``amountReturns``
-    canceled: int  # F17 surati: Bekor dona (``amount`` + ``amountReturns``)
+    returns: int  # Yakunlangan qatorlardagi Σ ``amountReturns`` (qisman qaytarish; F18 qismi)
+    canceled: int  # Bekor holatdagi hamma dona (``amount`` + ``amountReturns``) — F16 R; F17/F18 bo'linishi quyida
     lines: int = 0  # hisobga olingan qatorlar soni
     uncovered_lines: int = 0  # shundan tannarxsiz (F15 "N ta sotuv tannarxsiz")
     units_costed: int = 0  # tannarxi ma'lum hisobga olingan dona (tannarx/dona, foyda/dona — M6)
@@ -287,6 +287,12 @@ class SaleTotals:
     units_logistics_due: int = 0
     units_logistics_due_costed: int = 0  # shundan tannarxi ma'lum qatorlar donasi
     lines_logistics_due: int = 0
+    # ADR-043: Bekor holatdagi qatorlar ikkiga bo'linadi — tovar xaridorga topshirilgan (``dateIssued`` bor) — qaytarish
+    # (F18), topshirilmagan — bekor (F17). Summalar ``sellPrice`` × dona (F44 yalpi GMV qismlari).
+    canceled_issued: int = 0  # Bekor holat, topshirilgan dona (qaytarish)
+    canceled_revenue: Money = ZERO_UZS  # Bekor holatdagi hamma dona summasi
+    canceled_issued_revenue: Money = ZERO_UZS  # shundan topshirilganlari (qaytarish summasi)
+    returns_revenue: Money = ZERO_UZS  # Yakunlangan qatorlardagi ``amountReturns`` summasi
 
 
 def sale_totals(lines: Iterable[SaleLine]) -> SaleTotals:
@@ -299,6 +305,8 @@ def sale_totals(lines: Iterable[SaleLine]) -> SaleTotals:
     pending = _in_group(done, StatusGroup.PROCESSING)
     pending_covered = [line for line in pending if line.unit_cost is not None]
     due = [line for line in pending if logistics_due(line)]
+    canceled_lines = _in_group(items, StatusGroup.CANCELED)
+    canceled_issued = [line for line in canceled_lines if line.issued]
     return SaleTotals(
         revenue=revenue(done),
         units=sum(line.amount for line in done),
@@ -308,7 +316,7 @@ def sale_totals(lines: Iterable[SaleLine]) -> SaleTotals:
         revenue_costed=revenue(covered),
         payout_costed=payout(covered),
         cogs_estimated=cogs([line for line in covered if line.estimated]),
-        returns=_returned(items),
+        returns=sum(line.amount_returns for line in completed(items)),
         canceled=_units(items, StatusGroup.CANCELED),
         lines=len(done),
         uncovered_lines=len(done) - len(covered),
@@ -326,6 +334,17 @@ def sale_totals(lines: Iterable[SaleLine]) -> SaleTotals:
         units_logistics_due=sum(line.amount for line in due),
         units_logistics_due_costed=sum(line.amount for line in due if line.unit_cost is not None),
         lines_logistics_due=len(due),
+        canceled_issued=_units(canceled_issued, StatusGroup.CANCELED),
+        canceled_revenue=_uzs(sum((_gross_revenue(line) for line in canceled_lines), Decimal(0))),
+        canceled_issued_revenue=_uzs(
+            sum((_gross_revenue(line) for line in canceled_issued), Decimal(0))
+        ),
+        returns_revenue=_uzs(
+            sum(
+                (to_decimal(line.sell_price) * line.amount_returns for line in completed(items)),
+                Decimal(0),
+            )
+        ),
     )
 
 
@@ -475,12 +494,6 @@ def _units(lines: Iterable[SaleLine], group: StatusGroup) -> int:
     return sum(line.amount for line in lines if line.group is group)
 
 
-def _returned(lines: Iterable[SaleLine]) -> int:
-    """F18 surati: Yakunlangan qatorlardagi ``amountReturns``. Bekor qatorlarniki — bekor qilingan dona (F17), qaytish
-    emas."""
-    return sum(line.amount_returns for line in completed(lines))
-
-
 def realization_rate(window: Iterable[SaleLine], min_units: int = 50) -> Decimal | None:
     """F16. R = yakuniy holatga yetgan donalar ichida Yakunlangan ulushi (fakt; kutilayotgan sof foydaga
     ko'paytirilmaydi — ADR-036, ADR-037). Kutilayotgan sof foyda o'zi — ``upcore.pnl.Statement.processing``.
@@ -502,31 +515,189 @@ def realization_rate_units(done: int, canceled: int, min_units: int = 50) -> Dec
     return ratio(done, final)
 
 
-def cancel_share(lines: Iterable[SaleLine]) -> Decimal | None:
-    """F17. Bekor ulushi = Bekor / (Yakunlangan + Bekor), dona bo'yicha."""
+def _gross_revenue(line: SaleLine) -> Decimal:
+    """Qatorning buyurtma qilingan summasi: ``sellPrice`` × (``amount`` + ``amountReturns``) — F44 qismi."""
+    return to_decimal(line.sell_price) * (line.amount + line.amount_returns)
+
+
+def _returned(lines: Iterable[SaleLine]) -> int:
+    """F18 surati (ADR-043): topshirilgan Bekor qatorlar donasi + Yakunlangan qatorlardagi ``amountReturns``."""
     items = list(lines)
-    return cancel_rate(_units(items, StatusGroup.COMPLETED), _units(items, StatusGroup.CANCELED))
+    issued = [line for line in items if line.issued]
+    return _units(issued, StatusGroup.CANCELED) + sum(
+        line.amount_returns for line in completed(items)
+    )
 
 
-def cancel_rate(done: int, canceled: int) -> Decimal | None:
-    """F17 dona yig'indilaridan: Bekor / (Yakunlangan + Bekor)."""
-    return ratio(canceled, done + canceled)
+def _not_issued_canceled(lines: Iterable[SaleLine]) -> int:
+    """F17 surati (ADR-043): topshirilmagan Bekor qatorlar donasi."""
+    return _units([line for line in lines if not line.issued], StatusGroup.CANCELED)
 
 
-def late_cancel_share(canceled: int, after_issue: int) -> Decimal | None:
-    """F17 qismi. Topshirilgandan keyin bekor ulushi = (``dateIssued`` bor Bekor dona) / Bekor dona."""
-    return ratio(after_issue, canceled)
+def cancel_share(lines: Iterable[SaleLine]) -> Decimal | None:
+    """F17. Bekor ulushi (ADR-043) = bekor dona / yalpi dona (F44)."""
+    items = list(lines)
+    return cancel_rate(_not_issued_canceled(items), gross_units(items))
+
+
+def gross_units(lines: Iterable[SaleLine]) -> int:
+    """F44. Yalpi dona = hamma ma'lum holatdagi qatorlar donasi (``amount`` + ``amountReturns``)."""
+    return sum(
+        line.amount + line.amount_returns for line in lines if line.group is not StatusGroup.UNKNOWN
+    )
+
+
+def cancel_rate(canceled: int, gross: int) -> Decimal | None:
+    """F17 dona yig'indilaridan (ADR-043): bekor / yalpi dona."""
+    return ratio(canceled, gross)
 
 
 def return_share(sold: int, returned: int) -> Decimal | None:
-    """F18. Qaytish ulushi = qaytgan / (sotilgan + qaytgan) — Uzum ta'rifi (SKU ``quantityReturned``)."""
+    """F18. Qaytarish ulushi = qaytgan / (sotilgan + qaytgan) — mijozga yetgan tovar ichida (Uzum ta'rifi, SKU
+    ``quantityReturned``). ADR-043: sotilgan — F3 donasi (Yakunlangan + Jarayonda)."""
     return ratio(returned, sold + returned)
 
 
 def period_return_share(lines: Iterable[SaleLine]) -> Decimal | None:
-    """F18 davr bo'yicha: sotilgan = Yakunlangan ``amount``, qaytgan = Yakunlangan qatorlardagi Σ ``amountReturns``."""
+    """F18 davr bo'yicha (ADR-043): sotilgan = hisobga olingan ``amount``, qaytgan — ``_returned``."""
     items = list(lines)
-    return return_share(_units(items, StatusGroup.COMPLETED), _returned(items))
+    return return_share(sum(line.amount for line in counted(items)), _returned(items))
+
+
+@dataclass(frozen=True, slots=True)
+class OrderFlow:
+    """Buyurtmalar oqimi (ADR-043): yalpi = sof (sotilgan, F3) + bekor (F17) + qaytarish (F18), dona va so'mda; buyurtma
+    soni (F45) va o'rtacha ko'rsatkichlar (F48). Hamma maydon additiv (kunlar va do'konlar bo'yicha yig'iladi);
+    nisbatlar yig'indilardan.
+
+    Manba: ``daily_sku_metrics`` (``SaleTotals``) va buyurtma sanoqlari. ``canceled`` / ``canceled_revenue`` — Bekor
+    holatdagi hamma qatorlar, ``canceled_issued*`` — shundan tovar xaridorga topshirilganlari (``dateIssued`` bor: mijoz
+    olgan yoki punktda ko'rib rad etgan) — qaytarish; ``returns*`` — Yakunlangan qatorlardagi ``amountReturns``.
+    """
+
+    units: int = 0  # F3 donasi (Yakunlangan + Jarayonda)
+    revenue: Money = ZERO_UZS  # F3 (sof GMV)
+    canceled: int = 0
+    canceled_revenue: Money = ZERO_UZS
+    canceled_issued: int = 0
+    canceled_issued_revenue: Money = ZERO_UZS
+    returns: int = 0
+    returns_revenue: Money = ZERO_UZS
+    orders: int = 0  # F45 yalpi buyurtmalar (``orderId`` soni)
+    orders_net: int = 0  # F45 sof buyurtmalar (kamida bitta hisobga olingan dona bor)
+
+    def __add__(self, other: OrderFlow) -> OrderFlow:
+        return OrderFlow(
+            units=self.units + other.units,
+            revenue=self.revenue + other.revenue,
+            canceled=self.canceled + other.canceled,
+            canceled_revenue=self.canceled_revenue + other.canceled_revenue,
+            canceled_issued=self.canceled_issued + other.canceled_issued,
+            canceled_issued_revenue=self.canceled_issued_revenue + other.canceled_issued_revenue,
+            returns=self.returns + other.returns,
+            returns_revenue=self.returns_revenue + other.returns_revenue,
+            orders=self.orders + other.orders,
+            orders_net=self.orders_net + other.orders_net,
+        )
+
+    @property
+    def cancel_units(self) -> int:
+        """F17. Bekor dona — topshirilmagan Bekor qatorlar (mijoz olib ketmagan, bekor qilgan, tovar yetib kelmagan)."""
+        return self.canceled - self.canceled_issued
+
+    @property
+    def cancel_revenue(self) -> Money:
+        """F17. Bekor summasi."""
+        return self.canceled_revenue - self.canceled_issued_revenue
+
+    @property
+    def return_units(self) -> int:
+        """F18. Qaytarish dona — mijoz olgan (yoki punktda ko'rib rad etgan) va qaytgan."""
+        return self.canceled_issued + self.returns
+
+    @property
+    def return_revenue(self) -> Money:
+        """F18. Qaytarish summasi."""
+        return self.canceled_issued_revenue + self.returns_revenue
+
+    @property
+    def gross_units(self) -> int:
+        """F44. Yalpi dona = sotilgan + bekor + qaytarish."""
+        return self.units + self.cancel_units + self.return_units
+
+    @property
+    def gross_revenue(self) -> Money:
+        """F44. Yalpi buyurtmalar summasi (yalpi GMV) = F3 + bekor summasi + qaytarish summasi."""
+        return self.revenue + self.cancel_revenue + self.return_revenue
+
+    @property
+    def net_order_share(self) -> Decimal | None:
+        """F45. Sof buyurtmalar ulushi = sof / yalpi buyurtmalar."""
+        return ratio(self.orders_net, self.orders)
+
+    @property
+    def cancel_share(self) -> Decimal | None:
+        """F17. Bekor ulushi (soni) = bekor dona / yalpi dona."""
+        return cancel_rate(self.cancel_units, self.gross_units)
+
+    @property
+    def cancel_revenue_share(self) -> Decimal | None:
+        """F17. Bekor ulushi (summa) = bekor summasi / yalpi GMV."""
+        return ratio(self.cancel_revenue.amount, self.gross_revenue.amount)
+
+    @property
+    def return_share(self) -> Decimal | None:
+        """F18. Qaytarish ulushi (soni) = qaytgan / (sotilgan + qaytgan)."""
+        return return_share(self.units, self.return_units)
+
+    @property
+    def return_revenue_share(self) -> Decimal | None:
+        """F18. Qaytarish ulushi (summa) = qaytarish summasi / (F3 + qaytarish summasi)."""
+        return ratio(self.return_revenue.amount, (self.revenue + self.return_revenue).amount)
+
+    @property
+    def average_check(self) -> Money | None:
+        """F48. O'rtacha chek = F3 / sof buyurtmalar."""
+        return None if self.orders_net == 0 else Money(self.revenue.amount / self.orders_net, UZS)
+
+    @property
+    def average_price(self) -> Money | None:
+        """F48. O'rtacha tovar narxi = F3 / sotilgan dona."""
+        return None if self.units == 0 else Money(self.revenue.amount / self.units, UZS)
+
+    @property
+    def units_per_order(self) -> Decimal | None:
+        """F48. Buyurtmadagi tovarlar = sotilgan dona / sof buyurtmalar."""
+        return ratio(self.units, self.orders_net)
+
+
+def order_flow(t: SaleTotals, orders: int = 0, orders_net: int = 0) -> OrderFlow:
+    """``SaleTotals`` (+ buyurtma sanoqlari, F45) → ``OrderFlow``."""
+    return OrderFlow(
+        units=t.units,
+        revenue=t.revenue,
+        canceled=t.canceled,
+        canceled_revenue=t.canceled_revenue,
+        canceled_issued=t.canceled_issued,
+        canceled_issued_revenue=t.canceled_issued_revenue,
+        returns=t.returns,
+        returns_revenue=t.returns_revenue,
+        orders=orders,
+        orders_net=orders_net,
+    )
+
+
+def relative_change(current: DecimalLike, previous: DecimalLike) -> Decimal | None:
+    """Oldingi davrga nisbatan o'zgarish ulushi = (joriy − oldingi) / |oldingi|; oldingi 0 bo'lsa ``None``."""
+    before = to_decimal(previous)
+    return ratio(to_decimal(current) - before, abs(before))
+
+
+def share_change(current: Decimal | None, previous: Decimal | None) -> Decimal | None:
+    """Ulushlar o'zgarishi — punktda (0,32 − 0,29 = 0,03 → "+3 punkt"), nisbiy emas (ADR-043); biri yo'q — ``None``."""
+    if current is None or previous is None:
+        return None
+    return quantize(current - previous, RATIO_PLACES)
 
 
 # --- F19 ------------------------------------------------------------------------------------

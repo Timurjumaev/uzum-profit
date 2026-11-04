@@ -5765,6 +5765,70 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/settings/alerts": {
+      "put": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Set Alerts",
+        "description": "Bosh sahifadagi bekor va qaytarish ulushi kartochkasi shu chegaradan oshsa belgilanadi. Kodda standart yo'q.",
+        "operationId": "set_alerts_api_v1_orgs__org_id__settings_alerts_put",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertsIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/items/{item_id}/stock-moves": {
       "get": {
         "tags": [
@@ -6246,6 +6310,78 @@
           "checked_at"
         ],
         "title": "AccountStatus"
+      },
+      "AlertsIn": {
+        "properties": {
+          "cancel_share": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Share"
+          },
+          "return_share": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return Share"
+          }
+        },
+        "type": "object",
+        "title": "AlertsIn",
+        "description": "Bekor (F17) va qaytarish (F18) ulushi chegarasi; ``null`` — o'chirish."
+      },
+      "AlertsOut": {
+        "properties": {
+          "cancel_share": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Share"
+          },
+          "return_share": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return Share"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cancel_share",
+          "return_share"
+        ],
+        "title": "AlertsOut",
+        "description": "ADR-043: ogohlantirish chegaralari (ulush, 0..1); ``null`` — sozlanmagan (ogohlantirish yo'q)."
       },
       "AllocationBase": {
         "type": "string",
@@ -7155,6 +7291,9 @@
             "type": "array",
             "title": "Bottom"
           },
+          "summary": {
+            "$ref": "#/components/schemas/KpiSummaryOut"
+          },
           "kpis": {
             "$ref": "#/components/schemas/KpiOut"
           },
@@ -7173,6 +7312,7 @@
           "daily",
           "top",
           "bottom",
+          "summary",
           "kpis",
           "attention"
         ],
@@ -8189,9 +8329,27 @@
         ],
         "title": "KindStatus"
       },
-      "KpiOut": {
+      "KpiCardOut": {
         "properties": {
-          "margin": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "formula": {
+            "type": "string",
+            "title": "Formula"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "money",
+              "count",
+              "ratio",
+              "number"
+            ],
+            "title": "Unit"
+          },
+          "value": {
             "anyOf": [
               {
                 "type": "string"
@@ -8200,55 +8358,105 @@
                 "type": "null"
               }
             ],
-            "title": "Margin"
+            "title": "Value"
           },
+          "previous": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous"
+          },
+          "change": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change"
+          },
+          "good": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "up",
+                  "down"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Good"
+          },
+          "warn": {
+            "type": "boolean",
+            "title": "Warn",
+            "default": false
+          },
+          "series": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Series"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "formula",
+          "unit",
+          "value",
+          "previous",
+          "change",
+          "good",
+          "series"
+        ],
+        "title": "KpiCardOut",
+        "description": "KPI sarhisob kartochkasi (ADR-043). ``change`` — pul va sonlarda nisbiy o'zgarish, ulushlarda (``ratio``) — farq\npunktda; oldingi davr 0 yoki yo'q — ``null``. ``good`` — qaysi yo'nalish yaxshi (rang), ``warn`` — sozlamadagi\nchegaradan oshgan. ``series`` — ``KpiSummaryOut.points`` bo'laklaridagi qiymatlar (trend chizig'i)."
+      },
+      "KpiGroupOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/KpiCardOut"
+            },
+            "type": "array",
+            "title": "Cards"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "cards"
+        ],
+        "title": "KpiGroupOut"
+      },
+      "KpiOut": {
+        "properties": {
           "uncovered_share": {
             "type": "string",
             "title": "Uncovered Share"
-          },
-          "roi": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Roi"
-          },
-          "cancel_share": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cancel Share"
-          },
-          "return_share": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Return Share"
-          },
-          "drr": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Drr"
           },
           "frozen_money": {
             "type": "string",
@@ -8272,17 +8480,47 @@
         },
         "type": "object",
         "required": [
-          "margin",
           "uncovered_share",
-          "roi",
-          "cancel_share",
-          "return_share",
-          "drr",
           "frozen_money",
           "in_transit_value",
           "average_days_to_sell"
         ],
         "title": "KpiOut"
+      },
+      "KpiSummaryOut": {
+        "properties": {
+          "bucket": {
+            "type": "string",
+            "enum": [
+              "day",
+              "week",
+              "month"
+            ],
+            "title": "Bucket"
+          },
+          "points": {
+            "items": {
+              "type": "string",
+              "format": "date"
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/KpiGroupOut"
+            },
+            "type": "array",
+            "title": "Groups"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bucket",
+          "points",
+          "groups"
+        ],
+        "title": "KpiSummaryOut"
       },
       "LeadOut": {
         "properties": {
@@ -9717,20 +9955,13 @@
             ],
             "title": "Return Share"
           },
-          "canceled_after_issue": {
-            "type": "integer",
-            "title": "Canceled After Issue"
+          "cancel_revenue": {
+            "type": "string",
+            "title": "Cancel Revenue"
           },
-          "after_issue_share": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "After Issue Share"
+          "return_revenue": {
+            "type": "string",
+            "title": "Return Revenue"
           },
           "return_storage_cost": {
             "type": "string",
@@ -9744,8 +9975,8 @@
           "returns",
           "cancel_share",
           "return_share",
-          "canceled_after_issue",
-          "after_issue_share",
+          "cancel_revenue",
+          "return_revenue",
           "return_storage_cost"
         ],
         "title": "OrdersSummaryOut"
@@ -11729,6 +11960,9 @@
           },
           "inventory": {
             "$ref": "#/components/schemas/InventorySettingsOut"
+          },
+          "alerts": {
+            "$ref": "#/components/schemas/AlertsOut"
           }
         },
         "type": "object",
@@ -11738,7 +11972,8 @@
           "tax_rates",
           "payout_schedules",
           "payout_terms",
-          "inventory"
+          "inventory",
+          "alerts"
         ],
         "title": "SettingsOut"
       },

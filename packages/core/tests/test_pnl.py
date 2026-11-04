@@ -11,6 +11,7 @@ from upcore.metrics import ManualExpense, Period, SaleLine, own_expense_in_perio
 from upcore.money import Money, total
 from upcore.pnl import (
     CellKey,
+    Cells,
     CellSales,
     ExpenseItem,
     OwnExpense,
@@ -75,6 +76,10 @@ def test_single_cell_matches_profit_summary() -> None:
         and s.uncovered_payout == ref.uncovered_payout
     )
     assert s.lines == 2 and s.uncovered_lines == 1 and s.units == 3
+    # F46, F47 (ADR-043): komissiya 50 000 + logistika 15 000 + saqlash 30 000; tushum 250 000.
+    assert s.uzum_costs == uzs(95_000) and s.uzum_costs_share == D("0.38")
+    assert s.after_uzum == uzs(155_000) == s.payout - s.uzum_total
+    assert Cells(OCT, {}).statement().uzum_costs_share is None
 
 
 def test_expense_allocation_rules() -> None:

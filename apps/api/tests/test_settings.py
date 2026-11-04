@@ -328,3 +328,56 @@ def test_parse_ignores_garbage() -> None:
     assert got.inventory().cover_days == {**DEFAULT.cover_days, AbcClass.A: 5}
     assert orgsettings.OrgSettings().inventory() is DEFAULT
     assert orgsettings.dump(got) == {"lead_days": {"cargo": 4}, "cover_days": {"A": 5}}
+
+
+def test_alerts_parse_and_over() -> None:
+    """ADR-043: ogohlantirish chegaralari — ulush (0..1]; noto'g'risi tashlanadi, kodda standart yo'q."""
+    from upapi import orgsettings
+
+    got = orgsettings.parse(
+        {"alerts": {"cancel_share": "0.3", "return_share": 2, "x": "0.1"}, "cover_days": {"A": 5}}
+    )
+    assert got.alerts == {"cancel_share": D("0.3")}
+    assert orgsettings.parse({"alerts": {"cancel_share": True, "return_share": "abc"}}).alerts == {}
+    assert orgsettings.parse({"alerts": {"cancel_share": 0}}).alerts == {}
+    assert orgsettings.parse({"alerts": "x"}).alerts == {}
+    assert got.over("cancel_share", D("0.31")) and not got.over("cancel_share", D("0.3"))
+    assert not got.over("return_share", D("0.99")) and not got.over("cancel_share", None)
+    assert orgsettings.dump(got) == {"cover_days": {"A": 5}, "alerts": {"cancel_share": "0.3"}}
+    assert orgsettings.parse(orgsettings.dump(got)) == got
+
+
+def test_alerts_settings_and_dashboard_warning(world: World) -> None:
+    """ADR-043: bekor/qaytarish ulushi chegarasi; inventar sozlamasini saqlash chegarani o'chirmaydi."""
+    w, a = world, world.a
+    _, sku = a.item("Qaytuvchi")
+    a.sale(sku, day(-2), 3, price=100_000)
+    a.sale(sku, day(-2), 0, "CANCELED", price=100_000, amount_returns=10)
+    a.run(lambda conn: calc.request_full(conn, a.org_id))
+    a.recalc(datetime.now(UTC))
+    window = f"start={day(-6).isoformat()}&end={TODAY.isoformat()}"
+
+    def card(key: str) -> dict[str, Any]:
+        body = ok(send(w, "GET", f"dashboard?{window}"))
+        return next(c for g in body["summary"]["groups"] for c in g["cards"] if c["key"] == key)
+
+    assert ok(send(w, "GET", "settings"))["alerts"] == {"cancel_share": None, "return_share": None}
+    assert card("cancel_share")["warn"] is False
+    body = ok(send(w, "PUT", "settings/alerts", cancel_share="0.1", return_share="0.5"))
+    assert {k: D(v) for k, v in body["alerts"].items()} == {
+        "cancel_share": D("0.1"),
+        "return_share": D("0.5"),
+    }
+    cancel = card("cancel_share")
+    assert D(cancel["value"]) > D("0.1") and cancel["warn"] is True  # bekor ulushi > 10%
+    assert card("return_share")["warn"] is False
+    # Inventar sozlamasi saqlansa ham chegaralar qoladi.
+    ok(send(w, "PUT", "settings/inventory", cover_days={"A": 60, "B": 30, "C": 14}))
+    assert ok(send(w, "GET", "settings"))["alerts"]["cancel_share"] is not None
+    assert send(w, "PUT", "settings/alerts", cancel_share="1.5").status_code == 422
+    assert send(w, "PUT", "settings/alerts", cancel_share="0").status_code == 422
+    assert send(w, "PUT", "settings/alerts", role="accountant").status_code == 403
+    body = ok(send(w, "PUT", "settings/alerts"))  # hammasi null — o'chirish
+    assert body["alerts"] == {"cancel_share": None, "return_share": None}
+    assert card("cancel_share")["warn"] is False
+    assert "settings.alerts" in audited(w)

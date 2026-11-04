@@ -24,7 +24,7 @@ emas, hamma do'konlarga tushum ulushida taqsimlanadi (filtr bo'yicha natija = do
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
@@ -36,6 +36,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.expenses import ExpenseCategory, signed_amount
 from upcore.metrics import (
     ManualExpense,
+    OrderFlow,
     Period,
     SaleLine,
     StatusGroup,
@@ -44,6 +45,7 @@ from upcore.metrics import (
     expected_ads,
     realization_rate_units,
     status_group,
+    statuses,
     storage_weights,
 )
 from upcore.money import Currency, Money
@@ -84,14 +86,35 @@ class Book:
         return self.cells.within(period or self.cells.period, where)
 
 
-@dataclass(slots=True)
-class SaleSums:
-    """Yakunlangan, bekor va qaytgan dona (F17, F18) — ``daily_sku_metrics`` yig'indisi (Yakunlangan =
-    ``units − units_processing``, ADR-036)."""
+SaleSums = (
+    OrderFlow  # F17, F18, F44 yig'indilari (ADR-043); buyurtma sanoqlari (F45) — ``order_counts``
+)
 
-    units: int = 0
-    canceled: int = 0
-    returns: int = 0
+# ``daily_sku_metrics`` ustunlari = ``OrderFlow`` maydonlari (F3 dona va summa, bekor/qaytarish bo'linishi).
+_FLOW = (
+    "units",
+    "revenue",
+    "canceled",
+    "canceled_revenue",
+    "canceled_issued",
+    "canceled_issued_revenue",
+    "returns",
+    "returns_revenue",
+)
+
+
+def flow_of(v: Sequence[Any]) -> OrderFlow:
+    """``_FLOW`` tartibidagi SQL yig'indilari → ``OrderFlow``."""
+    return OrderFlow(
+        units=int(v[0]),
+        revenue=Money(v[1], UZS),
+        canceled=int(v[2]),
+        canceled_revenue=Money(v[3], UZS),
+        canceled_issued=int(v[4]),
+        canceled_issued_revenue=Money(v[5], UZS),
+        returns=int(v[6]),
+        returns_revenue=Money(v[7], UZS),
+    )
 
 
 async def sale_sums(
@@ -99,17 +122,19 @@ async def sale_sums(
     f: Filters,
     *,
     by_sku: bool = False,
+    by_day: bool = False,
     sku: UUID | None = None,
     unlinked: bool = False,
-) -> dict[str | None, SaleSums]:
-    """Filtr bo'yicha dona yig'indilari; ``by_sku`` — SKU kaliti bo'yicha (``UNLINKED`` — bog'lanmagan), aks holda
-    bitta ``None`` kaliti."""
+    period: Period | None = None,
+) -> dict[Any, OrderFlow]:
+    """Filtr bo'yicha sotuv, bekor va qaytarish yig'indilari (``daily_sku_metrics``); ``by_sku`` — SKU kaliti bo'yicha
+    (``UNLINKED`` — bog'lanmagan), ``by_day`` — kun bo'yicha, aks holda bitta ``None`` kaliti. Buyurtma sanoqlari bu
+    yerda yo'q (0) — ``order_counts``."""
     d = m.daily_sku_metrics
-    done = d.c.units - d.c.units_processing
-    sums = [func.coalesce(func.sum(c), 0) for c in (done, d.c.canceled, d.c.returns)]
-    query = select(cast(d.c.sku_id, Text) if by_sku else literal(None), *sums).where(
-        d.c.day >= f.period.start, d.c.day <= f.period.end
-    )
+    window = period or f.period
+    sums = [func.coalesce(func.sum(d.c[column]), 0) for column in _FLOW]
+    key: Any = cast(d.c.sku_id, Text) if by_sku else d.c.day if by_day else literal(None)
+    query = select(key, *sums).where(d.c.day >= window.start, d.c.day <= window.end)
     if f.shops:
         query = query.where(d.c.shop_id.in_(f.shops))
     if sku is not None:
@@ -118,11 +143,48 @@ async def sale_sums(
         query = query.where(d.c.sku_id.is_(None))
     if by_sku:
         query = query.group_by(d.c.sku_id)
-    out = {}
-    for key, units, canceled, returns in await conn.execute(query):
-        name = (UNLINKED if key is None else key) if by_sku else None
-        out[name] = SaleSums(int(units), int(canceled), int(returns))
+    elif by_day:
+        query = query.group_by(d.c.day)
+    out: dict[Any, OrderFlow] = {}
+    for row in await conn.execute(query):
+        name = (UNLINKED if row[0] is None else row[0]) if by_sku else row[0]
+        out[name] = flow_of(row[1:])
     return out
+
+
+async def order_counts(
+    conn: AsyncConnection, f: Filters, period: Period | None = None
+) -> dict[date, tuple[int, int]]:
+    """F45 kun bo'yicha: (yalpi buyurtmalar, sof buyurtmalar) — ``sale_items`` dagi ``orderId`` soni. Buyurtma bitta
+    kunga (F1, buyurtma sanasi) va bitta do'konga tegishli, shuning uchun kunlar yig'indisi davr soniga teng. Sof —
+    kamida bitta hisobga olinadigan (Yakunlangan + Jarayonda, ADR-036) donasi bor buyurtma; noma'lum holat — hech qaysi."""
+    s = m.sale_items
+    window = period or f.period
+    status = func.upper(func.trim(s.c.status))
+    known = (
+        statuses(StatusGroup.COMPLETED)
+        | statuses(StatusGroup.PROCESSING)
+        | statuses(StatusGroup.CANCELED)
+    )
+    counted_ = statuses(StatusGroup.COMPLETED) | statuses(StatusGroup.PROCESSING)
+    day = func.date(func.timezone("Asia/Tashkent", s.c.ordered_at)).label("day")
+    order = func.concat(cast(s.c.shop_id, Text), ":", s.c.order_id)
+    query = (
+        select(
+            day,
+            func.count(func.distinct(order)),
+            func.count(func.distinct(order)).filter(status.in_(counted_) & (s.c.amount > 0)),
+        )
+        .where(
+            s.c.ordered_at >= day_start(window.start),
+            s.c.ordered_at < day_start(window.end + timedelta(days=1)),
+            status.in_(known),
+        )
+        .group_by(day)
+    )
+    if f.shops:
+        query = query.where(s.c.shop_id.in_(f.shops))
+    return {r[0]: (int(r[1]), int(r[2])) for r in await conn.execute(query)}
 
 
 def _uzs(value: Any) -> Money:
