@@ -24,9 +24,11 @@ from upcore.money import (
 
 
 class RateSource(StrEnum):
-    """Kurs rejimlari (02-funksiyalar.md M9): CBU, qo'lda, kartadan yechilgan summadan."""
+    """Kurs manbalari (02-funksiyalar.md M9): CBU, qo'lda, kartadan yechilgan summadan; ``MARKET`` — bozor kursi
+    (CBU serverdan ochilmaganda zaxira, ADR-045; rasmiy emas, har doim belgilanadi)."""
 
     CBU = "cbu"
+    MARKET = "market"
     MANUAL = "manual"
     EFFECTIVE = "effective"
 
@@ -101,15 +103,23 @@ def rate_on(rates: Iterable[FxRate], currency: Currency | str, day: date) -> Rat
 
     CBU dam olish va bayram kunlari kurs e'lon qilmaydi — oxirgi ish kunining kursi amal qiladi.
     Kelajakdagi kurs hech qachon olinmaydi. Mos kurs bo'lmasa — ``FxError`` (raqam o'ylab topilmaydi).
+    Bir kunda CBU va bozor kursi ikkalasi bo'lsa — CBU (ADR-045); bozor kursi faqat CBU'da bo'lmagan kunni yopadi.
     """
     ccy = Currency(currency)
     best: FxRate | None = None
     for r in rates:
-        if r.currency is ccy and r.day <= day and (best is None or r.day > best.day):
+        if r.currency is not ccy or r.day > day:
+            continue
+        if best is None or r.day > best.day or (r.day == best.day and _prefer(r, best)):
             best = r
     if best is None:
         raise FxError(f"{ccy} uchun {day.isoformat()} sanasigacha kurs yo'q")
     return RateLookup(requested=day, rate=best)
+
+
+def _prefer(new: FxRate, old: FxRate) -> bool:
+    """Bir kunda ikki kurs: CBU bozor kursidan ustun."""
+    return new.source is RateSource.CBU and old.source is not RateSource.CBU
 
 
 def to_uzs(money: Money, rate: FxRate | None = None) -> Money:

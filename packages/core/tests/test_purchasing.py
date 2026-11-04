@@ -84,6 +84,16 @@ def test_flags_cargo_missing_not_received_cbu() -> None:
     assert p.ready_date is None  # yo'lda
 
 
+def test_market_rate_is_flagged_not_cbu() -> None:
+    """Zaxira bozor kursi (ADR-045) lotda `market_rate` belgisi bilan — rasmiy CBU deb ko'rsatilmaydi."""
+    market = FxRate(DAY, Currency.CNY, D("1650"), RateSource.MARKET)
+    p = Purchase(
+        "p", (PurchaseLine("a", 10),), (CostComponent(K.GOODS, Money.of(100, "CNY"), market),)
+    )
+    (lot,) = compute_lots(p)
+    assert Flag.MARKET_RATE in lot.flags and Flag.CBU_RATE not in lot.flags and lot.estimated
+
+
 def test_partial_receipt_uses_received_qty() -> None:
     p = Purchase(
         "p",

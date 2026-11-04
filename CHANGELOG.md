@@ -394,6 +394,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   olganida" turi, `AD#` → sotuv qatori, yechilgan kun buyurtma va topshirilgan kunga nisbatan), `dateService` ↔
   `dateCreated` farqi va saqlash yechiladigan kunlar; faqat yig'indilar, matnlar raqamsiz.
 
+- B4.30 (ADR-045, Temur tasdig'i): **zaxira kurs manbai — bozor kursi**. cbu.uz staging serverdan (AWS) ochilmaydi, shuning uchun
+  CBU javob bermasa joriy kurs va arxiv `fx_market_urls` dan (jsDelivr, Cloudflare Pages) olinadi, `fx_rates.source = market`
+  (`fx_upsert_market()`, migratsiya 0016). Bir kunda CBU ustun; lotda `market_rate` belgisi (taxminiy), xarajatda "bozor kursi,
+  Markaziy bank emas" (`rate_source`). Qo'lda va "karta" kurslari o'zgarmadi.
+
 - B4.28 (ADR-044, Temur talabi): xarid tovarini **hamma SKU'dan** tanlash — `GET /sku-picker` (do'kon, mahsulot, variant,
   qoldiq, Uzum holati; arxivlangan va bloklangan ham; avval qoldig'i yoki sotuvi borlari) va SKU'siz tovarlar;
   `LineIn.sku_id` (tovari yo'q SKU'ga tovar o'zi yaratiladi) va `POST /purchases/{id}/lines/bulk` (bir nechta tovar

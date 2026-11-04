@@ -23,6 +23,7 @@ from upcore.money import Currency
 
 TODAY = date(2026, 10, 24)  # sf.NOW (Toshkent 17:00)
 BASE = "https://cbu.test/json/"
+MARKET = "https://market.test/{date}/{ccy}.json"
 
 
 @pytest.fixture(scope="module")
@@ -49,9 +50,12 @@ def row(ccy: str, rate: str, day: date, nominal: str = "1") -> dict[str, str]:
 class FakeCbu:
     """cbu.uz o'rnida: joriy kurs va arxiv (kun bo'yicha); ``fail`` — birinchi shuncha so'rov 503."""
 
-    def __init__(self, archive_from: date | None = None, fail: int = 0) -> None:
+    def __init__(
+        self, archive_from: date | None = None, fail: int = 0, cbu_down: bool = False
+    ) -> None:
         self.archive_from = archive_from or date(2000, 1, 1)
         self.fail = fail
+        self.cbu_down = cbu_down  # cbu.uz ochilmaydi (staging AWS'dan: ulanish vaqti tugaydi)
         self.calls: list[str] = []
         self.transport = httpx.MockTransport(self.handle)
 
@@ -69,6 +73,15 @@ class FakeCbu:
     def handle(self, request: httpx.Request) -> httpx.Response:
         url = str(request.url)
         self.calls.append(url)
+        if url.startswith("https://market.test/"):
+            when, name = url.removeprefix("https://market.test/").split("/")
+            ccy = name.removesuffix(".json")
+            day = TODAY if when == "latest" else date.fromisoformat(when)
+            if day < self.archive_from:
+                return httpx.Response(404)
+            return httpx.Response(200, json={"date": day.isoformat(), ccy: {"uzs": 1650.5}})
+        if self.cbu_down:
+            raise httpx.ConnectTimeout("cbu.uz")
         if self.fail:
             self.fail -= 1
             return httpx.Response(503)
@@ -89,6 +102,7 @@ def settings(urls: dict[str, str], **extra: Any) -> Settings:
 def sync(
     urls: dict[str, str], cbu: FakeCbu, since: date | None = None, **extra: Any
 ) -> fx.FxSyncResult:
+    extra.setdefault("fx_market_urls", [])  # zaxirasiz (alohida testlarda yoqiladi)
     with runtime(urls, sf.seller(), cbu_url=BASE, **extra) as run:
 
         async def main(rt: Runtime) -> fx.FxSyncResult:
@@ -172,7 +186,7 @@ def test_retries_5xx_then_succeeds(fresh: dict[str, str]) -> None:
 def test_bad_responses_raise_and_store_nothing(
     fresh: dict[str, str], handler: Any, match: str
 ) -> None:
-    with runtime(fresh, sf.seller(), cbu_url=BASE) as run:
+    with runtime(fresh, sf.seller(), cbu_url=BASE, fx_market_urls=[]) as run:
 
         async def main(rt: Runtime) -> None:
             rt.transport = httpx.MockTransport(handler)
@@ -187,7 +201,7 @@ def test_network_error_is_retried_then_reported(fresh: dict[str, str]) -> None:
     def down(request: httpx.Request) -> httpx.Response:
         raise httpx.ConnectError("x")
 
-    with runtime(fresh, sf.seller(), cbu_url=BASE) as run:
+    with runtime(fresh, sf.seller(), cbu_url=BASE, fx_market_urls=[]) as run:
 
         async def main(rt: Runtime) -> None:
             rt.transport = httpx.MockTransport(down)
@@ -299,3 +313,74 @@ def test_since_fills_down_to_the_needed_day_beyond_the_per_run_limit(fresh: dict
     cbu.calls.clear()
     assert sync(fresh, cbu, since=need, fx_backfill_per_run=3, fx_currencies=["CNY"]).archived == 0
     assert len(cbu.calls) == 1  # faqat joriy kurs
+
+
+def market_rows(urls: dict[str, str]) -> dict[tuple[date, str], Decimal]:
+    rows = admin(urls, "SELECT day, currency, rate FROM fx_rates WHERE source = 'market'")
+    return {(d, c): r for d, c, r in rows}
+
+
+def test_market_fallback_when_cbu_is_unreachable(fresh: dict[str, str]) -> None:
+    """cbu.uz serverdan ochilmaydi (staging): joriy kurs va arxiv zaxira manbadan, manba `market`."""
+    cbu = FakeCbu(cbu_down=True)
+    res = sync(
+        fresh,
+        cbu,
+        fx_market_urls=[MARKET],
+        fx_backfill_per_run=2,
+        fx_currencies=["USD", "CNY"],
+    )
+    assert (res.source, res.latest, res.archived, res.days_filled) == ("market", 2, 4, 2)
+    rows = market_rows(fresh)
+    assert set(rows) == {
+        (d, c)
+        for d in (TODAY, TODAY - timedelta(days=1), TODAY - timedelta(days=2))
+        for c in ("USD", "CNY")
+    }
+    assert rows[(TODAY, "CNY")] == Decimal("1650.500000")
+    assert stored(fresh) == {}  # CBU qatori yo'q: o'ylab topilmaydi, manbalar aralashmaydi
+    # Ikkinchi ish zaxira arxivini davom ettiradi (CBU qatorlari yo'q, frontier — bozor qatorlari).
+    sync(fresh, cbu, fx_market_urls=[MARKET], fx_backfill_per_run=1, fx_currencies=["USD", "CNY"])
+    assert (TODAY - timedelta(days=3), "CNY") in market_rows(fresh)
+
+
+def test_market_fallback_uses_mirror_and_skips_missing_days(fresh: dict[str, str]) -> None:
+    cbu = FakeCbu(archive_from=TODAY - timedelta(days=1), cbu_down=True)
+    res = sync(
+        fresh,
+        cbu,
+        since=TODAY - timedelta(days=1),
+        fx_market_urls=["https://dead.test/{date}/{ccy}.json", MARKET],
+        fx_backfill_per_run=1,
+        fx_currencies=["CNY"],
+    )
+    # Birinchi ko'zgu ishlamaydi (503 emas, tarmoq xatosi) — ikkinchisi javob beradi; fayli yo'q kunlar o'tkaziladi.
+    assert res.source == "market" and res.latest == 1
+    assert (TODAY - timedelta(days=1), "CNY") in market_rows(fresh)
+
+
+def test_both_sources_down_is_an_error(fresh: dict[str, str]) -> None:
+    class Dead(FakeCbu):
+        def handle(self, request: httpx.Request) -> httpx.Response:
+            raise httpx.ConnectTimeout("hech narsa ochilmaydi")
+
+    cbu = Dead()
+    with pytest.raises(fx.FxFetchError):
+        sync(fresh, cbu, fx_market_urls=[MARKET], fx_currencies=["CNY"])
+    with pytest.raises(fx.FxFetchError):
+        sync(fresh, cbu, fx_currencies=["CNY"])  # zaxirasiz — avvalgidek
+
+
+def test_cbu_works_again_wins_over_market_on_the_same_day(fresh: dict[str, str]) -> None:
+    sync(
+        fresh,
+        FakeCbu(cbu_down=True),
+        fx_market_urls=[MARKET],
+        fx_backfill_per_run=0,
+        fx_currencies=["CNY"],
+    )
+    sync(fresh, FakeCbu(), fx_market_urls=[MARKET], fx_backfill_per_run=0, fx_currencies=["CNY"])
+    cbu_rows, market = stored(fresh), market_rows(fresh)
+    assert cbu_rows[(TODAY, "CNY")] == Decimal("1792.290000") and market[(TODAY, "CNY")] == Decimal(
+        "1650.500000"
+    )

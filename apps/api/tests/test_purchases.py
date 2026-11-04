@@ -574,3 +574,42 @@ def test_missing_rate_date_queues_cbu_archive_job(world: World) -> None:
     assert fx_jobs() == [
         {"since": "2026-08-01"}
     ]  # so'm kurs talab qilmaydi; navbatda allaqachon bor
+
+
+def test_market_rate_fallback_is_used_and_flagged(world: World) -> None:
+    """CBU kursi bo'lmagan kunni zaxira bozor kursi yopadi (ADR-045): tannarx hisoblanadi, kurs manbasi va lotdagi
+    `market_rate` belgisi ko'rinadi, CBU kursi kech bo'lsa u ustun; kurs yetarli bo'lgani uchun arxiv ishi qo'yilmaydi."""
+    w, a = world, world.a
+    jobs = w.api.jobs.app.connector.jobs  # type: ignore[attr-defined]
+    before = len([j for j in jobs.values() if j["task_name"] == "fx.cbu"])
+    a.sql(
+        "INSERT INTO fx_rates (day, currency, source, rate) VALUES "
+        "('2026-07-01', 'CNY', 'market', 1650.5) ON CONFLICT DO NOTHING"
+    )
+    pid = new_purchase(w, title="Bozor kursi", dates={"ordered": "2026-07-01"})["purchase"]["id"]
+    ok(send(w, "POST", f"purchases/{pid}/lines", item_id=str(w.ids["item"]), ordered_qty=10), 201)
+    det = ok(
+        send(
+            w,
+            "POST",
+            f"purchases/{pid}/components",
+            kind="goods",
+            amount="100",
+            currency="CNY",
+            paid_on="2026-07-01",
+        ),
+        201,
+    )
+    comp = det["components"][0]
+    assert comp["error"] is None and comp["rate_source"] == "market"
+    assert D(comp["applied_rate"]) == D("1650.5") and comp["amount_uzs"] is not None
+    assert "market_rate" in det["lines"][0]["flags"] and "cbu_rate" not in det["lines"][0]["flags"]
+    assert len([j for j in jobs.values() if j["task_name"] == "fx.cbu"]) == before
+    # Shu kunda CBU kursi ham bo'lsa — u ustun va belgi chiqmaydi.
+    a.sql(
+        "INSERT INTO fx_rates (day, currency, source, rate) VALUES "
+        "('2026-07-01', 'CNY', 'cbu', 1790) ON CONFLICT DO NOTHING"
+    )
+    det = ok(send(w, "GET", f"purchases/{pid}"))
+    assert det["components"][0]["rate_source"] == "cbu"
+    assert "market_rate" not in det["lines"][0]["flags"]

@@ -497,6 +497,14 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   quriladi. Testlar: `test_fx` (valyuta bo'yicha boshlanish, `since`), `test_purchases` (ish qo'yilishi).
   Keyin (Temur: xato staging'da qoldi): `upapi.fxcheck` + `infra/staging/fxcheck.sh` — diagnostika (cbu.uz serverdan ochiladimi,
   `fx_rates` valyuta bo'yicha, `fx.cbu` ishlari); sabab shu hisobotdan aniqlanadi (`docs/staging.md`).
+- [x] B4.30 Zaxira kurs manbai — bozor kursi (ADR-045; Temur, 2026-11-04: cbu.uz AWS serverdan ochilmaydi, `curl` — vaqt tugadi).
+  ✓ 2026-11-04: CBU javob bermasa joriy kurs va arxiv zaxira manbadan (`fx_market_urls`: jsDelivr va Cloudflare Pages
+  currency-api, ko'zgular tartibi bilan); `fx_rates.source = market` (`fx_upsert_market()`, migratsiya 0016); bir kunda
+  CBU ustun (`upcore.fx.rate_on`); lotda `market_rate` belgisi, xarajatda "bozor kursi, Markaziy bank emas" (`rate_source`);
+  arxiv har manba uchun o'z bo'shlig'idan; `fx.cbu` ishi `since` bilan zaxirada ham ishlaydi. Qo'lda va "karta" kurslari
+  zaxiradan ustun. Testlar: `test_fx` (zaxira, ko'zgu, ikkala manba yo'q, CBU qaytsa), `test_purchases`, core, web.
+  **T:** deploy'dan keyin kursi yo'q xaridda komponentni qayta saqlash (yoki worker 09:05 / 16:05 da o'zi to'ldiradi), so'ng
+  `fxcheck.sh` bilan `fx_rates` da `market` qatorlarini ko'rish.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

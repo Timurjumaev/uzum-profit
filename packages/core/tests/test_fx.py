@@ -79,6 +79,19 @@ def test_rate_on_never_uses_future_rate() -> None:
         rate_on(RATES, "EUR", date(2026, 10, 30))
 
 
+def test_rate_on_same_day_prefers_cbu_over_market() -> None:
+    """ADR-045: bir kunda CBU va bozor kursi — CBU (qaysi tartibda kelmasin); bozor kursi faqat bo'shliqni yopadi."""
+    day = date(2026, 10, 7)
+    cbu = FxRate(day, Currency.CNY, Decimal("1790"), RateSource.CBU)
+    market = FxRate(day, Currency.CNY, Decimal("1650"), RateSource.MARKET)
+    for rates in ([cbu, market], [market, cbu]):
+        assert rate_on(rates, "CNY", day).rate is cbu
+    # CBU'da bo'lmagan kun — bozor kursi; keyingi kun CBU'si bo'lsa u o'zi ustun (sana kech).
+    earlier = FxRate(date(2026, 10, 6), Currency.CNY, Decimal("1640"), RateSource.MARKET)
+    assert rate_on([cbu, earlier], "CNY", date(2026, 10, 6)).rate is earlier
+    assert rate_on([cbu, earlier], "CNY", date(2026, 10, 9)).rate is cbu
+
+
 def test_to_uzs() -> None:
     usd = FxRate(date(2026, 10, 23), Currency.USD, Decimal("12650.123456"))
     assert to_uzs(Money.of("142.50", "USD"), usd) == Money.of("1802642.59", "UZS")

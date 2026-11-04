@@ -9,8 +9,8 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 |---|---|
 | Joriy bosqich | **B4. Asosiy ekranlar.** **B2 tugadi** (2026-10-27: B2.11 real sinov, 24 soat xatosiz), **B3 tugadi** (2026-10-26) |
 | Keyingi vazifa | **B4.27** "Yo'qotishlar va imkoniyat" bloki (ADR-043, Temur tasdig'idan keyin); **B4 chiqish mezoni** — Temur 14 kun faqat yangi dasturda ishlaydi (B4.1–B4.26 tayyor; B4.9 bekor — ADR-032), keyin B5. B3 qoldig'i: Temur Q1 tovar belgisi tekshiruvi (ADR-030), `sellermax.uz` domenini ro'yxatdan o'tkazish |
-| Temurdan kutilmoqda | B4.29 ni merge qilish; deploy'dan keyin kursi yo'q xaridda biror narsani qayta saqlash (kurs arxivi to'ladi, xato yo'qoladi); Xaridlarda «Tovar qo'shish» oynasini sinash (B4.28); deploy'dan keyin staging'da realcheck (`cancel_split`) va Uzum kabinetidagi oktabr qaytarish / bekor sonlari bilan solishtirish; Bosh sahifadagi KPI sarhisobni ko'rib chiqish; xohlasa — Sozlamalar → "Ogohlantirish chegaralari". Oldingilar: boshlang'ich holatni kiritish (`/opening`) va yo'ldagi partiyalarni Xaridlarga kiritish (ADR-033); Foyda sahifasida oktabr/noyabr logistikasini kabinet bilan solishtirish (B4.25) |
-| Oxirgi yangilanish | 2026-11-04 (B4.29: CBU kursi yetishmasligi — arxiv valyuta bo'yicha, xarid uchun `since`) |
+| Temurdan kutilmoqda | B4.30 ni merge qilish; deploy'dan keyin kursi yo'q xaridda komponentni qayta saqlash (zaxira bozor kursi to'ladi, xato yo'qoladi); Xaridlarda «Tovar qo'shish» oynasini sinash (B4.28); deploy'dan keyin staging'da realcheck (`cancel_split`) va Uzum kabinetidagi oktabr qaytarish / bekor sonlari bilan solishtirish; Bosh sahifadagi KPI sarhisobni ko'rib chiqish; xohlasa — Sozlamalar → "Ogohlantirish chegaralari". Oldingilar: boshlang'ich holatni kiritish (`/opening`) va yo'ldagi partiyalarni Xaridlarga kiritish (ADR-033); Foyda sahifasida oktabr/noyabr logistikasini kabinet bilan solishtirish (B4.25) |
+| Oxirgi yangilanish | 2026-11-04 (B4.30: zaxira kurs manbai — bozor kursi, CBU serverdan ochilmasa; ADR-045) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 

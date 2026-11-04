@@ -7141,6 +7141,17 @@
             ],
             "title": "Rate Day"
           },
+          "rate_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate Source"
+          },
           "amount_uzs": {
             "anyOf": [
               {
@@ -7180,6 +7191,7 @@
           "shares",
           "applied_rate",
           "rate_day",
+          "rate_source",
           "amount_uzs",
           "error"
         ],

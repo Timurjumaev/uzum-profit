@@ -304,7 +304,7 @@ async def _changed(
 
 
 async def _fx_gap(ctx: OrgContext, purchase: Any) -> date | None:
-    """Xarid CBU kursi kerak bo'ladigan eng eski sana, agar bazadagi kurslar unga yetmasa (``None`` — yetadi).
+    """Xarid kursi (CBU yoki zaxira bozor kursi) kerak bo'ladigan eng eski sana, agar bazadagi kurslar unga yetmasa (``None`` — yetadi).
     Kun hisobdagi bilan bir xil: komponent ``paid_on`` → xaridning to'lov → buyurtma sanasi (``calc.lots``); sanasiz
     xarid bugungi kurs bilan hisoblanadi (joriy kurs har doim bor)."""
     fallback = purchase.paid_on or purchase.ordered_on
@@ -328,7 +328,7 @@ async def _fx_gap(ctx: OrgContext, purchase: Any) -> date | None:
     for currency, day in needs.items():
         first = await ctx.conn.scalar(
             select(func.min(m.fx_rates.c.day)).where(
-                m.fx_rates.c.source == "cbu", m.fx_rates.c.currency == currency
+                m.fx_rates.c.source.in_(["cbu", "market"]), m.fx_rates.c.currency == currency
             )
         )
         if first is None or first > day:
