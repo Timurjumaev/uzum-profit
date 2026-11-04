@@ -20,6 +20,7 @@ SCRIPTS = [
     "infra/staging/lib.sh",
     "infra/staging/deploy.sh",
     "infra/staging/realcheck.sh",
+    "infra/staging/fxcheck.sh",
     "infra/backup/backup.sh",
 ]
 
@@ -205,6 +206,14 @@ def test_realcheck_runs_in_deployed_api(root: Path) -> None:
     assert call.startswith("UP_TAG=v7 compose -f ")
     assert call.endswith("exec -T api python -m upapi.realcheck --org x")
     assert (root / "pwd.log").read_text().strip() == str(root)
+
+
+def test_fxcheck_runs_in_deployed_api(root: Path) -> None:
+    (root / ".deployed-tag").write_text("v7\n")
+    r = run(root, "infra/staging/fxcheck.sh")
+    assert r.returncode == 0, r.stderr
+    (call,) = calls(root)
+    assert call.endswith("exec -T api python -m upapi.fxcheck")
 
 
 def test_realcheck_needs_deploy(root: Path) -> None:

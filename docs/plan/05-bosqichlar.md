@@ -495,6 +495,8 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   kun: bir valyuta tarixi uzoq bo'lsa, boshqasi hech to'lmasdi); xarid saqlanganda to'lov sanasi kursi bazada yo'q bo'lsa
   `fx.cbu` ishi `since` bilan qo'yiladi — o'sha sanadan 10 kun oldingacha cheklovsiz to'ldiradi va tashkilotlar hisobi qayta
   quriladi. Testlar: `test_fx` (valyuta bo'yicha boshlanish, `since`), `test_purchases` (ish qo'yilishi).
+  Keyin (Temur: xato staging'da qoldi): `upapi.fxcheck` + `infra/staging/fxcheck.sh` — diagnostika (cbu.uz serverdan ochiladimi,
+  `fx_rates` valyuta bo'yicha, `fx.cbu` ishlari); sabab shu hisobotdan aniqlanadi (`docs/staging.md`).
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.
