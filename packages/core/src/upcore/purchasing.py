@@ -264,6 +264,87 @@ def compute_lots(purchase: Purchase) -> list[LotCost]:
     return result
 
 
+def compute_shipment_shares(
+    purchases: Sequence[Purchase], shipment_components: Sequence[CostComponent]
+) -> dict[str, LotCost]:
+    """Faqat kargo komponentlarining har qatorga tushgan ulushi (qator id → ulush; xarid ichidagi komponentlarsiz).
+
+    Kargo tovarlari — bitta "virtual xarid": qiymat asosi uchun narx so'mga o'z xaridining kursi bilan o'tkaziladi;
+    vazn / hajm yo'q qator bo'lsa taqsimot butun kargo bo'yicha dona asosiga o'tadi (``base_fallback``).
+    """
+    ids = [line.id for p in purchases for line in p.lines]
+    if len(set(ids)) != len(ids):
+        raise PurchaseError("qator id'lari takrorlangan")
+    virtual_lines = []
+    for p in purchases:
+        for line in p.lines:
+            price = line.unit_price
+            if price is not None:
+                price = Money(to_uzs(price, p.goods_rate).amount, UZS)
+            virtual_lines.append(
+                PurchaseLine(
+                    line.id,
+                    line.ordered_qty,
+                    line.received_qty,
+                    price,
+                    line.unit_weight,
+                    line.unit_volume,
+                )
+            )
+    return {
+        lot.line_id: lot
+        for lot in compute_lots(
+            Purchase("shipment", tuple(virtual_lines), tuple(shipment_components))
+        )
+    }
+
+
+def compute_shipment_lots(
+    purchases: Sequence[Purchase], shipment_components: Sequence[CostComponent]
+) -> dict[str, list[LotCost]]:
+    """F20, kargo bilan (ADR-046): bitta kargoga tegishli xaridlar lotlari (xarid id → lotlar).
+
+    Har xaridning o'z komponentlari avvalgidek o'z qatorlariga bo'linadi (:func:`compute_lots`). **Kargo komponentlari
+    butun kargoning hamma xaridlari qatorlariga** bitta taqsimotda bo'linadi (dona / vazn / hajm / qiymat / qo'lda):
+    yaxlitlash qoldig'i butun kargo bo'yicha eng katta qatorga, shuning uchun xaridlarga tushgan ulushlar yig'indisi
+    kargo summasiga tiyinigacha teng. Qator ``line_ids`` kargodagi istalgan xaridning qatori bo'lishi mumkin
+    (``None`` — hammasi). "Kargo kiritilmagan" belgisi (``cargo_missing``) faqat kargo ham, xarid ham kargo
+    komponentiga ega bo'lmasa chiqadi.
+    """
+    ids = [line.id for p in purchases for line in p.lines]
+    if len(set(ids)) != len(ids):
+        raise PurchaseError("qator id'lari takrorlangan")
+    own = {p.id: compute_lots(p) for p in purchases}
+    if not shipment_components:
+        return own
+    shared = compute_shipment_shares(purchases, shipment_components)
+    has_cargo = any(c.kind is ComponentKind.CARGO for c in shipment_components)
+    result: dict[str, list[LotCost]] = {}
+    for p in purchases:
+        lots = []
+        for lot in own[p.id]:
+            extra = shared[lot.line_id]
+            breakdown = dict(lot.breakdown)
+            for kind, amount in extra.breakdown.items():
+                breakdown[kind] = breakdown.get(kind, Money.zero(UZS)) + amount
+            line_total = total(list(breakdown.values()), UZS)
+            flags = set(lot.flags) | (set(extra.flags) - {Flag.CARGO_MISSING, Flag.NOT_RECEIVED})
+            if has_cargo:
+                flags.discard(Flag.CARGO_MISSING)
+            lots.append(
+                LotCost(
+                    line_id=lot.line_id,
+                    qty=lot.qty,
+                    breakdown=breakdown,
+                    total=line_total,
+                    unit_cost=None if lot.qty == 0 else Money(line_total.amount / lot.qty, UZS),
+                    flags=frozenset(flags),
+                )
+            )
+        result[p.id] = lots
+    return result
+
+
 def purchase_total(purchase: Purchase) -> Money:
     """Xaridning so'mdagi jami xarajati (hamma komponentlar)."""
     return total([c.in_uzs() for c in purchase.components], UZS)

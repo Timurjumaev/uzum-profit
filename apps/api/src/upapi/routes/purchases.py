@@ -66,6 +66,9 @@ class PurchaseIn(BaseModel):
     title: Text = None
     supplier_id: UUID | None = None
     carrier_id: UUID | None = None
+    shipment_id: UUID | None = (
+        None  # kargo (ADR-046): Xitoy omborida / yo'lda / keldi sanalari kargodan olinadi
+    )
     note: Text = None
     dates: dict[Stage, date | None] = Field(
         default_factory=dict
@@ -76,6 +79,7 @@ class PurchasePatch(BaseModel):
     title: Text = None
     supplier_id: UUID | None = None
     carrier_id: UUID | None = None
+    shipment_id: UUID | None = None  # ``null`` — kargodan ajratish (sanalar o'z holicha qoladi)
     note: Text = None
     dates: dict[Stage, date | None] | None = (
         None  # faqat berilgan bosqichlar o'zgaradi; ``null`` — sanani o'chirish
@@ -222,6 +226,43 @@ def _date_columns(dates: dict[Stage, date | None]) -> dict[str, date | None]:
     return {f"{s.value}_on": on for s, on in dates.items()}
 
 
+# Kargo sanalari (ADR-046): kargoga bog'langan xaridda shu bosqichlar kargodan olinadi va xarid ustunlariga yoziladi
+# (boshqa o'quvchilar — ombor joylari, F25 tarixi — shu ustunlardan o'qiydi).
+SHIPMENT_STAGES = (Stage.CN_WAREHOUSE, Stage.SHIPPED, Stage.ARRIVED)
+
+
+def shipment_dates(shipment: Any) -> dict[str, date]:
+    """Kargoda sanasi bor bosqichlar → xarid ustunlari (bo'sh sana xaridning o'z sanasini o'chirmaydi)."""
+    out: dict[str, date] = {}
+    for stage in SHIPMENT_STAGES:
+        on = getattr(shipment, f"{stage.value}_on")
+        if on is not None:
+            out[f"{stage.value}_on"] = on
+    return out
+
+
+async def request_shipment_members(
+    ctx: OrgContext, shipment_id: UUID | None, skip: UUID | None = None
+) -> None:
+    """Kargoning boshqa xaridlari qayta hisoblanadi (kargo xarajati ular orasida bo'linadi)."""
+    if shipment_id is None:
+        return
+    p = m.purchases
+    ids = await ctx.conn.scalars(select(p.c.id).where(p.c.shipment_id == shipment_id))
+    for other in ids:
+        if other != skip:
+            await calc.request(ctx.conn, ctx.org_id, calc.Scope.PURCHASE, other)
+
+
+async def _shipment(ctx: OrgContext, shipment_id: UUID) -> Any:
+    row = (
+        await ctx.conn.execute(select(m.shipments).where(m.shipments.c.id == shipment_id))
+    ).first()
+    if row is None:
+        raise AppError("shipment_not_found", 404)
+    return row
+
+
 async def _exists(ctx: OrgContext, table: Any, row_id: UUID | None, code: str) -> None:
     if (
         row_id is not None
@@ -304,25 +345,41 @@ async def _changed(
 
 
 async def _fx_gap(ctx: OrgContext, purchase: Any) -> date | None:
-    """Xarid kursi (CBU yoki zaxira bozor kursi) kerak bo'ladigan eng eski sana, agar bazadagi kurslar unga yetmasa (``None`` — yetadi).
-    Kun hisobdagi bilan bir xil: komponent ``paid_on`` → xaridning to'lov → buyurtma sanasi (``calc.lots``); sanasiz
-    xarid bugungi kurs bilan hisoblanadi (joriy kurs har doim bor)."""
+    """Xarid kursi (CBU yoki zaxira bozor kursi) kerak bo'ladigan eng eski sana, agar bazadagi kurslar unga yetmasa
+    (``None`` — yetadi). Kun hisobdagi bilan bir xil: komponent ``paid_on`` → xaridning to'lov → buyurtma sanasi
+    (``calc.lots``); sanasiz xarid bugungi kurs bilan hisoblanadi (joriy kurs har doim bor)."""
     fallback = purchase.paid_on or purchase.ordered_on
+    cc, pl = m.cost_components, m.purchase_lines
+    comps = list(await ctx.conn.execute(select(cc).where(cc.c.purchase_id == purchase.id)))
+    currencies = list(
+        await ctx.conn.scalars(
+            select(pl.c.currency).where(
+                pl.c.purchase_id == purchase.id, pl.c.unit_price.is_not(None)
+            )
+        )
+    )
+    return await fx_gap(ctx, comps, currencies, fallback)
+
+
+async def fx_gap(
+    ctx: OrgContext,
+    components: Iterable[Any],
+    line_currencies: Iterable[str | None],
+    fallback: date | None,
+) -> date | None:
+    """Komponentlar (va qator narxlari) kursi bazada yetarlimi; yetmasa — eng eski kerakli sana."""
     needs: dict[str, date] = {}
 
     def need(currency: str | None, day: date | None) -> None:
         if currency and currency != "UZS" and day is not None:
             needs[currency] = min(needs.get(currency, day), day)
 
-    cc, pl = m.cost_components, m.purchase_lines
-    for c in await ctx.conn.execute(select(cc).where(cc.c.purchase_id == purchase.id)):
+    for c in components:
         if c.rate_mode == "cbu":
             need(c.currency, c.paid_on or fallback)
         elif c.rate_mode == "effective":
             need(c.charged_currency, c.paid_on or fallback)
-    for currency in await ctx.conn.scalars(
-        select(pl.c.currency).where(pl.c.purchase_id == purchase.id, pl.c.unit_price.is_not(None))
-    ):
+    for currency in line_currencies:
         need(currency, fallback)
     gap: date | None = None
     for currency, day in needs.items():
@@ -427,7 +484,14 @@ async def create_purchase(
 ) -> rp.PurchaseDetailOut:
     await _exists(ctx, m.suppliers, body.supplier_id, "supplier_not_found")
     await _exists(ctx, m.carriers, body.carrier_id, "carrier_not_found")
-    _check_dates(body.dates)
+    columns = _date_columns(body.dates)
+    if body.shipment_id is not None:
+        if any(s in body.dates for s in SHIPMENT_STAGES):
+            raise AppError(
+                "dates_from_shipment", 422, detail="kargo sanalari kargoda o'zgartiriladi"
+            )
+        columns |= shipment_dates(await _shipment(ctx, body.shipment_id))
+    _check_dates({Stage(k.removesuffix("_on")): v for k, v in columns.items()})
     p = m.purchases
     purchase_id = await ctx.conn.scalar(
         insert(p)
@@ -436,14 +500,16 @@ async def create_purchase(
             title=body.title,
             supplier_id=body.supplier_id,
             carrier_id=body.carrier_id,
+            shipment_id=body.shipment_id,
             note=body.note,
-            **_date_columns(body.dates),
+            **columns,
         )
         .returning(p.c.id)
     )
     assert purchase_id is not None
     await ctx.audit("purchase.create", "purchase", purchase_id, after=_plain(body.model_dump()))
     await _changed(ctx, request, background, purchase_id)
+    await request_shipment_members(ctx, body.shipment_id, skip=purchase_id)
     return await _detail(ctx, purchase_id)
 
 
@@ -460,8 +526,16 @@ async def update_purchase(
     dates = values.pop("dates", None) or {}
     await _exists(ctx, m.suppliers, values.get("supplier_id"), "supplier_not_found")
     await _exists(ctx, m.carriers, values.get("carrier_id"), "carrier_not_found")
-    _check_dates({**rp.stage_dates(row), **dates})
-    values |= _date_columns(dates)
+    linked = values.get("shipment_id", row.shipment_id)
+    if linked is not None and any(s in dates for s in SHIPMENT_STAGES):
+        raise AppError("dates_from_shipment", 422, detail="kargo sanalari kargoda o'zgartiriladi")
+    columns = _date_columns(dates)
+    if values.get("shipment_id") is not None:
+        columns |= shipment_dates(await _shipment(ctx, values["shipment_id"]))
+    _check_dates(
+        {**rp.stage_dates(row)} | {Stage(k.removesuffix("_on")): v for k, v in columns.items()}
+    )
+    values |= columns
     if not values:
         return await _detail(ctx, purchase_id)
     before = {k: getattr(row, k) for k in values}
@@ -471,6 +545,11 @@ async def update_purchase(
         "purchase.update", "purchase", purchase_id, before=_plain(before), after=_plain(values)
     )
     await _changed(ctx, request, background, purchase_id)
+    if "shipment_id" in values and values["shipment_id"] != row.shipment_id:
+        # Eski va yangi kargoning boshqa xaridlari: kargo xarajati bo'linishi o'zgardi.
+        await request_shipment_members(ctx, row.shipment_id, skip=purchase_id)
+        await request_shipment_members(ctx, values["shipment_id"], skip=purchase_id)
+        background.add_task(_kick, request, ctx.org_id)
     return await _detail(ctx, purchase_id)
 
 
@@ -485,6 +564,7 @@ async def delete_purchase(
         for r in await ctx.conn.execute(select(pl.c.item_id).where(pl.c.purchase_id == purchase_id))
     }
     await ctx.conn.execute(delete(m.purchases).where(m.purchases.c.id == purchase_id))
+    await request_shipment_members(ctx, row.shipment_id)
     await ctx.audit(
         "purchase.delete",
         "purchase",

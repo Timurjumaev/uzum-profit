@@ -24,6 +24,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
+from types import SimpleNamespace
 from typing import Any
 from uuid import UUID
 
@@ -40,6 +41,8 @@ from upcore.purchasing import (
     PurchaseError,
     PurchaseLine,
     compute_lots,
+    compute_shipment_lots,
+    compute_shipment_shares,
 )
 
 from upapi.db import models as m
@@ -138,10 +141,45 @@ def targets_of(raw: Mapping[str, Any] | None) -> tuple[tuple[str, ...] | None, d
     return (tuple(str(x) for x in lines) if lines is not None else None), shares
 
 
-def build_purchase(
-    purchase: Row[Any], lines: Sequence[Row[Any]], components: Sequence[Row[Any]], rates: Rates
-) -> Purchase:
-    """Baza qatorlari → ``upcore`` xaridi (kurslar shu yerda tanlanadi)."""
+class Effective:
+    """Qator + ustidan yoziladigan qiymatlar (``Row`` o'zgarmas): kargoga bog'langan xaridning Xitoy omborida / yo'lda /
+    Toshkentga keldi sanalari kargodan olinadi (ADR-046); kargoda sana yo'q bo'lsa — xaridning o'zinikи."""
+
+    def __init__(self, row: Row[Any], **over: Any) -> None:
+        self._row, self._over = row, over
+
+    def __getattr__(self, name: str) -> Any:
+        if name in self._over:
+            return self._over[name]
+        return getattr(self._row, name)
+
+
+SHIPMENT_DATES = ("cn_warehouse_on", "shipped_on", "arrived_on")
+
+
+def effective_purchase(purchase: Row[Any], shipment: Row[Any] | None) -> Any:
+    """Kargoga bog'langan xarid: kargo sanalari ustun (bo'sh bo'lsa — xaridniki); kargosiz — o'zi."""
+    if shipment is None:
+        return purchase
+    over = {
+        name: getattr(shipment, name)
+        for name in SHIPMENT_DATES
+        if getattr(shipment, name) is not None
+    }
+    return Effective(purchase, **over)
+
+
+def shipment_fallback(shipment: Row[Any]) -> Any:
+    """Kargo komponenti sanasiz bo'lsa kurs sanasi: yo'lga chiqqan, yo'q bo'lsa kelgan kun (``component_rate`` uchun)."""
+    return SimpleNamespace(
+        paid_on=shipment.shipped_on or shipment.arrived_on, ordered_on=shipment.cn_warehouse_on
+    )
+
+
+def build_components(
+    components: Sequence[Row[Any]], purchase: Any, rates: Rates
+) -> tuple[CostComponent, ...]:
+    """Baza komponentlari → ``upcore`` komponentlari (kurslar shu yerda tanlanadi)."""
     parsed = []
     for c in components:
         line_ids, shares = targets_of(c.targets)
@@ -155,6 +193,19 @@ def build_purchase(
                 manual_shares=shares,
             )
         )
+    return tuple(parsed)
+
+
+def build_purchase(
+    purchase: Row[Any],
+    lines: Sequence[Row[Any]],
+    components: Sequence[Row[Any]],
+    rates: Rates,
+    shipment_components: Sequence[Row[Any]] = (),
+) -> Purchase:
+    """Baza qatorlari → ``upcore`` xaridi (kurslar shu yerda tanlanadi). ``shipment_components`` — faqat kargo to'langan
+    sanasi uchun (lot sotuvga tayyor sanasi, F21); ularning taqsimoti :func:`evaluate_shipment` da."""
+    parsed = build_components(components, purchase, rates)
     line_currencies = {currency_of(x.currency) for x in lines if x.unit_price is not None}
     goods_rate = None
     ccy = line_currencies.pop() if len(line_currencies) == 1 else Currency.UZS
@@ -168,7 +219,11 @@ def build_purchase(
             None,
         )
         goods_rate = goods or rates.cbu(ccy, purchase.paid_on or purchase.ordered_on)
-    cargo_paid = [c.paid_on for c in components if c.kind == "cargo" and c.paid_on is not None]
+    cargo_paid = [
+        c.paid_on
+        for c in (*components, *shipment_components)
+        if c.kind == "cargo" and c.paid_on is not None
+    ]
     return Purchase(
         id=str(purchase.id),
         lines=tuple(_line(x) for x in lines),
@@ -193,7 +248,8 @@ class Evaluation:
 def evaluate(
     purchase: Row[Any], lines: Sequence[Row[Any]], components: Sequence[Row[Any]], rates: Rates
 ) -> Evaluation:
-    """F20 — ``rebuild_lots`` bilan bir xil yo'l (kurslar :class:`Rates` ga oldindan yuklangan bo'lishi kerak)."""
+    """F20 — ``rebuild_lots`` bilan bir xil yo'l (kurslar :class:`Rates` ga oldindan yuklangan bo'lishi kerak).
+    Kargosiz xarid; kargoga bog'langanlar — :func:`evaluate_shipment`."""
     if not lines:
         return Evaluation()
     try:
@@ -201,6 +257,61 @@ def evaluate(
         return Evaluation(model, compute_lots(model))
     except CALC_ERRORS as exc:
         return Evaluation(error=str(exc) or type(exc).__name__)
+
+
+@dataclass
+class ShipmentEvaluation:
+    """Kargo hisobi: xaridlar natijasi, kargo komponentlarining har qatorga ulushi (qator id → ulush; xarid ichidagi
+    komponentlarsiz) va umumiy xato (hisoblab bo'lmasa)."""
+
+    purchases: dict[UUID, Evaluation] = field(default_factory=dict)
+    shares: dict[str, LotCost] = field(default_factory=dict)
+    error: str | None = None
+
+
+def evaluate_shipment(
+    shipment: Row[Any],
+    purchases: Sequence[Row[Any]],
+    lines_by: Mapping[UUID, Sequence[Row[Any]]],
+    comps_by: Mapping[UUID, Sequence[Row[Any]]],
+    shipment_comps: Sequence[Row[Any]],
+    rates: Rates,
+) -> ShipmentEvaluation:
+    """F20, kargo bilan (ADR-046): kargoga tegishli HAMMA xaridlar birga hisoblanadi — kargo xarajatlari butun
+    kargo tovarlariga bir taqsimotda bo'linadi. Biror xarid hisoblanmasa (kurs yo'q ...) — hammasi xato bilan
+    qaytadi: qolganlarining ulushi unsiz hisoblansa, kargo noto'g'ri bo'linar edi (raqam o'ylab topilmaydi)."""
+    out: dict[UUID, Evaluation] = {}
+    active = [p for p in purchases if lines_by.get(p.id)]
+    for p in purchases:
+        if not lines_by.get(p.id):
+            out[p.id] = Evaluation()
+    if (
+        not active
+    ):  # tovarsiz kargo: xarajatni bo'ladigan qator yo'q (komponentlar alohida ko'rsatiladi)
+        return ShipmentEvaluation(out)
+    try:
+        models = {
+            p.id: build_purchase(
+                effective_purchase(p, shipment),
+                lines_by[p.id],
+                comps_by.get(p.id, []),
+                rates,
+                shipment_comps,
+            )
+            for p in active
+        }
+        components = build_components(shipment_comps, shipment_fallback(shipment), rates)
+        lots = compute_shipment_lots(list(models.values()), components)
+        shares = compute_shipment_shares(list(models.values()), components) if components else {}
+    except CALC_ERRORS as exc:
+        reason = str(exc) or type(exc).__name__
+        error = f"kargo hisoblanmadi: {reason}"
+        for p in active:
+            out[p.id] = Evaluation(error=error)
+        return ShipmentEvaluation(out, {}, error)
+    for p in active:
+        out[p.id] = Evaluation(models[p.id], lots[str(p.id)])
+    return ShipmentEvaluation(out, shares)
 
 
 def currencies_of(rows: Iterable[Row[Any]]) -> set[Currency]:
@@ -217,14 +328,29 @@ async def rebuild_lots(
     conn: AsyncConnection, org_id: UUID, purchase_ids: set[UUID] | None, today: date
 ) -> LotsResult:
     """Xaridlar lotlarini qayta quradi (``None`` — tashkilotning hamma xaridlari). Qaytadi: lotlari o'zgargan
-    tovarlar (sotuv tannarxi shular uchun qayta hisoblanadi)."""
+    tovarlar (sotuv tannarxi shular uchun qayta hisoblanadi). Kargoga bog'langan xarid o'zgarsa — kargoning
+    hamma xaridlari qayta quriladi (kargo xarajati ular orasida bo'linadi, ADR-046)."""
     result = LotsResult()
-    p, pl, cc, lots = m.purchases, m.purchase_lines, m.cost_components, m.lots
+    p, pl, cc, lots, sh = m.purchases, m.purchase_lines, m.cost_components, m.lots, m.shipments
     query = select(p)
     if purchase_ids is not None:
         query = query.where(p.c.id.in_(purchase_ids))
     purchases = list(await conn.execute(query))
+    shipment_ids = {x.shipment_id for x in purchases if x.shipment_id is not None}
+    if shipment_ids and purchase_ids is not None:
+        have = {x.id for x in purchases}
+        purchases += [
+            x
+            for x in await conn.execute(select(p).where(p.c.shipment_id.in_(shipment_ids)))
+            if x.id not in have
+        ]
     ids = [x.id for x in purchases]
+    shipments = {x.id: x for x in await conn.execute(select(sh).where(sh.c.id.in_(shipment_ids)))}
+    ship_comps: dict[UUID, list[Row[Any]]] = {}
+    for row in await conn.execute(
+        select(cc).where(cc.c.shipment_id.in_(shipment_ids)).order_by(cc.c.created_at, cc.c.id)
+    ):
+        ship_comps.setdefault(row.shipment_id, []).append(row)
 
     lines_by: dict[UUID, list[Row[Any]]] = {}
     for row in await conn.execute(
@@ -247,13 +373,31 @@ async def rebuild_lots(
 
     rates = Rates(conn, today)
     await rates.load(
-        currencies_of([r for rows in (*lines_by.values(), *comps_by.values()) for r in rows])
+        currencies_of(
+            [
+                r
+                for rows in (*lines_by.values(), *comps_by.values(), *ship_comps.values())
+                for r in rows
+            ]
+        )
     )
+
+    evaluations: dict[UUID, Evaluation] = {}
+    for purchase in purchases:
+        if purchase.shipment_id is None:
+            evaluations[purchase.id] = evaluate(
+                purchase, lines_by.get(purchase.id, []), comps_by.get(purchase.id, []), rates
+            )
+    for shipment_id, shipment in shipments.items():
+        members = [x for x in purchases if x.shipment_id == shipment_id]
+        evaluations |= evaluate_shipment(
+            shipment, members, lines_by, comps_by, ship_comps.get(shipment_id, []), rates
+        ).purchases
 
     new_rows: list[dict[str, Any]] = []
     for purchase in purchases:
         lines = lines_by.get(purchase.id, [])
-        ev = evaluate(purchase, lines, comps_by.get(purchase.id, []), rates)
+        ev = evaluations[purchase.id]
         if ev.error is not None:
             result.errors[purchase.id] = ev.error
             _log.warning("calc_purchase_failed", purchase_id=str(purchase.id), reason=ev.error)
