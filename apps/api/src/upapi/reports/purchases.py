@@ -121,7 +121,11 @@ class PurchaseOut(BaseModel):
     supplier_name: str | None
     carrier_id: UUID | None
     carrier_name: str | None
-    dates: dict[Stage, date | None]
+    shipment_id: UUID | None  # kargo (ADR-046): xarid faqat bitta kargoga tegishli
+    shipment_name: str | None
+    dates: dict[
+        Stage, date | None
+    ]  # kargoga bog'langan xaridda Xitoy omborida / yo'lda / keldi — kargodan
     timeline: list[StageOut]
     line_count: int
     items: list[str]  # birinchi 3 ta tovar nomi
@@ -140,6 +144,9 @@ class PurchaseDetailOut(BaseModel):
     amounts: bool  # summalar ko'rinadimi (``view_purchase_amounts``)
     lines: list[LineOut]
     components: list[ComponentOut]  # summalar ruxsatisiz — bo'sh
+    shipment_components: list[
+        ComponentOut
+    ]  # kargo xarajatlari (faqat o'qish; summalar ruxsatisiz — bo'sh)
     by_kind: dict[str, Decimal]  # komponent turlari bo'yicha so'mda
     recalc_pending: bool  # sotuvlar tannarxi hali qayta hisoblanmoqda
 
@@ -160,7 +167,9 @@ async def org_lead(conn: AsyncConnection) -> dict[str, Decimal]:
     """F25 bosqich kunlari tashkilot xaridlari tarixidan (oxirgi 5 xarid medianasi)."""
     p = m.purchases
     history: dict[str, list[int]] = {}
+    shipments = {r.id: r for r in await conn.execute(select(m.shipments))}
     for row in await conn.execute(select(p).order_by(p.c.ordered_on.nulls_first(), p.c.created_at)):
+        row = calc_lots.effective_purchase(row, shipments.get(row.shipment_id))
         for stage, days in stage_days(stage_dates(row)).items():
             history.setdefault(stage, []).append(days)
     return dict(lead_time(history, (await orgsettings.load(conn)).lead_days).stages)
@@ -191,16 +200,45 @@ class Book:
         self.items: dict[UUID, Any] = {}
         self.suppliers: dict[UUID, str] = {}
         self.carriers: dict[UUID, str] = {}
+        self.shipments: dict[UUID, Row[Any]] = {}
+        self.shipment_components: dict[UUID, list[Row[Any]]] = {}
+        self.siblings: dict[
+            UUID, Row[Any]
+        ] = {}  # kargodagi hamma xaridlar (ro'yxatdan tashqaridagilar ham)
+        self._groups: dict[UUID, calc_lots.ShipmentEvaluation] = {}
         self.rates = calc_lots.Rates(conn, today)
         self.lead: dict[str, Decimal] = {}
 
-    async def load(self, purchase_id: UUID | None = None) -> Book:
+    async def load(self, purchase_id: UUID | None = None, shipment_id: UUID | None = None) -> Book:
+        """``purchase_id`` — bitta xarid; ``shipment_id`` — shu kargoning xaridlari (kargo xaridsiz bo'lsa ham o'qiladi)."""
         p, pl, cc = m.purchases, m.purchase_lines, m.cost_components
         query = select(p).order_by(p.c.created_at.desc(), p.c.id).limit(MAX_PURCHASES)
         if purchase_id is not None:
             query = query.where(p.c.id == purchase_id)
+        if shipment_id is not None:
+            query = query.where(p.c.shipment_id == shipment_id)
         self.purchases = list(await self.conn.execute(query))
-        ids = [x.id for x in self.purchases]
+        shipment_ids = {x.shipment_id for x in self.purchases if x.shipment_id is not None}
+        if shipment_id is not None:
+            shipment_ids.add(shipment_id)
+        self.siblings = {x.id: x for x in self.purchases}
+        if (
+            shipment_ids
+        ):  # kargo xarajati ular orasida bo'linadi: ro'yxatda bo'lmasa ham hammasi kerak
+            for x in await self.conn.execute(select(p).where(p.c.shipment_id.in_(shipment_ids))):
+                self.siblings.setdefault(x.id, x)
+            sh = m.shipments
+            self.shipments = {
+                r.id: r
+                for r in await self.conn.execute(select(sh).where(sh.c.id.in_(shipment_ids)))
+            }
+            for row in await self.conn.execute(
+                select(cc)
+                .where(cc.c.shipment_id.in_(shipment_ids))
+                .order_by(cc.c.created_at, cc.c.id)
+            ):
+                self.shipment_components.setdefault(row.shipment_id, []).append(row)
+        ids = list(self.siblings)
         for row in await self.conn.execute(
             select(pl).where(pl.c.purchase_id.in_(ids)).order_by(pl.c.created_at, pl.c.id)
         ):
@@ -223,13 +261,43 @@ class Book:
         self.carriers = {r.id: r.name for r in await self.conn.execute(select(c.c.id, c.c.name))}
         await self.rates.load(
             calc_lots.currencies_of(
-                [r for rows in (*self.lines.values(), *self.components.values()) for r in rows]
+                [
+                    r
+                    for rows in (
+                        *self.lines.values(),
+                        *self.components.values(),
+                        *self.shipment_components.values(),
+                    )
+                    for r in rows
+                ]
             )
         )
         self.lead = await org_lead(self.conn)
         return self
 
+    def effective(self, purchase: Row[Any]) -> Any:
+        """Kargoga bog'langan xarid: sanalar kargodan (``stage_dates``, Partiya yo'li uchun)."""
+        shipment = self.shipments.get(purchase.shipment_id) if purchase.shipment_id else None
+        return calc_lots.effective_purchase(purchase, shipment)
+
+    def group(self, shipment_id: UUID) -> calc_lots.ShipmentEvaluation:
+        """Kargo hisobi (bir marta): hamma xaridlari birga, kargo xarajatlari ular orasida bo'lingan."""
+        if shipment_id not in self._groups:
+            members = [x for x in self.siblings.values() if x.shipment_id == shipment_id]
+            self._groups[shipment_id] = calc_lots.evaluate_shipment(
+                self.shipments[shipment_id],
+                members,
+                self.lines,
+                self.components,
+                self.shipment_components.get(shipment_id, []),
+                self.rates,
+            )
+        return self._groups[shipment_id]
+
     def evaluate(self, purchase: Row[Any]) -> calc_lots.Evaluation:
+        shipment_id = purchase.shipment_id
+        if shipment_id is not None and shipment_id in self.shipments:
+            return self.group(shipment_id).purchases[purchase.id]
         return calc_lots.evaluate(
             purchase,
             self.lines.get(purchase.id, []),
@@ -249,21 +317,30 @@ class Book:
         flags = sorted({f.value for lot in ev.lots for f in lot.flags})
         total = unit = None
         if amounts and ev.model is not None and ev.error is None:
-            total = purchase_total(ev.model).amount
+            # Kargoli xarid: o'z komponentlari + kargo ulushi (lotlar yig'indisi); kargosiz — komponentlar yig'indisi.
+            total = (
+                sum((lot.total.amount for lot in ev.lots), Decimal(0))
+                if purchase.shipment_id is not None
+                else purchase_total(ev.model).amount
+            )
             avg = average_unit_cost(ev.lots)
             unit = None if avg is None else avg.amount
+        eff = self.effective(purchase)
+        shipment = self.shipments.get(purchase.shipment_id) if purchase.shipment_id else None
         return PurchaseOut(
             id=purchase.id,
             title=purchase.title,
-            stage=current_stage(stage_dates(purchase)),
+            stage=current_stage(stage_dates(eff)),
             supplier_id=purchase.supplier_id,
             supplier_name=self.suppliers.get(purchase.supplier_id)
             if purchase.supplier_id
             else None,
             carrier_id=purchase.carrier_id,
             carrier_name=self.carriers.get(purchase.carrier_id) if purchase.carrier_id else None,
-            dates=stage_dates(purchase),
-            timeline=_timeline(purchase, self.today, self.lead),
+            shipment_id=purchase.shipment_id,
+            shipment_name=None if shipment is None else (shipment.title or ""),
+            dates=stage_dates(eff),
+            timeline=_timeline(eff, self.today, self.lead),
             line_count=len(lines),
             items=names[:3],
             units_ordered=sum(x.ordered_qty for x in lines),
@@ -335,6 +412,13 @@ class Book:
             error=error,
         )
 
+    def shipment_component_outs(self, purchase: Row[Any]) -> list[ComponentOut]:
+        shipment = self.shipments.get(purchase.shipment_id) if purchase.shipment_id else None
+        if shipment is None:
+            return []
+        fallback = calc_lots.shipment_fallback(shipment)
+        return [self._component(fallback, c) for c in self.shipment_components.get(shipment.id, [])]
+
     def detail(self, purchase: Row[Any], amounts: bool, pending: bool) -> PurchaseDetailOut:
         ev = self.evaluate(purchase)
         lots = {lot.line_id: lot for lot in ev.lots}
@@ -352,6 +436,7 @@ class Book:
             components=[self._component(purchase, c) for c in self.components.get(purchase.id, [])]
             if amounts
             else [],
+            shipment_components=self.shipment_component_outs(purchase) if amounts else [],
             by_kind=by_kind,
             recalc_pending=pending,
         )

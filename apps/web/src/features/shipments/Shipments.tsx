@@ -1,0 +1,73 @@
+// Kargolar ro'yxati (M9, ADR-046): bitta kargo — ko'p xarid. Har qatorda sanalar, xaridlar soni, dona va kargo xarajatlari
+// jami (summalar ruxsati bilan). "Yangi kargo" — egasi, menejer, omborchi (`manage_purchases`).
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+
+import { errorText } from "../../app/errors";
+import { currentOrg, meQuery, shipmentsQuery } from "../../app/query";
+import { Banner, Button, DataTable, EmptyState, Skeleton, type Column } from "../../components/ui";
+import type { Shipment } from "../../lib/api/types";
+import { useFormat } from "../../lib/i18n";
+import { MANAGE_ROLES } from "../purchases/Purchases";
+import { ShipmentForm } from "./ShipmentForm";
+
+export function Shipments() {
+  const { t } = useTranslation();
+  const f = useFormat();
+  const { data: me } = useSuspenseQuery(meQuery);
+  const org = currentOrg(me)!;
+  const navigate = useNavigate();
+  const query = useQuery(shipmentsQuery(org.id));
+  const [adding, setAdding] = useState(false);
+  const canManage = MANAGE_ROLES.includes(org.role);
+  const amounts = query.data?.amounts ?? true;
+  const date = (d: string | null) => (d ? f.date(d) : "—");
+  const columns: Column<Shipment>[] = [
+    {
+      key: "shipment",
+      header: t("shipments.col.shipment"),
+      render: (r) => (
+        <span className="purchase-cell">
+          <Link to="/shipments/$shipmentId" params={{ shipmentId: r.id }} className="purchase-cell__title">
+            {r.title || t("shipments.untitled")}
+          </Link>
+          {r.note && <span className="caption">{r.note}</span>}
+        </span>
+      ),
+    },
+    { key: "carrier", header: t("purchases.fields.carrier"), render: (r) => r.carrier_name ?? "—" },
+    { key: "shipped", header: t("purchases.stage.shipped"), render: (r) => date(r.shipped_on) },
+    { key: "arrived", header: t("purchases.stage.arrived"), render: (r) => date(r.arrived_on) },
+    { key: "purchases", header: t("shipments.col.purchases"), numeric: true, render: (r) => f.number(r.purchase_count) },
+    { key: "units", header: t("purchases.col.units"), numeric: true, render: (r) => f.number(r.units) },
+    ...(amounts ? [{ key: "total", header: t("shipments.col.total"), numeric: true, render: (r: Shipment) => (r.total === null ? "—" : f.money(r.total, { unit: false })) }] : []),
+  ];
+  return (
+    <section className="purchases">
+      <Link to="/purchases" className="purchase__back">
+        ← {t("shipments.backToPurchases")}
+      </Link>
+      <header className="purchases__head">
+        <div className="page-title">
+          <h1 className="h2">{t("shipments.title")}</h1>
+        </div>
+        <span className="purchases__actions">{canManage && <Button onClick={() => setAdding(true)}>{t("shipments.add")}</Button>}</span>
+      </header>
+      <p className="caption">{t("shipments.lead")}</p>
+      <div className="purchases__panel">
+        {query.isError ? (
+          <Banner tone="negative" title={errorText(query.error, t)} action={<Button onClick={() => void query.refetch()}>{t("common.retry")}</Button>} />
+        ) : !query.data ? (
+          <Skeleton label={t("common.loading")} lines={4} />
+        ) : query.data.items.length === 0 ? (
+          <EmptyState title={t("shipments.empty")} text={t("shipments.emptyText")} action={canManage ? <Button onClick={() => setAdding(true)}>{t("shipments.add")}</Button> : undefined} />
+        ) : (
+          <DataTable caption={t("shipments.title")} columns={columns} rows={query.data.items} rowKey={(r) => r.id} />
+        )}
+      </div>
+      {adding && <ShipmentForm orgId={org.id} shipment={null} onClose={() => setAdding(false)} onSaved={(saved) => void navigate({ to: "/shipments/$shipmentId", params: { shipmentId: saved.shipment.id } })} />}
+    </section>
+  );
+}

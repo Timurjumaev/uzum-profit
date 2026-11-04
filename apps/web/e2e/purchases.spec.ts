@@ -2,6 +2,7 @@
 import { expect, test } from "@playwright/test";
 
 import { PURCHASE_1 } from "../src/test/purchases";
+import { SHIPMENT_1 } from "../src/test/shipments";
 import { mockApi } from "./support/api";
 import { open } from "./support/page";
 
@@ -43,3 +44,25 @@ test("tovar qo'shish oynasi: bir nechta SKU tanlash, 360 px da gorizontal skroll
   const overflow = await dialog.evaluate((el) => el.scrollWidth - el.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 });
+
+test("kargolar: ro'yxatdan kargo sahifasiga, xaridlar va kargo ulushi", async ({ page }) => {
+  await mockApi(page);
+  await open(page, "/purchases");
+  await page.getByRole("link", { name: "Kargolar" }).click();
+  await expect(page).toHaveURL(/\/shipments$/);
+  await page.getByRole("link", { name: "Presslangan oʻram" }).click();
+  await expect(page).toHaveURL(new RegExp(`/shipments/${SHIPMENT_1}$`));
+  await expect(page.getByRole("table", { name: "Kargodagi xaridlar" })).toBeVisible();
+  await expect(page.getByRole("table", { name: "Tovarlar va kargo ulushi" })).toBeVisible();
+});
+
+for (const path of ["/shipments", `/shipments/${SHIPMENT_1}`]) {
+  test(`gorizontal skroll yo'q (360 px) ${path}`, async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 800 });
+    await mockApi(page);
+    await open(page, path);
+    await page.getByRole("heading", { level: 1 }).waitFor();
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
+  });
+}

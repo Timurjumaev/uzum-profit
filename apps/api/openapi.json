@@ -5389,6 +5389,536 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/shipments": {
+      "get": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "List Shipments",
+        "description": "Kargolar (yangisi birinchi): xaridlar soni, dona va (summalar ruxsati bilan) kargo xarajatlari jami.",
+        "operationId": "list_shipments_api_v1_orgs__org_id__shipments_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShipmentsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "Create Shipment",
+        "operationId": "create_shipment_api_v1_orgs__org_id__shipments_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShipmentIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShipmentDetailOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/shipments/{shipment_id}": {
+      "get": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "Get Shipment",
+        "operationId": "get_shipment_api_v1_orgs__org_id__shipments__shipment_id__get",
+        "parameters": [
+          {
+            "name": "shipment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Shipment Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShipmentDetailOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "Update Shipment",
+        "operationId": "update_shipment_api_v1_orgs__org_id__shipments__shipment_id__patch",
+        "parameters": [
+          {
+            "name": "shipment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Shipment Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShipmentPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShipmentDetailOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "Delete Shipment",
+        "operationId": "delete_shipment_api_v1_orgs__org_id__shipments__shipment_id__delete",
+        "parameters": [
+          {
+            "name": "shipment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Shipment Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/shipments/{shipment_id}/components": {
+      "post": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "Create Component",
+        "operationId": "create_component_api_v1_orgs__org_id__shipments__shipment_id__components_post",
+        "parameters": [
+          {
+            "name": "shipment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Shipment Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComponentIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShipmentDetailOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/shipments/{shipment_id}/components/{component_id}": {
+      "patch": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "Update Component",
+        "operationId": "update_component_api_v1_orgs__org_id__shipments__shipment_id__components__component_id__patch",
+        "parameters": [
+          {
+            "name": "shipment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Shipment Id"
+            }
+          },
+          {
+            "name": "component_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Component Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComponentPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShipmentDetailOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "Delete Component",
+        "operationId": "delete_component_api_v1_orgs__org_id__shipments__shipment_id__components__component_id__delete",
+        "parameters": [
+          {
+            "name": "shipment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Shipment Id"
+            }
+          },
+          {
+            "name": "component_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Component Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShipmentDetailOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/settings": {
       "get": {
         "tags": [
@@ -11383,6 +11913,13 @@
             "type": "array",
             "title": "Components"
           },
+          "shipment_components": {
+            "items": {
+              "$ref": "#/components/schemas/ComponentOut"
+            },
+            "type": "array",
+            "title": "Shipment Components"
+          },
           "by_kind": {
             "additionalProperties": {
               "type": "string"
@@ -11401,6 +11938,7 @@
           "amounts",
           "lines",
           "components",
+          "shipment_components",
           "by_kind",
           "recalc_pending"
         ],
@@ -11443,6 +11981,18 @@
               }
             ],
             "title": "Carrier Id"
+          },
+          "shipment_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipment Id"
           },
           "note": {
             "anyOf": [
@@ -11544,6 +12094,29 @@
               }
             ],
             "title": "Carrier Name"
+          },
+          "shipment_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipment Id"
+          },
+          "shipment_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipment Name"
           },
           "dates": {
             "additionalProperties": {
@@ -11662,6 +12235,8 @@
           "supplier_name",
           "carrier_id",
           "carrier_name",
+          "shipment_id",
+          "shipment_name",
           "dates",
           "timeline",
           "line_count",
@@ -11715,6 +12290,18 @@
               }
             ],
             "title": "Carrier Id"
+          },
+          "shipment_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipment Id"
           },
           "note": {
             "anyOf": [
@@ -12337,6 +12924,585 @@
           "alerts"
         ],
         "title": "SettingsOut"
+      },
+      "ShipmentDetailOut": {
+        "properties": {
+          "shipment": {
+            "$ref": "#/components/schemas/ShipmentOut"
+          },
+          "amounts": {
+            "type": "boolean",
+            "title": "Amounts"
+          },
+          "purchases": {
+            "items": {
+              "$ref": "#/components/schemas/ShipmentPurchaseOut"
+            },
+            "type": "array",
+            "title": "Purchases"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/ShipmentLineOut"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/ComponentOut"
+            },
+            "type": "array",
+            "title": "Components"
+          },
+          "by_kind": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "By Kind"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "recalc_pending": {
+            "type": "boolean",
+            "title": "Recalc Pending"
+          }
+        },
+        "type": "object",
+        "required": [
+          "shipment",
+          "amounts",
+          "purchases",
+          "lines",
+          "components",
+          "by_kind",
+          "error",
+          "recalc_pending"
+        ],
+        "title": "ShipmentDetailOut"
+      },
+      "ShipmentIn": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "carrier_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Carrier Id"
+          },
+          "cn_warehouse_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cn Warehouse On"
+          },
+          "shipped_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipped On"
+          },
+          "arrived_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arrived On"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "title": "ShipmentIn"
+      },
+      "ShipmentLineOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "purchase_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Purchase Id"
+          },
+          "purchase_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Title"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "qty": {
+            "type": "integer",
+            "title": "Qty"
+          },
+          "unit_weight": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Weight"
+          },
+          "unit_volume": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Volume"
+          },
+          "share": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share"
+          },
+          "share_per_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Per Unit"
+          },
+          "flags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Flags"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "purchase_id",
+          "purchase_title",
+          "name",
+          "qty",
+          "unit_weight",
+          "unit_volume",
+          "share",
+          "share_per_unit",
+          "flags"
+        ],
+        "title": "ShipmentLineOut"
+      },
+      "ShipmentOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "carrier_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Carrier Id"
+          },
+          "carrier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Carrier Name"
+          },
+          "cn_warehouse_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cn Warehouse On"
+          },
+          "shipped_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipped On"
+          },
+          "arrived_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arrived On"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "purchase_count": {
+            "type": "integer",
+            "title": "Purchase Count"
+          },
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "carrier_id",
+          "carrier_name",
+          "cn_warehouse_on",
+          "shipped_on",
+          "arrived_on",
+          "note",
+          "purchase_count",
+          "units",
+          "total",
+          "created_at"
+        ],
+        "title": "ShipmentOut"
+      },
+      "ShipmentPatch": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "carrier_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Carrier Id"
+          },
+          "cn_warehouse_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cn Warehouse On"
+          },
+          "shipped_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipped On"
+          },
+          "arrived_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arrived On"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "title": "ShipmentPatch",
+        "description": "Faqat berilgan maydonlar o'zgaradi; ``null`` — qiymatni (sanani) o'chirish."
+      },
+      "ShipmentPurchaseOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/Stage"
+          },
+          "line_count": {
+            "type": "integer",
+            "title": "Line Count"
+          },
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          },
+          "share": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          },
+          "unit_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Cost"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "supplier_name",
+          "stage",
+          "line_count",
+          "units",
+          "share",
+          "total",
+          "unit_cost",
+          "error"
+        ],
+        "title": "ShipmentPurchaseOut"
+      },
+      "ShipmentsOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ShipmentOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "amounts": {
+            "type": "boolean",
+            "title": "Amounts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "amounts"
+        ],
+        "title": "ShipmentsOut"
       },
       "ShopOut": {
         "properties": {

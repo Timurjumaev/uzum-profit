@@ -30,6 +30,7 @@ from upapi.routes import (
     pnl,
     purchases,
     sales,
+    shipments,
     skus,
     stock_moves,
     sync,
@@ -119,6 +120,7 @@ def create_app(
     ):  # B2.9 o'qish API'lari
         app.include_router(reports.router, prefix=API_PREFIX)
     app.include_router(purchases.router, prefix=API_PREFIX)  # xaridlar (M9)
+    app.include_router(shipments.router, prefix=API_PREFIX)  # kargolar (M9, ADR-046)
     app.include_router(settings_routes.router, prefix=API_PREFIX)  # sozlamalar (M16)
     app.include_router(stock_moves.router, prefix=API_PREFIX)  # hisobdan chiqarish, tuzatish (M10)
     app.include_router(opening.router, prefix=API_PREFIX)  # boshlang'ich holat (F41, ADR-033)

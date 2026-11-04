@@ -114,6 +114,19 @@ const purchase = createRoute({
   component: lazyRouteComponent(() => import("../routes/purchases"), "PurchasePage"),
 });
 
+/** Kargolar (M9, B4.31, ADR-046): bitta kargo — ko'p xarid; kargo xarajatlari ularning tovarlari orasida bo'linadi. */
+const shipments = createRoute({
+  getParentRoute: () => app,
+  path: "/shipments",
+  component: lazyRouteComponent(() => import("../routes/shipments"), "Shipments"),
+});
+
+const shipment = createRoute({
+  getParentRoute: () => app,
+  path: "/shipments/$shipmentId",
+  component: lazyRouteComponent(() => import("../routes/shipments"), "ShipmentPage"),
+});
+
 /** Ombor (M10, B4.7): holat guruhi va qidiruv URL'da. */
 const inventory = createRoute({
   getParentRoute: () => app,
@@ -182,7 +195,7 @@ const uiKit = createRoute({
 
 export const routeTree = root.addChildren([
   auth.addChildren([
-    app.addChildren([home, status, pnl, products, product, orders, expenses, purchases, purchase, inventory, cash, reports, settings, opening]),
+    app.addChildren([home, status, pnl, products, product, orders, expenses, purchases, purchase, shipments, shipment, inventory, cash, reports, settings, opening]),
     onboarding,
     invite,
   ]),

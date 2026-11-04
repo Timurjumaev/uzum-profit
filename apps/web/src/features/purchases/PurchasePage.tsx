@@ -9,14 +9,15 @@ import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
-import { copyPurchase, currentOrg, deleteComponent, deleteLine, deletePurchase, meQuery, purchaseQuery, updatePurchase } from "../../app/query";
+import { copyPurchase, createComponent, currentOrg, deleteComponent, deleteLine, deletePurchase, meQuery, purchaseQuery, updateComponent, updatePurchase } from "../../app/query";
 import { Badge, Banner, Button, DataTable, Dialog, EmptyState, FormulaPopover, Skeleton, TextInput, Timeline, useToast, type Column } from "../../components/ui";
 import type { CostComponent, PurchaseDetail, PurchaseLine, PurchaseStage } from "../../lib/api/types";
 import { todayTashkent } from "../../lib/dates";
 import { useFormat } from "../../lib/i18n";
-import { ComponentForm, lineLabel } from "./ComponentForm";
+import { ComponentForm, componentLines, lineLabel } from "./ComponentForm";
+import { useComponentColumns } from "./componentColumns";
 import { LineForm } from "./LineForm";
-import { changedDates, DATED_STAGES, datesInOrder, isEstimated, nextStage, timelineStages, visibleFlags } from "./model";
+import { changedDates, DATED_STAGES, datesInOrder, isEstimated, nextStage, SHIPMENT_STAGES, timelineStages, visibleFlags } from "./model";
 import { PurchaseForm } from "./PurchaseForm";
 import { MANAGE_ROLES } from "./Purchases";
 
@@ -165,48 +166,16 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
       : []),
   ];
 
-  const rateText = (c: CostComponent) => {
-    if (c.error) return <Badge tone="negative">{c.error}</Badge>;
-    if (c.applied_rate === null) return "—";
-    return t("purchases.components.rateOn", {
-      rate: f.number(c.applied_rate, { digits: 2, trim: true }),
-      mode: t(`purchases.components.rateLabel.${c.rate_mode === "cbu" && c.rate_source === "market" ? "market" : c.rate_mode}`),
-      date: c.rate_day ? f.date(c.rate_day) : "",
-    });
-  };
-  const componentColumns: Column<CostComponent>[] = [
-    { key: "kind", header: t("purchases.components.col.kind"), render: (c) => t(`purchases.components.kind.${c.kind}`) },
-    { key: "amount", header: t("purchases.components.col.amount"), numeric: true, render: (c) => (c.currency === "UZS" ? f.money(c.amount, { unit: false }) : f.currency(c.amount, c.currency)) },
-    { key: "rate", header: t("purchases.components.col.rate"), render: rateText },
-    { key: "uzs", header: t("purchases.components.col.uzs"), numeric: true, render: (c) => (c.amount_uzs === null ? "—" : f.money(c.amount_uzs, { unit: false })) },
-    { key: "allocation", header: t("purchases.components.col.allocation"), render: (c) => t(`purchases.components.allocation.${c.allocation}`) },
-    {
-      key: "lines",
-      header: t("purchases.components.col.lines"),
-      render: (c) => (c.lines === null ? t("purchases.components.allLines") : t("purchases.components.someLines", { count: c.lines.length })),
-    },
-    ...(canManage
-      ? [
-          {
-            key: "actions",
-            header: t("expenses.own.actions"),
-            render: (c: CostComponent) => {
-              const name = t(`purchases.components.kind.${c.kind}`);
-              return (
-                <span className="expenses-actions">
-                  <Button variant="ghost" onClick={() => setEditing({ kind: "component", component: c })} aria-label={`${t("purchases.components.edit")}: ${name}`}>
-                    {t("purchases.components.edit")}
-                  </Button>
-                  <Button variant="ghost" loading={removeComponent.isPending && removeComponent.variables === c.id} onClick={() => removeComponent.mutate(c.id)} aria-label={`${t("purchases.components.delete")}: ${name}`}>
-                    {t("purchases.components.delete")}
-                  </Button>
-                </span>
-              );
-            },
-          },
-        ]
-      : []),
-  ];
+  const shipmentColumns = useComponentColumns();
+  const componentColumns = useComponentColumns(
+    canManage
+      ? {
+          onEdit: (c) => setEditing({ kind: "component", component: c }),
+          onDelete: (c) => removeComponent.mutate(c.id),
+          deleting: removeComponent.isPending ? (removeComponent.variables ?? null) : null,
+        }
+      : undefined,
+  );
 
   return (
     <section className="purchase">
@@ -218,6 +187,14 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
             <Badge tone={p.stage === "closed" ? "positive" : p.stage === "draft" ? "neutral" : "info"}>{t(`purchases.stage.${p.stage}`)}</Badge>
             {p.supplier_name && ` · ${p.supplier_name}`}
             {p.carrier_name && ` · ${p.carrier_name}`}
+            {p.shipment_id && (
+              <>
+                {" · "}
+                <Link to="/shipments/$shipmentId" params={{ shipmentId: p.shipment_id }}>
+                  {t("shipments.inShipment", { name: p.shipment_name || t("shipments.untitled") })}
+                </Link>
+              </>
+            )}
           </p>
           {p.note && <p className="caption">{p.note}</p>}
         </div>
@@ -259,7 +236,7 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
           </h2>
           {canManage && (
             <div className="purchase__actions">
-              {next && (
+              {next && !(p.shipment_id && SHIPMENT_STAGES.includes(next)) && (
                 <Button variant="secondary" loading={mark.isPending} onClick={() => mark.mutate(next)}>
                   {t("purchases.markNext", { stage: t(`purchases.stage.${next}`) })}
                 </Button>
@@ -274,6 +251,14 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
           <Timeline label={t("purchases.path")} stages={timelineStages(p.timeline, (s) => t(`purchases.stage.${s}`))} />
         </div>
         <p className="caption">{t("purchases.pathNote")}</p>
+        {p.shipment_id && (
+          <p className="caption">
+            {t("shipments.datesFromShipment")}{" "}
+            <Link to="/shipments/$shipmentId" params={{ shipmentId: p.shipment_id }}>
+              {p.shipment_name || t("shipments.untitled")}
+            </Link>
+          </p>
+        )}
       </section>
 
       <div className="purchase__layout">
@@ -310,6 +295,30 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
               )}
             </section>
           )}
+          {amounts && p.shipment_id && (
+            <section aria-labelledby="purchase-shipment-title" className="purchase__block">
+              <div className="purchase__section-head">
+                <h2 id="purchase-shipment-title" className="h3">
+                  {t("shipments.fromShipment")}
+                </h2>
+                <Link to="/shipments/$shipmentId" params={{ shipmentId: p.shipment_id }} className="caption">
+                  {p.shipment_name || t("shipments.untitled")} →
+                </Link>
+              </div>
+              {detail.shipment_components.length === 0 ? (
+                <EmptyState title={t("shipments.noCosts")} text={t("shipments.noCostsText")} />
+              ) : (
+                <DataTable
+                  caption={t("shipments.fromShipment")}
+                  density="compact"
+                  columns={shipmentColumns}
+                  rows={detail.shipment_components}
+                  rowKey={(c) => c.id}
+                />
+              )}
+              <p className="caption">{t("shipments.shareNote")}</p>
+            </section>
+          )}
         </div>
         <CostPanel detail={detail} />
       </div>
@@ -329,10 +338,9 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
       )}
       {editing?.kind === "component" && (
         <ComponentForm
-          orgId={orgId}
-          purchaseId={p.id}
           component={editing.component}
-          lines={detail.lines}
+          lines={componentLines(detail.lines)}
+          submit={(body, id) => (id ? updateComponent(orgId, p.id, id, body) : createComponent(orgId, p.id, body))}
           onClose={() => setEditing(null)}
           onSaved={(d) => void applied(d, t("purchases.components.saved"))}
         />
@@ -417,7 +425,15 @@ function DatesForm({ orgId, detail, onClose, onSaved }: { orgId: string; detail:
   const before = detail.purchase.dates as Partial<Record<PurchaseStage, string | null>>;
   const [draft, setDraft] = useState<Partial<Record<PurchaseStage, string>>>(() => Object.fromEntries(DATED_STAGES.map((s) => [s, before[s] ?? ""])));
   const ordered = datesInOrder(draft);
-  const save = useMutation({ mutationFn: () => updatePurchase(orgId, detail.purchase.id, { dates: changedDates(before, draft) }), onSuccess: onSaved });
+  const fromShipment = (s: PurchaseStage) => detail.purchase.shipment_id !== null && SHIPMENT_STAGES.includes(s);
+  const save = useMutation({
+    mutationFn: () => {
+      const dates = changedDates(before, draft);
+      for (const s of SHIPMENT_STAGES) if (fromShipment(s)) delete dates[s]; // kargo sanalari kargoda o'zgaradi
+      return updatePurchase(orgId, detail.purchase.id, { dates });
+    },
+    onSuccess: onSaved,
+  });
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (ordered) save.mutate();
@@ -440,11 +456,12 @@ function DatesForm({ orgId, detail, onClose, onSaved }: { orgId: string; detail:
     >
       <form id="dates-form" className="purchase-form" onSubmit={submit}>
         <p className="caption">{t("purchases.datesHint")}</p>
+        {detail.purchase.shipment_id !== null && <p className="caption">{t("shipments.datesFromShipment")}</p>}
         {save.isError && <Banner tone="negative" title={errorText(save.error, t)} />}
         {!ordered && <Banner tone="warning" title={t("purchases.datesOrder")} />}
         <div className="purchase-form__dates">
           {DATED_STAGES.map((s) => (
-            <TextInput key={s} label={t(`purchases.stage.${s}`)} type="date" optional value={draft[s] ?? ""} onValueChange={(v) => setDraft((d) => ({ ...d, [s]: v }))} />
+            <TextInput key={s} label={t(`purchases.stage.${s}`)} type="date" optional disabled={fromShipment(s)} value={draft[s] ?? ""} onValueChange={(v) => setDraft((d) => ({ ...d, [s]: v }))} />
           ))}
         </div>
       </form>

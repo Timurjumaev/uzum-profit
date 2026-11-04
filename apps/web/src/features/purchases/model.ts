@@ -15,6 +15,9 @@ export const GROUP_STAGES: Record<PurchaseGroup, PurchaseStage[]> = {
   closed: ["closed"],
 };
 
+/** Kargoga bog'langan xaridda shu bosqichlar kargodan olinadi (ADR-046). */
+export const SHIPMENT_STAGES: PurchaseStage[] = ["cn_warehouse", "shipped", "arrived"];
+
 export const COMPONENT_KINDS: ComponentKind[] = ["goods", "cn_delivery", "agent_fee", "cargo", "customs", "packaging", "labeling", "uzum_delivery", "other"];
 export const ALLOCATIONS: AllocationBase[] = ["units", "weight", "volume", "value", "manual"];
 export const CURRENCIES = ["CNY", "USD", "UZS", "EUR", "RUB"] as const;

@@ -203,6 +203,10 @@ def row_values(
             table.name, ()
         ):
             values[col.name] = _value(table, col, allowed)
+    if table.name == "cost_components":
+        values.pop(
+            "shipment_id", None
+        )  # xarajat yoki xaridniki, yoki kargoniki: aynan bittasi (ADR-046)
     return values
 
 

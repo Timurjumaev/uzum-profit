@@ -20,6 +20,7 @@ import {
   purchaseRoute,
   PURCHASES_ROUTE,
   purchaseSubRoute,
+  SHIPMENTS_ROUTE,
   SKU_PICKER_ROUTE,
   SUPPLIER_CREATE_ROUTE,
   SUPPLIERS_ROUTE,
@@ -56,6 +57,7 @@ async function renderAt(path: string, routes: Routes = {}, role = "owner") {
     [SUPPLIERS_ROUTE]: () => json(200, [{ id: "s1", name: "Yiwu Toys", platform: "1688" }]),
     [CARRIERS_ROUTE]: () => json(200, []),
     [SKU_PICKER_ROUTE]: () => json(200, { rows: PICKER_ROWS, truncated: false }),
+    [SHIPMENTS_ROUTE]: () => json(200, { items: [], amounts: true }),
     [ME_ROUTE]: () => json(200, { ...ME, orgs: [{ ...ME.orgs[0]!, role }] }),
     ...routes,
   });

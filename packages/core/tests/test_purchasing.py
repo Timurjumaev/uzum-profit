@@ -21,6 +21,7 @@ from upcore.purchasing import (
     Stage,
     average_unit_cost,
     compute_lots,
+    compute_shipment_lots,
     current_stage,
     default_base,
     purchase_total,
@@ -349,3 +350,118 @@ def test_timeline_without_history_has_no_expected_and_closed_is_done() -> None:
     assert all(m.state == "done" for m in closed)
     draft = timeline({}, oct_(5), {"prep": D(5)})
     assert all(m.state == "upcoming" for m in draft)
+
+
+# --- Kargo: bitta kargo — ko'p xarid (ADR-046) ---------------------------------------------------------------------
+
+
+def _weighed(pid: str, *lines: tuple[str, int, str], **extra: object) -> Purchase:
+    """Xarid: (qator id, dona, dona vazni kg) — hammasi qabul qilingan."""
+    return Purchase(
+        pid,
+        tuple(PurchaseLine(lid, q, q, unit_weight=D(w)) for lid, q, w in lines),
+        **extra,  # type: ignore[arg-type]
+    )
+
+
+def test_shipment_cargo_is_split_across_all_purchases_by_weight() -> None:
+    """10 xil bazadagi tovar bitta presslangan kargoda (Temur): bitta kargo narxi hamma xaridlarning tovarlariga vazn
+    bo'yicha bo'linadi; yig'indi tiyinigacha kargo summasiga teng; xarid ichidagi komponentlar o'z qatorlarida."""
+    a = _weighed(
+        "A",
+        ("a1", 100, "0.5"),
+        ("a2", 40, "1"),
+        components=(CostComponent(K.GOODS, Money.of(1000, "CNY"), CNY),),
+    )
+    b = _weighed("B", ("b1", 200, "0.2"))
+    cargo = CostComponent(K.CARGO, uzs(2_430_000), base=B.WEIGHT)
+    lots = compute_shipment_lots([a, b], [cargo])
+    # Vazn: a1 50, a2 40, b1 40 → jami 130 kg.
+    by = {lot.line_id: lot for rows in lots.values() for lot in rows}
+    assert by["a1"].breakdown[K.CARGO] == uzs("934615.38")
+    assert by["a2"].breakdown[K.CARGO] + by["b1"].breakdown[K.CARGO] + by["a1"].breakdown[
+        K.CARGO
+    ] == uzs(2_430_000)
+    assert total([lot.breakdown[K.CARGO] for lot in by.values()], Currency.UZS) == uzs(2_430_000)
+    # Xarid ichidagi tovar komponenti kargo bilan qo'shiladi, boshqa xaridga tegmaydi.
+    assert by["a1"].breakdown[K.GOODS] + by["a2"].breakdown[K.GOODS] == uzs(1_790_000)
+    assert K.GOODS not in by["b1"].breakdown
+    assert by["b1"].unit_cost == Money(by["b1"].total.amount / 200, Currency.UZS)
+    assert all(Flag.CARGO_MISSING not in lot.flags for lot in by.values())
+
+
+def test_shipment_without_components_equals_plain_purchases() -> None:
+    a = _weighed("A", ("a1", 10, "1"), components=(CostComponent(K.CARGO, uzs(1000)),))
+    b = _weighed("B", ("b1", 5, "1"))
+    lots = compute_shipment_lots([a, b], [])
+    assert lots["A"] == compute_lots(a) and lots["B"] == compute_lots(b)
+    assert Flag.CARGO_MISSING in lots["B"][0].flags  # kargo kiritilmagan — avvalgidek
+
+
+def test_shipment_cargo_missing_flag_only_when_neither_has_cargo() -> None:
+    a, b = _weighed("A", ("a1", 10, "1")), _weighed("B", ("b1", 5, "1"))
+    customs = CostComponent(K.CUSTOMS, uzs(900))
+    lots = compute_shipment_lots([a, b], [customs])
+    assert all(Flag.CARGO_MISSING in lot.flags for rows in lots.values() for lot in rows)
+    lots = compute_shipment_lots([a, b], [customs, CostComponent(K.CARGO, uzs(300))])
+    assert all(Flag.CARGO_MISSING not in lot.flags for rows in lots.values() for lot in rows)
+
+
+def test_shipment_value_base_uses_each_purchases_own_rate() -> None:
+    cny = Purchase(
+        "A",
+        (PurchaseLine("a1", 10, 10, unit_price=Money.of(10, "CNY")),),
+        goods_rate=CNY,  # 1790
+    )
+    usd = Purchase(
+        "B",
+        (PurchaseLine("b1", 10, 10, unit_price=Money.of(1, "USD")),),
+        goods_rate=USD,  # 12650
+    )
+    lots = compute_shipment_lots([cny, usd], [CostComponent(K.CARGO, uzs(10_000), base=B.VALUE)])
+    # Qiymat: a1 = 179 000, b1 = 126 500 so'm.
+    shares = {lot.line_id: lot.breakdown[K.CARGO] for rows in lots.values() for lot in rows}
+    assert shares["a1"] + shares["b1"] == uzs(10_000)
+    assert shares["a1"] > shares["b1"]
+
+
+def test_shipment_weight_missing_in_one_line_falls_back_to_units_and_flags() -> None:
+    a = _weighed("A", ("a1", 10, "1"))
+    b = Purchase("B", (PurchaseLine("b1", 30, 30),))  # vazni yo'q
+    lots = compute_shipment_lots([a, b], [CostComponent(K.CARGO, uzs(4000), base=B.WEIGHT)])
+    shares = {lot.line_id: lot.breakdown[K.CARGO] for rows in lots.values() for lot in rows}
+    assert shares == {"a1": uzs(1000), "b1": uzs(3000)}  # dona bo'yicha
+    assert all(Flag.BASE_FALLBACK in lot.flags for rows in lots.values() for lot in rows)
+
+
+def test_shipment_component_can_target_specific_lines_of_different_purchases() -> None:
+    a, b = _weighed("A", ("a1", 10, "1"), ("a2", 10, "1")), _weighed("B", ("b1", 10, "1"))
+    cargo = CostComponent(K.CARGO, uzs(3000), line_ids=("a1", "b1"))
+    lots = compute_shipment_lots([a, b], [cargo])
+    shares = {lot.line_id: lot.breakdown.get(K.CARGO) for rows in lots.values() for lot in rows}
+    assert shares == {"a1": uzs(1500), "a2": None, "b1": uzs(1500)}
+    with pytest.raises(PurchaseError):
+        compute_shipment_lots([a, b], [CostComponent(K.CARGO, uzs(1), line_ids=("zzz",))])
+
+
+def test_shipment_duplicate_line_ids_rejected() -> None:
+    with pytest.raises(PurchaseError):
+        compute_shipment_lots([_weighed("A", ("x", 1, "1")), _weighed("B", ("x", 1, "1"))], [])
+
+
+@given(
+    amount=st.integers(min_value=1, max_value=10**9),
+    qtys=st.lists(st.integers(min_value=1, max_value=500), min_size=2, max_size=12),
+    weights=st.lists(st.integers(min_value=1, max_value=900), min_size=12, max_size=12),
+    split=st.integers(min_value=1, max_value=11),
+)
+def test_shipment_shares_always_sum_to_cargo_amount(
+    amount: int, qtys: list[int], weights: list[int], split: int
+) -> None:
+    """Xossa: qanday xaridlarga bo'linmasin, kargo ulushlari yig'indisi kargo summasiga tiyinigacha teng."""
+    rows = [(f"l{i}", q, str(D(weights[i]) / 100)) for i, q in enumerate(qtys)]
+    cut = min(split, len(rows) - 1)
+    purchases = [_weighed("A", *rows[:cut]), _weighed("B", *rows[cut:])]
+    lots = compute_shipment_lots(purchases, [CostComponent(K.CARGO, uzs(amount), base=B.WEIGHT)])
+    shares = [lot.breakdown[K.CARGO] for rs in lots.values() for lot in rs]
+    assert total(shares, Currency.UZS) == uzs(amount)

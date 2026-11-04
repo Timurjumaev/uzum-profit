@@ -192,6 +192,10 @@ def test_cannot_reference_other_org_parent(
     if _natural_key_only(table):  # unikal kalit to'qnashuvi FK xatosini yashirmasin (masalan, lots)
         app.execute(f"DELETE FROM {table} WHERE id = %s", [seed.rows[a][table]])
     values = _fresh(seed, table, a)
+    if (table, column) == ("cost_components", "shipment_id"):
+        values.pop(
+            "purchase_id", None
+        )  # xarajat yoki xaridniki, yoki kargoniki: aynan bittasi (ADR-046)
     values[column] = seed.rows[b][parent]
     with pytest.raises(errors.ForeignKeyViolation):
         dbtools.insert(app, table, values)

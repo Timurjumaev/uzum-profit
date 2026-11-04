@@ -504,6 +504,16 @@ cash_accounts = tenant(
     Column("currency", Text, nullable=False),
     Column("opening_balance", FX, nullable=False, server_default="0"),
 )
+# Kargo (jo'natma, B4.31, ADR-046): bitta kargo — ko'p xarid; kargo xarajatlari butun kargo tovarlariga bo'linadi.
+shipments = tenant(
+    "shipments",
+    Column("title", Text),
+    Column("cn_warehouse_on", Date),
+    Column("shipped_on", Date),
+    Column("arrived_on", Date),
+    Column("note", Text),
+    refs={"carrier_id": ("carriers", True)},
+)
 purchases = tenant(
     "purchases",
     Column("title", Text),
@@ -518,8 +528,13 @@ purchases = tenant(
     Column("closed_on", Date),
     Column("legacy_batch_id", Integer),
     Column("note", Text),
-    refs={"supplier_id": ("suppliers", True), "carrier_id": ("carriers", True)},
+    refs={
+        "supplier_id": ("suppliers", True),
+        "carrier_id": ("carriers", True),
+        "shipment_id": ("shipments", True),  # xarid faqat bitta kargoga tegishli
+    },
 )
+Index(None, purchases.c.org_id, purchases.c.shipment_id)
 purchase_lines = tenant(
     "purchase_lines",
     Column("temp_name", Text),
@@ -550,7 +565,23 @@ cost_components = tenant(
     ),  # qatorlar va qo'lda ulushlar (purchase_lines id'lari shu xarid ichida)
     check_in("rate_mode", ("cbu", "manual", "effective")),
     check_in("allocation", ("units", "weight", "volume", "value", "manual")),
-    refs={"purchase_id": ("purchases", False), "account_id": ("cash_accounts", True)},
+    # Xarajat yoki xaridniki, yoki kargoniki (ADR-046): aynan bittasi.
+    Column("purchase_id", UUID(as_uuid=True), nullable=True),
+    Column("shipment_id", UUID(as_uuid=True), nullable=True),
+    ForeignKeyConstraint(
+        ["org_id", "purchase_id"],
+        ["purchases.org_id", "purchases.id"],
+        name="fk_cost_components_purchase_id",
+        ondelete="CASCADE",
+    ),
+    ForeignKeyConstraint(
+        ["org_id", "shipment_id"],
+        ["shipments.org_id", "shipments.id"],
+        name="fk_cost_components_shipment_id",
+        ondelete="CASCADE",
+    ),
+    CheckConstraint("num_nonnulls(purchase_id, shipment_id) = 1", name="owner_exactly_one"),
+    refs={"account_id": ("cash_accounts", True)},
 )
 stock_moves = tenant(
     "stock_moves",
