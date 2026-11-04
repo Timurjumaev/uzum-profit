@@ -61,6 +61,15 @@ systemctl list-timers uzum-backup.timer          # keyingi tungi zaxira (03:30 T
 
 Qo'lda deploy yoki qaytish: `infra/staging/deploy.sh <git sha>` (image'lar GHCR'da yoki serverda bo'lishi kerak).
 
+## CBU kurslari diagnostikasi
+
+"CNY uchun ... sanasigacha kurs yo'q" kabi xatoda: cbu.uz serverdan ochiladimi, bazada qaysi kurslar bor va `fx.cbu`
+ishlari qanday tugagan (Mac'dan, natija ekranda; sirlar chiqmaydi):
+
+```bash
+ssh -i ~/Downloads/awskey.pem ubuntu@16.170.178.179 'sudo -u deploy /srv/uzum-profit/infra/staging/fxcheck.sh'
+```
+
 ## Real sinov (B2.11)
 
 Temurning Mac'ida, repozitoriy papkasida (`git checkout main && git pull`):

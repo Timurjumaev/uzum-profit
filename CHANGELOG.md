@@ -465,6 +465,7 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   shuning uchun tarixi uzoq valyuta (USD) boshqasining (CNY) bo'shlig'ini yopmasdi. Endi arxiv eng kam to'lgan valyutadan
   boshlanadi; xarid saqlanganda kerakli sana kursi yo'q bo'lsa `fx.cbu` ishi `since` bilan qo'yiladi (sanadan 10 kun
   oldingacha cheklovsiz), keyin hisob qayta quriladi.
+- B4.29: `python -m upapi.fxcheck` va `infra/staging/fxcheck.sh` — CBU kurslari diagnostikasi (tarmoq, `fx_rates`, `fx.cbu` ishlari).
 
 - B4.26: qaytish ulushi faqat Yakunlangan qatorlardagi `amountReturns` dan hisoblanardi (real ma'lumotda doim 0), bekor
   ulushi esa mijoz olib qaytargan tovarlarni ham sanardi — ADR-043 bilan tuzatildi.
