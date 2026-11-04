@@ -19,6 +19,7 @@ from upapi.settings import Settings
 from upapi.sync import jobs
 from upapi.sync.engine import Runtime
 from upcore.fx import FxRate, rate_on
+from upcore.money import Currency
 
 TODAY = date(2026, 10, 24)  # sf.NOW (Toshkent 17:00)
 BASE = "https://cbu.test/json/"
@@ -85,12 +86,14 @@ def settings(urls: dict[str, str], **extra: Any) -> Settings:
     return sf.settings_for(urls, cbu_url=BASE, **extra)
 
 
-def sync(urls: dict[str, str], cbu: FakeCbu, **extra: Any) -> fx.FxSyncResult:
+def sync(
+    urls: dict[str, str], cbu: FakeCbu, since: date | None = None, **extra: Any
+) -> fx.FxSyncResult:
     with runtime(urls, sf.seller(), cbu_url=BASE, **extra) as run:
 
         async def main(rt: Runtime) -> fx.FxSyncResult:
             rt.transport = cbu.transport
-            return await fx.sync_fx(rt)
+            return await fx.sync_fx(rt, since)
 
         return run(main)
 
@@ -265,3 +268,34 @@ def test_job_registered_twice_a_day_and_runs(fresh: dict[str, str]) -> None:
 def test_settings_reject_plain_http_cbu() -> None:
     assert "UP_CBU_URL: faqat https://" in Settings(cbu_url="http://cbu.uz/x").problems()
     assert "UP_CBU_URL: faqat https://" not in Settings().problems()
+
+
+def test_archive_starts_from_the_least_filled_currency(fresh: dict[str, str]) -> None:
+    """USD tarixi uzoq, CNY faqat bugun: arxiv CNY bo'shlig'idan boshlanadi (avval eng eski kun USD'niki edi va CNY
+    hech qachon to'lmasdi — "CNY uchun ... kurs yo'q")."""
+    old = TODAY - timedelta(days=100)
+    admin(
+        fresh,
+        "INSERT INTO fx_rates (day, currency, source, rate) VALUES (%s, 'USD', 'cbu', 12000)",
+        [old],
+    )
+    sync(fresh, FakeCbu(), fx_backfill_per_run=3, fx_currencies=["USD", "CNY"])
+    cny = sorted(d for d, c in stored(fresh) if c == "CNY")
+    assert cny == [TODAY - timedelta(days=n) for n in (3, 2, 1, 0)]
+
+
+def test_since_fills_down_to_the_needed_day_beyond_the_per_run_limit(fresh: dict[str, str]) -> None:
+    cbu = FakeCbu()
+    need = TODAY - timedelta(days=20)
+    res = sync(fresh, cbu, since=need, fx_backfill_per_run=3, fx_currencies=["CNY"])
+    days = sorted(d for d, _ in stored(fresh))
+    # Kerakli sanadan 10 kun oldingacha (dam olish kunlari uchun oldingi ish kuni kursi ham bo'lsin).
+    assert days[0] == need - timedelta(days=fx.SINCE_MARGIN_DAYS) and days[-1] == TODAY
+    assert res.days_filled == 30
+    # Kurs kerakli sanaga topiladi.
+    rates = [FxRate(d, c_, r) for (d, c), r in stored(fresh).items() for c_ in [Currency(c)]]
+    assert rate_on(rates, "CNY", need).rate.day == need
+    # Allaqachon yetarli bo'lsa — arxivga so'rov ketmaydi.
+    cbu.calls.clear()
+    assert sync(fresh, cbu, since=need, fx_backfill_per_run=3, fx_currencies=["CNY"]).archived == 0
+    assert len(cbu.calls) == 1  # faqat joriy kurs

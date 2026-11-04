@@ -490,6 +490,11 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   «Partiyadagi tovarlar», «Tovar qo'shish» (uz-Latn va ru). Model o'zgarmadi (har qator — bitta tovar, tannarx tovar
   darajasida). Testlar: API (`test_sku_picker_lists_every_sku_and_lines_from_skus`), web (`model`, `purchases`).
   **T:** staging'da Xaridlar → partiya → «Tovar qo'shish»: ikkala do'kondagi hamma SKU ko'rinishini tekshirish.
+- [x] B4.29 CBU kursi yetishmasligi tuzatishi (Temur, 2026-11-04: xarid sahifasida "CNY uchun 2026-10-07 sanasigacha kurs yo'q").
+  ✓ 2026-11-04: kurs arxivi (`upapi.fx.sync_fx`) endi **eng kam to'lgan valyutadan** orqaga yuradi (avval bitta global eng eski
+  kun: bir valyuta tarixi uzoq bo'lsa, boshqasi hech to'lmasdi); xarid saqlanganda to'lov sanasi kursi bazada yo'q bo'lsa
+  `fx.cbu` ishi `since` bilan qo'yiladi — o'sha sanadan 10 kun oldingacha cheklovsiz to'ldiradi va tashkilotlar hisobi qayta
+  quriladi. Testlar: `test_fx` (valyuta bo'yicha boshlanish, `since`), `test_purchases` (ish qo'yilishi).
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

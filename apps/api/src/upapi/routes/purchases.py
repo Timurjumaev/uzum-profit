@@ -299,15 +299,55 @@ async def _changed(
     for item in items:
         if item is not None:
             await calc.request(ctx.conn, ctx.org_id, calc.Scope.ITEM, item)
-    background.add_task(_kick, request, ctx.org_id)
+    since = None if row is None else await _fx_gap(ctx, row)
+    background.add_task(_kick, request, ctx.org_id, since)
 
 
-async def _kick(request: Request, org_id: UUID) -> None:
-    """Hisob ishini navbatga qo'yish; bo'lmasa — tungi to'liq qayta qurish yoki keyingi sinxron oladi."""
+async def _fx_gap(ctx: OrgContext, purchase: Any) -> date | None:
+    """Xarid CBU kursi kerak bo'ladigan eng eski sana, agar bazadagi kurslar unga yetmasa (``None`` — yetadi).
+    Kun hisobdagi bilan bir xil: komponent ``paid_on`` → xaridning to'lov → buyurtma sanasi (``calc.lots``); sanasiz
+    xarid bugungi kurs bilan hisoblanadi (joriy kurs har doim bor)."""
+    fallback = purchase.paid_on or purchase.ordered_on
+    needs: dict[str, date] = {}
+
+    def need(currency: str | None, day: date | None) -> None:
+        if currency and currency != "UZS" and day is not None:
+            needs[currency] = min(needs.get(currency, day), day)
+
+    cc, pl = m.cost_components, m.purchase_lines
+    for c in await ctx.conn.execute(select(cc).where(cc.c.purchase_id == purchase.id)):
+        if c.rate_mode == "cbu":
+            need(c.currency, c.paid_on or fallback)
+        elif c.rate_mode == "effective":
+            need(c.charged_currency, c.paid_on or fallback)
+    for currency in await ctx.conn.scalars(
+        select(pl.c.currency).where(pl.c.purchase_id == purchase.id, pl.c.unit_price.is_not(None))
+    ):
+        need(currency, fallback)
+    gap: date | None = None
+    for currency, day in needs.items():
+        first = await ctx.conn.scalar(
+            select(func.min(m.fx_rates.c.day)).where(
+                m.fx_rates.c.source == "cbu", m.fx_rates.c.currency == currency
+            )
+        )
+        if first is None or first > day:
+            gap = day if gap is None else min(gap, day)
+    return gap
+
+
+async def _kick(request: Request, org_id: UUID, fx_since: date | None = None) -> None:
+    """Hisob ishini navbatga qo'yish; bo'lmasa — tungi to'liq qayta qurish yoki keyingi sinxron oladi. ``fx_since`` —
+    kursi yetishmaydigan eng eski sana: CBU arxivi shungacha to'ldiriladi (``fx.cbu``), keyin hisob qayta ishlaydi."""
     try:
         await request.app.state.jobs.defer_calc(org_id)
     except Exception as exc:
         _log.warning("calc_defer_failed", org_id=str(org_id), error_code=type(exc).__name__)
+    if fx_since is not None:
+        try:
+            await request.app.state.jobs.defer_fx(fx_since)
+        except Exception as exc:
+            _log.warning("fx_defer_failed", error_code=type(exc).__name__)
 
 
 # --- O'qish -----------------------------------------------------------------------------------

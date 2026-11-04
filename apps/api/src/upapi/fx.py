@@ -1,8 +1,11 @@
 """CBU kurslari (B2.7; 02 M3, F20): cbu.uz JSON → ``fx_rates`` (manba ``cbu``), kuniga 2 marta + arxiv.
 
 - **Joriy kurs:** ``<cbu_url>`` (hamma valyuta, bugungi kun) — faqat ``fx_currencies`` dagilari saqlanadi.
-- **Arxiv:** ``<cbu_url><VALYUTA>/<YYYY-MM-DD>/`` — bazadagi eng eski kundan orqaga, ``fx_backfill_days`` gacha,
-  har ishda ko'pi bilan ``fx_backfill_per_run`` kun. Tannarx (F20) to'lov sanasidagi kursni talab qiladi.
+- **Arxiv:** ``<cbu_url><VALYUTA>/<YYYY-MM-DD>/`` — orqaga, ``fx_backfill_days`` gacha, har ishda ko'pi bilan
+  ``fx_backfill_per_run`` kun. Boshlanish — **eng kam to'lgan valyutaning** eng eski kuni (bitta valyuta tarixi uzoqroq
+  bo'lsa, boshqasining bo'shlig'i yopilmay qolmaydi). Tannarx (F20) to'lov sanasidagi kursni talab qiladi: xarid
+  saqlanganda kerakli sana kursi yo'q bo'lsa, ish ``since`` bilan qo'yiladi — o'sha sanadan 10 kun oldingacha cheklovsiz
+  (``MAX_SINCE_DAYS`` gacha) to'ldiradi.
 - **Dam olish kunlari:** CBU e'lon qilmagan kun uchun qator o'ylab topilmaydi — tanlashni ``upcore.fx.rate_on``
   qiladi (oxirgi ish kuni). Bu yerda faqat CBU bergan narsa saqlanadi; ``Nominal`` ga bo'lish ``parse_cbu_row`` da.
 - **Yozuv:** ``fx_upsert()`` (0005) — ``up_sync`` egasidagi ``SECURITY DEFINER`` funksiya; ``up_app`` ning o'zi
@@ -27,6 +30,10 @@ from upapi.sync.engine import Runtime
 
 TASHKENT = ZoneInfo("Asia/Tashkent")
 ATTEMPTS = 3
+SINCE_MARGIN_DAYS = (
+    10  # dam olish / bayram kunlari uchun: kerakli sanadan oldingi ish kuni kursi ham bo'lsin
+)
+MAX_SINCE_DAYS = 800
 _log = get_logger("upapi.fx")
 
 
@@ -84,12 +91,22 @@ async def store(engine: AsyncEngine, rates: list[FxRate]) -> int:
     return len(rates)
 
 
-async def _earliest(engine: AsyncEngine) -> date | None:
+async def _frontier(engine: AsyncEngine, wanted: set[str]) -> date | None:
+    """Arxiv boshlanadigan kun: har valyutaning eng eski kuni orasida eng kech biri (kursi umuman yo'q valyuta
+    bo'lsa — ``None``: joriy kurs kelgach hammasida bor)."""
     async with engine.connect() as conn:
-        result: date | None = await conn.scalar(
-            text("SELECT min(day) FROM fx_rates WHERE source = 'cbu'")
+        rows = await conn.execute(
+            text(
+                "SELECT currency, min(day) FROM fx_rates WHERE source = 'cbu' "
+                "AND currency = ANY(:ccy) GROUP BY currency"
+            ),
+            {"ccy": sorted(wanted)},
         )
-        return result
+        firsts = {r[0]: r[1] for r in rows}
+    if not firsts or set(firsts) != wanted:
+        return None
+    first: date = max(firsts.values())
+    return first
 
 
 def _parse(rows: list[dict[str, Any]], wanted: set[str]) -> list[FxRate]:
@@ -99,8 +116,9 @@ def _parse(rows: list[dict[str, Any]], wanted: set[str]) -> list[FxRate]:
         raise FxFetchError(f"cbu.uz qatori tushunarsiz: {exc}") from None
 
 
-async def sync_fx(rt: Runtime) -> FxSyncResult:
-    """Joriy kurslarni oladi, keyin arxivni bir qism to'ldiradi. Tarmoq/format xatosi — ``FxFetchError``."""
+async def sync_fx(rt: Runtime, since: date | None = None) -> FxSyncResult:
+    """Joriy kurslarni oladi, keyin arxivni bir qism to'ldiradi; ``since`` — shu sana (va undan ``SINCE_MARGIN_DAYS``
+    oldin) kursigacha cheklovsiz. Tarmoq/format xatosi — ``FxFetchError``."""
     s = rt.settings
     wanted = {c.upper() for c in s.fx_currencies}
     async with httpx.AsyncClient(
@@ -115,11 +133,21 @@ async def sync_fx(rt: Runtime) -> FxSyncResult:
         saved = await store(rt.engine, latest)
         latest_day = max(r.day for r in latest)
 
-        horizon = _today(rt.clock()) - timedelta(days=s.fx_backfill_days)
-        earliest = min(await _earliest(rt.engine) or latest_day, latest_day)
+        today = _today(rt.clock())
+        horizon = today - timedelta(days=s.fx_backfill_days)
+        budget = s.fx_backfill_per_run
+        if since is not None:
+            horizon = max(
+                horizon,
+                since - timedelta(days=SINCE_MARGIN_DAYS),
+                today - timedelta(days=MAX_SINCE_DAYS),
+            )
+        frontier = min(await _frontier(rt.engine, wanted) or latest_day, latest_day)
+        if since is not None:
+            budget = max(budget, (frontier - horizon).days)
         archived = days_filled = 0
-        day = earliest - timedelta(days=1)
-        for _ in range(s.fx_backfill_per_run):
+        day = frontier - timedelta(days=1)
+        for _ in range(budget):
             if day < horizon:
                 break
             got: list[FxRate] = []
