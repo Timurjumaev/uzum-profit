@@ -482,6 +482,14 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   solishtirish; xohlasa — Sozlamalarda chegaralar.
 - [ ] B4.27 "Yo'qotishlar va imkoniyat" bloki (ADR-043 (5), AI'siz, formula bilan): qaytarish xarajati, zarardagi SKU,
   tannarxsiz sotuvlar; bekor summasi yo'qotish emas.
+- [x] B4.28 Xarid tovarlari: tanlov SKU'dan, «Qatorlar» → «Partiyadagi tovarlar» (ADR-044; Temur, 2026-11-04).
+  ✓ 2026-11-04: tovar tanlash ro'yxati `items` o'rniga hamma SKU'dan (`GET /sku-picker`: do'kon, mahsulot, variant, qoldiq,
+  Uzum holati; arxivlangan va bloklangan ham, qoldig'i yoki sotuvi borlari oldinda) + SKU'siz tovarlar; `LineIn.sku_id` —
+  tovari yo'q SKU'ga tovar yaratiladi (`item_of_sku`, `/opening` bilan umumiy); `POST /purchases/{id}/lines/bulk` — bir
+  nechta SKU bitta tranzaksiyada; shaklda ko'p tanlash (har biriga dona, narx/vazn hammasiga) va takror belgisi; ekran nomi
+  «Partiyadagi tovarlar», «Tovar qo'shish» (uz-Latn va ru). Model o'zgarmadi (har qator — bitta tovar, tannarx tovar
+  darajasida). Testlar: API (`test_sku_picker_lists_every_sku_and_lines_from_skus`), web (`model`, `purchases`).
+  **T:** staging'da Xaridlar → partiya → «Tovar qo'shish»: ikkala do'kondagi hamma SKU ko'rinishini tekshirish.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

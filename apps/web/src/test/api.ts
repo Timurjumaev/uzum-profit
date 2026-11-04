@@ -74,6 +74,7 @@ export const SKUS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/skus`;
 export const skuRoute = (skuId: string) => `GET /api/v1/orgs/${ORG_ID}/skus/${skuId}`;
 export const UNIT_CALC_ROUTE = `GET /api/v1/orgs/${ORG_ID}/unit-calc`;
 export const ITEMS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/items`;
+export const SKU_PICKER_ROUTE = `GET /api/v1/orgs/${ORG_ID}/sku-picker`;
 export const linkRoute = (skuId: string) => `PUT /api/v1/orgs/${ORG_ID}/skus/${skuId}/item`;
 export const SALES_ROUTE = `GET /api/v1/orgs/${ORG_ID}/sales`;
 export const ORDERS_ANALYSIS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/orders/analysis`;

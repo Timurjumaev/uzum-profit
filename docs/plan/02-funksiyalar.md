@@ -195,10 +195,15 @@ xarajatni to'g'ri yig'ish va tovarlarga to'g'ri bo'lish.
 - **Kargo kompaniyalari:** nomi, narx usuli (kg / m³ / dona / aralash), valyuta, o'rtacha yo'l muddati (o'rganiladi).
 - **Xarid (partiya) hayoti:** Qoralama → Buyurtma berildi → To'landi → Xitoy omborida → Yo'lda → Toshkentga keldi →
   Qabul qilindi → Uzumga yuborildi → Yopildi. Har bosqich ixtiyoriy, sanasi yoziladi, vaqt chizig'ida ko'rinadi.
-  Legacy'dagi kabi bosqichma-bosqich to'ldiriladi: avval faqat tovar summasi, keyin qatorlar, keyin kargo.
-- **Qatorlar:** tovar/SKU yoki "yangi tovar" (vaqtinchalik nom, rasm, 1688 havolasi), variant (rang × o'lcham),
-  buyurtma qilingan va qabul qilingan dona (qisman kelishi mumkin), dona narxi (valyutada), dona vazni va hajmi
-  (taqsimot uchun, ixtiyoriy).
+  Legacy'dagi kabi bosqichma-bosqich to'ldiriladi: avval faqat tovar summasi, keyin tovarlar, keyin kargo.
+- **Partiyadagi tovarlar** (qatorlar; ADR-044): xarid — ko'p tovar. Tovar tanlanadigan ro'yxat — **hamma SKU** (do'kon,
+  mahsulot, variant, qoldiq, Uzum holati; arxivlangan va bloklangan ham, hech narsa yashirilmaydi) yoki "yangi tovar"
+  (vaqtinchalik nom, rasm, 1688 havolasi). SKU tanlansa tovar o'zi yaratiladi (bor bo'lsa — o'sha); bir nechta SKU
+  birdaniga qo'shiladi (har biriga dona, narx/vazn/hajm hammasiga bir xil, keyin alohida tahrirlanadi). **Har tovar —
+  bitta `item`** (tannarx birligi, bitta lot); narxi bir xil bir nechta SKU — bitta tovarga bog'lanib bitta qator,
+  tannarxi farq qiladigani — alohida qator. Variant (rang × o'lcham), buyurtma qilingan va qabul qilingan dona (qisman
+  kelishi mumkin), dona narxi (valyutada), dona vazni va hajmi (taqsimot uchun, ixtiyoriy). Bir tovar partiyada ikki
+  marta tanlansa — belgi (taqiq emas).
 - **Xarajat komponentlari** (istalgancha): tovar, Xitoy ichki yetkazish, xarid komissiyasi (agent), kargo, bojxona,
   qadoqlash, shtrix-kod/yorliq, Uzum omboriga yetkazish, boshqa. Har birida: summa + valyuta, to'lov sanasi,
   hisob (karta/naqd), **kurs**, **taqsimot asosi**, qaysi qatorlarga tegishli.
