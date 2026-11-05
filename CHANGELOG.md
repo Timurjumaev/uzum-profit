@@ -394,6 +394,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   olganida" turi, `AD#` → sotuv qatori, yechilgan kun buyurtma va topshirilgan kunga nisbatan), `dateService` ↔
   `dateCreated` farqi va saqlash yechiladigan kunlar; faqat yig'indilar, matnlar raqamsiz.
 
+- B4.35 (ADR-048 davomi): **dizayn jilosi — qolgan sahifalar.** KPI kartalarda raqamlar bir chiziqda; Ombor holat belgilari cho'zilmaydi;
+  Buyurtmalarda filtr va Excel tugmasi bir chiziqda; Xarajatlarda Excel tugmasi cho'zilmaydi; Sozlamalarda sarlavha, izoh va forma
+  sarlavhalari oralig'i tuzatildi. Faqat CSS.
 - B4.34 (ADR-049, Temur topdi): **Kargo sahifasi tuzatishlari.** Kargo xarajati turlarida endi faqat kargoga tegishlilari (Kargo, Bojxona,
   Qadoqlash, Shtrix-kod / yorliq, Uzum omboriga yetkazish, Boshqa); Tovar, Xitoy ichki yetkazish va agent komissiyasi xaridniki — API ham rad
   etadi (`kind_not_for_shipment`). Oyna tugmalari to'g'ri yoziladi ("Xarajatni / Kargoni / Sanalarni saqlash"), kargodagi xaridni kargo

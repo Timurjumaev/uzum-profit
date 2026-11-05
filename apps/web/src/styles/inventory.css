@@ -48,6 +48,11 @@
   justify-items: end;
 }
 
+/* Holat belgilari katak kengligiga cho'zilmaydi. */
+.inventory-cell:not(.inventory-cell--num) > :is(.ui-pill, .ui-badge) {
+  justify-self: start;
+}
+
 .inventory-cell__name {
   color: var(--text-primary);
   font: var(--type-body-strong);

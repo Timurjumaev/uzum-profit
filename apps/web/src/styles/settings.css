@@ -19,6 +19,11 @@
   margin: 0;
 }
 
+/* Bo'lim sarlavhasi va izohi: grid oralig'i yetarli, brauzer/asosiy margin qo'shilmaydi. */
+.settings-section > :is(h2, p) {
+  margin: 0;
+}
+
 .settings-section {
   padding-block-end: var(--space-5);
   border-block-end: 1px solid var(--border-hairline);
@@ -55,6 +60,11 @@
   margin: 0;
   padding: 0;
   border: 0;
+}
+
+.settings-fieldset > legend {
+  padding: 0;
+  margin-block-end: var(--space-2);
 }
 
 .settings-form--grid > :is(.ui-banner, .settings-section__row) {
