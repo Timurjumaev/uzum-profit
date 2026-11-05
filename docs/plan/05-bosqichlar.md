@@ -515,6 +515,12 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   bloki; "Yangi kargo…" (kompaniya) → "Yangi kompaniya…". Testlar: core (taqsimot, xossa), API (`test_shipments`, 5),
   web (`shipments.test`, 11), e2e (kargo sahifasi, 360 px). **T:** staging'da kargo yaratib 2 ta xaridni bog'lash, kargo
   narxini kiritish va xaridlardagi tannarxni tekshirish.
+- [x] B4.32 Xarid ↔ kargo biriktirish (ADR-047; Temur talabi, 2026-11-05).
+  ✓ 2026-11-05: xarid sahifasida "Yangi xarajat" → Turi = Kargo — summa o'rniga kargolar ro'yxati (holati va sanasi bilan,
+  "Kargosiz", "Yangi kargo…"), saqlash xaridni kargoga biriktiradi (komponent yaratilmaydi — ikki marta hisoblanmaydi);
+  kargo sahifasida "Xarid biriktirish" (kargosiz va boshqa kargodagi xaridlardan bir nechtasi; ketma-ket `PATCH`, qisman xato
+  aniq aytiladi). Backend o'zgarmadi. Testlar: web (`shipments.test`, +9: ro'yxat, yangi kargo, almashtirish/ajratish, izoh,
+  ko'p xarid, qisman xato, bo'sh holat, rol, a11y). **T:** staging'da xarid sahifasidan va kargo sahifasidan biriktirib ko'rish.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

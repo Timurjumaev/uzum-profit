@@ -12,7 +12,9 @@ import {
   ME,
   ME_ROUTE,
   mockApi,
+  PURCHASES_ROUTE,
   purchaseRoute,
+  purchaseSubRoute,
   shipmentRoute,
   shipmentSubRoute,
   SHIPMENTS_ROUTE,
@@ -22,7 +24,7 @@ import {
   problem,
   type Routes,
 } from "../../test/api";
-import { PURCHASE_1, purchaseDetail, purchaseRow, component, timeline } from "../../test/purchases";
+import { PURCHASE_1, PURCHASE_2, purchaseDetail, purchaseRow, component, timeline } from "../../test/purchases";
 import { shipmentDetail, shipmentRow, SHIPMENT_1, SHIPMENT_COMP } from "../../test/shipments";
 
 const f = formatterFor("uz-Latn");
@@ -213,5 +215,166 @@ describe("xarid sahifasida kargo", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Xaridni saqlash" }));
     await waitFor(() => expect(bodiesOf(api, patch)).toHaveLength(1));
     expect(bodiesOf(api, patch)[0]).not.toHaveProperty("shipment_id"); // kargo o'zgarmadi
+  });
+});
+
+describe("xaridni kargoga biriktirish — xarid sahifasidan (Turi = Kargo)", () => {
+  const SHIPMENT_2 = "b2222222-2222-4222-8222-222222222222";
+  const openCargo = async () => {
+    fireEvent.click(await screen.findByRole("button", { name: "Xarajat qoʻshish" }));
+    const dialog = await screen.findByRole("dialog", { name: "Yangi xarajat" });
+    fireEvent.change(within(dialog).getByLabelText("Turi"), { target: { value: "cargo" } });
+    return dialog;
+  };
+
+  it("summa o'rniga kargolar ro'yxati (holati bilan); tanlansa xarid shu kargoga biriktiriladi, xarajat yaratilmaydi", async () => {
+    const patch = purchaseRoute("PATCH", PURCHASE_1);
+    const create = purchaseSubRoute("POST", PURCHASE_1, "components");
+    const { api } = await renderAt(`/purchases/${PURCHASE_1}`, { [patch]: () => json(200, purchaseDetail()), [create]: () => json(201, purchaseDetail()) });
+    const dialog = await openCargo();
+    expect(within(dialog).queryByLabelText("Summa")).toBeNull();
+    expect(within(dialog).queryByLabelText("Valyuta")).toBeNull();
+    const save = () => within(dialog).getByRole("button", { name: "Kargoga biriktirish" }) as HTMLButtonElement;
+    expect(save().disabled).toBe(true); // hech narsa tanlanmagan
+    const first = await within(dialog).findByRole("radio", { name: /Presslangan oʻram/ });
+    expect(norm(first.closest("label")!.textContent!)).toMatch(/Cargo Express.*Yoʻlda 12\./); // holat va sana
+    expect(within(dialog).getByRole("radio", { name: /Nomsiz kargo/ })).toBeTruthy();
+    fireEvent.click(first);
+    fireEvent.click(save());
+    await waitFor(() => expect(bodiesOf(api, patch)).toHaveLength(1));
+    expect(bodiesOf(api, patch)[0]).toEqual({ shipment_id: SHIPMENT_1 });
+    expect(api.count(create)).toBe(0);
+  });
+
+  it("«Yangi kargo…»: nomi bilan yaratiladi va xarid unga biriktiriladi; nomsiz saqlab bo'lmaydi", async () => {
+    const patch = purchaseRoute("PATCH", PURCHASE_1);
+    const post = shipmentSubRoute("POST", "");
+    const { api } = await renderAt(`/purchases/${PURCHASE_1}`, {
+      [patch]: () => json(200, purchaseDetail()),
+      [post]: () => json(201, shipmentDetail({ shipment: shipmentRow({ id: SHIPMENT_2, title: "Dekabr" }) })),
+    });
+    const dialog = await openCargo();
+    fireEvent.click(await within(dialog).findByRole("radio", { name: /Yangi kargo…/ }));
+    const save = () => within(dialog).getByRole("button", { name: "Kargoga biriktirish" }) as HTMLButtonElement;
+    expect(save().disabled).toBe(true);
+    fireEvent.change(within(dialog).getByLabelText(/^Yangi kargo nomi/), { target: { value: "Dekabr" } });
+    fireEvent.click(save());
+    await waitFor(() => expect(bodiesOf(api, patch)).toHaveLength(1));
+    expect(bodiesOf(api, post)[0]).toEqual({ title: "Dekabr" });
+    expect(bodiesOf(api, patch)[0]).toEqual({ shipment_id: SHIPMENT_2 });
+  });
+
+  it("kargoga bog'langan xarid: hozirgi kargo belgilangan (o'zgarmasa saqlab bo'lmaydi); boshqasi — ko'chirish; «Kargosiz» — ajratish", async () => {
+    const linked = purchaseDetail({ purchase: purchaseRow({ shipment_id: SHIPMENT_1, shipment_name: "Presslangan oʻram" }) });
+    const patch = purchaseRoute("PATCH", PURCHASE_1);
+    const { api } = await renderAt(`/purchases/${PURCHASE_1}`, { [purchaseRoute("GET", PURCHASE_1)]: () => json(200, linked), [patch]: () => json(200, purchaseDetail()) });
+    const dialog = await openCargo();
+    const current = (await within(dialog).findByRole("radio", { name: /Presslangan oʻram/ })) as HTMLInputElement;
+    expect(current.checked).toBe(true);
+    expect(norm(current.closest("label")!.textContent!)).toContain("hozirgi");
+    expect((within(dialog).getByRole("button", { name: "Kargoga biriktirish" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(within(dialog).getByRole("radio", { name: /Kargosiz/ }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Kargodan ajratish" }));
+    await waitFor(() => expect(bodiesOf(api, patch)).toHaveLength(1));
+    expect(bodiesOf(api, patch)[0]).toEqual({ shipment_id: null });
+  });
+
+  it("keldi bo'lgan kargoda — sanalar kargodan olinishi haqida izoh; boshqa turlarda summa maydonlari avvalgidek", async () => {
+    await renderAt(`/purchases/${PURCHASE_1}`, {
+      [SHIPMENTS_ROUTE]: () => json(200, { items: [shipmentRow({ arrived_on: "2026-10-20" })], amounts: true }),
+    });
+    const dialog = await openCargo();
+    expect(within(dialog).queryByText(/sanalari kargodan olinadi/)).toBeNull(); // belgilanmaguncha izoh yo'q
+    fireEvent.click(await within(dialog).findByRole("radio", { name: /Presslangan oʻram/ }));
+    expect(within(dialog).getByText(/sanalari kargodan olinadi/)).toBeTruthy();
+    fireEvent.change(within(dialog).getByLabelText("Turi"), { target: { value: "customs" } });
+    expect(within(dialog).getByLabelText("Summa")).toBeTruthy();
+    expect(within(dialog).queryByRole("radio", { name: /Presslangan oʻram/ })).toBeNull();
+    expect(within(dialog).getByRole("button", { name: "Xaridni saqlash" })).toBeTruthy();
+  });
+
+  it("kargo sahifasida «Kargo» turi summa bilan qoladi (kargo xarajati shu yerda kiritiladi)", async () => {
+    await renderAt(`/shipments/${SHIPMENT_1}`);
+    fireEvent.click(await screen.findByRole("button", { name: "Xarajat qoʻshish" }));
+    const dialog = await screen.findByRole("dialog", { name: "Yangi xarajat" });
+    fireEvent.change(within(dialog).getByLabelText("Turi"), { target: { value: "cargo" } });
+    expect(within(dialog).getByLabelText("Summa")).toBeTruthy();
+    expect(within(dialog).queryByRole("radio", { name: /Yangi kargo…/ })).toBeNull();
+  });
+});
+
+describe("kargoga xarid biriktirish — kargo sahifasidan", () => {
+  const OTHER = "93333333-3333-4333-8333-333333333333";
+  const rows = () => [
+    purchaseRow({ id: PURCHASE_1, title: "A yetkazib beruvchi", shipment_id: SHIPMENT_1, shipment_name: "Presslangan oʻram" }), // allaqachon shu kargoda
+    purchaseRow({ id: PURCHASE_2, title: "Kargosiz xarid", supplier_name: "Yiwu Toys", shipment_id: null, shipment_name: null, stage: "ordered" }),
+    purchaseRow({ id: OTHER, title: "Boshqa kargodagi", shipment_id: "b2222222-2222-4222-8222-222222222222", shipment_name: "Dekabr" }),
+  ];
+  const withPurchases = (items = rows()) => ({ [PURCHASES_ROUTE]: () => json(200, { items, amounts: true }) });
+  const open = async () => {
+    fireEvent.click(await screen.findByRole("button", { name: "Xarid biriktirish" }));
+    return screen.findByRole("dialog", { name: "Kargoga xarid biriktirish" });
+  };
+
+  it("shu kargodagi xarid ro'yxatda yo'q; kargosiz birinchi, boshqa kargodagi ko'chirilishi aytiladi; bir nechtasi biriktiriladi", async () => {
+    const patch2 = purchaseRoute("PATCH", PURCHASE_2);
+    const patch3 = purchaseRoute("PATCH", OTHER);
+    const { api } = await renderAt(`/shipments/${SHIPMENT_1}`, { ...withPurchases(), [patch2]: () => json(200, purchaseDetail()), [patch3]: () => json(200, purchaseDetail()) });
+    const dialog = await open();
+    const boxes = await within(dialog).findAllByRole("checkbox");
+    expect(boxes).toHaveLength(2); // PURCHASE_1 allaqachon shu kargoda
+    expect(norm(boxes[0]!.closest("label")!.textContent!)).toContain("Kargosiz xarid");
+    expect(norm(boxes[0]!.closest("label")!.textContent!)).toContain("kargosiz");
+    expect(norm(boxes[1]!.closest("label")!.textContent!)).toContain("hozir «Dekabr» kargoda — koʻchiriladi");
+    const save = () => within(dialog).getByRole("button", { name: /^Biriktirish/ }) as HTMLButtonElement;
+    expect(save().disabled).toBe(true);
+    fireEvent.click(boxes[0]!);
+    fireEvent.click(boxes[1]!);
+    expect(save().textContent).toBe("Biriktirish (2)");
+    fireEvent.click(save());
+    await waitFor(() => expect(bodiesOf(api, patch2)).toHaveLength(1));
+    await waitFor(() => expect(bodiesOf(api, patch3)).toHaveLength(1));
+    expect(bodiesOf(api, patch2)[0]).toEqual({ shipment_id: SHIPMENT_1 });
+    expect(bodiesOf(api, patch3)[0]).toEqual({ shipment_id: SHIPMENT_1 });
+    expect(await screen.findByText("Biriktirildi: 2 ta xarid")).toBeTruthy();
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Kargoga xarid biriktirish" })).toBeNull());
+  });
+
+  it("biri xato bersa to'xtaydi: nechtasi biriktirilgani aytiladi, qolgani belgilangan holda qoladi", async () => {
+    const patch2 = purchaseRoute("PATCH", PURCHASE_2);
+    const patch3 = purchaseRoute("PATCH", OTHER);
+    const { api } = await renderAt(`/shipments/${SHIPMENT_1}`, {
+      ...withPurchases(),
+      [patch2]: () => json(200, purchaseDetail()),
+      [patch3]: () => problem(422, "dates_from_shipment"),
+    });
+    const dialog = await open();
+    const boxes = await within(dialog).findAllByRole("checkbox");
+    fireEvent.click(boxes[0]!);
+    fireEvent.click(boxes[1]!);
+    fireEvent.click(within(dialog).getByRole("button", { name: "Biriktirish (2)" }));
+    expect(await within(dialog).findByText(/1 ta xarid biriktirildi, keyingisida xato/)).toBeTruthy();
+    expect(api.count(patch2)).toBe(1);
+    expect(api.count(patch3)).toBe(1);
+    expect(screen.getByRole("dialog", { name: "Kargoga xarid biriktirish" })).toBeTruthy(); // oyna ochiq
+    expect(within(dialog).getByRole("button", { name: "Biriktirish (1)" })).toBeTruthy(); // qolgani tanlangan
+  });
+
+  it("biriktiriladigan xarid yo'q — bo'sh holat; faqat o'qiy oladigan rolda (hisobchi) tugma yo'q", async () => {
+    await renderAt(`/shipments/${SHIPMENT_1}`, withPurchases([rows()[0]!]));
+    const dialog = await open();
+    expect(await within(dialog).findByText("Biriktiriladigan xarid yoʻq")).toBeTruthy();
+    cleanup();
+    await renderAt(`/shipments/${SHIPMENT_1}`, withPurchases(), "accountant");
+    await screen.findByRole("table", { name: "Kargodagi xaridlar" });
+    expect(screen.queryByRole("button", { name: "Xarid biriktirish" })).toBeNull();
+  });
+
+  it("a11y: biriktirish oynasi", async () => {
+    await renderAt(`/shipments/${SHIPMENT_1}`, withPurchases());
+    const dialog = await open();
+    await within(dialog).findAllByRole("checkbox");
+    const result = await axe.run(document.body, { rules: { "color-contrast": { enabled: false }, region: { enabled: false } } });
+    expect(result.violations.filter((v) => v.impact === "critical" || v.impact === "serious")).toEqual([]);
   });
 });

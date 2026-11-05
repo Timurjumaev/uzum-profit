@@ -240,6 +240,12 @@
   min-block-size: 32px;
 }
 
+/* Kargo tanlovida: tanlangan kargo ostidagi izoh (masalan, "sanalar kargodan olinadi"). */
+.purchase-form__note {
+  display: block;
+  margin-inline-start: var(--space-6);
+}
+
 .purchases__actions {
   display: inline-flex;
   flex-wrap: wrap;
