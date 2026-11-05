@@ -586,6 +586,9 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
 - [ ] B5.1 Yetkazib beruvchilar va kargo kompaniyalari; muddatlarni o'rganish (F25).
 - [ ] B5.2 Buyurtma rejasi (F23–F27): tavsiya miqdor, CNY va so'm byudjeti, rejadan xarid yaratish.
 - [ ] B5.3 FBO yuborish rejasi + Excel; postavkalar: e'lon va qabul, kamomad (F33), bog'liq jarima.
+  ADR-050: Excel — Uzum kabineti shablonida (shtrix-kod, tannarx, dona); xarid ↔ postavka SKU bo'yicha avtomatik bog'lanish
+  (FIFO, qo'lda almashtirish), xarid sahifasida "Uzumga yuborildi / qabul qilindi / kamomad"; o'z omborimni postavkalar bo'yicha
+  hisoblash (ADR-034 qoldig'i).
 - [ ] B5.4 Yo'qolgan tovar (F31) + kompensatsiya (F32); nelikvid (F30); muzlagan pul (F29); yo'qotilgan foyda (F34).
 - [ ] B5.5 Reklama tahlili (DRR, ACOS, SKU bo'yicha), ABC/XYZ, hafta kuni × soat issiqlik xaritasi.
 - [ ] B5.6 Davrlarni solishtirish barcha hisobotlarda.
