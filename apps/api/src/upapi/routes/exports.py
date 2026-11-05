@@ -120,6 +120,14 @@ async def export_sales(
     return _file(f"sotuvlar-{_span(f)}", xlsx.build("Sotuvlar", SALES, rows, note))
 
 
+# B4.42: "Tannarx/dona" qayerdan — davr sotuvlari yoki (sotuv bo'lmasa) oxirgi partiya / boshlang'ich narx / yo'ldagi partiya.
+UNIT_COST_SOURCE = {
+    "sales": "davr sotuvlari",
+    "lot": "oxirgi partiya",
+    "opening": "boshlangʻich narx",
+    "transit": "yoʻldagi partiya",
+}
+
 SKUS = [
     xlsx.Col("SKU", lambda r: r.title),
     xlsx.Col("Tovar", lambda r: r.product_title),
@@ -131,8 +139,8 @@ SKUS = [
     xlsx.Col("Oʼrtacha narx", lambda r: r.avg_price, "money"),
     xlsx.Col("Komissiya ulushi", lambda r: r.commission_share, "ratio"),
     xlsx.Col("Logistika/dona", lambda r: r.logistics_per_unit, "money"),
-    xlsx.Col("Tannarx/dona", lambda r: r.cogs_per_unit, "money"),
-    xlsx.Col("Oxirgi partiya tannarxi/dona", lambda r: r.lot_unit_cost, "money"),
+    xlsx.Col("Tannarx/dona", lambda r: r.unit_cost, "money"),
+    xlsx.Col("Tannarx manbasi", lambda r: UNIT_COST_SOURCE.get(r.unit_cost_source or "")),
     xlsx.Col("Reklama/dona", lambda r: r.ads_per_unit, "money"),
     xlsx.Col("Foyda/dona", lambda r: r.profit_per_unit, "money"),
     xlsx.Col("Sof foyda (F12)", lambda r: r.net_profit, "money", total=True),

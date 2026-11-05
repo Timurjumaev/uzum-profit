@@ -3460,6 +3460,10 @@ export interface components {
             lot_unit_cost: string | null;
             /** Lot Source */
             lot_source: ("lot" | "opening" | "transit") | null;
+            /** Unit Cost */
+            unit_cost: string | null;
+            /** Unit Cost Source */
+            unit_cost_source: ("sales" | "lot" | "opening" | "transit") | null;
             /** Ads Per Unit */
             ads_per_unit: string | null;
             /** Acos */
