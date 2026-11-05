@@ -434,6 +434,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.42 (ADR-052): Mahsulotlarda "Oxirgi partiya" ustuni olib tashlandi — "Tannarx/dona" o'zi sotuv bo'lmasa oxirgi partiya
+  (yoki boshlang'ich narx, yo'ldagi partiya) tannarxini izoh bilan ko'rsatadi; saralash va Excel ("Tannarx manbasi") ham.
 - ADR-050 (reja): B5.3 aniqlashtirildi — xarid ↔ FBO postavka SKU bo'yicha avtomatik bog'lanishi va "Uzumga yuborish" Excel'i
   Uzum kabineti shablonida (shtrix-kod, tannarx, dona); shablon fakti 08 §4 da.
 - B4.28 (ADR-044): xarid sahifasidagi «Qatorlar» → **«Partiyadagi tovarlar»** («Tovar qo'shish»; xarajatda «Tovarlarga

@@ -14135,6 +14135,34 @@
             ],
             "title": "Lot Source"
           },
+          "unit_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Cost"
+          },
+          "unit_cost_source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "sales",
+                  "lot",
+                  "opening",
+                  "transit"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Cost Source"
+          },
           "ads_per_unit": {
             "anyOf": [
               {
@@ -14297,6 +14325,8 @@
           "cogs_per_unit",
           "lot_unit_cost",
           "lot_source",
+          "unit_cost",
+          "unit_cost_source",
           "ads_per_unit",
           "acos",
           "profit_per_unit",
