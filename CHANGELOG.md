@@ -434,6 +434,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- ADR-050 (reja): B5.3 aniqlashtirildi — xarid ↔ FBO postavka SKU bo'yicha avtomatik bog'lanishi va "Uzumga yuborish" Excel'i
+  Uzum kabineti shablonida (shtrix-kod, tannarx, dona); shablon fakti 08 §4 da.
 - B4.28 (ADR-044): xarid sahifasidagi «Qatorlar» → **«Partiyadagi tovarlar»** («Tovar qo'shish»; xarajatda «Tovarlarga
   taqsimlash»), ruscha «Товары в партии». Tovar ro'yxati `items` o'rniga SKU'lardan — bog'lanmagan SKU'lar ham chiqadi.
 

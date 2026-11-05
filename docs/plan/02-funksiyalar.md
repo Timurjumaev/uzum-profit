@@ -232,8 +232,10 @@ eng katta qatorga, F20); kurs o'zgarsa tannarx darhol yangilanadi.
 - **Joylar:** Xitoyda (buyurtma qilingan) → Yo'lda → O'z omborim → Uzum FBO (API) / FBS (API) → Brak → Qaytish yo'lida.
 - **Qoldiq jadvali:** har tovar bo'yicha joylar, tannarxdagi qiymat, zaxira kunlari (F24), holat (F26), buyurtma sanasi,
   tavsiya miqdor (F27) va byudjet (CNY va so'm), "Xarid yaratish" tugmasi.
-- **FBO yuborish rejasi:** o'z omborimdan Uzumga nima yuborish kerak (FBO zaxira maqsadi bo'yicha) + Excel [B5].
-- **Postavkalar:** holat, e'lon qilingan va qabul qilingan dona, kamomad (F33), bog'liq C000007 jarimasi [B5].
+- **FBO yuborish rejasi:** o'z omborimdan Uzumga nima yuborish kerak (FBO zaxira maqsadi bo'yicha) + Excel — Uzum
+  kabineti shablonida (shtrix-kod, tannarx, dona), xarid sahifasidan ham (ADR-050) [B5].
+- **Postavkalar:** holat, e'lon qilingan va qabul qilingan dona, kamomad (F33), bog'liq C000007 jarimasi; har postavka
+  xaridlarga SKU bo'yicha avtomatik bog'lanadi (FIFO, qo'lda almashtirish mumkin), xaridda "Uzumga yuborildi" (ADR-050) [B5].
 - **Yo'qolgan tovar** (F31) va kompensatsiya taxmini (F32), "kabinetda tekshiring" ro'yxati bilan [B5].
 - **Nelikvid** (F30), **muzlagan pul** (F29), **tugab qolishdan yo'qotilgan foyda** (F34) [B5].
 - Qoldiq tarixi grafigi (snapshotlardan); o'z omborida inventarizatsiya (tuzatish yozuvi bilan).
