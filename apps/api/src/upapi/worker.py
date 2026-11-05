@@ -3,6 +3,10 @@
 
 API bilan bir xil xavfsizlik shartlari: staging/prod'da xavfli sozlama yoki RLS'ni chetlab o'tadigan DB roli bilan
 ishga tushmaydi. Ishchi ``up_app`` bilan ulanadi; tashkilot ma'lumoti faqat ``org_transaction`` ichida (RLS).
+
+Ishga tushganda (har deploy ishchini qayta yaratadi) hamma tashkilot uchun to'liq qayta hisob navbatga qo'yiladi
+(:func:`upapi.sync.jobs.rebuild_all`, B4.40): tannarx dvigateli yoki belgilar qoidasi o'zgargan bo'lsa, saqlangan
+natijalar tungi 03:40 ni kutmasdan yangilanadi (B4.39 tuzatishi staging'da eski "Taxminiy" belgilari bilan qolgan edi).
 """
 
 from __future__ import annotations
@@ -17,7 +21,7 @@ from upapi.logs import configure_logging, get_logger
 from upapi.settings import Settings, get_settings
 from upapi.startup import UnsafeConfiguration, check_role, check_settings
 from upapi.sync.engine import Runtime
-from upapi.sync.jobs import QUEUES, build_app, connector_for
+from upapi.sync.jobs import QUEUES, build_app, connector_for, rebuild_all
 
 
 async def wait_for_schema(engine: AsyncEngine, every: float = 2.0) -> None:
@@ -47,8 +51,10 @@ async def run(settings: Settings | None = None) -> None:
         await check_role(rt.engine, settings)
         await wait_for_schema(rt.engine)
         app = build_app(connector_for(settings))
-        get_logger("upapi.worker").info("worker_started", concurrency=settings.worker_concurrency)
+        log = get_logger("upapi.worker")
+        log.info("worker_started", concurrency=settings.worker_concurrency)
         async with app.open_async():
+            log.info("calc_rebuild_on_start", queued=await rebuild_all(app, rt.engine))
             await app.run_worker_async(
                 queues=QUEUES,
                 concurrency=settings.worker_concurrency,

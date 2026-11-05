@@ -575,6 +575,14 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   yangilanadi (oxirgi qatlam narxi emas, `valid_from` jadvali). "Lot yetmadi" faqat haqiqiy partiyalar tugaganda. Boshlashdan oldingi sotuvlarning "tarixiy" belgisi ham
   jadvalda "Taxminiy" ko'rsatmaydi (sotuvchi kiritgan narx). 02 (F22, F41) yangilandi.
   **T:** kerak emas; shunday sotuvlarda "Taxminiy" yo'qolganini tekshiring.
+- [x] B4.40 Deploy'dan keyin tannarx natijalari darhol qayta hisoblanadi (Temur skrinshoti, 2026-11-05: B4.39 dan keyin ham
+  boshlang'ich narxli sotuvlarda "Taxminiy · partiyalar yetmadi").
+  ✓ 2026-11-05: sabab — dvigatel emas (B4.39 to'g'ri), saqlangan natija: `sale_costs` (tannarx va belgilar) faqat manba o'zgarganda
+  yoki tungi 03:40 dagi to'liq qayta qurishda yangilanadi, deploy esa hisob qoidasini o'zgartirsa ham eski qatorlarga tegmasdi — B4.39
+  tuzatishi eski sotuvlarga ertalabgacha yetib bormasdi (oldingi dvigatel tuzatishlarida ham shunday bo'lgan). Endi ishchi ishga
+  tushganda (har deploy uni qayta yaratadi) hamma ulangan tashkilot uchun to'liq qayta qurish navbatga qo'yiladi (`rebuild_all`, tungi
+  ish bilan bir xil; idempotent, faqat farqlar yoziladi). Versiya raqami o'rniga har ishga tushishda — oshirishni unutib bo'lmaydi.
+  **T:** deploy tugagach bir necha daqiqadan keyin Buyurtmalar sahifasini yangilab, o'sha sotuvlarda "Taxminiy" yo'qolganini ko'ring.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

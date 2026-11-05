@@ -151,6 +151,14 @@ def test_worker_starts_and_stops(monkeypatch: pytest.MonkeyPatch) -> None:
     bog'liq bo'lmasligi uchun uchalasi doim "vaqti kelgan" deb olinadi."""
     monkeypatch.setattr(jobs, "FX_CRON", "* * * * *")
     monkeypatch.setattr(jobs, "CALC_CRON", "* * * * *")
+    rebuilds: list[Any] = []
+    real_rebuild = worker.rebuild_all
+
+    async def spy(app: Any, engine: Any) -> int:
+        rebuilds.append(app)
+        return await real_rebuild(app, engine)
+
+    monkeypatch.setattr(worker, "rebuild_all", spy)
     with dbtools.migrated_database() as urls:
         settings = sf.settings_for(urls)
 
@@ -173,6 +181,8 @@ def test_worker_starts_and_stops(monkeypatch: pytest.MonkeyPatch) -> None:
     # va qolgan davriy ishlar navbatga qo'yildi.
     assert defers.keys() == {"tick", "fx", "calc"}
     assert defers["tick"] >= 1
+    # B4.40: ishga tushishda bir marta to'liq qayta hisob (deploy hisob qoidasini o'zgartirgan bo'lishi mumkin).
+    assert len(rebuilds) == 1
 
 
 def test_worker_waits_for_migrations() -> None:

@@ -488,6 +488,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- B4.40: deploy'dan keyin saqlangan tannarx natijalari (`sale_costs`, kunlik agregat) eski qoida bo'yicha tungi 03:40 gacha qolardi —
+  B4.39 tuzatishiga qaramay "Taxminiy · partiyalar yetmadi" ko'rinardi. Endi ishchi ishga tushganda hamma tashkilot uchun to'liq qayta
+  hisob navbatga qo'yiladi.
 - B4.39: boshlang'ich holatda narxi kiritilgan tovarning qoldig'i tugagach ham sotuv kunidagi kiritilgan narx aniq tannarx hisoblanadi —
   "Taxminiy" ("partiyalar yetmadi") belgisi chiqmaydi; "lot yetmadi" faqat haqiqiy partiyalar tugaganda.
 - B4.38: Mahsulotlarda sotilmagan SKU'lar "Zarar" o'rniga **"Sotuv yo'q"**; "Oxirgi partiya" partiya bo'lmasa boshlang'ich holat
