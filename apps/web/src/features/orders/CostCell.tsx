@@ -1,5 +1,7 @@
 // Sotuv qatori tannarxi katagi (M7): qiymat va uning ishonchliligi. "Taxminiy" yoki "Tannarxsiz" belgisi sababi bilan
 // ko'rsatiladi — F22 belgilari matnga aylantiriladi (tamoyil 9: taxmin yashirilmaydi, lekin sababi ham aytiladi).
+import { Info } from "lucide-react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Badge } from "../../components/ui";
@@ -28,20 +30,31 @@ export function sortFlags(flags: readonly string[]): string[] {
 
 type Props = { cogs: string | null; flags: readonly string[] };
 
+/** Belgi bosilsa sabablar katak ichida ochiladi (qalqib chiqmaydi: jadval skroll konteynerida kesilmasin, telefonda ham ishlasin). */
 export function CostCell({ cogs, flags }: Props) {
   const { t } = useTranslation();
   const f = useFormat();
-  const reasons = sortFlags(flags)
-    .map((x) => t(`orders.flag.${x}`, { defaultValue: x }))
-    .join("; ");
+  const [open, setOpen] = useState(false);
+  const id = useId();
+  const reasons = sortFlags(flags).map((x) => t(`orders.flag.${x}`, { defaultValue: x }));
   const value = cogs === null ? "—" : f.money(cogs, { unit: false });
   if (flags.length === 0) return <>{value}</>;
+  const text = t(cogs === null ? "orders.uncosted" : "orders.estimated");
   return (
     <>
-      <Badge tone={cogs === null ? "negative" : "warning"} title={reasons}>
-        {t(cogs === null ? "orders.uncosted" : "orders.estimated")}
-      </Badge>
-      <span className="ui-visually-hidden">: {reasons}.</span> {value}
+      <button type="button" className="cost-flag" aria-expanded={open} aria-controls={id} title={reasons.join("; ")} onClick={() => setOpen(!open)}>
+        <Badge tone={cogs === null ? "negative" : "warning"}>
+          {text} <Info size={12} aria-hidden />
+        </Badge>
+      </button>{" "}
+      {value}
+      {open && (
+        <ul id={id} className="cost-flag__reasons caption">
+          {reasons.map((x) => (
+            <li key={x}>{x}</li>
+          ))}
+        </ul>
+      )}
     </>
   );
 }

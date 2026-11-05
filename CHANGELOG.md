@@ -488,6 +488,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- B4.38: Mahsulotlarda sotilmagan SKU'lar "Zarar" o'rniga **"Sotuv yo'q"**; "Oxirgi partiya" partiya bo'lmasa boshlang'ich holat
+  narxini ko'rsatadi; buyurtmalardagi "Taxminiy" / "Tannarxsiz" belgisi bosilganda sabablar ochiladi.
 - B4.37: **zarar SKU soni** — "Zarar bilan sotilayotgan SKU" va Asosiy sahifadagi zarar ro'yxati sotilmagan SKU'larni (faqat saqlash yoki
   reklama xarajati bor) ham sanardi; endi faqat davrda sotuvi bor SKU. Hamma sotuvi tannarxsiz SKU "Zarar" o'rniga "Maʼlumot yoʻq"
   (sotuvsiz kunlardagi xarajat F15 da to'liq ayrilar, tushumi hisobga kirmasdi). **"Taxminiy" belgisi** — sababi ko'rinmasdi va tannarxi

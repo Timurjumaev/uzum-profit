@@ -42,7 +42,7 @@ from upcore.unit import unit_calc
 
 from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission
-from upapi.calc.costs import day_start
+from upapi.calc.costs import day_start, openings, start_of
 from upapi.db import models as m
 from upapi.errors import AppError
 from upapi.reports import cells as rc
@@ -110,7 +110,9 @@ class SkuRowOut(BaseModel):
     lot_unit_cost: (
         Decimal | None
     )  # F20: tovarning oxirgi partiyasi tannarxi/dona (sotuvdan mustaqil)
-    lot_in_transit: bool  # partiya hali yo'lda (tayyor emas): tannarx taxminiy
+    lot_source: (
+        Literal["lot", "opening", "transit"] | None
+    )  # manba: partiya, boshlang'ich narx yoki yo'ldagi partiya
     ads_per_unit: Decimal | None
     acos: Decimal | None  # F19
     profit_per_unit: Decimal | None
@@ -131,14 +133,21 @@ class SkuRowOut(BaseModel):
     status: str | None  # Uzum SKU holati
 
 
+type LotSource = Literal["lot", "opening", "transit"]
+
+
 class LastLot(NamedTuple):
     unit: Decimal
-    in_transit: bool
+    source: LotSource  # "lot" — tayyor partiya | "opening" — boshlang'ich holat narxi (F41) | "transit" — yo'ldagi partiya
 
 
-async def latest_lot_costs(conn: AsyncConnection, items: set[UUID]) -> dict[UUID, LastLot]:
-    """Tovar → oxirgi partiya tannarxi/dona (F20): eng so'nggi tayyor lot, tayyori yo'q bo'lsa — yo'ldagi (sanasiz)
-    oxirgisi. Sotuvdan mustaqil: yangi xarid qilingan, hali sotilmagan tovar ham ko'rinadi."""
+async def latest_lot_costs(
+    conn: AsyncConnection, items: set[UUID], start: date | None, today: date
+) -> dict[UUID, LastLot]:
+    """Tovar → joriy tannarx/dona. Tartib: eng so'nggi tayyor partiya (F20; boshlashdan oldin tayyor bo'lganlari
+    qoldiqqa kirgan — hisobga olinmaydi, F41), bo'lmasa boshlang'ich holatda kiritilgan narx (``start`` qo'yilgan
+    bo'lsa; ``today`` dagi tarixiy narx), bo'lmasa yo'ldagi (sanasiz) oxirgi partiya. Sotuvdan mustaqil: yangi xarid
+    qilingan yoki boshlang'ich narx kiritilgan, hali sotilmagan tovar ham ko'rinadi."""
     if not items:
         return {}
     lt = m.lots
@@ -150,15 +159,24 @@ async def latest_lot_costs(conn: AsyncConnection, items: set[UUID]) -> dict[UUID
         )
     ):
         if r.ready_on is not None:
+            if start is not None and r.ready_on < start:
+                continue
             key = (r.ready_on, r.created_at)
             if r.item_id not in ready or key > ready[r.item_id][0]:
                 ready[r.item_id] = (key, r.unit_cost)
         elif r.item_id not in transit or r.created_at > transit[r.item_id][0]:
             transit[r.item_id] = (r.created_at, r.unit_cost)
-    return {
-        **{item: LastLot(v[1], True) for item, v in transit.items()},
-        **{item: LastLot(v[1], False) for item, v in ready.items()},
-    }
+    opened = await openings(conn, start, items) if start is not None else {}
+    out: dict[UUID, LastLot] = {}
+    for item in items:
+        price = opened[item].price_on(today) if item in opened else None
+        if item in ready:
+            out[item] = LastLot(ready[item][1], "lot")
+        elif price is not None:
+            out[item] = LastLot(price.amount, "opening")
+        elif item in transit:
+            out[item] = LastLot(transit[item][1], "transit")
+    return out
 
 
 class SkusOut(BaseModel):
@@ -200,7 +218,7 @@ def _row(
         logistics_per_unit=amount(u.logistics_per_unit),
         cogs_per_unit=amount(u.cogs_per_unit),
         lot_unit_cost=None if lot is None else lot.unit,
-        lot_in_transit=False if lot is None else lot.in_transit,
+        lot_source=None if lot is None else lot.source,
         ads_per_unit=amount(u.ads_per_unit),
         acos=u.acos,
         profit_per_unit=amount(u.profit_per_unit),
@@ -246,7 +264,12 @@ async def skus(
     sums = await rc.sale_sums(ctx.conn, f, by_sku=True)
     catalog = await sku_catalog(ctx.conn, f.shops)
     stock = await load_stock(ctx.conn, sorted(f.shops, key=str) if f.shops else None, f.today)
-    lots = await latest_lot_costs(ctx.conn, {i.item_id for i in catalog.values() if i.item_id})
+    lots = await latest_lot_costs(
+        ctx.conn,
+        {i.item_id for i in catalog.values() if i.item_id},
+        await start_of(ctx.conn, ctx.org_id),
+        f.today,
+    )
     empty = Cells(f.period, {}).statement()
     needle = fold(q).strip() if q else ""
 
@@ -389,7 +412,12 @@ async def sku_detail(
     n = (await rc.sale_sums(conn, f, sku=sku_id)).get(None, rc.SaleSums())
     stock = await load_stock(conn, [info.shop_id], f.today, {sku_id})
     st = stock.skus.get(sku_id)
-    last = await latest_lot_costs(conn, {info.item_id} if info.item_id else set())
+    last = await latest_lot_costs(
+        conn,
+        {info.item_id} if info.item_id else set(),
+        await start_of(conn, ctx.org_id),
+        f.today,
+    )
     row = _row(info, s, n, st, last.get(info.item_id) if info.item_id else None)
 
     d = m.sku_daily

@@ -240,7 +240,8 @@ function buildColumns(ids: readonly ColumnId[], { t, f, shopName }: Ctx): Column
       cell(r.lot_unit_cost, (x) => (
         <>
           {f.money(x, { unit: false })}
-          {r.lot_in_transit && <span className="caption"> {t("products.lotTransit")}</span>}
+          {r.lot_source === "transit" && <span className="caption"> {t("products.lotTransit")}</span>}
+          {r.lot_source === "opening" && <span className="caption"> {t("products.lotOpening")}</span>}
         </>
       )),
     ads: (r) => money(r.ads_per_unit),

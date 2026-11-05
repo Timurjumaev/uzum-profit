@@ -813,6 +813,7 @@ class ProfitLabel(StrEnum):
     BORDERLINE = "borderline"  # Chegarada: F13 < 5%
     PROFITABLE = "profitable"  # Foydali
     NO_DATA = "no_data"  # Ma'lumot yo'q: tannarxi ma'lum tushum yo'q (F13 hisoblanmaydi)
+    IDLE = "idle"  # Sotuv yo'q: davrda sotilmagan, faqat xarajat (saqlash, reklama) bor — zarar emas, e'tibor kerak
 
 
 def profit_label(

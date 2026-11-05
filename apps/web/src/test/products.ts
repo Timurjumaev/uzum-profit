@@ -38,7 +38,7 @@ export function skuRow(over: Partial<Row> = {}): Row {
     logistics_per_unit: "5000.00",
     cogs_per_unit: "100000.00",
     lot_unit_cost: "100000.00",
-    lot_in_transit: false,
+    lot_source: "lot",
     ads_per_unit: "3333.33",
     acos: "0.016667",
     profit_per_unit: "40000.00",

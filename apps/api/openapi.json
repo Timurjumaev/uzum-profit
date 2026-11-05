@@ -11885,7 +11885,8 @@
           "loss",
           "borderline",
           "profitable",
-          "no_data"
+          "no_data",
+          "idle"
         ],
         "title": "ProfitLabel",
         "description": "M6 SKU holat belgisi."
@@ -14118,9 +14119,21 @@
             ],
             "title": "Lot Unit Cost"
           },
-          "lot_in_transit": {
-            "type": "boolean",
-            "title": "Lot In Transit"
+          "lot_source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "lot",
+                  "opening",
+                  "transit"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot Source"
           },
           "ads_per_unit": {
             "anyOf": [
@@ -14283,7 +14296,7 @@
           "logistics_per_unit",
           "cogs_per_unit",
           "lot_unit_cost",
-          "lot_in_transit",
+          "lot_source",
           "ads_per_unit",
           "acos",
           "profit_per_unit",

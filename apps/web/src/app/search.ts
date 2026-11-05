@@ -52,7 +52,7 @@ export const PRODUCT_SORTS = [
   "expenses_allocated",
 ] as const;
 export type ProductSort = (typeof PRODUCT_SORTS)[number];
-export const PRODUCT_LABELS = ["loss", "borderline", "profitable", "no_data"] as const;
+export const PRODUCT_LABELS = ["loss", "borderline", "profitable", "no_data", "idle"] as const;
 export type ProductLabel = (typeof PRODUCT_LABELS)[number];
 export const PRODUCT_ABC = ["A", "B", "C"] as const;
 export type ProductAbc = (typeof PRODUCT_ABC)[number];
