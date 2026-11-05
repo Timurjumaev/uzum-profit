@@ -73,7 +73,7 @@ Matn satri ≤ 75 belgi (yordam matnlari, tavsiflar). Hamma matn chapga tekislan
 ## 3. Oraliq, shakl, chiziqlar
 
 - Oraliq qadami 4 px: 4, 8, 12, 16, 20, 24, 32, 40, 48, 64.
-- Radius: 6 px (tugma, input), 10 px (panel, drawer, dialog); jadvallar va hisob varag'ida radius yo'q.
+- Radius: 6 px (tugma, input), 10 px (panel, kartochka, jadval, drawer, dialog; ADR-048, B4.36 — hamma sahifada bir xil); faqat hisob varag'ida (LedgerTable, Foyda sahifasidagi hisob varag'i qutisi) radius yo'q.
 - Chiziqlar: `hairline` (1 px, ajratuvchi), `rule` (1 px, hisobdagi oraliq summa ustida — siyoh rangida),
   `rule-double` (3 px double, faqat yakuniy summa ostida).
 - Soya: faqat suzib chiqadigan qatlamlarda (menyu, popover, dialog): `0 8px 24px rgb(18 24 38 / 0.12)`.

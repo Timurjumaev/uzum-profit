@@ -394,6 +394,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   olganida" turi, `AD#` → sotuv qatori, yechilgan kun buyurtma va topshirilgan kunga nisbatan), `dateService` ↔
   `dateCreated` farqi va saqlash yechiladigan kunlar; faqat yig'indilar, matnlar raqamsiz.
 
+- B4.36 (ADR-048 davomi): **kartochkalar bir xil burchakda** — Asosiy, Foyda va Mahsulotlar sahifalaridagi kartochkalar ham 10 px (hisob
+  varag'i burchaksiz); davr kartalaridagi sarlavhalar bir chiziqda; jadvallarda gorizontal skroll bo'lsa, chetida yengil soya. Faqat CSS.
 - B4.35 (ADR-048 davomi): **dizayn jilosi — qolgan sahifalar.** KPI kartalarda raqamlar bir chiziqda; Ombor holat belgilari cho'zilmaydi;
   Buyurtmalarda filtr va Excel tugmasi bir chiziqda; Xarajatlarda Excel tugmasi cho'zilmaydi; Sozlamalarda sarlavha, izoh va forma
   sarlavhalari oralig'i tuzatildi. Faqat CSS.

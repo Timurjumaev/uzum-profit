@@ -803,7 +803,13 @@
   overflow-x: auto;
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-panel);
-  background: var(--bg-surface);
+  /* Skroll ishorasi: kontent o'ngda/chapda davom etsa, shu chetda yengil soya (skroll bo'lmasa ko'rinmaydi). */
+  background:
+    linear-gradient(to right, var(--bg-surface) 30%, transparent) left center / 24px 100% no-repeat local,
+    linear-gradient(to left, var(--bg-surface) 30%, transparent) right center / 24px 100% no-repeat local,
+    linear-gradient(to right, rgb(18 24 38 / 0.12), transparent) left center / 10px 100% no-repeat scroll,
+    linear-gradient(to left, rgb(18 24 38 / 0.12), transparent) right center / 10px 100% no-repeat scroll,
+    var(--bg-surface);
 }
 
 .ui-table {
