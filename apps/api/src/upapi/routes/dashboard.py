@@ -25,9 +25,7 @@ from upcore.inventory import StockStatus
 from upcore.metrics import (
     OrderFlow,
     Period,
-    ProfitLabel,
     drr,
-    profit_label,
     relative_change,
     run_rate,
     share_change,
@@ -383,8 +381,9 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
     skus = {k: v for k, v in cur.by_sku().items() if k is not None and k != rc.UNLINKED}
     ranked = sorted(skus.items(), key=lambda kv: (-kv[1].net_profit.amount, kv[0]))
     top = [kv for kv in ranked[:TOP] if kv[1].net_profit.amount > 0]
+    # "Zarar bilan sotilayotgan": davrda sotuvi bor (tannarxi ma'lum) va F12 < 0 — sotuvsiz SKU saqlash/reklamasi emas.
     bottom = sorted(
-        (kv for kv in ranked if kv[1].net_profit.amount < 0), key=lambda kv: kv[1].net_profit.amount
+        (kv for kv in ranked if kv[1].sold_at_loss), key=lambda kv: kv[1].net_profit.amount
     )[:TOP]
     catalog = await sku_catalog(
         conn, ids=[UUID(k) for k, _ in (*top, *bottom)] if (top or bottom) else []
@@ -473,11 +472,7 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
         attention=AttentionOut(
             uncosted_lines=s.uncovered_lines,
             uncosted_revenue=s.uncovered_revenue.amount,
-            loss_skus=sum(
-                1
-                for st in skus.values()
-                if profit_label(st.net_profit, st.margin) is ProfitLabel.LOSS
-            ),
+            loss_skus=sum(1 for st in skus.values() if st.sold_at_loss),
             stock_critical=statuses.count(StockStatus.CRITICAL),
             stock_high=statuses.count(StockStatus.HIGH),
             recalculated=await rc.recalculated(conn, f, now),

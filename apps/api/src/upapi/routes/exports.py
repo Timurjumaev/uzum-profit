@@ -132,6 +132,7 @@ SKUS = [
     xlsx.Col("Komissiya ulushi", lambda r: r.commission_share, "ratio"),
     xlsx.Col("Logistika/dona", lambda r: r.logistics_per_unit, "money"),
     xlsx.Col("Tannarx/dona", lambda r: r.cogs_per_unit, "money"),
+    xlsx.Col("Oxirgi partiya tannarxi/dona", lambda r: r.lot_unit_cost, "money"),
     xlsx.Col("Reklama/dona", lambda r: r.ads_per_unit, "money"),
     xlsx.Col("Foyda/dona", lambda r: r.profit_per_unit, "money"),
     xlsx.Col("Sof foyda (F12)", lambda r: r.net_profit, "money", total=True),

@@ -14107,6 +14107,21 @@
             ],
             "title": "Cogs Per Unit"
           },
+          "lot_unit_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot Unit Cost"
+          },
+          "lot_in_transit": {
+            "type": "boolean",
+            "title": "Lot In Transit"
+          },
           "ads_per_unit": {
             "anyOf": [
               {
@@ -14267,6 +14282,8 @@
           "commission_share",
           "logistics_per_unit",
           "cogs_per_unit",
+          "lot_unit_cost",
+          "lot_in_transit",
           "ads_per_unit",
           "acos",
           "profit_per_unit",

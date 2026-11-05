@@ -84,6 +84,21 @@ describe("roʻyxat", () => {
     expect(summary).toContain(f.percent("0.187500"));
   });
 
+  it("tannarx belgisi sababi bilan: tannarxsiz — sababi, taxminiy — F22 belgilari matni (kurs CBU oxirida)", async () => {
+    await renderAt(PATH, {
+      [SALES_ROUTE]: () =>
+        json(200, salesData({ items: [sale({ id: "a", cost_flags: ["cbu_rate", "cargo_missing"] }), sale({ id: "b", cogs: null, gross_profit: null, cost_flags: ["no_lots"] }), sale({ id: "c" })] })),
+    });
+    const table = await screen.findByRole("table", { name: CAPTION });
+    const [taxminiy, tannarxsiz, toza] = within(table).getAllByRole("row").slice(1);
+    const badge = within(taxminiy!).getByText("Taxminiy");
+    expect(badge.getAttribute("title")).toBe("kargo xarajati kiritilmagan; kurs Markaziy bank boʻyicha (haqiqiy toʻlangan emas)");
+    expect(within(tannarxsiz!).getByText("Tannarxsiz").getAttribute("title")).toBe("tovarda hali partiya yoʻq — xaridni kiriting");
+    expect(within(tannarxsiz!).queryByText("Taxminiy")).toBeNull(); // tannarxi yo'q qatorda "taxminiy" emas
+    expect(within(toza!).queryByText("Taxminiy")).toBeNull();
+    expect(within(toza!).queryByText("Tannarxsiz")).toBeNull();
+  });
+
   it("so'rov: davr va limit; holat filtri URL'ga yoziladi va so'rovni o'zgartiradi", async () => {
     const { api, history } = await renderAt(PATH);
     await screen.findByRole("table", { name: CAPTION });

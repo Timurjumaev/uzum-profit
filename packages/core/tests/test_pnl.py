@@ -709,3 +709,38 @@ def test_conservation_every_cost_once(
     assert s.net_profit_done + s.net_profit_processing == s.net_profit
     for view in (cells.by_sku(), cells.by_day(), cells.by_shop()):
         assert total([x.net_profit for x in view.values()], "UZS") == s.net_profit
+
+
+def test_label_uncosted_sku_not_loss() -> None:
+    """Hamma sotuvi tannarxsiz SKU: sotuvsiz kundagi saqlash F15 da to'liq ayriladi (tushum esa hisobga kirmaydi) —
+    manfiy F12 tannarx yo'qligidan, "Zarar" emas. Tannarxi ma'lum sotuvda xarajat ortiq bo'lsa — haqiqiy zarar."""
+    from upcore.metrics import ProfitLabel
+
+    storage = [ExpenseItem(d(5), "S1", C.STORAGE, uzs(30_000), sku="A")]  # d(5) da A sotilmagan
+    blind = build_cells(OCT, [sale(1, cost=None), sale(2, cost=None)], storage).by_sku()["A"]
+    assert blind.net_profit.amount < 0  # xarajat ayrildi, tushum yo'q
+    assert blind.all_uncosted and blind.label is ProfitLabel.NO_DATA and not blind.sold_at_loss
+
+    costed = build_cells(OCT, [sale(1), sale(2)], storage).by_sku()["A"]
+    assert costed.net_profit.amount > 0  # sotuvdan foyda ortiq
+    assert costed.label is ProfitLabel.PROFITABLE and not costed.sold_at_loss
+
+    heavy = [ExpenseItem(d(5), "S1", C.STORAGE, uzs(900_000), sku="A")]
+    loss = build_cells(OCT, [sale(1), sale(2)], heavy).by_sku()["A"]
+    assert loss.label is ProfitLabel.LOSS and loss.sold_at_loss
+
+    mixed = build_cells(OCT, [sale(1), sale(2, cost=None)], heavy).by_sku()["A"]
+    assert not mixed.all_uncosted and mixed.sold_at_loss  # qisman tannarx ma'lum
+
+
+def test_sold_at_loss_requires_sales() -> None:
+    """ "Zarar bilan sotilayotgan" SKU'ga faqat saqlash yoki reklamasi bor, davrda sotilmagan SKU kirmaydi."""
+    from upcore.metrics import ProfitLabel
+
+    ads_only = build_cells(
+        OCT, [sale(1, sku="B")], [ExpenseItem(d(3), "S1", C.ADVERTISING, uzs(10_000), sku="A")]
+    ).by_sku()["A"]
+    assert (
+        ads_only.net_profit.amount < 0 and ads_only.label is ProfitLabel.LOSS
+    )  # M6 jadvalida Zarar
+    assert ads_only.lines == 0 and not ads_only.sold_at_loss  # lekin "sotilayotgan" emas

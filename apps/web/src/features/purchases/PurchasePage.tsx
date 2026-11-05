@@ -104,6 +104,7 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
         <span className="purchase-cell">
           <span className="purchase-cell__title">{l.item_name ?? l.temp_name ?? "—"}</span>
           {l.variant && <span className="caption">{l.variant}</span>}
+          {l.item_id === null && <span className="caption">{t("purchases.lines.noSkuHint")}</span>}
           {l.url && (
             <a href={l.url} target="_blank" rel="noreferrer noopener" className="caption">
               {t("purchases.lines.link")} <ExternalLink size={12} aria-hidden />

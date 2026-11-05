@@ -10,6 +10,7 @@ import { ORDER_GROUPS, ordersSearch, type OrderGroup } from "../../app/search";
 import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, FormulaPopover, Select, Skeleton, type Column, type Tone } from "../../components/ui";
 import type { Sale } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
+import { CostCell } from "./CostCell";
 
 const GROUP_TONE: Record<Sale["group"], Tone> = { completed: "positive", processing: "info", canceled: "negative", unknown: "warning" };
 
@@ -63,11 +64,7 @@ export function OrdersList({ orgId, params, group }: Props) {
       key: "cogs",
       header: t("terms.cogs"), help: help("cogs", t("terms.cogs")),
       numeric: true,
-      render: (r) => (
-        <>
-          {r.cost_flags.length > 0 && <Badge tone="warning">{t("orders.estimated")}</Badge>} {r.cogs === null ? "—" : f.money(r.cogs, { unit: false })}
-        </>
-      ),
+      render: (r) => <CostCell cogs={r.cogs} flags={r.cost_flags} />,
     },
     { key: "profit", header: t("terms.grossProfit"), help: help("grossProfit", t("terms.grossProfit")), numeric: true, render: (r) => (r.gross_profit === null ? "—" : f.money(r.gross_profit, { unit: false })) },
   ];
