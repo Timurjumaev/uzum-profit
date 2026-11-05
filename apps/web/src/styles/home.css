@@ -39,6 +39,7 @@
   gap: var(--space-1);
   padding: var(--space-4);
   border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-panel);
   background: var(--bg-surface);
   min-inline-size: 0;
 }
@@ -137,6 +138,7 @@
   flex: 1 0 11rem;
   padding: var(--space-3);
   border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-panel);
   background: var(--bg-surface);
   scroll-snap-align: start;
 }
@@ -144,6 +146,7 @@
 .home-period h3 {
   display: flex;
   align-items: center;
+  min-block-size: 32px; /* "?" tugmali va tugmasiz sarlavhalar bir chiziqda */
   gap: var(--space-1);
   margin: 0 0 var(--space-2);
   color: var(--text-secondary);
@@ -398,6 +401,7 @@
   min-inline-size: 0;
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-panel);
   background: var(--bg-surface);
 }
 
@@ -473,6 +477,8 @@
   margin: 0;
   padding: 0;
   border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-panel);
+  overflow: hidden;
   background: var(--bg-surface);
   list-style: none;
 }

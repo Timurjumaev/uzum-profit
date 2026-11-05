@@ -542,6 +542,12 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   Sozlamalarda bo'lim sarlavhasi, izoh va forma sarlavhalari (legend) oralig'i. Faqat CSS; mantiq va matn o'zgarmadi. Vizual asoslar yangilandi.
   **T:** staging'da Asosiy, Ombor, Buyurtmalar, Xarajatlar, Sozlamalarni ko'rib, yoqmagan joyni skrinshot bilan yozing (keyingi o'tish:
   mobil jadvallar — Ombor/Mahsulotlar, Asosiy sahifa qayta tuzilishi).
+- [x] B4.36 Dizayn jilosi: Asosiy, Foyda, Mahsulotlar kartochkalari va jadval skroll ishorasi (ADR-048 davomi; Temur: "hammasi yaxshi, davom et").
+  ✓ 2026-11-05: kartochkalar hamma sahifada bir xil burchakda (10 px; avval Asosiy, Foyda va Mahsulotlarda burchaksiz, boshqa sahifalarda
+  10 px edi): Asosiy ("uch raqam", davr kartalari, KPI kartalari, "Diqqat talab qiladi"), Foyda ("Kutilayotgan sof foyda"), Mahsulotlar
+  ("Jadvaldan tashqari", SKU bloklari); hisob varag'i burchaksiz qoldi. Davr kartalarida "?" tugmali sarlavha bir chiziqda. Jadvallarda
+  gorizontal skroll bo'lsa, chetida yengil soya (mobilda ma'lumot o'ngda davom etishi ko'rinadi). Faqat CSS; ma'lumot yashirilmadi.
+  Vizual asoslar (Asosiy, Palitra) yangilandi. **T:** staging'da Asosiy, Foyda, Mahsulotlarni ko'rib, yoqmagan joyni skrinshot bilan yozing.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.
