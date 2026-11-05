@@ -16,6 +16,16 @@ Boshlang'ich holat (F41, ADR-033): ``Opening`` berilsa, boshlash sanasidan oldin
 sotuvchi kiritgan tarixiy tannarx (sana bo'yicha narxlar) bilan, "tarixiy" belgisi bilan hisoblanadi. Boshlash
 kunidagi qoldiq (dona × shu sanadagi narx) birinchi lot bo'ladi; tayyor sanasi boshlashdan oldingi lotlar
 qoldiqqa kirgan deb hisoblanadi va ishlatilmaydi (``superseded``). Boshlashdan keyin — odatdagi FIFO / o'rtacha.
+
+Boshlang'ich qoldiq va lotlar tugaganda (F41, ADR-051): boshlashdan oldin berilib, keyin bekor qilingan buyurtmalar tovari
+omborga qaytadi, lekin boshlash kunidagi qoldiqda yo'q edi (xaridorga yo'lda). Uzum qaytish sanasini bermaydi, shuning uchun
+manba FBO postavkalaridan aniqlanadi (``Opening.supplied_on``):
+
+- shu kungacha boshlashdan keyin postavka bo'lmagan — yangi tovar Uzumga kelmagan, yetmagan qism qaytgan eski tovar:
+  boshlang'ich narxda, belgisiz; FBO tovarida yo'ldagi / keyinroq tayyor lotga ham tegilmaydi (tovar Uzumda yo'q);
+- postavka bo'lgan va partiya kiritilgan — qaytgan eski tovarni partiyadan ajratib bo'lmaydi: oxirgi partiya narxida,
+  belgisiz (sotuvchi aybi emas);
+- postavka bo'lgan, partiya kiritilmagan — boshlang'ich narxda, "postavka bor, partiya kiritilmagan" belgisi bilan.
 """
 
 from __future__ import annotations
@@ -45,6 +55,9 @@ class CostFlag(StrEnum):
     EARLY_SALE = "early_sale"  # sotuv lot tayyor bo'lishidan oldin
     NOT_RECEIVED_MARKED = "not_received_marked"  # yo'ldagi (sanasiz) lotdan olindi
     LOT_SHORTAGE = "lot_shortage"  # lotlar yetmadi — oxirgi ma'lum narx
+    SUPPLY_NO_LOT = (
+        "supply_no_lot"  # boshlashdan keyin postavka bor, partiya kiritilmagan (F41, ADR-051)
+    )
     RETURN_UNMATCHED = "return_unmatched"  # qaytishning asl sotuvi topilmadi
     NO_LOTS = "no_lots"  # tovarda lot umuman yo'q — tannarx yo'q
     HISTORICAL = "historical"  # boshlash sanasidan oldingi sotuv — tarixiy tannarx (F41)
@@ -124,11 +137,20 @@ class PricePoint:
 
 @dataclass(frozen=True, slots=True)
 class Opening:
-    """F41. Boshlang'ich holat: boshlash sanasi, shu kungi qoldiq (dona) va tarixiy narxlar."""
+    """F41. Boshlang'ich holat: boshlash sanasi, shu kungi qoldiq (dona) va tarixiy narxlar.
+
+    ADR-051: ``fbo`` — tovar Uzumga FBO postavka bilan boradi (postavka tarixi bor); ``supplied_on`` — boshlashdan keyingi
+    birinchi postavka kuni (``None`` — yo'q): shu kungacha Uzumga yangi tovar kelmagan."""
 
     start: date
     qty: int = 0
     prices: tuple[PricePoint, ...] = ()
+    fbo: bool = False
+    supplied_on: date | None = None
+
+    def supplied_by(self, day: date) -> bool:
+        """ADR-051: ``day`` gacha (shu kun ham) boshlashdan keyin yangi tovar postavka bilan kelganmi."""
+        return self.supplied_on is not None and self.supplied_on <= day
 
     def __post_init__(self) -> None:
         if self.qty < 0:
@@ -302,7 +324,9 @@ class _Engine:
         self.pool_value = Decimal(0)
         self.last_unit: Decimal | None = None
         self.last_flags: set[AnyFlag] = set()
-        self.last_from_opening = False
+        self.last_lot: tuple[Decimal, set[AnyFlag]] | None = (
+            None  # oxirgi olingan haqiqiy partiya (ADR-051)
+        )
         self.sales: dict[str, Outflow] = {}
         self.writeoffs: dict[str, Outflow] = {}
         self.returns: dict[str, ReturnResult] = {}
@@ -332,7 +356,8 @@ class _Engine:
         need = event.qty
         allocations: list[Allocation] = []
         flags: set[AnyFlag] = set()
-        while need > 0 and (self.pool_qty > 0 or self._fallback()):
+        old_goods = self._old_goods(event.day)
+        while need > 0 and (self.pool_qty > 0 or (not old_goods and self._fallback())):
             avg = self.pool_value / self.pool_qty
             layer = next(x for x in self.open if x.remaining > 0)
             take = min(need, layer.remaining)
@@ -344,26 +369,43 @@ class _Engine:
             flags |= layer.flags
             allocations.append(Allocation(layer.lot.id, take, unit))
             self.last_unit, self.last_flags = unit, set(layer.flags)
-            self.last_from_opening = layer.lot.id == OPENING_LOT
+            if layer.lot.id != OPENING_LOT:
+                self.last_lot = (unit, set(layer.flags))
         if need > 0:
             short: Decimal | None = self.last_unit
-            shortage_flags: set[AnyFlag] = self.last_flags
-            exact = False
-            if self.opening is not None and (short is None or self.last_from_opening):
-                # Qoldiq tugadi (yoki lot ham, qoldiq ham yo'q), lekin sotuvchi tarixiy narx yozgan: yetmagan qism o'sha
-                # kundagi shu narxda — sotuvchi kiritgan aniq tannarx, taxminiy emas (belgi qo'yilmaydi). Qoldiq soni
-                # Uzumdan olinadi: sotuvchi narxni kiritadi, soni uning ixtiyorida emas.
-                price = self.opening.price_on(event.day)
-                if price is not None:
-                    short, exact = price.amount, True
+            extra: set[AnyFlag] = self.last_flags | {CostFlag.LOT_SHORTAGE}
+            if self.opening is not None:
+                short, extra = self._opening_shortage(event.day, short, extra)
             if short is None:  # tovarda lot umuman yo'q
                 self._record(event, None, (), flags | {CostFlag.NO_LOTS})
                 return
-            if not exact:
-                flags |= shortage_flags | {CostFlag.LOT_SHORTAGE}
+            flags |= extra
             allocations.append(Allocation(None, need, short))
         cost = Money(sum((a.unit * a.qty for a in allocations), Decimal(0)), UZS)
         self._record(event, cost, tuple(allocations), flags)
+
+    def _old_goods(self, day: date) -> bool:
+        """ADR-051: FBO tovari, boshlashdan keyin ``day`` gacha postavka yo'q va narx bor — Uzumdagi har dona eski tovar
+        (boshlang'ich qoldiq yoki qaytgan), yo'ldagi yoki keyinroq tayyor lotdan olinmaydi."""
+        o = self.opening
+        return o is not None and o.fbo and not o.supplied_by(day) and o.price_on(day) is not None
+
+    def _opening_shortage(
+        self, day: date, short: Decimal | None, extra: set[AnyFlag]
+    ) -> tuple[Decimal | None, set[AnyFlag]]:
+        """F41, ADR-051: boshlang'ich qoldiq va lotlar tugaganda yetmagan qism narxi va belgilari (modul izohi)."""
+        assert self.opening is not None
+        price = self.opening.price_on(day)
+        if not self.opening.supplied_by(day):
+            # Yangi tovar kelmagan: boshlashdan oldingi bekor buyurtmalardan qaytgan eski tovar — boshlang'ich narx, aniq.
+            return (short, extra) if price is None else (price.amount, set())
+        if self.last_lot is not None:
+            # Partiya kiritilgan, qaytgan eski tovar ham bo'lishi mumkin — ajratib bo'lmaydi: partiya narxi, partiyaning
+            # o'z belgilari bilan (masalan, kargo kiritilmagan), "yetmadi" belgisisiz.
+            return self.last_lot[0], set(self.last_lot[1])
+        if price is None:
+            return short, extra
+        return price.amount, {CostFlag.SUPPLY_NO_LOT}
 
     def historical(self, event: Event, unit: Money | None) -> None:
         """F41: boshlashdan oldingi hodisa — lotga tegmaydi; sotuv tarixiy narxda (narx yo'q — ``None``).

@@ -111,6 +111,13 @@ describe("roʻyxat", () => {
     expect(within(table).queryByRole("button", { name: /Taxminiy/ })).toBeNull();
   });
 
+  it("ADR-051: postavka bor, partiya kiritilmagan — 'Taxminiy' va sotuvchi tuzata oladigan sabab", async () => {
+    await renderAt(PATH, { [SALES_ROUTE]: () => json(200, salesData({ items: [sale({ cost_flags: ["supply_no_lot"] })] })) });
+    const table = await screen.findByRole("table", { name: CAPTION });
+    fireEvent.click(within(table).getByRole("button", { name: /Taxminiy/ }));
+    expect(within(table).getByText("boshlashdan keyin postavka bor, lekin partiya Xaridlarga kiritilmagan — boshlangʻich narx olindi")).toBeTruthy();
+  });
+
   it("so'rov: davr va limit; holat filtri URL'ga yoziladi va so'rovni o'zgartiradi", async () => {
     const { api, history } = await renderAt(PATH);
     await screen.findByRole("table", { name: CAPTION });

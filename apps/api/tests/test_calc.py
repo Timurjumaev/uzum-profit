@@ -712,6 +712,44 @@ def test_opening_price_covers_sales_without_stock_or_lots(org: Org) -> None:
     assert costs[after][0] == D(150_000) and costs[after][2] == []
 
 
+def test_opening_shortage_uses_fbo_supplies(org: Org) -> None:
+    """ADR-051: boshlang'ich qoldiq (1 dona) tugadi. Boshlashdan keyin postavka yo'q — qaytgan eski tovar: boshlang'ich
+    narxda, belgisiz (bekor qilingan postavka hisobga olinmaydi). Postavka bo'lgach, partiya kiritilmagan — "postavka bor,
+    partiya kiritilmagan" belgisi; postavka kelishi shu kundan sotuvlarni qayta hisoblatadi."""
+    item, sku = org.item("FBO")
+    org.sql("UPDATE orgs SET cost_start_on = %s WHERE id = %s", [d(10, 1), org.org_id])
+    org.insert("item_costs", item_id=item, valid_from=None, unit_cost=D(50_000))
+    org.insert("opening_stock", item_id=item, uzum_qty=1, own_qty=0)
+
+    def invoice(ext: int, day: date, status: str) -> None:
+        inv = org.insert(
+            "fbo_invoices", shop_id=org.shop_id, external_id=ext, status=status, created_on=at(day)
+        )
+        org.insert(
+            "fbo_invoice_items",
+            invoice_id=inv,
+            sku_external_id=1,
+            sku_id=sku,
+            quantity_to_stock=5,
+            quantity_accepted=5,
+        )
+
+    invoice(1, d(9, 1), "ACCEPTED")  # FBO tovari (boshlashdan oldin)
+    invoice(2, d(10, 5), "CANCELED")  # bekor — tovar kelmagan
+    first = org.sale(sku, d(10, 10), 3)
+    org.request(calc.Scope.SHOP, org.shop_id)
+    org.recalc()
+    assert org.costs()[first][0] == D(150_000) and org.costs()[first][2] == []
+
+    invoice(3, d(10, 15), "ACCEPTED")
+    later = org.sale(sku, d(10, 20), 2)
+    org.request(calc.Scope.SHOP, org.shop_id)
+    org.recalc()
+    costs = org.costs()
+    assert costs[first][2] == []  # postavkadan oldin — o'zgarmadi
+    assert costs[later][0] == D(100_000) and costs[later][2] == ["supply_no_lot"]
+
+
 def test_link_sales_fallbacks(org: Org) -> None:
     """Nom aynan mos kelmasa ham sotuv SKU'ga bog'lanadi (bir ma'noli bo'lsa); ikki ma'noli — bog'lanmaydi."""
     import asyncio
