@@ -1120,6 +1120,7 @@ export const uzLatn = {
     deleteBlocked: "Kargoda xaridlar bor. Avval ularni kargodan ajrating (xarid sahifasida «Kargo» → «Kargosiz»).",
     col: { shipment: "Kargo", purchases: "Xaridlar", total: "Kargo xarajati", share: "Kargo ulushi", perUnit: "Ulush/dona" },
     fields: { title: "Nomi", titleHint: "Masalan: «Noyabr, presslangan oʻram». Boʻsh qoldirish mumkin." },
+    units: "{{count}} dona",
     link: {
       legend: "Kargo",
       hint: "Kargo narxi kargo sahifasida bir marta kiritiladi va kargodagi hamma xaridlarning tovarlariga boʻlinadi. Bu yerda xarid kargoga biriktiriladi.",

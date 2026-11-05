@@ -1,5 +1,5 @@
-// Yorug'/qorong'i rejim (04 §4.2): standart — tizim sozlamasi (CSS `prefers-color-scheme`); foydalanuvchi tanlasa
-// `<html data-theme>` va `localStorage` (`up.theme`). Sahifa yuklanishida miltillamasligi uchun shu qoida
+// Yorug'/qorong'i rejim (04 §4.2, ADR-048): standart — **yorug'** (Temur: asosiy ko'rinish yorug'); foydalanuvchi tanlasa
+// (yorug' / qorong'i / tizim) `<html data-theme>` va `localStorage` (`up.theme`); "tizim" — CSS `prefers-color-scheme`. Sahifa yuklanishida miltillamasligi uchun shu qoida
 // `public/theme-init.js` da ham (React'dan oldin, CSP: inline skript yo'q).
 import { useCallback, useSyncExternalStore } from "react";
 
@@ -11,9 +11,9 @@ export const THEME_KEY = "up.theme";
 function storedChoice(): ThemeChoice {
   try {
     const value = globalThis.localStorage?.getItem(THEME_KEY);
-    return value === "light" || value === "dark" ? value : "system";
+    return value === "light" || value === "dark" || value === "system" ? value : "light";
   } catch {
-    return "system";
+    return "light";
   }
 }
 
@@ -27,8 +27,7 @@ export function applyTheme(choice: ThemeChoice): Theme {
   if (choice === "system") root.removeAttribute("data-theme");
   else root.setAttribute("data-theme", choice);
   try {
-    if (choice === "system") globalThis.localStorage?.removeItem(THEME_KEY);
-    else globalThis.localStorage?.setItem(THEME_KEY, choice);
+    globalThis.localStorage?.setItem(THEME_KEY, choice); // "system" ham saqlanadi (yo'qligi — standart yorug')
   } catch {
     // saqlanmasa — faqat shu sahifada
   }
@@ -61,7 +60,7 @@ function snapshot(): string {
 
 /** Joriy tanlov va amaldagi mavzu (tizim o'zgarsa ham yangilanadi). */
 export function useTheme(): { choice: ThemeChoice; theme: Theme; setTheme: (choice: ThemeChoice) => void } {
-  const [choice, theme] = useSyncExternalStore(subscribe, snapshot, () => "system:light").split(":") as [
+  const [choice, theme] = useSyncExternalStore(subscribe, snapshot, () => "light:light").split(":") as [
     ThemeChoice,
     Theme,
   ];

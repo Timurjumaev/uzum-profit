@@ -521,6 +521,13 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   kargo sahifasida "Xarid biriktirish" (kargosiz va boshqa kargodagi xaridlardan bir nechtasi; ketma-ket `PATCH`, qisman xato
   aniq aytiladi). Backend o'zgarmadi. Testlar: web (`shipments.test`, +9: ro'yxat, yangi kargo, almashtirish/ajratish, izoh,
   ko'p xarid, qisman xato, bo'sh holat, rol, a11y). **T:** staging'da xarid sahifasidan va kargo sahifasidan biriktirib ko'rish.
+- [x] B4.33 Dizayn jilosi: Xaridlar va Kargolar (ADR-048; Temur talabi, 2026-11-05; yo'nalish A, standart yorug').
+  ✓ 2026-11-05: standart mavzu yorug'; iliq qog'oz tokenlari (`bg-page`, `bg-raised`, `border-hairline`, yangi `border-strong`,
+  `border-input` ≥ 3:1); jadval (sarlavha fon + siyoh chiziq, bo'shliqlar, burchak), mobil ro'yxat (ustunlar yashirin, meta qator),
+  tugma (submit — primary), yig'indi paneli (hisob daftari qatorlari), tanlov qatorlari, bo'sh holat; Xaridlar, Xarid, Kargolar,
+  Kargo sahifalari va oynalari. Testlar: theme/shell (yangi standart), e2e vizual (+xaridlar va kargolar, 16 asos), a11y (qorong'i aniq
+  tanlanadi). **T:** staging'da Xaridlar va Kargolar sahifalarini yorug' rejimda ko'zdan kechirib, yoqmagan joylarni skrinshot bilan
+  yozing; yoqsa — qolgan sahifalarga (Mahsulotlar, Ombor, Foyda, Xarajatlar, Bosh sahifa) yoyiladi (B4.34).
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

@@ -3,15 +3,16 @@
 
 :root {
   color-scheme: light;
-  --bg-page: #F5F6F8;
+  --bg-page: #F6F5F1;
   --bg-surface: #FFFFFF;
-  --bg-raised: #F0F2F5;
+  --bg-raised: #EFEDE7;
   --text-primary: #121826;
   --text-secondary: #4B5160;
   --text-muted: #7C8291;
-  --border-hairline: #E3E6EB;
+  --border-hairline: #E4E1D9;
+  --border-strong: #CFCCC3;
   --border-rule: #121826;
-  --border-input: #858A96;
+  --border-input: #7D828E;
   --accent: #256ABF;
   --accent-hover: #1C5CAB;
   --accent-text: #256ABF;
@@ -99,6 +100,7 @@
     --text-secondary: #B4BAC6;
     --text-muted: #8A91A0;
     --border-hairline: #2A3140;
+    --border-strong: #3A4254;
     --border-rule: #EEF0F4;
     --border-input: #6B7282;
     --accent: #256ABF;
@@ -135,6 +137,7 @@
   --text-secondary: #B4BAC6;
   --text-muted: #8A91A0;
   --border-hairline: #2A3140;
+  --border-strong: #3A4254;
   --border-rule: #EEF0F4;
   --border-input: #6B7282;
   --accent: #256ABF;

@@ -13,7 +13,7 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 export function Button({
-  variant = "secondary",
+  variant,
   size = "md",
   loading = false,
   icon,
@@ -23,6 +23,8 @@ export function Button({
   type = "button",
   ...rest
 }: ButtonProps) {
+  // Forma yuboruvchi tugma — shakldagi asosiy amal: aksentda (aniq `variant` berilmasa).
+  variant ??= type === "submit" ? "primary" : "secondary";
   return (
     <button
       type={type}

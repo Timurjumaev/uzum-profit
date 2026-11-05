@@ -72,11 +72,14 @@ export function Purchases() {
             {r.title ?? t("purchases.untitled")}
           </Link>
           {r.items.length > 0 && (
-            <span className="caption">
+            <span className="caption" title={r.items.join(", ")}>
               {r.items.join(", ")}
               {r.line_count > r.items.length && ` ${t("purchases.more", { count: r.line_count - r.items.length })}`}
             </span>
           )}
+          <span className="caption purchase-cell__meta">
+            {t(`purchases.stage.${r.stage}`)} · {units(r)}
+          </span>
         </span>
       ),
     },
@@ -117,7 +120,11 @@ export function Purchases() {
             {t("shipments.title")}
           </Link>
           <ExportButton orgId={org.id} table="purchases" />
-          {canManage && <Button onClick={() => setAdding(true)}>{t("purchases.add")}</Button>}
+          {canManage && (
+            <Button variant="primary" onClick={() => setAdding(true)}>
+              {t("purchases.add")}
+            </Button>
+          )}
         </span>
       </header>
       <div role="tablist" aria-label={t("purchases.groupsLabel")} className="orders-tabs">
@@ -135,7 +142,7 @@ export function Purchases() {
           </button>
         ))}
       </div>
-      <div id="purchases-panel" role="tabpanel" aria-label={t("purchases.list")} className="purchases__panel">
+      <div id="purchases-panel" role="tabpanel" aria-label={t("purchases.list")} className="purchases__panel purchases__panel--collapse">
         {!amounts && <Banner tone="info" title={t("purchases.noAmounts")}>{t("purchases.noAmountsText")}</Banner>}
         {query.isError ? (
           <Banner tone="negative" title={errorText(query.error, t)} action={<Button onClick={() => void query.refetch()}>{t("common.retry")}</Button>} />

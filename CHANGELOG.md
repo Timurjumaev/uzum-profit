@@ -394,6 +394,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   olganida" turi, `AD#` → sotuv qatori, yechilgan kun buyurtma va topshirilgan kunga nisbatan), `dateService` ↔
   `dateCreated` farqi va saqlash yechiladigan kunlar; faqat yig'indilar, matnlar raqamsiz.
 
+- B4.33 (ADR-048, Temur talabi): **dizayn jilosi — Xaridlar va Kargolar** (yo'nalish A, "hisob daftari"). Standart mavzu endi yorug' (tizim
+  sozlamasi emas; menyuda hamon tanlanadi). Iliq qog'oz tokenlari va yangi `border-strong`; jadval (sarlavha fon va siyoh chiziq, qator
+  bo'shliqlari, burchak), mobilda Xaridlar va Kargolar ro'yxati ixcham (nom ostida meta qator), tovar nomlari bir qator; formadagi
+  `submit` tugma va sahifaning asosiy amali — primary; yig'indi paneli hisob daftari qatorlari bilan; oynadagi radio/checkbox tanlov qatorlari
+  va Summa/Valyuta qatori tuzatildi. Vizual testlarga xaridlar va kargolar sahifalari qo'shildi.
 - B4.32 (ADR-047, Temur talabi): **xarid ↔ kargo biriktirish.** Xarid sahifasida "Yangi xarajat" → Turi = Kargo tanlansa, summa
   o'rniga kargolar ro'yxati chiqadi (holati va sanasi bilan, "Kargosiz", "Yangi kargo…") va xarid shu kargoga biriktiriladi —
   xarajat komponenti yaratilmaydi, kargo puli ikki marta hisoblanmaydi. Kargo sahifasida "Xarid biriktirish": kargosiz va boshqa

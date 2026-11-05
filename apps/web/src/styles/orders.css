@@ -101,6 +101,18 @@
   gap: var(--space-1);
 }
 
+/* Qator amallari: jim (ikkinchi daraja rangi), ustiga kelganda aniq; "O'chirish" — qizarmaydi, faqat bosganda tasdiq. */
+.expenses-actions .ui-btn--ghost {
+  min-block-size: 28px;
+  padding: 0 var(--space-2);
+  color: var(--text-secondary);
+  font: var(--type-table);
+}
+
+.expenses-actions .ui-btn--ghost:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+
 .expenses-form {
   display: grid;
   gap: var(--space-3);

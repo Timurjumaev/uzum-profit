@@ -104,9 +104,10 @@ export function AttachPurchases({ orgId, shipmentId, onClose, onAttached, onChan
             <legend className="ui-field__label">{t("shipments.col.purchases")}</legend>
             {rows.map((p) => (
               <label key={p.id}>
-                <input type="checkbox" checked={picked.includes(p.id)} onChange={(e) => toggle(p.id, e.target.checked)} /> {label(p, t("purchases.untitled"))}
+                <input type="checkbox" checked={picked.includes(p.id)} onChange={(e) => toggle(p.id, e.target.checked)} />
+                <span className="purchase-form__choice">
+                <span>{label(p, t("purchases.untitled"))}</span>
                 <span className="caption">
-                  {" · "}
                   {t(`purchases.stage.${p.stage}`)}
                   {" · "}
                   {p.shipment_id
@@ -114,6 +115,7 @@ export function AttachPurchases({ orgId, shipmentId, onClose, onAttached, onChan
                         name: p.shipment_name || t("shipments.untitled"),
                       })
                     : t("shipments.attach.free")}
+                </span>
                 </span>
               </label>
             ))}

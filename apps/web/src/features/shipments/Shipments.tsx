@@ -12,6 +12,7 @@ import type { Shipment } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { MANAGE_ROLES } from "../purchases/Purchases";
 import { ShipmentForm } from "./ShipmentForm";
+import { shipmentStatus } from "./ShipmentLink";
 
 export function Shipments() {
   const { t } = useTranslation();
@@ -24,6 +25,11 @@ export function Shipments() {
   const canManage = MANAGE_ROLES.includes(org.role);
   const amounts = query.data?.amounts ?? true;
   const date = (d: string | null) => (d ? f.date(d) : "—");
+  /** Mobil meta qator uchun holat: eng oxirgi to'ldirilgan bosqich va sanasi. */
+  const status = (r: Shipment) => {
+    const st = shipmentStatus(r);
+    return st ? `${t(`purchases.stage.${st.stage}`)} ${f.date(st.on)}` : null;
+  };
   const columns: Column<Shipment>[] = [
     {
       key: "shipment",
@@ -34,6 +40,9 @@ export function Shipments() {
             {r.title || t("shipments.untitled")}
           </Link>
           {r.note && <span className="caption">{r.note}</span>}
+          <span className="caption purchase-cell__meta">
+            {[r.carrier_name, status(r), t("shipments.units", { count: r.units })].filter(Boolean).join(" · ")}
+          </span>
         </span>
       ),
     },
@@ -53,10 +62,16 @@ export function Shipments() {
         <div className="page-title">
           <h1 className="h2">{t("shipments.title")}</h1>
         </div>
-        <span className="purchases__actions">{canManage && <Button onClick={() => setAdding(true)}>{t("shipments.add")}</Button>}</span>
+        <span className="purchases__actions">
+          {canManage && (
+            <Button variant="primary" onClick={() => setAdding(true)}>
+              {t("shipments.add")}
+            </Button>
+          )}
+        </span>
       </header>
       <p className="caption">{t("shipments.lead")}</p>
-      <div className="purchases__panel">
+      <div className="purchases__panel purchases__panel--shipments">
         {query.isError ? (
           <Banner tone="negative" title={errorText(query.error, t)} action={<Button onClick={() => void query.refetch()}>{t("common.retry")}</Button>} />
         ) : !query.data ? (
