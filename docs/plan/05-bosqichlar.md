@@ -568,6 +568,13 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   tartib: tayyor partiya → boshlang'ich narx → yo'ldagi partiya (`lot_source`). (3) "Taxminiy" sababi sichqoncha ustida chiqmasdi
   (brauzer tooltip'i): belgi endi tugma — bosilsa sabablar katak ichida ochiladi (telefonda ham ishlaydi). **T:** staging'da Mahsulotlar →
   Holat = "Zarar" va "Sotuv yo'q", "Oxirgi partiya" va Buyurtmalarda "Taxminiy" belgisini bosib ko'ring.
+- [x] B4.39 Boshlang'ich holatda narxi kiritilgan tovar sotuvida "Taxminiy" chiqmaydi (Temur: "men har biriga aniq tannarx kiritganman, qoldiqni dastur o'zi
+  olgan — hech qachon taxminiy chiqmasin", 2026-11-05).
+  ✓ 2026-11-05: boshlang'ich qoldiq (Uzumdan olingan dona) tugagan yoki 0 bo'lgan tovarning keyingi sotuvi sotuv kunidagi kiritilgan narxda
+  hisoblanadi va endi belgilanmaydi (avval "lot yetmadi" — "partiyalar yetmadi" matni bilan taxminiy edi); qoldiq tugagach narx kunlar bo'yicha
+  yangilanadi (oxirgi qatlam narxi emas, `valid_from` jadvali). "Lot yetmadi" faqat haqiqiy partiyalar tugaganda. Boshlashdan oldingi sotuvlarning "tarixiy" belgisi ham
+  jadvalda "Taxminiy" ko'rsatmaydi (sotuvchi kiritgan narx). 02 (F22, F41) yangilandi.
+  **T:** kerak emas; shunday sotuvlarda "Taxminiy" yo'qolganini tekshiring.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

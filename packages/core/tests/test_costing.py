@@ -394,11 +394,24 @@ def test_opening_conserves_units(
 
 def test_opening_price_without_stock_or_lots_is_estimated_not_missing() -> None:
     """Narx yozilgan, lekin qoldiq 0 va partiya yo'q: boshlashdan keyingi sotuv tannarxsiz qolmaydi — o'sha kundagi
-    tarixiy narx, "lot yetmadi" belgisi bilan (tamoyil 9: taxmin yashirilmaydi, lekin foydadan tashlanmaydi)."""
+    sotuvchi kiritgan narx; bu aniq tannarx — taxminiy belgisi yo'q."""
     o = opening(10, 0, (None, 8000), (15, 9000))
     r = compute_costs([], [Sale("a", d(12), 2), Sale("b", d(20), 3)], FIFO, o)
-    assert r.sales["a"].cost == uzs(2 * 8000) and r.sales["a"].flags == {CostFlag.LOT_SHORTAGE}
-    assert r.sales["b"].cost == uzs(3 * 9000) and r.sales["b"].flags == {CostFlag.LOT_SHORTAGE}
+    assert r.sales["a"].cost == uzs(2 * 8000) and r.sales["a"].flags == frozenset()
+    assert r.sales["b"].cost == uzs(3 * 9000) and r.sales["b"].flags == frozenset()
     # Narx ham yo'q — avvalgidek tannarx yo'q.
     r = compute_costs([], [Sale("c", d(12), 1)], FIFO, opening(10, 0))
     assert r.sales["c"].cost is None and r.sales["c"].flags == {CostFlag.NO_LOTS}
+
+
+def test_opening_stock_exhausted_uses_entered_price_without_flag() -> None:
+    """Boshlang'ich qoldiq (2 dona) tugadi, partiya yo'q: yetmagan qism sotuv kunidagi kiritilgan narxda, belgisiz (sotuvchi
+    narxni aniq kiritgan; qoldiq soni Uzumdan). Keyingi sotuv ham shunday; haqiqiy partiya tugasa — "lot yetmadi"."""
+    o = opening(10, 2, (None, 8000), (15, 9000))
+    r = compute_costs([], [Sale("a", d(12), 5), Sale("b", d(20), 2)], FIFO, o)
+    assert r.sales["a"].cost == uzs(2 * 8000 + 3 * 8000) and r.sales["a"].flags == frozenset()
+    assert (
+        r.sales["b"].cost == uzs(2 * 9000) and r.sales["b"].flags == frozenset()
+    )  # 15-kundan yangi narx
+    real = compute_costs([lot("L", 11, 3, 9000)], [Sale("c", d(12), 8)], FIFO, o)
+    assert real.sales["c"].flags == {CostFlag.LOT_SHORTAGE}  # oxirgi qatlam — haqiqiy partiya
