@@ -87,11 +87,12 @@ Matn satri ≤ 75 belgi (yordam matnlari, tavsiflar). Hamma matn chapga tekislan
 
 | Nomi | Yorug' | Qorong'i | Vazifasi |
 |---|---|---|---|
-| **Qog'oz** (sahifa) | `#F5F6F8` | `#0E121A` | sahifa foni |
+| **Qog'oz** (sahifa) | `#F6F5F1` | `#0E121A` | sahifa foni (yorug'da iliq, daftar qog'ozi) |
 | **Varaq** (yuza) | `#FFFFFF` | `#161B24` | panel, jadval, grafik foni |
 | **Siyoh** (asosiy matn) | `#121826` | `#EEF0F4` | matn, hisob chiziqlari, sof foyda chizig'i |
 | **Ko'k siyoh** (aksent) | `#256ABF` | `#6DA7EC` (matn) / `#256ABF` (tugma) | asosiy tugma, havola, fokus, tanlangan holat |
-| **Daftar chizig'i** | `#E3E6EB` | `#2A3140` | hairline, jadval qatorlari |
+| **Daftar chizig'i** | `#E4E1D9` | `#2A3140` | hairline, jadval qatorlari |
+| **Kuchli chiziq** | `#CFCCC3` | `#3A4254` | ikkinchi darajali tugma chegarasi (faqat bezak, matnli) |
 | **Foyda** | `#006300` | `#3FBF3F` | musbat natija matni |
 | **Zarar** | `#B42F2F` | `#EF8A8A` | manfiy natija matni |
 
@@ -99,15 +100,16 @@ Matn satri ≤ 75 belgi (yordam matnlari, tavsiflar). Hamma matn chapga tekislan
 
 | Token | Yorug' | Qorong'i |
 |---|---|---|
-| `bg-page` | `#F5F6F8` | `#0E121A` |
+| `bg-page` | `#F6F5F1` | `#0E121A` |
 | `bg-surface` | `#FFFFFF` | `#161B24` |
-| `bg-raised` (hover, tanlangan qator) | `#F0F2F5` | `#1E2430` |
+| `bg-raised` (hover, jadval sarlavhasi) | `#EFEDE7` | `#1E2430` |
 | `text-primary` | `#121826` | `#EEF0F4` |
 | `text-secondary` | `#4B5160` | `#B4BAC6` |
 | `text-muted` (faqat ≥ 14 px yoki ikkinchi darajali) | `#7C8291` | `#8A91A0` |
-| `border-hairline` | `#E3E6EB` | `#2A3140` |
+| `border-hairline` | `#E4E1D9` | `#2A3140` |
+| `border-strong` (tugma chegarasi, bezak) | `#CFCCC3` | `#3A4254` |
 | `border-rule` | `#121826` | `#EEF0F4` |
-| `border-input` (≥ 3:1) | `#858A96` | `#6B7282` |
+| `border-input` (≥ 3:1, hamma fonda) | `#7D828E` | `#6B7282` |
 | `accent` (tugma foni) | `#256ABF` | `#256ABF` |
 | `accent-hover` | `#1C5CAB` | `#3987E5` |
 | `accent-text` (havola) | `#256ABF` | `#6DA7EC` |
@@ -118,8 +120,9 @@ Matn satri ≤ 75 belgi (yordam matnlari, tavsiflar). Hamma matn chapga tekislan
 | `warning-text` / `warning-bg` | `#8A5A00` / `#FDF1D6` | `#FAB219` / `#3A2C0E` |
 | `info-text` / `info-bg` | `#1C5CAB` / `#E7F0FB` | `#86B6EF` / `#16263D` |
 
-Qorong'i rejim avtomatik inversiya emas: har token alohida tanlangan. Tizim sozlamasiga ergashadi, foydalanuvchi
-qo'lda tanlay oladi (`data-theme`).
+Qorong'i rejim avtomatik inversiya emas: har token alohida tanlangan. **Standart — yorug'** (ADR-048); foydalanuvchi
+menyudan yorug' / qorong'i / tizim sozlamasini tanlaydi (`data-theme`, `localStorage` `up.theme`; "tizim" tanlansa
+CSS `prefers-color-scheme` ga ergashadi).
 
 ### 4.3 Grafik ranglari (dataviz usuli)
 
@@ -163,8 +166,8 @@ qo'lda tanlay oladi (`data-theme`).
 - Qorong'i (`#161B24` fonda): hammasi PASS (CVD 8,4, oddiy ko'z 19,3, kontrast ≥ 3:1).
 - Scatter/xarita kabi "hamma juftlik" grafiklarida ko'pi bilan 3 seriya.
 - Matn kontrastlari (WCAG): siyoh 17,3; ikkinchi darajali 7,7; muted 3,75 (shuning uchun kichik matnda ishlatilmaydi);
-  havola 5,4; oq matn aksent tugmada 5,4; foyda 7,5; zarar 6,2; ogohlantirish 5,9; input chegarasi 3,5 (≥ 3:1;
-  2026-10-25, B3.3: `#8B909C` → `#858A96` — eskisi qog'oz va hover fonida 2,9 edi, endi hamma fonda ≥ 3,08).
+  havola 5,4; oq matn aksent tugmada 5,4; foyda 7,5; zarar 6,2; ogohlantirish 5,9; input chegarasi 3,3–3,9 (≥ 3:1;
+  2026-10-25, B3.3: `#8B909C` → `#858A96`; 2026-11-05, B4.33: iliq qog'oz va hover foni (`#F6F5F1`, `#EFEDE7`) bilan `#858A96` → `#7D828E` — eskisi yangi hover fonida 2,95 edi, endi hamma fonda ≥ 3,29).
   Kontrastlar `apps/web/src/styles/tokens.test.ts` da avtomatik tekshiriladi.
   Qorong'i: matn 15,1; ikkinchi 8,9; muted 5,5; havola 6,9; foyda 7,2; zarar 7,1; input chegarasi 3,6.
 
@@ -177,14 +180,14 @@ loading, error). `/ui-kit` ichki sahifasida hammasi ko'rinadi (yorug'/qorong'i, 
 
 | Komponent | Muhim qoidalar |
 |---|---|
-| Button | primary (aksent), secondary (hairline chegara), ghost, destructive; 32/36/40 px; yuklanishda matn saqlanadi + spinner |
+| Button | primary (aksent), secondary (`border-strong` chegara), ghost, destructive; 32/36/40 px; yuklanishda matn saqlanadi + spinner. **Shakl yuboruvchi (`type=submit`) tugma — o'zi primary**; sahifaning asosiy amali ("Yangi xarid", "Yangi kargo") ham primary, qolganlari secondary |
 | Input, NumberInput, **MoneyInput** | yorliq tepada, yordam matni pastda; pul o'ngga tekislanadi, valyuta qo'shimchasi; "1 234,5", "1234.5", "1 234 567" qabul qilinadi |
 | Select, **Combobox** | qidiruvda apostrof turlari va lotin/kirill farqi yo'q (§8.3); SKU qidiruvida rasm kichik ko'rinishi |
 | **DateRangePicker** | tayyor davrlar (Bugun, Kecha, 7/30 kun, Shu oy, O'tgan oy, Shu yil, Hammasi) + kalendar; tanlov URL'da |
 | CompareToggle | "oldingi davr" / "o'tgan yil" |
 | **KPI** | yorliq, qiymat (proportsional raqam), o'zgarish (ishora, nom bilan davr, rang = yo'nalish × yaxshimi), 12 nuqtali sparkline |
 | **LedgerTable** (Hisob varag'i) | operator ustuni (−, =), summa tabular, oraliq summa ustida `rule`, yakun ostida `rule-double`; qator bosilsa drill-down drawer |
-| **DataTable** | sarlavha 12/500, qator 13 px, balandlik 36 (zich 32, keng 44); raqamlar o'ngga, tabular, **hech qachon qatorga bo'linmaydi**; birinchi ustun skrollda qotadi; jami qatori `rule` bilan; ustun tanlash; saqlangan ko'rinish; eksport; 500+ qatorda virtual |
+| **DataTable** | sarlavha 12/500 (`bg-raised` fon, ostida siyoh chiziq — hisob daftari), qator 13 px, eng kam balandlik 36 (zich 32, keng 44) va yuqori/pastki bo'shliq 8 px (zich 6, keng 12) — ko'p qatorli katak sig'adi; burchak 10 px (`radius-panel`), oxirgi qatorda chiziq yo'q; raqamlar o'ngga, tabular, **hech qachon qatorga bo'linmaydi**; birinchi ustun skrollda qotadi; jami qatori `rule` bilan; ustun tanlash; saqlangan ko'rinish; eksport; 500+ qatorda virtual |
 | **FormulaPopover** | har ko'rsatkich yonidagi "?": formula (F-raqam bilan), qaysi ma'lumotdan, "taxminiy" sababi |
 | Badge / StatusPill | holat ikon + matn bilan (rang yolg'iz emas) |
 | Drawer, Dialog, Popover, Tooltip | Esc bilan yopiladi, fokus ichida qoladi |
@@ -366,6 +369,12 @@ Sof foyda, oktabr
   havola → ro'yxat (sanalar, xaridlar soni, dona, kargo xarajati) → kargo sahifasi: kargodagi xaridlar (kargo ulushi
   bilan), kargo xarajatlari (kurs bilan), tovarlar va dona boshiga ulush, o'ngda jami; xarid sahifasida kargo nomi va
   kargodan xarajatlar (faqat o'qish).
+  **Ro'yxat qoidalari (ADR-048):** tovar nomlari bir qator (ortig'i "…", to'liq matn `title` da); nom — matn rangida
+  sarlavha (havola faqat ustiga kelganda ostiga chiziladi); mobilda (≤ 639 px) ikkinchi darajali ustunlar yashirin,
+  ularning o'rniga nom ostida bitta meta qator (bosqich · dona yoki kompaniya · sana · dona); qator amallari
+  ("Tahrirlash", "O'chirish") jim rangda. **Yig'indi paneli** (`dl`): yorliq chapda, qiymat o'ngda, qatorlar orasida
+  hairline; yig'indi ustida siyoh chiziq, yakuniy qator ostida qo'sh chiziq. **Tanlov qatorlari** (radio / checkbox
+  oynada): chegarali qator, tanlanganda `info-bg` fon va aksent chegara; matn ostida ikkinchi darajali meta.
 - **Ombor:** holat bo'yicha guruhlar (Kritik → Yaxshi), har qatorda joylar bo'yicha qoldiq; tepada muzlagan pul
   va yo'ldagi tovar.
 - **Pul oqimi:** 90 kunlik prognoz grafigi (bitta o'q, so'm) + to'lov kalendari ro'yxati.

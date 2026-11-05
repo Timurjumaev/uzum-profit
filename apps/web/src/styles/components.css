@@ -61,6 +61,10 @@
 
 .ui-btn--secondary {
   background: var(--bg-surface);
+  border-color: var(--border-strong);
+}
+
+.ui-btn--secondary:hover:not(:disabled) {
   border-color: var(--border-input);
 }
 
@@ -271,9 +275,9 @@
 .ui-empty {
   display: grid;
   justify-items: start;
-  gap: var(--space-2);
-  padding: var(--space-8) var(--space-6);
-  border: 1px dashed var(--border-hairline);
+  gap: var(--space-1);
+  padding: var(--space-5) var(--space-6);
+  border: 1px solid var(--border-hairline);
   border-radius: var(--radius-panel);
   background: var(--bg-surface);
 }
@@ -796,6 +800,7 @@
   max-inline-size: 100%;
   overflow-x: auto;
   border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-panel);
   background: var(--bg-surface);
 }
 
@@ -806,30 +811,41 @@
   font: var(--type-table);
 }
 
+/* Qator balandligi — eng kami (block-size); ko'p qatorli katak o'sadi, shuning uchun yuqori/pastki bo'shliq bor. */
 .ui-table th,
 .ui-table td {
   block-size: 36px;
-  padding: 0 var(--space-3);
+  padding: var(--space-2) var(--space-4);
   border-block-end: 1px solid var(--border-hairline);
   text-align: start;
   font-weight: 400;
+  vertical-align: middle;
 }
 
 .ui-table--compact th,
 .ui-table--compact td {
   block-size: 32px;
+  padding-block: 6px;
+  padding-inline: var(--space-3);
 }
 
 .ui-table--comfortable th,
 .ui-table--comfortable td {
   block-size: 44px;
+  padding-block: var(--space-3);
 }
 
+/* Sarlavha: hisob daftaridagi kabi — yengil fon, ostida siyoh chiziq. */
 .ui-table thead th {
   font: var(--type-label);
   color: var(--text-secondary);
-  background: var(--bg-surface);
+  background: var(--bg-raised);
+  border-block-end: 1px solid var(--border-rule);
   white-space: nowrap;
+}
+
+.ui-table tbody tr:last-child > * {
+  border-block-end: 0;
 }
 
 .ui-table .num {
@@ -847,6 +863,10 @@
   inset-inline-start: 0;
   background: var(--bg-surface);
   z-index: 1;
+}
+
+.ui-table thead tr > :first-child {
+  background: var(--bg-raised);
 }
 
 .ui-table tfoot > tr > * {

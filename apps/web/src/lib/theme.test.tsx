@@ -17,7 +17,7 @@ function setSystemDark(dark: boolean) {
 
 beforeEach(() => {
   document.head.innerHTML =
-    '<meta name="theme-color" content="#F5F6F8" media="(prefers-color-scheme: light)">' +
+    '<meta name="theme-color" content="#F6F5F1" media="(prefers-color-scheme: light)">' +
     '<meta name="theme-color" content="#0E121A" media="(prefers-color-scheme: dark)">';
   document.documentElement.removeAttribute("data-theme");
   localStorage.clear();
@@ -37,8 +37,8 @@ describe("mavzu (04 §4.2)", () => {
 
     expect(applyTheme("system")).toBe("light");
     expect(document.documentElement.hasAttribute("data-theme")).toBe(false);
-    expect(localStorage.getItem(THEME_KEY)).toBeNull();
-    expect(metas()).toEqual(["#F5F6F8", "#0E121A"]);
+    expect(localStorage.getItem(THEME_KEY)).toBe("system"); // "system" ham tanlov: saqlanadi
+    expect(metas()).toEqual(["#F6F5F1", "#0E121A"]);
   });
 
   it("tizim qorong'i bo'lsa — system → dark", () => {
@@ -70,7 +70,7 @@ describe("mavzu (04 §4.2)", () => {
       return <span>{`${api.choice}/${api.theme}`}</span>;
     }
     const { container } = render(<Probe />);
-    expect(container.textContent).toBe("system/light");
+    expect(container.textContent).toBe("light/light"); // tanlov yo'q — standart yorug' (ADR-048)
     act(() => api!.setTheme("dark"));
     expect(container.textContent).toBe("dark/dark");
     act(() => api!.setTheme("system"));
@@ -84,9 +84,24 @@ describe("mavzu (04 §4.2)", () => {
     localStorage.setItem(THEME_KEY, "dark");
     new Function(script)();
     expect(document.documentElement.dataset.theme).toBe("dark");
-    document.documentElement.removeAttribute("data-theme");
-    localStorage.setItem(THEME_KEY, "pushti");
-    new Function(script)();
-    expect(document.documentElement.hasAttribute("data-theme")).toBe(false);
+    // Tanlov yo'q yoki noma'lum — standart yorug' (ADR-048); "system" — atribut yo'q (CSS tizimga qaraydi).
+    for (const [stored, expected] of [[null, "light"], ["pushti", "light"], ["light", "light"], ["system", null]] as const) {
+      document.documentElement.removeAttribute("data-theme");
+      if (stored === null) localStorage.removeItem(THEME_KEY);
+      else localStorage.setItem(THEME_KEY, stored);
+      new Function(script)();
+      expect(document.documentElement.getAttribute("data-theme"), String(stored)).toBe(expected);
+    }
+  });
+
+  it("standart tanlov — yorug', tizim qorong'i bo'lsa ham", () => {
+    setSystemDark(true);
+    let api: ReturnType<typeof useTheme> | undefined;
+    function Probe() {
+      api = useTheme();
+      return null;
+    }
+    render(<Probe />);
+    expect([api!.choice, api!.theme]).toEqual(["light", "light"]);
   });
 });

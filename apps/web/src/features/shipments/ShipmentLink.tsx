@@ -73,9 +73,12 @@ export function ShipmentLinkFields({ state }: { state: ReturnType<typeof useShip
   const { shipments, choice, setChoice, newName, setNewName, current } = state;
   const option = (value: string, title: string, meta?: string, note?: string) => (
     <label key={value}>
-      <input type="radio" name="shipment-link" checked={choice === value} onChange={() => setChoice(value)} /> {title}
-      {meta && <span className="caption"> · {meta}</span>}
-      {note && choice === value && <span className="caption purchase-form__note">{note}</span>}
+      <input type="radio" name="shipment-link" checked={choice === value} onChange={() => setChoice(value)} />
+      <span className="purchase-form__choice">
+        <span>{title}</span>
+        {meta && <span className="caption">{meta}</span>}
+        {note && choice === value && <span className="caption">{note}</span>}
+      </span>
     </label>
   );
   return (

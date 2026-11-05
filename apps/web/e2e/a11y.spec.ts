@@ -42,6 +42,8 @@ for (const scheme of ["light", "dark"] as const) {
   for (const c of CASES) {
     test(`${c.name} — ${scheme}`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: scheme });
+      // Standart mavzu — yorug' (ADR-048): qorong'i tekshiruvi uchun tanlov aniq qo'yiladi.
+      if (scheme === "dark") await page.addInitScript(() => localStorage.setItem("up.theme", "dark"));
       await mockApi(page, c.state);
       await open(page, c.path);
       if (c.path === "/ui-kit") await page.waitForSelector(".chart__canvas svg path", { state: "attached" });

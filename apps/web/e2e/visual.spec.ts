@@ -3,6 +3,8 @@
 // Vaqt qotirilgan, animatsiya o'chiq, tarmoq — soxta: farq faqat haqiqiy o'zgarishdan chiqadi.
 import { expect, test, type Page } from "@playwright/test";
 
+import { PURCHASE_1 } from "../src/test/purchases";
+import { SHIPMENT_1 } from "../src/test/shipments";
 import { loadingSync, mockApi, NEW_USER, SHOPS, type ApiState } from "./support/api";
 import { open } from "./support/page";
 
@@ -36,6 +38,10 @@ const SHOTS: Shot[] = [
     },
   },
   { name: "status", path: "/status" },
+  { name: "purchases", path: "/purchases" },
+  { name: "purchase", path: `/purchases/${PURCHASE_1}` },
+  { name: "shipments", path: "/shipments" },
+  { name: "shipment", path: `/shipments/${SHIPMENT_1}` },
   {
     name: "palette",
     path: "/",
@@ -59,6 +65,8 @@ for (const scheme of ["light", "dark"] as const) {
   for (const shot of SHOTS) {
     test(`${shot.name} — ${scheme}`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: scheme });
+      // Standart mavzu — yorug' (ADR-048): qorong'i tekshiruvi uchun tanlov aniq qo'yiladi.
+      if (scheme === "dark") await page.addInitScript(() => localStorage.setItem("up.theme", "dark"));
       await mockApi(page, shot.state);
       await open(page, shot.path);
       await shot.prepare?.(page);

@@ -493,12 +493,13 @@ describe("foydalanuvchi menyusi", () => {
     await renderShell("/");
     openUser();
     const select = within(account()).getByLabelText("Mavzu") as HTMLSelectElement;
-    expect(select.value).toBe("system");
+    expect(select.value).toBe("light"); // standart — yorug' (ADR-048)
     fireEvent.change(select, { target: { value: "dark" } });
     expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
     expect(localStorage.getItem("up.theme")).toBe("dark");
     fireEvent.change(select, { target: { value: "system" } });
     expect(document.documentElement.hasAttribute("data-theme")).toBe(false);
+    expect(localStorage.getItem("up.theme")).toBe("system");
   });
 
   it("til: butun karkas almashadi", async () => {
