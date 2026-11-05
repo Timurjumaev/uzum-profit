@@ -49,12 +49,14 @@
 }
 
 .orders-summary {
+  max-inline-size: none; /* bir qatorga sig'sin: "?" tugmalari keyingi qatorga tushib qolmasin */
   margin: 0;
 }
 
 .orders-filters {
   display: flex;
   flex-wrap: wrap;
+  align-items: end; /* tanlov va tugma bir chiziqda; tugma uzayib ketmaydi */
   gap: var(--space-3);
 }
 
@@ -94,6 +96,10 @@
   display: grid;
   gap: var(--space-4);
   min-inline-size: 0;
+}
+
+.expenses-list > .ui-btn {
+  justify-self: start; /* "Excel yuklab olish" butun kenglikka cho'zilmaydi */
 }
 
 .expenses-actions {

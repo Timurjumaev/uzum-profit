@@ -185,7 +185,7 @@ loading, error). `/ui-kit` ichki sahifasida hammasi ko'rinadi (yorug'/qorong'i, 
 | Select, **Combobox** | qidiruvda apostrof turlari va lotin/kirill farqi yo'q (§8.3); SKU qidiruvida rasm kichik ko'rinishi |
 | **DateRangePicker** | tayyor davrlar (Bugun, Kecha, 7/30 kun, Shu oy, O'tgan oy, Shu yil, Hammasi) + kalendar; tanlov URL'da |
 | CompareToggle | "oldingi davr" / "o'tgan yil" |
-| **KPI** | yorliq, qiymat (proportsional raqam), o'zgarish (ishora, nom bilan davr, rang = yo'nalish × yaxshimi), 12 nuqtali sparkline |
+| **KPI** | (kartalar bir qatorda teng balandlikda cho'ziladi, ichki qatorlar yuqoridan boshlanadi — raqamlar bir chiziqda; yorliq qatori kamida 32 px, "?" tugmasi bor-yo'qligidan qat'i nazar) yorliq, qiymat (proportsional raqam), o'zgarish (ishora, nom bilan davr, rang = yo'nalish × yaxshimi), 12 nuqtali sparkline |
 | **LedgerTable** (Hisob varag'i) | operator ustuni (−, =), summa tabular, oraliq summa ustida `rule`, yakun ostida `rule-double`; qator bosilsa drill-down drawer |
 | **DataTable** | sarlavha 12/500 (`bg-raised` fon, ostida siyoh chiziq — hisob daftari), qator 13 px, eng kam balandlik 36 (zich 32, keng 44) va yuqori/pastki bo'shliq 8 px (zich 6, keng 12) — ko'p qatorli katak sig'adi; burchak 10 px (`radius-panel`), oxirgi qatorda chiziq yo'q; raqamlar o'ngga, tabular, **hech qachon qatorga bo'linmaydi**; birinchi ustun skrollda qotadi; jami qatori `rule` bilan; ustun tanlash; saqlangan ko'rinish; eksport; 500+ qatorda virtual |
 | **FormulaPopover** | har ko'rsatkich yonidagi "?": formula (F-raqam bilan), qaysi ma'lumotdan, "taxminiy" sababi |

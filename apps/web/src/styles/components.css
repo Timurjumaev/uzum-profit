@@ -708,6 +708,7 @@
 /* --- KPI --- */
 .ui-kpi {
   display: grid;
+  align-content: start; /* kartalar bir qatorda teng balandlikda cho'ziladi — ichki qatorlar cho'zilmasin, raqamlar bir chiziqda tursin */
   gap: var(--space-1);
   padding: var(--space-4);
   border: 1px solid var(--border-hairline);
@@ -719,6 +720,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-1);
+  min-block-size: 32px; /* "?" tugmasi (32 px) bor va yo'q yorliqlar bir xil balandlikda, raqamlar bir chiziqda */
   color: var(--text-secondary);
 }
 

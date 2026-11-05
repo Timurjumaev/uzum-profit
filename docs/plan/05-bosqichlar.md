@@ -534,6 +534,14 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   eski yozuv turi bilan tahrirlanadi; boshlang'ich tur Kargo; to'g'ri tugma yozuvlari (Xarajatni / Kargoni / Sanalarni saqlash); kargodagi
   xaridni shu sahifadan ajratish; xaridsiz kargoda tushuntirish. Testlar: API (`test_shipments`), web (`shipments.test`, +3), vizual asoslar.
   **T:** staging'da Kargo sahifasida "Xarajat qo'shish" turlarini, "Ajratish" tugmasini ko'rish; kargoga avval yozilgan "Tovar" xarajati bo'lsa — uni o'chirib, xarid sahifasida kiritish.
+- [x] B4.35 Dizayn jilosi: qolgan sahifalar (ADR-048 davomi; Temur: "o'zing qulayidan boshla, xatosiz").
+  ✓ 2026-11-05: hamma sahifa (Asosiy, Foyda, Mahsulotlar, Buyurtmalar, Xarajatlar, Ombor, Sozlamalar) mock ma'lumot bilan 1440 va 390 px da
+  ko'zdan kechirildi; umumiy kamchiliklar tuzatildi: KPI kartalarda raqamlar bir chiziqda (kartalar teng balandlikda cho'zilganda ichki
+  qatorlar surilmaydi; "?" tugmali va tugmasiz yorliq bir xil balandlikda), Ombor holat belgilari katak kengligiga cho'zilmaydi,
+  Buyurtmalarda filtr va Excel tugmasi bir chiziqda, "?" tugmalari qatorga tushib qolmaydi, Xarajatlarda Excel tugmasi cho'zilmaydi,
+  Sozlamalarda bo'lim sarlavhasi, izoh va forma sarlavhalari (legend) oralig'i. Faqat CSS; mantiq va matn o'zgarmadi. Vizual asoslar yangilandi.
+  **T:** staging'da Asosiy, Ombor, Buyurtmalar, Xarajatlar, Sozlamalarni ko'rib, yoqmagan joyni skrinshot bilan yozing (keyingi o'tish:
+  mobil jadvallar — Ombor/Mahsulotlar, Asosiy sahifa qayta tuzilishi).
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.
