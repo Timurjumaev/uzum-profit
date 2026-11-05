@@ -165,7 +165,7 @@ describe("xarid sahifasi", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Bosqich sanalari" }));
     const dialog = await screen.findByRole("dialog", { name: "Bosqich sanalari" });
     fireEvent.change(within(dialog).getByLabelText(/^Toshkentga keldi/), { target: { value: "2026-10-01" } });
-    const save = within(dialog).getByRole("button", { name: "Xaridni saqlash" }) as HTMLButtonElement;
+    const save = within(dialog).getByRole("button", { name: "Sanalarni saqlash" }) as HTMLButtonElement;
     expect(save.disabled).toBe(true);
     expect(within(dialog).getByText(/Sanalar tartibi buzilgan/)).toBeTruthy();
     fireEvent.change(within(dialog).getByLabelText(/^Toshkentga keldi/), { target: { value: "2026-10-27" } });
@@ -269,7 +269,7 @@ describe("xarid sahifasi", () => {
     fireEvent.change(within(dialog).getByLabelText(/^Kartadan yechilgan summa\s*$/), { target: { value: "142,50" } });
     fireEvent.click(within(dialog).getByRole("checkbox", { name: "Hamma tovarlar" }));
     fireEvent.click(within(dialog).getByRole("checkbox", { name: /Yangi oʻyinchoq/ }));
-    fireEvent.click(within(dialog).getByRole("button", { name: "Xaridni saqlash" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Xarajatni saqlash" }));
     await waitFor(() => expect(bodiesOf(api, post)).toHaveLength(1));
     expect(bodiesOf(api, post)[0]).toEqual({
       kind: "goods",
@@ -291,7 +291,7 @@ describe("xarid sahifasi", () => {
     const edit = await screen.findByRole("dialog", { name: "Xarajatni tahrirlash" });
     fireEvent.click(within(edit).getByRole("radio", { name: "Qoʻlda kurs" }));
     fireEvent.change(within(edit).getByLabelText(/^1 birlik/), { target: { value: "1810" } });
-    fireEvent.click(within(edit).getByRole("button", { name: "Xaridni saqlash" }));
+    fireEvent.click(within(edit).getByRole("button", { name: "Xarajatni saqlash" }));
     await waitFor(() => expect(bodiesOf(api, patch)).toHaveLength(1));
     expect(bodiesOf(api, patch)[0]).toMatchObject({ rate_mode: "manual", rate: "1810", allocation: "value", lines: null });
     expect(await screen.findByText(/1 810 \(qoʻlda/)).toBeTruthy();

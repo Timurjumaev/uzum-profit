@@ -527,7 +527,13 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   tugma (submit — primary), yig'indi paneli (hisob daftari qatorlari), tanlov qatorlari, bo'sh holat; Xaridlar, Xarid, Kargolar,
   Kargo sahifalari va oynalari. Testlar: theme/shell (yangi standart), e2e vizual (+xaridlar va kargolar, 16 asos), a11y (qorong'i aniq
   tanlanadi). **T:** staging'da Xaridlar va Kargolar sahifalarini yorug' rejimda ko'zdan kechirib, yoqmagan joylarni skrinshot bilan
-  yozing; yoqsa — qolgan sahifalarga (Mahsulotlar, Ombor, Foyda, Xarajatlar, Bosh sahifa) yoyiladi (B4.34).
+  yozing; yoqsa — qolgan sahifalarga (Mahsulotlar, Ombor, Foyda, Xarajatlar, Bosh sahifa) yoyiladi (B4.35).
+- [x] B4.34 Kargo sahifasi tuzatishlari (ADR-049; Temur topdi, 2026-11-05).
+  ✓ 2026-11-05: kargo xarajati turlari faqat kargoga tegishlilari (Kargo, Bojxona, Qadoqlash, Shtrix-kod / yorliq, Uzum omboriga
+  yetkazish, Boshqa); Tovar, Xitoy ichki yetkazish va agent — xaridniki (API `422 kind_not_for_shipment`, `SHIPMENT_KINDS` core'da);
+  eski yozuv turi bilan tahrirlanadi; boshlang'ich tur Kargo; to'g'ri tugma yozuvlari (Xarajatni / Kargoni / Sanalarni saqlash); kargodagi
+  xaridni shu sahifadan ajratish; xaridsiz kargoda tushuntirish. Testlar: API (`test_shipments`), web (`shipments.test`, +3), vizual asoslar.
+  **T:** staging'da Kargo sahifasida "Xarajat qo'shish" turlarini, "Ajratish" tugmasini ko'rish; kargoga avval yozilgan "Tovar" xarajati bo'lsa — uni o'chirib, xarid sahifasida kiritish.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

@@ -66,7 +66,7 @@ export function ShipmentForm({ orgId, shipment, onClose, onSaved }: { orgId: str
             {t("purchases.cancel")}
           </Button>
           <Button type="submit" form="shipment-form" disabled={!valid} loading={save.isPending}>
-            {t("purchases.save")}
+            {t("shipments.save")}
           </Button>
         </>
       }

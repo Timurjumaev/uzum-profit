@@ -10,6 +10,7 @@ from upcore.fx import FxRate, RateSource, effective_fx_rate, manual_rate
 from upcore.money import Currency, Money, total
 from upcore.purchasing import (
     DATED_STAGES,
+    SHIPMENT_KINDS,
     AllocationBase,
     ComponentKind,
     CostComponent,
@@ -44,6 +45,15 @@ def uzs(x: int | str) -> Money:
 
 def by_id(lots: list[LotCost]) -> dict[str, LotCost]:
     return {lot.line_id: lot for lot in lots}
+
+
+def test_shipment_kinds_exclude_purchase_level_costs() -> None:
+    """ADR-049: tovar, Xitoy ichki yetkazish va agent komissiyasi har xaridniki; kargoga qolganlari yoziladi."""
+    purchase_level = {ComponentKind.GOODS, ComponentKind.CN_DELIVERY, ComponentKind.AGENT_FEE}
+    assert not (SHIPMENT_KINDS & purchase_level)
+    assert SHIPMENT_KINDS | purchase_level == set(
+        ComponentKind
+    )  # yangi tur qo'shilsa — qaysi tomonga tegishli ekani hal qilinadi
 
 
 def test_goods_cargo_extras_basic() -> None:

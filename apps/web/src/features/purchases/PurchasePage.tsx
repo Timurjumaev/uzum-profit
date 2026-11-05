@@ -450,7 +450,7 @@ function DatesForm({ orgId, detail, onClose, onSaved }: { orgId: string; detail:
             {t("purchases.cancel")}
           </Button>
           <Button type="submit" form="dates-form" disabled={!ordered} loading={save.isPending}>
-            {t("purchases.save")}
+            {t("purchases.datesSave")}
           </Button>
         </>
       }
