@@ -661,7 +661,7 @@ def test_opening_price_covers_sales_without_stock_or_lots(org: Org) -> None:
     org.recalc()
     costs = org.costs()
     assert costs[before][0] == D(100_000) and costs[before][2] == ["historical"]
-    assert costs[after][0] == D(150_000) and costs[after][2] == ["lot_shortage"]
+    assert costs[after][0] == D(150_000) and costs[after][2] == ["opening_shortage"]
 
 
 def test_link_sales_fallbacks(org: Org) -> None:

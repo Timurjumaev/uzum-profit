@@ -45,6 +45,9 @@ class CostFlag(StrEnum):
     EARLY_SALE = "early_sale"  # sotuv lot tayyor bo'lishidan oldin
     NOT_RECEIVED_MARKED = "not_received_marked"  # yo'ldagi (sanasiz) lotdan olindi
     LOT_SHORTAGE = "lot_shortage"  # lotlar yetmadi — oxirgi ma'lum narx
+    OPENING_SHORTAGE = (
+        "opening_shortage"  # boshlang'ich qoldiq yetmadi — boshlang'ich holatdagi narx (F41)
+    )
     RETURN_UNMATCHED = "return_unmatched"  # qaytishning asl sotuvi topilmadi
     NO_LOTS = "no_lots"  # tovarda lot umuman yo'q — tannarx yo'q
     HISTORICAL = "historical"  # boshlash sanasidan oldingi sotuv — tarixiy tannarx (F41)
@@ -346,15 +349,22 @@ class _Engine:
         if need > 0:
             short: Decimal | None = self.last_unit
             shortage_flags: set[AnyFlag] = self.last_flags
+            # Yetmagan qism narxi boshlang'ich holatdan: oxirgi olingan qatlam boshlang'ich qoldiq edi yoki narx to'g'ridan-to'g'ri
+            # ``item_costs`` dan olinadi — sotuvchiga "partiya" emas, "boshlang'ich qoldiq yetmadi" deb aytiladi.
+            taken = [a for a in allocations if a.lot_id is not None]
+            from_opening = bool(taken) and taken[-1].lot_id == OPENING_LOT
             if short is None and self.opening is not None:
                 # Lot ham, boshlang'ich qoldiq ham yo'q (qoldiq 0 yozilgan yoki sotuvdan keyin tovar keldi, partiya
                 # kiritilmagan), lekin sotuvchi tarixiy narx yozgan: o'sha kundagi narx — taxminiy ("lot yetmadi").
                 price = self.opening.price_on(event.day)
                 short = None if price is None else price.amount
+                from_opening = True
             if short is None:  # tovarda lot umuman yo'q
                 self._record(event, None, (), flags | {CostFlag.NO_LOTS})
                 return
-            flags |= shortage_flags | {CostFlag.LOT_SHORTAGE}
+            flags |= shortage_flags | {
+                CostFlag.OPENING_SHORTAGE if from_opening else CostFlag.LOT_SHORTAGE
+            }
             allocations.append(Allocation(None, need, short))
         cost = Money(sum((a.unit * a.qty for a in allocations), Decimal(0)), UZS)
         self._record(event, cost, tuple(allocations), flags)

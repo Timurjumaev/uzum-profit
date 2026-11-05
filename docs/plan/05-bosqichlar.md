@@ -568,6 +568,12 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   tartib: tayyor partiya → boshlang'ich narx → yo'ldagi partiya (`lot_source`). (3) "Taxminiy" sababi sichqoncha ustida chiqmasdi
   (brauzer tooltip'i): belgi endi tugma — bosilsa sabablar katak ichida ochiladi (telefonda ham ishlaydi). **T:** staging'da Mahsulotlar →
   Holat = "Zarar" va "Sotuv yo'q", "Oxirgi partiya" va Buyurtmalarda "Taxminiy" belgisini bosib ko'ring.
+- [x] B4.39 "Taxminiy" belgisi matni boshlang'ich holat uchun (Temur: "partiya yo'q, faqat boshlang'ich narx — nega taxminiy?", 2026-11-05).
+  ✓ 2026-11-05: boshlang'ich qoldiq (dona) tugagan yoki 0 kiritilgan tovarning keyingi sotuvi boshlang'ich holatdagi narxda hisoblanadi va
+  taxminiy belgilanadi — lekin sababi "partiyalar yetmadi — oxirgi partiya narxi" deb noto'g'ri yozilardi. Yangi belgi `opening_shortage`:
+  "boshlang'ich qoldiq yetmadi (qoldiq kam kiritilgan yoki tovar keyin kelgan) — boshlang'ich holatdagi narx olindi; xaridni kiritsangiz
+  aniqlashadi". Hisob o'zgarmadi (narx shu, belgi matni aniqlashdi). **T:** shunday SKU'larda boshlang'ich holat oynasida qoldiq sonini
+  tekshiring (sotilgan donadan kam bo'lsa — to'g'rilang, belgi yo'qoladi).
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

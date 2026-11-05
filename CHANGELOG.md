@@ -488,6 +488,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- B4.39: boshlang'ich qoldiq tugagan tovar sotuvidagi "Taxminiy" sababi "partiyalar yetmadi" emas, "boshlang'ich qoldiq yetmadi" (yangi
+  belgi `opening_shortage`); hisob o'zgarmadi.
 - B4.38: Mahsulotlarda sotilmagan SKU'lar "Zarar" o'rniga **"Sotuv yo'q"**; "Oxirgi partiya" partiya bo'lmasa boshlang'ich holat
   narxini ko'rsatadi; buyurtmalardagi "Taxminiy" / "Tannarxsiz" belgisi bosilganda sabablar ochiladi.
 - B4.37: **zarar SKU soni** — "Zarar bilan sotilayotgan SKU" va Asosiy sahifadagi zarar ro'yxati sotilmagan SKU'larni (faqat saqlash yoki

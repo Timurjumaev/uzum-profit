@@ -772,6 +772,7 @@ export const uzLatn = {
     flag: {
       no_item: "SKU tovarga bogʻlanmagan — Mahsulotlar sahifasida SKUʼni tovarga bogʻlang",
       no_lots: "tovarda hali partiya yoʻq — xaridni kiriting",
+      opening_shortage: "boshlangʻich qoldiq yetmadi (qoldiq kam kiritilgan yoki tovar keyin kelgan) — boshlangʻich holatdagi narx olindi; xaridni kiritsangiz aniqlashadi",
       lot_shortage: "partiyalar yetmadi — oxirgi partiya narxi olindi",
       early_sale: "sotuv partiya tayyor boʻlishidan oldin — keyingi partiya narxi",
       not_received_marked: "yoʻldagi partiyadan olindi (qabul belgilanmagan)",
