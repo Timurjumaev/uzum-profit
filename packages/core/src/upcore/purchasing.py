@@ -41,6 +41,20 @@ class ComponentKind(StrEnum):
     OTHER = "other"
 
 
+# Kargo xarajatlari (ADR-046, ADR-049): kargodagi hamma xaridning hamma tovariga bo'linadigan turlar. Tovar narxi, Xitoy ichki
+# yetkazish va agent komissiyasi — har xaridning o'zida (yetkazib beruvchi bo'yicha), kargoga tegishli emas.
+SHIPMENT_KINDS: frozenset[ComponentKind] = frozenset(
+    {
+        ComponentKind.CARGO,
+        ComponentKind.CUSTOMS,
+        ComponentKind.PACKAGING,
+        ComponentKind.LABELING,
+        ComponentKind.UZUM_DELIVERY,
+        ComponentKind.OTHER,
+    }
+)
+
+
 class AllocationBase(StrEnum):
     """Taqsimot asosi (M9). Kargo uchun standart — vazn."""
 

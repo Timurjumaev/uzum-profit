@@ -197,6 +197,15 @@ def test_validation_and_permissions(world: World) -> None:
         ).status_code
         == 422
     )
+    # Tovar, Xitoy ichki yetkazish va agent komissiyasi — xaridniki, kargoga yozib bo'lmaydi (ADR-049); yozilmaydi va hisobga kirmaydi.
+    for kind in ("goods", "cn_delivery", "agent_fee"):
+        r = send(w, "POST", f"shipments/{ship}/components", **{**comp, "kind": kind}, lines=[la])
+        assert r.status_code == 422 and r.json()["code"] == "kind_not_for_shipment"
+    assert send(w, "PATCH", f"shipments/{ship}/components/{cid}", kind="goods").status_code == 422
+    for kind in ("customs", "packaging", "labeling", "uzum_delivery", "other"):
+        ok(send(w, "PATCH", f"shipments/{ship}/components/{cid}", kind=kind))
+    assert [c["kind"] for c in ok(send(w, "GET", f"shipments/{ship}"))["components"]] == ["other"]
+    ok(send(w, "PATCH", f"shipments/{ship}/components/{cid}", kind="cargo", amount="500"))
     # Ruxsatlar: buxgalter ko'radi, o'zgartirmaydi; omborchi o'zgartiradi, lekin summalarni ko'rmaydi.
     assert send(w, "POST", "shipments", role="accountant").status_code == 403
     seen = ok(send(w, "GET", f"shipments/{ship}", role="warehouse"))

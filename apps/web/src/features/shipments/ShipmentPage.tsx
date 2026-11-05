@@ -8,13 +8,13 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
-import { createShipmentComponent, currentOrg, deleteShipment, deleteShipmentComponent, meQuery, shipmentQuery, updateShipmentComponent } from "../../app/query";
+import { createShipmentComponent, currentOrg, deleteShipment, deleteShipmentComponent, meQuery, shipmentQuery, updatePurchase, updateShipmentComponent } from "../../app/query";
 import { Badge, Banner, Button, DataTable, Dialog, EmptyState, Skeleton, useToast, type Column } from "../../components/ui";
 import type { CostComponent, ShipmentDetail, ShipmentLine, ShipmentPurchase } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { ComponentForm } from "../purchases/ComponentForm";
 import { useComponentColumns } from "../purchases/componentColumns";
-import { isEstimated, visibleFlags } from "../purchases/model";
+import { isEstimated, SHIPMENT_KINDS, visibleFlags } from "../purchases/model";
 import { MANAGE_ROLES } from "../purchases/Purchases";
 import { AttachPurchases } from "./AttachPurchases";
 import { ShipmentForm } from "./ShipmentForm";
@@ -67,6 +67,15 @@ function ShipmentView({ orgId, detail, canManage }: { orgId: string; detail: Shi
   };
   /** Xaridlar biriktirildi/ko'chirildi: kargo (xaridlar, ulushlar) qayta o'qiladi, ro'yxatlar va hisobotlar eskiradi. */
   const refresh = () => Promise.all([["shipments"], ["purchases"], ["pnl"], ["dashboard"], ["skus"], ["sku"], ["inventory"]].map((k) => client.invalidateQueries({ queryKey: ["orgs", orgId, ...k] })));
+  /** Xaridni kargodan ajratish (xarid o'z holicha qoladi; kargo va qolgan xaridlar tannarxi qayta hisoblanadi). */
+  const detach = useMutation({
+    mutationFn: (purchaseId: string) => updatePurchase(orgId, purchaseId, { shipment_id: null }),
+    onSuccess: async () => {
+      toast.show(t("shipments.link.detached"), "positive");
+      await refresh();
+    },
+    onError: (error) => toast.show(errorText(error, t), "negative"),
+  });
   const removeComponent = useMutation({
     mutationFn: (id: string) => deleteShipmentComponent(orgId, s.id, id),
     onSuccess: (next) => applied(next, t("purchases.components.deleted")),
@@ -104,6 +113,21 @@ function ShipmentView({ orgId, detail, canManage }: { orgId: string; detail: Shi
             header: t("purchases.col.unitCost"),
             numeric: true,
             render: (r: ShipmentPurchase) => (r.unit_cost === null ? "—" : money(r.unit_cost)),
+          },
+        ]
+      : []),
+    ...(canManage
+      ? [
+          {
+            key: "actions",
+            header: t("expenses.own.actions"),
+            render: (r: ShipmentPurchase) => (
+              <span className="expenses-actions">
+                <Button variant="ghost" loading={detach.isPending && detach.variables === r.id} onClick={() => detach.mutate(r.id)} aria-label={`${t("shipments.detach")}: ${r.title ?? t("purchases.untitled")}`}>
+                  {t("shipments.detach")}
+                </Button>
+              </span>
+            ),
           },
         ]
       : []),
@@ -190,7 +214,7 @@ function ShipmentView({ orgId, detail, canManage }: { orgId: string; detail: Shi
                 )}
               </div>
               {detail.components.length === 0 ? (
-                <EmptyState title={t("shipments.noCosts")} text={t("shipments.noCostsText")} />
+                <EmptyState title={t("shipments.noCosts")} text={t(detail.lines.length === 0 ? "shipments.noCostsNoLines" : "shipments.noCostsText")} />
               ) : (
                 <DataTable caption={t("shipments.costs")} density="compact" columns={componentColumns} rows={detail.components} rowKey={(c) => c.id} />
               )}
@@ -225,7 +249,7 @@ function ShipmentView({ orgId, detail, canManage }: { orgId: string; detail: Shi
               </div>
             )}
           </dl>
-          {amounts && Object.keys(detail.by_kind).length > 0 && (
+          {amounts && Object.keys(detail.by_kind).length > 1 && (
             <ul className="purchase__kinds">
               {Object.entries(detail.by_kind).map(([kind, v]) => (
                 <li key={kind}>
@@ -254,6 +278,7 @@ function ShipmentView({ orgId, detail, canManage }: { orgId: string; detail: Shi
         <ComponentForm
           component={editing.component}
           lines={lineChoices}
+          kinds={SHIPMENT_KINDS}
           submit={(body, id) => (id ? updateShipmentComponent(orgId, s.id, id, body) : createShipmentComponent(orgId, s.id, body))}
           onClose={() => setEditing(null)}
           onSaved={(d) => void applied(d, t("purchases.components.saved"))}

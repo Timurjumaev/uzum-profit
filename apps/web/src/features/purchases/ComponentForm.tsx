@@ -27,9 +27,9 @@ type Draft = {
   shares: Record<string, string | null>;
 };
 
-function draftOf(c: CostComponent | null, lines: ComponentLine[]): Draft {
+function draftOf(c: CostComponent | null, lines: ComponentLine[], kind: ComponentKind): Draft {
   return {
-    kind: (c?.kind as ComponentKind | undefined) ?? "goods",
+    kind: (c?.kind as ComponentKind | undefined) ?? kind,
     amount: c?.amount ?? null,
     currency: (c?.currency as CurrencyCode | undefined) ?? "CNY",
     paidOn: c?.paid_on ?? "",
@@ -59,12 +59,16 @@ type Props<D> = {
   onSaved: (d: D) => void;
   /** Xarid sahifasida: yangi xarajatda Turi = Kargo — summa o'rniga kargolar ro'yxati (xarid kargoga biriktiriladi). */
   cargoLink?: ShipmentLinkProps;
+  /** Tanlanadigan turlar (standart — hammasi); kargoda faqat kargoga tegishlilari, birinchisi — boshlang'ich tur. */
+  kinds?: ComponentKind[];
 };
 
-export function ComponentForm<D>({ component, lines, submit: send, onClose, onSaved, cargoLink }: Props<D>) {
+export function ComponentForm<D>({ component, lines, submit: send, onClose, onSaved, cargoLink, kinds = COMPONENT_KINDS }: Props<D>) {
   const { t } = useTranslation();
-  const [draft, setDraft] = useState(() => draftOf(component, lines));
+  const [draft, setDraft] = useState(() => draftOf(component, lines, kinds.includes("goods") ? "goods" : kinds[0]!));
   const patch = (x: Partial<Draft>) => setDraft((d) => ({ ...d, ...x }));
+  // Eski yozuvning turi ro'yxatda bo'lmasa ham tahrirlashda ko'rinadi (masalan, kargoga avval yozilgan "Tovar").
+  const kindOptions = component !== null && !kinds.includes(component.kind as ComponentKind) ? [component.kind as ComponentKind, ...kinds] : kinds;
   const link = useShipmentLink(cargoLink);
   const linking = cargoLink !== undefined && component === null && draft.kind === "cargo";
   const foreign = draft.currency !== "UZS";
@@ -115,7 +119,7 @@ export function ComponentForm<D>({ component, lines, submit: send, onClose, onSa
             {t("purchases.cancel")}
           </Button>
           <Button type="submit" form="component-form" disabled={linking ? !link.valid : !valid} loading={linking ? link.save.isPending : save.isPending}>
-            {linking ? t(link.detaching ? "shipments.link.detachSave" : "shipments.link.save") : t("purchases.save")}
+            {linking ? t(link.detaching ? "shipments.link.detachSave" : "shipments.link.save") : t("purchases.components.save")}
           </Button>
         </>
       }
@@ -127,7 +131,7 @@ export function ComponentForm<D>({ component, lines, submit: send, onClose, onSa
           label={t("purchases.components.col.kind")}
           value={draft.kind}
           onValueChange={(kind) => patch({ kind: kind as ComponentKind })}
-          options={COMPONENT_KINDS.map((k) => ({ value: k, label: t(`purchases.components.kind.${k}`) }))}
+          options={kindOptions.map((k) => ({ value: k, label: t(`purchases.components.kind.${k}`) }))}
         />
         {linking ? (
           <ShipmentLinkFields state={link} />
@@ -159,7 +163,7 @@ export function ComponentForm<D>({ component, lines, submit: send, onClose, onSa
               label={t("purchases.components.allocationLabel")}
               value={draft.allocation}
               onValueChange={(a) => patch({ allocation: a as AllocationBase | "" })}
-              options={[{ value: "", label: t("purchases.components.allocation.default") }, ...ALLOCATIONS.map((a) => ({ value: a, label: t(`purchases.components.allocation.${a}`) }))]}
+              options={[{ value: "", label: t(kinds.includes("goods") ? "purchases.components.allocation.default" : "purchases.components.allocation.defaultShipment") }, ...ALLOCATIONS.map((a) => ({ value: a, label: t(`purchases.components.allocation.${a}`) }))]}
             />
             <fieldset className="purchase-form__lines">
               <legend className="ui-field__label">{t("purchases.components.targets")}</legend>

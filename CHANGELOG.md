@@ -394,6 +394,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   olganida" turi, `AD#` → sotuv qatori, yechilgan kun buyurtma va topshirilgan kunga nisbatan), `dateService` ↔
   `dateCreated` farqi va saqlash yechiladigan kunlar; faqat yig'indilar, matnlar raqamsiz.
 
+- B4.34 (ADR-049, Temur topdi): **Kargo sahifasi tuzatishlari.** Kargo xarajati turlarida endi faqat kargoga tegishlilari (Kargo, Bojxona,
+  Qadoqlash, Shtrix-kod / yorliq, Uzum omboriga yetkazish, Boshqa); Tovar, Xitoy ichki yetkazish va agent komissiyasi xaridniki — API ham rad
+  etadi (`kind_not_for_shipment`). Oyna tugmalari to'g'ri yoziladi ("Xarajatni / Kargoni / Sanalarni saqlash"), kargodagi xaridni kargo
+  sahifasidan ajratish mumkin, xaridsiz kargoda tushuntirish chiqadi.
 - B4.33 (ADR-048, Temur talabi): **dizayn jilosi — Xaridlar va Kargolar** (yo'nalish A, "hisob daftari"). Standart mavzu endi yorug' (tizim
   sozlamasi emas; menyuda hamon tanlanadi). Iliq qog'oz tokenlari va yangi `border-strong`; jadval (sarlavha fon va siyoh chiziq, qator
   bo'shliqlari, burchak), mobilda Xaridlar va Kargolar ro'yxati ixcham (nom ostida meta qator), tovar nomlari bir qator; formadagi

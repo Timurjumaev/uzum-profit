@@ -85,9 +85,9 @@ describe("kargolar ro'yxati", () => {
     fireEvent.change(within(dialog).getByLabelText(/^Nomi/), { target: { value: "Noyabr" } });
     fireEvent.change(within(dialog).getByLabelText(/^Yoʻlda/), { target: { value: "2026-10-12" } });
     fireEvent.change(within(dialog).getByLabelText(/^Toshkentga keldi/), { target: { value: "2026-10-10" } });
-    expect((within(dialog).getByRole("button", { name: "Xaridni saqlash" }) as HTMLButtonElement).disabled).toBe(true);
+    expect((within(dialog).getByRole("button", { name: "Kargoni saqlash" }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.change(within(dialog).getByLabelText(/^Toshkentga keldi/), { target: { value: "2026-10-25" } });
-    fireEvent.click(within(dialog).getByRole("button", { name: "Xaridni saqlash" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Kargoni saqlash" }));
     await waitFor(() => expect(bodiesOf(api, create)).toHaveLength(1));
     expect(bodiesOf(api, create)[0]).toEqual({ title: "Noyabr", carrier_id: null, cn_warehouse_on: null, shipped_on: "2026-10-12", arrived_on: "2026-10-25", note: null });
     await waitFor(() => expect(history.location.pathname).toBe(`/shipments/${SHIPMENT_1}`));
@@ -124,7 +124,7 @@ describe("kargo sahifasi", () => {
     expect(within(dialog).getByRole("checkbox", { name: /A yetkazib beruvchi · Mashina/ })).toBeTruthy();
     expect(within(dialog).getByRole("checkbox", { name: /B yetkazib beruvchi · Mashina/ })).toBeTruthy();
     fireEvent.click(within(dialog).getByRole("checkbox", { name: /B yetkazib beruvchi · Mashina/ }));
-    fireEvent.click(within(dialog).getByRole("button", { name: "Xaridni saqlash" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Xarajatni saqlash" }));
     await waitFor(() => expect(bodiesOf(api, post)).toHaveLength(1));
     expect(bodiesOf(api, post)[0]).toMatchObject({ amount: "300", currency: "USD", lines: expect.arrayContaining([expect.any(String)]) });
   });
@@ -201,7 +201,7 @@ describe("xarid sahifasida kargo", () => {
     expect((within(dialog).getByLabelText(/^Yoʻlda/) as HTMLInputElement).disabled).toBe(true);
     expect((within(dialog).getByLabelText(/^Buyurtma berildi/) as HTMLInputElement).disabled).toBe(false);
     fireEvent.change(within(dialog).getByLabelText(/^Buyurtma berildi/), { target: { value: "2026-10-01" } });
-    fireEvent.click(within(dialog).getByRole("button", { name: "Xaridni saqlash" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Sanalarni saqlash" }));
     await waitFor(() => expect(bodiesOf(api, patch)).toHaveLength(1));
     expect(bodiesOf(api, patch)[0]).toEqual({ dates: { ordered: "2026-10-01" } }); // kargo sanalari yuborilmaydi
   });
@@ -290,7 +290,55 @@ describe("xaridni kargoga biriktirish — xarid sahifasidan (Turi = Kargo)", () 
     fireEvent.change(within(dialog).getByLabelText("Turi"), { target: { value: "customs" } });
     expect(within(dialog).getByLabelText("Summa")).toBeTruthy();
     expect(within(dialog).queryByRole("radio", { name: /Presslangan oʻram/ })).toBeNull();
-    expect(within(dialog).getByRole("button", { name: "Xaridni saqlash" })).toBeTruthy();
+    expect(within(dialog).getByRole("button", { name: "Xarajatni saqlash" })).toBeTruthy();
+  });
+
+  it("kargo xarajati turlari: faqat kargoga tegishlilari, boshlang'ichi — Kargo; Tovar, Xitoy ichki yetkazish va agent xaridniki (ADR-049)", async () => {
+    await renderAt(`/shipments/${SHIPMENT_1}`);
+    fireEvent.click(await screen.findByRole("button", { name: "Xarajat qoʻshish" }));
+    const dialog = await screen.findByRole("dialog", { name: "Yangi xarajat" });
+    const kind = within(dialog).getByLabelText("Turi") as HTMLSelectElement;
+    expect(kind.value).toBe("cargo");
+    expect([...kind.options].map((o) => o.textContent)).toEqual(["Kargo", "Bojxona", "Qadoqlash", "Shtrix-kod / yorliq", "Uzum omboriga yetkazish", "Boshqa"]);
+    // Taqsimot standarti matni kargoga mos (tovar qiymati haqida gap yo'q).
+    expect(within(dialog).getByRole("option", { name: "Standart (kargo — vazn, qolgani — dona)" })).toBeTruthy();
+    expect(within(dialog).getByRole("button", { name: "Xarajatni saqlash" })).toBeTruthy();
+    cleanup();
+    // Xarid sahifasida esa hamma tur (Tovar boshlang'ich).
+    await renderAt(`/purchases/${PURCHASE_1}`);
+    fireEvent.click(await screen.findByRole("button", { name: "Xarajat qoʻshish" }));
+    const purchaseDialog = await screen.findByRole("dialog", { name: "Yangi xarajat" });
+    const purchaseKind = within(purchaseDialog).getByLabelText("Turi") as HTMLSelectElement;
+    expect(purchaseKind.value).toBe("goods");
+    expect(purchaseKind.options).toHaveLength(9);
+  });
+
+  it("kargodagi xaridni shu sahifadan ajratish: PATCH shipment_id=null; faqat o'qiy oladigan rolda tugma yo'q", async () => {
+    const patch = purchaseRoute("PATCH", PURCHASE_1);
+    const { api } = await renderAt(`/shipments/${SHIPMENT_1}`, { [patch]: () => json(200, purchaseDetail()) });
+    fireEvent.click(await screen.findByRole("button", { name: "Ajratish: A yetkazib beruvchi" }));
+    await waitFor(() => expect(bodiesOf(api, patch)).toHaveLength(1));
+    expect(bodiesOf(api, patch)[0]).toEqual({ shipment_id: null });
+    expect(await screen.findByText("Xarid kargodan ajratildi")).toBeTruthy();
+    cleanup();
+    await renderAt(`/shipments/${SHIPMENT_1}`, {}, "accountant");
+    await screen.findByRole("table", { name: "Kargodagi xaridlar" });
+    expect(screen.queryByRole("button", { name: /^Ajratish/ })).toBeNull();
+  });
+
+  it("kargoga avval yozilgan «Tovar» xarajati tahrirlashda turi bilan ko'rinadi; xaridsiz kargoda xarajat qo'shishdan oldin tushuntirish", async () => {
+    const legacy = shipmentDetail({ components: [component({ id: SHIPMENT_COMP, kind: "goods", amount: "1000.0000", currency: "UZS", applied_rate: null, rate_day: null, rate_source: null, amount_uzs: "1000.00" })], by_kind: { goods: "1000.00" } });
+    await renderAt(`/shipments/${SHIPMENT_1}`, { [shipmentRoute(SHIPMENT_1)]: () => json(200, legacy) });
+    fireEvent.click(await screen.findByRole("button", { name: /Tahrirlash: Tovar/ }));
+    const dialog = await screen.findByRole("dialog", { name: "Xarajatni tahrirlash" });
+    const kind = within(dialog).getByLabelText("Turi") as HTMLSelectElement;
+    expect(kind.value).toBe("goods");
+    expect([...kind.options].map((o) => o.value)).toEqual(["goods", "cargo", "customs", "packaging", "labeling", "uzum_delivery", "other"]);
+    cleanup();
+    const empty = shipmentDetail({ shipment: shipmentRow({ purchase_count: 0, units: 0, total: "0.00" }), purchases: [], lines: [], components: [], by_kind: {} });
+    await renderAt(`/shipments/${SHIPMENT_1}`, { [shipmentRoute(SHIPMENT_1)]: () => json(200, empty) });
+    expect(await screen.findByText(/Avval kargoga xarid biriktiring/)).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Xarajat qoʻshish" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("kargo sahifasida «Kargo» turi summa bilan qoladi (kargo xarajati shu yerda kiritiladi)", async () => {

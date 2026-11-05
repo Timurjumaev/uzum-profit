@@ -28,7 +28,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import Row, delete, func, insert, or_, select, update
 from upcore.fx import to_uzs
 from upcore.money import Currency, Money, to_decimal
-from upcore.purchasing import Stage, current_stage, default_base
+from upcore.purchasing import SHIPMENT_KINDS, ComponentKind, Stage, current_stage, default_base
 
 from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission
@@ -488,6 +488,16 @@ async def delete_shipment(shipment_id: UUID, ctx: Manager) -> Response:
 # --- Kargo xarajatlari ---------------------------------------------------------------------------
 
 
+def _check_kind(kind: ComponentKind) -> None:
+    """Tovar, Xitoy ichki yetkazish va agent komissiyasi har xaridning o'zida; kargoga tegishli emas (ADR-049)."""
+    if kind not in SHIPMENT_KINDS:
+        raise AppError(
+            "kind_not_for_shipment",
+            422,
+            detail="bu xarajat turi xaridga tegishli — uni xarid sahifasida kiriting",
+        )
+
+
 @router.post(
     "/orgs/{org_id}/shipments/{shipment_id}/components",
     response_model=ShipmentDetailOut,
@@ -502,6 +512,7 @@ async def create_component(
 ) -> ShipmentDetailOut:
     _require_amounts(ctx)
     shipment = await _shipment(ctx, shipment_id)
+    _check_kind(body.kind)
     await _check_targets(ctx, shipment_id, body.lines, body.shares)
     values = _component_values(body.model_dump())
     values["allocation"] = values["allocation"] or default_base(body.kind).value
@@ -543,6 +554,9 @@ async def update_component(
     for key in ("kind", "amount", "currency", "rate_mode", "allocation"):
         if key in values and values[key] is None:
             raise AppError("bad_component", 422, detail=f"{key} bo'sh bo'lmaydi")
+    # Tur o'zgarsa tekshiriladi; eski yozuvning (masalan, avval yozilgan "Tovar") boshqa maydonlari tahrirlanaveradi.
+    if values.get("kind") is not None:
+        _check_kind(values["kind"])
     lines, shares = calc_lots.targets_of(row.targets)
     new_lines = values.pop("lines", lines)
     new_shares = values.pop("shares", shares)

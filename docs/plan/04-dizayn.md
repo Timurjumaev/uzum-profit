@@ -368,7 +368,7 @@ Sof foyda, oktabr
   xarajat komponentlari, birlik tannarx tarkibi (o'ngda doim ko'rinadi). **Kargolar** (ADR-046): Xaridlar sarlavhasidagi
   havola → ro'yxat (sanalar, xaridlar soni, dona, kargo xarajati) → kargo sahifasi: kargodagi xaridlar (kargo ulushi
   bilan), kargo xarajatlari (kurs bilan), tovarlar va dona boshiga ulush, o'ngda jami; xarid sahifasida kargo nomi va
-  kargodan xarajatlar (faqat o'qish).
+  kargodan xarajatlar (faqat o'qish). Kargo xarajati turlari — faqat kargoga tegishlilari (ADR-049); kargodagi xaridni kargo sahifasidan ajratish mumkin.
   **Ro'yxat qoidalari (ADR-048):** tovar nomlari bir qator (ortig'i "…", to'liq matn `title` da); nom — matn rangida
   sarlavha (havola faqat ustiga kelganda ostiga chiziladi); mobilda (≤ 639 px) ikkinchi darajali ustunlar yashirin,
   ularning o'rniga nom ostida bitta meta qator (bosqich · dona yoki kompaniya · sana · dona); qator amallari
