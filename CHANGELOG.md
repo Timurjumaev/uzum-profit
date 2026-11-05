@@ -394,6 +394,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   olganida" turi, `AD#` → sotuv qatori, yechilgan kun buyurtma va topshirilgan kunga nisbatan), `dateService` ↔
   `dateCreated` farqi va saqlash yechiladigan kunlar; faqat yig'indilar, matnlar raqamsiz.
 
+- B4.32 (ADR-047, Temur talabi): **xarid ↔ kargo biriktirish.** Xarid sahifasida "Yangi xarajat" → Turi = Kargo tanlansa, summa
+  o'rniga kargolar ro'yxati chiqadi (holati va sanasi bilan, "Kargosiz", "Yangi kargo…") va xarid shu kargoga biriktiriladi —
+  xarajat komponenti yaratilmaydi, kargo puli ikki marta hisoblanmaydi. Kargo sahifasida "Xarid biriktirish": kargosiz va boshqa
+  kargodagi xaridlardan bir nechtasini belgilab biriktirish (biri xato bersa to'xtaydi, nechtasi biriktirilgani aytiladi).
 - B4.31 (ADR-046, Temur taklifi): **Kargo — bitta kargo, ko'p xarid.** Yangi `shipments` (nomi, kargo kompaniyasi, Xitoy omborida /
   yo'lda / keldi sanalari), `purchases.shipment_id`, `cost_components.shipment_id` (migratsiya 0017). Kargo xarajatlari kargodagi
   hamma xaridlarning hamma tovarlariga bitta taqsimotda bo'linadi (yig'indi tiyinigacha); sanalar kargodan; `/shipments` API va

@@ -16,9 +16,10 @@ import { ComponentForm } from "../purchases/ComponentForm";
 import { useComponentColumns } from "../purchases/componentColumns";
 import { isEstimated, visibleFlags } from "../purchases/model";
 import { MANAGE_ROLES } from "../purchases/Purchases";
+import { AttachPurchases } from "./AttachPurchases";
 import { ShipmentForm } from "./ShipmentForm";
 
-type Editing = { kind: "header" } | { kind: "delete" } | { kind: "component"; component: CostComponent | null };
+type Editing = { kind: "header" } | { kind: "delete" } | { kind: "attach" } | { kind: "component"; component: CostComponent | null };
 
 function BackLink() {
   const { t } = useTranslation();
@@ -64,6 +65,8 @@ function ShipmentView({ orgId, detail, canManage }: { orgId: string; detail: Shi
       [["shipments", "list"], ["purchases"], ["pnl"], ["dashboard"], ["skus"], ["sku"], ["inventory"]].map((k) => client.invalidateQueries({ queryKey: ["orgs", orgId, ...k] })),
     );
   };
+  /** Xaridlar biriktirildi/ko'chirildi: kargo (xaridlar, ulushlar) qayta o'qiladi, ro'yxatlar va hisobotlar eskiradi. */
+  const refresh = () => Promise.all([["shipments"], ["purchases"], ["pnl"], ["dashboard"], ["skus"], ["sku"], ["inventory"]].map((k) => client.invalidateQueries({ queryKey: ["orgs", orgId, ...k] })));
   const removeComponent = useMutation({
     mutationFn: (id: string) => deleteShipmentComponent(orgId, s.id, id),
     onSuccess: (next) => applied(next, t("purchases.components.deleted")),
@@ -166,6 +169,7 @@ function ShipmentView({ orgId, detail, canManage }: { orgId: string; detail: Shi
               <h2 id="shipment-purchases-title" className="h3">
                 {t("shipments.purchases")}
               </h2>
+              {canManage && <Button onClick={() => setEditing({ kind: "attach" })}>{t("shipments.attach.button")}</Button>}
             </div>
             {detail.purchases.length === 0 ? (
               <EmptyState title={t("shipments.noPurchases")} text={t("shipments.noPurchasesText")} />
@@ -253,6 +257,19 @@ function ShipmentView({ orgId, detail, canManage }: { orgId: string; detail: Shi
           submit={(body, id) => (id ? updateShipmentComponent(orgId, s.id, id, body) : createShipmentComponent(orgId, s.id, body))}
           onClose={() => setEditing(null)}
           onSaved={(d) => void applied(d, t("purchases.components.saved"))}
+        />
+      )}
+      {editing?.kind === "attach" && (
+        <AttachPurchases
+          orgId={orgId}
+          shipmentId={s.id}
+          onClose={() => setEditing(null)}
+          onChanged={() => void refresh()}
+          onAttached={(count) => {
+            setEditing(null);
+            toast.show(t("shipments.attach.saved", { count }), "positive");
+            void refresh();
+          }}
         />
       )}
       {editing?.kind === "delete" && <DeleteDialog orgId={orgId} shipmentId={s.id} hasPurchases={s.purchase_count > 0} onClose={() => setEditing(null)} />}

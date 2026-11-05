@@ -64,7 +64,7 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
     setEditing(null);
     toast.show(message, "positive");
     await Promise.all(
-      [["purchases", "list"], ["pnl"], ["dashboard"], ["skus"], ["sku"], ["inventory"]].map((k) => client.invalidateQueries({ queryKey: ["orgs", orgId, ...k] })),
+      [["purchases", "list"], ["shipments"], ["pnl"], ["dashboard"], ["skus"], ["sku"], ["inventory"]].map((k) => client.invalidateQueries({ queryKey: ["orgs", orgId, ...k] })),
     );
   };
   const fail = (error: unknown) => toast.show(errorText(error, t), "negative");
@@ -343,6 +343,7 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
           submit={(body, id) => (id ? updateComponent(orgId, p.id, id, body) : createComponent(orgId, p.id, body))}
           onClose={() => setEditing(null)}
           onSaved={(d) => void applied(d, t("purchases.components.saved"))}
+          cargoLink={{ orgId, purchase: p, onLinked: (d) => void applied(d, t(d.purchase.shipment_id ? "shipments.link.linked" : "shipments.link.detached")) }}
         />
       )}
       {editing?.kind === "delete" && <DeleteDialog orgId={orgId} purchaseId={p.id} onClose={() => setEditing(null)} />}
