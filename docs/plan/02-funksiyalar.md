@@ -452,7 +452,7 @@ lot narxida), brak / yo'qotish (−).
 - Boshlang'ich holat (F41) bo'lsa — boshlash sanasigacha bo'lgan hodisalar lotlarga tegmaydi.
 
 **F22. Taxminiy belgilar:** "kargo kiritilmagan", "erta sotuv" (sotuv lotdan oldin), "lot yetmadi", "tarixiy"
-(boshlash sanasidan oldingi sotuv — F41),
+(boshlash sanasidan oldingi sotuv — F41), "postavka bor, partiya kiritilmagan" (F41, ADR-051),
 "kurs qo'lda emas, CBU". UI'da `~` va izoh.
 
 **F23. Sof sotuv tezligi** (dona/kun): oxirgi 14 kun, oxirgi 7 kun 2 barobar vazn bilan; qoldiq 0 bo'lgan kunlar
@@ -528,9 +528,13 @@ oldingi kun snapshoti, S bugun bo'lsa joriy qoldiq) + o'z omborimda (sotuvchi ta
 - Sotuv kuni < S: tannarx = shu kungi narx × dona, "tarixiy" belgisi (F22), lotlarga tegmaydi; narx yo'q — tannarxsiz.
 - S kunida "boshlang'ich qoldiq" loti: Q dona × S kungi narx; FIFO'da shu kungi partiyalardan ham oldin ishlatiladi,
   o'rtachada hovuzning boshlang'ich qiymati. Q = 0 yoki narx yo'q — lot yo'q.
-- S dan keyingi sotuvga lot ham, qoldiq ham yetmasa, lekin tovarga narx yozilgan bo'lsa — sotuv kunidagi narx +
-  sotuvchi kiritgan narx, **belgisiz** (aniq tannarx; qoldiq soni Uzumdan olinadi, sotuvchi faqat narx kiritadi) — qoldiq tugagan
-  bo'lsa ham; narx ham yo'q bo'lsa — tannarxsiz. "Lot yetmadi" faqat haqiqiy partiyalar tugaganda.
+- S dan keyingi sotuvga qoldiq ham, lot ham yetmasa (ADR-051): S dan oldin berilib, keyin bekor qilingan buyurtmalar tovari
+  omborga qaytadi, lekin Q da yo'q (xaridorga yo'lda edi); Uzum qaytish sanasini bermaydi, manba FBO postavkalaridan aniqlanadi:
+  (1) S dan sotuv kunigacha postavka yo'q — qaytgan eski tovar: sotuv kunidagi narx, **belgisiz**; FBO tovarida yo'ldagi va
+  keyinroq tayyor partiyaga tegilmaydi (tovar Uzumda yo'q); (2) postavka bor, partiya kiritilgan — qaytgan eski tovarni ajratib
+  bo'lmaydi: oxirgi partiya narxi, **belgisiz** (partiyaning o'z belgilari qoladi); (3) postavka bor, partiya kiritilmagan —
+  sotuv kunidagi narx, "postavka bor, partiya kiritilmagan" belgisi (sotuvchi partiyani kiritsa yo'qoladi). Narx yo'q —
+  avvalgidek "lot yetmadi" yoki tannarxsiz. Bekor qilingan postavka hisobga olinmaydi; postavka kuni — yaratilgan sana.
 - Tayyor sanasi < S bo'lgan partiyalar ishlatilmaydi (qoldiqqa kirgan); yo'ldagi (sanasiz) va S dan keyingilari — F21.
 - Ombor qiymati (F27, F29): S dan keyin tayyor partiya bo'lmasa — S kungi narx.
 - Qamrov (sahifada): S gacha bo'lgan tushumning narx yozilgan turlarga to'g'ri keladigan ulushi — shu narx qo'llanadigan

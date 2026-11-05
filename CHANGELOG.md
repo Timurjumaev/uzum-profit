@@ -490,6 +490,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- B4.41 (ADR-051): boshlang'ich qoldiq tugagach boshlashdan oldingi bekor buyurtmalardan qaytgan tovar "Taxminiy · partiyalar
+  yetmadi" bo'lardi. Endi manba FBO postavkalaridan: postavka yo'q — boshlang'ich narx, belgisiz; postavka va partiya bor — partiya
+  narxi, belgisiz; postavka bor, partiya kiritilmagan — "Taxminiy" yangi sabab bilan. B4.39 dagi "qoldiq tugasa ham doim boshlang'ich
+  narx" qoidasi almashtirildi.
 - B4.40: deploy'dan keyin saqlangan tannarx natijalari (`sale_costs`, kunlik agregat) eski qoida bo'yicha tungi 03:40 gacha qolardi —
   B4.39 tuzatishiga qaramay "Taxminiy · partiyalar yetmadi" ko'rinardi. Endi ishchi ishga tushganda hamma tashkilot uchun to'liq qayta
   hisob navbatga qo'yiladi.

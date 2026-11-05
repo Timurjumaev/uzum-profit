@@ -863,6 +863,15 @@ async def _invoices(run: _Run) -> None:
             run.counts[shop.id].written += await store.replace_children(
                 conn, m.fbo_invoice_items, "invoice_id", parent, rows
             )
+            # ADR-051: postavka boshlang'ich qoldiq tugagandagi tannarx manbasini belgilaydi — shu kundan sotuvlar qayta.
+            created = invoice["created_on"]
+            await calc.request(
+                conn,
+                run.org_id,
+                calc.Scope.SHOP,
+                shop.id,
+                None if created is None else _day(created),
+            )
             fetched_items[str(invoice["external_id"])] = invoice["status"] or ""
             cursor["items"] = fetched_items
             await run.save_cursor(conn, shop.id)

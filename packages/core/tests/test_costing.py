@@ -371,13 +371,25 @@ def test_opening_validation() -> None:
     st.sampled_from([FIFO, AVG]),
     st.integers(0, 30),
     st.integers(0, 50),
+    st.booleans(),
+    st.none() | st.integers(0, 40),
 )
 def test_opening_conserves_units(
-    raw_lots: list, raw_events: list, method: CostMethod, start: int, qty: int
+    raw_lots: list,
+    raw_events: list,
+    method: CostMethod,
+    start: int,
+    qty: int,
+    is_fbo: bool,
+    supplied: int | None,
 ) -> None:
-    """Boshlashdan keyin lotlardan chiqqan + qoldiq = boshlang'ich qoldiq + ishlatilgan lotlar; tarix lotga tegmaydi."""
+    """Boshlashdan keyin lotlardan chiqqan + qoldiq = boshlang'ich qoldiq + ishlatilgan lotlar; tarix lotga tegmaydi
+    (ADR-051: FBO va postavka sanasining har qanday holatida ham)."""
     lots, events = build(raw_lots, raw_events)
-    o = opening(start, qty, (None, 100))
+    base = opening(start, qty, (None, 100))
+    o = Opening(
+        base.start, base.qty, base.prices, is_fbo, None if supplied is None else d(supplied)
+    )
     r = compute_costs(lots, events, method, o)
     assert compute_costs(list(reversed(lots)), list(reversed(events)), method, o) == r
     used = sum(x.qty for x in lots if x.id not in r.superseded)
@@ -404,9 +416,10 @@ def test_opening_price_without_stock_or_lots_is_estimated_not_missing() -> None:
     assert r.sales["c"].cost is None and r.sales["c"].flags == {CostFlag.NO_LOTS}
 
 
-def test_opening_stock_exhausted_uses_entered_price_without_flag() -> None:
-    """Boshlang'ich qoldiq (2 dona) tugadi, partiya yo'q: yetmagan qism sotuv kunidagi kiritilgan narxda, belgisiz (sotuvchi
-    narxni aniq kiritgan; qoldiq soni Uzumdan). Keyingi sotuv ham shunday; haqiqiy partiya tugasa — "lot yetmadi"."""
+def test_opening_stock_exhausted_without_new_supply_is_old_goods() -> None:
+    """ADR-051: boshlang'ich qoldiq (2 dona) tugadi, boshlashdan keyin postavka yo'q — yetmagan qism qaytgan eski tovar
+    (boshlashdan oldingi bekor buyurtmalar): sotuv kunidagi kiritilgan narxda, belgisiz. Postavka ma'lumoti bo'lmagan
+    (FBO'siz) tovarda ham shunday: partiya tugagach — boshlang'ich narx."""
     o = opening(10, 2, (None, 8000), (15, 9000))
     r = compute_costs([], [Sale("a", d(12), 5), Sale("b", d(20), 2)], FIFO, o)
     assert r.sales["a"].cost == uzs(2 * 8000 + 3 * 8000) and r.sales["a"].flags == frozenset()
@@ -414,4 +427,61 @@ def test_opening_stock_exhausted_uses_entered_price_without_flag() -> None:
         r.sales["b"].cost == uzs(2 * 9000) and r.sales["b"].flags == frozenset()
     )  # 15-kundan yangi narx
     real = compute_costs([lot("L", 11, 3, 9000)], [Sale("c", d(12), 8)], FIFO, o)
-    assert real.sales["c"].flags == {CostFlag.LOT_SHORTAGE}  # oxirgi qatlam — haqiqiy partiya
+    assert real.sales["c"].cost == uzs(2 * 8000 + 3 * 9000 + 3 * 8000)
+    assert real.sales["c"].flags == frozenset()
+
+
+def fbo(o: Opening, supplied: int | None = None) -> Opening:
+    return Opening(
+        o.start, o.qty, o.prices, fbo=True, supplied_on=None if supplied is None else d(supplied)
+    )
+
+
+def test_temur_returned_old_goods_after_start() -> None:
+    """ADR-051, Temur holati (BYDURII-GUBKA-БЕЛЫЙ, 2026-11-05): boshlang'ich qoldiq 4 dona (3 600), boshlashdan keyin postavka
+    yo'q, 9 dona sotildi — 6 tasi oktabrdagi bekor buyurtmalardan qaytgan. Hammasi 3 600 da, "Taxminiy"siz."""
+    o = fbo(opening(1, 4, (None, 3600)))
+    r = compute_costs([], [Sale(f"s{i}", d(1 + i // 3), 1) for i in range(9)], FIFO, o)
+    assert all(x.cost == uzs(3600) and x.flags == frozenset() for x in r.sales.values())
+
+
+def test_no_new_supply_does_not_touch_transit_or_later_lots() -> None:
+    """ADR-051: FBO tovari, postavka yo'q — yo'ldagi (sanasiz) va keyinroq tayyor bo'ladigan partiya Uzumda yo'q: qoldiq
+    tugagach sotuv ular hisobidan emas ("yo'ldan olindi" / "erta sotuv" emas), boshlang'ich narxda; partiyalar butun qoladi."""
+    lots = [lot("T", None, 10, 9000), lot("P", 30, 10, 9500)]
+    o = fbo(opening(10, 1, (None, 8000)))
+    r = compute_costs(lots, [Sale("a", d(12), 3)], FIFO, o)
+    assert r.sales["a"].cost == uzs(3 * 8000) and r.sales["a"].flags == frozenset()
+    assert r.remaining["T"] == 10 and r.remaining["P"] == 10
+    # Postavka 20-kuni bo'ldi: 25-kungi sotuv avvalgidek keyingi partiyadan ("erta sotuv").
+    r = compute_costs(lots, [Sale("b", d(25), 3)], FIFO, fbo(opening(10, 1, (None, 8000)), 20))
+    assert CostFlag.EARLY_SALE in r.sales["b"].flags
+
+
+def test_supply_with_lot_extra_units_at_lot_price_without_flag() -> None:
+    """ADR-051 (Temur): postavka bo'lgan va partiya kiritilgan, lekin sotuv qoldiq + partiyadan ko'p (qaytgan eski tovar
+    aralashgan — Uzum qaytish sanasini bermaydi, ajratib bo'lmaydi): ortiqcha dona oxirgi partiya narxida, "yetmadi"
+    belgisisiz; partiyaning o'z belgisi (kargo kiritilmagan) qoladi."""
+    o = fbo(opening(10, 2, (None, 8000)), 11)
+    r = compute_costs([lot("L", 11, 3, 9000)], [Sale("a", d(12), 8)], FIFO, o)
+    assert r.sales["a"].cost == uzs(2 * 8000 + 3 * 9000 + 3 * 9000)
+    assert r.sales["a"].flags == frozenset()
+    flagged = lot("L", 11, 3, 9000, frozenset({Flag.CARGO_MISSING}))
+    r = compute_costs([flagged], [Sale("a", d(12), 8)], FIFO, o)
+    assert r.sales["a"].flags == {Flag.CARGO_MISSING}
+
+
+def test_supply_without_lot_is_flagged() -> None:
+    """ADR-051: boshlashdan keyin postavka bo'lgan, partiya kiritilmagan — yangi tovar narxi noma'lum: boshlang'ich narx,
+    "postavka bor, partiya kiritilmagan" belgisi (sotuvchi partiyani kiritsa yo'qoladi). Postavkadan oldingi sotuv — eski
+    tovar, belgisiz."""
+    o = fbo(opening(10, 1, (None, 8000)), 15)
+    r = compute_costs([], [Sale("a", d(12), 2), Sale("b", d(16), 2)], FIFO, o)
+    assert r.sales["a"].cost == uzs(2 * 8000) and r.sales["a"].flags == frozenset()
+    assert r.sales["b"].cost == uzs(2 * 8000) and r.sales["b"].flags == {CostFlag.SUPPLY_NO_LOT}
+
+
+def test_no_opening_shortage_unchanged() -> None:
+    """Boshlang'ich holat yo'q (sana berilmagan): lotlar tugasa — avvalgidek "lot yetmadi"."""
+    r = compute_costs([lot("L", 1, 3, 9000)], [Sale("a", d(2), 5)], FIFO)
+    assert r.sales["a"].flags == {CostFlag.LOT_SHORTAGE}

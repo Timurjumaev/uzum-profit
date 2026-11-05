@@ -26,7 +26,7 @@ from datetime import date, datetime, time
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import ColumnElement, Row, delete, or_, select, true
+from sqlalchemy import ColumnElement, Row, delete, func, or_, select, true
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.costing import (
@@ -206,10 +206,46 @@ async def openings(
         select(os_).where(true() if items is None else os_.c.item_id.in_(items))
     ):
         qty[r.item_id] = r.uzum_qty + r.own_qty
+    supply = await supplies(conn, start, items)
     return {
-        item: Opening(start, qty.get(item, 0), tuple(prices.get(item, ())))
+        item: Opening(
+            start,
+            qty.get(item, 0),
+            tuple(prices.get(item, ())),
+            fbo=item in supply,
+            supplied_on=supply.get(item),
+        )
         for item in prices.keys() | qty.keys()
     }
+
+
+# Bekor qilingan postavka tovar olib kelmagan (``reports.stock.CLOSED_INVOICES`` dagi yopiq, lekin qabul qilinmagan holatlar).
+VOID_INVOICES = ("CANCELED", "CANCELLED", "REJECTED", "DELETED")
+
+
+async def supplies(
+    conn: AsyncConnection, start: date, items: set[UUID] | None = None
+) -> dict[UUID, date | None]:
+    """ADR-051: FBO postavka tarixi bor tovarlar → boshlashdan (``start``) keyingi birinchi postavka kuni (Toshkent;
+    ``None`` — boshlashdan keyin postavka yo'q). Bekor qilingan postavkalar hisobga olinmaydi; sanasi o'qilmagan postavka
+    faqat "FBO tovari" belgisini beradi."""
+    v, i, k = m.fbo_invoices, m.fbo_invoice_items, m.mp_skus
+    query = (
+        select(k.c.item_id, v.c.created_on)
+        .select_from(i.join(v, v.c.id == i.c.invoice_id).join(k, k.c.id == i.c.sku_id))
+        .where(
+            k.c.item_id.is_not(None) if items is None else k.c.item_id.in_(items),
+            or_(v.c.status.is_(None), func.upper(v.c.status).not_in(VOID_INVOICES)),
+        )
+    )
+    out: dict[UUID, date | None] = {}
+    for r in await conn.execute(query):
+        day = None if r.created_on is None else business_date(r.created_on)
+        out.setdefault(r.item_id, None)
+        if day is not None and day >= start:
+            current = out[r.item_id]
+            out[r.item_id] = day if current is None else min(current, day)
+    return out
 
 
 async def items_with_sales(conn: AsyncConnection, shop_id: UUID, since: date | None) -> set[UUID]:

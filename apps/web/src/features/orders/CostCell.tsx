@@ -11,6 +11,7 @@ import { useFormat } from "../../lib/i18n";
 const ORDER = [
   "no_item",
   "no_lots",
+  "supply_no_lot",
   "lot_shortage",
   "early_sale",
   "not_received_marked",
