@@ -236,6 +236,13 @@ function buildColumns(ids: readonly ColumnId[], { t, f, shopName }: Ctx): Column
     commission: (r) => percent(r.commission_share),
     logistics: (r) => money(r.logistics_per_unit),
     cogs: (r) => money(r.cogs_per_unit),
+    lot: (r) =>
+      cell(r.lot_unit_cost, (x) => (
+        <>
+          {f.money(x, { unit: false })}
+          {r.lot_in_transit && <span className="caption"> {t("products.lotTransit")}</span>}
+        </>
+      )),
     ads: (r) => money(r.ads_per_unit),
     profit: (r) => money(r.profit_per_unit),
     net: (r) => money(r.net_profit),

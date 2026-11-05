@@ -548,6 +548,19 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   ("Jadvaldan tashqari", SKU bloklari); hisob varag'i burchaksiz qoldi. Davr kartalarida "?" tugmali sarlavha bir chiziqda. Jadvallarda
   gorizontal skroll bo'lsa, chetida yengil soya (mobilda ma'lumot o'ngda davom etishi ko'rinadi). Faqat CSS; ma'lumot yashirilmadi.
   Vizual asoslar (Asosiy, Palitra) yangilandi. **T:** staging'da Asosiy, Foyda, Mahsulotlarni ko'rib, yoqmagan joyni skrinshot bilan yozing.
+- [x] B4.37 Mantiq tuzatishlari: zarar SKU soni, "Taxminiy" belgisi sababi, partiya tannarxi (Temur topdi, 2026-11-05: 3 ta savol).
+  ✓ 2026-11-05: (1) **Zarar SKU:** "Zarar bilan sotilayotgan SKU" va Asosiy sahifadagi zarar ro'yxati davrda sotuvi bor SKU'larni sanaydi
+  (`Statement.sold_at_loss`); avval faqat saqlash yoki reklama xarajati bor, sotilmagan SKU'lar ham kirib, son oshib ketardi. Hamma sotuvi
+  tannarxsiz SKU (F15 qamrovi 0) endi "Zarar" emas, "Maʼlumot yoʻq": sotuvsiz kunlardagi xarajat to'liq ayriladi, tushumi esa hisobga
+  kirmasdi — manfiy son tannarx yo'qligidan chiqardi (`Statement.label`; Mahsulotlar jadvali holat belgisi va filtri ham shunday). (2)
+  **"Taxminiy" belgisi:** F22 ning har qanday belgisida chiqar, sababi ko'rinmasdi, tannarxi yo'q ("—") qatorda ham "Taxminiy" turardi.
+  Endi belgi ustiga sabab matni yoziladi (sichqoncha ustida va ekran o'quvchi uchun): kargo kiritilmagan, qabul qilinmagan, kurs CBU,
+  lot yetmadi va h.k.; tannarxi yo'q qator "Tannarxsiz" (sabab: SKU bog'lanmagan, partiya yo'q). Buyurtmalar va Asosiy drill-down'da bir xil
+  (`CostCell`). (3) **Mahsulotlarda tannarx:** "Tannarx/dona" davrda sotilgan donalar o'rtachasi (F21) — sotuv yo'q SKU'da bo'sh edi;
+  yangi "Oxirgi partiya" ustuni (F20) tovarning oxirgi partiyasi tannarxini sotuvdan mustaqil ko'rsatadi (yo'ldagi partiya "(yo'lda)"),
+  saralanadi, Excel'da ham. Xarid qatori SKU'ga bog'lanmagan ("yangi tovar") bo'lsa xarid sahifasida shu haqda izoh. Formulalar o'zgarmadi.
+  **T:** staging'da Asosiy → "Zarar bilan sotilayotgan SKU" sonini, Mahsulotlarda "Oxirgi partiya" ustunini va Buyurtmalarda "Taxminiy"
+  belgisi ustiga sichqoncha olib borib sababini tekshiring.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

@@ -176,6 +176,8 @@ def test_sku_detail(world: World) -> None:
     lots = body["lots"]
     assert [(x["ready_on"], x["qty"]) for x in lots] == [("2026-09-01", 100), (None, 20)]
     assert money(lots[0]["unit_cost"]) == D(100_000) and money(lots[1]["unit_cost"]) == D(120_000)
+    # Jadval va sahifada "oxirgi partiya tannarxi": tayyor lot (100 000), yo'ldagisi (120 000) emas.
+    assert money(row["lot_unit_cost"]) == D(100_000) and row["lot_in_transit"] is False
     assert body["linked"]["name"] == "Mashina"
     assert [s["sku_id"] for s in body["linked"]["skus"]] == [str(xa)]
     assert body["stock_detail"]["active"] == 80 and body["stock_detail"]["fbs"] == 5
@@ -222,6 +224,10 @@ def test_sku_detail_calculator_defaults_and_sources(world: World) -> None:
     )
     assert quiet["price"] is None and quiet["ads_pct"] is None and quiet["tax_pct"] is None
     assert quiet["commission_pct"] is None and "price" not in quiet["sources"]
+    # Jadvalda ham: davrda sotuv yo'q — "Tannarx/dona" (sotuvdan) bo'sh, "Oxirgi partiya" lotdan ko'rinadi.
+    idle = rows(world, start="2026-07-01", end="2026-07-05")[str(xa)]
+    assert idle["cogs_per_unit"] is None and money(idle["lot_unit_cost"]) == D(100_000)
+    assert rows(world, **OCT)[str(world.ids["ya"])]["lot_unit_cost"] is None  # tovarsiz SKU
     nothing = world.get(f"skus/{world.ids['ya']}", **OCT)["calc"]
     assert nothing["unit_cost"] is None and nothing["logistics"] is not None
 

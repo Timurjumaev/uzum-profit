@@ -66,6 +66,15 @@ describe("jadval", () => {
     expect(screen.getByText("2 / 2 ta SKU")).toBeTruthy();
   });
 
+  it("'Oxirgi partiya' ustuni: sotuvdan mustaqil tannarx (tovarsiz SKU — tire), yo'ldagi partiya belgilanadi", async () => {
+    const rows = skusData().items.map((r, i) => (i === 0 ? { ...r, cogs_per_unit: null, units: 0, lot_unit_cost: "120000.00", lot_in_transit: true } : r));
+    await renderTable({ [SKUS_ROUTE]: () => json(200, skusData({ items: rows })) });
+    expect(headers().map((h) => h!.replace(/Qanday hisoblanadi.*$/, "").trim())).toEqual(expect.arrayContaining(["Tannarx/dona", "Oxirgi partiya"]));
+    const [first, second] = within(table()).getAllByRole("row").slice(1);
+    expect(norm(first!.textContent!)).toContain(`${n("120000.00")} (yoʻlda)`); // davrda sotuv yo'q, lekin partiya tannarxi ko'rinadi
+    expect(within(second!).getAllByText("—").length).toBeGreaterThan(0); // tovarga bog'lanmagan SKU
+  });
+
   it("so'rov: davr, saralash (standart -revenue), limit; ustun sarlavhasi bosilsa URL va so'rov o'zgaradi", async () => {
     const { api, history } = await renderTable();
     const [first] = skusUrls(api);

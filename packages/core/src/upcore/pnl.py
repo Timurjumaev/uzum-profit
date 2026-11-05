@@ -41,6 +41,7 @@ from upcore.expenses import ExpenseCategory, ExpenseRecord
 from upcore.metrics import (
     ManualExpense,
     Period,
+    ProfitLabel,
     SaleLine,
     SaleTotals,
     StatusGroup,
@@ -48,6 +49,7 @@ from upcore.metrics import (
     expected_logistics,
     logistics_due,
     own_expense_in_period,
+    profit_label,
     ratio,
 )
 from upcore.money import Currency, Money, quantize, split, to_decimal, total
@@ -402,6 +404,26 @@ class Statement:
     def net_profit(self) -> Money:
         """F12 (F15 bilan): ma'lum qism yalpi foydasi − qamrov bo'yicha ayrilgan xarajatlar."""
         return self.gross_profit - self.expenses_deducted
+
+    @property
+    def all_uncosted(self) -> bool:
+        """Sotuv bor, lekin hammasi tannarxsiz (F15 qamrovi 0): foyda hisoblanmaydi."""
+        return self.lines > 0 and self.uncovered_lines == self.lines
+
+    @property
+    def label(self) -> ProfitLabel:
+        """M6 holat belgisi (F12, F13). Hamma sotuvi tannarxsiz SKU "Zarar" bo'lmaydi: sotuvsiz kunlardagi xarajat
+        (saqlash, reklama) F15 da to'liq ayriladi, tushumi esa hisobga kirmaydi — manfiy son tannarx yo'qligidan
+        chiqadi, haqiqiy zarar emas ("Ma'lumot yo'q")."""
+        if self.all_uncosted:
+            return ProfitLabel.NO_DATA
+        return profit_label(self.net_profit, self.margin)
+
+    @property
+    def sold_at_loss(self) -> bool:
+        """Davrda sotilgan (tannarxi ma'lum sotuvi bor) va F12 < 0: "zarar bilan sotilayotgan" SKU. Sotuvsiz SKU
+        (faqat saqlash yoki reklama xarajati) bunga kirmaydi."""
+        return self.lines > 0 and self.label is ProfitLabel.LOSS
 
     @property
     def uncovered_revenue(self) -> Money:

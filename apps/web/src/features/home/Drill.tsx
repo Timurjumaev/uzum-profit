@@ -9,6 +9,7 @@ import { expensesPage, salesPage, type ReportParams } from "../../app/query";
 import { Badge, Button, DataTable, Drawer, Skeleton, type Column } from "../../components/ui";
 import type { Expenses, Sale } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
+import { CostCell } from "../orders/CostCell";
 import { negate, type HomeRow } from "./model";
 
 type Props = { orgId: string; params: ReportParams; row: HomeRow | null; onClose: () => void };
@@ -69,7 +70,8 @@ function SalesBody({ orgId, params, field }: { orgId: string; params: ReportPara
       render: (r) => {
         const value = r[field];
         // Taxminiy: tannarxda F22 belgisi; logistika va Uzum to'lovida — Uzum hali yozmagan logistika (ADR-037).
-        const estimated = field === "cogs" ? r.cost_flags.length > 0 : (field === "logistics" || field === "payout") && r.logistics_estimated !== null;
+        if (field === "cogs") return <CostCell cogs={r.cogs} flags={r.cost_flags} />;
+        const estimated = (field === "logistics" || field === "payout") && r.logistics_estimated !== null;
         return (
           <>
             {estimated && <Badge tone="warning">{t("home.drill.estimated")}</Badge>} {value === null ? "—" : f.money(value, { unit: false })}

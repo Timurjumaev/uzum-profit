@@ -3456,6 +3456,10 @@ export interface components {
             logistics_per_unit: string | null;
             /** Cogs Per Unit */
             cogs_per_unit: string | null;
+            /** Lot Unit Cost */
+            lot_unit_cost: string | null;
+            /** Lot In Transit */
+            lot_in_transit: boolean;
             /** Ads Per Unit */
             ads_per_unit: string | null;
             /** Acos */

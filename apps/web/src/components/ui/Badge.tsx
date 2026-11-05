@@ -25,6 +25,10 @@ export function StatusPill({ tone = "neutral", children }: { tone?: Tone; childr
 }
 
 /** Kichik yorliq (soni, "Taxminiy" va h.k.) — matnli, ikon ixtiyoriy. */
-export function Badge({ tone = "neutral", children }: { tone?: Tone; children: ReactNode }) {
-  return <span className={cx("ui-badge", `ui-tone--${tone}`)}>{children}</span>;
+export function Badge({ tone = "neutral", title, children }: { tone?: Tone; title?: string; children: ReactNode }) {
+  return (
+    <span className={cx("ui-badge", `ui-tone--${tone}`)} title={title}>
+      {children}
+    </span>
+  );
 }

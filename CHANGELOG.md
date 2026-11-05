@@ -488,6 +488,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- B4.37: **zarar SKU soni** — "Zarar bilan sotilayotgan SKU" va Asosiy sahifadagi zarar ro'yxati sotilmagan SKU'larni (faqat saqlash yoki
+  reklama xarajati bor) ham sanardi; endi faqat davrda sotuvi bor SKU. Hamma sotuvi tannarxsiz SKU "Zarar" o'rniga "Maʼlumot yoʻq"
+  (sotuvsiz kunlardagi xarajat F15 da to'liq ayrilar, tushumi hisobga kirmasdi). **"Taxminiy" belgisi** — sababi ko'rinmasdi va tannarxi
+  yo'q qatorda ham chiqardi; endi sababi (belgi ustida) va "Tannarxsiz" belgisi. **Mahsulotlar** — yangi "Oxirgi partiya" ustuni (F20):
+  xarid tannarxi sotuvga bog'liq emas (avval faqat davrdagi sotuvlardan, sotuvsiz SKU'da bo'sh edi).
 - B4.29: xarid sahifasida "CNY uchun ... sanasigacha kurs yo'q" — CBU arxivi bitta global eng eski kundan orqaga yurar edi,
   shuning uchun tarixi uzoq valyuta (USD) boshqasining (CNY) bo'shlig'ini yopmasdi. Endi arxiv eng kam to'lgan valyutadan
   boshlanadi; xarid saqlanganda kerakli sana kursi yo'q bo'lsa `fx.cbu` ishi `since` bilan qo'yiladi (sanadan 10 kun
