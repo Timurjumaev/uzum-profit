@@ -247,18 +247,19 @@
 
 .home-flow__step {
   display: grid;
-  grid-template-columns: 1.25rem minmax(0, 1fr) auto;
+  /* Mobil: chiziq (2–3 ustun) har qatorda bir xil kenglikda — summa uzunligiga bog'liq emas. */
+  grid-template-columns: 1.25rem minmax(0, 1fr) auto 4.5rem;
   grid-template-areas:
-    "op name value"
-    ". bar bar";
+    "op name value value"
+    ". bar bar share";
   align-items: center;
   gap: 2px var(--space-2);
 }
 
 @media (min-width: 768px) {
   .home-flow__step {
-    grid-template-columns: 1.25rem minmax(9rem, 13rem) minmax(0, 1fr) minmax(9rem, auto);
-    grid-template-areas: "op name bar value";
+    grid-template-columns: 1.25rem minmax(9rem, 13rem) minmax(0, 1fr) minmax(9rem, auto) 4.5rem;
+    grid-template-areas: "op name bar value share";
   }
 }
 
@@ -277,19 +278,33 @@
 .home-flow__value {
   grid-area: value;
   font: var(--type-body-strong);
+  text-align: end;
   white-space: nowrap;
 }
 
+.home-flow__share {
+  grid-area: share;
+  text-align: end;
+  color: var(--text-secondary);
+  font: var(--type-body);
+  white-space: nowrap;
+}
+
+/* F49 (ADR-053): chiziq — yalpi buyurtmalar summasi (100%), bo'lak o'z o'rnida (o'ngdan chapga ayriladi). */
 .home-flow__bar {
   grid-area: bar;
+  position: relative;
   display: block;
   block-size: 10px;
   background: var(--bg-raised);
+  box-shadow: inset 0 0 0 1px var(--border-hairline);
 }
 
 .home-flow__bar > span {
+  position: absolute;
+  inset-block: 0;
+  min-inline-size: 2px;
   display: block;
-  block-size: 100%;
   background: var(--chart-1);
 }
 
@@ -309,12 +324,25 @@
   background: var(--chart-7);
 }
 
-.home-flow__step--after_uzum .home-flow__bar > span {
-  background: var(--chart-3);
+.home-flow__step--cogs .home-flow__bar > span {
+  background: var(--chart-1);
 }
 
-.home-flow__step--revenue .home-flow__name,
-.home-flow__step--after_uzum .home-flow__name,
+.home-flow__step--own_expenses .home-flow__bar > span {
+  background: var(--chart-5);
+}
+
+.home-flow__step--tax .home-flow__bar > span {
+  background: var(--chart-8);
+}
+
+/* Tannarxsiz qism — taxmin emas, hisobga kirmagan pul: shtrix (rangdan tashqari belgi, §11). */
+.home-flow__step--uncosted .home-flow__bar > span {
+  background: repeating-linear-gradient(135deg, var(--text-secondary) 0 2px, transparent 2px 5px);
+  box-shadow: inset 0 0 0 1px var(--text-secondary);
+}
+
+.home-flow__step--gross_revenue .home-flow__name,
 .home-flow__step--net_profit .home-flow__name {
   font: var(--type-body-strong);
 }
@@ -327,7 +355,8 @@
   background: var(--negative-text);
 }
 
-.home-flow__step--net_profit.is-negative .home-flow__value {
+.home-flow__step--net_profit.is-negative .home-flow__value,
+.home-flow__step--net_profit.is-negative .home-flow__share {
   color: var(--negative-text);
 }
 

@@ -7,7 +7,14 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from upcore.expenses import ExpenseCategory, classify_expenses
-from upcore.metrics import ManualExpense, Period, SaleLine, own_expense_in_period, profit_summary
+from upcore.metrics import (
+    ManualExpense,
+    OrderFlow,
+    Period,
+    SaleLine,
+    own_expense_in_period,
+    profit_summary,
+)
 from upcore.money import Money, total
 from upcore.pnl import (
     CellKey,
@@ -20,6 +27,7 @@ from upcore.pnl import (
     build_cells,
     compare,
     expense_items,
+    order_to_profit,
 )
 
 D = Decimal
@@ -80,6 +88,68 @@ def test_single_cell_matches_profit_summary() -> None:
     assert s.uzum_costs == uzs(95_000) and s.uzum_costs_share == D("0.38")
     assert s.after_uzum == uzs(155_000) == s.payout - s.uzum_total
     assert Cells(OCT, {}).statement().uzum_costs_share is None
+
+
+def _flow_sum(steps: list) -> Money:
+    return total([x.amount for x in steps[1:]], "UZS")
+
+
+def test_order_to_profit_parts_sum_to_gross() -> None:
+    """F49 (ADR-053): bo'laklar yig'indisi = F44; tannarxsiz qism va sotuvsiz kun xarajati bilan ham."""
+    lines = [sale(3, qty=2), sale(3, price=50_000, cost=None)]
+    exp = [
+        ExpenseItem(d(3), "S1", C.STORAGE, uzs(30_000)),
+        ExpenseItem(d(9), "S1", C.FINE, uzs(7_000)),  # sotuvsiz kun
+    ]
+    own = [OwnExpense(ManualExpense(uzs(12_000), d(3), d(3)), "qadoq")]
+    s = build_cells(OCT, lines, exp, own, tax=TaxRule(D(4))).statement()
+    flow = OrderFlow(
+        canceled_revenue=uzs(60_000),
+        canceled_issued_revenue=uzs(20_000),
+        returns_revenue=uzs(10_000),
+    )
+    steps = order_to_profit(s, flow)
+    got = {x.key: (x.formula, x.amount) for x in steps}
+    assert [x.key for x in steps] == [
+        "gross_revenue",
+        "cancel_revenue",
+        "return_revenue",
+        "uzum_costs",
+        "cogs",
+        "own_expenses",
+        "tax",
+        "uncosted",
+        "net_profit",
+    ]
+    assert got["gross_revenue"] == (
+        "F44",
+        uzs(320_000),
+    )  # 250 000 + bekor 40 000 + qaytarish 30 000
+    assert got["cancel_revenue"] == ("F17", uzs(40_000)) and got["return_revenue"] == (
+        "F18",
+        uzs(30_000),
+    )
+    assert got["uzum_costs"][1] == s.uzum_costs and got["cogs"][1] == s.cogs == uzs(80_000)
+    assert got["own_expenses"][1] == uzs(12_000) and got["tax"][1] == s.tax
+    assert (
+        got["uncosted"][1] == s.uncovered_payout - s.uncovered_expenses
+        and not got["uncosted"][1].is_zero()
+    )
+    assert got["net_profit"] == ("F12", s.net_profit)
+    assert _flow_sum(steps) == got["gross_revenue"][1]
+    assert steps[0].share == D(1) and steps[1].share == D("0.125")
+
+
+def test_order_to_profit_loss_and_empty() -> None:
+    """Zarar: sof foyda manfiy, yig'indi baribir F44. Hech narsa yo'q — ulushlar ``None``."""
+    lines = [sale(2, cost=95_000)]
+    s = build_cells(OCT, lines, [ExpenseItem(d(2), "S1", C.ADVERTISING, uzs(20_000))]).statement()
+    steps = order_to_profit(s, OrderFlow())
+    assert steps[-1].amount.amount < 0 and steps[-1].share is not None and steps[-1].share < 0
+    assert steps[-2].amount.is_zero()  # hammasi tannarxli — tannarxsiz qism 0
+    assert _flow_sum(steps) == s.revenue
+    empty = order_to_profit(Cells(OCT, {}).statement(), OrderFlow())
+    assert all(x.share is None and x.amount.is_zero() for x in empty)
 
 
 def test_expense_allocation_rules() -> None:

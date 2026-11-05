@@ -593,6 +593,10 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   ✓ 2026-11-05: "Oxirgi partiya" ustuni olib tashlandi; "Tannarx/dona" — davrda sotuv bo'lsa sotilgan donalar o'rtachasi (F21), bo'lmasa
   oxirgi partiya / boshlang'ich narx / yo'ldagi partiya, yonida izoh. Saralash va Excel ("Tannarx manbasi" ustuni) ham shunday.
   **T:** staging'da Mahsulotlar → "Tannarx/dona" ustunida sotuvsiz SKU'larda ham qiymat (izoh bilan) borligini ko'rish.
+- [x] B4.43 Asosiydagi "Buyurtmadan sof foydagacha" — Temur chizmasi bo'yicha zinapoya (ADR-053, F49; 2026-11-05).
+  ✓ 2026-11-05: buyurtmalar summasi 100%, bekor → qaytarish → Uzum ushlab qolgan → tannarx → o'z xarajatlar → soliq →
+  tannarxi kiritilmagan bo'laklari o'ngdan chapga, chapda sof foyda; har qatorda "summa / ulush"; zarar — chapdan qizil.
+  **T:** staging'da Asosiy sahifadagi yangi chiziqni ko'rish (yoqmagan joyni skrinshot bilan yozish).
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

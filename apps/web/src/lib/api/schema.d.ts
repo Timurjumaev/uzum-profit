@@ -1790,6 +1790,20 @@ export interface components {
             next_cursor: string | null;
         };
         /**
+         * FlowStepOut
+         * @description F49 "Buyurtmadan sof foydagacha" qatori (ADR-053): summa va yalpi buyurtmalar summasidagi ulushi.
+         */
+        FlowStepOut: {
+            /** Key */
+            key: string;
+            /** Formula */
+            formula: string;
+            /** Value */
+            value: string;
+            /** Share */
+            share: string | null;
+        };
+        /**
          * ForecastOut
          * @description M4 "Oy prognozi" (run-rate) shu oy bo'yicha.
          */
@@ -2025,6 +2039,8 @@ export interface components {
             points: string[];
             /** Groups */
             groups: components["schemas"]["KpiGroupOut"][];
+            /** Flow */
+            flow: components["schemas"]["FlowStepOut"][];
         };
         /** LeadOut */
         LeadOut: {

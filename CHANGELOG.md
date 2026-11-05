@@ -434,6 +434,12 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.43 (ADR-053, Temur chizmasi): bosh sahifadagi "Buyurtmadan sof foydagacha" — endi zinapoya: buyurtmalar summasi 100%,
+  har bo'lak (bekor, qaytarish, Uzum ushlab qolgan, tannarx, o'z xarajatlar, soliq, tannarxi kiritilmagan) chiziqda o'z
+  o'rnida o'ngdan chapga ayriladi, chapda sof foyda; har qatorda "summa / ulush". "Tushum" va "Uzumdan keyin qoladi"
+  qatorlari yo'ldan olindi (kartochkalarda qoldi). Zarar — chapdan qizil. Yangi formula F49 (`upcore.pnl.order_to_profit`),
+  `/dashboard` → `summary.flow`.
+
 - B4.42 (ADR-052): Mahsulotlarda "Oxirgi partiya" ustuni olib tashlandi — "Tannarx/dona" o'zi sotuv bo'lmasa oxirgi partiya
   (yoki boshlang'ich narx, yo'ldagi partiya) tannarxini izoh bilan ko'rsatadi; saralash va Excel ("Tannarx manbasi") ham.
 - ADR-050 (reja): B5.3 aniqlashtirildi — xarid ↔ FBO postavka SKU bo'yicha avtomatik bog'lanishi va "Uzumga yuborish" Excel'i

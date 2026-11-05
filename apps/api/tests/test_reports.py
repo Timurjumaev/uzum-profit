@@ -774,6 +774,25 @@ def test_dashboard_blocks(world: World) -> None:
     assert val("uzum_costs") == -(rows["commission"] + rows["logistics"]) - uzum
     assert val("after_uzum") == val("revenue") - val("uzum_costs")
     assert val("net_profit") == money(dash["statement"]["net_profit"])
+    # F49 (ADR-053): buyurtmadan sof foydagacha — bo'laklar yig'indisi = yalpi summa, birinchisi 100%.
+    flow = {x["key"]: x for x in summary["flow"]}
+    assert list(flow) == [
+        "gross_revenue",
+        "cancel_revenue",
+        "return_revenue",
+        "uzum_costs",
+        "cogs",
+        "own_expenses",
+        "tax",
+        "uncosted",
+        "net_profit",
+    ]
+    assert D(flow["gross_revenue"]["value"]) == val("gross_revenue")
+    assert D(flow["gross_revenue"]["share"]) == 1 and flow["cogs"]["formula"] == "F7"
+    assert D(flow["uzum_costs"]["value"]) == val("uzum_costs")
+    assert D(flow["cogs"]["value"]) == -rows["cogs"]
+    assert D(flow["net_profit"]["value"]) == val("net_profit")
+    assert sum(D(x["value"]) for x in summary["flow"][1:]) == val("gross_revenue")
     # Oldingi davr (11–30 sentabr): 1 buyurtma, 2 dona; o'zgarish — nisbiy, ulushlarda — punkt.
     assert D(cards["orders"]["previous"]) == 1 and D(cards["orders"]["change"]) == 7
     assert cards["cancel_share"]["previous"] == "0.000000"

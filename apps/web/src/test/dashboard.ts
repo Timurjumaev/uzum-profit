@@ -190,6 +190,18 @@ export function summaryData(over: Partial<Summary> = {}): Summary {
         ],
       },
     ],
+    // F49 (ADR-053): bo'laklar yig'indisi = yalpi summa; tannarxsiz qism 0 (yashiriladi).
+    flow: [
+      { key: "gross_revenue", formula: "F44", value: "215420000.00", share: "1.000000" },
+      { key: "cancel_revenue", formula: "F17", value: "19850000.00", share: "0.092146" },
+      { key: "return_revenue", formula: "F18", value: "9150000.00", share: "0.042475" },
+      { key: "uzum_costs", formula: "F46", value: "52300000.00", share: "0.242782" },
+      { key: "cogs", formula: "F7", value: "70000000.00", share: "0.324947" },
+      { key: "own_expenses", formula: "F10", value: "9000000.00", share: "0.041779" },
+      { key: "tax", formula: "F11", value: "6727000.00", share: "0.031227" },
+      { key: "uncosted", formula: "F15", value: "0.00", share: "0.000000" },
+      { key: "net_profit", formula: "F12", value: "48393000.00", share: "0.224645" },
+    ],
     ...over,
   };
 }
