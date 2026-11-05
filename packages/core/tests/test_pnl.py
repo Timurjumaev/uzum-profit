@@ -740,7 +740,5 @@ def test_sold_at_loss_requires_sales() -> None:
     ads_only = build_cells(
         OCT, [sale(1, sku="B")], [ExpenseItem(d(3), "S1", C.ADVERTISING, uzs(10_000), sku="A")]
     ).by_sku()["A"]
-    assert (
-        ads_only.net_profit.amount < 0 and ads_only.label is ProfitLabel.LOSS
-    )  # M6 jadvalida Zarar
-    assert ads_only.lines == 0 and not ads_only.sold_at_loss  # lekin "sotilayotgan" emas
+    assert ads_only.net_profit.amount < 0 and ads_only.lines == 0
+    assert ads_only.label is ProfitLabel.IDLE and not ads_only.sold_at_loss  # "Zarar" emas

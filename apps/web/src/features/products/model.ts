@@ -97,9 +97,10 @@ export const LABEL_TONE: Record<ProductLabel, Tone> = {
   borderline: "warning",
   profitable: "positive",
   no_data: "neutral",
+  idle: "info",
 };
 
-export const LABEL_SORT_ORDER: readonly ProductLabel[] = ["loss", "borderline", "profitable", "no_data"];
+export const LABEL_SORT_ORDER: readonly ProductLabel[] = ["loss", "borderline", "profitable", "no_data", "idle"];
 
 /** Saralash: shu ustun bosilganda keyingi holat (kalit bir xil bo'lsa yo'nalish almashadi; nom — o'sish, qolgani — kamayish). */
 export function nextSort(current: { key: ProductSort; desc: boolean }, key: ProductSort): { key: ProductSort; desc: boolean } {

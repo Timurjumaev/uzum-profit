@@ -91,9 +91,14 @@ describe("roʻyxat", () => {
     });
     const table = await screen.findByRole("table", { name: CAPTION });
     const [taxminiy, tannarxsiz, toza] = within(table).getAllByRole("row").slice(1);
-    const badge = within(taxminiy!).getByText("Taxminiy");
-    expect(badge.getAttribute("title")).toBe("kargo xarajati kiritilmagan; kurs Markaziy bank boʻyicha (haqiqiy toʻlangan emas)");
-    expect(within(tannarxsiz!).getByText("Tannarxsiz").getAttribute("title")).toBe("tovarda hali partiya yoʻq — xaridni kiriting");
+    const badge = within(taxminiy!).getByRole("button", { name: /Taxminiy/ });
+    expect(badge.getAttribute("aria-expanded")).toBe("false");
+    expect(within(taxminiy!).queryByText("kargo xarajati kiritilmagan")).toBeNull();
+    fireEvent.click(badge); // bosilsa sabablar katak ichida ochiladi (muhimlik tartibida, kurs CBU oxirida)
+    expect(badge.getAttribute("aria-expanded")).toBe("true");
+    expect(within(taxminiy!).getAllByRole("listitem").map((x) => x.textContent)).toEqual(["kargo xarajati kiritilmagan", "kurs Markaziy bank boʻyicha (haqiqiy toʻlangan emas)"]);
+    fireEvent.click(within(tannarxsiz!).getByRole("button", { name: /Tannarxsiz/ }));
+    expect(within(tannarxsiz!).getByText("tovarda hali partiya yoʻq — xaridni kiriting")).toBeTruthy();
     expect(within(tannarxsiz!).queryByText("Taxminiy")).toBeNull(); // tannarxi yo'q qatorda "taxminiy" emas
     expect(within(toza!).queryByText("Taxminiy")).toBeNull();
     expect(within(toza!).queryByText("Tannarxsiz")).toBeNull();

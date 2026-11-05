@@ -514,7 +514,7 @@ export const uzLatn = {
       logistics: { code: "F5", formula: "Σ logistika (Yakunlangan va Jarayondagi sotuvlar) — Uzum tovar olib ketilganda aslida yechgan summa; hali yechmagan boʻlsa — sotuvdagi summa; sotuvda 0 va tovar hali olib ketilmagan boʻlsa — oxirgi pullik tarif × dona taxminiy", source: "Uzum sotuvlari va xarajatlari, F40 tarifi" },
       payout: { code: "F6", formula: "Tushum − komissiya − logistika", source: "Uzum sotuvlari" },
       grossProfit: { code: "F8", formula: "Uzum toʻlovi − tannarx (tannarxi maʼlum sotuvlar)", source: "Yuqoridagi qatorlar" },
-      lotCost: { code: "F20", formula: "Tovarning oxirgi partiyasi: (tovar + kargo + boshqa xarajatlar) / dona. Sotuvga bogʻliq emas — xarid kiritilgach SKU sotilmagan boʻlsa ham koʻrinadi", source: "Xaridlar va partiyalar" },
+      lotCost: { code: "F20", formula: "Tovarning oxirgi partiyasi: (tovar + kargo + boshqa xarajatlar) / dona; partiya hali yoʻq boʻlsa — boshlangʻich holatda kiritilgan narx. Sotuvga bogʻliq emas — xarid kiritilgach SKU sotilmagan boʻlsa ham koʻrinadi", source: "Xaridlar va partiyalar" },
       cogs: { code: "F7", formula: "Σ birlik tannarxi × dona (tannarxi maʼlum sotuvlar)", source: "Xaridlar va partiyalar" },
       returnStorage: { code: "F9", formula: "«Qaytim saqlash» toifasi: chiqim − kompensatsiya", source: "Uzum xarajatlari" },
       uzumExpenses: { code: "F9", formula: "Reklama + saqlash + qaytim saqlash + jarimalar + fotostudiya + pul yechish + boshqa − kompensatsiya. Buyurtmaga bogʻliq reklama — oʻsha sotuvning kuni va tovariga, saqlash — tovarlarga qoldigʻi boʻyicha", source: "Uzum xarajatlari" },
@@ -624,7 +624,7 @@ export const uzLatn = {
     search: "Mahsulot qidirish",
     searchPlaceholder: "Nomi, artikul yoki shtrix-kod",
     filter: { label: "Holat", abc: "ABC", all: "Hammasi" },
-    label: { loss: "Zarar", borderline: "Chegarada", profitable: "Foydali", no_data: "Maʼlumot yoʻq" },
+    label: { loss: "Zarar", borderline: "Chegarada", profitable: "Foydali", no_data: "Maʼlumot yoʻq", idle: "Sotuv yoʻq" },
     col: {
       product: "Mahsulot",
       shop: "Doʻkon",
@@ -650,6 +650,7 @@ export const uzLatn = {
       label: "Holat",
     },
     lotTransit: "(yoʻlda)",
+    lotOpening: "(boshlangʻich)",
     columns: { title: "Ustunlar", reset: "Standart ustunlar" },
     views: {
       title: "Koʻrinishlar",

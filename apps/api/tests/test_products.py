@@ -85,7 +85,7 @@ def test_table_columns(world: World) -> None:
 
 def test_table_filters_and_sorts(world: World) -> None:
     labels = {r["sku_id"]: r["label"] for r in rows(world, **OCT).values()}
-    for label in ("profitable", "borderline", "loss", "no_data"):
+    for label in ("profitable", "borderline", "loss", "no_data", "idle"):
         got = world.get("skus", label=label, **OCT)
         assert {r["sku_id"] for r in got["items"]} == {s for s, x in labels.items() if x == label}
         assert got["total"] == len(got["items"])
@@ -177,7 +177,7 @@ def test_sku_detail(world: World) -> None:
     assert [(x["ready_on"], x["qty"]) for x in lots] == [("2026-09-01", 100), (None, 20)]
     assert money(lots[0]["unit_cost"]) == D(100_000) and money(lots[1]["unit_cost"]) == D(120_000)
     # Jadval va sahifada "oxirgi partiya tannarxi": tayyor lot (100 000), yo'ldagisi (120 000) emas.
-    assert money(row["lot_unit_cost"]) == D(100_000) and row["lot_in_transit"] is False
+    assert money(row["lot_unit_cost"]) == D(100_000) and row["lot_source"] == "lot"
     assert body["linked"]["name"] == "Mashina"
     assert [s["sku_id"] for s in body["linked"]["skus"]] == [str(xa)]
     assert body["stock_detail"]["active"] == 80 and body["stock_detail"]["fbs"] == 5

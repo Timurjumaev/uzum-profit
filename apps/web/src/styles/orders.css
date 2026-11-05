@@ -143,3 +143,21 @@
   flex-wrap: wrap;
   gap: var(--space-3);
 }
+
+/* Tannarx belgisi (CostCell): bosilsa sabablar katak ichida ochiladi. */
+.cost-flag {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.cost-flag__reasons {
+  margin: var(--space-1) 0 0;
+  padding-inline-start: var(--space-4);
+  text-align: start;
+  white-space: normal;
+  min-inline-size: 12rem;
+}

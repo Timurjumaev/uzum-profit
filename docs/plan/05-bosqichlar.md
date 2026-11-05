@@ -561,6 +561,13 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   saralanadi, Excel'da ham. Xarid qatori SKU'ga bog'lanmagan ("yangi tovar") bo'lsa xarid sahifasida shu haqda izoh. Formulalar o'zgarmadi.
   **T:** staging'da Asosiy → "Zarar bilan sotilayotgan SKU" sonini, Mahsulotlarda "Oxirgi partiya" ustunini va Buyurtmalarda "Taxminiy"
   belgisi ustiga sichqoncha olib borib sababini tekshiring.
+- [x] B4.38 B4.37 davomi: staging'da topilgan kamchiliklar (Temur skrinshoti, 2026-11-05).
+  ✓ 2026-11-05: (1) Mahsulotlar jadvalida 121 ta SKU ham "Zarar" chiqqan edi — ularning ko'pi davrda sotilmagan (faqat saqlash xarajati):
+  yangi holat **"Sotuv yo'q"** (`ProfitLabel.IDLE`, filtrda ham); "Zarar" faqat sotilgan SKU uchun. (2) "Oxirgi partiya" ustuni bo'sh edi:
+  tannarx boshlang'ich holat oynasida kiritilgan (partiya emas) — endi partiya bo'lmasa boshlang'ich narx ("(boshlang'ich)") ko'rinadi;
+  tartib: tayyor partiya → boshlang'ich narx → yo'ldagi partiya (`lot_source`). (3) "Taxminiy" sababi sichqoncha ustida chiqmasdi
+  (brauzer tooltip'i): belgi endi tugma — bosilsa sabablar katak ichida ochiladi (telefonda ham ishlaydi). **T:** staging'da Mahsulotlar →
+  Holat = "Zarar" va "Sotuv yo'q", "Oxirgi partiya" va Buyurtmalarda "Taxminiy" belgisini bosib ko'ring.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

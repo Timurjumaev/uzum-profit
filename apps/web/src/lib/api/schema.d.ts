@@ -2831,7 +2831,7 @@ export interface components {
          * @description M6 SKU holat belgisi.
          * @enum {string}
          */
-        ProfitLabel: "loss" | "borderline" | "profitable" | "no_data";
+        ProfitLabel: "loss" | "borderline" | "profitable" | "no_data" | "idle";
         /** PurchaseDetailOut */
         PurchaseDetailOut: {
             purchase: components["schemas"]["PurchaseOut"];
@@ -3458,8 +3458,8 @@ export interface components {
             cogs_per_unit: string | null;
             /** Lot Unit Cost */
             lot_unit_cost: string | null;
-            /** Lot In Transit */
-            lot_in_transit: boolean;
+            /** Lot Source */
+            lot_source: ("lot" | "opening" | "transit") | null;
             /** Ads Per Unit */
             ads_per_unit: string | null;
             /** Acos */
