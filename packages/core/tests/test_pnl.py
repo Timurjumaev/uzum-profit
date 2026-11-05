@@ -95,7 +95,7 @@ def _flow_sum(steps: list) -> Money:
 
 
 def test_order_to_profit_parts_sum_to_gross() -> None:
-    """F49 (ADR-052): bo'laklar yig'indisi = F44; tannarxsiz qism va sotuvsiz kun xarajati bilan ham."""
+    """F49 (ADR-053): bo'laklar yig'indisi = F44; tannarxsiz qism va sotuvsiz kun xarajati bilan ham."""
     lines = [sale(3, qty=2), sale(3, price=50_000, cost=None)]
     exp = [
         ExpenseItem(d(3), "S1", C.STORAGE, uzs(30_000)),

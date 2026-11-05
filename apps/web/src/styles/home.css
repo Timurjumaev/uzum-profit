@@ -290,7 +290,7 @@
   white-space: nowrap;
 }
 
-/* F49 (ADR-052): chiziq — yalpi buyurtmalar summasi (100%), bo'lak o'z o'rnida (o'ngdan chapga ayriladi). */
+/* F49 (ADR-053): chiziq — yalpi buyurtmalar summasi (100%), bo'lak o'z o'rnida (o'ngdan chapga ayriladi). */
 .home-flow__bar {
   grid-area: bar;
   position: relative;

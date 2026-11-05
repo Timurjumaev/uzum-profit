@@ -82,6 +82,7 @@ class SkuSort(StrEnum):
     DAYS_OF_STOCK = "days_of_stock"
     AVG_PRICE = "avg_price"
     LOT_UNIT_COST = "lot_unit_cost"
+    UNIT_COST = "unit_cost"
     PROFIT_PER_UNIT = "profit_per_unit"
     ROI = "roi"
     RETURN_SHARE = "return_share"
@@ -113,6 +114,9 @@ class SkuRowOut(BaseModel):
     lot_source: (
         Literal["lot", "opening", "transit"] | None
     )  # manba: partiya, boshlang'ich narx yoki yo'ldagi partiya
+    # Mahsulotlar "Tannarx/dona" (B4.42): davrda sotilgan bo'lsa F21 o'rtachasi, aks holda oxirgi partiya (F20) — manbasi bilan.
+    unit_cost: Decimal | None
+    unit_cost_source: Literal["sales", "lot", "opening", "transit"] | None
     ads_per_unit: Decimal | None
     acos: Decimal | None  # F19
     profit_per_unit: Decimal | None
@@ -200,6 +204,7 @@ def _row(
     lot: LastLot | None = None,
 ) -> SkuRowOut:
     u = unit_economics(s)
+    sold = amount(u.cogs_per_unit)
     return SkuRowOut(
         sku_id=info.id,
         shop_id=info.shop_id,
@@ -219,6 +224,8 @@ def _row(
         cogs_per_unit=amount(u.cogs_per_unit),
         lot_unit_cost=None if lot is None else lot.unit,
         lot_source=None if lot is None else lot.source,
+        unit_cost=sold if sold is not None or lot is None else lot.unit,
+        unit_cost_source="sales" if sold is not None else None if lot is None else lot.source,
         ads_per_unit=amount(u.ads_per_unit),
         acos=u.acos,
         profit_per_unit=amount(u.profit_per_unit),

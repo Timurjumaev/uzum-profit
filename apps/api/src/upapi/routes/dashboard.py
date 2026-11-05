@@ -127,7 +127,7 @@ class KpiGroupOut(BaseModel):
 
 
 class FlowStepOut(BaseModel):
-    """F49 "Buyurtmadan sof foydagacha" qatori (ADR-052): summa va yalpi buyurtmalar summasidagi ulushi."""
+    """F49 "Buyurtmadan sof foydagacha" qatori (ADR-053): summa va yalpi buyurtmalar summasidagi ulushi."""
 
     key: str
     formula: str  # F-raqam (02-funksiyalar.md)

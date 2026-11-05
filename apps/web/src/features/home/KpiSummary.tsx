@@ -1,4 +1,4 @@
-// KPI sarhisob (ADR-043, M4): "Buyurtmadan sof foydagacha" yo'li (F49, ADR-052) va 4 guruh kartochka — buyurtmalar va tushum, Uzum
+// KPI sarhisob (ADR-043, M4): "Buyurtmadan sof foydagacha" yo'li (F49, ADR-053) va 4 guruh kartochka — buyurtmalar va tushum, Uzum
 // xarajatlari va foyda, qaytarilgan va bekor qilingan, o'rtacha ko'rsatkichlar. Har kartochkada: qiymat, oldingi davrga
 // nisbatan o'zgarish (pul va sonlarda nisbiy, ulushlarda — punkt; rang = yo'nalish × yaxshimi), oldingi davr qiymati,
 // trend chizig'i va formula ("?"). Hamma raqam API'dan (`/dashboard` → `summary`), bu yerda hisob yo'q (tamoyil 4);
@@ -95,7 +95,7 @@ export function flowBars(steps: FlowStep[]): { start: number; size: number }[] {
   });
 }
 
-/** "Buyurtmadan sof foydagacha" (F49, ADR-052): yalpi buyurtmalar summasi bo'laklarga bo'linadi — bekor, qaytarish, Uzum
+/** "Buyurtmadan sof foydagacha" (F49, ADR-053): yalpi buyurtmalar summasi bo'laklarga bo'linadi — bekor, qaytarish, Uzum
  * ushlab qolgan, tannarx, o'z xarajatlari, soliq, tannarxsiz qism va sof foyda; har qatorda summa va yalpi summadagi
  * ulushi. Hisob API'da, bu yerda faqat joylashuv. */
 function Flow({ steps }: { steps: FlowStep[] }) {

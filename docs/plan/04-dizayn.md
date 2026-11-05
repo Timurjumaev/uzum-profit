@@ -266,7 +266,7 @@ ishora bo'yicha (musbat — yashil, manfiy — qizil). Mobilda ustma-ust, "+" va
 
 ```
 Koʻrsatkichlar sarhisobi                      [Joriy davr: 1–26-oktabr] [Oldingi davr: 5–30-sentabr]
-┌ Buyurtmadan sof foydagacha (F49, ADR-052) ──────────────────────────────────────────────────────────┐
+┌ Buyurtmadan sof foydagacha (F49, ADR-053) ──────────────────────────────────────────────────────────┐
 │   Buyurtmalar summasi   ████████████████████████████████████████   215 420 000 soʻm  / 100%   │
 │ − Bekor qilingan        ·································████████    19 850 000 soʻm  / 9,2%   │
 │ − Qaytarilgan           ·······························███·········     9 150 000 soʻm  / 4,2%   │
@@ -282,7 +282,7 @@ BUYURTMALAR VA TUSHUM
 │ ▲4,6%  oldingi: 206 000 000   │ ┃ ▼1,9%  oldingi: ...  ┃ │ ▼4,6%  oldingi: 1 300 │
 │ ╱╲__╱ (trend)                 │ ┃ ╱╲__╱                ┃ │ ╱╲__╱                 │
 ```
-- Yo'l (ADR-052, Temur chizmasi): har qatorda to'liq chiziq izi (100% = yalpi summa) va bo'lak o'z o'rnida — bo'laklar
+- Yo'l (ADR-053, Temur chizmasi): har qatorda to'liq chiziq izi (100% = yalpi summa) va bo'lak o'z o'rnida — bo'laklar
   o'ngdan chapga ketma-ket ayriladi, sof foyda chapda; o'ngda "summa / ulush". Ranglar: bekor `chart-4`, qaytarish
   `chart-2`, Uzum `chart-7`, tannarx `chart-1`, o'z xarajatlar `chart-5`, soliq `chart-8`, tannarxi kiritilmagan — shtrix
   (rangdan tashqari belgi), sof foyda — `positive-text`; zarar — chapdan |ulush| uzunlikda `negative-text`, 100% dan

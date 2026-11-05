@@ -774,7 +774,7 @@ def test_dashboard_blocks(world: World) -> None:
     assert val("uzum_costs") == -(rows["commission"] + rows["logistics"]) - uzum
     assert val("after_uzum") == val("revenue") - val("uzum_costs")
     assert val("net_profit") == money(dash["statement"]["net_profit"])
-    # F49 (ADR-052): buyurtmadan sof foydagacha — bo'laklar yig'indisi = yalpi summa, birinchisi 100%.
+    # F49 (ADR-053): buyurtmadan sof foydagacha — bo'laklar yig'indisi = yalpi summa, birinchisi 100%.
     flow = {x["key"]: x for x in summary["flow"]}
     assert list(flow) == [
         "gross_revenue",

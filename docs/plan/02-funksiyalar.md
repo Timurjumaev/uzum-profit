@@ -109,7 +109,7 @@ Bloklar (joylashuvi 04-dizayn.md §7.2 desktop, §7.3 mobil):
 4. **Diqqat talab qiladi** (ustuvorlik bo'yicha): tannarxsiz sotuvlar, tugayotgan tovar, zarar bilan sotilayotgan
    SKU, yangi jarimalar, kechikayotgan kargo, sinxron xatosi, Uzum to'lovi kutilmoqda.
 5. **Eng foydali 5 / zarar 5 SKU.**
-6. **KPI sarhisob** (ADR-043; davr chizig'idan keyin): "Buyurtmadan sof foydagacha" yo'li (F49, ADR-052: yalpi buyurtmalar
+6. **KPI sarhisob** (ADR-043; davr chizig'idan keyin): "Buyurtmadan sof foydagacha" yo'li (F49, ADR-053: yalpi buyurtmalar
    summasi 100% → − bekor → − qaytarish → − Uzum ushlab qolgan → − tannarx → − o'z xarajatlar → − soliq → − tannarxi
    kiritilmagan → = sof foyda; har qatorda summa / ulush, bo'laklar chiziqda o'ngdan chapga) va 4 guruh, 24 kartochka:
    **buyurtmalar va tushum** (yalpi summa F44, tushum F3, sotilgan dona, yalpi va sof buyurtmalar, sof ulushi — F45),
@@ -576,7 +576,7 @@ Raqobatchilardagi so'mdagi "marja" shu raqam; bizda foyda — faqat F12.
 **F48. O'rtacha ko'rsatkichlar** (ADR-043): o'rtacha chek = F3 / sof buyurtmalar (F45); o'rtacha tovar narxi = F3 /
 sotilgan dona; buyurtmadagi tovarlar = sotilgan dona / sof buyurtmalar. Maxraj 0 — "—".
 
-**F49. Buyurtmadan sof foydagacha** (ADR-052) — F44 bo'laklarga: bekor (F17) + qaytarish (F18) + Uzum ushlab qolgan (F46)
+**F49. Buyurtmadan sof foydagacha** (ADR-053) — F44 bo'laklarga: bekor (F17) + qaytarish (F18) + Uzum ushlab qolgan (F46)
 + tannarx (F7) + o'z xarajatlar (F10) + soliq (F11) + tannarxi kiritilmagan + sof foyda (F12) = F44 (F44 = F3 + bekor +
 qaytarish, F3 — hisobotdagi tushum). Tannarxi kiritilmagan = tannarxsiz sotuvlar to'lovi (F6) − ularga to'g'ri keladigan
 xarajatlar (F15): sof foydaga kirmaydi, hamma sotuv tannarxli bo'lsa 0. Har bo'lak ulushi = bo'lak / F44 (F44 = 0 — "—").

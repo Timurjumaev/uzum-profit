@@ -97,6 +97,7 @@ def test_table_filters_and_sorts(world: World) -> None:
     assert world.call("skus", abc="D", **OCT).status_code == 422
     for key in (
         "avg_price",
+        "unit_cost",
         "profit_per_unit",
         "roi",
         "return_share",
@@ -224,10 +225,16 @@ def test_sku_detail_calculator_defaults_and_sources(world: World) -> None:
     )
     assert quiet["price"] is None and quiet["ads_pct"] is None and quiet["tax_pct"] is None
     assert quiet["commission_pct"] is None and "price" not in quiet["sources"]
-    # Jadvalda ham: davrda sotuv yo'q — "Tannarx/dona" (sotuvdan) bo'sh, "Oxirgi partiya" lotdan ko'rinadi.
+    # Jadvalda ham (B4.42): davrda sotuv yo'q — "Tannarx/dona" oxirgi partiyadan, manbasi bilan; sotuv bo'lsa — davr o'rtachasi.
     idle = rows(world, start="2026-07-01", end="2026-07-05")[str(xa)]
     assert idle["cogs_per_unit"] is None and money(idle["lot_unit_cost"]) == D(100_000)
-    assert rows(world, **OCT)[str(world.ids["ya"])]["lot_unit_cost"] is None  # tovarsiz SKU
+    assert money(idle["unit_cost"]) == D(100_000) and idle["unit_cost_source"] == "lot"
+    sold = rows(world, **OCT)[str(xa)]
+    assert sold["unit_cost"] == sold["cogs_per_unit"] and sold["unit_cost_source"] == "sales"
+    ya = rows(world, **OCT)[str(world.ids["ya"])]  # tovarsiz SKU
+    assert (
+        ya["lot_unit_cost"] is None and ya["unit_cost"] is None and ya["unit_cost_source"] is None
+    )
     nothing = world.get(f"skus/{world.ids['ya']}", **OCT)["calc"]
     assert nothing["unit_cost"] is None and nothing["logistics"] is not None
 

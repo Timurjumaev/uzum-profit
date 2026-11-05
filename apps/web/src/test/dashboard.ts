@@ -190,7 +190,7 @@ export function summaryData(over: Partial<Summary> = {}): Summary {
         ],
       },
     ],
-    // F49 (ADR-052): bo'laklar yig'indisi = yalpi summa; tannarxsiz qism 0 (yashiriladi).
+    // F49 (ADR-053): bo'laklar yig'indisi = yalpi summa; tannarxsiz qism 0 (yashiriladi).
     flow: [
       { key: "gross_revenue", formula: "F44", value: "215420000.00", share: "1.000000" },
       { key: "cancel_revenue", formula: "F17", value: "19850000.00", share: "0.092146" },

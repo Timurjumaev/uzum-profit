@@ -493,7 +493,7 @@ class FlowStep(NamedTuple):
 
 
 def order_to_profit(s: Statement, flow: OrderFlow) -> list[FlowStep]:
-    """F49 (ADR-052). Buyurtmadan sof foydagacha: yalpi buyurtmalar summasi (F44) bo'laklarga bo'linadi — bekor (F17),
+    """F49 (ADR-053). Buyurtmadan sof foydagacha: yalpi buyurtmalar summasi (F44) bo'laklarga bo'linadi — bekor (F17),
     qaytarish (F18), Uzum ushlab qolgan (F46), tannarx (F7), o'z xarajatlar (F10), soliq (F11), tannarxsiz qism (F15)
     va sof foyda (F12). Bo'laklar yig'indisi doim F44 ga teng.
 

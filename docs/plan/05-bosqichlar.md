@@ -548,7 +548,7 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   ("Jadvaldan tashqari", SKU bloklari); hisob varag'i burchaksiz qoldi. Davr kartalarida "?" tugmali sarlavha bir chiziqda. Jadvallarda
   gorizontal skroll bo'lsa, chetida yengil soya (mobilda ma'lumot o'ngda davom etishi ko'rinadi). Faqat CSS; ma'lumot yashirilmadi.
   Vizual asoslar (Asosiy, Palitra) yangilandi. **T:** staging'da Asosiy, Foyda, Mahsulotlarni ko'rib, yoqmagan joyni skrinshot bilan yozing.
-- [x] B4.37 Mantiq tuzatishlari: zarar SKU soni, "Taxminiy" belgisi sababi, partiya tannarxi (Temur topdi, 2026-11-05: 3 ta savol).
+- [x] B4.37 **("Oxirgi partiya" ustuni olib tashlandi: ADR-052, B4.42)** Mantiq tuzatishlari: zarar SKU soni, "Taxminiy" belgisi sababi, partiya tannarxi (Temur topdi, 2026-11-05: 3 ta savol).
   ✓ 2026-11-05: (1) **Zarar SKU:** "Zarar bilan sotilayotgan SKU" va Asosiy sahifadagi zarar ro'yxati davrda sotuvi bor SKU'larni sanaydi
   (`Statement.sold_at_loss`); avval faqat saqlash yoki reklama xarajati bor, sotilmagan SKU'lar ham kirib, son oshib ketardi. Hamma sotuvi
   tannarxsiz SKU (F15 qamrovi 0) endi "Zarar" emas, "Maʼlumot yoʻq": sotuvsiz kunlardagi xarajat to'liq ayriladi, tushumi esa hisobga
@@ -589,7 +589,11 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   (yo'ldagi partiyaga tegilmaydi); postavka bor, partiya kiritilgan — oxirgi partiya narxi, belgisiz; postavka bor, partiya
   kiritilmagan — "Taxminiy" ("postavka bor, partiya Xaridlarga kiritilmagan"). Postavka sinxroni qayta hisobni chaqiradi.
   **T:** deploy'dan keyin Buyurtmalarda GUBKA va FRENCH sotuvlarida "Taxminiy" yo'qligini ko'rish.
-- [x] B4.42 Asosiydagi "Buyurtmadan sof foydagacha" — Temur chizmasi bo'yicha zinapoya (ADR-052, F49; 2026-11-05).
+- [x] B4.42 Mahsulotlar: bitta "Tannarx/dona" ustuni (ADR-052; Temur talabi, 2026-11-05).
+  ✓ 2026-11-05: "Oxirgi partiya" ustuni olib tashlandi; "Tannarx/dona" — davrda sotuv bo'lsa sotilgan donalar o'rtachasi (F21), bo'lmasa
+  oxirgi partiya / boshlang'ich narx / yo'ldagi partiya, yonida izoh. Saralash va Excel ("Tannarx manbasi" ustuni) ham shunday.
+  **T:** staging'da Mahsulotlar → "Tannarx/dona" ustunida sotuvsiz SKU'larda ham qiymat (izoh bilan) borligini ko'rish.
+- [x] B4.43 Asosiydagi "Buyurtmadan sof foydagacha" — Temur chizmasi bo'yicha zinapoya (ADR-053, F49; 2026-11-05).
   ✓ 2026-11-05: buyurtmalar summasi 100%, bekor → qaytarish → Uzum ushlab qolgan → tannarx → o'z xarajatlar → soliq →
   tannarxi kiritilmagan bo'laklari o'ngdan chapga, chapda sof foyda; har qatorda "summa / ulush"; zarar — chapdan qizil.
   **T:** staging'da Asosiy sahifadagi yangi chiziqni ko'rish (yoqmagan joyni skrinshot bilan yozish).

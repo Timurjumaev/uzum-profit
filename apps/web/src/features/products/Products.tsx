@@ -235,13 +235,14 @@ function buildColumns(ids: readonly ColumnId[], { t, f, shopName }: Ctx): Column
     avg_price: (r) => money(r.avg_price),
     commission: (r) => percent(r.commission_share),
     logistics: (r) => money(r.logistics_per_unit),
-    cogs: (r) => money(r.cogs_per_unit),
-    lot: (r) =>
-      cell(r.lot_unit_cost, (x) => (
+    // B4.42: davrda sotuv bo'lsa — sotilgan donalar o'rtachasi (F21); bo'lmasa — oxirgi partiya (F20), manbasi izohda.
+    cogs: (r) =>
+      cell(r.unit_cost, (x) => (
         <>
           {f.money(x, { unit: false })}
-          {r.lot_source === "transit" && <span className="caption"> {t("products.lotTransit")}</span>}
-          {r.lot_source === "opening" && <span className="caption"> {t("products.lotOpening")}</span>}
+          {r.unit_cost_source !== null && r.unit_cost_source !== "sales" && (
+            <span className="caption"> {t(`products.unitCostSource.${r.unit_cost_source}`)}</span>
+          )}
         </>
       )),
     ads: (r) => money(r.ads_per_unit),
