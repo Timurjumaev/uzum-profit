@@ -286,14 +286,36 @@ describe("eng foydali 5 / zarar 5 va ko'rsatkichlar", () => {
     expect(region.getByText(/Oldingi davr/)).toBeTruthy();
   });
 
-  it("buyurtmadan sof foydagacha yo'li: yalpi → bekor → qaytarish → tushum → Uzum → qoladi → sof foyda", async () => {
+  it("buyurtmadan sof foydagacha (F49): bo'laklar o'ngdan chapga, summa / ulush; nol qator yashiriladi", async () => {
     await renderHome();
     const flow = screen.getByRole("figure", { name: "Buyurtmadan sof foydagacha" });
     const steps = [...flow.querySelectorAll(".home-flow__step")].map((li) => norm(li.querySelector(".home-flow__name")!.textContent ?? ""));
-    expect(steps).toEqual(["Buyurtmalar summasi", "Bekor qilingan", "Qaytarilgan", "Tushum", "Uzum ushlab qolgan", "Uzumdan keyin qoladi", "Sof foyda"]);
-    const first = flow.querySelector<HTMLElement>(".home-flow__step--gross_revenue .home-flow__bar > span")!;
-    expect(first.style.inlineSize).toBe("100%");
-    expect(norm(flow.querySelector(".home-flow__step--revenue .home-flow__value")!.textContent ?? "")).toBe(m("186420000.00"));
+    expect(steps).toEqual(["Buyurtmalar summasi", "Bekor qilingan", "Qaytarilgan", "Uzum ushlab qolgan", "Tannarx", "Oʻz xarajatlar", "Soliq", "Sof foyda"]);
+    const bar = (key: string) => flow.querySelector<HTMLElement>(`.home-flow__step--${key} .home-flow__bar > span`)!.style;
+    expect([bar("gross_revenue").insetInlineStart, bar("gross_revenue").inlineSize]).toEqual(["0%", "100%"]);
+    // Bekor — eng o'ngda (90,79–100%), sof foyda — chapda (0–22,46%).
+    expect([bar("cancel_revenue").insetInlineStart, bar("cancel_revenue").inlineSize]).toEqual(["90.79%", "9.21%"]);
+    expect([bar("net_profit").insetInlineStart, bar("net_profit").inlineSize]).toEqual(["0%", "22.46%"]);
+    const row = (key: string) => flow.querySelector(`.home-flow__step--${key}`)!;
+    expect(norm(row("gross_revenue").querySelector(".home-flow__share")!.textContent ?? "")).toBe("/ 100%");
+    expect(norm(row("cogs").querySelector(".home-flow__value")!.textContent ?? "")).toBe(m("70000000.00"));
+    expect(norm(row("cogs").querySelector(".home-flow__share")!.textContent ?? "")).toBe("/ 32,5%");
+    expect(within(flow as HTMLElement).queryByText(/Tannarxi kiritilmagan/)).toBeNull();
+  });
+
+  it("buyurtmadan sof foydagacha: zarar chapdan qizil, tannarxsiz qism ko'rinadi", async () => {
+    const base = dashboardData();
+    const flow = base.summary.flow.map((x) =>
+      x.key === "uncosted" ? { ...x, value: "10000000.00", share: "0.046421" } : x.key === "net_profit" ? { ...x, value: "-20000000.00", share: "-0.092842" } : x,
+    );
+    await renderHome("/", { [DASHBOARD_ROUTE]: () => json(200, dashboardData({ summary: { ...base.summary, flow } })) });
+    const fig = screen.getByRole("figure", { name: "Buyurtmadan sof foydagacha" });
+    const net = fig.querySelector<HTMLElement>(".home-flow__step--net_profit")!;
+    expect(net.className).toContain("is-negative");
+    const span = net.querySelector<HTMLElement>(".home-flow__bar > span")!.style;
+    expect([span.insetInlineStart, span.inlineSize]).toEqual(["0%", "9.28%"]);
+    expect(fig.querySelector(".home-flow__step--uncosted")).toBeTruthy();
+    expect(within(fig as HTMLElement).getByText(/tannarxi yoʻq sotuvlardan qolgan pul/)).toBeTruthy();
   });
 
   it("tovardagi pul: muzlagan pul va yo'ldagi tovar (davrga bog'liq emas)", async () => {

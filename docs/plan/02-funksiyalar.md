@@ -1,7 +1,7 @@
 # 02. Funksiyalar: modullar, qabul mezonlari, formulalar
 
 Bu fayl dastur NIMA qilishini belgilaydi. Har modulda: vazifasi, ekranlari, funksiyalari (qaysi bosqichda),
-qabul mezonlari. Oxirida **formulalar lug'ati (F1–F48)**: dasturdagi har bir raqam shu yerdagi bitta formuladan
+qabul mezonlari. Oxirida **formulalar lug'ati (F1–F49)**: dasturdagi har bir raqam shu yerdagi bitta formuladan
 hisoblanadi. Kodda formula funksiyasi docstring'ida `F12` kabi raqam bilan belgilanadi.
 
 Belgilar: **[B4]** = shu bosqichda quriladi (05-bosqichlar.md). **[Keyin]** = ommaviy chiqishdan keyin.
@@ -109,8 +109,9 @@ Bloklar (joylashuvi 04-dizayn.md §7.2 desktop, §7.3 mobil):
 4. **Diqqat talab qiladi** (ustuvorlik bo'yicha): tannarxsiz sotuvlar, tugayotgan tovar, zarar bilan sotilayotgan
    SKU, yangi jarimalar, kechikayotgan kargo, sinxron xatosi, Uzum to'lovi kutilmoqda.
 5. **Eng foydali 5 / zarar 5 SKU.**
-6. **KPI sarhisob** (ADR-043; davr chizig'idan keyin): "Buyurtmadan sof foydagacha" yo'li (yalpi buyurtmalar summasi →
-   − bekor → − qaytarish → = tushum → − Uzum ushlab qolgan → = Uzumdan keyin qoladi → sof foyda) va 4 guruh, 24 kartochka:
+6. **KPI sarhisob** (ADR-043; davr chizig'idan keyin): "Buyurtmadan sof foydagacha" yo'li (F49, ADR-052: yalpi buyurtmalar
+   summasi 100% → − bekor → − qaytarish → − Uzum ushlab qolgan → − tannarx → − o'z xarajatlar → − soliq → − tannarxi
+   kiritilmagan → = sof foyda; har qatorda summa / ulush, bo'laklar chiziqda o'ngdan chapga) va 4 guruh, 24 kartochka:
    **buyurtmalar va tushum** (yalpi summa F44, tushum F3, sotilgan dona, yalpi va sof buyurtmalar, sof ulushi — F45),
    **Uzum ushlab qolgani va foyda** (F46 va ulushi, F47, DRR, sof foyda, marja — yonida tannarxsiz qism ulushi, ROI),
    **qaytarilgan va bekor qilingan** (dona, summa, soni va summasi bo'yicha ulush — F18, F17), **o'rtacha** (F48: chek,
@@ -574,3 +575,9 @@ Raqobatchilardagi so'mdagi "marja" shu raqam; bizda foyda — faqat F12.
 
 **F48. O'rtacha ko'rsatkichlar** (ADR-043): o'rtacha chek = F3 / sof buyurtmalar (F45); o'rtacha tovar narxi = F3 /
 sotilgan dona; buyurtmadagi tovarlar = sotilgan dona / sof buyurtmalar. Maxraj 0 — "—".
+
+**F49. Buyurtmadan sof foydagacha** (ADR-052) — F44 bo'laklarga: bekor (F17) + qaytarish (F18) + Uzum ushlab qolgan (F46)
++ tannarx (F7) + o'z xarajatlar (F10) + soliq (F11) + tannarxi kiritilmagan + sof foyda (F12) = F44 (F44 = F3 + bekor +
+qaytarish, F3 — hisobotdagi tushum). Tannarxi kiritilmagan = tannarxsiz sotuvlar to'lovi (F6) − ularga to'g'ri keladigan
+xarajatlar (F15): sof foydaga kirmaydi, hamma sotuv tannarxli bo'lsa 0. Har bo'lak ulushi = bo'lak / F44 (F44 = 0 — "—").
+Sof foyda manfiy — ayrilganlar F44 dan ko'p. `upcore.pnl.order_to_profit`.

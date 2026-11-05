@@ -31,7 +31,7 @@ from upcore.metrics import (
     share_change,
 )
 from upcore.money import Currency, Money, total
-from upcore.pnl import CellKey, Cells, Statement, compare
+from upcore.pnl import CellKey, Cells, Statement, compare, order_to_profit
 
 from upapi import orgsettings
 from upapi.auth.deps import OrgContext, require
@@ -126,10 +126,20 @@ class KpiGroupOut(BaseModel):
     cards: list[KpiCardOut]
 
 
+class FlowStepOut(BaseModel):
+    """F49 "Buyurtmadan sof foydagacha" qatori (ADR-052): summa va yalpi buyurtmalar summasidagi ulushi."""
+
+    key: str
+    formula: str  # F-raqam (02-funksiyalar.md)
+    value: Decimal
+    share: Decimal | None  # F44 = 0 — null
+
+
 class KpiSummaryOut(BaseModel):
     bucket: Literal["day", "week", "month"]  # trend nuqtasi kattaligi (davr uzunligiga qarab)
     points: list[date]  # bo'laklar boshi
     groups: list[KpiGroupOut]
+    flow: list[FlowStepOut]  # F49: bo'laklar yig'indisi = birinchi qator (F44)
 
 
 class KpiOut(BaseModel):
@@ -332,7 +342,11 @@ def _summary(
                 )
             )
         groups.append(KpiGroupOut(key=group, cards=out))
-    return KpiSummaryOut(bucket=bucket, points=points, groups=groups)
+    flow = [
+        FlowStepOut(key=x.key, formula=x.formula, value=x.amount.amount, share=x.share)
+        for x in order_to_profit(cur.s, cur.flow)
+    ]
+    return KpiSummaryOut(bucket=bucket, points=points, groups=groups, flow=flow)
 
 
 @router.get("/orgs/{org_id}/dashboard", response_model=DashboardOut)

@@ -589,6 +589,10 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   (yo'ldagi partiyaga tegilmaydi); postavka bor, partiya kiritilgan — oxirgi partiya narxi, belgisiz; postavka bor, partiya
   kiritilmagan — "Taxminiy" ("postavka bor, partiya Xaridlarga kiritilmagan"). Postavka sinxroni qayta hisobni chaqiradi.
   **T:** deploy'dan keyin Buyurtmalarda GUBKA va FRENCH sotuvlarida "Taxminiy" yo'qligini ko'rish.
+- [x] B4.42 Asosiydagi "Buyurtmadan sof foydagacha" — Temur chizmasi bo'yicha zinapoya (ADR-052, F49; 2026-11-05).
+  ✓ 2026-11-05: buyurtmalar summasi 100%, bekor → qaytarish → Uzum ushlab qolgan → tannarx → o'z xarajatlar → soliq →
+  tannarxi kiritilmagan bo'laklari o'ngdan chapga, chapda sof foyda; har qatorda "summa / ulush"; zarar — chapdan qizil.
+  **T:** staging'da Asosiy sahifadagi yangi chiziqni ko'rish (yoqmagan joyni skrinshot bilan yozish).
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

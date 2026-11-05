@@ -434,6 +434,12 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.42 (ADR-052, Temur chizmasi): bosh sahifadagi "Buyurtmadan sof foydagacha" — endi zinapoya: buyurtmalar summasi 100%,
+  har bo'lak (bekor, qaytarish, Uzum ushlab qolgan, tannarx, o'z xarajatlar, soliq, tannarxi kiritilmagan) chiziqda o'z
+  o'rnida o'ngdan chapga ayriladi, chapda sof foyda; har qatorda "summa / ulush". "Tushum" va "Uzumdan keyin qoladi"
+  qatorlari yo'ldan olindi (kartochkalarda qoldi). Zarar — chapdan qizil. Yangi formula F49 (`upcore.pnl.order_to_profit`),
+  `/dashboard` → `summary.flow`.
+
 - ADR-050 (reja): B5.3 aniqlashtirildi — xarid ↔ FBO postavka SKU bo'yicha avtomatik bog'lanishi va "Uzumga yuborish" Excel'i
   Uzum kabineti shablonida (shtrix-kod, tannarx, dona); shablon fakti 08 §4 da.
 - B4.28 (ADR-044): xarid sahifasidagi «Qatorlar» → **«Partiyadagi tovarlar»** («Tovar qo'shish»; xarajatda «Tovarlarga

@@ -40,6 +40,7 @@ from typing import NamedTuple, cast
 from upcore.expenses import ExpenseCategory, ExpenseRecord
 from upcore.metrics import (
     ManualExpense,
+    OrderFlow,
     Period,
     ProfitLabel,
     SaleLine,
@@ -480,6 +481,39 @@ class Statement:
             ]
         out += [("net_profit", self.net_profit)]
         return out
+
+
+class FlowStep(NamedTuple):
+    """F49 qatori: kalit, F-raqam, summa va yalpi buyurtmalar summasidagi (F44) ulushi (F44 = 0 — ``None``)."""
+
+    key: str
+    formula: str
+    amount: Money
+    share: Decimal | None
+
+
+def order_to_profit(s: Statement, flow: OrderFlow) -> list[FlowStep]:
+    """F49 (ADR-052). Buyurtmadan sof foydagacha: yalpi buyurtmalar summasi (F44) bo'laklarga bo'linadi — bekor (F17),
+    qaytarish (F18), Uzum ushlab qolgan (F46), tannarx (F7), o'z xarajatlar (F10), soliq (F11), tannarxsiz qism (F15)
+    va sof foyda (F12). Bo'laklar yig'indisi doim F44 ga teng.
+
+    F44 = F3 + bekor + qaytarish (F3 — hisobotdagi tushum). Tannarxsiz qism = tannarxi noma'lum sotuvlarning to'lovi
+    (F6) − ularga to'g'ri keladigan xarajatlar (F15): sof foydaga kirmaydi (taxmin qilinmaydi), shuning uchun alohida
+    bo'lak; hamma sotuv tannarxli bo'lsa 0. Sof foyda manfiy bo'lsa — ayrilganlar F44 dan ko'p."""
+    gross = s.revenue + flow.cancel_revenue + flow.return_revenue
+    uncosted = s.uncovered_payout - s.uncovered_expenses
+    parts = [
+        ("gross_revenue", "F44", gross),
+        ("cancel_revenue", "F17", flow.cancel_revenue),
+        ("return_revenue", "F18", flow.return_revenue),
+        ("uzum_costs", "F46", s.uzum_costs),
+        ("cogs", "F7", s.cogs),
+        ("own_expenses", "F10", s.own_total),
+        ("tax", "F11", s.tax),
+        ("uncosted", "F15", uncosted),
+        ("net_profit", "F12", s.net_profit),
+    ]
+    return [FlowStep(k, code, m, ratio(m.amount, gross.amount)) for k, code, m in parts]
 
 
 @dataclass(frozen=True, slots=True)

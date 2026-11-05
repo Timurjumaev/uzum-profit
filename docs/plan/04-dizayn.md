@@ -266,23 +266,28 @@ ishora bo'yicha (musbat — yashil, manfiy — qizil). Mobilda ustma-ust, "+" va
 
 ```
 Koʻrsatkichlar sarhisobi                      [Joriy davr: 1–26-oktabr] [Oldingi davr: 5–30-sentabr]
-┌ Buyurtmadan sof foydagacha ─────────────────────────────────────────────────────────────────┐
-│   Buyurtmalar summasi   ████████████████████████████████████████████████   215 420 000 soʻm │
-│ − Bekor qilingan        ████                                                19 850 000 soʻm │
-│ − Qaytarilgan           ██                                                   9 150 000 soʻm │
-│ = Tushum                ████████████████████████████████████████           186 420 000 soʻm │
-│ − Uzum ushlab qolgan    ███████████                                         52 300 000 soʻm │
-│ = Uzumdan keyin qoladi  ██████████████████████████████                     134 120 000 soʻm │
-│ = Sof foyda             ███████████                                         48 393 000 soʻm │
-└─────────────────────────────────────────────────────────────────────────────────────────────┘
+┌ Buyurtmadan sof foydagacha (F49, ADR-052) ──────────────────────────────────────────────────────────┐
+│   Buyurtmalar summasi   ████████████████████████████████████████   215 420 000 soʻm  / 100%   │
+│ − Bekor qilingan        ·································████████    19 850 000 soʻm  / 9,2%   │
+│ − Qaytarilgan           ·······························███·········     9 150 000 soʻm  / 4,2%   │
+│ − Uzum ushlab qolgan    ·····················██████████············    52 300 000 soʻm  / 24,3%  │
+│ − Tannarx               ·········█████████████······················    70 000 000 soʻm  / 32,5%  │
+│ − Oʻz xarajatlar        ·······██···································     9 000 000 soʻm  / 4,2%   │
+│ − Soliq                 ······█·····································     6 727 000 soʻm  / 3,1%   │
+│ = Sof foyda             ██████······································    48 393 000 soʻm  / 22,5%  │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────┘
 BUYURTMALAR VA TUSHUM
 ┌ Buyurtmalar summasi (GMV) (?) ┐ ┃ Tushum (sof GMV) (?) ┃ ┌ Sotilgan tovarlar (?) ┐
 │ 215 420 000 soʻm              │ ┃ 186 420 000 soʻm     ┃ │ 1 240                 │
 │ ▲4,6%  oldingi: 206 000 000   │ ┃ ▼1,9%  oldingi: ...  ┃ │ ▼4,6%  oldingi: 1 300 │
 │ ╱╲__╱ (trend)                 │ ┃ ╱╲__╱                ┃ │ ╱╲__╱                 │
 ```
-- Yo'l: yotiq chiziqlar (§5.1 — ulushlar uchun yotiq ustunlar), uzunligi yalpi summaga nisbatan; ranglar `--chart-*`,
-  sof foyda — `positive-text` (manfiy bo'lsa `negative-text`). Mobilda nom va summa bir qatorda, chiziq ostida.
+- Yo'l (ADR-052, Temur chizmasi): har qatorda to'liq chiziq izi (100% = yalpi summa) va bo'lak o'z o'rnida — bo'laklar
+  o'ngdan chapga ketma-ket ayriladi, sof foyda chapda; o'ngda "summa / ulush". Ranglar: bekor `chart-4`, qaytarish
+  `chart-2`, Uzum `chart-7`, tannarx `chart-1`, o'z xarajatlar `chart-5`, soliq `chart-8`, tannarxi kiritilmagan — shtrix
+  (rangdan tashqari belgi), sof foyda — `positive-text`; zarar — chapdan |ulush| uzunlikda `negative-text`, 100% dan
+  oshgan bo'laklar chiziq chegarasida kesiladi. 0 bo'lgan o'z xarajatlar, soliq, tannarxsiz qism qatorlari yashiriladi.
+  Mobilda nom va summa bir qatorda, ostida chiziq va ulush (chiziq kengligi hamma qatorda bir xil).
 - Guruh sarlavhasi — `label`, katta harf, `text-secondary`, ostida hairline. Kartochka: radius yo'q, hairline chegara;
   qiymat `type-h2`, asosiy kartochkalar (tushum, sof foyda) — `type-h1`, chap tomonda 3 px `accent` chiziq.
 - O'zgarish: pul va sonda `▲ 4,6%`, ulushda `▲ 3,2 punkt` (§8.4); rang = yo'nalish × yaxshimi (xarajat, bekor, qaytarish

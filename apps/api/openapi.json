@@ -8457,6 +8457,42 @@
         ],
         "title": "ExpensesOut"
       },
+      "FlowStepOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "formula": {
+            "type": "string",
+            "title": "Formula"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "share": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "formula",
+          "value",
+          "share"
+        ],
+        "title": "FlowStepOut",
+        "description": "F49 \"Buyurtmadan sof foydagacha\" qatori (ADR-052): summa va yalpi buyurtmalar summasidagi ulushi."
+      },
       "ForecastOut": {
         "properties": {
           "revenue": {
@@ -9182,13 +9218,21 @@
             },
             "type": "array",
             "title": "Groups"
+          },
+          "flow": {
+            "items": {
+              "$ref": "#/components/schemas/FlowStepOut"
+            },
+            "type": "array",
+            "title": "Flow"
           }
         },
         "type": "object",
         "required": [
           "bucket",
           "points",
-          "groups"
+          "groups",
+          "flow"
         ],
         "title": "KpiSummaryOut"
       },
