@@ -28,11 +28,15 @@ export function sortFlags(flags: readonly string[]): string[] {
   return [...flags].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
 }
 
+/** Sotuvchi o'zi kiritgan narx (boshlang'ich holat, F41) aniq tannarx: "tarixiy" belgisi taxmin emas, "Taxminiy" qo'yilmaydi. */
+const EXACT = new Set(["historical"]);
+
 type Props = { cogs: string | null; flags: readonly string[] };
 
 /** Belgi bosilsa sabablar katak ichida ochiladi (qalqib chiqmaydi: jadval skroll konteynerida kesilmasin, telefonda ham ishlasin). */
-export function CostCell({ cogs, flags }: Props) {
+export function CostCell({ cogs, flags: all }: Props) {
   const { t } = useTranslation();
+  const flags = all.filter((x) => !EXACT.has(x));
   const f = useFormat();
   const [open, setOpen] = useState(false);
   const id = useId();

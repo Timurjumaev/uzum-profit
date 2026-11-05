@@ -104,6 +104,13 @@ describe("roʻyxat", () => {
     expect(within(toza!).queryByText("Tannarxsiz")).toBeNull();
   });
 
+  it("boshlang'ich holatdagi (tarixiy) narx — sotuvchi kiritgan aniq tannarx: 'Taxminiy' yo'q", async () => {
+    await renderAt(PATH, { [SALES_ROUTE]: () => json(200, salesData({ items: [sale({ cost_flags: ["historical"] })] })) });
+    const table = await screen.findByRole("table", { name: CAPTION });
+    expect(within(table).queryByText("Taxminiy")).toBeNull();
+    expect(within(table).queryByRole("button", { name: /Taxminiy/ })).toBeNull();
+  });
+
   it("so'rov: davr va limit; holat filtri URL'ga yoziladi va so'rovni o'zgartiradi", async () => {
     const { api, history } = await renderAt(PATH);
     await screen.findByRole("table", { name: CAPTION });

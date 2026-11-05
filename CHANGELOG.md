@@ -488,6 +488,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- B4.39: boshlang'ich holatda narxi kiritilgan tovarning qoldig'i tugagach ham sotuv kunidagi kiritilgan narx aniq tannarx hisoblanadi —
+  "Taxminiy" ("partiyalar yetmadi") belgisi chiqmaydi; "lot yetmadi" faqat haqiqiy partiyalar tugaganda.
 - B4.38: Mahsulotlarda sotilmagan SKU'lar "Zarar" o'rniga **"Sotuv yo'q"**; "Oxirgi partiya" partiya bo'lmasa boshlang'ich holat
   narxini ko'rsatadi; buyurtmalardagi "Taxminiy" / "Tannarxsiz" belgisi bosilganda sabablar ochiladi.
 - B4.37: **zarar SKU soni** — "Zarar bilan sotilayotgan SKU" va Asosiy sahifadagi zarar ro'yxati sotilmagan SKU'larni (faqat saqlash yoki
