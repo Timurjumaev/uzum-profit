@@ -225,7 +225,7 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
    bitta tranzaksiyada lotlar → `sale_costs` → `daily_sku_metrics`. Tovar ichida doim to'liq hisoblanadi (keyingi
    lot "erta sotuv" orqali oldingi sotuvga ta'sir qiladi), bazaga faqat farqlar yoziladi; COGS o'zgarsa
    `changed_at`/`previous_cogs`. `amount` qaytganlarsiz (F18), shuning uchun qaytish hodisasi yo'q; hisobdan
-   chiqarish — `stock_moves` (`writeoff`, manfiy `adjust`). `calc.nightly` — to'liq qayta qurish (kurs arxivi kech
+   chiqarish — `stock_moves` (`writeoff`, manfiy `adjust`). `calc.nightly` va ishchi ishga tushishi (deploy, B4.40) — to'liq qayta qurish (kurs arxivi kech
    kelsa ham). Benchmark: 10 000 sotuvli tovar bazasi bilan < 3 s.
 8. Boshlang'ich holat (B4.12, F41, ADR-033): `orgs.cost_start_on`, `item_costs` (tovar, `valid_from`, narx),
    `opening_stock` (tovar, Uzumda, o'z omborimda). Sana bo'lsa — undan oldingi sotuvlar tarixiy narxda (lotsiz),

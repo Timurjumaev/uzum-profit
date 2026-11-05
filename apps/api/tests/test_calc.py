@@ -380,6 +380,27 @@ def test_incremental_equals_full_rebuild(org: Org) -> None:
     assert sum(1 for v in incremental.values() if "lot_shortage" in v[2]) >= 1
 
 
+def test_full_rebuild_rewrites_stale_flags(org: Org) -> None:
+    """B4.40: dvigatel qoidasi o'zgargach (masalan, B4.39) bazada eski natija — "lot yetmadi" belgisi va boshqa
+    tannarx — qolgan bo'lsa, to'liq qayta qurish (ishchi ishga tushganda so'raladi) uni joriy qoida bo'yicha qayta
+    yozadi (manba o'zgarmagan bo'lsa ham)."""
+    _, sku, _, _ = _two_lots(org)
+    sale = org.sale(sku, d(10, 5), 2)
+    org.request(calc.Scope.PURCHASE)
+    org.request(calc.Scope.SHOP, org.shop_id)
+    org.recalc()
+    good = org.costs()[sale]
+    assert "lot_shortage" not in good[2]
+    org.sql(
+        "UPDATE sale_costs SET flags = %s, cogs = 1, unit_cost = 1 WHERE sale_item_id = %s",
+        [["lot_shortage"], sale],
+    )
+    org.run(lambda conn: calc.request_full(conn, org.org_id))
+    org.recalc()
+    fixed = org.costs()[sale]
+    assert fixed[2] == good[2] and fixed[0] == good[0] and fixed[1] == good[1]
+
+
 def test_average_method(org: Org) -> None:
     org.sql("UPDATE orgs SET cost_method = 'average' WHERE id = %s", [org.org_id])
     _, sku, _, _ = _two_lots(org)
@@ -607,6 +628,33 @@ def test_nightly_requests_full_rebuild(db: dict[str, str]) -> None:
     assert admin(db, "SELECT count(*) FROM recalc_queue WHERE org_id = %s", [account.org_id]) == [
         (0,)
     ]
+
+
+def test_rebuild_all_on_worker_start(db: dict[str, str]) -> None:
+    """B4.40: ishchi ishga tushganda (deploy) hamma ulangan tashkilot uchun to'liq qayta qurish so'rovi va hisob ishi —
+    saqlangan ``sale_costs`` yangi dvigatel qoidasi bo'yicha tungi hisobni kutmay yangilanadi. Takroriy chaqiruv
+    ikkinchi ish qo'ymaydi (navbat qulfi), so'rovlar birlashadi."""
+    app = jobs.build_app(InMemoryConnector())
+    account = create_account(db, sf.settings_for(db), TOKEN, [A])
+    engine = make_engine(db["app"])
+
+    async def main() -> tuple[int, int]:
+        try:
+            async with app.open_async():
+                return await jobs.rebuild_all(app, engine), await jobs.rebuild_all(app, engine)
+        finally:
+            await engine.dispose()
+
+    first, second = asyncio.run(main())
+    assert first >= 1 and second == 0
+    queued = [j for j in app.connector.jobs.values() if j["task_name"] == jobs.CALC]
+    assert {"org_id": str(account.org_id)} in [j["args"] for j in queued]
+    kinds = admin(
+        db,
+        "SELECT kind, ref_id, since FROM recalc_queue WHERE org_id = %s ORDER BY kind",
+        [account.org_id],
+    )
+    assert kinds == [("item", None, None), ("purchase", None, None), ("shop", None, None)]
 
 
 # --- Tezlik (03 §7) ------------------------------------------------------------------------------------

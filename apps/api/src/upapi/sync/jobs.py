@@ -9,7 +9,9 @@
 - ``calc.org`` (B2.8) — tashkilot hisob ishi (:func:`upapi.calc.recalc_org`): ``lock = calc:<org>``, navbatda bitta.
   Akkaunt sinxroni biror narsa yozgan bo'lsa navbatga qo'yiladi (so'rovlar ``recalc_queue`` da — ma'lumot bilan
   bitta tranzaksiyada yozilgan). ``calc.nightly`` — Toshkent 03:40 da har tashkilot uchun to'liq qayta qurish
-  (masalan, CBU arxivi keyinroq kelib, kurslar o'zgargan bo'lsa).
+  (masalan, CBU arxivi keyinroq kelib, kurslar o'zgargan bo'lsa). Xuddi shu qayta qurish ishchi ishga tushganda ham
+  (:func:`rebuild_all`, B4.40): deploy hisob qoidasini (dvigatel, belgilar) o'zgartirsa, saqlangan natijalar
+  (``sale_costs``, ``daily_sku_metrics``) tungi hisobni kutmay darhol yangi qoida bo'yicha qayta yoziladi.
 
 Sotuvchi tahrirlari (xaridlar, B4.6) ham ``calc.org`` ni API'dan navbatga qo'yadi (:meth:`JobQueue.defer_calc`).
 
@@ -128,6 +130,17 @@ async def request_full_rebuild(engine: AsyncEngine, org_id: UUID) -> None:
         await calc.request_full(conn, org_id)
 
 
+async def rebuild_all(app: App, engine: AsyncEngine) -> int:
+    """Ulangan har tashkilot uchun hosila jadvallarni to'liq qayta qurish so'rovi va hisob ishi (tungi ``calc.nightly``
+    va ishchi ishga tushishi, B4.40). Qayta hisob idempotent va faqat farqlarni yozadi — takroriy chaqiruv xavfsiz.
+    Qaytaradi: navbatga qo'yilgan ``calc.org`` ishlari soni."""
+    queued = 0
+    for org_id in sorted({org for org, _ in await due_accounts(engine)}):
+        await request_full_rebuild(engine, org_id)
+        queued += await defer_calc(app, org_id)
+    return queued
+
+
 def build_app(connector: BaseConnector) -> App:
     """Navbat ilovasi (ishchi va API uchun bir xil vazifalar ro'yxati)."""
     app = App(connector=connector)
@@ -196,12 +209,7 @@ def build_app(connector: BaseConnector) -> App:
     @app.periodic(cron=CALC_CRON, periodic_id="calc")
     @app.task(name=CALC_NIGHTLY, queue=CALC_QUEUE, queueing_lock=CALC_NIGHTLY, pass_context=True)
     async def calc_nightly(context: JobContext, timestamp: int) -> int:
-        rt = runtime(context)
-        queued = 0
-        for org_id in sorted({org for org, _ in await due_accounts(rt.engine)}):
-            await request_full_rebuild(rt.engine, org_id)
-            queued += await defer_calc(context.app, org_id)
-        return queued
+        return await rebuild_all(context.app, runtime(context).engine)
 
     return app
 
