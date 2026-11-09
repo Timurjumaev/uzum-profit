@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import { errorText } from "../../app/errors";
 import { useFilters } from "../../app/filters";
 import { currentOrg, meQuery, shopsQuery, skusQuery, syncQuery } from "../../app/query";
-import { DEFAULT_PRODUCT_SORT, parseSort, productsSearch, PRODUCT_ABC, PRODUCT_LABELS, type ProductSort } from "../../app/search";
+import { DEFAULT_PRODUCT_SORT, parseSort, productsSearch, PRODUCT_ABC, PRODUCT_LABELS, type ProductsSearch, type ProductSort } from "../../app/search";
 import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, FormulaPopover, loadPageSize, Pagination, Popover, ProductThumb, savePageSize, Select, Skeleton, StatusPill, type Column, PageHelp } from "../../components/ui";
 import type { SkuRow, Skus } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
@@ -94,7 +94,9 @@ export function Products() {
     const shop = shops.data?.find((s) => s.id === id);
     return shop ? (shop.alias ?? shop.name) : id.slice(0, 8);
   };
-  const columns = useMemo(() => buildColumns(chosen, { t, f, shopName }), [chosen, t, f, shops.data]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Ro'yxat holati SKU havolasiga qo'shiladi (B4.50): qaytganda qidiruv, filtr, saralash va sahifa saqlanadi.
+  const listKey = JSON.stringify(search);
+  const columns = useMemo(() => buildColumns(chosen, { t, f, shopName, list: search }), [chosen, t, f, shops.data, listKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (query.isError && !first) {
     return (
@@ -219,7 +221,7 @@ export function Products() {
 
 // --- Ustunlar -----------------------------------------------------------------------------------------------------
 
-type Ctx = { t: ReturnType<typeof useTranslation>["t"]; f: ReturnType<typeof useFormat>; shopName: (id: string) => string };
+type Ctx = { t: ReturnType<typeof useTranslation>["t"]; f: ReturnType<typeof useFormat>; shopName: (id: string) => string; list: ProductsSearch };
 
 const cell = (value: string | null, render: (v: string) => ReactNode) => (value === null ? <span className="muted">—</span> : render(value));
 
@@ -227,7 +229,7 @@ function tone(value: string | null): string | undefined {
   return value !== null && value.startsWith("-") && !/^-0+(\.0*)?$/.test(value) ? "ui-text--negative" : undefined;
 }
 
-function buildColumns(ids: readonly ColumnId[], { t, f, shopName }: Ctx): Column<SkuRow>[] {
+function buildColumns(ids: readonly ColumnId[], { t, f, shopName, list }: Ctx): Column<SkuRow>[] {
   const money = (v: string | null) => cell(v, (x) => <span className={tone(x)}>{f.money(x, { unit: false })}</span>);
   const percent = (v: string | null) => cell(v, (x) => f.percent(x));
   const header = (id: ColumnId) => t(`products.col.${id}`);
@@ -243,7 +245,7 @@ function buildColumns(ids: readonly ColumnId[], { t, f, shopName }: Ctx): Column
     ) : undefined;
   };
   const all: Record<ColumnId, (r: SkuRow) => ReactNode> = {
-    product: (r) => <ProductCell row={r} />,
+    product: (r) => <ProductCell row={r} list={list} />,
     shop: (r) => shopName(r.shop_id),
     units: (r) => f.number(r.units),
     revenue: (r) => f.money(r.revenue, { unit: false }),
@@ -309,7 +311,7 @@ function Uncovered({ row }: { row: SkuRow }) {
   );
 }
 
-function ProductCell({ row }: { row: SkuRow }) {
+function ProductCell({ row, list }: { row: SkuRow; list: ProductsSearch }) {
   const { t } = useTranslation();
   const name = row.title ?? row.product_title ?? t("home.sku.unnamed");
   return (
@@ -319,7 +321,7 @@ function ProductCell({ row }: { row: SkuRow }) {
         <Link
           to="/products/$skuId"
           params={{ skuId: row.sku_id }}
-          search={(prev) => ({ shop: prev.shop, from: prev.from, to: prev.to, cmp: prev.cmp })}
+          search={(prev) => ({ shop: prev.shop, from: prev.from, to: prev.to, cmp: prev.cmp, ...list })}
           className="products-cell__name"
         >
           {name}

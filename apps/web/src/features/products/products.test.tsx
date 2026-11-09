@@ -138,6 +138,26 @@ describe("jadval", () => {
     await waitFor(() => expect(history.location.search).not.toContain("q="));
   });
 
+  it("ro'yxat holati (qidiruv, filtr, saralash, sahifa) SKU havolasiga qo'shiladi; SKU sahifasidan 'qaytish' uni tiklaydi (B4.50)", async () => {
+    const state = "q=mashina&sort=-units&label=loss&abc=B&page=2";
+    const { history } = await renderAt(`${PATH}&${state}`, { [SKUS_ROUTE]: () => json(200, skusData({ total: 120, page: 2, pages: 3 })) });
+    await screen.findByRole("table", { name: CAPTION });
+    const link = within(table()).getByRole("link", { name: "Oʻyinchoq mashina qizil" });
+    const href = new URL(link.getAttribute("href")!, "http://x");
+    expect(href.pathname).toBe(`/products/${SKU_1}`);
+    for (const [k, v] of new URLSearchParams(state)) expect(href.searchParams.get(k)).toBe(v);
+    fireEvent.click(link);
+    const back = await screen.findByRole("link", { name: /Mahsulotlarga qaytish/ });
+    const to = new URL(back.getAttribute("href")!, "http://x");
+    expect(to.pathname).toBe("/products");
+    for (const [k, v] of new URLSearchParams(state)) expect(to.searchParams.get(k)).toBe(v);
+    expect(history.location.pathname).toBe(`/products/${SKU_1}`);
+    fireEvent.click(back);
+    await waitFor(() => expect(history.location.pathname).toBe("/products"));
+    expect(history.location.search).toContain("q=mashina");
+    expect(history.location.search).toContain("page=2");
+  });
+
   it("sahifalash: 20 tadan ko'p bo'lsa raqamlar, keyingi sahifa `page` bilan so'raladi va URL'ga yoziladi", async () => {
     const { api, history } = await renderAt(PATH, {
       [SKUS_ROUTE]: [

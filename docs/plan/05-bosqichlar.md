@@ -638,8 +638,14 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   bersa (summa 0–10¹², foiz 0–100 dan tashqari) eski natija yashiriladi va "Qiymat notoʻgʻri: summalar 0 dan 1 000 000 000 000
   gacha, foizlar 0 dan 100 gacha boʻlishi kerak" chiqadi; boshqa xatolar — umumiy matn (`errorText`). **T:** staging'da
   kalkulyatorga komissiya 150 yozib xato matnini ko'rish.
-- [ ] B4.50 SKU'dan qaytganda qidiruv, filtr, saralash va sahifa saqlanadi; "Zaxira kunlari" saralashida harakatsiz qoldiq
+- [x] B4.50 SKU'dan qaytganda qidiruv, filtr, saralash va sahifa saqlanadi; "Zaxira kunlari" saralashida harakatsiz qoldiq
   (tezlik 0, qoldiq bor) yuqorida; nom bo'yicha saralash ko'rinadigan nom, katta-kichik harfsiz, lotin/kirill tartibida.
+  ✓ 2026-11-09: (1) SKU sahifasi marshrutiga ham `productsSearch` ulandi: jadvaldagi SKU havolasi `q`, `sort`, `label`, `abc`, `page`
+  ni olib yuradi, "Mahsulotlarga qaytish" ularni tiklaydi (URL'da — ulashsa ham, orqaga bosilsa ham ishlaydi). (2) "Zaxira kunlari"
+  saralashi: tezlik 0 bo'lib qoldig'i bor SKU (F24 `None`) endi cheksiz zaxira — kamayishda eng tepada, o'sishda oxirgi qoldiqli;
+  qoldiqsizlar doim oxirida. (3) Nom bo'yicha saralash ko'rinadigan nom (SKU nomi, yo'q bo'lsa mahsulot nomi) bo'yicha, qidiruv bilan
+  bir xil `fold` (katta-kichik harf, kirill/lotin, tutuq) — avval xom `title` va nomsizlar tasodifiy edi. **T:** staging'da SKU
+  ochib qaytganda qidiruv/filtr/sahifa saqlanishini, "Zaxira kunlari" ni bosganda harakatsiz qoldiq tepada chiqishini ko'rish.
 - [ ] B4.51 Mahsulotlar Excel'i: "Holat" o'zbekcha, "Do'kon" ustuni; Excel sarlavhalarida oʻ/gʻ — U+02BB.
 - [ ] B4.52 Tovarga bog'lash: "Tovardan ajratish" tasdiq bilan; tovar qidiruvi serverda (500+ tovar).
 - [ ] B4.53 Tushuntirishlar: Dona, O'rtacha narx, Qoldiq, ABC, Holat ustunlarida "?"; "Jadvaldan tashqari" matni filtrda;

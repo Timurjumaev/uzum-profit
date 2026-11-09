@@ -81,6 +81,7 @@ const products = createRoute({
 const product = createRoute({
   getParentRoute: () => app,
   path: "/products/$skuId",
+  validateSearch: productsSearch, // ro'yxat holati (qidiruv, filtr, saralash, sahifa) SKU sahifasida ham saqlanadi — "qaytish" uchun (B4.50)
   component: lazyRouteComponent(() => import("../routes/products"), "SkuPage"),
 });
 
