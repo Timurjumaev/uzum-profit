@@ -684,6 +684,7 @@ export const uzLatn = {
       note: "Jadval qatorlari va quyidagilar yigʻindisi — Foyda va zarar jami.",
       unlinked: "{{units}} dona, tushum {{revenue}}, sof foyda {{profit}}",
       unallocated: "Sotuvsiz kunlar xarajati (sof foyda): {{profit}}",
+      unallocatedHint: "Doʻkonda sotuv boʻlmagan kunlarning xarajati: tushum yoʻq — hech bir SKUʼga boʻlinmaydi, lekin jami sof foydadan ayriladi.",
       filteredNote: "Qidiruv va filtr bu qismlarga taʼsir qilmaydi — ular butun davr va tanlangan doʻkonlar boʻyicha.",
     },
     rank: "Uzum reytingi: {{value}}",

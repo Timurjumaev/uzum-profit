@@ -355,6 +355,7 @@ function Outside({ data, filtered }: { data: Skus; filtered: boolean }) {
         <div>
           <dt>{t("pnl.views.unallocated")}</dt>
           <dd>{t("products.outside.unallocated", { profit: f.money(unallocated.net_profit) })}</dd>
+          <dd className="caption">{t("products.outside.unallocatedHint")}</dd>
         </div>
       </dl>
     </section>

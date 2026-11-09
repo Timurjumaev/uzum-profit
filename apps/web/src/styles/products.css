@@ -313,3 +313,60 @@
   display: block;
   white-space: nowrap;
 }
+
+/* --- Mobil (B4.54, 360 px; tamoyil 10): bosish maydoni ≥ 44 px, KPI'lar ikki ustunda. Faqat shu sahifalar ichida. --- */
+@media (max-width: 640px), (pointer: coarse) {
+  .products .ui-btn,
+  .sku .ui-btn,
+  .products .ui-input,
+  .sku .ui-input,
+  .products .ui-sort,
+  .sku .ui-segmented__item {
+    min-block-size: 44px;
+  }
+
+  /* "?" tugmasi: ko'rinishi o'sha, bosish maydoni 44 px (manfiy chekka — kartalar kengaymaydi). */
+  .products .ui-icon-btn,
+  .sku .ui-icon-btn {
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    margin: -6px;
+  }
+
+  .products .ui-sort {
+    min-inline-size: 44px;
+  }
+
+  .sku__back,
+  .sku__ext,
+  .sku-link__skus a,
+  .products-cell__name {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 44px;
+  }
+
+  .sku .ui-segmented__item {
+    display: inline-flex;
+    align-items: center;
+    padding-inline: var(--space-4);
+  }
+}
+
+@media (max-width: 640px) {
+  .sku__kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+
+  .sku__kpis .ui-kpi {
+    min-inline-size: 0;
+    padding: var(--space-3);
+  }
+
+  /* Katta raqam ("1 200 000 so'm") ikki ustunli karta ichiga sig'sin: kichikroq shrift, kerak bo'lsa qatorga o'tadi. */
+  .sku__kpis .kpi {
+    font-size: 1rem;
+    overflow-wrap: anywhere;
+  }
+}
