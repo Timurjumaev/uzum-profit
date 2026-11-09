@@ -229,6 +229,10 @@ def test_sku_detail_calculator_defaults_and_sources(world: World) -> None:
     idle = rows(world, start="2026-07-01", end="2026-07-05")[str(xa)]
     assert idle["cogs_per_unit"] is None and money(idle["lot_unit_cost"]) == D(100_000)
     assert money(idle["unit_cost"]) == D(100_000) and idle["unit_cost_source"] == "lot"
+    # B4.44: davrda sotilmagan har SKU — "Sotuv yo'q" (xarajati bo'lmasa ham; avval "Ma'lumot yo'q" chiqardi).
+    quiet_rows = rows(world, start="2026-07-01", end="2026-07-05")
+    unsold = [r for r in quiet_rows.values() if r["units"] == 0]
+    assert len(unsold) > 1 and all(r["label"] == "idle" for r in unsold)
     sold = rows(world, **OCT)[str(xa)]
     assert sold["unit_cost"] == sold["cogs_per_unit"] and sold["unit_cost_source"] == "sales"
     ya = rows(world, **OCT)[str(world.ids["ya"])]  # tovarsiz SKU

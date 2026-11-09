@@ -812,8 +812,8 @@ class ProfitLabel(StrEnum):
     LOSS = "loss"  # Zarar: F12 < 0
     BORDERLINE = "borderline"  # Chegarada: F13 < 5%
     PROFITABLE = "profitable"  # Foydali
-    NO_DATA = "no_data"  # Ma'lumot yo'q: tannarxi ma'lum tushum yo'q (F13 hisoblanmaydi)
-    IDLE = "idle"  # Sotuv yo'q: davrda sotilmagan, faqat xarajat (saqlash, reklama) bor — zarar emas, e'tibor kerak
+    NO_DATA = "no_data"  # Ma'lumot yo'q: sotuv bor, lekin hammasi tannarxsiz (F13 hisoblanmaydi)
+    IDLE = "idle"  # Sotuv yo'q: davrda sotilmagan (xarajati bo'lsa ham, bo'lmasa ham) — zarar emas (B4.44)
 
 
 def profit_label(

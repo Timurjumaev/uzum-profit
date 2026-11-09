@@ -434,6 +434,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.44: Mahsulotlarda davrda sotilmagan har SKU holati — "Sotuv yo'q" (avval xarajati yo'q yoki kompensatsiya tushganlari
+  "Ma'lumot yo'q" chiqardi; filtr va Excel ham). "Ma'lumot yo'q" — faqat sotuv bor, hammasi tannarxsiz. Reja: Mahsulotlar
+  tahlilidagi 22 ta kamchilik B4.45–B4.55 da bo'lib tuzatiladi, ro'yxatlar sahifalanadi (ADR-054, B4.48, B4.56–B4.60).
+
 - B4.43 (ADR-053, Temur chizmasi): bosh sahifadagi "Buyurtmadan sof foydagacha" — endi zinapoya: buyurtmalar summasi 100%,
   har bo'lak (bekor, qaytarish, Uzum ushlab qolgan, tannarx, o'z xarajatlar, soliq, tannarxi kiritilmagan) chiziqda o'z
   o'rnida o'ngdan chapga ayriladi, chapda sof foyda; har qatorda "summa / ulush". "Tushum" va "Uzumdan keyin qoladi"

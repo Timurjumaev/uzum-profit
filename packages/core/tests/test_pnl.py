@@ -812,3 +812,22 @@ def test_sold_at_loss_requires_sales() -> None:
     ).by_sku()["A"]
     assert ads_only.net_profit.amount < 0 and ads_only.lines == 0
     assert ads_only.label is ProfitLabel.IDLE and not ads_only.sold_at_loss  # "Zarar" emas
+
+
+def test_unsold_sku_is_always_idle() -> None:
+    """B4.44: davrda sotilmagan SKU doim "Sotuv yo'q" — xarajati yo'q, xarajati bor yoki kompensatsiya tushgan bo'lsa
+    ham (avval xarajatsizi va kompensatsiyalisi "Ma'lumot yo'q" chiqardi)."""
+    from upcore.metrics import ProfitLabel
+
+    nothing = Cells(OCT, {}).statement()  # katalogda bor, davrda hech narsasi yo'q
+    assert nothing.lines == 0 and nothing.label is ProfitLabel.IDLE
+
+    for amount in (uzs(1_000), uzs(-500)):  # saqlash xarajati / kompensatsiya
+        s = build_cells(OCT, [], [ExpenseItem(d(5), "S1", C.STORAGE, amount, sku="A")]).by_sku()[
+            "A"
+        ]
+        assert s.lines == 0 and s.label is ProfitLabel.IDLE and not s.sold_at_loss
+
+    # Sotilgan, lekin hammasi tannarxsiz — "Ma'lumot yo'q" qoladi.
+    blind = build_cells(OCT, [sale(1, cost=None)]).by_sku()["A"]
+    assert blind.label is ProfitLabel.NO_DATA
