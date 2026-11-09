@@ -434,6 +434,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.47 (tamoyil 9, F13): Mahsulotlar jadvalida qisman tannarxsiz SKU'ning "Marja" va "Holat" ustunlarida "tannarxsiz N%"
+  belgisi (izohida sotuvlar soni va nima qilish kerakligi) — avval bunday SKU belgisiz "Foydali" chiqardi.
+
 - B4.46: SKU sahifasidagi "Qaytishlar sabablari" endi mijozga topshirilib qaytgan (Bekor + topshirilgan) sotuvlarni ham sanaydi
   (ADR-043, F18) — avval faqat qisman qaytarishlar kirardi. Sabablar Buyurtmalar tahlili bilan bitta funksiyadan
   (`reports.cells.cause_sums`).

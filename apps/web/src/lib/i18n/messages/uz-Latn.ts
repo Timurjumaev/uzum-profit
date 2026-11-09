@@ -652,6 +652,8 @@ export const uzLatn = {
       label: "Holat",
     },
     unitCostSource: { lot: "(oxirgi partiya)", opening: "(boshlangʻich)", transit: "(yoʻldagi partiya)" },
+    uncovered: "tannarxsiz {{share}}",
+    uncoveredHint: "{{lines}} ta sotuv ({{share}} tushum) tannarxsiz — sof foyda, marja va holatga kirmadi. Tovarga partiya yoki boshlangʻich narx kiriting.",
     columns: { title: "Ustunlar", reset: "Standart ustunlar" },
     views: {
       title: "Koʻrinishlar",

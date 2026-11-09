@@ -89,6 +89,21 @@ describe("jadval", () => {
     expect(norm(within(table()).getAllByRole("row")[1]!.textContent!)).not.toContain("partiya)");
   });
 
+  it("B4.47: qisman tannarxsiz SKU — marja va holat yonida 'tannarxsiz N%' (izoh bilan); to'liq tannarxli SKU'da yo'q", async () => {
+    const items = [skuRow({ uncovered_share: "0.250000", uncovered_lines: 2 }), skuRow({ sku_id: SKU_2, title: "Kruzhka", item_id: null })];
+    await renderTable({ [SKUS_ROUTE]: () => json(200, skusData({ items })) });
+    const [first, second] = within(table()).getAllByRole("row").slice(1);
+    const marks = within(first!).getAllByText(/tannarxsiz 25%/);
+    expect(marks).toHaveLength(2); // marja va holat
+    expect(marks[0]!.getAttribute("title")).toContain("2 ta sotuv");
+    expect(within(second!).queryByText(/tannarxsiz/)).toBeNull();
+    cleanup();
+    // Hammasi tannarxsiz ("Ma'lumot yo'q"): marja "—" yonida ulush, holatda takrorlanmaydi.
+    await renderTable();
+    const blind = within(table()).getAllByRole("row")[2]!;
+    expect(within(blind).getAllByText(/tannarxsiz 100%/)).toHaveLength(1);
+  });
+
   it("so'rov: davr, saralash (standart -revenue), limit; ustun sarlavhasi bosilsa URL va so'rov o'zgaradi", async () => {
     const { api, history } = await renderTable();
     const [first] = skusUrls(api);
