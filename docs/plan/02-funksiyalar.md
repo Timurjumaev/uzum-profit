@@ -156,7 +156,8 @@ oylar yig'indisi = butun davr; har qatorda yakunlangan + kutilayotgan = jami; ha
 - Jadval: rasm, SKU, nom, do'kon, sotilgan dona, tushum, o'rtacha narx, komissiya %, logistika/dona,
   tannarx/dona (lot ma'lumoti bilan), reklama/dona, foyda/dona,
   marja, ROI, qaytish %, qoldiq, zaxira kunlari,
-  ABC (bizniki + Uzum `rankInfo`), holat belgisi (Zarar / Chegarada < 5% / Foydali / Ma'lumot yo'q).
+  ABC (bizniki + Uzum `rankInfo`), holat belgisi (Zarar / Chegarada < 5% / Foydali / Ma'lumot yo'q — sotuv bor, hammasi tannarxsiz / Sotuv yo'q —
+  davrda sotilmagan, xarajati bo'lsa ham, bo'lmasa ham; B4.44).
 - Qidiruv (lotin/kirill, apostrof turidan qat'i nazar), filtrlar, ustunlarni tanlash, saqlangan ko'rinishlar,
   Excel eksport.
 - **SKU sahifasi:** sarlavha (rasm, nom, Uzum'dagi sahifaga havola), KPI'lar; narx va foyda tarixi; tannarx tarixi

@@ -597,6 +597,31 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   ✓ 2026-11-05: buyurtmalar summasi 100%, bekor → qaytarish → Uzum ushlab qolgan → tannarx → o'z xarajatlar → soliq →
   tannarxi kiritilmagan bo'laklari o'ngdan chapga, chapda sof foyda; har qatorda "summa / ulush"; zarar — chapdan qizil.
   **T:** staging'da Asosiy sahifadagi yangi chiziqni ko'rish (yoqmagan joyni skrinshot bilan yozish).
+- [x] B4.44 Mahsulotlar tahlili, 1-qism: holat belgisi — davrda sotilmagan har SKU "Sotuv yo'q" (Temur, 2026-11-09).
+  Tahlil (2026-11-06): Mahsulotlar sahifasida 22 ta kamchilik topildi; Temur qarori — bo'lib-bo'lib tuzatiladi, har biri
+  alohida PR (B4.44–B4.55), keyin sahifalash boshqa sahifalarga (B4.56–B4.60, ADR-054).
+  ✓ 2026-11-09: avval sotilmagan SKU xarajati bo'lsa "Sotuv yo'q", xarajati yo'q yoki kompensatsiya tushgan bo'lsa
+  "Ma'lumot yo'q" chiqardi (filtr va Excel ham) — endi `Statement.label`: sotuv qatori yo'q → doim "Sotuv yo'q";
+  "Ma'lumot yo'q" — faqat sotuv bor, hammasi tannarxsiz. **T:** staging'da Mahsulotlar → Holat "Sotuv yo'q" filtrini ko'rish.
+- [ ] B4.45 Tannarx bir xil: SKU sahifasi KPI va kalkulyator jadvaldagi "Tannarx/dona" zanjirini ishlatadi (sotuv → oxirgi
+  partiya → boshlang'ich → yo'ldagi; boshlashdan oldingi partiya olinmaydi), KPI "?" — F21/F20; ishlatilmaydigan
+  `lot_unit_cost`, `LABEL_SORT_ORDER`, `COLUMN_OF_SORT` olib tashlanadi.
+- [ ] B4.46 SKU sahifasi "Qaytishlar sabablari" — "Bekor + topshirilgan" qaytishlar ham (ADR-043, Buyurtmalar bilan bir xil).
+- [ ] B4.47 Jadvalda tannarxsiz qism belgisi (tamoyil 9, F13): `uncovered_share` > 0 bo'lsa marja/sof foyda yonida.
+- [ ] B4.48 Umumiy sahifalash (ADR-054): `Pagination` komponenti (sahifa raqamlari, 20/50/100, standart 50, URL'da `page`),
+  API sahifa + jami; Mahsulotlarga ("Yana yuklash" va virtual skroll o'rniga — 500+ qator xatosi va offset takrori yo'qoladi);
+  Mahsulotlar uchun birinchi e2e.
+- [ ] B4.49 Kalkulyator: to'xtovsiz qayta chizish (debounce) va noto'g'ri qiymatda aniq xato matni (422).
+- [ ] B4.50 SKU'dan qaytganda qidiruv, filtr, saralash va sahifa saqlanadi; "Zaxira kunlari" saralashida harakatsiz qoldiq
+  (tezlik 0, qoldiq bor) yuqorida; nom bo'yicha saralash ko'rinadigan nom, katta-kichik harfsiz, lotin/kirill tartibida.
+- [ ] B4.51 Mahsulotlar Excel'i: "Holat" o'zbekcha, "Do'kon" ustuni; Excel sarlavhalarida oʻ/gʻ — U+02BB.
+- [ ] B4.52 Tovarga bog'lash: "Tovardan ajratish" tasdiq bilan; tovar qidiruvi serverda (500+ tovar).
+- [ ] B4.53 Tushuntirishlar: Dona, O'rtacha narx, Qoldiq, ABC, Holat ustunlarida "?"; "Jadvaldan tashqari" matni filtrda;
+  sof foyda grafigida sotuvsiz kunlar xarajati.
+- [ ] B4.54 Mobil (360 px): Mahsulotlar jadvali va SKU sahifasi KPI'lari, bosish maydoni ≥ 44 px, mobil e2e.
+- [ ] B4.55 "Chegarada" chegarasi Sozlamalarda (Temur: "statik emas, dinamik"; standart 5%, F13).
+- [ ] B4.56–B4.60 Sahifalash (ADR-054) boshqa sahifalarga, har biri alohida PR: Buyurtmalar, Uzum xarajatlari, Ombor,
+  Foyda tafsiloti (drill-down), Xaridlar va Kargolar.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

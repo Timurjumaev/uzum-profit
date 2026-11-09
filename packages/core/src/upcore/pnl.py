@@ -413,15 +413,15 @@ class Statement:
 
     @property
     def label(self) -> ProfitLabel:
-        """M6 holat belgisi (F12, F13). "Zarar" faqat davrda sotilgan SKU uchun. Sotuvi yo'q SKU (faqat saqlash yoki
-        reklama xarajati) — "Sotuv yo'q" (``IDLE``). Hamma sotuvi tannarxsiz SKU "Ma'lumot yo'q": sotuvsiz kunlardagi
-        xarajat F15 da to'liq ayriladi, tushumi esa hisobga kirmaydi — manfiy son tannarx yo'qligidan chiqadi."""
+        """M6 holat belgisi (F12, F13). Davrda sotilmagan SKU — doim "Sotuv yo'q" (``IDLE``; B4.44): xarajati bormi
+        (saqlash, reklama), yo'qmi yoki kompensatsiya tushganmi — farqi yo'q. "Zarar" faqat davrda sotilgan SKU uchun.
+        Hamma sotuvi tannarxsiz SKU "Ma'lumot yo'q": sotuvsiz kunlardagi xarajat F15 da to'liq ayriladi, tushumi esa
+        hisobga kirmaydi — manfiy son tannarx yo'qligidan chiqadi."""
+        if self.lines == 0:
+            return ProfitLabel.IDLE
         if self.all_uncosted:
             return ProfitLabel.NO_DATA
-        label = profit_label(self.net_profit, self.margin)
-        if label is ProfitLabel.LOSS and self.lines == 0:
-            return ProfitLabel.IDLE
-        return label
+        return profit_label(self.net_profit, self.margin)
 
     @property
     def sold_at_loss(self) -> bool:
