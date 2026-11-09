@@ -434,6 +434,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.50: SKU sahifasidan "Mahsulotlarga qaytish" qidiruv, filtr, saralash va sahifani saqlaydi (URL'da); "Zaxira kunlari"
+  saralashida harakatsiz qoldiq (tezlik 0) cheksiz zaxira sifatida tepada; nom bo'yicha saralash ko'rinadigan nom va `fold` bilan.
 - B4.49: Unit kalkulyator to'xtovsiz qayta chizilmaydi (debounce kiritishning matn ko'rinishida); server 422 bersa eski natija
   o'rniga aniq xato matni chiqadi.
 - B4.56–B4.60 (ADR-054): sahifalash Buyurtmalar, Uzum xarajatlari, Xaridlar va Omborga — `Pagination`, `page` URL'da, umumiy

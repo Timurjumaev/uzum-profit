@@ -179,7 +179,23 @@ class SkusOut(BaseModel):
     unallocated: StatementOut  # sotuvsiz kun xarajatlari (taqsimlanmagan)
 
 
+def _shown_title(row: SkuRowOut) -> str | None:
+    """Jadvalda ko'rinadigan nom (SKU nomi, bo'lmasa mahsulot nomi)."""
+    return row.title or row.product_title or None
+
+
 def _value(row: SkuRowOut, sort: SkuSort) -> Any:
+    """Saralash qiymati; ``None`` — oxirida (B4.50).
+
+    * ``title`` — ko'rinadigan nom, katta-kichik harf, kirill/lotin va tutuq turidan qat'i nazar (qidiruv bilan bir xil ``fold``);
+    * ``days_of_stock`` — tezlik 0 bo'lsa F24 ``None`` beradi, lekin qoldiq bor bo'lsa bu "cheksiz zaxira" (harakatsiz qoldiq):
+      kamayish tartibida eng tepada; qoldiqsiz SKU — qiymatsiz.
+    """
+    if sort is SkuSort.TITLE:
+        title = _shown_title(row)
+        return fold(title) if title else None
+    if sort is SkuSort.DAYS_OF_STOCK and row.days_of_stock is None and row.stock > 0:
+        return Decimal("Infinity")
     return getattr(row, sort.value)
 
 
@@ -274,7 +290,9 @@ async def ranked(
         )
         if (label is None or row.label is label) and (abc is None or row.abc == abc):
             rows.append(row)
-    present = sorted(rows, key=lambda r: (r.title or "", str(r.sku_id)))  # barqaror ikkinchi tartib
+    present = sorted(
+        rows, key=lambda r: (fold(_shown_title(r)), str(r.sku_id))
+    )  # barqaror ikkinchi tartib
     nones = [r for r in present if _value(r, key) is None]
     known = sorted(
         (r for r in present if _value(r, key) is not None),

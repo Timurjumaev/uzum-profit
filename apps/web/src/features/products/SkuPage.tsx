@@ -2,7 +2,7 @@
 // va sotuv tarixi, qoldiq tarixi, tannarx tarixi (tovar lotlari), qaytishlar sabablari, tovarga bog'lash va unit
 // kalkulyator. Hamma raqam API'dan (`/skus/{id}`).
 import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, useParams, useSearch } from "@tanstack/react-router";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { errorText } from "../../app/errors";
 import { useFilters } from "../../app/filters";
 import { currentOrg, meQuery, shopsQuery, skuQuery } from "../../app/query";
+import { productsSearch } from "../../app/search";
 import { LineBarChart } from "../../components/charts";
 import { Badge, Banner, Button, DataTable, FormulaPopover, Kpi, ProductThumb, Skeleton, StatusPill, type Column } from "../../components/ui";
 import type { SkuDetail, SkuLot } from "../../lib/api/types";
@@ -24,13 +25,14 @@ export function SkuPage() {
   const { data: me } = useSuspenseQuery(meQuery);
   const org = currentOrg(me)!;
   const { filters } = useFilters();
+  const list = productsSearch(useSearch({ strict: false }) as Record<string, unknown>); // ro'yxat holati — "qaytish" uchun (B4.50)
   const params = useMemo(
     () => ({ shops: filters.shops, start: filters.range.start, end: filters.range.end }),
     [filters.shops, filters.range.start, filters.range.end],
   );
   const query = useQuery({ ...skuQuery(org.id, skuId, params), placeholderData: keepPreviousData });
   const back = (
-    <Link to="/products" search={(prev) => ({ shop: prev.shop, from: prev.from, to: prev.to, cmp: prev.cmp })} className="sku__back">
+    <Link to="/products" search={(prev) => ({ shop: prev.shop, from: prev.from, to: prev.to, cmp: prev.cmp, ...list })} className="sku__back">
       <ArrowLeft size={16} aria-hidden /> {t("products.back")}
     </Link>
   );

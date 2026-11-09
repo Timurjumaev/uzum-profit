@@ -25,6 +25,7 @@ from sellerfake import TOKEN, A, B, create_account
 from test_calc import Org
 from upapi import calc
 from upapi.auth.deps import COOKIE
+from upapi.reports.common import fold
 from upcore.expenses import ExpenseCategory
 from upcore.inventory import DayStat, StockStatus, velocity
 from upcore.metrics import TASHKENT, ManualExpense, Period, SaleLine, business_date
@@ -869,7 +870,19 @@ def test_skus_search_sort_and_pages(world: World) -> None:
     by_units = world.get("skus", sort="-units", **OCT)["items"]
     assert [r["units"] for r in by_units] == sorted((r["units"] for r in by_units), reverse=True)
     asc = world.get("skus", sort="title", **OCT)["items"]
-    assert [r["title"] for r in asc] == sorted(r["title"] for r in asc)
+    shown = [fold(r["title"] or r["product_title"]) for r in asc]
+    assert shown == sorted(
+        shown
+    )  # ko'rinadigan nom, katta-kichik harf va kirill/lotindan qat'i nazar (B4.50)
+
+    # "Zaxira kunlari": harakatsiz qoldiq (tezlik 0, qoldiq bor) — cheksiz zaxira; qoldiqsiz SKU doim oxirida.
+    def kind(r: dict[str, Any]) -> str:
+        return "known" if r["days_of_stock"] is not None else "idle" if r["stock"] > 0 else "empty"
+
+    desc = world.get("skus", sort="-days_of_stock", **OCT)["items"]
+    assert [kind(r) for r in desc] == ["idle", "known", "empty", "empty"]
+    asc_days = world.get("skus", sort="days_of_stock", **OCT)["items"]
+    assert [kind(r) for r in asc_days] == ["known", "idle", "empty", "empty"]
     first = world.get("skus", limit=2, **OCT)
     assert len(first["items"]) == 2 and (first["page"], first["pages"]) == (1, 2)
     rest = world.get("skus", limit=2, page=2, **OCT)
