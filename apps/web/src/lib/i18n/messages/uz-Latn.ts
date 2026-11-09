@@ -747,6 +747,7 @@ export const uzLatn = {
       targetHelp: "Masalan: 20 — shu marja uchun narx hisoblanadi",
       enter: "Qiymat topilmadi — kiriting",
       needInput: "Narx, tannarx va komissiyani kiriting — natija shu yerda chiqadi.",
+      invalid: "Qiymat notoʻgʻri: summalar 0 dan 1 000 000 000 000 gacha, foizlar 0 dan 100 gacha boʻlishi kerak.",
       profit: "Narxdagi foyda/dona",
       fixed: "Qatʼiy xarajat/dona",
       breakeven: "Zararsizlik narxi",

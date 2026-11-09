@@ -365,6 +365,35 @@ describe("unit kalkulyator", () => {
     expect(norm((screen.getByLabelText("Narx") as HTMLInputElement).value)).toBe("200 000,00");
   });
 
+  it("kiritish o'zgarmasa qo'shimcha so'rov ketmaydi; tez yozish — bitta so'rov", async () => {
+    const { api } = await renderCalc();
+    await waitFor(() => expect(screen.getByTestId("calc-profit")).toBeTruthy());
+    const before = calls(api).length;
+    await new Promise((r) => setTimeout(r, 1000)); // debounce (300 ms) dan ancha uzoq
+    expect(calls(api)).toHaveLength(before);
+    const price = screen.getByLabelText("Narx");
+    for (const v of ["2", "25", "250", "2500", "25000"]) fireEvent.change(price, { target: { value: v } });
+    await waitFor(() => expect(calls(api).some((u) => u.searchParams.get("price") === "25000")).toBe(true));
+    expect(calls(api).filter((u) => u.searchParams.get("price") !== "200000.00")).toHaveLength(1);
+  });
+
+  it("noto'g'ri qiymat (422) — aniq xato matni, eski natija ko'rsatilmaydi; to'g'rilansa natija qaytadi", async () => {
+    await renderCalc({
+      [UNIT_CALC_ROUTE]: (r) => {
+        const q = new URL(r.url).searchParams;
+        return Number(q.get("commission_pct")) > 100 ? problem(422, "validation_error") : json(200, unitCalc());
+      },
+    });
+    await waitFor(() => expect(screen.getByTestId("calc-profit")).toBeTruthy());
+    fireEvent.change(screen.getByLabelText("Komissiya"), { target: { value: "150" } });
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toContain("foizlar 0 dan 100 gacha");
+    expect(screen.queryByTestId("calc-profit")).toBeNull();
+    fireEvent.change(screen.getByLabelText("Komissiya"), { target: { value: "20" } });
+    await waitFor(() => expect(screen.getByTestId("calc-profit")).toBeTruthy());
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
   it("qiymat yo'q — taxmin yo'q: maydon bo'sh, so'rov ketmaydi, 'kiriting' tavsiyasi", async () => {
     const detail = skuDetail({ calc: { price: null, unit_cost: null, logistics: null, packaging: "0", commission_pct: null, tax_pct: null, ads_pct: null, sources: {} } });
     const { api } = await renderCalc({ [skuRoute(SKU_1)]: () => json(200, detail) });

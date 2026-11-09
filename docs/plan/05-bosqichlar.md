@@ -631,7 +631,13 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   Mahsulotlarda "Yana yuklash" olib tashlandi; jadval ≤ 100 qator bo'lgani uchun virtual skroll ishlamaydi (500+ qator xatosi
   yo'qoldi). Birinchi Mahsulotlar e2e (`e2e/products.spec.ts`, desktop + mobil 360 px). **T:** staging'da Mahsulotlarda sahifalarni
   almashtirish, "Sahifada" tanlovini va SKU'dan qaytganda sahifa saqlanmasligini ko'rish (saqlash — B4.50).
-- [ ] B4.49 Kalkulyator: to'xtovsiz qayta chizish (debounce) va noto'g'ri qiymatda aniq xato matni (422).
+- [x] B4.49 Kalkulyator: to'xtovsiz qayta chizish (debounce) va noto'g'ri qiymatda aniq xato matni (422).
+  ✓ 2026-11-09: sabab — `toInput(values)` har renderda yangi obyekt, `useDebounced` esa obyektning o'zini kuzatardi: effekt har
+  renderda qayta ishga tushib, 300 ms'da `setOut` → yana render → ... (kalkulyator to'xtovsiz qayta chizilardi). Endi
+  kechiktirilgan narsa — kiritishning matn ko'rinishi (`JSON.stringify`), obyekt undan `useMemo` bilan olinadi. Server 422
+  bersa (summa 0–10¹², foiz 0–100 dan tashqari) eski natija yashiriladi va "Qiymat notoʻgʻri: summalar 0 dan 1 000 000 000 000
+  gacha, foizlar 0 dan 100 gacha boʻlishi kerak" chiqadi; boshqa xatolar — umumiy matn (`errorText`). **T:** staging'da
+  kalkulyatorga komissiya 150 yozib xato matnini ko'rish.
 - [ ] B4.50 SKU'dan qaytganda qidiruv, filtr, saralash va sahifa saqlanadi; "Zaxira kunlari" saralashida harakatsiz qoldiq
   (tezlik 0, qoldiq bor) yuqorida; nom bo'yicha saralash ko'rinadigan nom, katta-kichik harfsiz, lotin/kirill tartibida.
 - [ ] B4.51 Mahsulotlar Excel'i: "Holat" o'zbekcha, "Do'kon" ustuni; Excel sarlavhalarida oʻ/gʻ — U+02BB.
