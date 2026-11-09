@@ -651,7 +651,13 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   avval `loss`, `no_data`...); "SKU" va "Tovar"dan keyin "Doʻkon" ustuni (taxallus, yo'q bo'lsa nom). Sarlavhalardagi oʻ/gʻ
   U+02BB bilan: Oʻrtacha narx, Uzum toʻlovi, Doʻkonlar, Davrga toʻgʻri keladigani, Oʻz xarajatlarim, Yoʻlda, Oʻz omborimda va
   "Ha/Yoʻq" katagi (avval U+02BC edi); tutuq (P&Lʼga) joyida. **T:** staging'da Mahsulotlar Excel'ini yuklab ustunlarni ko'rish.
-- [ ] B4.52 Tovarga bog'lash: "Tovardan ajratish" tasdiq bilan; tovar qidiruvi serverda (500+ tovar).
+- [x] B4.52 Tovarga bog'lash: "Tovardan ajratish" tasdiq bilan; tovar qidiruvi serverda (500+ tovar).
+  ✓ 2026-11-09: (1) "Tovardan ajratish" endi tasdiq oynasi bilan: qaysi SKU qaysi tovardan ajralishi, tannarx hisoblanmay qolishi
+  va tovarning o'zi saqlanishi yoziladi; "Bekor qilish" — so'rov ketmaydi. (2) Tovar tanlovi avval faqat birinchi 500 ta tovarni
+  yuklab mijozda filtrlardi — 500+ tovarda qolgani topilmasdi. Endi yozilgan matn (250 ms) `GET /items?q=` bilan serverda
+  qidiriladi; `limit` (standart 50) va `total` qo'shildi, mos kelganlar ko'p bo'lsa "Birinchi 50 ta ko'rsatildi, jami N ta —
+  aniqroq yozing" izohi chiqadi; tanlangan nom ro'yxat o'zgarsa ham maydonda qoladi (`Combobox` — `onSearch`, `selectedLabel`,
+  `total`). **T:** staging'da SKU sahifasida "Tovardan ajratish" tasdiqini va tovar tanlovida qidiruvni ko'rish.
 - [ ] B4.53 Tushuntirishlar: Dona, O'rtacha narx, Qoldiq, ABC, Holat ustunlarida "?"; "Jadvaldan tashqari" matni filtrda;
   sof foyda grafigida sotuvsiz kunlar xarajati.
 - [ ] B4.54 Mobil (360 px): Mahsulotlar jadvali va SKU sahifasi KPI'lari, bosish maydoni ≥ 44 px, mobil e2e.

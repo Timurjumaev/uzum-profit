@@ -38,6 +38,7 @@ class ItemOut(BaseModel):
 
 class ItemsOut(BaseModel):
     items: list[ItemOut]
+    total: int  # qidiruvga mos jami tovar (``items`` — birinchi ``limit`` tasi)
 
 
 class PickerRowOut(BaseModel):
@@ -77,9 +78,12 @@ class ItemLinkIn(BaseModel):
 
 @router.get("/orgs/{org_id}/items", response_model=ItemsOut)
 async def list_items(
-    ctx: Manager, q: Annotated[str | None, Query(max_length=100)] = None
+    ctx: Manager,
+    q: Annotated[str | None, Query(max_length=100)] = None,
+    limit: Annotated[int, Query(ge=1, le=MAX_ITEMS)] = 50,
 ) -> ItemsOut:
-    """Tovarlar (bog'lash tanlovi uchun): nom bo'yicha qidiruv (lotin/kirill, tutuq turidan qat'i nazar)."""
+    """Tovarlar (bog'lash tanlovi uchun): nom bo'yicha qidiruv (lotin/kirill, tutuq turidan qat'i nazar), birinchi
+    ``limit`` tasi va mos kelganlar soni (``total``) — tanlov 500+ tovarda ham serverda qidiradi (B4.52)."""
     i, k = m.items, m.mp_skus
     counts = select(k.c.item_id, func.count().label("n")).group_by(k.c.item_id).subquery()
     rows = await ctx.conn.execute(
@@ -92,8 +96,9 @@ async def list_items(
     return ItemsOut(
         items=[
             ItemOut(id=r.id, name=r.name, image_url=r.image_url, sku_count=int(r.n))
-            for r in found[:MAX_ITEMS]
-        ]
+            for r in found[:limit]
+        ],
+        total=len(found),
     )
 
 
