@@ -76,7 +76,7 @@ def test_build_formats_and_layout() -> None:
     assert a[2].number_format == "#,##0" and a[3].number_format == "0.0%"
     assert a[4].value == datetime(2026, 10, 2) and a[4].number_format == "DD.MM.YYYY"
     assert a[5].value == datetime(2026, 10, 2, 10, 30)  # Toshkent vaqti
-    assert (a[6].value, b[6].value) == ("Ha", "Yoʼq")
+    assert (a[6].value, b[6].value) == ("Ha", "Yoʻq")
     assert a[7].value == "x, y" and b[7].value in (None, "")
     assert [b[i].value for i in (2, 3, 4, 5)] == [
         None,
@@ -153,9 +153,23 @@ def test_skus_export_matches_list(world: World) -> None:
     listed = world.get("skus", limit=100, **OCT)["items"]
     rows = table(sheet(r.content))
     assert [row[0] for row in rows] == [x["title"] for x in listed]
-    assert [D(str(row[14])) for row in rows] == [
-        D(x["net_profit"]) for x in listed
-    ]  # "Sof foyda" ustuni
+    head = [c.value for c in next(sheet(r.content).iter_rows(min_row=HEAD, max_row=HEAD))]
+    assert head[:3] == ["SKU", "Tovar", "Doʻkon"]  # oʻ — U+02BB (B4.51)
+    col = head.index("Sof foyda (F12)")
+    assert [D(str(row[col])) for row in rows] == [D(x["net_profit"]) for x in listed]
+    # "Holat" — jadvaldagi o'zbekcha nom, "Doʻkon" — doʻkon nomi.
+    labels = {
+        "loss": "Zarar",
+        "borderline": "Chegarada",
+        "profitable": "Foydali",
+        "no_data": "Maʼlumot yoʻq",
+        "idle": "Sotuv yoʻq",
+    }
+    assert [row[head.index("Holat")] for row in rows] == [labels[x["label"]] for x in listed]
+    names = {str(r[0]): r[1] or r[2] for r in world.a.sql("SELECT id, alias, name FROM shops")}
+    assert [row[2] for row in rows] == [names[x["shop_id"]] for x in listed]
+    for header in head:  # tutuq (U+02BC) faqat Maʼlumot/P&Lʼga kabi so'zlarda; oʻ/gʻ — U+02BB
+        assert not any(bad in str(header) for bad in ("o\u02bc", "O\u02bc", "g\u02bc"))
     bad = export(world, "skus", sort="yoq_ustun", **OCT)
     assert bad.status_code == 422
 

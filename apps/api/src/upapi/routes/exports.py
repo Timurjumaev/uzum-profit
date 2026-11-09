@@ -15,12 +15,14 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
+from sqlalchemy import select
 from upcore.inventory import StockStatus
 from upcore.metrics import ProfitLabel, StatusGroup
 from upcore.purchasing import Stage
 
 from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission, allowed
+from upapi.db import models as m
 from upapi.errors import AppError
 from upapi.reports import xlsx
 from upapi.reports.common import MAX_LIMIT, Filters, filters
@@ -75,7 +77,7 @@ def _span(f: Filters) -> str:
 
 
 def _shops(f: Filters) -> list[str]:
-    return [f"Doʼkonlar: {len(f.shops)} ta"] if f.shops else []
+    return [f"Doʻkonlar: {len(f.shops)} ta"] if f.shops else []
 
 
 def _flags(row: Any) -> str:
@@ -95,7 +97,7 @@ SALES = [
     xlsx.Col("Komissiya", lambda r: r.commission, "money", total=True),
     xlsx.Col("Logistika", lambda r: r.logistics, "money", total=True),
     xlsx.Col("shundan taxminiy (F40)", lambda r: r.logistics_estimated, "money", total=True),
-    xlsx.Col("Uzum toʼlovi (F6)", lambda r: r.payout, "money", total=True),
+    xlsx.Col("Uzum toʻlovi (F6)", lambda r: r.payout, "money", total=True),
     xlsx.Col("Tannarx (F7)", lambda r: r.cogs, "money", total=True),
     xlsx.Col("Yalpi foyda (F8)", lambda r: r.gross_profit, "money", total=True),
     xlsx.Col("Tannarx belgilari", _flags),
@@ -128,6 +130,15 @@ UNIT_COST_SOURCE = {
     "transit": "yoʻldagi partiya",
 }
 
+# Mahsulotlar jadvalidagi "Holat" (uz-Latn `products.label`) — Excel'da ham o'zbekcha (B4.51).
+PROFIT_LABEL = {
+    "loss": "Zarar",
+    "borderline": "Chegarada",
+    "profitable": "Foydali",
+    "no_data": "Maʼlumot yoʻq",
+    "idle": "Sotuv yoʻq",
+}
+
 SKUS = [
     xlsx.Col("SKU", lambda r: r.title),
     xlsx.Col("Tovar", lambda r: r.product_title),
@@ -136,7 +147,7 @@ SKUS = [
     xlsx.Col("Narx", lambda r: r.price, "money"),
     xlsx.Col("Dona", lambda r: r.units, "int", total=True),
     xlsx.Col("Tushum (F3)", lambda r: r.revenue, "money", total=True),
-    xlsx.Col("Oʼrtacha narx", lambda r: r.avg_price, "money"),
+    xlsx.Col("Oʻrtacha narx", lambda r: r.avg_price, "money"),
     xlsx.Col("Komissiya ulushi", lambda r: r.commission_share, "ratio"),
     xlsx.Col("Logistika/dona", lambda r: r.logistics_per_unit, "money"),
     xlsx.Col("Tannarx/dona", lambda r: r.unit_cost, "money"),
@@ -152,7 +163,7 @@ SKUS = [
     xlsx.Col("ACOS (F19)", lambda r: r.acos, "ratio"),
     xlsx.Col("Qaytish (F18)", lambda r: r.return_share, "ratio"),
     xlsx.Col("Bekor (F17)", lambda r: r.cancel_share, "ratio"),
-    xlsx.Col("Holat", lambda r: r.label.value),
+    xlsx.Col("Holat", lambda r: PROFIT_LABEL[r.label.value]),
     xlsx.Col("Qoldiq", lambda r: r.stock, "int", total=True),
     xlsx.Col("Zaxira kunlari (F24)", lambda r: r.days_of_stock, "money"),
     xlsx.Col("ABC (F28)", lambda r: r.abc),
@@ -174,7 +185,16 @@ async def export_skus(
         ctx, f, q, label, abc, sort
     )  # sahifalashsiz — Excel hamma qatorni chiqaradi
     note = [_period(f), *_shops(f)]
-    return _file(f"mahsulotlar-{_span(f)}", xlsx.build("Mahsulotlar", SKUS, rows, note))
+    names = {
+        r.id: r.alias or r.name
+        for r in await ctx.conn.execute(select(m.shops.c.id, m.shops.c.alias, m.shops.c.name))
+    }
+    cols = [
+        *SKUS[:2],
+        xlsx.Col("Doʻkon", lambda r: names.get(r.shop_id)),
+        *SKUS[2:],
+    ]  # SKU, Tovar, Doʻkon, ...
+    return _file(f"mahsulotlar-{_span(f)}", xlsx.build("Mahsulotlar", cols, rows, note))
 
 
 UZUM_EXPENSES = [
@@ -194,7 +214,7 @@ OWN_EXPENSES = [
     xlsx.Col("Boshlanishi", lambda r: r.start_on, "date"),
     xlsx.Col("Tugashi", lambda r: r.end_on, "date"),
     xlsx.Col("Summa", lambda r: r.amount, "money", total=True),
-    xlsx.Col("Davrga toʼgʼri keladigani (F10)", lambda r: r.in_period, "money", total=True),
+    xlsx.Col("Davrga toʻgʻri keladigani (F10)", lambda r: r.in_period, "money", total=True),
     xlsx.Col("Takrorlanish", lambda r: r.recurrence),
     xlsx.Col("Izoh", lambda r: r.note),
 ]
@@ -213,7 +233,7 @@ async def export_expenses(
     if kind == "own":
         # O'z xarajatlari bitta javobda keladi (sahifalanmaydi) — bitta chaqiruv yetadi.
         page = await expenses_routes.expenses(ctx, f, None, False, 1, None)
-        data = xlsx.build("Oʼz xarajatlarim", OWN_EXPENSES, page.own_items, note)
+        data = xlsx.build("Oʻz xarajatlarim", OWN_EXPENSES, page.own_items, note)
         return _file(f"oz-xarajatlar-{_span(f)}", data)
 
     async def fetch(cursor: str | None) -> Any:
@@ -267,8 +287,8 @@ def _stock_cols(amounts: bool) -> list[xlsx.Col]:
         xlsx.Col("Brak", lambda r: r.locations.defected, "int", total=True),
         xlsx.Col("Kutilayotgan", lambda r: r.locations.pending, "int", total=True),
         xlsx.Col("Xitoyda", lambda r: r.locations.china, "int", total=True),
-        xlsx.Col("Yoʼlda", lambda r: r.locations.road, "int", total=True),
-        xlsx.Col("Oʼz omborimda", lambda r: r.locations.own, "int", total=True),
+        xlsx.Col("Yoʻlda", lambda r: r.locations.road, "int", total=True),
+        xlsx.Col("Oʻz omborimda", lambda r: r.locations.own, "int", total=True),
         xlsx.Col("Postavkada", lambda r: r.locations.inbound, "int", total=True),
         xlsx.Col("Sotuv tezligi (F23, dona/kun)", lambda r: r.velocity.value, "money"),
         xlsx.Col("Zaxira kunlari (F24)", lambda r: r.days_of_stock, "money"),

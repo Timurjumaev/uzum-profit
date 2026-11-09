@@ -646,7 +646,11 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   qoldiqsizlar doim oxirida. (3) Nom bo'yicha saralash ko'rinadigan nom (SKU nomi, yo'q bo'lsa mahsulot nomi) bo'yicha, qidiruv bilan
   bir xil `fold` (katta-kichik harf, kirill/lotin, tutuq) — avval xom `title` va nomsizlar tasodifiy edi. **T:** staging'da SKU
   ochib qaytganda qidiruv/filtr/sahifa saqlanishini, "Zaxira kunlari" ni bosganda harakatsiz qoldiq tepada chiqishini ko'rish.
-- [ ] B4.51 Mahsulotlar Excel'i: "Holat" o'zbekcha, "Do'kon" ustuni; Excel sarlavhalarida oʻ/gʻ — U+02BB.
+- [x] B4.51 Mahsulotlar Excel'i: "Holat" o'zbekcha, "Do'kon" ustuni; Excel sarlavhalarida oʻ/gʻ — U+02BB.
+  ✓ 2026-11-09: Mahsulotlar Excel'ida "Holat" endi jadvaldagidek o'zbekcha (Zarar, Chegarada, Foydali, Maʼlumot yoʻq, Sotuv yoʻq —
+  avval `loss`, `no_data`...); "SKU" va "Tovar"dan keyin "Doʻkon" ustuni (taxallus, yo'q bo'lsa nom). Sarlavhalardagi oʻ/gʻ
+  U+02BB bilan: Oʻrtacha narx, Uzum toʻlovi, Doʻkonlar, Davrga toʻgʻri keladigani, Oʻz xarajatlarim, Yoʻlda, Oʻz omborimda va
+  "Ha/Yoʻq" katagi (avval U+02BC edi); tutuq (P&Lʼga) joyida. **T:** staging'da Mahsulotlar Excel'ini yuklab ustunlarni ko'rish.
 - [ ] B4.52 Tovarga bog'lash: "Tovardan ajratish" tasdiq bilan; tovar qidiruvi serverda (500+ tovar).
 - [ ] B4.53 Tushuntirishlar: Dona, O'rtacha narx, Qoldiq, ABC, Holat ustunlarida "?"; "Jadvaldan tashqari" matni filtrda;
   sof foyda grafigida sotuvsiz kunlar xarajati.

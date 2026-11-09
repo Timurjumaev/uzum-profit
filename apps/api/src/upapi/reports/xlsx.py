@@ -54,7 +54,7 @@ def cell_value(value: Any, kind: str) -> Any:
     if value is None:
         return None
     if kind == "bool":
-        return "Ha" if value else "Yoʼq"
+        return "Ha" if value else "Yoʻq"
     if kind in NUMERIC:
         return int(value) if kind == "int" else float(value)
     if kind == "datetime" and isinstance(value, datetime):
