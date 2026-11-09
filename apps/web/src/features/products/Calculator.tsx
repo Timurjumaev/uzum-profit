@@ -5,7 +5,9 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { errorText } from "../../app/errors";
 import { unitCalcQuery, type UnitCalcInput } from "../../app/query";
+import { ApiError } from "../../lib/api/client";
 import { Button, FormulaPopover, MoneyInput, NumberInput } from "../../components/ui";
 import type { SkuCalcDefaults } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
@@ -43,6 +45,8 @@ export function toInput(v: Values): UnitCalcInput | null {
   };
 }
 
+/** Qiymatning o'zi emas, uning matn ko'rinishi kechiktiriladi: `toInput` har renderda yangi obyekt beradi — obyektning
+ * o'zi bog'liqlik bo'lsa effekt har renderda qayta ishga tushib, kalkulyator to'xtovsiz qayta chizilardi (B4.49). */
 function useDebounced<T>(value: T, ms: number): T {
   const [out, setOut] = useState(value);
   useEffect(() => {
@@ -63,14 +67,17 @@ export function Calculator({ orgId, defaults }: { orgId: string; defaults: SkuCa
     setSeen(defaults);
     setValues(start);
   }
-  const input = useDebounced(toInput(values), DEBOUNCE_MS);
+  const key = useDebounced(JSON.stringify(toInput(values)), DEBOUNCE_MS);
+  const input = useMemo(() => JSON.parse(key) as UnitCalcInput | null, [key]);
   const result = useQuery({ ...unitCalcQuery(orgId, input!), enabled: input !== null, placeholderData: keepPreviousData });
   const set = (field: Field) => (value: string | null) => setValues((v) => ({ ...v, [field]: value }));
   const hint = (field: Exclude<Field, "target_margin_pct" | "packaging">) => {
     const source = defaults.sources[field];
     return source ? t(`products.calc.source.${field}.${source}`) : t("products.calc.enter");
   };
-  const c = input === null ? undefined : result.data;
+  // Xato bo'lsa eski natija ko'rsatilmaydi (u yangi kiritishga mos emas); 422 — qaysi qiymat noto'g'riligi aytiladi.
+  const c = input === null || result.isError ? undefined : result.data;
+  const failure = result.isError ? (result.error instanceof ApiError && result.error.status === 422 ? t("products.calc.invalid") : errorText(result.error, t)) : null;
   const changed = JSON.stringify(values) !== JSON.stringify(start);
   const help = (key: string, metric: string) => (
     <FormulaPopover metric={metric} code={t(`home.formula.${key}.code`)} formula={t(`home.formula.${key}.formula`)} source={t(`home.formula.${key}.source`)} />
@@ -105,7 +112,11 @@ export function Calculator({ orgId, defaults }: { orgId: string; defaults: SkuCa
           />
         </div>
         <div className="sku-calc__result" role="status" aria-live="polite" aria-busy={result.isFetching || undefined}>
-          {c === undefined ? (
+          {failure !== null ? (
+            <p className="ui-text--negative" role="alert">
+              {failure}
+            </p>
+          ) : c === undefined ? (
             <p className="muted">{t("products.calc.needInput")}</p>
           ) : (
             <dl className="sku-calc__list">

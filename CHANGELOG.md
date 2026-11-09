@@ -434,6 +434,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.49: Unit kalkulyator to'xtovsiz qayta chizilmaydi (debounce kiritishning matn ko'rinishida); server 422 bersa eski natija
+  o'rniga aniq xato matni chiqadi.
 - B4.56–B4.60 (ADR-054): sahifalash Buyurtmalar, Uzum xarajatlari, Xaridlar va Omborga — `Pagination`, `page` URL'da, umumiy
   "Sahifada" o'lchami; `/sales`, `/expenses` — `page` rejimi (`cursor` drill-down uchun qoladi) va `total`/`page`/`pages`;
   `/inventory` — `page`/`limit`; `/purchases` — ixtiyoriy `limit`/`page`; "Yana yuklash" olib tashlandi.
