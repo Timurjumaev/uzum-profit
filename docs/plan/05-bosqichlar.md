@@ -612,7 +612,11 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   `opening`, `transit`; boshlashdan oldingi partiya olinmaydi. `SkuRowOut.lot_unit_cost` / `lot_source`, `sort=lot_unit_cost`
   olib tashlandi (ADR-052 dagi "qoladi" bekor). **T:** staging'da boshlang'ich narxi bor, davrda sotilmagan SKU sahifasida
   KPI va kalkulyatorda jadvaldagi narx chiqishini ko'rish.
-- [ ] B4.46 SKU sahifasi "Qaytishlar sabablari" — "Bekor + topshirilgan" qaytishlar ham (ADR-043, Buyurtmalar bilan bir xil).
+- [x] B4.46 SKU sahifasi "Qaytishlar sabablari" — "Bekor + topshirilgan" qaytishlar ham (ADR-043, Buyurtmalar bilan bir xil).
+  ✓ 2026-11-09: avval faqat Yakunlangan qatordagi qisman qaytarish sanalardi — "Qaytish" KPI'si (F18) bor, jadvalda "qaytish
+  yo'q" chiqishi mumkin edi. Endi sabablar bitta funksiyadan (`reports.cells.cause_sums`): qaytarish — qisman qaytarish +
+  mijozga topshirilgan Bekor qator, bekor — topshirilmagani; Buyurtmalar tahlili ham shundan. **T:** staging'da qaytishi bor
+  SKU sahifasida sabablar jadvalini Buyurtmalar → "Qaytarilish" bilan solishtirish.
 - [ ] B4.47 Jadvalda tannarxsiz qism belgisi (tamoyil 9, F13): `uncovered_share` > 0 bo'lsa marja/sof foyda yonida.
 - [ ] B4.48 Umumiy sahifalash (ADR-054): `Pagination` komponenti (sahifa raqamlari, 20/50/100, standart 50, URL'da `page`),
   API sahifa + jami; Mahsulotlarga ("Yana yuklash" va virtual skroll o'rniga — 500+ qator xatosi va offset takrori yo'qoladi);

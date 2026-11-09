@@ -434,6 +434,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.46: SKU sahifasidagi "Qaytishlar sabablari" endi mijozga topshirilib qaytgan (Bekor + topshirilgan) sotuvlarni ham sanaydi
+  (ADR-043, F18) — avval faqat qisman qaytarishlar kirardi. Sabablar Buyurtmalar tahlili bilan bitta funksiyadan
+  (`reports.cells.cause_sums`).
+
 - B4.45: bitta SKU tannarxi hamma joyda bir xil — SKU sahifasidagi "Tannarx/dona" KPI'si jadvaldagidek (sotuvsiz SKU'da
   oxirgi partiya / boshlang'ich narx / yo'ldagi partiya, izoh bilan; "?" — F21, F20), kalkulyator ham shu partiya zanjiridan
   (boshlang'ich narx va yo'ldagi partiya qo'shildi, boshlashdan oldingi partiya olinmaydi). API: `SkuRowOut.lot_unit_cost`,

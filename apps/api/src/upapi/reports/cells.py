@@ -152,6 +152,59 @@ async def sale_sums(
     return out
 
 
+@dataclass(frozen=True, slots=True)
+class Causes:
+    """Sabablar bo'yicha dona (ADR-043, F17/F18 bilan bir xil bo'linish): ``returned`` — qaytarish (Yakunlangan qatordagi
+    ``amountReturns`` + Bekor holatdagi, mijozga topshirilgan qator), ``canceled`` — bekor (topshirilmagan Bekor qator).
+    Kalit — Uzum ``returnCause`` (``None`` — sabab ko'rsatilmagan); kamayish tartibida, 0 lar yo'q."""
+
+    returned: list[tuple[str | None, int]]
+    canceled: list[tuple[str | None, int]]
+
+
+def _ranked(rows: Any) -> list[tuple[str | None, int]]:
+    sums: dict[str | None, int] = {}
+    for cause, units in rows:
+        sums[cause] = sums.get(cause, 0) + int(units or 0)
+    return sorted(((c, v) for c, v in sums.items() if v > 0), key=lambda kv: (-kv[1], kv[0] or ""))
+
+
+async def cause_sums(conn: AsyncConnection, f: Filters, *, sku: UUID | None = None) -> Causes:
+    """Davrdagi qaytarish va bekor sabablari (Buyurtmalar tahlili va SKU sahifasi — bitta hisob, B4.46). Bekor qator
+    donasi = ``amount + amountReturns`` (``upcore.metrics``)."""
+    s = m.sale_items
+    where = [
+        s.c.ordered_at >= day_start(f.period.start),
+        s.c.ordered_at < day_start(f.period.end + timedelta(days=1)),
+    ]
+    if f.shops:
+        where.append(s.c.shop_id.in_(f.shops))
+    if sku is not None:
+        where.append(s.c.sku_id == sku)
+    status = func.upper(func.trim(s.c.status))
+    cancel_units = func.sum(s.c.amount + s.c.amount_returns)
+    canceled_ = [*where, status.in_(statuses(StatusGroup.CANCELED))]
+    partial = await conn.execute(
+        select(s.c.return_cause, func.sum(s.c.amount_returns))
+        .where(*where, s.c.amount_returns > 0, status.in_(statuses(StatusGroup.COMPLETED)))
+        .group_by(s.c.return_cause)
+    )
+    issued = await conn.execute(
+        select(s.c.return_cause, cancel_units)
+        .where(*canceled_, s.c.issued_at.is_not(None))
+        .group_by(s.c.return_cause)
+    )
+    returned = _ranked([*partial, *issued])
+    canceled = _ranked(
+        await conn.execute(
+            select(s.c.return_cause, cancel_units)
+            .where(*canceled_, s.c.issued_at.is_(None))
+            .group_by(s.c.return_cause)
+        )
+    )
+    return Causes(returned, canceled)
+
+
 async def order_counts(
     conn: AsyncConnection, f: Filters, period: Period | None = None
 ) -> dict[date, tuple[int, int]]:
