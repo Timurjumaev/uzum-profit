@@ -8,7 +8,7 @@ import { inventoryData } from "../../src/test/inventory";
 import { pnlData, skuColumns } from "../../src/test/pnl";
 import { openingData, openingRow } from "../../src/test/opening";
 import { settingsData } from "../../src/test/settings";
-import { skuRow, skusData } from "../../src/test/products";
+import { skuDetail, skuRow, skusData, unitCalc } from "../../src/test/products";
 import { PURCHASE_1, purchaseDetail, purchaseRow } from "../../src/test/purchases";
 import { SHIPMENT_1, shipmentDetail, shipmentRow } from "../../src/test/shipments";
 
@@ -245,6 +245,8 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
       const base = openingData();
       return json(route, 200, { ...base, rows: [base.rows[0]!, variant("v1", "ELONE-AIRGILOF-ВИШН-4", 12), variant("v2", "ELONE-AIRGILOF-ПАСТ-4", 9), ...base.rows.slice(1)] });
     }
+    if (/^GET \/orgs\/[^/]+\/skus\/[^/]+$/.test(key)) return json(route, 200, skuDetail());
+    if (key === `GET /orgs/${ORG_ID}/unit-calc`) return json(route, 200, unitCalc());
     if (key === `GET /orgs/${ORG_ID}/skus`) {
       // 120 ta SKU, sahifa bo'yicha (ADR-054): `page`/`limit` ga qarab kesadi, oxirgisidan oshsa — oxirgisi.
       const all = Array.from({ length: 120 }, (_, i) =>

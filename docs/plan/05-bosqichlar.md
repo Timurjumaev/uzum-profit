@@ -666,7 +666,15 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   qilmaydi — butun davr va tanlangan doʻkonlar bo'yicha" izohi. (3) SKU sahifasi kunlik grafigida sotuvsiz kundagi xarajat (sof foyda
   ≠ 0) endi chiziqda ko'rinadi (avval `units > 0` bo'lmasa kun bo'sh edi) va izoh chiqadi. **T:** staging'da Mahsulotlarda ustun
   "?" larini, filtr bilan "Jadvaldan tashqari" izohini va xarajatli sotuvsiz kuni bor SKU grafigini ko'rish.
-- [ ] B4.54 Mobil (360 px): Mahsulotlar jadvali va SKU sahifasi KPI'lari, bosish maydoni ≥ 44 px, mobil e2e.
+- [x] B4.54 Mobil (360 px): Mahsulotlar jadvali va SKU sahifasi KPI'lari, bosish maydoni ≥ 44 px, mobil e2e.
+  ✓ 2026-11-09: 360 px'da ko'rib chiqildi (screenshot). SKU sahifasi KPI'lari bitta ustun (ekran uzun) edi — endi ikki ustun, katta
+  raqam kichikroq shriftda sig'adi (gorizontal skroll 0). Mahsulotlar va SKU sahifalarida (faqat shu ikki sahifa ichida) tugma,
+  havola, maydon, saralash sarlavhasi, grafik/jadval almashtirgich va "?" bosish maydoni ≥ 44 px (avval 19–36 px). Yuqori panel
+  (do'kon, davr, yangilanish, qidiruv) umumiy qobiq — 36 px, alohida vazifa. Jadval o'z ichida gorizontal skroll qiladi (ustun
+  ko'p). Mobil e2e (`e2e/products.spec.ts`): SKU sahifasi va Mahsulotlar jadvalida kichik bosish maydoni yo'qligi, gorizontal
+  skroll yo'qligi, KPI ikki ustunda. Qo'shimcha (Temur savoli): "Sotuvsiz kunlar xarajati" ostiga izoh — doʻkonda sotuv boʻlmagan kun
+  xarajati, hech bir SKUʼga boʻlinmaydi, lekin jami sof foydadan ayriladi. **T:** telefonda staging'da Mahsulotlar va SKU
+  sahifasini ko'rib, qulay emas joyni skrinshot bilan yozish.
 - [ ] B4.55 "Chegarada" chegarasi Sozlamalarda (Temur: "statik emas, dinamik"; standart 5%, F13).
 - [ ] B4.56–B4.60 Sahifalash (ADR-054) boshqa sahifalarga: **Buyurtmalar, Uzum xarajatlari, Xaridlar, Ombor — qilindi** (quyida,
   B4.56–B4.58 + Xaridlar; Temur bitta PR'da so'radi); qoldi: Foyda tafsiloti (drill-down) va Kargolar.

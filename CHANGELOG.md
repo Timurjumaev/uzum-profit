@@ -434,6 +434,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.54: Mahsulotlar va SKU sahifasi mobilda (360 px): KPI'lar ikki ustunda, bosish maydoni ≥ 44 px, mobil e2e; "Sotuvsiz kunlar
+  xarajati" ostiga izoh.
 - B4.53: Mahsulotlar jadvalida Dona, O'rtacha narx, Qoldiq, ABC, Holat ustunlariga "?" tushuntirishi; filtr bo'lsa "Jadvaldan tashqari"
   izohi; SKU grafigida sotuvsiz kundagi xarajat ko'rinadi.
 - B4.52: "Tovardan ajratish" tasdiq oynasi bilan; tovar tanlovi qidiruvi serverda (`/items?q=&limit=`, `total`) — 500+ tovarda ham

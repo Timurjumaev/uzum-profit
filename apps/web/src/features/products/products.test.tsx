@@ -233,6 +233,8 @@ describe("jadval", () => {
     const block = screen.getByRole("region", { name: "Jadvaldan tashqari" });
     expect(within(block).getByText(/1 dona, tushum/)).toBeTruthy();
     expect(norm(within(block).getByText(/Sotuvsiz kunlar xarajati/).textContent!)).toContain(norm(f.money("-12000.00")));
+    // B4.54: "sotuvsiz kunlar xarajati" nimaligi izohda tushuntiriladi.
+    expect(within(block).getByText(/hech bir SKUʼga boʻlinmaydi, lekin jami sof foydadan ayriladi/)).toBeTruthy();
   });
 
   it("xato — qizil banner va 'Qayta urinish'; yuklanish — skelet", async () => {

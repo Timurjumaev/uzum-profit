@@ -42,3 +42,42 @@ test("gorizontal skroll yo'q (360 px) /products", async ({ page }) => {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 });
+
+const SKU = "51111111-1111-4111-8111-111111111111";
+
+/** Ko'rinadigan tugma, havola va maydonlardan bosish maydoni 44 px dan kichigi (sahifa ichidagilar; yuqori panel — umumiy qobiq). */
+async function smallTargets(page: import("@playwright/test").Page, scope: string) {
+  return page.evaluate((sel) => {
+    const root = document.querySelector(sel)!;
+    return [...root.querySelectorAll("a,button,select,input,[role=tab]")]
+      .map((e) => ({ name: (e.textContent || e.getAttribute("aria-label") || e.tagName).trim().slice(0, 40), box: e.getBoundingClientRect() }))
+      .filter((x) => x.box.width > 0 && x.box.height > 0 && (x.box.height < 43.5 || x.box.width < 43.5))
+      .map((x) => `${x.name}: ${Math.round(x.box.width)}×${Math.round(x.box.height)}`);
+  }, scope);
+}
+
+test.describe("mobil (360 px)", () => {
+  test.use({ viewport: { width: 360, height: 800 }, hasTouch: true });
+
+  test("SKU sahifasi: gorizontal skroll yo'q, KPI'lar ikki ustunda, bosish maydoni ≥ 44 px (B4.54)", async ({ page }) => {
+    await mockApi(page);
+    await open(page, `/products/${SKU}`);
+    await page.getByRole("heading", { level: 1 }).waitFor();
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
+    const kpis = page.locator(".sku__kpis > *");
+    const first = await kpis.nth(0).boundingBox();
+    const second = await kpis.nth(1).boundingBox();
+    expect(Math.abs(first!.y - second!.y)).toBeLessThan(2); // bitta qatorda — ikki ustun
+    expect(await smallTargets(page, ".sku")).toEqual([]);
+  });
+
+  test("Mahsulotlar jadvali: bosish maydoni ≥ 44 px, jadval o'z ichida skroll qiladi (B4.54)", async ({ page }) => {
+    await mockApi(page);
+    await open(page, "/products");
+    await page.getByRole("table", { name: TABLE }).waitFor();
+    expect(await smallTargets(page, ".products")).toEqual([]);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
+  });
+});
