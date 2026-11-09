@@ -675,6 +675,18 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   skroll yo'qligi, KPI ikki ustunda. Qo'shimcha (Temur savoli): "Sotuvsiz kunlar xarajati" ostiga izoh — doʻkonda sotuv boʻlmagan kun
   xarajati, hech bir SKUʼga boʻlinmaydi, lekin jami sof foydadan ayriladi. **T:** telefonda staging'da Mahsulotlar va SKU
   sahifasini ko'rib, qulay emas joyni skrinshot bilan yozish.
+- [x] B4.54a SKU sahifasi tanqidiy tahlili (Temur skrinshotlari, 2026-11-09): topilgan va tuzatilgan kamchiliklar.
+  ✓ 2026-11-09: (1) Grafik kartalari yonma-yon turganda biri "Jadval"ga o'tsa (~120 qator), ikkinchisi ham shu balandlikka
+  cho'zilib, grafik o'rtada bo'sh qolardi — endi kartalar o'z balandligida (`align-items: start`), jadval ko'rinishi `max 24rem` +
+  ichki skroll + qotgan sarlavha (hamma grafikda). (2) Jadval ko'rinishida "—" qatorlari (ma'lumotsiz kunlar) yo'q. (3) Kunlik
+  o'q avval faqat ma'lumotli kunlarni ko'rsatardi (kategoriya o'qi) — 22-sentabrdan keyin 26-sentabr kelib vaqt siqilardi; endi
+  davrning hamma kuni (`fillDays`), bo'sh kunlar bo'sh. (4) Siyrak chiziq (kam yoki yolg'iz nuqta) ko'rinmasdi — endi doira bilan
+  belgilanadi (`MarkPointComponent` ulandi); narx chizig'i bo'sh kunlar ustidan tutashadi (`connect`). (5) Narx va qoldiq snapshoti
+  hamma kunga yozilmagan bo'lsa izoh: "{N} kunning {M} tasi uchun bor, qolgan kunlar bo'sh — nol emas" (tamoyil 8). (6) KPI raqami
+  ("4 353 060 soʻm") karta chetidan chiqib kesilardi — karta kengligiga moslangan o'lcham (`cqi`), e2e shuni tekshiradi. (7) Dona
+  (F2), O'rtacha narx (F3), Holat va ABC nishonlarida "?" tushuntirish (SKU sahifasi). **Topildi, tuzatilmadi:** "Qaytishlar
+  sabablari"da Uzum xom sabab matni (`BAD_QUALITY`, ruscha) — to'liq sabab ro'yxati kerak (Temurdan). **T:** staging'da SKU
+  sahifasini 100% masshtabda ko'rish; qaytish sabablari uchun Uzumdagi hamma sabab nomlarini yuborish.
 - [ ] B4.55 "Chegarada" chegarasi Sozlamalarda (Temur: "statik emas, dinamik"; standart 5%, F13).
 - [ ] B4.56–B4.60 Sahifalash (ADR-054) boshqa sahifalarga: **Buyurtmalar, Uzum xarajatlari, Xaridlar, Ombor — qilindi** (quyida,
   B4.56–B4.58 + Xaridlar; Temur bitta PR'da so'radi); qoldi: Foyda tafsiloti (drill-down) va Kargolar.

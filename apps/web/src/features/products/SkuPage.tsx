@@ -17,7 +17,7 @@ import type { SkuDetail, SkuLot } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { Calculator } from "./Calculator";
 import { LinkItem } from "./LinkItem";
-import { LABEL_TONE } from "./model";
+import { fillDays, LABEL_TONE } from "./model";
 
 export function SkuPage() {
   const { t } = useTranslation();
@@ -92,7 +92,9 @@ function Detail({ orgId, detail, canManage }: { orgId: string; detail: SkuDetail
           </p>
           <p className="sku__badges">
             <StatusPill tone={LABEL_TONE[sku.label]}>{t(`products.label.${sku.label}`)}</StatusPill>
+            {help("label", t("products.col.label"))}
             <Badge>ABC: {sku.abc}</Badge>
+            {help("abc", t("products.col.abc"))}
             {sku.rank && <Badge>{t("products.rank", { value: sku.rank })}</Badge>}
             {detail.uzum_url && (
               <a href={detail.uzum_url} target="_blank" rel="noopener noreferrer" className="sku__ext">
@@ -113,8 +115,8 @@ function Detail({ orgId, detail, canManage }: { orgId: string; detail: SkuDetail
       <section className="sku__kpis" aria-label={t("products.sku.kpis")}>
         <Kpi label={t("terms.revenue")} value={f.money(sku.revenue)} help={help("revenue", t("terms.revenue"))} />
         <Kpi label={t("terms.netProfit")} value={f.money(sku.net_profit)} help={help("netProfit", t("terms.netProfit"))} note={uncovered} />
-        <Kpi label={t("products.col.units")} value={f.number(sku.units)} />
-        <Kpi label={t("products.col.avg_price")} value={money(sku.avg_price)} />
+        <Kpi label={t("products.col.units")} value={f.number(sku.units)} help={help("units", t("products.col.units"))} />
+        <Kpi label={t("products.col.avg_price")} value={money(sku.avg_price)} help={help("avgPrice", t("products.col.avg_price"))} />
         <Kpi label={t("products.col.profit")} value={money(sku.profit_per_unit)} help={help("profitPerUnit", t("products.col.profit"))} />
         <Kpi label={t("terms.margin")} value={percent(sku.margin)} help={help("margin", t("terms.margin"))} />
         <Kpi label={t("terms.roi")} value={percent(sku.roi)} help={help("roi", t("terms.roi"))} />
@@ -146,10 +148,16 @@ function Detail({ orgId, detail, canManage }: { orgId: string; detail: SkuDetail
 
 function Charts({ detail }: { detail: SkuDetail }) {
   const { t } = useTranslation();
-  const days = detail.history.map((d) => d.day);
+  const f = useFormat();
+  const { period } = detail.meta;
+  const history = fillDays(detail.history, period.start, period.end);
+  const days = history.map((d) => d.day);
+  // Narx va qoldiq — Uzum snapshotidan: u hamma kunga yozilmagan bo'lishi mumkin ("ma'lumot yo'q" ≠ "nol", tamoyil 8).
+  const snapshotDays = history.filter((d) => d.price !== null || d.stock !== null);
+  const sparse = snapshotDays.length < history.length;
   // B4.53: sotuvsiz kunda ham xarajat bo'lsa (sof foyda ≠ 0) chiziqda ko'rinadi — avval bunday kunlar bo'sh qolardi.
   const shows = (d: SkuDetail["history"][number]) => d.units > 0 || Number(d.net_profit) !== 0;
-  const noSalesDay = detail.history.some((d) => d.units === 0 && Number(d.net_profit) !== 0);
+  const noSalesDay = history.some((d) => d.units === 0 && Number(d.net_profit) !== 0);
   return (
     <section className="sku__charts" aria-label={t("products.sku.history")}>
       {noSalesDay && <p className="caption">{t("products.sku.chartSalesNote")}</p>}
@@ -157,20 +165,27 @@ function Charts({ detail }: { detail: SkuDetail }) {
         title={t("products.sku.chartSales")}
         x={days}
         series={[
-          { key: "revenue", name: t("terms.revenue"), color: 1, values: detail.history.map((d) => (d.units > 0 ? d.revenue : null)) },
-          { key: "profit", name: t("terms.netProfit"), color: "ink", kind: "line", values: detail.history.map((d) => (shows(d) ? d.net_profit : null)) },
+          { key: "revenue", name: t("terms.revenue"), color: 1, values: history.map((d) => (d.units > 0 ? d.revenue : null)) },
+          { key: "profit", name: t("terms.netProfit"), color: "ink", kind: "line", values: history.map((d) => (shows(d) ? d.net_profit : null)) },
         ]}
       />
+      {sparse && (
+        <p className="caption sku__charts-note">
+          {snapshotDays.length === 0
+            ? t("products.sku.snapshotNone")
+            : t("products.sku.snapshotNote", { count: snapshotDays.length, total: history.length, from: f.date(snapshotDays[0]!.day) })}
+        </p>
+      )}
       <LineBarChart
         title={t("products.sku.chartPrice")}
         x={days}
-        series={[{ key: "price", name: t("products.sku.price"), color: 2, kind: "line", values: detail.history.map((d) => d.price) }]}
+        series={[{ key: "price", name: t("products.sku.price"), color: 2, kind: "line", connect: true, values: history.map((d) => d.price) }]}
       />
       <LineBarChart
         title={t("products.sku.chartStock")}
         x={days}
         unit="count"
-        series={[{ key: "stock", name: t("terms.stock"), color: 3, values: detail.history.map((d) => (d.stock === null ? null : String(d.stock))) }]}
+        series={[{ key: "stock", name: t("terms.stock"), color: 3, values: history.map((d) => (d.stock === null ? null : String(d.stock))) }]}
       />
     </section>
   );

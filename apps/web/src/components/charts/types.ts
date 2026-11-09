@@ -14,6 +14,8 @@ export type SeriesInput = {
   kind?: "bar" | "line";
   /** LineBar: bir xil `stack` dagi ustunlar ustma-ust (masalan, Yakunlangan + Jarayonda tushum). */
   stack?: string;
+  /** LineBar chiziq: bo'sh kunlar ustidan chiziq tutashadi (narx kabi doimiy kattalik). Standart — uziladi. */
+  connect?: boolean;
   values: Value[];
 };
 

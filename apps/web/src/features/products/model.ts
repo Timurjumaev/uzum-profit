@@ -1,6 +1,8 @@
 // Mahsulotlar modeli (M6, B4.3): ustunlar, saralash kalitlari, holat belgisi va brauzerda saqlanadigan ko'rinishlar.
 // Hisoblash yo'q (tamoyil 4) — raqamlar API'dan; bu yerda faqat tanlov, tartib va matn kalitlari.
 import type { ProductAbc, ProductLabel, ProductSort } from "../../app/search";
+import { addDays, type IsoDate } from "../../lib/dates";
+import type { SkuDay } from "../../lib/api/types";
 import type { Tone } from "../../components/ui";
 
 export const COLUMN_IDS = [
@@ -171,4 +173,19 @@ export function saveViews(orgId: string, views: SavedView[]): void {
 /** Ko'rinishni nom bo'yicha qo'shadi yoki almashtiradi. */
 export function upsertView(views: SavedView[], view: SavedView): SavedView[] {
   return [...views.filter((v) => v.name !== view.name), view].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * Kunlik tarixni davrning HAMMA kuniga to'ldiradi (B4.56). API faqat ma'lumoti bor kunlarni beradi; grafik kategoriya o'qida
+ * bo'lgani uchun bo'sh kunlar tashlab ketilsa vaqt siqilib, tendensiya buziladi (22-sentabrdan keyin 26-sentabr kelib qolardi).
+ */
+export function fillDays(history: SkuDay[], start: IsoDate, end: IsoDate): SkuDay[] {
+  const byDay = new Map(history.map((d) => [d.day, d]));
+  const out: SkuDay[] = [];
+  for (let day = start, n = 0; day <= end && n < 4000; day = addDays(day, 1), n++) {
+    out.push(
+      byDay.get(day) ?? { day, units: 0, revenue: "0.00", net_profit: "0.00", profit_per_unit: null, price: null, commission_pct: null, stock: null },
+    );
+  }
+  return out;
 }

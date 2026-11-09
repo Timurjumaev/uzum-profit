@@ -131,6 +131,23 @@ describe("lineBarOption (04 §5.1)", () => {
     expect(line.itemStyle.borderColor).toBe(chartPalette("light").surface);
   });
 
+  it("siyrak chiziq (B4.56): boshqa nuqtalar bo'sh bo'lsa nuqta ko'rinadi; zich qatorda faqat yolg'iz nuqtalar belgilanadi", () => {
+    const days = Array.from({ length: 40 }, (_, i) => `2026-10-${String(i + 1).padStart(2, "0")}`);
+    const line = (values: (string | null)[], extra: Record<string, unknown> = {}) => ({ key: "p", name: "Narx", color: 2 as const, kind: "line" as const, values, ...extra });
+    // Bitta nuqta (qolgani bo'sh): kam nuqtali qator — belgilar yoqiladi, chiziq uziladi.
+    const single = lineBarOption({ x: days, xKind: "day", unit: "money", series: [line(days.map((_, i) => (i === 30 ? "28451" : null)))] }, ctx());
+    expect(opt(single).series[0].showSymbol).toBe(true);
+    expect(opt(single).series[0].connectNulls).toBe(false);
+    // Zich qator (40 ta) — belgisiz; faqat yolg'iz (ikki yoni bo'sh) nuqta markPoint bilan.
+    const dense = days.map((_, i) => (i === 10 ? null : i === 12 ? null : String(1000 + i)));
+    const o = opt(lineBarOption({ x: days, xKind: "day", unit: "money", series: [line(dense)] }, ctx()));
+    expect(o.series[0].showSymbol).toBe(false);
+    expect(o.series[0].markPoint.data).toEqual([{ coord: [days[11], 1011] }]); // 11-kun: 10 va 12 bo'sh
+    // Doimiy kattalik (narx): bo'sh kunlar ustidan tutashadi.
+    const joined = opt(lineBarOption({ x: days, xKind: "day", unit: "money", series: [line(dense, { connect: true })] }, ctx()));
+    expect(joined.series[0].connectNulls).toBe(true);
+  });
+
   it("seriya ranglari — rol slotlari; natija chizig'i — siyoh", () => {
     const [bar, line] = build().series;
     expect(bar.color).toBe(chartSlots.light[0]);

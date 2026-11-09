@@ -115,6 +115,12 @@ export function lineBarOption(
       const color = colorOf(palette, s.color);
       const markArea = i === 0 && bands.length > 0 ? bandAreas(bands, palette) : undefined;
       if (s.kind === "line") {
+        // Siyrak qatorlar (B4.56): ma'lumot kam nuqtada bo'lsa yoki nuqta atrofi bo'sh bo'lsa, chiziq chizilmaydi — nuqta
+        // ko'rinmay qolardi ("Narx" legendasi bor-u grafik bo'm-bo'sh). Bunday nuqtalar doira bilan belgilanadi.
+        const values = s.values.map(num);
+        const filled = values.filter((v) => v !== null).length;
+        const lone = values.flatMap((v, k) => (v !== null && values[k - 1] == null && values[k + 1] == null ? [k] : []));
+        const dots = filled <= MARKERS_UP_TO || x.length <= MARKERS_UP_TO;
         return {
           name: s.name,
           type: "line",
@@ -123,7 +129,19 @@ export function lineBarOption(
           lineStyle: { width: 2, color },
           symbol: "circle",
           symbolSize: MARKER,
-          showSymbol: x.length <= MARKERS_UP_TO,
+          showSymbol: dots,
+          connectNulls: s.connect === true,
+          markPoint:
+            dots || lone.length === 0
+              ? undefined
+              : {
+                  silent: true,
+                  symbol: "circle",
+                  symbolSize: MARKER,
+                  itemStyle: { color, borderColor: palette.surface, borderWidth: 2 },
+                  label: { show: false },
+                  data: lone.map((k) => ({ coord: [x[k], values[k]] })),
+                },
           itemStyle: { color, borderColor: palette.surface, borderWidth: 2 },
           emphasis: { focus: "series", scale: false },
           endLabel: direct
