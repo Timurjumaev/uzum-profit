@@ -17,6 +17,12 @@ export type ComboboxProps = {
   onValueChange: (value: string | null) => void;
   placeholder?: string;
   limit?: number;
+  /** Serverda qidiruv (B4.52): yozilgan matn `onSearch` ga beriladi, `options` allaqachon filtrlangan — mijozda qayta filtrlanmaydi. */
+  onSearch?: (query: string) => void;
+  /** Tanlangan qiymatning nomi: `options` (qidiruv natijasi) ichida bo'lmasa ham maydonda ko'rinadi. */
+  selectedLabel?: string;
+  /** Natijadan ko'p mos kelsa (`options` faqat boshi) — "yana N ta, aniqroq yozing" izohi uchun jami son. */
+  total?: number;
 };
 
 /** Qidiruv kaliti apostrofsiz: "galla" ham "gʻalla" ni topadi (foydalanuvchi ko'pincha belgisiz yozadi). */
@@ -31,16 +37,18 @@ export function filterOptions(options: ComboOption[], query: string): ComboOptio
   });
 }
 
-export function Combobox({ label, help, options, value, onValueChange, placeholder, limit = 50 }: ComboboxProps) {
+export function Combobox({ label, help, options, value, onValueChange, placeholder, limit = 50, onSearch, selectedLabel, total }: ComboboxProps) {
   const { t } = useTranslation();
   const listId = useId();
   const selected = options.find((o) => o.value === value) ?? null;
+  const selectedText = selected?.label ?? (value !== null ? selectedLabel : undefined);
   const [query, setQuery] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
-  const shown = useMemo(() => filterOptions(options, query ?? "").slice(0, limit), [options, query, limit]);
+  const shown = useMemo(() => (onSearch ? options : filterOptions(options, query ?? "")).slice(0, limit), [options, query, limit, onSearch]);
   const choose = (option: ComboOption) => {
     onValueChange(option.value);
+    onSearch?.("");
     setQuery(null);
     setOpen(false);
   };
@@ -60,9 +68,10 @@ export function Combobox({ label, help, options, value, onValueChange, placehold
             aria-describedby={describedBy}
             autoComplete="off"
             placeholder={placeholder ?? t("ui.search")}
-            value={query ?? selected?.label ?? ""}
+            value={query ?? selectedText ?? ""}
             onChange={(e) => {
               setQuery(e.target.value);
+              onSearch?.(e.target.value);
               setActive(0);
               setOpen(true);
             }}
@@ -112,6 +121,11 @@ export function Combobox({ label, help, options, value, onValueChange, placehold
                   </span>
                 </li>
               ))}
+              {total !== undefined && total > shown.length && (
+                <li className="ui-combobox__empty" role="presentation">
+                  {t("ui.comboMore", { shown: shown.length, total })}
+                </li>
+              )}
             </ul>
           )}
         </div>

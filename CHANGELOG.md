@@ -434,6 +434,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.52: "Tovardan ajratish" tasdiq oynasi bilan; tovar tanlovi qidiruvi serverda (`/items?q=&limit=`, `total`) — 500+ tovarda ham
+  hammasi topiladi.
 - B4.51: Mahsulotlar Excel'ida "Holat" o'zbekcha va "Doʻkon" ustuni; Excel sarlavhalarida oʻ/gʻ — U+02BB (avval U+02BC).
 - B4.50: SKU sahifasidan "Mahsulotlarga qaytish" qidiruv, filtr, saralash va sahifani saqlaydi (URL'da); "Zaxira kunlari"
   saralashida harakatsiz qoldiq (tezlik 0) cheksiz zaxira sifatida tepada; nom bo'yicha saralash ko'rinadigan nom va `fold` bilan.

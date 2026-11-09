@@ -1,9 +1,9 @@
 // Tovar ↔ SKU bog'lash (M6): tannarx va ombor tovar darajasida yuritiladi. SKU: tovarsiz, mavjud tovarga, yangi tovar
 // sifatida yoki ajratilgan. O'zgartirish — egasi va menejer (`manage_purchases`); tannarx qayta hisoblash navbatiga
 // tushadi (bir necha daqiqada yangilanadi).
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
@@ -18,6 +18,7 @@ export function LinkItem({ orgId, detail, canManage }: { orgId: string; detail: 
   const toast = useToast();
   const client = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [confirmDetach, setConfirmDetach] = useState(false);
   const sku = detail.sku;
   const linked = detail.linked;
   const done = useMutation({
@@ -26,6 +27,7 @@ export function LinkItem({ orgId, detail, canManage }: { orgId: string; detail: 
       await Promise.all(["sku", "skus", "pnl", "dashboard"].map((key) => client.invalidateQueries({ queryKey: ["orgs", orgId, key] })));
       toast.show(t("products.link.saved"), "positive");
       setOpen(false);
+      setConfirmDetach(false);
     },
     onError: (error) => toast.show(errorText(error, t), "negative"),
   });
@@ -63,11 +65,30 @@ export function LinkItem({ orgId, detail, canManage }: { orgId: string; detail: 
             {linked ? t("products.link.change") : t("products.link.add")}
           </Button>
           {linked && (
-            <Button variant="ghost" loading={done.isPending && done.variables?.mode === "none"} onClick={() => done.mutate({ mode: "none" })}>
+            <Button variant="ghost" onClick={() => setConfirmDetach(true)}>
               {t("products.link.detach")}
             </Button>
           )}
         </div>
+      )}
+      {confirmDetach && linked && (
+        <Dialog
+          open
+          onClose={() => setConfirmDetach(false)}
+          title={t("products.link.detachTitle")}
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setConfirmDetach(false)}>
+                {t("products.link.cancel")}
+              </Button>
+              <Button variant="destructive" loading={done.isPending && done.variables?.mode === "none"} onClick={() => done.mutate({ mode: "none" })}>
+                {t("products.link.detachConfirm")}
+              </Button>
+            </>
+          }
+        >
+          <p>{t("products.link.detachText", { sku: sku.title ?? sku.product_title ?? t("home.sku.unnamed"), item: linked.name })}</p>
+        </Dialog>
       )}
       {open && <LinkForm orgId={orgId} detail={detail} pending={done.isPending} onSubmit={(body) => done.mutate(body)} onClose={() => setOpen(false)} />}
     </section>
@@ -76,7 +97,15 @@ export function LinkItem({ orgId, detail, canManage }: { orgId: string; detail: 
 
 function LinkForm({ orgId, detail, pending, onSubmit, onClose }: { orgId: string; detail: SkuDetail; pending: boolean; onSubmit: (body: ItemLinkIn) => void; onClose: () => void }) {
   const { t } = useTranslation();
-  const items = useQuery(itemsQuery(orgId, ""));
+  // Tovar qidiruvi serverda (B4.52): yozish tugagach (250 ms) so'raladi; 500+ tovarda ham hammasi qidiriladi.
+  const [search, setSearch] = useState("");
+  const [typed, setTyped] = useState("");
+  useEffect(() => {
+    const id = setTimeout(() => setSearch(typed.trim()), 250);
+    return () => clearTimeout(id);
+  }, [typed]);
+  const items = useQuery({ ...itemsQuery(orgId, search), placeholderData: keepPreviousData });
+  const [chosen, setChosen] = useState<string | null>(detail.linked?.name ?? null);
   const [mode, setMode] = useState<Exclude<Mode, "none">>("existing");
   const [item, setItem] = useState<string | null>(detail.linked?.item_id ?? null);
   const [name, setName] = useState(detail.sku.title ?? detail.sku.product_title ?? "");
@@ -111,7 +140,13 @@ function LinkForm({ orgId, detail, pending, onSubmit, onClose }: { orgId: string
           label={t("products.link.item")}
           options={(items.data?.items ?? []).map((i) => ({ value: i.id, label: i.name, hint: t("products.link.skuCount", { value: i.sku_count }) }))}
           value={item}
-          onValueChange={setItem}
+          onValueChange={(v) => {
+            setItem(v);
+            setChosen(items.data?.items.find((i) => i.id === v)?.name ?? chosen);
+          }}
+          onSearch={setTyped}
+          selectedLabel={chosen ?? undefined}
+          total={items.data?.total}
           placeholder={t("products.link.itemPlaceholder")}
         />
       ) : (

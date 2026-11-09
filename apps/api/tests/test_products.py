@@ -393,6 +393,12 @@ def test_items_list_and_search(world: World) -> None:
     assert "Yashirin Mashina" not in names  # boshqa tashkilot tovari ko'rinmaydi (RLS)
     found = world.get("items", q="MASHI")["items"]
     assert [x["name"] for x in found] == ["Mashina"] and found[0]["sku_count"] >= 1
+    # B4.52: `limit` — birinchi tovarlar, `total` — mos kelganlarning hammasi (500+ tovarda qidiruv serverda).
+    few = world.get("items", limit=1)
+    assert len(few["items"]) == 1 and few["total"] == len(names)
+    assert world.get("items", q="MASHI", limit=1)["total"] == 1
+    assert world.get("items", q="yoq-zzz")["total"] == 0
+    assert world.call("items", limit=0).status_code == 422
     assert world.call("items", role="accountant").status_code == 403
     assert world.call("items", role="warehouse").status_code == 200
 

@@ -518,7 +518,8 @@ export interface paths {
         };
         /**
          * List Items
-         * @description Tovarlar (bog'lash tanlovi uchun): nom bo'yicha qidiruv (lotin/kirill, tutuq turidan qat'i nazar).
+         * @description Tovarlar (bog'lash tanlovi uchun): nom bo'yicha qidiruv (lotin/kirill, tutuq turidan qat'i nazar), birinchi
+         *     ``limit`` tasi va mos kelganlar soni (``total``) — tanlov 500+ tovarda ham serverda qidiradi (B4.52).
          */
         get: operations["list_items_api_v1_orgs__org_id__items_get"];
         put?: never;
@@ -1961,6 +1962,8 @@ export interface components {
         ItemsOut: {
             /** Items */
             items: components["schemas"]["ItemOut"][];
+            /** Total */
+            total: number;
         };
         /** KindStatus */
         KindStatus: {
@@ -5499,6 +5502,7 @@ export interface operations {
         parameters: {
             query?: {
                 q?: string | null;
+                limit?: number;
             };
             header?: never;
             path: {

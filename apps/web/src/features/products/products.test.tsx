@@ -466,6 +466,47 @@ describe("tovarga bog'lash", () => {
     fireEvent.click(within(dlg).getByRole("button", { name: "Saqlash" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     fireEvent.click(screen.getByRole("button", { name: "Tovardan ajratish" }));
+    fireEvent.click(within(await screen.findByRole("dialog", { name: "SKUʼni tovardan ajratish?" })).getByRole("button", { name: "Ha, ajratish" }));
     await waitFor(() => expect(api.bodiesOf(linkRoute(SKU_1))[2]).toEqual({ mode: "none" }));
+  });
+
+  it("tovardan ajratish — tasdiq bilan: bekor qilinsa so'rov ketmaydi, tasdiqlansa ketadi (B4.52)", async () => {
+    const { api } = await open();
+    fireEvent.click(screen.getByRole("button", { name: "Tovardan ajratish" }));
+    const dlg = await screen.findByRole("dialog", { name: "SKUʼni tovardan ajratish?" });
+    expect(dlg.textContent).toContain("Oʻyinchoq mashina qizil");
+    expect(dlg.textContent).toContain("tovarsiz qoladi");
+    expect(api.bodiesOf(linkRoute(SKU_1))).toEqual([]); // hali so'rov ketmadi
+    fireEvent.click(within(dlg).getByRole("button", { name: "Bekor qilish" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(api.bodiesOf(linkRoute(SKU_1))).toEqual([]);
+    fireEvent.click(screen.getByRole("button", { name: "Tovardan ajratish" }));
+    fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Ha, ajratish" }));
+    await waitFor(() => expect(api.bodiesOf(linkRoute(SKU_1))).toEqual([{ mode: "none" }]));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("tovar qidiruvi serverda: yozilgan matn `q` bilan so'raladi, jami ko'p bo'lsa 'aniqroq yozing' izohi, tanlangan nom saqlanadi", async () => {
+    const many = Array.from({ length: 50 }, (_, n) => ({ id: `6${String(n).padStart(7, "0")}-2222-4222-8222-222222222222`, name: `Tovar ${n}`, image_url: null, sku_count: 1 }));
+    const found = { id: "62222222-2222-4222-8222-222222222222", name: "Chiroq LED", image_url: null, sku_count: 1 };
+    const { api } = await open({
+      [ITEMS_ROUTE]: (r) => {
+        const q = new URL(r.url).searchParams.get("q");
+        return json(200, q ? { items: [found], total: 1 } : { items: many, total: 620 });
+      },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Tovarni oʻzgartirish" }));
+    const dlg = await screen.findByRole("dialog", { name: "SKUʼni tovarga bogʻlash" });
+    const input = within(dlg).getByRole("combobox");
+    fireEvent.focus(input);
+    expect(await within(dlg).findByText("Birinchi 50 ta koʻrsatildi, jami 620 ta — aniqroq yozing")).toBeTruthy();
+    fireEvent.change(input, { target: { value: "chiroq" } });
+    fireEvent.mouseDown(await within(dlg).findByRole("option", { name: /Chiroq LED/ }));
+    const urls = api.fetch.mock.calls.map(([r]) => new URL((r as Request).url)).filter((u) => u.pathname.endsWith("/items"));
+    expect(urls.some((u) => u.searchParams.get("q") === "chiroq")).toBe(true);
+    // Tanlangach qidiruv tozalanadi (ro'yxat qaytadi), lekin tanlangan nom maydonda qoladi.
+    await waitFor(() => expect((input as HTMLInputElement).value).toBe("Chiroq LED"));
+    fireEvent.click(within(dlg).getByRole("button", { name: "Saqlash" }));
+    await waitFor(() => expect(api.bodiesOf(linkRoute(SKU_1))).toEqual([{ mode: "existing", item_id: found.id }]));
   });
 });
