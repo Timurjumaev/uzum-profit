@@ -228,6 +228,17 @@ describe("SKU sahifasi", () => {
     expect(screen.getAllByRole("img", { name: /Tushum va sof foyda|Narx tarixi|Qoldiq tarixi/ }).length).toBeGreaterThan(0);
   });
 
+  it("B4.45: 'Tannarx/dona' KPI jadval bilan bir xil — sotuvsiz SKU'da boshlang'ich narx izoh bilan; kalkulyator manbasi", async () => {
+    const sku = skuRow({ units: 0, cogs_per_unit: null, unit_cost: "45000.00", unit_cost_source: "opening" });
+    const calc = { ...skuDetail().calc, unit_cost: "45000.00", sources: { ...skuDetail().calc.sources, unit_cost: "opening" } };
+    await renderSku({ [skuRoute(SKU_1)]: () => json(200, skuDetail({ sku, calc })) });
+    const kpi = screen.getByText("Tannarx/dona", { selector: ".ui-kpi *" }).closest(".ui-kpi")!;
+    expect(norm(kpi.textContent!)).toContain(norm(f.money("45000.00")));
+    expect(kpi.textContent).toContain("(boshlangʻich)");
+    expect(within(kpi as HTMLElement).getByRole("button", { name: /Qanday hisoblanadi/ })).toBeTruthy();
+    expect(screen.getByText("Boshlangʻich holatdagi narx")).toBeTruthy(); // kalkulyator: tannarx manbasi
+  });
+
   it("tovarsiz SKU: lotlar o'rniga ogohlantirish, 'Tovarga bog'lash' tugmasi", async () => {
     await renderSku({ [skuRoute(SKU_1)]: () => json(200, skuDetail({ linked: null, lots: [], sku: skuRow({ item_id: null }) })) });
     expect(screen.getByText(/SKU tovarga bogʻlanmagan, shuning uchun tannarx yoʻq/)).toBeTruthy();

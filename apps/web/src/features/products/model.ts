@@ -66,11 +66,6 @@ export const SORT_KEY: Partial<Record<ColumnId, ProductSort>> = {
   days: "days_of_stock",
 };
 
-/** Saralash kalitiga mos ustun (ustun ko'rinmasa ham saralash saqlanadi). */
-export const COLUMN_OF_SORT: Partial<Record<ProductSort, ColumnId>> = Object.fromEntries(
-  Object.entries(SORT_KEY).map(([column, sort]) => [sort, column]),
-);
-
 /** Ustun sarlavhasiga biriktirilgan formula (`home.formula.<kalit>`): F-raqam bilan "?" ko'rsatiladi. */
 export const COLUMN_FORMULA: Partial<Record<ColumnId, string>> = {
   revenue: "revenue",
@@ -96,8 +91,6 @@ export const LABEL_TONE: Record<ProductLabel, Tone> = {
   no_data: "neutral",
   idle: "info",
 };
-
-export const LABEL_SORT_ORDER: readonly ProductLabel[] = ["loss", "borderline", "profitable", "no_data", "idle"];
 
 /** Saralash: shu ustun bosilganda keyingi holat (kalit bir xil bo'lsa yo'nalish almashadi; nom — o'sish, qolgani — kamayish). */
 export function nextSort(current: { key: ProductSort; desc: boolean }, key: ProductSort): { key: ProductSort; desc: boolean } {

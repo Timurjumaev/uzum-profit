@@ -748,7 +748,7 @@ export const uzLatn = {
       partsText: "komissiya {{commission}}, soliq {{tax}}, reklama {{ads}}",
       source: {
         price: { period: "Davr oʻrtacha sotuv narxi", catalog: "Uzum katalogidagi narx" },
-        unit_cost: { period: "Davr tannarxi (sotilganlar)", last_lot: "Oxirgi partiya tannarxi" },
+        unit_cost: { period: "Davr tannarxi (sotilganlar)", last_lot: "Oxirgi partiya tannarxi", opening: "Boshlangʻich holatdagi narx", transit: "Yoʻldagi partiya tannarxi" },
         logistics: { last_paid: "Oxirgi pullik logistika", shop_typical: "Doʻkonning odatiy logistikasi" },
         commission_pct: { period: "Davr haqiqiy komissiyasi", snapshot: "Oxirgi snapshot", catalog: "Uzum katalogi" },
         tax_pct: { period: "Davr haqiqiy soliq ulushi" },

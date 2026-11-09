@@ -177,8 +177,6 @@ def test_sku_detail(world: World) -> None:
     lots = body["lots"]
     assert [(x["ready_on"], x["qty"]) for x in lots] == [("2026-09-01", 100), (None, 20)]
     assert money(lots[0]["unit_cost"]) == D(100_000) and money(lots[1]["unit_cost"]) == D(120_000)
-    # Jadval va sahifada "oxirgi partiya tannarxi": tayyor lot (100 000), yo'ldagisi (120 000) emas.
-    assert money(row["lot_unit_cost"]) == D(100_000) and row["lot_source"] == "lot"
     assert body["linked"]["name"] == "Mashina"
     assert [s["sku_id"] for s in body["linked"]["skus"]] == [str(xa)]
     assert body["stock_detail"]["active"] == 80 and body["stock_detail"]["fbs"] == 5
@@ -227,7 +225,7 @@ def test_sku_detail_calculator_defaults_and_sources(world: World) -> None:
     assert quiet["commission_pct"] is None and "price" not in quiet["sources"]
     # Jadvalda ham (B4.42): davrda sotuv yo'q — "Tannarx/dona" oxirgi partiyadan, manbasi bilan; sotuv bo'lsa — davr o'rtachasi.
     idle = rows(world, start="2026-07-01", end="2026-07-05")[str(xa)]
-    assert idle["cogs_per_unit"] is None and money(idle["lot_unit_cost"]) == D(100_000)
+    assert idle["cogs_per_unit"] is None
     assert money(idle["unit_cost"]) == D(100_000) and idle["unit_cost_source"] == "lot"
     # B4.44: davrda sotilmagan har SKU — "Sotuv yo'q" (xarajati bo'lmasa ham; avval "Ma'lumot yo'q" chiqardi).
     quiet_rows = rows(world, start="2026-07-01", end="2026-07-05")
@@ -236,11 +234,47 @@ def test_sku_detail_calculator_defaults_and_sources(world: World) -> None:
     sold = rows(world, **OCT)[str(xa)]
     assert sold["unit_cost"] == sold["cogs_per_unit"] and sold["unit_cost_source"] == "sales"
     ya = rows(world, **OCT)[str(world.ids["ya"])]  # tovarsiz SKU
-    assert (
-        ya["lot_unit_cost"] is None and ya["unit_cost"] is None and ya["unit_cost_source"] is None
-    )
+    assert ya["unit_cost"] is None and ya["unit_cost_source"] is None
     nothing = world.get(f"skus/{world.ids['ya']}", **OCT)["calc"]
     assert nothing["unit_cost"] is None and nothing["logistics"] is not None
+
+
+def test_unit_cost_same_on_table_page_and_calculator(world: World) -> None:
+    """B4.45: sotuvsiz SKU tannarxi jadvalda, SKU sahifasida va kalkulyatorda bir xil zanjirdan — yo'ldagi partiya va
+    boshlang'ich narx ham (avval kalkulyator ularni bilmasdi), boshlashdan oldingi partiya esa olinmaydi (F41)."""
+    b, shop = world.b, str(world.b.shop_id)
+    # Faqat yo'ldagi (qabul qilinmagan) partiya: 20 × 60 000.
+    t_item, t_sku = b.item("Termos")
+    p = b.purchase(None)
+    b.line(p, t_item, 20, received=None)
+    b.component(p, "goods", 1_200_000)
+    # Partiyasi boshlashdan oldin (1-avgust, 30 000), boshlang'ich holatdagi narxi 45 000.
+    o_item, o_sku = b.item("Ochqich")
+    p = b.purchase(d(8, 1))
+    b.line(p, o_item, 10)
+    b.component(p, "goods", 300_000)
+    b.insert("item_costs", item_id=o_item, valid_from=d(9, 1), unit_cost=D(45_000))
+    settle(world)
+    before = b.sql("SELECT cost_start_on FROM orgs WHERE id = %s", [b.org_id])[0][0]
+    b.sql("UPDATE orgs SET cost_start_on = %s WHERE id = %s", [d(9, 1), b.org_id])
+    try:
+        for sku, source, calc_source, unit in (
+            (t_sku, "transit", "transit", 60_000),
+            (o_sku, "opening", "opening", 45_000),
+        ):
+            row = rows(world, shop=shop, **OCT)[str(sku)]
+            body = world.get(f"skus/{sku}", shop=shop, **OCT)
+            assert row["units"] == 0 and row["unit_cost_source"] == source
+            assert money(row["unit_cost"]) == D(unit)
+            assert body["sku"]["unit_cost"] == row["unit_cost"]  # SKU sahifasi KPI
+            assert body["sku"]["unit_cost_source"] == source
+            assert body["calc"]["sources"]["unit_cost"] == calc_source
+            assert money(body["calc"]["unit_cost"]) == D(unit)
+    finally:
+        b.sql("UPDATE orgs SET cost_start_on = %s WHERE id = %s", [before, b.org_id])
+    # Boshlash sanasi yo'q: boshlang'ich narx ishlamaydi — oxirgi tayyor partiya (30 000).
+    calc_ = world.get(f"skus/{o_sku}", shop=shop, **OCT)["calc"]
+    assert calc_["sources"]["unit_cost"] == "last_lot" and money(calc_["unit_cost"]) == D(30_000)
 
 
 def test_sku_detail_uzum_url_and_errors(world: World) -> None:

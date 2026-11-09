@@ -81,7 +81,6 @@ class SkuSort(StrEnum):
     STOCK = "stock"
     DAYS_OF_STOCK = "days_of_stock"
     AVG_PRICE = "avg_price"
-    LOT_UNIT_COST = "lot_unit_cost"
     UNIT_COST = "unit_cost"
     PROFIT_PER_UNIT = "profit_per_unit"
     ROI = "roi"
@@ -108,12 +107,6 @@ class SkuRowOut(BaseModel):
     commission_share: Decimal | None
     logistics_per_unit: Decimal | None
     cogs_per_unit: Decimal | None  # F21: davrda sotilgan donalar o'rtachasi (sotuv bo'lmasa — yo'q)
-    lot_unit_cost: (
-        Decimal | None
-    )  # F20: tovarning oxirgi partiyasi tannarxi/dona (sotuvdan mustaqil)
-    lot_source: (
-        Literal["lot", "opening", "transit"] | None
-    )  # manba: partiya, boshlang'ich narx yoki yo'ldagi partiya
     # Mahsulotlar "Tannarx/dona" (B4.42): davrda sotilgan bo'lsa F21 o'rtachasi, aks holda oxirgi partiya (F20) — manbasi bilan.
     unit_cost: Decimal | None
     unit_cost_source: Literal["sales", "lot", "opening", "transit"] | None
@@ -222,8 +215,6 @@ def _row(
         commission_share=u.commission_share,
         logistics_per_unit=amount(u.logistics_per_unit),
         cogs_per_unit=amount(u.cogs_per_unit),
-        lot_unit_cost=None if lot is None else lot.unit,
-        lot_source=None if lot is None else lot.source,
         unit_cost=sold if sold is not None or lot is None else lot.unit,
         unit_cost_source="sales" if sold is not None else None if lot is None else lot.source,
         ads_per_unit=amount(u.ads_per_unit),
@@ -372,7 +363,8 @@ class StockDetailOut(BaseModel):
 class CalcDefaultsOut(BaseModel):
     """Unit kalkulyator boshlang'ich qiymatlari (F35, F36) va ularning manbasi; ``null`` — qiymat yo'q (UI so'raydi).
 
-    Manbalar: ``price`` — ``period`` (davr o'rtachasi) | ``catalog``; ``unit_cost`` — ``last_lot`` | ``period``;
+    Manbalar: ``price`` — ``period`` (davr o'rtachasi) | ``catalog``; ``unit_cost`` — ``last_lot`` | ``opening`` | ``transit`` (jadval
+    zanjiri, B4.45) | ``period``;
     ``logistics`` — ``last_paid`` | ``shop_typical`` (standart tarif — F40); ``commission_pct`` — ``period`` |
     ``snapshot`` | ``catalog``; ``tax_pct`` va ``ads_pct`` — ``period``."""
 
@@ -397,6 +389,10 @@ class SkuDetailOut(BaseModel):
     stock_detail: StockDetailOut | None
     linked: LinkedItemOut | None
     calc: CalcDefaultsOut
+
+
+# Kalkulyator manbasi nomi (``CalcDefaultsOut.sources["unit_cost"]``): partiya zanjiri manbasi bo'yicha.
+_CALC_LOT_SOURCE: dict[str, str] = {"lot": "last_lot", "opening": "opening", "transit": "transit"}
 
 
 def _pct(value: Decimal | None) -> Decimal | None:
@@ -495,7 +491,9 @@ async def sku_detail(
     fee, fee_source = fees.of(info.shop_id, sku_id)
     u = unit_economics(s)
     org = book.cells.within(f.period).statement()
-    last_lot = next((x for x in reversed(lots) if x.ready_on is not None), None)
+    # B4.45: jadval bilan bir xil partiya zanjiri (``latest_lot_costs``: boshlashdan keyingi oxirgi tayyor partiya →
+    # boshlang'ich narx → yo'ldagi partiya); boshlashdan oldingi partiya olinmaydi (u qoldiqqa kirgan, F41).
+    lot = last.get(info.item_id) if info.item_id else None
     last_snap = next((x for x in reversed(history) if x.commission_pct is not None), None)
     sources: dict[str, str] = {}
 
@@ -508,10 +506,10 @@ async def sku_detail(
 
     calc = CalcDefaultsOut(
         price=pick("price", ("period", amount(u.avg_price)), ("catalog", info.price)),
-        # Narx qo'yish uchun — oxirgi partiya (keyingi donalar shu narxda keladi, ADR-033); bo'lmasa davr o'rtachasi.
+        # Narx qo'yish uchun — avval partiya zanjiri (keyingi donalar shu narxda keladi, ADR-033); bo'lmasa davr o'rtachasi.
         unit_cost=pick(
             "unit_cost",
-            ("last_lot", None if last_lot is None else last_lot.unit_cost),
+            (_CALC_LOT_SOURCE[lot.source] if lot else "", None if lot is None else lot.unit),
             ("period", amount(u.cogs_per_unit)),
         ),
         logistics=pick("logistics", (fee_source or "", amount(fee))) if fee_source else None,

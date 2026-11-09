@@ -1414,7 +1414,8 @@ export interface components {
          * CalcDefaultsOut
          * @description Unit kalkulyator boshlang'ich qiymatlari (F35, F36) va ularning manbasi; ``null`` — qiymat yo'q (UI so'raydi).
          *
-         *     Manbalar: ``price`` — ``period`` (davr o'rtachasi) | ``catalog``; ``unit_cost`` — ``last_lot`` | ``period``;
+         *     Manbalar: ``price`` — ``period`` (davr o'rtachasi) | ``catalog``; ``unit_cost`` — ``last_lot`` | ``opening`` | ``transit`` (jadval
+         *     zanjiri, B4.45) | ``period``;
          *     ``logistics`` — ``last_paid`` | ``shop_typical`` (standart tarif — F40); ``commission_pct`` — ``period`` |
          *     ``snapshot`` | ``catalog``; ``tax_pct`` va ``ads_pct`` — ``period``.
          */
@@ -3472,10 +3473,6 @@ export interface components {
             logistics_per_unit: string | null;
             /** Cogs Per Unit */
             cogs_per_unit: string | null;
-            /** Lot Unit Cost */
-            lot_unit_cost: string | null;
-            /** Lot Source */
-            lot_source: ("lot" | "opening" | "transit") | null;
             /** Unit Cost */
             unit_cost: string | null;
             /** Unit Cost Source */

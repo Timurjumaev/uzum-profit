@@ -603,9 +603,15 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   ✓ 2026-11-09: avval sotilmagan SKU xarajati bo'lsa "Sotuv yo'q", xarajati yo'q yoki kompensatsiya tushgan bo'lsa
   "Ma'lumot yo'q" chiqardi (filtr va Excel ham) — endi `Statement.label`: sotuv qatori yo'q → doim "Sotuv yo'q";
   "Ma'lumot yo'q" — faqat sotuv bor, hammasi tannarxsiz. **T:** staging'da Mahsulotlar → Holat "Sotuv yo'q" filtrini ko'rish.
-- [ ] B4.45 Tannarx bir xil: SKU sahifasi KPI va kalkulyator jadvaldagi "Tannarx/dona" zanjirini ishlatadi (sotuv → oxirgi
+- [x] B4.45 Tannarx bir xil: SKU sahifasi KPI va kalkulyator jadvaldagi "Tannarx/dona" zanjirini ishlatadi (sotuv → oxirgi
   partiya → boshlang'ich → yo'ldagi; boshlashdan oldingi partiya olinmaydi), KPI "?" — F21/F20; ishlatilmaydigan
   `lot_unit_cost`, `LABEL_SORT_ORDER`, `COLUMN_OF_SORT` olib tashlanadi.
+  ✓ 2026-11-09: SKU sahifasi "Tannarx/dona" KPI'si — `unit_cost` (sotuvsiz SKU'da ham qiymat, izoh "(oxirgi partiya)" /
+  "(boshlang'ich)" / "(yo'ldagi partiya)"), "?" — F21, F20 (avval F7 jami formulasi). Kalkulyator tannarxi — jadval bilan bir
+  xil partiya zanjiri (`latest_lot_costs`), keyin davr o'rtachasi (narx qo'yish uchun partiya ustun — ADR-033); yangi manbalar
+  `opening`, `transit`; boshlashdan oldingi partiya olinmaydi. `SkuRowOut.lot_unit_cost` / `lot_source`, `sort=lot_unit_cost`
+  olib tashlandi (ADR-052 dagi "qoladi" bekor). **T:** staging'da boshlang'ich narxi bor, davrda sotilmagan SKU sahifasida
+  KPI va kalkulyatorda jadvaldagi narx chiqishini ko'rish.
 - [ ] B4.46 SKU sahifasi "Qaytishlar sabablari" — "Bekor + topshirilgan" qaytishlar ham (ADR-043, Buyurtmalar bilan bir xil).
 - [ ] B4.47 Jadvalda tannarxsiz qism belgisi (tamoyil 9, F13): `uncovered_share` > 0 bo'lsa marja/sof foyda yonida.
 - [ ] B4.48 Umumiy sahifalash (ADR-054): `Pagination` komponenti (sahifa raqamlari, 20/50/100, standart 50, URL'da `page`),
