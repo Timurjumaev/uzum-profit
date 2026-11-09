@@ -650,6 +650,8 @@ export const ru: Messages = {
       label: "Статус",
     },
     unitCostSource: { lot: "(последняя партия)", opening: "(начальная)", transit: "(партия в пути)" },
+    uncovered: "без себестоимости {{share}}",
+    uncoveredHint: "{{lines}} продаж ({{share}} выручки) без себестоимости — не вошли в чистую прибыль, маржу и статус. Внесите партию или начальную цену товара.",
     columns: { title: "Столбцы", reset: "Столбцы по умолчанию" },
     views: {
       title: "Виды",

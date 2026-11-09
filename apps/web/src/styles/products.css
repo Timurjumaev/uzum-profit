@@ -308,3 +308,9 @@
     align-items: start;
   }
 }
+
+/* B4.47: tannarxsiz qism belgisi — jadval katagida raqam ostida, qatorga bo'linmaydi. */
+.products-uncovered {
+  display: block;
+  white-space: nowrap;
+}

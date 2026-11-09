@@ -248,7 +248,13 @@ function buildColumns(ids: readonly ColumnId[], { t, f, shopName }: Ctx): Column
     ads: (r) => money(r.ads_per_unit),
     profit: (r) => money(r.profit_per_unit),
     net: (r) => money(r.net_profit),
-    margin: (r) => percent(r.margin),
+    // B4.47 (tamoyil 9, F13): marja tannarxi ma'lum qism bo'yicha — tannarxsiz ulush bo'lsa yonida ko'rinadi.
+    margin: (r) => (
+      <>
+        {percent(r.margin)}
+        <Uncovered row={r} />
+      </>
+    ),
     roi: (r) => percent(r.roi),
     returns: (r) => percent(r.return_share),
     cancel: (r) => percent(r.cancel_share),
@@ -257,7 +263,12 @@ function buildColumns(ids: readonly ColumnId[], { t, f, shopName }: Ctx): Column
     stock: (r) => f.number(r.stock),
     days: (r) => cell(r.days_of_stock, (x) => f.number(x, { digits: 0 })),
     abc: (r) => <Badge>{r.abc}</Badge>,
-    label: (r) => <StatusPill tone={LABEL_TONE[r.label]}>{t(`products.label.${r.label}`)}</StatusPill>,
+    label: (r) => (
+      <>
+        <StatusPill tone={LABEL_TONE[r.label]}>{t(`products.label.${r.label}`)}</StatusPill>
+        {r.label !== "no_data" && <Uncovered row={r} />}
+      </>
+    ),
   };
   return COLUMN_IDS.filter((id) => ids.includes(id)).map((id) => ({
     key: id,
@@ -267,6 +278,20 @@ function buildColumns(ids: readonly ColumnId[], { t, f, shopName }: Ctx): Column
     sortKey: SORT_KEY[id],
     help: help(id),
   }));
+}
+
+/** Tannarxsiz qism belgisi (tamoyil 9): qisman tannarxsiz SKU'ning foydasi faqat tannarxi ma'lum sotuvlar bo'yicha. */
+function Uncovered({ row }: { row: SkuRow }) {
+  const { t } = useTranslation();
+  const f = useFormat();
+  if (Number(row.uncovered_share) <= 0 || row.uncovered_lines === 0) return null;
+  const share = f.percent(row.uncovered_share);
+  return (
+    <span className="caption ui-text--warning products-uncovered" title={t("products.uncoveredHint", { lines: f.number(row.uncovered_lines), share })}>
+      {" "}
+      {t("products.uncovered", { share })}
+    </span>
+  );
 }
 
 function ProductCell({ row }: { row: SkuRow }) {

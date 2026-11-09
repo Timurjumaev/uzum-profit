@@ -617,7 +617,10 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   yo'q" chiqishi mumkin edi. Endi sabablar bitta funksiyadan (`reports.cells.cause_sums`): qaytarish — qisman qaytarish +
   mijozga topshirilgan Bekor qator, bekor — topshirilmagani; Buyurtmalar tahlili ham shundan. **T:** staging'da qaytishi bor
   SKU sahifasida sabablar jadvalini Buyurtmalar → "Qaytarilish" bilan solishtirish.
-- [ ] B4.47 Jadvalda tannarxsiz qism belgisi (tamoyil 9, F13): `uncovered_share` > 0 bo'lsa marja/sof foyda yonida.
+- [x] B4.47 Jadvalda tannarxsiz qism belgisi (tamoyil 9, F13): `uncovered_share` > 0 bo'lsa marja/sof foyda yonida.
+  ✓ 2026-11-09: qisman tannarxsiz SKU'da "Marja" va "Holat" ustunlarida "tannarxsiz 25%" (ogohlantirish rangida; ustiga
+  kelganda: nechta sotuv va nima qilish kerak); hammasi tannarxsiz ("Ma'lumot yo'q") SKU'da — faqat marja yonida.
+  **T:** staging'da Mahsulotlarda tannarxi qisman kiritilgan SKU yonida belgini ko'rish.
 - [ ] B4.48 Umumiy sahifalash (ADR-054): `Pagination` komponenti (sahifa raqamlari, 20/50/100, standart 50, URL'da `page`),
   API sahifa + jami; Mahsulotlarga ("Yana yuklash" va virtual skroll o'rniga — 500+ qator xatosi va offset takrori yo'qoladi);
   Mahsulotlar uchun birinchi e2e.
