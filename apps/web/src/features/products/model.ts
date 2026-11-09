@@ -68,6 +68,8 @@ export const SORT_KEY: Partial<Record<ColumnId, ProductSort>> = {
 
 /** Ustun sarlavhasiga biriktirilgan formula (`home.formula.<kalit>`): F-raqam bilan "?" ko'rsatiladi. */
 export const COLUMN_FORMULA: Partial<Record<ColumnId, string>> = {
+  units: "units",
+  avg_price: "avgPrice",
   revenue: "revenue",
   commission: "commission",
   logistics: "logistics",
@@ -82,6 +84,9 @@ export const COLUMN_FORMULA: Partial<Record<ColumnId, string>> = {
   direct: "direct",
   allocated: "allocated",
   days: "stockDays",
+  stock: "stock",
+  abc: "abc",
+  label: "label",
 };
 
 export const LABEL_TONE: Record<ProductLabel, Tone> = {

@@ -434,6 +434,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.53: Mahsulotlar jadvalida Dona, O'rtacha narx, Qoldiq, ABC, Holat ustunlariga "?" tushuntirishi; filtr bo'lsa "Jadvaldan tashqari"
+  izohi; SKU grafigida sotuvsiz kundagi xarajat ko'rinadi.
 - B4.52: "Tovardan ajratish" tasdiq oynasi bilan; tovar tanlovi qidiruvi serverda (`/items?q=&limit=`, `total`) — 500+ tovarda ham
   hammasi topiladi.
 - B4.51: Mahsulotlar Excel'ida "Holat" o'zbekcha va "Doʻkon" ustuni; Excel sarlavhalarida oʻ/gʻ — U+02BB (avval U+02BC).

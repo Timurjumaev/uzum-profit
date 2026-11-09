@@ -658,8 +658,14 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   qidiriladi; `limit` (standart 50) va `total` qo'shildi, mos kelganlar ko'p bo'lsa "Birinchi 50 ta ko'rsatildi, jami N ta —
   aniqroq yozing" izohi chiqadi; tanlangan nom ro'yxat o'zgarsa ham maydonda qoladi (`Combobox` — `onSearch`, `selectedLabel`,
   `total`). **T:** staging'da SKU sahifasida "Tovardan ajratish" tasdiqini va tovar tanlovida qidiruvni ko'rish.
-- [ ] B4.53 Tushuntirishlar: Dona, O'rtacha narx, Qoldiq, ABC, Holat ustunlarida "?"; "Jadvaldan tashqari" matni filtrda;
+- [x] B4.53 Tushuntirishlar: Dona, O'rtacha narx, Qoldiq, ABC, Holat ustunlarida "?"; "Jadvaldan tashqari" matni filtrda;
   sof foyda grafigida sotuvsiz kunlar xarajati.
+  ✓ 2026-11-09: (1) Dona (F2), O'rtacha narx (F3), Qoldiq (F24), ABC (F28) va Holat (F12, F13) ustun sarlavhalarida "?" —
+  formula, manba va qoida (`home.formula.units|avgPrice|stock|abc|label`; uz-Latn va ru; "Holat" ichida chegara — marja 5% dan past,
+  B4.55 sozlama qilgach matn yangilanadi). (2) "Jadvaldan tashqari" blokida qidiruv yoki filtr bor bo'lsa "bu qismlarga taʼsir
+  qilmaydi — butun davr va tanlangan doʻkonlar bo'yicha" izohi. (3) SKU sahifasi kunlik grafigida sotuvsiz kundagi xarajat (sof foyda
+  ≠ 0) endi chiziqda ko'rinadi (avval `units > 0` bo'lmasa kun bo'sh edi) va izoh chiqadi. **T:** staging'da Mahsulotlarda ustun
+  "?" larini, filtr bilan "Jadvaldan tashqari" izohini va xarajatli sotuvsiz kuni bor SKU grafigini ko'rish.
 - [ ] B4.54 Mobil (360 px): Mahsulotlar jadvali va SKU sahifasi KPI'lari, bosish maydoni ≥ 44 px, mobil e2e.
 - [ ] B4.55 "Chegarada" chegarasi Sozlamalarda (Temur: "statik emas, dinamik"; standart 5%, F13).
 - [ ] B4.56–B4.60 Sahifalash (ADR-054) boshqa sahifalarga: **Buyurtmalar, Uzum xarajatlari, Xaridlar, Ombor — qilindi** (quyida,

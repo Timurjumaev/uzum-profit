@@ -9,6 +9,7 @@ import { App, createAppState } from "../../App";
 import { formatterFor } from "../../lib/format";
 import { ITEMS_ROUTE, json, linkRoute, ME, ME_ROUTE, mockApi, ORG_ID, problem, skuRoute, SKUS_ROUTE, UNIT_CALC_ROUTE, type Routes } from "../../test/api";
 import { ITEM_1, SECOND, SKU_1, SKU_2, skuDetail, skuRow, skusData, unitCalc } from "../../test/products";
+import { DEFAULT_COLUMNS } from "./model";
 
 const f = formatterFor("uz-Latn");
 const norm = (text: string) => text.replace(/[\u00A0\u202F]/g, " ");
@@ -203,6 +204,28 @@ describe("jadval", () => {
     await renderTable();
     expect(screen.queryByRole("navigation", { name: "Sahifalar" })).toBeNull();
     expect(screen.queryByLabelText("Sahifada")).toBeNull();
+  });
+
+  it("Dona, O'rtacha narx, Qoldiq, Holat (va ABC) ustunlarida '?' tushuntirish: F-raqam, formula, manba (B4.53)", async () => {
+    localStorage.setItem(`up.products.columns.${ORG_ID}`, JSON.stringify([...DEFAULT_COLUMNS, "abc"]));
+    await renderTable();
+    for (const [name, code] of [["Dona", "F2"], ["Oʻrtacha narx", "F3"], ["Qoldiq", "F24"], ["Holat", "F12, F13"], ["ABC", "F28"]] as const) {
+      const th = within(table()).getAllByRole("columnheader").find((h) => h.textContent?.startsWith(name));
+      expect(th, name).toBeTruthy();
+      const help = within(th!).getByRole("button", { name: /Qanday hisoblanadi/ });
+      fireEvent.click(help);
+      expect(await screen.findByText(new RegExp(`· ${code}$`)), name).toBeTruthy();
+      fireEvent.keyDown(document.body, { key: "Escape" });
+    }
+  });
+
+  it("'Jadvaldan tashqari' — filtr bo'lsa 'filtr bu qismlarga ta'sir qilmaydi' izohi (B4.53)", async () => {
+    await renderTable();
+    expect(screen.queryByText(/Qidiruv va filtr bu qismlarga/)).toBeNull();
+    cleanup();
+    await renderAt(`${PATH}&label=loss`, { [SKUS_ROUTE]: () => json(200, skusData()) });
+    await screen.findByRole("table", { name: CAPTION });
+    expect(screen.getByText(/Qidiruv va filtr bu qismlarga taʼsir qilmaydi/)).toBeTruthy();
   });
 
   it("jadvaldan tashqari: SKU'ga bog'lanmagan sotuvlar va taqsimlanmagan xarajat alohida", async () => {
@@ -425,6 +448,19 @@ describe("unit kalkulyator", () => {
     fireEvent.change(screen.getByLabelText("Komissiya"), { target: { value: "20" } });
     await waitFor(() => expect(calls(api)).toHaveLength(1));
     expect(Object.fromEntries(calls(api)[0]!.searchParams)).toMatchObject({ logistics: "0", tax_pct: "0", ads_pct: "0" });
+  });
+});
+
+describe("SKU sahifasi grafigi (B4.53)", () => {
+  it("sotuvsiz kunda xarajat bo'lsa izoh chiqadi; bo'lmasa — yo'q", async () => {
+    await renderAt(`/products/${SKU_1}?from=2026-09-01&to=2026-10-31`);
+    await screen.findByRole("heading", { name: "Unit kalkulyator" });
+    expect(screen.queryByText(/Sotuvsiz kunlarda faqat xarajat/)).toBeNull();
+    cleanup();
+    const detail = skuDetail();
+    detail.history = [{ ...detail.history[0]!, net_profit: "-5000.00" }, ...detail.history.slice(1)];
+    await renderAt(`/products/${SKU_1}?from=2026-09-01&to=2026-10-31`, { [skuRoute(SKU_1)]: () => json(200, detail) });
+    expect(await screen.findByText(/Sotuvsiz kunlarda faqat xarajat/)).toBeTruthy();
   });
 });
 
