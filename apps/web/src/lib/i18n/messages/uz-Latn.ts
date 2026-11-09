@@ -32,6 +32,15 @@ export const uzLatn = {
     exportExcel: "Excel yuklab olish",
     exportFailed: "Faylni yuklab boʻlmadi. Qayta urinib koʻring.",
     sortBy: "{{name}} boʻyicha saralash",
+    pagination: {
+      label: "Sahifalar",
+      range: "{{from}}–{{to}} / {{total}} ta",
+      prev: "Oldingi sahifa",
+      next: "Keyingi sahifa",
+      page: "{{n}}-sahifa",
+      size: "Sahifada",
+      sizeOption: "{{n}} tadan",
+    },
     ascending: "oʻsish tartibida",
     descending: "kamayish tartibida",
     dismiss: "Yopish",
@@ -621,7 +630,7 @@ export const uzLatn = {
   },
   products: {
     title: "Mahsulotlar, {{period}}",
-    count: "{{shown}} / {{total}} ta SKU",
+    count: "Jami {{total}} ta SKU",
     caption: "Mahsulotlar: SKU boʻyicha sotuv va foyda",
     back: "Mahsulotlarga qaytish",
     search: "Mahsulot qidirish",
@@ -664,7 +673,6 @@ export const uzLatn = {
     },
     emptyFiltered: "Hech narsa topilmadi",
     resetFilters: "Filtrlarni tozalash",
-    more: "Yana yuklash",
     outside: {
       title: "Jadvaldan tashqari",
       note: "Jadval qatorlari va quyidagilar yigʻindisi — Foyda va zarar jami.",

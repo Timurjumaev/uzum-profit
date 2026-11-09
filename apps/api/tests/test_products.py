@@ -116,6 +116,27 @@ def test_table_filters_and_sorts(world: World) -> None:
     assert [r["sku_id"] for r in only_b["items"]] == [str(world.ids["zb"])]
 
 
+def test_table_pages(world: World) -> None:
+    """ADR-054: sahifa raqami bilan; sahifalar ketma-ket va takrorsiz, oxirgisidan oshgani — oxirgisi."""
+    everything = world.get("skus", limit=100, **OCT)
+    ids = [r["sku_id"] for r in everything["items"]]
+    assert everything["page"] == 1 and everything["pages"] == 1 and everything["total"] == len(ids)
+    assert len(ids) >= 3
+    seen: list[str] = []
+    for n in range(1, len(ids) + 1):
+        got = world.get("skus", limit=1, page=n, **OCT)
+        assert (got["page"], got["pages"], got["total"]) == (n, len(ids), len(ids))
+        seen += [r["sku_id"] for r in got["items"]]
+    assert seen == ids
+    last = world.get("skus", limit=2, page=999, **OCT)
+    assert last["page"] == last["pages"] == -(-len(ids) // 2)
+    assert [r["sku_id"] for r in last["items"]] == ids[(last["pages"] - 1) * 2 :]
+    empty = world.get("skus", q="yoqligi-aniq-zzz", **OCT)
+    assert (empty["items"], empty["page"], empty["pages"], empty["total"]) == ([], 1, 1, 0)
+    for bad in ({"page": 0}, {"limit": 0}, {"limit": 101}):
+        assert world.call("skus", **bad, **OCT).status_code == 422
+
+
 # --- F40: kalkulyator logistikasi -------------------------------------------------------------------
 
 

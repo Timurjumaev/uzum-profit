@@ -3520,8 +3520,10 @@ export interface components {
             items: components["schemas"]["SkuRowOut"][];
             /** Total */
             total: number;
-            /** Next Cursor */
-            next_cursor: string | null;
+            /** Page */
+            page: number;
+            /** Pages */
+            pages: number;
             unlinked: components["schemas"]["StatementOut"];
             unallocated: components["schemas"]["StatementOut"];
         };
@@ -5694,8 +5696,7 @@ export interface operations {
                 abc?: ("A" | "B" | "C") | null;
                 sort?: string;
                 limit?: number;
-                /** @description Oldingi javobdagi ``next_cursor`` */
-                cursor?: string | null;
+                page?: number;
                 /** @description Davr boshi (Toshkent kuni) */
                 start?: string | null;
                 /** @description Davr oxiri, kiradi; standart — bugun */

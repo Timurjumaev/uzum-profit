@@ -434,6 +434,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.48 (ADR-054): umumiy sahifalash — `Pagination` komponenti (sahifa raqamlari, 20/50/100, standart 50, o'lcham brauzerda eslanadi,
+  `page` URL'da); `/skus` `cursor` o'rniga `page`/`limit` (≤ 100) va `page`, `pages` javobi; Mahsulotlarda "Yana yuklash" va virtual
+  skroll o'rniga sahifalar; Excel eksport hamma qatorni sahifalashsiz oladi; birinchi Mahsulotlar e2e.
 - B4.47 (tamoyil 9, F13): Mahsulotlar jadvalida qisman tannarxsiz SKU'ning "Marja" va "Holat" ustunlarida "tannarxsiz N%"
   belgisi (izohida sotuvlar soni va nima qilish kerakligi) — avval bunday SKU belgisiz "Foydali" chiqardi.
 

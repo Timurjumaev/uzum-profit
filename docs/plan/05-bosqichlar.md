@@ -621,9 +621,16 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   ✓ 2026-11-09: qisman tannarxsiz SKU'da "Marja" va "Holat" ustunlarida "tannarxsiz 25%" (ogohlantirish rangida; ustiga
   kelganda: nechta sotuv va nima qilish kerak); hammasi tannarxsiz ("Ma'lumot yo'q") SKU'da — faqat marja yonida.
   **T:** staging'da Mahsulotlarda tannarxi qisman kiritilgan SKU yonida belgini ko'rish.
-- [ ] B4.48 Umumiy sahifalash (ADR-054): `Pagination` komponenti (sahifa raqamlari, 20/50/100, standart 50, URL'da `page`),
+- [x] B4.48 Umumiy sahifalash (ADR-054): `Pagination` komponenti (sahifa raqamlari, 20/50/100, standart 50, URL'da `page`),
   API sahifa + jami; Mahsulotlarga ("Yana yuklash" va virtual skroll o'rniga — 500+ qator xatosi va offset takrori yo'qoladi);
   Mahsulotlar uchun birinchi e2e.
+  ✓ 2026-11-09: `Pagination` (`components/ui`): "1–50 / 340 ta", sahifa raqamlari (ko'pida "…"), oldingi/keyingi, "Sahifada" 20/50/100
+  (tanlov brauzerda eslanadi, standart 50), ≤ 20 ta bo'lsa chizilmaydi, tugmalar ≥ 44 px. `/skus`: `cursor` o'rniga `page` (1 dan) va
+  `limit` ≤ 100 (standart 50), javobda `page` va `pages`; so'ralgan sahifa oxirgisidan oshsa API oxirgisini beradi va URL shunga
+  o'tadi; saralash/filtr/qidiruv/o'lcham o'zgarsa — 1-sahifa. Excel eksporti sahifalashsiz hamma qatorni oladi (`skus.ranked`).
+  Mahsulotlarda "Yana yuklash" olib tashlandi; jadval ≤ 100 qator bo'lgani uchun virtual skroll ishlamaydi (500+ qator xatosi
+  yo'qoldi). Birinchi Mahsulotlar e2e (`e2e/products.spec.ts`, desktop + mobil 360 px). **T:** staging'da Mahsulotlarda sahifalarni
+  almashtirish, "Sahifada" tanlovini va SKU'dan qaytganda sahifa saqlanmasligini ko'rish (saqlash — B4.50).
 - [ ] B4.49 Kalkulyator: to'xtovsiz qayta chizish (debounce) va noto'g'ri qiymatda aniq xato matni (422).
 - [ ] B4.50 SKU'dan qaytganda qidiruv, filtr, saralash va sahifa saqlanadi; "Zaxira kunlari" saralashida harakatsiz qoldiq
   (tezlik 0, qoldiq bor) yuqorida; nom bo'yicha saralash ko'rinadigan nom, katta-kichik harfsiz, lotin/kirill tartibida.

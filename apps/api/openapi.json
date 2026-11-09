@@ -2467,29 +2467,23 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "maximum": 500,
+              "maximum": 100,
               "minimum": 1,
-              "default": 100,
+              "default": 50,
               "title": "Limit"
             }
           },
           {
-            "name": "cursor",
+            "name": "page",
             "in": "query",
             "required": false,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Oldingi javobdagi ``next_cursor``",
-              "title": "Cursor"
-            },
-            "description": "Oldingi javobdagi ``next_cursor``"
+              "type": "integer",
+              "maximum": 100000,
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
           },
           {
             "name": "start",
@@ -14379,16 +14373,13 @@
             "type": "integer",
             "title": "Total"
           },
-          "next_cursor": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Next Cursor"
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "pages": {
+            "type": "integer",
+            "title": "Pages"
           },
           "unlinked": {
             "$ref": "#/components/schemas/StatementOut"
@@ -14402,7 +14393,8 @@
           "meta",
           "items",
           "total",
-          "next_cursor",
+          "page",
+          "pages",
           "unlinked",
           "unallocated"
         ],

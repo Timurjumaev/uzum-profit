@@ -29,8 +29,7 @@
   min-inline-size: 0;
 }
 
-.products__more {
-  display: flex;
+.products__pages {
   justify-content: center;
 }
 

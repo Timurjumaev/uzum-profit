@@ -1,7 +1,7 @@
 // Mahsulotlar (M6, B4.3): SKU jadvali — qidiruv (lotin/kirill), filtrlar, saralash (URL'da), ustun tanlash va saqlangan
-// ko'rinishlar (brauzerda), 500+ qatorda virtual skroll. Har raqam API'dan (`/skus`); har ustunda "?" formulasi (F-raqam).
+// ko'rinishlar (brauzerda), sahifalash (ADR-054: 20/50/100, `page` URL'da). Har raqam API'dan (`/skus`); har ustunda "?" formulasi (F-raqam).
 // Jadvaldan tashqari qismlar (SKUga bog'lanmagan sotuvlar, taqsimlanmagan xarajat) alohida — qatorlar + ular = P&L jami.
-import { keepPreviousData, useInfiniteQuery, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { Columns3, Save } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
@@ -11,7 +11,7 @@ import { errorText } from "../../app/errors";
 import { useFilters } from "../../app/filters";
 import { currentOrg, meQuery, shopsQuery, skusQuery, syncQuery } from "../../app/query";
 import { DEFAULT_PRODUCT_SORT, parseSort, productsSearch, PRODUCT_ABC, PRODUCT_LABELS, type ProductSort } from "../../app/search";
-import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, FormulaPopover, Popover, ProductThumb, Select, Skeleton, StatusPill, type Column, PageHelp } from "../../components/ui";
+import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, FormulaPopover, loadPageSize, Pagination, Popover, ProductThumb, savePageSize, Select, Skeleton, StatusPill, type Column, PageHelp } from "../../components/ui";
 import type { SkuRow, Skus } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { syncSummary } from "../../lib/sync";
@@ -48,13 +48,15 @@ export function Products() {
     () => ({ shops: filters.shops, start: filters.range.start, end: filters.range.end }),
     [filters.shops, filters.range.start, filters.range.end],
   );
-  const list = { q: search.q, sort: search.sort, label: search.label, abc: search.abc };
-  const query = useInfiniteQuery({ ...skusQuery(org.id, params, list), placeholderData: keepPreviousData });
+  const [size, setSize] = useState(loadPageSize);
+  const list = { q: search.q, sort: search.sort, label: search.label, abc: search.abc, page: search.page, size };
+  const query = useQuery({ ...skusQuery(org.id, params, list), placeholderData: keepPreviousData });
   const sync = useQuery(syncQuery(org.id));
   const shops = useQuery(shopsQuery(org.id));
 
-  const update = (patch: Record<string, string | undefined>) =>
-    void navigate({ to: "/products", search: (prev) => ({ ...prev, ...patch }), replace: true });
+  // Filtr, qidiruv yoki saralash o'zgarsa — 1-sahifa (ADR-054); sahifa almashtirish `page` ni o'zi beradi.
+  const update = (patch: Record<string, string | number | undefined>) =>
+    void navigate({ to: "/products", search: (prev) => ({ ...prev, page: undefined, ...patch }), replace: true });
 
   // Qidiruv: yozish tugagach (250 ms) URL'ga; URL boshqa joydan o'zgarsa (ko'rinish tanlandi) maydon ham yangilanadi.
   const [draft, setDraft] = useState(search.q ?? "");
@@ -73,8 +75,15 @@ export function Products() {
 
   const [stored, setStored] = useState<ColumnId[] | null>(() => loadColumns(org.id));
   const [views, setViews] = useState<SavedView[]>(() => loadViews(org.id));
-  const first = query.data?.pages[0];
-  const rows = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
+  const first = query.data;
+  const rows = first?.items ?? [];
+  // So'ralgan sahifa oxirgisidan oshib ketgan bo'lsa (filtr qisqartirdi) API oxirgisini beradi — URL ham shunga o'tadi.
+  const shownPage = first?.page;
+  useEffect(() => {
+    if (shownPage !== undefined && !query.isPlaceholderData && shownPage !== (search.page ?? 1)) {
+      void navigate({ to: "/products", search: (prev) => ({ ...prev, page: shownPage > 1 ? shownPage : undefined }), replace: true });
+    }
+  }, [shownPage, query.isPlaceholderData, search.page, navigate]);
   const chosen: readonly ColumnId[] = stored ?? DEFAULT_COLUMNS;
   const setColumns = (next: ColumnId[]) => {
     setStored(next);
@@ -128,7 +137,7 @@ export function Products() {
           <h1 className="h2">{t("products.title", { period: f.period(period.start, period.end) })}</h1>
           <PageHelp page="products" />
         </div>
-        <p className="caption">{t("products.count", { shown: f.number(rows.length), total: f.number(first.total) })}</p>
+        <p className="caption">{t("products.count", { total: f.number(first.total) })}</p>
       </header>
 
       <div className="products__bar" role="search">
@@ -190,13 +199,19 @@ export function Products() {
           }}
         />
       )}
-      {query.hasNextPage && (
-        <div className="products__more">
-          <Button variant="secondary" loading={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>
-            {t("products.more")}
-          </Button>
-        </div>
-      )}
+      <Pagination
+        className="products__pages"
+        page={first.page}
+        pages={first.pages}
+        total={first.total}
+        size={size}
+        onPage={(n) => update({ page: n > 1 ? n : undefined })}
+        onSize={(n) => {
+          savePageSize(n);
+          setSize(n);
+          update({});
+        }}
+      />
       <Outside data={first} />
     </section>
   );

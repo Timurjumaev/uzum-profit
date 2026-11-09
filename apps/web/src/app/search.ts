@@ -60,7 +60,13 @@ export type ProductAbc = (typeof PRODUCT_ABC)[number];
 /** Standart saralash: tushum kamayish tartibida (URL'da yozilmaydi). */
 export const DEFAULT_PRODUCT_SORT = { key: "revenue", desc: true } as const;
 
-export type ProductsSearch = { q?: string; sort?: string; label?: ProductLabel; abc?: ProductAbc };
+export type ProductsSearch = { q?: string; sort?: string; label?: ProductLabel; abc?: ProductAbc; page?: number };
+
+/** Sahifa raqami (ADR-054): 2 va undan katta butun son; 1-sahifa URL'da yozilmaydi. */
+export function pageParam(value: unknown): number | undefined {
+  const n = typeof value === "string" ? Number(value) : value;
+  return typeof n === "number" && Number.isInteger(n) && n >= 2 && n <= 100_000 ? n : undefined;
+}
 
 /** Mahsulotlar jadvali (M6): qidiruv, saralash (`-` — kamayish), holat va ABC filtrlari — havola bilan ulashiladi. */
 export function productsSearch(search: Record<string, unknown>): ProductsSearch {
@@ -72,6 +78,8 @@ export function productsSearch(search: Record<string, unknown>): ProductsSearch 
   }
   if ((PRODUCT_LABELS as readonly unknown[]).includes(search.label)) out.label = search.label as ProductLabel;
   if ((PRODUCT_ABC as readonly unknown[]).includes(search.abc)) out.abc = search.abc as ProductAbc;
+  const page = pageParam(search.page);
+  if (page !== undefined) out.page = page;
   return out;
 }
 
