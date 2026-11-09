@@ -1035,3 +1035,38 @@
 .page-title > h1 {
   margin: 0;
 }
+
+/* --- Sahifalash (ADR-054) --- */
+.ui-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.ui-pagination__range {
+  margin: 0;
+  align-self: center;
+}
+
+.ui-pagination__pages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.ui-pagination__pages .ui-btn {
+  min-inline-size: 44px; /* mobilda bosish maydoni (tamoyil 10) */
+  min-block-size: 44px;
+}
+
+.ui-pagination__pages .ui-btn[aria-current="page"] {
+  font-weight: 600;
+}
+
+.ui-pagination__gap {
+  padding-inline: var(--space-1);
+  color: var(--text-secondary);
+}

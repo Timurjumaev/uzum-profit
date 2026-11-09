@@ -125,16 +125,13 @@ export const expensesPage = (orgId: string, p: ReportParams, category: string | 
 
 // --- Mahsulotlar (M6, B4.3) ---------------------------------------------------------------------------------------
 
-export const SKU_PAGE = 200;
+export type SkuListParams = { q?: string; sort?: string; label?: string; abc?: string; page?: number; size?: number };
 
-export type SkuListParams = { q?: string; sort?: string; label?: string; abc?: string };
-
-/** SKU jadvali: kursor bilan sahifalanadi (`next_cursor`); `placeholderData` bilan filtr o'zgarganda jadval yo'qolmaydi. */
+/** SKU jadvali, bitta sahifa (ADR-054: `page` 1 dan, `limit` 20/50/100); `placeholderData` bilan sahifa almashganda jadval yo'qolmaydi. */
 export const skusQuery = (orgId: string, p: ReportParams, l: SkuListParams) =>
-  infiniteQueryOptions({
+  queryOptions({
     queryKey: ["orgs", orgId, "skus", p, l],
-    initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) =>
+    queryFn: () =>
       unwrap(
         api.GET("/api/v1/orgs/{org_id}/skus", {
           params: {
@@ -145,13 +142,12 @@ export const skusQuery = (orgId: string, p: ReportParams, l: SkuListParams) =>
               sort: l.sort,
               label: l.label as "loss" | undefined,
               abc: l.abc as "A" | undefined,
-              limit: SKU_PAGE,
-              cursor: pageParam,
+              limit: l.size ?? 50,
+              page: l.page ?? 1,
             },
           },
         }),
       ),
-    getNextPageParam: (last) => last.next_cursor,
   });
 
 /** SKU sahifasi: shu davr hisobi, kunlik tarix, lotlar, qaytish sabablari, kalkulyator boshlang'ich qiymatlari. */

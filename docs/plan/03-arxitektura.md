@@ -236,7 +236,7 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
 
 - REST, `/api/v1`, JSON, OpenAPI avtomatik; frontend tiplari undan generatsiya qilinadi (CI'da farq bo'lsa xato).
 - Pul qiymatlari satr ("123456.00"), foizlar Decimal satr; sanalar ISO 8601; vaqt UTC.
-- Ro'yxatlar: kursor pagination, `sort`, `filter[...]`; eksport endpoint'lari alohida (`.xlsx`, `.pdf`).
+- Ro'yxatlar: kursor pagination (Mahsulotlar `/skus` — sahifa raqami: `page` 1 dan, `limit` ≤ 100, javobda `total`, `page`, `pages`; ADR-054), `sort`, `filter[...]`; eksport endpoint'lari alohida (`.xlsx`, `.pdf`).
 - Xatolar: RFC 9457 `application/problem+json`, `code` maydoni bilan (frontend matnni i18n'dan oladi).
 - Resurslar: `auth`, `orgs`, `members`, `accounts` (marketplace), `shops`, `sync`, `dashboard`, `pnl`, `skus`,
   `items`, `sales`, `expenses`, `purchases`, `suppliers`, `carriers`, `inventory`, `supplies`, `cash`, `goals`,
@@ -261,7 +261,7 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
   `features/<modul>` (sahifa logikasi).
 - Formatlash faqat `lib/format` orqali (04-dizayn.md §8): son, pul, foiz, sana; hech joyda `toLocaleString` to'g'ridan.
 - PWA: o'rnatiladigan, oxirgi bosh sahifa oflayn o'qish uchun keshda; web push [B6].
-- Tezlik byudjeti: boshlang'ich JS ≤ 250 KB gzip, har marshrut alohida bo'lak, 500+ qatorli jadvallar virtual.
+- Tezlik byudjeti: boshlang'ich JS ≤ 250 KB gzip, har marshrut alohida bo'lak, uzun ro'yxatlar sahifalanadi (ADR-054; bir sahifada ≤ 100 qator).
 
 ## 10. Xavfsizlik
 

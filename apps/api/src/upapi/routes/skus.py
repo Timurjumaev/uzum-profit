@@ -10,7 +10,7 @@ xarajatining tushum ulushi, ADR-026); sotuvsiz kun xarajati — ``unallocated`` 
 API bergandek olinadi (ADR-035).
 
 Qidiruv (``q``) — SKU nomi, mahsulot nomi, artikul, shtrix-kod; lotin/kirill va tutuq turidan qat'i nazar.
-Filtrlar: ``label`` (holat belgisi), ``abc``, ``shop``. Saralash ``sort`` (``-`` — kamayish), sahifalash ``cursor`` bilan.
+Filtrlar: ``label`` (holat belgisi), ``abc``, ``shop``. Saralash ``sort`` (``-`` — kamayish), sahifalash ``page`` (1 dan) va ``limit`` bilan (ADR-054).
 
 ``/skus/{id}`` — SKU sahifasi: KPI'lar (shu davr hisobi), kunlik tarix (sotuv, foyda, narx, qoldiq snapshotlari),
 tannarx tarixi (tovar lotlari), qaytish sabablari, bog'langan tovar va unit kalkulyator boshlang'ich qiymatlari
@@ -45,14 +45,10 @@ from upapi.errors import AppError
 from upapi.reports import cells as rc
 from upapi.reports import products as rp
 from upapi.reports.common import (
-    Cursor,
     Filters,
     Heavy,
-    Limit,
     Meta,
     SkuInfo,
-    decode_cursor,
-    encode_cursor,
     filters,
     fold,
     meta,
@@ -177,7 +173,8 @@ class SkusOut(BaseModel):
     meta: Meta
     items: list[SkuRowOut]
     total: int  # filtr (``q``, ``label``, ``abc``) bo'yicha jami SKU
-    next_cursor: str | None
+    page: int  # haqiqiy sahifa (so'ralgani oxirgidan katta bo'lsa — oxirgisi)
+    pages: int  # jami sahifa (kamida 1)
     unlinked: StatementOut  # SKU'ga bog'lanmagan sotuvlar
     unallocated: StatementOut  # sotuvsiz kun xarajatlari (taqsimlanmagan)
 
@@ -235,24 +232,20 @@ def _row(
     )
 
 
-@router.get("/orgs/{org_id}/skus", response_model=SkusOut)
-async def skus(
-    ctx: Finance,
-    f: Filter,
-    _: Heavy,
-    q: Annotated[str | None, Query(max_length=100)] = None,
-    label: Annotated[ProfitLabel | None, Query(description="Holat belgisi bo'yicha")] = None,
-    abc: Annotated[Literal["A", "B", "C"] | None, Query(description="ABC (F28)")] = None,
-    sort: Annotated[str, Query(pattern=r"^-?[a-z_]+$")] = "-revenue",
-    limit: Limit = 100,
-    cursor: Cursor = None,
-) -> SkusOut:
+async def ranked(
+    ctx: OrgContext,
+    f: Filters,
+    q: str | None,
+    label: ProfitLabel | None,
+    abc: str | None,
+    sort: str,
+) -> tuple[list[SkuRowOut], dict[str | None, Statement]]:
+    """Filtrlangan va saralangan hamma SKU qatorlari (sahifalashsiz) va SKU kesimi; Excel eksport ham shundan oladi."""
     desc = sort.startswith("-")
     try:
         key = SkuSort(sort.lstrip("-"))
     except ValueError:
         raise AppError("bad_sort", 422, detail=sort) from None
-    offset = int((decode_cursor(cursor, 1) or [0])[0])
     book = await rc.load_book(ctx.conn, f.period, f.today)
     cells = book.scoped(f)
     by_sku = cells.by_sku()
@@ -288,14 +281,32 @@ async def skus(
         key=lambda r: _value(r, key),
         reverse=desc,
     )
-    ordered = known + nones  # qiymatsizlar doim oxirida
-    page = ordered[offset : offset + limit]
-    more = offset + limit < len(ordered)
+    return known + nones, by_sku  # qiymatsizlar doim oxirida
+
+
+@router.get("/orgs/{org_id}/skus", response_model=SkusOut)
+async def skus(
+    ctx: Finance,
+    f: Filter,
+    _: Heavy,
+    q: Annotated[str | None, Query(max_length=100)] = None,
+    label: Annotated[ProfitLabel | None, Query(description="Holat belgisi bo'yicha")] = None,
+    abc: Annotated[Literal["A", "B", "C"] | None, Query(description="ABC (F28)")] = None,
+    sort: Annotated[str, Query(pattern=r"^-?[a-z_]+$")] = "-revenue",
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    page: Annotated[int, Query(ge=1, le=100_000)] = 1,
+) -> SkusOut:
+    ordered, by_sku = await ranked(ctx, f, q, label, abc, sort)
+    empty = Cells(f.period, {}).statement()
+    pages = max(1, -(-len(ordered) // limit))
+    page = min(page, pages)  # filtr o'zgargach sahifa oxirgidan oshib ketsa — oxirgisi
+    start = (page - 1) * limit
     return SkusOut(
         meta=await meta(ctx.conn, f, KINDS),
-        items=page,
+        items=ordered[start : start + limit],
         total=len(ordered),
-        next_cursor=encode_cursor([offset + limit]) if more else None,
+        page=page,
+        pages=pages,
         unlinked=StatementOut.of(by_sku.get(rc.UNLINKED, empty)),
         unallocated=StatementOut.of(by_sku.get(None, empty)),
     )

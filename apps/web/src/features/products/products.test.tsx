@@ -63,7 +63,7 @@ describe("jadval", () => {
     expect(within(second).getByText("Maʼlumot yoʻq")).toBeTruthy();
     expect(within(second).getAllByText("—").length).toBeGreaterThan(0);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toContain("Mahsulotlar");
-    expect(screen.getByText("2 / 2 ta SKU")).toBeTruthy();
+    expect(screen.getByText("Jami 2 ta SKU")).toBeTruthy();
   });
 
   it("B4.42: bitta 'Tannarx/dona' ustuni — sotuv bo'lsa davr o'rtachasi, bo'lmasa oxirgi partiya izoh bilan; 'Oxirgi partiya' ustuni yo'q", async () => {
@@ -138,19 +138,51 @@ describe("jadval", () => {
     await waitFor(() => expect(history.location.search).not.toContain("q="));
   });
 
-  it("'Yana yuklash': keyingi sahifa kursor bilan so'raladi va qatorlar qo'shiladi", async () => {
-    const { api } = await renderAt(PATH, {
+  it("sahifalash: 20 tadan ko'p bo'lsa raqamlar, keyingi sahifa `page` bilan so'raladi va URL'ga yoziladi", async () => {
+    const { api, history } = await renderAt(PATH, {
       [SKUS_ROUTE]: [
-        () => json(200, skusData({ items: [skuRow()], total: 2, next_cursor: "abc" })),
-        () => json(200, skusData({ items: [SECOND], total: 2, next_cursor: null })),
+        () => json(200, skusData({ items: [skuRow()], total: 120, page: 1, pages: 3 })),
+        () => json(200, skusData({ items: [SECOND], total: 120, page: 2, pages: 3 })),
       ],
     });
     await screen.findByRole("table", { name: CAPTION });
-    expect(screen.getByText("1 / 2 ta SKU")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Yana yuklash" }));
-    await waitFor(() => expect(within(table()).getAllByRole("row")).toHaveLength(3));
-    expect(skusUrls(api)[1]!.searchParams.get("cursor")).toBe("abc");
+    expect(skusUrls(api)[0]!.searchParams.get("page")).toBe("1");
+    expect(skusUrls(api)[0]!.searchParams.get("limit")).toBe("50");
     expect(screen.queryByRole("button", { name: "Yana yuklash" })).toBeNull();
+    expect(screen.getByText(/1–50 \/ 120 ta/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "1-sahifa" }).getAttribute("aria-current")).toBe("page");
+    fireEvent.click(screen.getByRole("button", { name: "Keyingi sahifa" }));
+    await waitFor(() => expect(skusUrls(api)[1]!.searchParams.get("page")).toBe("2"));
+    expect(history.location.search).toContain("page=2");
+    await waitFor(() => expect(within(table()).getByRole("link", { name: "Кружка белая" })).toBeTruthy());
+    expect(screen.getByText(/51–100 \/ 120 ta/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "2-sahifa" }).getAttribute("aria-current")).toBe("page");
+  });
+
+  it("sahifa o'lchami tanlanadi va eslanadi; filtr o'zgarsa — 1-sahifa", async () => {
+    const { api, history } = await renderAt(`${PATH}&page=2`, {
+      [SKUS_ROUTE]: (r) => json(200, skusData({ items: [SECOND], total: 120, page: Number(new URL(r.url).searchParams.get("page")), pages: 3 })),
+    });
+    await screen.findByRole("table", { name: CAPTION });
+    expect(skusUrls(api)[0]!.searchParams.get("page")).toBe("2");
+    fireEvent.change(screen.getByLabelText("Sahifada"), { target: { value: "20" } });
+    await waitFor(() => expect(skusUrls(api).some((u) => u.searchParams.get("limit") === "20" && u.searchParams.get("page") === "1")).toBe(true));
+    expect(history.location.search).not.toContain("page=");
+    expect(localStorage.getItem("sellermax.pageSize")).toBe("20");
+    fireEvent.change(screen.getByLabelText("Holat"), { target: { value: "loss" } });
+    await waitFor(() => expect(skusUrls(api).some((u) => u.searchParams.get("label") === "loss" && u.searchParams.get("page") === "1")).toBe(true));
+  });
+
+  it("URL'dagi sahifa oxirgisidan oshsa — API qaytargan sahifaga o'tadi", async () => {
+    const { history } = await renderAt(`${PATH}&page=9`, { [SKUS_ROUTE]: () => json(200, skusData({ total: 60, page: 2, pages: 2 })) });
+    await screen.findByRole("table", { name: CAPTION });
+    await waitFor(() => expect(history.location.search).toContain("page=2"));
+  });
+
+  it("20 tadan kam — sahifalash chizilmaydi", async () => {
+    await renderTable();
+    expect(screen.queryByRole("navigation", { name: "Sahifalar" })).toBeNull();
+    expect(screen.queryByLabelText("Sahifada")).toBeNull();
   });
 
   it("jadvaldan tashqari: SKU'ga bog'lanmagan sotuvlar va taqsimlanmagan xarajat alohida", async () => {

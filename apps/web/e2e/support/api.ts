@@ -8,6 +8,7 @@ import { inventoryData } from "../../src/test/inventory";
 import { pnlData, skuColumns } from "../../src/test/pnl";
 import { openingData, openingRow } from "../../src/test/opening";
 import { settingsData } from "../../src/test/settings";
+import { skuRow, skusData } from "../../src/test/products";
 import { PURCHASE_1, purchaseDetail, purchaseRow } from "../../src/test/purchases";
 import { SHIPMENT_1, shipmentDetail, shipmentRow } from "../../src/test/shipments";
 
@@ -243,6 +244,16 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
         openingRow({ item_id: null, sku_id: id, name: "AirPods gʻilof", skus: [sku], product_id: "p-airgilof", product: "AirPods gʻilof", revenue: "500000.00", uzum_suggested: n });
       const base = openingData();
       return json(route, 200, { ...base, rows: [base.rows[0]!, variant("v1", "ELONE-AIRGILOF-ВИШН-4", 12), variant("v2", "ELONE-AIRGILOF-ПАСТ-4", 9), ...base.rows.slice(1)] });
+    }
+    if (key === `GET /orgs/${ORG_ID}/skus`) {
+      // 120 ta SKU, sahifa bo'yicha (ADR-054): `page`/`limit` ga qarab kesadi, oxirgisidan oshsa — oxirgisi.
+      const all = Array.from({ length: 120 }, (_, i) =>
+        skuRow({ sku_id: `5${String(i).padStart(7, "0")}-1111-4111-8111-111111111111`, title: `Tovar ${String(i + 1).padStart(3, "0")}` }),
+      );
+      const limit = Number(url.searchParams.get("limit") ?? 50);
+      const pages = Math.ceil(all.length / limit);
+      const at = Math.min(Number(url.searchParams.get("page") ?? 1), pages);
+      return json(route, 200, skusData({ items: all.slice((at - 1) * limit, at * limit), total: all.length, page: at, pages }));
     }
     if (key === `GET /orgs/${ORG_ID}/inventory`) return json(route, 200, inventoryData());
     if (key === `GET /orgs/${ORG_ID}/purchases`) return json(route, 200, { items: [purchaseRow()], amounts: true });

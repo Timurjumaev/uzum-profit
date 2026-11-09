@@ -32,6 +32,15 @@ export const ru: Messages = {
     exportExcel: "Скачать Excel",
     exportFailed: "Не удалось скачать файл. Повторите попытку.",
     sortBy: "Сортировать по: {{name}}",
+    pagination: {
+      label: "Страницы",
+      range: "{{from}}–{{to}} из {{total}}",
+      prev: "Предыдущая страница",
+      next: "Следующая страница",
+      page: "Страница {{n}}",
+      size: "На странице",
+      sizeOption: "по {{n}}",
+    },
     ascending: "по возрастанию",
     descending: "по убыванию",
     dismiss: "Закрыть",
@@ -619,7 +628,7 @@ export const ru: Messages = {
   },
   products: {
     title: "Товары, {{period}}",
-    count: "{{shown}} / {{total}} SKU",
+    count: "Всего {{total}} SKU",
     caption: "Товары: продажи и прибыль по SKU",
     back: "Назад к товарам",
     search: "Поиск товара",
@@ -662,7 +671,6 @@ export const ru: Messages = {
     },
     emptyFiltered: "Ничего не найдено",
     resetFilters: "Сбросить фильтры",
-    more: "Загрузить ещё",
     outside: {
       title: "Вне таблицы",
       note: "Строки таблицы и перечисленное ниже в сумме дают итог «Прибыли и убытка».",

@@ -22,6 +22,8 @@ import {
   LedgerTable,
   MoneyInput,
   NumberInput,
+  Pagination,
+  pageItems,
   ProductThumb,
   ProgressBar,
   Skeleton,
@@ -467,5 +469,40 @@ describe("holat va qolganlari", () => {
     expect(current.textContent).toContain("Kechikmoqda");
     expect(container.textContent).toContain("kutilmoqda ~28.10");
     expect(container.textContent).toContain("02.10");
+  });
+});
+
+describe("Pagination (ADR-054)", () => {
+  it("sahifa raqamlari: kam bo'lsa hammasi, ko'p bo'lsa qisqartiriladi", () => {
+    expect(pageItems(1, 1)).toEqual([1]);
+    expect(pageItems(3, 7)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(pageItems(1, 20)).toEqual([1, 2, 3, 4, null, 20]);
+    expect(pageItems(10, 20)).toEqual([1, null, 9, 10, 11, null, 20]);
+    expect(pageItems(20, 20)).toEqual([1, null, 17, 18, 19, 20]);
+  });
+
+  it("oraliq matni, joriy sahifa, chegarada tugmalar o'chiq, bosilganda sahifa/o'lcham beriladi", () => {
+    const onPage = vi.fn();
+    const onSize = vi.fn();
+    wrap(<Pagination page={1} pages={3} total={120} size={50} onPage={onPage} onSize={onSize} />);
+    expect(screen.getByText(/1–50 \/ 120 ta/)).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Oldingi sahifa" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByRole("button", { name: "1-sahifa" }).getAttribute("aria-current")).toBe("page");
+    fireEvent.click(screen.getByRole("button", { name: "3-sahifa" }));
+    expect(onPage).toHaveBeenCalledWith(3);
+    fireEvent.click(screen.getByRole("button", { name: "1-sahifa" }));
+    expect(onPage).toHaveBeenCalledTimes(1); // joriy sahifa qayta so'ralmaydi
+    fireEvent.change(screen.getByLabelText("Sahifada"), { target: { value: "100" } });
+    expect(onSize).toHaveBeenCalledWith(100);
+  });
+
+  it("bitta sahifaga sig'sa chizilmaydi; oxirgi sahifada oraliq jamigacha", () => {
+    const noop = () => undefined;
+    const { container } = wrap(<Pagination page={1} pages={1} total={20} size={50} onPage={noop} onSize={noop} />);
+    expect(container.firstChild).toBeNull();
+    cleanup();
+    wrap(<Pagination page={3} pages={3} total={120} size={50} onPage={noop} onSize={noop} />);
+    expect(screen.getByText(/101–120 \/ 120 ta/)).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Keyingi sahifa" }) as HTMLButtonElement).disabled).toBe(true);
   });
 });

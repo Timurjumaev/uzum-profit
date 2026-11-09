@@ -170,10 +170,9 @@ async def export_skus(
 ) -> Response:
     _need(ctx, Permission.VIEW_FINANCE)
 
-    async def fetch(cursor: str | None) -> Any:
-        return await skus_routes.skus(ctx, f, None, q, label, abc, sort, MAX_LIMIT, cursor)
-
-    rows = await _all(fetch)
+    rows, _ = await skus_routes.ranked(
+        ctx, f, q, label, abc, sort
+    )  # sahifalashsiz — Excel hamma qatorni chiqaradi
     note = [_period(f), *_shops(f)]
     return _file(f"mahsulotlar-{_span(f)}", xlsx.build("Mahsulotlar", SKUS, rows, note))
 
