@@ -434,6 +434,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.56–B4.60 (ADR-054): sahifalash Buyurtmalar, Uzum xarajatlari, Xaridlar va Omborga — `Pagination`, `page` URL'da, umumiy
+  "Sahifada" o'lchami; `/sales`, `/expenses` — `page` rejimi (`cursor` drill-down uchun qoladi) va `total`/`page`/`pages`;
+  `/inventory` — `page`/`limit`; `/purchases` — ixtiyoriy `limit`/`page`; "Yana yuklash" olib tashlandi.
 - B4.48 (ADR-054): umumiy sahifalash — `Pagination` komponenti (sahifa raqamlari, 20/50/100, standart 50, o'lcham brauzerda eslanadi,
   `page` URL'da); `/skus` `cursor` o'rniga `page`/`limit` (≤ 100) va `page`, `pages` javobi; Mahsulotlarda "Yana yuklash" va virtual
   skroll o'rniga sahifalar; Excel eksport hamma qatorni sahifalashsiz oladi; birinchi Mahsulotlar e2e.

@@ -96,7 +96,10 @@ class SalesSummaryOut(BaseModel):
 class SalesOut(BaseModel):
     meta: Meta
     items: list[SaleOut]
-    next_cursor: str | None
+    next_cursor: str | None  # kursor rejimi (`cursor`); sahifa rejimida (`page`) — None
+    total: int  # filtr bo'yicha jami qator
+    page: int  # haqiqiy sahifa (`page` berilmasa 1)
+    pages: int  # jami sahifa (kamida 1)
     summary: SalesSummaryOut
 
 
@@ -113,6 +116,9 @@ async def sales(
     ] = False,
     limit: Limit = 100,
     cursor: Cursor = None,
+    page: Annotated[
+        int | None, Query(ge=1, le=100_000, description="Sahifa raqami (1 dan); `cursor` o'rniga")
+    ] = None,
 ) -> SalesOut:
     s, c = m.sale_items, m.sale_costs
     now = await db_now(ctx.conn)
@@ -135,6 +141,9 @@ async def sales(
     if counted:
         wanted = [x for g in sorted(COUNTED) for x in sorted(statuses(g))]
         where.append(func.upper(func.trim(s.c.status)).in_(wanted))
+    total = int(await ctx.conn.scalar(select(func.count()).select_from(s).where(*where)) or 0)
+    pages = max(1, -(-total // limit))
+    at_page = 1 if page is None else min(page, pages)
     x = charged_logistics()
     query = (
         select(s, c.c.cogs, c.c.flags, c.c.changed_at, c.c.previous_cogs, effective_logistics(s, x))
@@ -144,11 +153,13 @@ async def sales(
         .order_by(s.c.ordered_at.desc(), s.c.id.desc())
         .limit(limit + 1)
     )
-    if after is not None:
+    if page is not None:
+        query = query.offset((at_page - 1) * limit)
+    elif after is not None:
         at, last = datetime.fromisoformat(after[0]), UUID(after[1])
         query = query.where(or_(s.c.ordered_at < at, and_(s.c.ordered_at == at, s.c.id < last)))
     rows = list(await ctx.conn.execute(query))
-    more = len(rows) > limit
+    more = len(rows) > limit and page is None
     rows = rows[:limit]
     recent = now - timedelta(days=rc.RECALC_DAYS)
     lines = [rc.sale_line(r) for r in rows]
@@ -197,6 +208,9 @@ async def sales(
         next_cursor=encode_cursor([tail.ordered_at.isoformat(), str(tail.id)])
         if more and tail is not None
         else None,
+        total=total,
+        page=at_page,
+        pages=pages,
         summary=SalesSummaryOut(
             units=units,
             canceled=canceled,

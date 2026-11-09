@@ -80,7 +80,8 @@ export function inventoryData(over: Partial<S["InventoryOut"]> = {}): S["Invento
     as_of: "2026-10-31",
     items: [stockRow(), deadRow()],
     total: 2,
-    next_cursor: null,
+    page: 1,
+    pages: 1,
     totals: {
       frozen_money: { china: "2400000.00", road: "3600000.00", own: "1500000.00", fbo: "800000.00", fbs: "200000.00", defected: "100000.00" },
       frozen_total: "8600000.00",

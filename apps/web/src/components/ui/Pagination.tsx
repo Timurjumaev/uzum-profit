@@ -2,6 +2,7 @@
 // Tanlangan o'lcham brauzerda eslanadi (standart 50); sahifa raqami URL'da — sahifa komponentida. Bir sahifaga
 // sig'adigan ro'yxatda (jami ≤ eng kichik o'lcham) hech narsa chizilmaydi.
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useFormat } from "../../lib/i18n";
@@ -29,6 +30,18 @@ export function savePageSize(size: number): void {
   } catch {
     /* xotira yopiq (maxfiy oyna) — tanlov faqat shu sessiyada */
   }
+}
+
+/** Sahifa o'lchami holati: boshlang'ich qiymat — brauzerda eslangani; o'zgarsa eslab qolinadi. */
+export function usePageSize(): [number, (size: number) => void] {
+  const [size, setSize] = useState(loadPageSize);
+  return [
+    size,
+    (next) => {
+      savePageSize(next);
+      setSize(next);
+    },
+  ];
 }
 
 /** Ko'rinadigan sahifa raqamlari: birinchi, oxirgi, joriy va qo'shnilari; orasi — `null` (ko'p nuqta). */

@@ -33,8 +33,7 @@
   min-inline-size: 0;
 }
 
-.inventory__more {
-  display: flex;
+.inventory__pages {
   justify-content: center;
 }
 

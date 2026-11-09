@@ -56,6 +56,9 @@ export function salesData(over: Partial<Sales> = {}): Sales {
       sale({ id: "s4", day: "2026-10-05", status: "PROCESSING", group: "processing", cost_flags: ["estimated"], logistics_estimated: "10000.00" }),
     ],
     next_cursor: null,
+    total: 4,
+    page: 1,
+    pages: 1,
     summary: { units: 13, canceled: 5, returns: 3, cancel_share: "0.277778", return_share: "0.187500" },
     ...over,
   };

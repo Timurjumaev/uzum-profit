@@ -141,18 +141,22 @@ describe("roʻyxat", () => {
     expect(urls(bad.api, SALES_ROUTE)[0]!.searchParams.get("group")).toBeNull();
   });
 
-  it("sahifalash: 'Yana yuklash' kursor bilan keyingi qatorlarni qo'shadi", async () => {
-    const { api } = await renderAt(PATH, {
-      [SALES_ROUTE]: [
-        () => json(200, salesData({ items: [sale()], next_cursor: "CUR1" })),
-        () => json(200, salesData({ items: [sale({ id: "s9", sku_title: "Ikkinchi sahifa" })], next_cursor: null })),
-      ],
+  it("sahifalash: keyingi sahifa `page` bilan so'raladi va URL'ga yoziladi; holat filtri 1-sahifaga qaytaradi", async () => {
+    const { api, history } = await renderAt(PATH, {
+      [SALES_ROUTE]: (r) => {
+        const page = Number(new URL(r.url).searchParams.get("page"));
+        return json(200, salesData(page === 2 ? { items: [sale({ id: "s9", sku_title: "Ikkinchi sahifa" })], total: 120, page: 2, pages: 3 } : { items: [sale()], total: 120, page: 1, pages: 3 }));
+      },
     });
     await screen.findByRole("table", { name: CAPTION });
-    fireEvent.click(screen.getByRole("button", { name: "Yana yuklash" }));
-    expect(await screen.findByText("Ikkinchi sahifa")).toBeTruthy();
-    expect(urls(api, SALES_ROUTE)[1]!.searchParams.get("cursor")).toBe("CUR1");
+    expect(urls(api, SALES_ROUTE)[0]!.searchParams.get("page")).toBe("1");
+    expect(urls(api, SALES_ROUTE)[0]!.searchParams.get("limit")).toBe("50");
     expect(screen.queryByRole("button", { name: "Yana yuklash" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Keyingi sahifa" }));
+    expect(await screen.findByText("Ikkinchi sahifa")).toBeTruthy();
+    expect(history.location.search).toContain("page=2");
+    fireEvent.change(screen.getByLabelText("Holat"), { target: { value: "completed" } });
+    await waitFor(() => expect(history.location.search).not.toContain("page="));
   });
 
   it("bo'sh davr — bo'sh holat; xato — qayta urinish bannerı", async () => {

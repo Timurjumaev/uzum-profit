@@ -16,7 +16,7 @@ export { changeTone, Kpi, Sparkline } from "./Kpi";
 export { LedgerTable, type LedgerRow } from "./LedgerTable";
 export { Dialog, Drawer } from "./Overlay";
 export { PageHelp, HELP_PAGES, type HelpPage } from "./PageHelp";
-export { DEFAULT_PAGE_SIZE, loadPageSize, PAGE_SIZES, Pagination, pageItems, savePageSize } from "./Pagination";
+export { DEFAULT_PAGE_SIZE, loadPageSize, PAGE_SIZES, Pagination, pageItems, savePageSize, usePageSize } from "./Pagination";
 export { Popover, Tooltip } from "./Popover";
 export { ProductThumb } from "./ProductThumb";
 export { Segmented, type SegmentedOption } from "./Segmented";

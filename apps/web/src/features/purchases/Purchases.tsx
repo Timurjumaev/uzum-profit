@@ -1,16 +1,16 @@
 // Xaridlar ro'yxati (M9, B4.6; 04 §7.4): bosqich guruhi (URL'da), har xaridda ixcham Partiya yo'li, dona (buyurtma /
 // qabul), jami va o'rtacha tannarx/dona (F20 — jonli, API'dan; taxminiy bo'lsa "~"). "Yangi xarid" — egasi, menejer,
 // omborchi (`manage_purchases`); omborchi summalarni ko'rmaydi.
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { TriangleAlert } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
-import { currentOrg, meQuery, purchasesQuery } from "../../app/query";
+import { currentOrg, meQuery, purchasesPageQuery } from "../../app/query";
 import { PURCHASE_GROUPS, purchasesSearch, type PurchaseGroup } from "../../app/search";
-import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, Skeleton, type Column, PageHelp } from "../../components/ui";
+import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, Pagination, Skeleton, usePageSize, type Column, PageHelp } from "../../components/ui";
 import { cx } from "../../components/ui/cx";
 import type { PurchaseRow, StageMark } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
@@ -54,12 +54,21 @@ export function Purchases() {
   const { data: me } = useSuspenseQuery(meQuery);
   const org = currentOrg(me)!;
   const navigate = useNavigate();
-  const group = purchasesSearch(useSearch({ strict: false }) as Record<string, unknown>).group;
-  const query = useQuery(purchasesQuery(org.id, group ? GROUP_STAGES[group] : []));
+  const search = purchasesSearch(useSearch({ strict: false }) as Record<string, unknown>);
+  const group = search.group;
+  const [size, setSize] = usePageSize();
+  const query = useQuery({ ...purchasesPageQuery(org.id, group ? GROUP_STAGES[group] : [], search.page, size), placeholderData: keepPreviousData });
+  // So'ralgan sahifa oxirgisidan oshib ketgan bo'lsa API oxirgisini beradi — URL ham shunga o'tadi.
+  const shownPage = query.data?.page;
+  useEffect(() => {
+    if (shownPage !== undefined && !query.isPlaceholderData && shownPage !== (search.page ?? 1)) {
+      void navigate({ to: "/purchases", search: (prev) => ({ ...prev, group, page: shownPage > 1 ? shownPage : undefined }), replace: true });
+    }
+  }, [shownPage, query.isPlaceholderData, search.page, navigate, group]);
   const [adding, setAdding] = useState(false);
   const canManage = MANAGE_ROLES.includes(org.role);
   const amounts = query.data?.amounts ?? true;
-  const setGroup = (next: PurchaseGroup | undefined) => void navigate({ to: "/purchases", search: (prev) => ({ ...prev, group: next }), replace: true });
+  const setGroup = (next: PurchaseGroup | undefined) => void navigate({ to: "/purchases", search: (prev) => ({ ...prev, group: next, page: undefined }), replace: true });
   const units = (r: PurchaseRow) =>
     r.units_received === null ? t("purchases.unitsOrdered", { ordered: f.number(r.units_ordered) }) : t("purchases.unitsReceived", { received: f.number(r.units_received), ordered: f.number(r.units_ordered) });
   const columns: Column<PurchaseRow>[] = [
@@ -155,7 +164,20 @@ export function Purchases() {
             <EmptyState title={t("purchases.empty")} text={t("purchases.emptyText")} action={canManage ? <Button onClick={() => setAdding(true)}>{t("purchases.add")}</Button> : undefined} />
           )
         ) : (
-          <DataTable caption={t("purchases.list")} columns={columns} rows={query.data.items} rowKey={(r) => r.id} />
+          <>
+            <DataTable caption={t("purchases.list")} columns={columns} rows={query.data.items} rowKey={(r) => r.id} />
+            <Pagination
+              page={query.data.page}
+              pages={query.data.pages}
+              total={query.data.total}
+              size={size}
+              onPage={(n) => void navigate({ to: "/purchases", search: (prev) => ({ ...prev, group, page: n > 1 ? n : undefined }), replace: true })}
+              onSize={(n) => {
+                setSize(n);
+                void navigate({ to: "/purchases", search: (prev) => ({ ...prev, group, page: undefined }), replace: true });
+              }}
+            />
+          </>
         )}
       </div>
       {adding && (

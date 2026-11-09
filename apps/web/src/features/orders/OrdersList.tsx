@@ -1,33 +1,43 @@
 // Sotuv qatorlari ro'yxati (M7): sana, holat, SKU, dona, narx, komissiya, logistika, Uzum to'lovi, tannarx, foyda.
 // Tannarxsiz yoki taxminiy qator belgilanadi (tamoyil 9). Yuqorida davr bo'yicha bekor (F17) va qaytish (F18) ulushi — holat filtriga bog'liq emas.
-import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
 import { ordersQuery, type ReportParams } from "../../app/query";
 import { ORDER_GROUPS, ordersSearch, type OrderGroup } from "../../app/search";
-import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, FormulaPopover, Select, Skeleton, type Column, type Tone } from "../../components/ui";
+import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, FormulaPopover, Pagination, Select, Skeleton, usePageSize, type Column, type Tone } from "../../components/ui";
 import type { Sale } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { CostCell } from "./CostCell";
 
 const GROUP_TONE: Record<Sale["group"], Tone> = { completed: "positive", processing: "info", canceled: "negative", unknown: "warning" };
 
-type Props = { orgId: string; params: ReportParams; group: OrderGroup | undefined };
+type Props = { orgId: string; params: ReportParams; group: OrderGroup | undefined; page: number | undefined };
 
-export function OrdersList({ orgId, params, group }: Props) {
+export function OrdersList({ orgId, params, group, page }: Props) {
   const { t } = useTranslation();
   const f = useFormat();
   const navigate = useNavigate();
-  const query = useInfiniteQuery({ ...ordersQuery(orgId, params, group), placeholderData: keepPreviousData });
+  const [size, setSize] = usePageSize();
+  const query = useQuery({ ...ordersQuery(orgId, params, group, page, size), placeholderData: keepPreviousData });
+  const go = (patch: { group?: OrderGroup; page?: number }) =>
+    void navigate({ to: "/orders", search: (prev) => ({ ...prev, group, page: undefined, ...patch }), replace: true });
+  // So'ralgan sahifa oxirgisidan oshib ketgan bo'lsa API oxirgisini beradi — URL ham shunga o'tadi.
+  const shown = query.data?.page;
+  useEffect(() => {
+    if (shown !== undefined && !query.isPlaceholderData && shown !== (page ?? 1)) go({ page: shown > 1 ? shown : undefined });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shown, query.isPlaceholderData, page]);
   if (query.isError && !query.data) {
     return <Banner tone="negative" title={errorText(query.error, t)} action={<Button onClick={() => void query.refetch()}>{t("common.retry")}</Button>} />;
   }
   if (!query.data) return <Skeleton label={t("common.loading")} lines={8} />;
 
-  const first = query.data.pages[0]!;
-  const rows = query.data.pages.flatMap((p) => p.items);
+  const first = query.data;
+  const rows = first.items;
   const share = (value: string | null) => (value === null ? "—" : f.percent(value));
   const help = (key: string, metric: string) => (
     <FormulaPopover metric={metric} code={t(`home.formula.${key}.code`)} formula={t(`home.formula.${key}.formula`)} source={t(`home.formula.${key}.source`)} />
@@ -86,7 +96,7 @@ export function OrdersList({ orgId, params, group }: Props) {
         <Select
           label={t("orders.col.status")}
           value={group ?? ""}
-          onValueChange={(v) => void navigate({ to: "/orders", search: (prev) => ({ ...prev, group: ordersSearch({ group: v }).group }), replace: true })}
+          onValueChange={(v) => go({ group: ordersSearch({ group: v }).group })}
           options={[{ value: "", label: t("orders.group.all") }, ...ORDER_GROUPS.map((g) => ({ value: g, label: t(`orders.group.${g}`) }))]}
         />
         <ExportButton orgId={orgId} table="sales" query={{ start: params.start, end: params.end, shop: params.shops, group }} disabled={rows.length === 0} />
@@ -96,11 +106,17 @@ export function OrdersList({ orgId, params, group }: Props) {
       ) : (
         <>
           <DataTable caption={t("orders.caption")} density="compact" columns={columns} rows={rows} rowKey={(r) => r.id} />
-          {query.hasNextPage && (
-            <Button variant="secondary" loading={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>
-              {t("orders.loadMore")}
-            </Button>
-          )}
+          <Pagination
+            page={first.page}
+            pages={first.pages}
+            total={first.total}
+            size={size}
+            onPage={(n) => go({ page: n > 1 ? n : undefined })}
+            onSize={(n) => {
+              setSize(n);
+              go({});
+            }}
+          />
         </>
       )}
     </div>

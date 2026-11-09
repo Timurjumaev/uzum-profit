@@ -26,7 +26,7 @@ export function Orders() {
   const tab: OrderTab = search.tab ?? "list";
   const params = { shops: filters.shops, start: filters.range.start, end: filters.range.end };
   const setTab = (next: OrderTab) =>
-    void navigate({ to: "/orders", search: (prev) => ({ ...prev, tab: next === "list" ? undefined : next, group: undefined }), replace: true });
+    void navigate({ to: "/orders", search: (prev) => ({ ...prev, tab: next === "list" ? undefined : next, group: undefined, page: undefined }), replace: true });
   return (
     <section className="orders">
       <header className="orders__head">
@@ -52,7 +52,7 @@ export function Orders() {
         ))}
       </div>
       <div id="orders-panel" role="tabpanel" aria-labelledby={`orders-tab-${tab}`}>
-        {tab === "list" ? <OrdersList orgId={org.id} params={params} group={search.group} /> : <Analysis orgId={org.id} params={params} kind={tab} />}
+        {tab === "list" ? <OrdersList orgId={org.id} params={params} group={search.group} page={search.page} /> : <Analysis orgId={org.id} params={params} kind={tab} />}
       </div>
     </section>
   );

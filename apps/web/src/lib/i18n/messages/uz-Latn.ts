@@ -795,7 +795,6 @@ export const uzLatn = {
       market_rate: "kurs bozor boʻyicha (Markaziy bank emas)",
       cbu_rate: "kurs Markaziy bank boʻyicha (haqiqiy toʻlangan emas)",
     },
-    loadMore: "Yana yuklash",
     empty: "Bu davrda buyurtma yoʻq",
     emptyText: "Davrni yoki doʻkonni oʻzgartirib koʻring, yoki sinxron holatini tekshiring.",
     bySku: "SKU boʻyicha",
@@ -1065,7 +1064,6 @@ export const uzLatn = {
     emptyText: "Uzum bilan sinxron tugagach SKU qoldigʻi shu yerda chiqadi.",
     emptyFiltered: "Bu filtrga mos SKU yoʻq",
     resetFilters: "Filtrni tozalash",
-    more: "Yana yuklash",
     col: {
       sku: "SKU",
       status: "Holat",

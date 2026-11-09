@@ -95,40 +95,51 @@ export type OrderTab = (typeof ORDER_TABS)[number];
 export const ORDER_GROUPS = ["completed", "processing", "canceled"] as const;
 export type OrderGroup = (typeof ORDER_GROUPS)[number];
 
-export type OrdersSearch = { tab?: Exclude<OrderTab, "list">; group?: OrderGroup };
+export type OrdersSearch = { tab?: Exclude<OrderTab, "list">; group?: OrderGroup; page?: number };
 
 /** Buyurtmalar (M7): bo'lim (ro'yxat — standart, URL'da yo'q) va ro'yxat holati filtri — havola bilan ulashiladi. */
 export function ordersSearch(search: Record<string, unknown>): OrdersSearch {
   const out: OrdersSearch = {};
   if (search.tab === "cancel" || search.tab === "returns") out.tab = search.tab;
   if ((ORDER_GROUPS as readonly unknown[]).includes(search.group)) out.group = search.group as OrderGroup;
+  const page = pageParam(search.page);
+  if (page !== undefined) out.page = page;
   return out;
 }
 
-export type ExpensesSearch = { section?: "own" };
+export type ExpensesSearch = { section?: "own"; page?: number };
 
 /** Xarajatlar (M8): bo'lim (`section`) — Uzum xarajatlari (standart, URL'da yo'q) yoki o'z xarajatlarim. */
 export function expensesSearch(search: Record<string, unknown>): ExpensesSearch {
-  return search.section === "own" ? { section: "own" } : {};
+  const out: ExpensesSearch = search.section === "own" ? { section: "own" } : {};
+  const page = pageParam(search.page);
+  if (page !== undefined) out.page = page;
+  return out;
 }
 
 export const PURCHASE_GROUPS = ["active", "draft", "transit", "closed"] as const;
 export type PurchaseGroup = (typeof PURCHASE_GROUPS)[number];
-export type PurchasesSearch = { group?: PurchaseGroup };
+export type PurchasesSearch = { group?: PurchaseGroup; page?: number };
 
 /** Xaridlar (M9): bosqich guruhi (`group`) — standart "hammasi" (URL'da yo'q). */
 export function purchasesSearch(search: Record<string, unknown>): PurchasesSearch {
-  return (PURCHASE_GROUPS as readonly unknown[]).includes(search.group) ? { group: search.group as PurchaseGroup } : {};
+  const out: PurchasesSearch = {};
+  if ((PURCHASE_GROUPS as readonly unknown[]).includes(search.group)) out.group = search.group as PurchaseGroup;
+  const page = pageParam(search.page);
+  if (page !== undefined) out.page = page;
+  return out;
 }
 
 export const STOCK_STATUSES = ["critical", "high", "medium", "good", "dead"] as const;
 export type StockStatusId = (typeof STOCK_STATUSES)[number];
-export type InventorySearch = { status?: StockStatusId; q?: string };
+export type InventorySearch = { status?: StockStatusId; q?: string; page?: number };
 
 /** Ombor (M10): holat guruhi (`status`, standart "hammasi") va qidiruv (`q`) — havola bilan ulashiladi. */
 export function inventorySearch(search: Record<string, unknown>): InventorySearch {
   const out: InventorySearch = {};
   if ((STOCK_STATUSES as readonly unknown[]).includes(search.status)) out.status = search.status as StockStatusId;
   if (typeof search.q === "string" && search.q.trim() !== "") out.q = search.q.slice(0, 100);
+  const page = pageParam(search.page);
+  if (page !== undefined) out.page = page;
   return out;
 }

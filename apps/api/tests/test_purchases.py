@@ -207,6 +207,28 @@ def test_stepwise_purchase_live_cost_and_late_cargo(world: World) -> None:
     assert {"purchase.create", "purchase_line.create", "cost_component.create"} <= actions
 
 
+def test_list_pages(world: World) -> None:
+    """ADR-054: `limit` berilsa sahifa; berilmasa (Excel, biriktirish ro'yxati) hammasi."""
+    ids = [new_purchase(world, title=f"Partiya {n}")["purchase"]["id"] for n in range(3)]
+    everything = world.get("purchases")
+    assert (everything["page"], everything["pages"]) == (1, 1)
+    order = [x["id"] for x in everything["items"]]
+    assert set(ids) <= set(order) and everything["total"] == len(order)
+    seen: list[str] = []
+    for n in range(1, len(order) + 1):
+        got = world.get("purchases", limit=1, page=n)
+        assert (got["page"], got["pages"], got["total"]) == (n, len(order), len(order))
+        seen += [x["id"] for x in got["items"]]
+    assert seen == order
+    last = world.get("purchases", limit=2, page=999)
+    assert last["page"] == last["pages"] == -(-len(order) // 2)
+    assert (
+        world.get("purchases", limit=1, stage=["draft"])["total"] == 3
+    )  # bosqich filtri sahifalashdan oldin
+    assert world.get("purchases", limit=1, stage=["closed"])["total"] == 0
+    assert world.call("purchases", limit=101).status_code == 422
+
+
 def test_rate_modes_cbu_and_card_charge(world: World) -> None:
     """Kurs rejimlari: CBU (to'lov sanasi; dam olish kunida oxirgi ish kuni) va "kartadan yechilgan summa":
     1 000 CNY uchun USD kartadan 142,50 $ → effektiv kurs = 142,50 × 12 600 / 1 000."""

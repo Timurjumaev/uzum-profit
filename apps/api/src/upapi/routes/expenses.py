@@ -20,7 +20,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
-from sqlalchemy import and_, case, or_, select
+from sqlalchemy import and_, case, func, or_, select
 from upcore.expenses import Direction, ExpenseCategory, signed_amount
 from upcore.metrics import ManualExpense, business_date, own_expense_in_period
 from upcore.money import Currency, Money
@@ -105,7 +105,10 @@ class ExpensesOut(BaseModel):
     own_total: Decimal
     own_items: list[OwnExpenseOut]
     items: list[ExpenseOut]
-    next_cursor: str | None
+    next_cursor: str | None  # kursor rejimi (`cursor`); sahifa rejimida (`page`) — None
+    total: int  # ro'yxat filtri bo'yicha jami qator
+    page: int  # haqiqiy sahifa (`page` berilmasa 1)
+    pages: int  # jami sahifa (kamida 1)
 
 
 def _row(r: Any) -> ExpenseOut:
@@ -142,6 +145,9 @@ async def expenses(
     include_excluded: Annotated[bool, Query(description="P&L'ga kirmaganlari ham")] = False,
     limit: Limit = 100,
     cursor: Cursor = None,
+    page: Annotated[
+        int | None, Query(ge=1, le=100_000, description="Sahifa raqami (1 dan); `cursor` o'rniga")
+    ] = None,
 ) -> ExpensesOut:
     e, s = m.mp_expenses, m.sale_items
     zero = Money.zero(UZS)
@@ -172,23 +178,31 @@ async def expenses(
             fines.append(r)
     fines.sort(key=lambda r: (-r.amount, r.created_on, r.id))
 
+    listing = list(where)
+    if not include_excluded:
+        listing.append(e.c.excluded.is_(None))
+    if category is not None:
+        listing.append(e.c.category == category)
+    total = int(
+        await ctx.conn.scalar(select(func.count()).select_from(source).where(*listing)) or 0
+    )
+    pages = max(1, -(-total // limit))
+    at_page = 1 if page is None else min(page, pages)
     query = (
         select(e, sale_day)
         .select_from(source)
-        .where(*where)
+        .where(*listing)
         .order_by(e.c.created_on.desc(), e.c.id.desc())
         .limit(limit + 1)
     )
-    if not include_excluded:
-        query = query.where(e.c.excluded.is_(None))
-    if category is not None:
-        query = query.where(e.c.category == category)
     after = decode_cursor(cursor, 2)
-    if after is not None:
+    if page is not None:
+        query = query.offset((at_page - 1) * limit)
+    elif after is not None:
         at, last = datetime.fromisoformat(after[0]), UUID(after[1])
         query = query.where(or_(e.c.created_on < at, and_(e.c.created_on == at, e.c.id < last)))
     rows = list(await ctx.conn.execute(query))
-    more = len(rows) > limit
+    more = len(rows) > limit and page is None
     rows = rows[:limit]
 
     x, c = m.manual_expenses, m.expense_categories
@@ -252,4 +266,7 @@ async def expenses(
         next_cursor=encode_cursor([last_row.created_on.isoformat(), str(last_row.id)])
         if more and last_row is not None
         else None,
+        total=total,
+        page=at_page,
+        pages=pages,
     )

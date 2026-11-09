@@ -72,6 +72,9 @@ export function expensesData(over: Partial<Expenses> = {}): Expenses {
     own_items: [ownItem(), ownItem({ id: OWN_2, category: "internet", scope: "shop", shop_id: SHOP_A, start_on: "2026-10-05", end_on: "2026-10-05", amount: "100000.00", in_period: "100000.00", recurrence: "monthly", note: null })],
     items: [uzumItem(), uzumItem({ id: "e2", category: "advertising", amount: "200000.00", name: "Reklama", day: "2026-10-07" }), uzumItem({ id: "e3", category: "storage", amount: "9000.00", name: "Saqlash", in_pnl: false, excluded: "status" })],
     next_cursor: null,
+    total: 3,
+    page: 1,
+    pages: 1,
     ...over,
   };
 }

@@ -60,6 +60,9 @@ _log = get_logger("upapi.purchases")
 class PurchasesOut(BaseModel):
     items: list[rp.PurchaseOut]
     amounts: bool
+    total: int = 0  # filtr bo'yicha jami xarid
+    page: int = 1  # haqiqiy sahifa (`limit` berilmasa hammasi — 1)
+    pages: int = 1  # jami sahifa (kamida 1)
 
 
 class PurchaseIn(BaseModel):
@@ -412,17 +415,29 @@ async def _kick(request: Request, org_id: UUID, fx_since: date | None = None) ->
 
 @router.get("/orgs/{org_id}/purchases", response_model=PurchasesOut)
 async def list_purchases(
-    ctx: Viewer, stage: Annotated[list[Stage] | None, Query()] = None
+    ctx: Viewer,
+    stage: Annotated[list[Stage] | None, Query()] = None,
+    limit: Annotated[
+        int | None, Query(ge=1, le=100, description="Sahifa o'lchami; bo'lmasa — hammasi")
+    ] = None,
+    page: Annotated[int, Query(ge=1, le=100_000)] = 1,
 ) -> PurchasesOut:
-    """Xaridlar (yangisi birinchi), joriy bosqich filtri bilan; har birida Partiya yo'li va jonli tannarx."""
+    """Xaridlar (yangisi birinchi), joriy bosqich filtri bilan; har birida Partiya yo'li va jonli tannarx.
+
+    ``limit`` berilsa — sahifa (ADR-054; Excel va biriktirish ro'yxati ``limit`` siz hammasini oladi).
+    """
     book = await rp.Book(ctx.conn, today()).load()
     amounts = _amounts(ctx)
-    items = []
+    matched = []
     for purchase in book.purchases:
         out = book.summary(purchase, book.evaluate(purchase), amounts)
         if rp.matches(out.stage, stage):
-            items.append(out)
-    return PurchasesOut(items=items, amounts=amounts)
+            matched.append(out)
+    size = limit or max(1, len(matched))
+    pages = max(1, -(-len(matched) // size))
+    at = min(page, pages) if limit else 1
+    items = matched[(at - 1) * size : at * size] if limit else matched
+    return PurchasesOut(items=items, amounts=amounts, total=len(matched), page=at, pages=pages)
 
 
 @router.get("/orgs/{org_id}/purchases/{purchase_id}", response_model=rp.PurchaseDetailOut)

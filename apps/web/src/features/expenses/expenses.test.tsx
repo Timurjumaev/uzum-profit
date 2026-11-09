@@ -49,26 +49,27 @@ describe("Uzum xarajatlari", () => {
     expect(screen.getByRole("heading", { level: 1 }).textContent).toContain("Xarajatlar");
   });
 
-  it("toifa filtri ro'yxat so'rovini o'zgartiradi; 'Yana yuklash' kursor bilan", async () => {
-    let calls = 0;
-    const { api } = await renderAt(PATH, {
+  it("toifa filtri ro'yxat so'rovini o'zgartiradi; sahifalash `page` bilan, toifa o'zgarsa 1-sahifa", async () => {
+    const { api, history } = await renderAt(PATH, {
       [EXPENSES_ROUTE]: (req) => {
-        calls += 1;
         const u = new URL(req.url);
-        if (u.searchParams.get("cursor") === "C2") return json(200, expensesData({ items: [uzumItem({ id: "z10", name: "Ikkinchi sahifa" })], next_cursor: null }));
-        if (u.searchParams.get("category") === "fine") return json(200, expensesData({ items: [uzumItem({ id: "z9", name: "Faqat jarima" })], next_cursor: "C2" }));
+        const page = Number(u.searchParams.get("page"));
+        if (u.searchParams.get("category") === "fine") {
+          return json(200, expensesData({ items: [uzumItem({ id: "z9", name: page === 2 ? "Ikkinchi sahifa" : "Faqat jarima" })], total: 120, page: page === 2 ? 2 : 1, pages: 3 }));
+        }
         return json(200, expensesData());
       },
     });
     await screen.findByRole("table", { name: "Barcha yozuvlar" });
     fireEvent.change(screen.getByLabelText("Toifa"), { target: { value: "fine" } });
     expect(await screen.findByText("Faqat jarima")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Yana yuklash" }));
+    fireEvent.click(screen.getByRole("button", { name: "Keyingi sahifa" }));
     expect(await screen.findByText("Ikkinchi sahifa")).toBeTruthy();
+    expect(history.location.search).toContain("page=2");
     const urls = api.fetch.mock.calls.map(([r]) => new URL((r as Request).url));
-    expect(urls.some((u) => u.searchParams.get("category") === "fine")).toBe(true);
-    expect(urls.some((u) => u.searchParams.get("cursor") === "C2")).toBe(true);
-    expect(calls).toBeGreaterThan(2);
+    expect(urls.some((u) => u.searchParams.get("category") === "fine" && u.searchParams.get("page") === "2" && u.searchParams.get("limit") === "50")).toBe(true);
+    fireEvent.change(screen.getByLabelText("Toifa"), { target: { value: "" } });
+    await waitFor(() => expect(history.location.search).not.toContain("page="));
   });
 
   it("bo'sh davr — bo'sh holat; xato — qayta urinish", async () => {

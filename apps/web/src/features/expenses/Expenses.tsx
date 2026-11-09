@@ -24,14 +24,15 @@ export function Expenses() {
   const org = currentOrg(me)!; // `app` marshruti tashkilotsiz foydalanuvchini onboarding'ga yuboradi
   const { filters } = useFilters();
   const navigate = useNavigate();
-  const tab = expensesSearch(useSearch({ strict: false }) as Record<string, unknown>).section ?? "uzum";
+  const search = expensesSearch(useSearch({ strict: false }) as Record<string, unknown>);
+  const tab = search.section ?? "uzum";
   const params = useMemo(
     () => ({ shops: filters.shops, start: filters.range.start, end: filters.range.end }),
     [filters.shops, filters.range.start, filters.range.end],
   );
   const query = useQuery(expensesQuery(org.id, params));
   const setTab = (next: (typeof TABS)[number]) =>
-    void navigate({ to: "/expenses", search: (prev) => ({ ...prev, section: next === "own" ? ("own" as const) : undefined }), replace: true });
+    void navigate({ to: "/expenses", search: (prev) => ({ ...prev, section: next === "own" ? ("own" as const) : undefined, page: undefined }), replace: true });
   return (
     <section className="expenses">
       <header className="orders__head">
@@ -62,7 +63,7 @@ export function Expenses() {
         ) : !query.data ? (
           <Skeleton label={t("common.loading")} lines={8} />
         ) : tab === "uzum" ? (
-          <UzumExpenses orgId={org.id} params={params} data={query.data} />
+          <UzumExpenses orgId={org.id} params={params} data={query.data} page={search.page} />
         ) : (
           <OwnExpenses orgId={org.id} params={params} data={query.data} canManage={org.role === "owner" || org.role === "manager"} />
         )}
