@@ -815,6 +815,8 @@ export interface paths {
         /**
          * List Purchases
          * @description Xaridlar (yangisi birinchi), joriy bosqich filtri bilan; har birida Partiya yo'li va jonli tannarx.
+         *
+         *     ``limit`` berilsa — sahifa (ADR-054; Excel va biriktirish ro'yxati ``limit`` siz hammasini oladi).
          */
         get: operations["list_purchases_api_v1_orgs__org_id__purchases_get"];
         put?: never;
@@ -1789,6 +1791,12 @@ export interface components {
             items: components["schemas"]["ExpenseOut"][];
             /** Next Cursor */
             next_cursor: string | null;
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Pages */
+            pages: number;
         };
         /**
          * FlowStepOut
@@ -1837,8 +1845,10 @@ export interface components {
             items: components["schemas"]["StockRowOut"][];
             /** Total */
             total: number;
-            /** Next Cursor */
-            next_cursor: string | null;
+            /** Page */
+            page: number;
+            /** Pages */
+            pages: number;
             totals: components["schemas"]["StockTotalsOut"];
         };
         /**
@@ -2962,6 +2972,21 @@ export interface components {
             items: components["schemas"]["PurchaseOut"][];
             /** Amounts */
             amounts: boolean;
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Page
+             * @default 1
+             */
+            page: number;
+            /**
+             * Pages
+             * @default 1
+             */
+            pages: number;
         };
         /** RefreshOut */
         RefreshOut: {
@@ -3091,6 +3116,12 @@ export interface components {
             items: components["schemas"]["SaleOut"][];
             /** Next Cursor */
             next_cursor: string | null;
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Pages */
+            pages: number;
             summary: components["schemas"]["SalesSummaryOut"];
         };
         /** SalesSummaryOut */
@@ -5851,6 +5882,8 @@ export interface operations {
                 limit?: number;
                 /** @description Oldingi javobdagi ``next_cursor`` */
                 cursor?: string | null;
+                /** @description Sahifa raqami (1 dan); `cursor` o'rniga */
+                page?: number | null;
                 /** @description Davr boshi (Toshkent kuni) */
                 start?: string | null;
                 /** @description Davr oxiri, kiradi; standart — bugun */
@@ -5952,6 +5985,8 @@ export interface operations {
                 limit?: number;
                 /** @description Oldingi javobdagi ``next_cursor`` */
                 cursor?: string | null;
+                /** @description Sahifa raqami (1 dan); `cursor` o'rniga */
+                page?: number | null;
                 /** @description Davr boshi (Toshkent kuni) */
                 start?: string | null;
                 /** @description Davr oxiri, kiradi; standart — bugun */
@@ -6006,8 +6041,7 @@ export interface operations {
                 status?: components["schemas"]["StockStatus"] | null;
                 q?: string | null;
                 limit?: number;
-                /** @description Oldingi javobdagi ``next_cursor`` */
-                cursor?: string | null;
+                page?: number;
             };
             header?: never;
             path: {
@@ -6292,6 +6326,9 @@ export interface operations {
         parameters: {
             query?: {
                 stage?: components["schemas"]["Stage"][] | null;
+                /** @description Sahifa o'lchami; bo'lmasa — hammasi */
+                limit?: number | null;
+                page?: number;
             };
             header?: never;
             path: {

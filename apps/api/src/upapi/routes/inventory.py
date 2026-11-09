@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -26,13 +26,9 @@ from upcore.money import Currency, total
 from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission, allowed
 from upapi.reports.common import (
-    Cursor,
     Filters,
     Heavy,
-    Limit,
     Meta,
-    decode_cursor,
-    encode_cursor,
     fold,
     meta,
     sku_catalog,
@@ -137,7 +133,8 @@ class InventoryOut(BaseModel):
     as_of: date
     items: list[StockRowOut]
     total: int
-    next_cursor: str | None
+    page: int  # haqiqiy sahifa (so'ralgani oxirgidan katta bo'lsa — oxirgisi)
+    pages: int  # jami sahifa (kamida 1)
     totals: StockTotalsOut
 
 
@@ -148,34 +145,12 @@ def _order(s: SkuStock) -> tuple[int, Decimal, str]:
     return (rank, days, str(s.sku_id))
 
 
-@router.get("/orgs/{org_id}/inventory", response_model=InventoryOut)
-async def inventory(
-    ctx: Stock,
-    _: Heavy,
-    shop: Annotated[list[UUID] | None, Query(description="Do'konlar")] = None,
-    as_of: Annotated[date | None, Query(description="Qaysi kun holatiga; standart — bugun")] = None,
-    status: StockStatus | None = None,
-    q: Annotated[str | None, Query(max_length=100)] = None,
-    limit: Limit = 100,
-    cursor: Cursor = None,
-) -> InventoryOut:
-    day = as_of or today()
-    f = Filters(Period(day, day), frozenset(shop) if shop else None, today())
-    amounts = allowed(ctx.role, Permission.VIEW_PURCHASE_AMOUNTS)
-    book = await load_stock(ctx.conn, shop, day)
-    catalog = await sku_catalog(ctx.conn, f.shops)
-    needle = fold(q).strip() if q else ""
-    chosen = [
-        s
-        for s in book.skus.values()
-        if (status is None or s.status is status)
-        and (not needle or needle in catalog[s.sku_id].haystack())
-    ]
-    chosen.sort(key=_order)
-    offset = int((decode_cursor(cursor, 1) or [0])[0])
-    page = chosen[offset : offset + limit]
+def rows_for(
+    book: Any, catalog: dict[UUID, Any], selected: list[SkuStock], amounts: bool
+) -> list[StockRowOut]:
+    """Tanlangan SKU'lar uchun jadval qatorlari (sahifa ham, Excel eksport ham shundan)."""
     rows = []
-    for s in page:
+    for s in selected:
         info = catalog[s.sku_id]
         plan = None
         if s.reorder is not None:
@@ -240,6 +215,48 @@ async def inventory(
                 stock_value=amount(s.stock_value) if amounts else None,
             )
         )
+    return rows
+
+
+async def selection(
+    ctx: OrgContext,
+    shop: list[UUID] | None,
+    as_of: date | None,
+    status: StockStatus | None,
+    q: str | None,
+) -> tuple[date, Filters, Any, dict[UUID, Any], list[SkuStock], bool]:
+    """Filtrlangan va tartiblangan hamma SKU (sahifalashsiz): kun, filtr, kitob, katalog, tanlov, summa ruxsati."""
+    day = as_of or today()
+    f = Filters(Period(day, day), frozenset(shop) if shop else None, today())
+    amounts = allowed(ctx.role, Permission.VIEW_PURCHASE_AMOUNTS)
+    book = await load_stock(ctx.conn, shop, day)
+    catalog = await sku_catalog(ctx.conn, f.shops)
+    needle = fold(q).strip() if q else ""
+    chosen = [
+        s
+        for s in book.skus.values()
+        if (status is None or s.status is status)
+        and (not needle or needle in catalog[s.sku_id].haystack())
+    ]
+    chosen.sort(key=_order)
+    return day, f, book, catalog, chosen, amounts
+
+
+@router.get("/orgs/{org_id}/inventory", response_model=InventoryOut)
+async def inventory(
+    ctx: Stock,
+    _: Heavy,
+    shop: Annotated[list[UUID] | None, Query(description="Do'konlar")] = None,
+    as_of: Annotated[date | None, Query(description="Qaysi kun holatiga; standart — bugun")] = None,
+    status: StockStatus | None = None,
+    q: Annotated[str | None, Query(max_length=100)] = None,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    page: Annotated[int, Query(ge=1, le=100_000)] = 1,
+) -> InventoryOut:
+    day, f, book, catalog, chosen, amounts = await selection(ctx, shop, as_of, status, q)
+    pages = max(1, -(-len(chosen) // limit))
+    page = min(page, pages)  # filtr o'zgargach sahifa oxirgidan oshib ketsa — oxirgisi
+    rows = rows_for(book, catalog, chosen[(page - 1) * limit : page * limit], amounts)
     counts: dict[str, int] = {}
     for s in book.skus.values():
         if s.status is not None:
@@ -250,7 +267,8 @@ async def inventory(
         as_of=day,
         items=rows,
         total=len(chosen),
-        next_cursor=encode_cursor([offset + limit]) if offset + limit < len(chosen) else None,
+        page=page,
+        pages=pages,
         totals=StockTotalsOut(
             frozen_money=frozen if amounts else None,
             frozen_total=total(list(book.frozen.values()), UZS).amount if amounts else None,

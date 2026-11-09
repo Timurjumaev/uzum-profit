@@ -135,12 +135,23 @@ describe("ombor jadvali", () => {
     expect(await screen.findByText("3 ta SKU tannarxsiz")).toBeTruthy();
   });
 
-  it("yana yuklash: keyingi sahifa kursor bilan", async () => {
-    const pages = [() => json(200, inventoryData({ next_cursor: "abc" })), () => json(200, inventoryData({ items: [stockRow({ sku_id: "d3333333-3333-4333-8333-333333333333", product_title: "Uchinchi" })], next_cursor: null }))];
-    const { api } = await renderAt("/inventory", { [INVENTORY_ROUTE]: pages });
-    fireEvent.click(await screen.findByRole("button", { name: "Yana yuklash" }));
+  it("sahifalash: keyingi sahifa `page` bilan so'raladi, URL'ga yoziladi; o'lcham o'zgarsa 1-sahifa", async () => {
+    const third = stockRow({ sku_id: "d3333333-3333-4333-8333-333333333333", product_title: "Uchinchi" });
+    const { api, history } = await renderAt("/inventory", {
+      [INVENTORY_ROUTE]: (r) => {
+        const page = Number(new URL(r.url).searchParams.get("page"));
+        return json(200, inventoryData(page === 2 ? { items: [third], total: 120, page: 2, pages: 3 } : { total: 120, page: 1, pages: 3 }));
+      },
+    });
+    await screen.findByRole("button", { name: "Keyingi sahifa" });
+    expect(queryOf(api).get("page")).toBe("1");
+    expect(queryOf(api).get("limit")).toBe("50");
+    fireEvent.click(screen.getByRole("button", { name: "Keyingi sahifa" }));
     expect(await screen.findByText("Uchinchi")).toBeTruthy();
-    expect(queryOf(api).get("cursor")).toBe("abc");
+    expect(history.location.search).toContain("page=2");
+    fireEvent.change(screen.getByLabelText("Sahifada"), { target: { value: "20" } });
+    await waitFor(() => expect(history.location.search).not.toContain("page="));
+    await waitFor(() => expect(queryOf(api).get("limit")).toBe("20"));
   });
 });
 

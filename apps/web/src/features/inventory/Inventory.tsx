@@ -2,7 +2,7 @@
 // (Kritik → Yaxshi, F26) URL'da; har qatorda joylar bo'yicha qoldiq, tezlik (F23), zaxira kunlari (F24), buyurtma sanasi
 // va tavsiya miqdor (F27) — hammasi API'dan (`/inventory`), bu yerda qayta hisoblanmaydi (tamoyil 4). "Xarid yaratish" —
 // tavsiya miqdor bilan qoralama xarid (narx va kargo keyin kiritiladi). Omborchi summalarni ko'rmaydi (null).
-import { keepPreviousData, useInfiniteQuery, useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,7 +11,7 @@ import { errorText } from "../../app/errors";
 import { useFilters } from "../../app/filters";
 import { createLine, createPurchase, currentOrg, deletePurchase, inventoryQuery, meQuery } from "../../app/query";
 import { inventorySearch, STOCK_STATUSES } from "../../app/search";
-import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, FormulaPopover, Kpi, Skeleton, StatusPill, useToast, type Column, PageHelp } from "../../components/ui";
+import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, FormulaPopover, Kpi, Pagination, Skeleton, StatusPill, usePageSize, useToast, type Column, PageHelp } from "../../components/ui";
 import { cx } from "../../components/ui/cx";
 import type { StockRow } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
@@ -29,11 +29,13 @@ export function Inventory() {
   const org = currentOrg(me)!; // `app` marshruti tashkilotsiz foydalanuvchini onboarding'ga yuboradi
   const { filters } = useFilters();
   const search = inventorySearch(useSearch({ strict: false }) as Record<string, unknown>);
-  const query = useInfiniteQuery({ ...inventoryQuery(org.id, filters.shops, search), placeholderData: keepPreviousData });
+  const [size, setSize] = usePageSize();
+  const query = useQuery({ ...inventoryQuery(org.id, filters.shops, { ...search, size }), placeholderData: keepPreviousData });
   const canManage = MANAGE_ROLES.includes(org.role);
   const [moving, setMoving] = useState<StockRow | null>(null);
 
-  const update = (patch: Record<string, string | undefined>) => void navigate({ to: "/inventory", search: (prev) => ({ ...prev, ...patch }), replace: true });
+  // Filtr yoki qidiruv o'zgarsa — 1-sahifa (ADR-054); sahifa almashtirish `page` ni o'zi beradi.
+  const update = (patch: Record<string, string | number | undefined>) => void navigate({ to: "/inventory", search: (prev) => ({ ...prev, page: undefined, ...patch }), replace: true });
   // Qidiruv: yozish tugagach (250 ms) URL'ga; URL boshqa joydan o'zgarsa maydon ham yangilanadi.
   const [draft, setDraft] = useState(search.q ?? "");
   const [seen, setSeen] = useState(search.q ?? "");
@@ -49,8 +51,15 @@ export function Inventory() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft, search.q]);
 
-  const first = query.data?.pages[0];
-  const rows = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
+  const first = query.data;
+  const rows = first?.items ?? [];
+  // So'ralgan sahifa oxirgisidan oshib ketgan bo'lsa API oxirgisini beradi — URL ham shunga o'tadi.
+  const shownPage = first?.page;
+  useEffect(() => {
+    if (shownPage !== undefined && !query.isPlaceholderData && shownPage !== (search.page ?? 1)) {
+      void navigate({ to: "/inventory", search: (prev) => ({ ...prev, page: shownPage > 1 ? shownPage : undefined }), replace: true });
+    }
+  }, [shownPage, query.isPlaceholderData, search.page, navigate]);
   const columns = useMemo(() => buildColumns({ t, f, canManage, onMove: setMoving }), [t, f, canManage]);
 
   if (query.isError && !first) {
@@ -177,13 +186,18 @@ export function Inventory() {
           <DataTable caption={t("inventory.list")} columns={columns} rows={rows} rowKey={(r) => r.sku_id} density="comfortable" />
         )}
       </div>
-      {query.hasNextPage && (
-        <div className="inventory__more">
-          <Button variant="secondary" loading={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>
-            {t("inventory.more")}
-          </Button>
-        </div>
-      )}
+      <Pagination
+        className="inventory__pages"
+        page={first.page}
+        pages={first.pages}
+        total={first.total}
+        size={size}
+        onPage={(n) => update({ page: n > 1 ? n : undefined })}
+        onSize={(n) => {
+          setSize(n);
+          update({});
+        }}
+      />
       {moving && moving.item_id && <StockMoveForm orgId={org.id} itemId={moving.item_id} title={moving.product_title ?? moving.title ?? ""} onClose={() => setMoving(null)} />}
     </section>
   );

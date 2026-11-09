@@ -296,17 +296,8 @@ async def export_inventory(
 ) -> Response:
     _need(ctx, Permission.VIEW_PURCHASES)
     amounts = allowed(ctx.role, Permission.VIEW_PURCHASE_AMOUNTS)
-    day: date | None = None
-
-    async def fetch(cursor: str | None) -> Any:
-        nonlocal day
-        page = await inventory_routes.inventory(
-            ctx, None, shop, as_of, status, q, MAX_LIMIT, cursor
-        )
-        day = page.as_of
-        return page
-
-    rows = await _all(fetch)
-    note = [f"Holat: {day:%d.%m.%Y}"] if day else []
+    day, _, book, catalog, chosen, _ = await inventory_routes.selection(ctx, shop, as_of, status, q)
+    rows = inventory_routes.rows_for(book, catalog, chosen, amounts)  # sahifalashsiz — hamma qator
+    note = [f"Holat: {day:%d.%m.%Y}"]
     data = xlsx.build("Ombor", _stock_cols(amounts), rows, note)
-    return _file(f"ombor-{day:%Y%m%d}" if day else "ombor", data)
+    return _file(f"ombor-{day:%Y%m%d}", data)

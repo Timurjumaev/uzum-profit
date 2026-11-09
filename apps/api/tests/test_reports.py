@@ -885,6 +885,37 @@ def test_skus_search_sort_and_pages(world: World) -> None:
 # --- Drill-down: sotuvlar va xarajatlar ------------------------------------------------------------
 
 
+def test_sales_and_expenses_pages(world: World) -> None:
+    """ADR-054: `page` rejimi — sahifalar ketma-ket va takrorsiz; `cursor` rejimi (drill-down) bilan bir xil qatorlar."""
+    for route in ("sales", "expenses"):
+        by_cursor: list[str] = []
+        cursor = None
+        while True:
+            params: dict[str, Any] = {"limit": 2, **OCT}
+            if cursor:
+                params["cursor"] = cursor
+            got = world.get(route, **params)
+            by_cursor += [i["id"] for i in got["items"]]
+            cursor = got["next_cursor"]
+            if not cursor:
+                break
+        everything = world.get(route, limit=100, **OCT)
+        assert [i["id"] for i in everything["items"]] == by_cursor
+        total = everything["total"]
+        assert total == len(by_cursor) and (everything["page"], everything["pages"]) == (1, 1)
+        pages = -(-total // 2)
+        seen: list[str] = []
+        for n in range(1, pages + 1):
+            got = world.get(route, limit=2, page=n, **OCT)
+            assert (got["page"], got["pages"], got["total"]) == (n, pages, total)
+            assert got["next_cursor"] is None  # sahifa rejimida kursor yo'q
+            seen += [i["id"] for i in got["items"]]
+        assert seen == by_cursor
+        last = world.get(route, limit=2, page=999, **OCT)
+        assert last["page"] == last["pages"] == pages
+        assert world.call(route, page=0, **OCT).status_code == 422
+
+
 def test_sales_drilldown_sums_match_pnl(world: World) -> None:
     pnl = world.get("pnl", **OCT)["statement"]
     items: list[dict[str, Any]] = []
@@ -1076,7 +1107,13 @@ def test_inventory_filters_and_warehouse_amounts(world: World) -> None:
     found = world.get("inventory", q="chiroq", as_of=AS_OF.isoformat())["items"]
     assert [r["sku_id"] for r in found] == [str(world.ids["zb"])]
     page = world.get("inventory", limit=1, as_of=AS_OF.isoformat())
-    assert len(page["items"]) == 1 and page["next_cursor"]
+    assert len(page["items"]) == 1 and (page["page"], page["pages"]) == (1, page["total"])
+    last = world.get(
+        "inventory", limit=1, page=999, as_of=AS_OF.isoformat()
+    )  # oxirgisidan oshsa — oxirgisi
+    assert last["page"] == last["pages"] == page["total"] and len(last["items"]) == 1
+    assert world.call("inventory", page=0, as_of=AS_OF.isoformat()).status_code == 422
+    assert world.call("inventory", limit=101, as_of=AS_OF.isoformat()).status_code == 422
 
 
 # --- Ruxsat, ajratish, xatolar -----------------------------------------------------------------------

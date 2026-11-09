@@ -1,13 +1,14 @@
 // Uzum xarajatlari (M8, F9): toifalar bo'yicha ishorali yig'indi (kompensatsiya ayiriladi), oylar trendi, eng katta
 // jarimalar va ro'yxat (toifa filtri bilan; P&L'ga kirmaganlari — sababi bilan). Yig'indi = P&L dagi F9.
-import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
-import { expensesPage, type ReportParams } from "../../app/query";
+import { expensesListQuery, type ReportParams } from "../../app/query";
 import { StackedBarChart, type SeriesInput } from "../../components/charts";
-import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, FormulaPopover, Kpi, Select, type Column } from "../../components/ui";
+import { Badge, Banner, DataTable, EmptyState, ExportButton, FormulaPopover, Kpi, Pagination, Select, usePageSize, type Column } from "../../components/ui";
 import type { Expenses, UzumExpenseItem } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 
@@ -16,18 +17,22 @@ function useCategory() {
   return (code: string) => t(`home.expense.${code}`, { defaultValue: code });
 }
 
-export function UzumExpenses({ orgId, params, data }: { orgId: string; params: ReportParams; data: Expenses }) {
+export function UzumExpenses({ orgId, params, data, page }: { orgId: string; params: ReportParams; data: Expenses; page: number | undefined }) {
   const { t } = useTranslation();
   const f = useFormat();
   const label = useCategory();
   const [category, setCategory] = useState("");
-  const list = useInfiniteQuery({
-    queryKey: ["orgs", orgId, "expenses", "list", params, category],
-    queryFn: ({ pageParam }) => expensesPage(orgId, params, category || null, pageParam),
-    initialPageParam: null as string | null,
-    getNextPageParam: (last) => last.next_cursor,
-    placeholderData: keepPreviousData,
-  });
+  const navigate = useNavigate();
+  const [size, setSize] = usePageSize();
+  const list = useQuery({ ...expensesListQuery(orgId, params, category, page, size), placeholderData: keepPreviousData });
+  const goPage = (next: number | undefined) =>
+    void navigate({ to: "/expenses", search: (prev) => ({ ...prev, page: next && next > 1 ? next : undefined }), replace: true });
+  // So'ralgan sahifa oxirgisidan oshib ketgan bo'lsa API oxirgisini beradi — URL ham shunga o'tadi.
+  const shown = list.data?.page;
+  useEffect(() => {
+    if (shown !== undefined && !list.isPlaceholderData && shown !== (page ?? 1)) goPage(shown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shown, list.isPlaceholderData, page]);
   if (data.uzum.length === 0 && data.items.length === 0) return <EmptyState title={t("expenses.uzum.empty")} text={t("expenses.uzum.emptyText")} />;
 
   const ordered = [...data.uzum].sort((a, b) => Number(b.amount) - Number(a.amount));
@@ -50,7 +55,7 @@ export function UzumExpenses({ orgId, params, data }: { orgId: string; params: R
     { key: "name", header: t("home.drill.name"), render: (r) => r.name ?? r.raw_code ?? r.code ?? "—" },
     { key: "amount", header: t("expenses.col.amount"), numeric: true, render: (r) => f.money(r.amount, { unit: false }) },
   ];
-  const rows = list.data?.pages.flatMap((p) => p.items) ?? [];
+  const rows = list.data?.items ?? [];
   const listColumns: Column<UzumExpenseItem>[] = [
     // ADR-039: buyurtmaga bog'liq reklama P&L'da buyurtma kuniga yoziladi — ikkala sana.
     { key: "day", header: t("home.drill.day"), render: (r) => (r.order_date ? `${f.date(r.day)} · ${t("home.drill.orderDate", { date: f.date(r.order_date) })}` : f.date(r.day)) },
@@ -100,7 +105,10 @@ export function UzumExpenses({ orgId, params, data }: { orgId: string; params: R
         <Select
           label={t("expenses.col.category")}
           value={category}
-          onValueChange={setCategory}
+          onValueChange={(v) => {
+            setCategory(v);
+            goPage(undefined);
+          }}
           options={[{ value: "", label: t("orders.group.all") }, ...keys.map((k) => ({ value: k, label: label(k) }))]}
         />
         <ExportButton orgId={orgId} table="expenses" query={{ start: params.start, end: params.end, shop: params.shops, category }} />
@@ -109,10 +117,18 @@ export function UzumExpenses({ orgId, params, data }: { orgId: string; params: R
         ) : (
           <>
             <DataTable caption={t("expenses.uzum.list")} density="compact" columns={listColumns} rows={rows} rowKey={(r) => r.id} empty={t("home.drill.empty")} />
-            {list.hasNextPage && (
-              <Button variant="secondary" loading={list.isFetchingNextPage} onClick={() => void list.fetchNextPage()}>
-                {t("orders.loadMore")}
-              </Button>
+            {list.data && (
+              <Pagination
+                page={list.data.page}
+                pages={list.data.pages}
+                total={list.data.total}
+                size={size}
+                onPage={goPage}
+                onSize={(n) => {
+                  setSize(n);
+                  goPage(undefined);
+                }}
+              />
             )}
           </>
         )}

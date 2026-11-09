@@ -793,7 +793,6 @@ export const ru: Messages = {
       market_rate: "курс рыночный (не ЦБ)",
       cbu_rate: "курс ЦБ (не фактически оплаченный)",
     },
-    loadMore: "Загрузить ещё",
     empty: "За этот период заказов нет",
     emptyText: "Измените период или магазин, либо проверьте состояние синхронизации.",
     bySku: "По SKU",
@@ -1063,7 +1062,6 @@ export const ru: Messages = {
     emptyText: "Остатки SKU появятся здесь после синхронизации с Uzum.",
     emptyFiltered: "Нет SKU по этому фильтру",
     resetFilters: "Сбросить фильтр",
-    more: "Загрузить ещё",
     col: {
       sku: "SKU",
       status: "Статус",

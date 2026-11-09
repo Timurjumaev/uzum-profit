@@ -3015,6 +3015,26 @@
             "description": "Oldingi javobdagi ``next_cursor``"
           },
           {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 100000,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sahifa raqami (1 dan); `cursor` o'rniga",
+              "title": "Page"
+            },
+            "description": "Sahifa raqami (1 dan); `cursor` o'rniga"
+          },
+          {
             "name": "start",
             "in": "query",
             "required": false,
@@ -3301,6 +3321,26 @@
             "description": "Oldingi javobdagi ``next_cursor``"
           },
           {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 100000,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sahifa raqami (1 dan); `cursor` o'rniga",
+              "title": "Page"
+            },
+            "description": "Sahifa raqami (1 dan); `cursor` o'rniga"
+          },
+          {
             "name": "start",
             "in": "query",
             "required": false,
@@ -3493,29 +3533,23 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "maximum": 500,
+              "maximum": 100,
               "minimum": 1,
-              "default": 100,
+              "default": 50,
               "title": "Limit"
             }
           },
           {
-            "name": "cursor",
+            "name": "page",
             "in": "query",
             "required": false,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Oldingi javobdagi ``next_cursor``",
-              "title": "Cursor"
-            },
-            "description": "Oldingi javobdagi ``next_cursor``"
+              "type": "integer",
+              "maximum": 100000,
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
           }
         ],
         "responses": {
@@ -4238,7 +4272,7 @@
           "purchases"
         ],
         "summary": "List Purchases",
-        "description": "Xaridlar (yangisi birinchi), joriy bosqich filtri bilan; har birida Partiya yo'li va jonli tannarx.",
+        "description": "Xaridlar (yangisi birinchi), joriy bosqich filtri bilan; har birida Partiya yo'li va jonli tannarx.\n\n``limit`` berilsa — sahifa (ADR-054; Excel va biriktirish ro'yxati ``limit`` siz hammasini oladi).",
         "operationId": "list_purchases_api_v1_orgs__org_id__purchases_get",
         "parameters": [
           {
@@ -4268,6 +4302,38 @@
                 }
               ],
               "title": "Stage"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sahifa o'lchami; bo'lmasa — hammasi",
+              "title": "Limit"
+            },
+            "description": "Sahifa o'lchami; bo'lmasa — hammasi"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100000,
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
             }
           }
         ],
@@ -8434,6 +8500,18 @@
               }
             ],
             "title": "Next Cursor"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "pages": {
+            "type": "integer",
+            "title": "Pages"
           }
         },
         "type": "object",
@@ -8447,7 +8525,10 @@
           "own_total",
           "own_items",
           "items",
-          "next_cursor"
+          "next_cursor",
+          "total",
+          "page",
+          "pages"
         ],
         "title": "ExpensesOut"
       },
@@ -8576,16 +8657,13 @@
             "type": "integer",
             "title": "Total"
           },
-          "next_cursor": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Next Cursor"
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "pages": {
+            "type": "integer",
+            "title": "Pages"
           },
           "totals": {
             "$ref": "#/components/schemas/StockTotalsOut"
@@ -8597,7 +8675,8 @@
           "as_of",
           "items",
           "total",
-          "next_cursor",
+          "page",
+          "pages",
           "totals"
         ],
         "title": "InventoryOut"
@@ -12395,6 +12474,21 @@
           "amounts": {
             "type": "boolean",
             "title": "Amounts"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page",
+            "default": 1
+          },
+          "pages": {
+            "type": "integer",
+            "title": "Pages",
+            "default": 1
           }
         },
         "type": "object",
@@ -12788,6 +12882,18 @@
             ],
             "title": "Next Cursor"
           },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "pages": {
+            "type": "integer",
+            "title": "Pages"
+          },
           "summary": {
             "$ref": "#/components/schemas/SalesSummaryOut"
           }
@@ -12797,6 +12903,9 @@
           "meta",
           "items",
           "next_cursor",
+          "total",
+          "page",
+          "pages",
           "summary"
         ],
         "title": "SalesOut"

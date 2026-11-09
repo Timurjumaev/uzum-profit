@@ -640,8 +640,14 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   sof foyda grafigida sotuvsiz kunlar xarajati.
 - [ ] B4.54 Mobil (360 px): Mahsulotlar jadvali va SKU sahifasi KPI'lari, bosish maydoni ≥ 44 px, mobil e2e.
 - [ ] B4.55 "Chegarada" chegarasi Sozlamalarda (Temur: "statik emas, dinamik"; standart 5%, F13).
-- [ ] B4.56–B4.60 Sahifalash (ADR-054) boshqa sahifalarga, har biri alohida PR: Buyurtmalar, Uzum xarajatlari, Ombor,
-  Foyda tafsiloti (drill-down), Xaridlar va Kargolar.
+- [ ] B4.56–B4.60 Sahifalash (ADR-054) boshqa sahifalarga: **Buyurtmalar, Uzum xarajatlari, Xaridlar, Ombor — qilindi** (quyida,
+  B4.56–B4.58 + Xaridlar; Temur bitta PR'da so'radi); qoldi: Foyda tafsiloti (drill-down) va Kargolar.
+  ✓ 2026-11-09: har biri `Pagination` bilan: `page` URL'da (filtr/bo'lim/tur o'zgarsa — 1-sahifa), "Sahifada" 20/50/100 umumiy
+  (brauzerda eslanadi), "Yana yuklash" olib tashlandi. API: `/sales` va `/expenses` — `page` (offset) rejimi qo'shildi,
+  javobda `total`, `page`, `pages`; `cursor` rejimi saqlandi (P&L drill-down va Excel uchun); `/inventory` — `cursor` o'rniga
+  `page`/`limit` ≤ 100 (Excel `selection`/`rows_for` orqali sahifalashsiz); `/purchases` — ixtiyoriy `limit` ≤ 100 + `page`
+  (`limit` siz — hammasi: Excel va kargoga biriktirish ro'yxati). So'ralgan sahifa oxirgisidan oshsa — API oxirgisini beradi.
+  **T:** staging'da Buyurtmalar, Xarajatlar (Uzum), Xaridlar va Ombor sahifalarida sahifa raqamlari va "Sahifada" tanlovini ko'rish.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

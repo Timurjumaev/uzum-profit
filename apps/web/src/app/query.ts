@@ -1,6 +1,6 @@
 // Server holati (03 §9): TanStack Query, staleTime 60 s. 4xx qayta so'ralmaydi (ruxsat yoki kiritish masalasi),
 // tarmoq/5xx/429 — 2 marta. Sessiya tugasa (401) — kirish sahifasiga (`onUnauthorized`).
-import { infiniteQueryOptions, MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
+import { MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
 import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, OpeningIn } from "../lib/api/types";
@@ -202,23 +202,19 @@ export const linkItem = (orgId: string, skuId: string, body: ItemLinkIn) =>
 
 // --- Buyurtmalar (M7, B4.4) ---------------------------------------------------------------------------------------
 
-export const ORDERS_PAGE = 50;
-
-/** Sotuv qatorlari ro'yxati (holat filtri bilan), kursor bilan sahifalanadi; `summary` — davr bo'yicha F17, F18. */
-export const ordersQuery = (orgId: string, p: ReportParams, group: string | undefined) =>
-  infiniteQueryOptions({
-    queryKey: ["orgs", orgId, "orders", p, group ?? null],
-    initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) =>
+/** Sotuv qatorlari ro'yxati (holat filtri bilan), bitta sahifa (ADR-054); `summary` — davr bo'yicha F17, F18. */
+export const ordersQuery = (orgId: string, p: ReportParams, group: string | undefined, page: number | undefined, size: number) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "orders", p, group ?? null, page ?? 1, size],
+    queryFn: () =>
       unwrap(
         api.GET("/api/v1/orgs/{org_id}/sales", {
           params: {
             path: { org_id: orgId },
-            query: { ...reportQuery(p), group: group as "completed" | undefined, limit: ORDERS_PAGE, cursor: pageParam },
+            query: { ...reportQuery(p), group: group as "completed" | undefined, limit: size, page: page ?? 1 },
           },
         }),
       ),
-    getNextPageParam: (last) => last.next_cursor,
   });
 
 /** Bekor va qaytish tahlili: ulushlar (F17, F18), kunlik trend, sabablar, SKU bo'yicha, qaytim saqlash xarajati. */
@@ -230,6 +226,18 @@ export const ordersAnalysisQuery = (orgId: string, p: ReportParams) =>
   });
 
 // --- Xarajatlar (M8, B4.5) ----------------------------------------------------------------------------------------
+
+/** Uzum xarajatlari ro'yxati, bitta sahifa (ADR-054; toifa filtri bilan). */
+export const expensesListQuery = (orgId: string, p: ReportParams, category: string, page: number | undefined, size: number) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "expenses", "list", p, category, page ?? 1, size],
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/v1/orgs/{org_id}/expenses", {
+          params: { path: { org_id: orgId }, query: { ...reportQuery(p), category: category || null, limit: size, page: page ?? 1 } },
+        }),
+      ),
+  });
 
 /** Xarajatlar sahifasi: Uzum toifalari (F9), oylar, jarimalar, o'z xarajatlarim (F10) — bitta so'rov. */
 export const expensesQuery = (orgId: string, p: ReportParams) =>
@@ -261,6 +269,18 @@ export const purchasesQuery = (orgId: string, stages: PurchaseStage[]) =>
       unwrap(
         api.GET("/api/v1/orgs/{org_id}/purchases", {
           params: { path: { org_id: orgId }, query: { stage: stages.length > 0 ? stages : undefined } },
+        }),
+      ),
+  });
+
+/** Xaridlar ro'yxati, bitta sahifa (ADR-054); bosqich filtri bilan. */
+export const purchasesPageQuery = (orgId: string, stages: PurchaseStage[], page: number | undefined, size: number) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "purchases", "list", stages, page ?? 1, size],
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/v1/orgs/{org_id}/purchases", {
+          params: { path: { org_id: orgId }, query: { stage: stages.length > 0 ? stages : undefined, limit: size, page: page ?? 1 } },
         }),
       ),
   });
@@ -392,23 +412,19 @@ export const deleteShipmentComponent = (orgId: string, shipmentId: string, compo
 
 // --- Ombor (M10, B4.7) --------------------------------------------------------------------------------------------
 
-export const INVENTORY_PAGE = 100;
-
-/** Qoldiq jadvali: holat (server filtri), qidiruv, do'konlar; kursor bilan sahifalanadi. `totals` — butun tanlov bo'yicha. */
-export const inventoryQuery = (orgId: string, shops: string[], l: { status?: string; q?: string }) =>
-  infiniteQueryOptions({
-    queryKey: ["orgs", orgId, "inventory", shops, l.status ?? null, l.q ?? null],
-    initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) =>
+/** Qoldiq jadvali: holat (server filtri), qidiruv, do'konlar; bitta sahifa (ADR-054). `totals` — butun tanlov bo'yicha. */
+export const inventoryQuery = (orgId: string, shops: string[], l: { status?: string; q?: string; page?: number; size: number }) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "inventory", shops, l.status ?? null, l.q ?? null, l.page ?? 1, l.size],
+    queryFn: () =>
       unwrap(
         api.GET("/api/v1/orgs/{org_id}/inventory", {
           params: {
             path: { org_id: orgId },
-            query: { shop: shops.length > 0 ? shops : undefined, status: l.status as "critical" | undefined, q: l.q || undefined, limit: INVENTORY_PAGE, cursor: pageParam },
+            query: { shop: shops.length > 0 ? shops : undefined, status: l.status as "critical" | undefined, q: l.q || undefined, limit: l.size, page: l.page ?? 1 },
           },
         }),
       ),
-    getNextPageParam: (last) => last.next_cursor,
   });
 
 /** Tovarning hisobdan chiqarish va tuzatish yozuvlari (yangisi birinchi). */

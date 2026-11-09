@@ -256,7 +256,7 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
       return json(route, 200, skusData({ items: all.slice((at - 1) * limit, at * limit), total: all.length, page: at, pages }));
     }
     if (key === `GET /orgs/${ORG_ID}/inventory`) return json(route, 200, inventoryData());
-    if (key === `GET /orgs/${ORG_ID}/purchases`) return json(route, 200, { items: [purchaseRow()], amounts: true });
+    if (key === `GET /orgs/${ORG_ID}/purchases`) return json(route, 200, { items: [purchaseRow()], amounts: true, total: 1, page: 1, pages: 1 });
     if (key === `GET /orgs/${ORG_ID}/purchases/${PURCHASE_1}`) return json(route, 200, purchaseDetail());
     if (key === `GET /orgs/${ORG_ID}/sku-picker`) {
       const row = (n: number, status: string, stock: number) => ({

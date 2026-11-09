@@ -179,7 +179,7 @@ def test_purchases_and_inventory_export(world: World) -> None:
     assert len(table(sheet(purchases.content))) == len(listed)
     stock = export(world, "inventory", as_of="2026-10-20")
     assert stock.status_code == 200, stock.text
-    inv = world.get("inventory", as_of="2026-10-20", limit=500)["items"]
+    inv = world.get("inventory", as_of="2026-10-20", limit=100)["items"]
     rows = table(sheet(stock.content))
     assert len(rows) == len(inv) > 0
     assert [r[0] for r in rows] == [x["title"] for x in inv]

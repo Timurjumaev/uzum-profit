@@ -52,12 +52,12 @@ afterEach(() => {
 
 async function renderAt(path: string, routes: Routes = {}, role = "owner") {
   const api = mockApi({
-    [PURCHASES_ROUTE]: () => json(200, { items: [purchaseRow(), purchaseRow({ id: PURCHASE_2, title: null, stage: "draft", timeline: timeline("ordered", {}).map((m) => ({ ...m, state: "upcoming", days: null })), items: [], line_count: 0, units_ordered: 0, total: null, unit_cost: null, flags: [] })], amounts: true }),
+    [PURCHASES_ROUTE]: () => json(200, { items: [purchaseRow(), purchaseRow({ id: PURCHASE_2, title: null, stage: "draft", timeline: timeline("ordered", {}).map((m) => ({ ...m, state: "upcoming", days: null })), items: [], line_count: 0, units_ordered: 0, total: null, unit_cost: null, flags: [] })], amounts: true, total: 2, page: 1, pages: 1 }),
     [purchaseRoute("GET", PURCHASE_1)]: () => json(200, purchaseDetail()),
     [SUPPLIERS_ROUTE]: () => json(200, [{ id: "s1", name: "Yiwu Toys", platform: "1688" }]),
     [CARRIERS_ROUTE]: () => json(200, []),
     [SKU_PICKER_ROUTE]: () => json(200, { rows: PICKER_ROWS, truncated: false }),
-    [SHIPMENTS_ROUTE]: () => json(200, { items: [], amounts: true }),
+    [SHIPMENTS_ROUTE]: () => json(200, { items: [], amounts: true, total: 0, page: 1, pages: 1 }),
     [ME_ROUTE]: () => json(200, { ...ME, orgs: [{ ...ME.orgs[0]!, role }] }),
     ...routes,
   });
@@ -95,6 +95,23 @@ describe("xaridlar ro'yxati", () => {
     });
   });
 
+  it("sahifalash: keyingi sahifa `page` bilan, URL'da; bosqich guruhi 1-sahifaga qaytaradi", async () => {
+    const { api, history } = await renderAt("/purchases", {
+      [PURCHASES_ROUTE]: (r) => {
+        const page = Number(new URL(r.url).searchParams.get("page"));
+        return json(200, { items: [purchaseRow({ id: page === 2 ? PURCHASE_2 : PURCHASE_1, title: page === 2 ? "Ikkinchi sahifa" : "Birinchi sahifa" })], amounts: true, total: 120, page, pages: 3 });
+      },
+    });
+    expect(await screen.findByText("Birinchi sahifa")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Keyingi sahifa" }));
+    expect(await screen.findByText("Ikkinchi sahifa")).toBeTruthy();
+    expect(history.location.search).toContain("page=2");
+    const calls = api.fetch.mock.calls.map(([r]) => new URL((r as Request).url)).filter((u) => u.pathname.endsWith("/purchases"));
+    expect(calls.some((u) => u.searchParams.get("page") === "2" && u.searchParams.get("limit") === "50")).toBe(true);
+    fireEvent.click(screen.getByRole("tab", { name: "Qoralama" }));
+    await waitFor(() => expect(history.location.search).not.toContain("page="));
+  });
+
   it("bo'sh — taklif; yangi xarid: yangi yetkazib beruvchi nomi bilan yaratiladi va xarid sahifasiga o'tiladi", async () => {
     const { api, history } = await renderAt("/purchases", {
       [PURCHASES_ROUTE]: () => json(200, { items: [], amounts: true }),
@@ -123,7 +140,7 @@ describe("xaridlar ro'yxati", () => {
     await screen.findByRole("table", { name: "Xaridlar roʻyxati" });
     expect(screen.queryByRole("button", { name: "Yangi xarid" })).toBeNull();
     cleanup();
-    await renderAt("/purchases", { [PURCHASES_ROUTE]: () => json(200, { items: [purchaseRow({ total: null, unit_cost: null })], amounts: false }) }, "warehouse");
+    await renderAt("/purchases", { [PURCHASES_ROUTE]: () => json(200, { items: [purchaseRow({ total: null, unit_cost: null })], amounts: false, total: 1, page: 1, pages: 1 }) }, "warehouse");
     const table = await screen.findByRole("table", { name: "Xaridlar roʻyxati" });
     expect(within(table).queryByRole("columnheader", { name: "Jami" })).toBeNull();
     expect(screen.getByText("Summalar sizga koʻrinmaydi")).toBeTruthy();
