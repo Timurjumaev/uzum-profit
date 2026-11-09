@@ -13,6 +13,7 @@ from decimal import Decimal
 from typing import Any
 
 import test_reports
+from test_calc import at
 from test_reports import AUG, OCT, World, d, money
 from upapi import calc
 from upapi.auth.deps import COOKIE
@@ -190,11 +191,26 @@ def test_sku_detail_returns_by_cause(world: World) -> None:
     world.a.sale(xa, d(10, 17), 2, amount_returns=1, return_cause="Defekt")
     world.a.sale(
         xa, d(10, 18), 1, "CANCELED", amount_returns=1, return_cause="Bekor"
-    )  # qaytish emas
-    assert world.get(f"skus/{xa}", **OCT)["returns"] == [
+    )  # topshirilmagan — bekor, qaytish emas
+    # B4.46 (ADR-043): mijozga topshirilgan, keyin qaytgan Bekor qator — qaytarish (dona = amount + amountReturns).
+    world.a.sale(
+        xa,
+        d(10, 19),
+        1,
+        "CANCELED",
+        amount_returns=1,
+        return_cause="Yoqmadi",
+        issued_at=at(d(10, 20)),
+    )
+    body = world.get(f"skus/{xa}", **OCT)
+    assert body["returns"] == [
         {"cause": "Defekt", "units": 3},
+        {"cause": "Yoqmadi", "units": 2},
         {"cause": None, "units": 1},
     ]
+    # Buyurtmalar tahlili ham shu hisobdan (u butun do'kon bo'yicha — har sabab kamida SKU'nikicha).
+    shop = {c["cause"]: c["units"] for c in world.get("orders/analysis", **OCT)["return_causes"]}
+    assert all(shop.get(c["cause"], 0) >= c["units"] for c in body["returns"])
     world.a.run(lambda conn: calc.request_full(conn, world.a.org_id))
     assert world.a.recalc(datetime.now(UTC)).errors == {}
 

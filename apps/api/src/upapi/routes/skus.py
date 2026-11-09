@@ -19,8 +19,7 @@ tannarx tarixi (tovar lotlari), qaytish sabablari, bog'langan tovar va unit kalk
 
 from __future__ import annotations
 
-from collections import defaultdict
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Any, Literal, NamedTuple
@@ -28,12 +27,10 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.metrics import (
     ProfitLabel,
-    StatusGroup,
-    statuses,
 )
 from upcore.money import Currency, Money, quantize
 from upcore.pnl import Cells, Statement, unit_economics
@@ -42,7 +39,7 @@ from upcore.unit import unit_calc
 
 from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission
-from upapi.calc.costs import day_start, openings, start_of
+from upapi.calc.costs import openings, start_of
 from upapi.db import models as m
 from upapi.errors import AppError
 from upapi.reports import cells as rc
@@ -472,20 +469,8 @@ async def sku_detail(
         ]
         linked = await item_of(ctx, info.item_id)
 
-    t = m.sale_items
-    causes: dict[str | None, int] = defaultdict(int)
-    for cause, units in await conn.execute(
-        select(t.c.return_cause, func.sum(t.c.amount_returns))
-        .where(
-            t.c.sku_id == sku_id,
-            t.c.amount_returns > 0,
-            t.c.ordered_at >= day_start(f.period.start),
-            t.c.ordered_at < day_start(f.period.end + timedelta(days=1)),
-            func.upper(func.trim(t.c.status)).in_(statuses(StatusGroup.COMPLETED)),
-        )
-        .group_by(t.c.return_cause)
-    ):
-        causes[cause] += int(units)
+    # B4.46: Buyurtmalar tahlili bilan bitta hisob — qisman qaytarish va topshirilgan Bekor qator (ADR-043, F18).
+    causes = (await rc.cause_sums(conn, f, sku=sku_id)).returned
 
     fees = await rp.load_fees(conn, f.period.end, {sku_id: info.shop_id})
     fee, fee_source = fees.of(info.shop_id, sku_id)
@@ -534,10 +519,7 @@ async def sku_detail(
         uzum_url=url,
         history=history,
         lots=lots,
-        returns=[
-            ReturnCauseOut(cause=c, units=v)
-            for c, v in sorted(causes.items(), key=lambda kv: (-kv[1], kv[0] or ""))
-        ],
+        returns=[ReturnCauseOut(cause=c, units=v) for c, v in causes],
         stock_detail=(
             None
             if st is None

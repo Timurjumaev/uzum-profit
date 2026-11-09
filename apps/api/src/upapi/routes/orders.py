@@ -9,17 +9,16 @@ alohida; qaytarish xarajati — "Qaytim saqlash" (C000004) toifasi, ishora bilan
 
 from __future__ import annotations
 
-from collections import defaultdict
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Annotated, Any
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from sqlalchemy import Text, cast, func, select
+from sqlalchemy import Text, cast, select
 from upcore.expenses import ExpenseCategory, signed_amount
-from upcore.metrics import OrderFlow, StatusGroup, statuses
+from upcore.metrics import OrderFlow
 from upcore.money import Currency, Money
 
 from upapi.auth.deps import OrgContext, require
@@ -81,18 +80,14 @@ class OrdersAnalysisOut(BaseModel):
     cancel_causes: list[OrdersCauseOut]
 
 
-def _causes(rows: Any) -> list[OrdersCauseOut]:
-    sums: dict[str | None, int] = defaultdict(int)
-    for cause, units in rows:
-        sums[cause] += int(units)
-    ordered = sorted(sums.items(), key=lambda kv: (-kv[1], kv[0] or ""))
-    return [OrdersCauseOut(cause=c, units=v) for c, v in ordered if v > 0]
+def _causes(rows: list[tuple[str | None, int]]) -> list[OrdersCauseOut]:
+    return [OrdersCauseOut(cause=c, units=v) for c, v in rows]
 
 
 @router.get("/orgs/{org_id}/orders/analysis", response_model=OrdersAnalysisOut)
 async def analysis(ctx: Finance, f: Filter) -> OrdersAnalysisOut:
     conn = ctx.conn
-    s, e, k = m.sale_items, m.mp_expenses, m.mp_skus
+    e, k = m.mp_expenses, m.mp_skus
 
     by_day = await rc.sale_sums(conn, f, by_day=True)
     daily = [
@@ -133,35 +128,8 @@ async def analysis(ctx: Finance, f: Filter) -> OrdersAnalysisOut:
         if v.cancel_units + v.return_units > 0
     ][:TOP_SKUS]
 
-    window = [
-        s.c.ordered_at >= day_start(f.period.start),
-        s.c.ordered_at < day_start(f.period.end + timedelta(days=1)),
-    ]
-    if f.shops:
-        window.append(s.c.shop_id.in_(f.shops))
-    status = func.upper(func.trim(s.c.status))
-    # Bekor qator: dona `amount + amountReturns` (upcore.metrics._units); topshirilgan — qaytarish (ADR-043).
-    cancel_units = func.sum(s.c.amount + s.c.amount_returns)
-    cancel_where = [*window, status.in_(statuses(StatusGroup.CANCELED))]
-    returned = list(
-        await conn.execute(
-            select(s.c.return_cause, func.sum(s.c.amount_returns))
-            .where(*window, s.c.amount_returns > 0, status.in_(statuses(StatusGroup.COMPLETED)))
-            .group_by(s.c.return_cause)
-        )
-    )
-    returned += list(
-        await conn.execute(
-            select(s.c.return_cause, cancel_units)
-            .where(*cancel_where, s.c.issued_at.is_not(None))
-            .group_by(s.c.return_cause)
-        )
-    )
-    canceled_by_cause = await conn.execute(
-        select(s.c.return_cause, cancel_units)
-        .where(*cancel_where, s.c.issued_at.is_(None))
-        .group_by(s.c.return_cause)
-    )
+    # Sabablar (ADR-043): qaytarish — qisman qaytarish + topshirilgan Bekor; bekor — topshirilmagan (SKU sahifasi bilan bitta hisob).
+    causes = await rc.cause_sums(conn, f)
 
     cost_query = select(e.c.type, e.c.amount).where(
         e.c.created_on >= day_start(f.period.start),
@@ -193,6 +161,6 @@ async def analysis(ctx: Finance, f: Filter) -> OrdersAnalysisOut:
         ),
         daily=daily,
         by_sku=by_sku,
-        return_causes=_causes(returned),
-        cancel_causes=_causes(canceled_by_cause),
+        return_causes=_causes(causes.returned),
+        cancel_causes=_causes(causes.canceled),
     )
