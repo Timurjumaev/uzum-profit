@@ -7266,7 +7266,7 @@
           "sources"
         ],
         "title": "CalcDefaultsOut",
-        "description": "Unit kalkulyator boshlang'ich qiymatlari (F35, F36) va ularning manbasi; ``null`` — qiymat yo'q (UI so'raydi).\n\nManbalar: ``price`` — ``period`` (davr o'rtachasi) | ``catalog``; ``unit_cost`` — ``last_lot`` | ``period``;\n``logistics`` — ``last_paid`` | ``shop_typical`` (standart tarif — F40); ``commission_pct`` — ``period`` |\n``snapshot`` | ``catalog``; ``tax_pct`` va ``ads_pct`` — ``period``."
+        "description": "Unit kalkulyator boshlang'ich qiymatlari (F35, F36) va ularning manbasi; ``null`` — qiymat yo'q (UI so'raydi).\n\nManbalar: ``price`` — ``period`` (davr o'rtachasi) | ``catalog``; ``unit_cost`` — ``last_lot`` | ``opening`` | ``transit`` (jadval\nzanjiri, B4.45) | ``period``;\n``logistics`` — ``last_paid`` | ``shop_typical`` (standart tarif — F40); ``commission_pct`` — ``period`` |\n``snapshot`` | ``catalog``; ``tax_pct`` va ``ads_pct`` — ``period``."
       },
       "CarrierIn": {
         "properties": {
@@ -14152,33 +14152,6 @@
             ],
             "title": "Cogs Per Unit"
           },
-          "lot_unit_cost": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Lot Unit Cost"
-          },
-          "lot_source": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "lot",
-                  "opening",
-                  "transit"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Lot Source"
-          },
           "unit_cost": {
             "anyOf": [
               {
@@ -14367,8 +14340,6 @@
           "commission_share",
           "logistics_per_unit",
           "cogs_per_unit",
-          "lot_unit_cost",
-          "lot_source",
           "unit_cost",
           "unit_cost_source",
           "ads_per_unit",

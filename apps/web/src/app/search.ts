@@ -43,7 +43,6 @@ export const PRODUCT_SORTS = [
   "stock",
   "days_of_stock",
   "avg_price",
-  "lot_unit_cost",
   "unit_cost",
   "profit_per_unit",
   "roi",

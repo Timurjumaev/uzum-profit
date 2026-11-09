@@ -434,6 +434,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.45: bitta SKU tannarxi hamma joyda bir xil — SKU sahifasidagi "Tannarx/dona" KPI'si jadvaldagidek (sotuvsiz SKU'da
+  oxirgi partiya / boshlang'ich narx / yo'ldagi partiya, izoh bilan; "?" — F21, F20), kalkulyator ham shu partiya zanjiridan
+  (boshlang'ich narx va yo'ldagi partiya qo'shildi, boshlashdan oldingi partiya olinmaydi). API: `SkuRowOut.lot_unit_cost`,
+  `lot_source` va `sort=lot_unit_cost` olib tashlandi.
+
 - B4.44: Mahsulotlarda davrda sotilmagan har SKU holati — "Sotuv yo'q" (avval xarajati yo'q yoki kompensatsiya tushganlari
   "Ma'lumot yo'q" chiqardi; filtr va Excel ham). "Ma'lumot yo'q" — faqat sotuv bor, hammasi tannarxsiz. Reja: Mahsulotlar
   tahlilidagi 22 ta kamchilik B4.45–B4.55 da bo'lib tuzatiladi, ro'yxatlar sahifalanadi (ADR-054, B4.48, B4.56–B4.60).

@@ -746,7 +746,7 @@ export const ru: Messages = {
       partsText: "комиссия {{commission}}, налог {{tax}}, реклама {{ads}}",
       source: {
         price: { period: "Средняя цена продаж за период", catalog: "Цена в каталоге Uzum" },
-        unit_cost: { period: "Себестоимость проданного за период", last_lot: "Себестоимость последней партии" },
+        unit_cost: { period: "Себестоимость проданного за период", last_lot: "Себестоимость последней партии", opening: "Цена из начальных остатков", transit: "Себестоимость партии в пути" },
         logistics: { last_paid: "Последняя платная логистика", shop_typical: "Обычная логистика магазина" },
         commission_pct: { period: "Фактическая комиссия периода", snapshot: "Последний снимок", catalog: "Каталог Uzum" },
         tax_pct: { period: "Фактическая доля налога за период" },

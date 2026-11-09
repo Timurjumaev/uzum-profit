@@ -116,7 +116,13 @@ function Detail({ orgId, detail, canManage }: { orgId: string; detail: SkuDetail
         <Kpi label={t("products.col.profit")} value={money(sku.profit_per_unit)} help={help("profitPerUnit", t("products.col.profit"))} />
         <Kpi label={t("terms.margin")} value={percent(sku.margin)} help={help("margin", t("terms.margin"))} />
         <Kpi label={t("terms.roi")} value={percent(sku.roi)} help={help("roi", t("terms.roi"))} />
-        <Kpi label={t("products.col.cogs")} value={money(sku.cogs_per_unit)} help={help("cogs", t("products.col.cogs"))} />
+        {/* B4.45: jadvaldagi "Tannarx/dona" bilan bir xil — sotuv bo'lmasa oxirgi partiya / boshlang'ich / yo'ldagi (izohda). */}
+        <Kpi
+          label={t("products.col.cogs")}
+          value={money(sku.unit_cost)}
+          note={sku.unit_cost_source !== null && sku.unit_cost_source !== "sales" ? t(`products.unitCostSource.${sku.unit_cost_source}`) : undefined}
+          help={help("unitCost", t("products.col.cogs"))}
+        />
         <Kpi label={t("home.kpis.returns")} value={percent(sku.return_share)} good="down" help={help("returns", t("home.kpis.returns"))} />
         <Kpi label={t("home.kpis.cancel")} value={percent(sku.cancel_share)} good="down" help={help("cancel", t("home.kpis.cancel"))} />
         <Kpi
