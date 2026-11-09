@@ -858,11 +858,11 @@ def test_skus_table(world: World) -> None:
     assert xa["label"] in ("profitable", "borderline", "loss")
     ya = rows[str(world.ids["ya"])]
     assert ya["label"] == "no_data" and ya["cogs_per_unit"] is None and ya["uncovered_lines"] == 1
-    assert body["total"] == 4 and body["next_cursor"] is None
+    assert body["total"] == 4 and (body["page"], body["pages"]) == (1, 1)
     assert money(body["unlinked"]["revenue"]) == D(50_000)
 
 
-def test_skus_search_sort_and_cursor(world: World) -> None:
+def test_skus_search_sort_and_pages(world: World) -> None:
     for q in ("кружка", "KRUJKA", "oyinchoq", "O'yinchoq", "Oʼyinchoq", "4780001", "art-1"):
         found = world.get("skus", q=q, **OCT)["items"]
         assert len(found) == 1, q
@@ -871,13 +871,13 @@ def test_skus_search_sort_and_cursor(world: World) -> None:
     asc = world.get("skus", sort="title", **OCT)["items"]
     assert [r["title"] for r in asc] == sorted(r["title"] for r in asc)
     first = world.get("skus", limit=2, **OCT)
-    assert len(first["items"]) == 2 and first["next_cursor"]
-    rest = world.get("skus", limit=2, cursor=first["next_cursor"], **OCT)
-    assert len(rest["items"]) == 2 and rest["next_cursor"] is None
+    assert len(first["items"]) == 2 and (first["page"], first["pages"]) == (1, 2)
+    rest = world.get("skus", limit=2, page=2, **OCT)
+    assert len(rest["items"]) == 2 and (rest["page"], rest["pages"]) == (2, 2)
     ids = {r["sku_id"] for r in first["items"] + rest["items"]}
     assert len(ids) == 4
     assert world.call("skus", sort="nope", **OCT).status_code == 422
-    assert world.call("skus", cursor="!!", **OCT).status_code == 422
+    assert world.call("skus", page="x", **OCT).status_code == 422
     margin = world.get("skus", sort="-margin", **OCT)["items"]
     assert margin[-1]["margin"] is None  # qiymatsiz oxirida
 

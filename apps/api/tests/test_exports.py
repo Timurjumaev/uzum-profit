@@ -150,7 +150,7 @@ def test_sales_export_follows_filters_and_hides_other_org(world: World) -> None:
 def test_skus_export_matches_list(world: World) -> None:
     r = export(world, "skus", **OCT)
     assert r.status_code == 200, r.text
-    listed = world.get("skus", limit=500, **OCT)["items"]
+    listed = world.get("skus", limit=100, **OCT)["items"]
     rows = table(sheet(r.content))
     assert [row[0] for row in rows] == [x["title"] for x in listed]
     assert [D(str(row[14])) for row in rows] == [
