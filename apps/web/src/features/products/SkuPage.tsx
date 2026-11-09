@@ -147,14 +147,18 @@ function Detail({ orgId, detail, canManage }: { orgId: string; detail: SkuDetail
 function Charts({ detail }: { detail: SkuDetail }) {
   const { t } = useTranslation();
   const days = detail.history.map((d) => d.day);
+  // B4.53: sotuvsiz kunda ham xarajat bo'lsa (sof foyda ≠ 0) chiziqda ko'rinadi — avval bunday kunlar bo'sh qolardi.
+  const shows = (d: SkuDetail["history"][number]) => d.units > 0 || Number(d.net_profit) !== 0;
+  const noSalesDay = detail.history.some((d) => d.units === 0 && Number(d.net_profit) !== 0);
   return (
     <section className="sku__charts" aria-label={t("products.sku.history")}>
+      {noSalesDay && <p className="caption">{t("products.sku.chartSalesNote")}</p>}
       <LineBarChart
         title={t("products.sku.chartSales")}
         x={days}
         series={[
           { key: "revenue", name: t("terms.revenue"), color: 1, values: detail.history.map((d) => (d.units > 0 ? d.revenue : null)) },
-          { key: "profit", name: t("terms.netProfit"), color: "ink", kind: "line", values: detail.history.map((d) => (d.units > 0 ? d.net_profit : null)) },
+          { key: "profit", name: t("terms.netProfit"), color: "ink", kind: "line", values: detail.history.map((d) => (shows(d) ? d.net_profit : null)) },
         ]}
       />
       <LineBarChart

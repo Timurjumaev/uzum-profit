@@ -214,7 +214,7 @@ export function Products() {
           update({});
         }}
       />
-      <Outside data={first} />
+      <Outside data={first} filtered={filtered} />
     </section>
   );
 }
@@ -335,7 +335,7 @@ function ProductCell({ row, list }: { row: SkuRow; list: ProductsSearch }) {
 // --- Jadvaldan tashqari -----------------------------------------------------------------------------------------
 
 /** ADR-026: SKUga bog'lanmagan sotuvlar va sotuvsiz kun xarajati jadval qatori emas — qatorlar + ular = P&L jami. */
-function Outside({ data }: { data: Skus }) {
+function Outside({ data, filtered }: { data: Skus; filtered: boolean }) {
   const { t } = useTranslation();
   const f = useFormat();
   const { unlinked, unallocated } = data;
@@ -344,6 +344,7 @@ function Outside({ data }: { data: Skus }) {
     <section className="products-outside" aria-label={t("products.outside.title")}>
       <h2 className="h3">{t("products.outside.title")}</h2>
       <p className="caption">{t("products.outside.note")}</p>
+      {filtered && <p className="caption">{t("products.outside.filteredNote")}</p>}
       <dl>
         <div>
           <dt>{t("pnl.views.unlinked")}</dt>
