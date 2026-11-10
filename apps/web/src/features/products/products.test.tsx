@@ -317,7 +317,7 @@ describe("SKU sahifasi", () => {
     const linked = screen.getByRole("region", { hidden: true, name: "Tovar" }).textContent ?? "";
     expect(linked).toContain("Mashina");
     expect(screen.getByRole("link", { name: "Кружка белая" }).getAttribute("href")).toContain(`/products/${SKU_2}`);
-    expect(screen.getAllByRole("img", { name: /Tushum va sof foyda|Narx tarixi|Qoldiq tarixi/ }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("img", { name: /Kunlik tushum va sof foyda/ }).length).toBeGreaterThan(0);
   });
 
   it("B4.45: 'Tannarx/dona' KPI jadval bilan bir xil — sotuvsiz SKU'da boshlang'ich narx izoh bilan; kalkulyator manbasi", async () => {
@@ -469,28 +469,18 @@ describe("SKU sahifasi grafigi (B4.53)", () => {
 describe("SKU sahifasi grafiklari (B4.56)", () => {
   const day = (d: string, over: Record<string, unknown> = {}) => ({ day: d, units: 0, revenue: "0.00", net_profit: "0.00", profit_per_unit: null, price: null, commission_pct: null, stock: null, ...over });
 
-  it("snapshot hamma kunga yo'q — izoh ('nol emas'); jadval ko'rinishida faqat ma'lumotli kunlar, bo'sh kunlar qatori yo'q", async () => {
+  it("narx va qoldiq TARIXI grafigi yo'q (ADR-055); hozirgi narx — KPI; kunlik tushum grafigi bor", async () => {
     const detail = skuDetail();
-    // Davr 2026-09-01 – 2026-10-31 (61 kun); snapshot faqat 2 kun uchun.
     detail.history = [day("2026-10-02", { units: 2, revenue: "400000.00", net_profit: "80000.00", price: "200000.00", stock: 8 }), day("2026-10-05", { price: "200000.00", stock: 7 })];
     await renderAt(`/products/${SKU_1}?from=2026-09-01&to=2026-10-31`, { [skuRoute(SKU_1)]: () => json(200, detail) });
-    expect(await screen.findByText(/61 kunning 2 tasi uchun bor/)).toBeTruthy();
-    expect(screen.getByText(/nol emas/)).toBeTruthy();
-    // "Qoldiq tarixi" jadvali: faqat 2 qator (61 kun emas).
-    const frames = document.querySelectorAll(".chart-frame");
-    const stock = frames[2] as HTMLElement;
-    fireEvent.click(within(stock).getByLabelText("Jadval"));
-    expect(within(stock).getAllByRole("row")).toHaveLength(1 + 2); // sarlavha + 2 kun
-  });
-
-  it("snapshot hamma kunga bor — izoh yo'q", async () => {
-    const detail = skuDetail();
-    const days: string[] = [];
-    for (let i = 0; i < 61; i++) days.push(new Date(Date.UTC(2026, 8, 1 + i)).toISOString().slice(0, 10));
-    detail.history = days.map((d) => day(d, { price: "200000.00", stock: 5 }));
-    await renderAt(`/products/${SKU_1}?from=2026-09-01&to=2026-10-31`, { [skuRoute(SKU_1)]: () => json(200, detail) });
     await screen.findByRole("heading", { name: "Unit kalkulyator" });
-    expect(screen.queryByText(/nol emas/)).toBeNull();
+    expect(screen.getByText("Kunlik tushum va sof foyda")).toBeTruthy();
+    expect(screen.queryByText(/Narx tarixi/)).toBeNull();
+    expect(screen.queryByText(/Qoldiq tarixi/)).toBeNull();
+    expect(document.querySelectorAll(".chart-frame")).toHaveLength(1);
+    // Hozirgi narx (Uzum katalogi) va qoldiq — KPI sifatida qoladi.
+    expect(screen.getByText("Uzumdagi narx")).toBeTruthy();
+    expect(screen.getByText("Qoldiq")).toBeTruthy();
   });
 
   it("KPI va nishonlarda '?' tushuntirish: Dona (F2), O'rtacha narx (F3), Holat, ABC", async () => {

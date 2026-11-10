@@ -687,6 +687,16 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   (F2), O'rtacha narx (F3), Holat va ABC nishonlarida "?" tushuntirish (SKU sahifasi). **Topildi, tuzatilmadi:** "Qaytishlar
   sabablari"da Uzum xom sabab matni (`BAD_QUALITY`, ruscha) — to'liq sabab ro'yxati kerak (Temurdan). **T:** staging'da SKU
   sahifasini 100% masshtabda ko'rish; qaytish sabablari uchun Uzumdagi hamma sabab nomlarini yuborish.
+- [x] B4.54b SKU sahifasi: narx va qoldiq tarixi grafiklari olib tashlandi (ADR-055, Temur: grafik noto'g'ri ko'rindi).
+  ✓ 2026-11-10: sabab real ma'lumotda aniqlandi (staging so'rovlari): Uzum `quantityActive` ni postavka qabulidan ~12 kun keyin
+  qo'shadi, shu davrda qoldiq 0 chiqib sotuv bilan zid edi. SKU sahifasida kunlik tushum va sof foyda grafigi qoladi; narx va
+  qoldiq — hozirgi qiymat KPI'lari ("Uzumdagi narx" yangi, "Qoldiq" avvalgi). Snapshot yig'ish davom etadi. **B4.54a** ning
+  narx/qoldiq grafigiga oid bandlari (snapshot izohi, siyrak chiziq `connect`) endi SKU sahifasida ishlatilmaydi (komponentda qoladi).
+- [ ] B4.61 Ombor va "Zaxira kunlari": postavka `ACCEPTED`, lekin Uzum hali `quantityActive` ga qo'shmagan davr (ADR-055). Hozir
+  qoldiq 0 → F24 = yo'q/"Kritik" → noto'g'ri xarid qarori. Kerak: shu davrni aniqlash (postavka qabul sanasi va qoldiq o'zgarishi,
+  ehtimol `quantityCreated` va boshqa maydonlarni snapshotga yozib borish) va Ombor/F24 da "qabul jarayonida" deb alohida
+  ko'rsatish. **T:** shu SKU uchun 28-oktabr – 8-noyabr oralig'ida Uzum kabinetida qoldiq nechta ko'ringanini aytish (ma'no
+  tasdiqlanadi); keyin shu vazifa.
 - [ ] B4.55 "Chegarada" chegarasi Sozlamalarda (Temur: "statik emas, dinamik"; standart 5%, F13).
 - [ ] B4.56–B4.60 Sahifalash (ADR-054) boshqa sahifalarga: **Buyurtmalar, Uzum xarajatlari, Xaridlar, Ombor — qilindi** (quyida,
   B4.56–B4.58 + Xaridlar; Temur bitta PR'da so'radi); qoldi: Foyda tafsiloti (drill-down) va Kargolar.
