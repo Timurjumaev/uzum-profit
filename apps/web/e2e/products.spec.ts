@@ -1,6 +1,7 @@
 // Mahsulotlar (M6, B4.48): sahifalash — sahifa raqamlari, o'lcham tanlovi, URL'da `page`, 360 px'da gorizontal skrollsiz.
 import { expect, test } from "@playwright/test";
 
+import { skuDetail, skuRow } from "../src/test/products";
 import { mockApi } from "./support/api";
 import { open } from "./support/page";
 
@@ -80,4 +81,38 @@ test.describe("mobil (360 px)", () => {
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
   });
+});
+
+test("SKU sahifasi (1000 px): katta KPI raqami kesilmaydi, jadval ko'rinishi kartalarni cho'zmaydi (B4.56)", async ({ page }) => {
+  await page.setViewportSize({ width: 1000, height: 900 });
+  await mockApi(page);
+  // Katta summalar + uzun kunlik tarix (har kun ma'lumotli) — jadval ko'rinishi uzun bo'ladi.
+  const history = Array.from({ length: 26 }, (_, i) => ({
+    day: `2026-10-${String(i + 1).padStart(2, "0")}`,
+    units: 1,
+    revenue: "100000.00",
+    net_profit: "20000.00",
+    profit_per_unit: "20000.00",
+    price: "200000.00",
+    commission_pct: null,
+    stock: 10,
+  }));
+  const detail = skuDetail({ sku: skuRow({ revenue: "4353060000.00", net_profit: "1472780000.00", avg_price: "28451000.00" }), history });
+  await page.route(`**/api/v1/orgs/*/skus/${SKU}*`, (route) => route.fulfill({ json: detail }));
+  await open(page, `/products/${SKU}?from=2026-10-01&to=2026-10-26`);
+  await page.getByRole("heading", { level: 1 }).waitFor();
+  // Raqam kartadan o'ng chetga chiqib ketmasin (kesilgan "4 353 060 so'" — B4.56).
+  const clipped = await page.evaluate(() =>
+    [...document.querySelectorAll(".sku__kpis .ui-kpi")]
+      .filter((card) => card.querySelector(".kpi")!.getBoundingClientRect().right > card.getBoundingClientRect().right - 8)
+      .map((card) => card.textContent),
+  );
+  expect(clipped).toEqual([]);
+  const price = page.locator(".chart-frame").nth(1);
+  const before = (await price.boundingBox())!.height;
+  await page.locator(".chart-frame").nth(2).getByLabel("Jadval").check({ force: true });
+  const after = (await price.boundingBox())!.height;
+  expect(Math.abs(after - before)).toBeLessThan(2); // yonidagi karta jadvalga o'tsa ham o'z balandligida
+  const table = await page.locator(".chart-frame").nth(2).boundingBox();
+  expect(table!.height).toBeLessThan(600); // jadval o'z ichida skroll qiladi
 });

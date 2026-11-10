@@ -695,6 +695,8 @@ export const uzLatn = {
       days: "zaxira: {{value}} kun",
       history: "Tarix",
       chartSales: "Kunlik tushum va sof foyda",
+      snapshotNote: "Narx va qoldiq — Uzum snapshotidan: {{total}} kunning {{count}} tasi uchun bor ({{from}} dan), qolgan kunlar boʻsh — nol emas.",
+      snapshotNone: "Bu davrda Uzum narx va qoldiq snapshoti yoʻq — grafiklar boʻsh.",
       chartSalesNote: "Sotuvsiz kunlarda faqat xarajat boʻladi — sof foyda chizigʻi oʻsha kunlari pastga tushadi.",
       chartPrice: "Narx tarixi (Uzum snapshoti)",
       chartStock: "Qoldiq tarixi (FBO + FBS)",

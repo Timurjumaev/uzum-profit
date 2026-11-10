@@ -37,7 +37,12 @@ export function LineBarChart({ title, x, xKind = "day", unit = "money", series, 
       empty={x.length === 0 || series.every((s) => s.values.every((v) => v === null))}
       table={{
         head: [t("charts.date"), ...series.map((s) => s.name)],
-        rows: x.map((value, i) => [xText(xKind, value, ctx.f), ...series.map((s) => valueText(unit, s.values[i] ?? null, ctx.f))]),
+        // Hech bir qatorda qiymati yo'q kunlar ("—" qatorlari) jadvalni uzaytirmaydi (B4.56).
+        rows: x.flatMap((value, i) =>
+          series.some((s) => (s.values[i] ?? null) !== null)
+            ? [[xText(xKind, value, ctx.f), ...series.map((s) => valueText(unit, s.values[i] ?? null, ctx.f))]]
+            : [],
+        ),
       }}
     >
       <EChart option={option} height={height} />

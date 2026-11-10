@@ -27,6 +27,7 @@ export function loadEcharts(): Promise<EChartsApi> {
       components.GridComponent,
       components.TooltipComponent,
       components.MarkAreaComponent,
+      components.MarkPointComponent,
       components.VisualMapComponent,
       components.CalendarComponent,
       renderers.SVGRenderer,

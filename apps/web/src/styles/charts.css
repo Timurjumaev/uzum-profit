@@ -110,3 +110,16 @@
   block-size: 8px;
   border-radius: 4px;
 }
+
+/* Jadval ko'rinishi (B4.56): uzun jadval kartani cho'zmaydi — o'z ichida skroll, sarlavha qotadi. */
+.chart-frame .ui-table-wrap {
+  max-block-size: 24rem;
+  overflow: auto;
+}
+
+.chart-frame .ui-table thead th {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  background: var(--bg-raised);
+}

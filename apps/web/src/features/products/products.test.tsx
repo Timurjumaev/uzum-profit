@@ -9,7 +9,7 @@ import { App, createAppState } from "../../App";
 import { formatterFor } from "../../lib/format";
 import { ITEMS_ROUTE, json, linkRoute, ME, ME_ROUTE, mockApi, ORG_ID, problem, skuRoute, SKUS_ROUTE, UNIT_CALC_ROUTE, type Routes } from "../../test/api";
 import { ITEM_1, SECOND, SKU_1, SKU_2, skuDetail, skuRow, skusData, unitCalc } from "../../test/products";
-import { DEFAULT_COLUMNS } from "./model";
+import { DEFAULT_COLUMNS, fillDays } from "./model";
 
 const f = formatterFor("uz-Latn");
 const norm = (text: string) => text.replace(/[\u00A0\u202F]/g, " ");
@@ -463,6 +463,52 @@ describe("SKU sahifasi grafigi (B4.53)", () => {
     detail.history = [{ ...detail.history[0]!, net_profit: "-5000.00" }, ...detail.history.slice(1)];
     await renderAt(`/products/${SKU_1}?from=2026-09-01&to=2026-10-31`, { [skuRoute(SKU_1)]: () => json(200, detail) });
     expect(await screen.findByText(/Sotuvsiz kunlarda faqat xarajat/)).toBeTruthy();
+  });
+});
+
+describe("SKU sahifasi grafiklari (B4.56)", () => {
+  const day = (d: string, over: Record<string, unknown> = {}) => ({ day: d, units: 0, revenue: "0.00", net_profit: "0.00", profit_per_unit: null, price: null, commission_pct: null, stock: null, ...over });
+
+  it("snapshot hamma kunga yo'q — izoh ('nol emas'); jadval ko'rinishida faqat ma'lumotli kunlar, bo'sh kunlar qatori yo'q", async () => {
+    const detail = skuDetail();
+    // Davr 2026-09-01 – 2026-10-31 (61 kun); snapshot faqat 2 kun uchun.
+    detail.history = [day("2026-10-02", { units: 2, revenue: "400000.00", net_profit: "80000.00", price: "200000.00", stock: 8 }), day("2026-10-05", { price: "200000.00", stock: 7 })];
+    await renderAt(`/products/${SKU_1}?from=2026-09-01&to=2026-10-31`, { [skuRoute(SKU_1)]: () => json(200, detail) });
+    expect(await screen.findByText(/61 kunning 2 tasi uchun bor/)).toBeTruthy();
+    expect(screen.getByText(/nol emas/)).toBeTruthy();
+    // "Qoldiq tarixi" jadvali: faqat 2 qator (61 kun emas).
+    const frames = document.querySelectorAll(".chart-frame");
+    const stock = frames[2] as HTMLElement;
+    fireEvent.click(within(stock).getByLabelText("Jadval"));
+    expect(within(stock).getAllByRole("row")).toHaveLength(1 + 2); // sarlavha + 2 kun
+  });
+
+  it("snapshot hamma kunga bor — izoh yo'q", async () => {
+    const detail = skuDetail();
+    const days: string[] = [];
+    for (let i = 0; i < 61; i++) days.push(new Date(Date.UTC(2026, 8, 1 + i)).toISOString().slice(0, 10));
+    detail.history = days.map((d) => day(d, { price: "200000.00", stock: 5 }));
+    await renderAt(`/products/${SKU_1}?from=2026-09-01&to=2026-10-31`, { [skuRoute(SKU_1)]: () => json(200, detail) });
+    await screen.findByRole("heading", { name: "Unit kalkulyator" });
+    expect(screen.queryByText(/nol emas/)).toBeNull();
+  });
+
+  it("KPI va nishonlarda '?' tushuntirish: Dona (F2), O'rtacha narx (F3), Holat, ABC", async () => {
+    await renderAt(`/products/${SKU_1}?from=2026-09-01&to=2026-10-31`);
+    await screen.findByRole("heading", { name: "Unit kalkulyator" });
+    for (const name of ["Dona", "Oʻrtacha narx", "Holat", "ABC"]) {
+      expect(screen.getAllByRole("button", { name: new RegExp(`Qanday hisoblanadi: ${name}`) }).length, name).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("fillDays (B4.56)", () => {
+  it("davrning hamma kuni: ma'lumotli kun saqlanadi, bo'shlari nol/bo'sh bilan to'ldiriladi", () => {
+    const got = fillDays([{ day: "2026-10-02", units: 2, revenue: "5.00", net_profit: "1.00", profit_per_unit: "0.50", price: "9.00", commission_pct: null, stock: 3 }], "2026-10-01", "2026-10-04");
+    expect(got.map((d) => d.day)).toEqual(["2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04"]);
+    expect(got[1]!.units).toBe(2);
+    expect(got[0]).toMatchObject({ units: 0, revenue: "0.00", net_profit: "0.00", price: null, stock: null });
+    expect(fillDays([], "2026-10-05", "2026-10-05")).toHaveLength(1);
   });
 });
 

@@ -434,6 +434,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.54a: SKU sahifasi tanqidiy tahlili — grafik kartalari jadval ko'rinishida cho'zilmaydi (ichki skroll), kunlik o'q davrning hamma
+  kuni, siyrak chiziq nuqtalari ko'rinadi, snapshot izohi, KPI raqami kesilmaydi, Dona/O'rtacha narx/Holat/ABC tushuntirishi.
 - B4.54: Mahsulotlar va SKU sahifasi mobilda (360 px): KPI'lar ikki ustunda, bosish maydoni ≥ 44 px, mobil e2e; "Sotuvsiz kunlar
   xarajati" ostiga izoh.
 - B4.53: Mahsulotlar jadvalida Dona, O'rtacha narx, Qoldiq, ABC, Holat ustunlariga "?" tushuntirishi; filtr bo'lsa "Jadvaldan tashqari"

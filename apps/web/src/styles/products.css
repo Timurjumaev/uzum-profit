@@ -197,8 +197,8 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .sku__charts > :first-child {
-    grid-column: 1 / -1;
+  .sku__charts > figure:first-of-type {
+    grid-column: 1 / -1; /* kunlik tushum grafigi butun kenglikda (izoh <p> bundan oldin turishi mumkin) */
   }
 }
 
@@ -363,10 +363,31 @@
     min-inline-size: 0;
     padding: var(--space-3);
   }
+}
 
-  /* Katta raqam ("1 200 000 so'm") ikki ustunli karta ichiga sig'sin: kichikroq shrift, kerak bo'lsa qatorga o'tadi. */
-  .sku__kpis .kpi {
-    font-size: 1rem;
-    overflow-wrap: anywhere;
+/* Grafiklar (B4.56): bir qatordagi kartalar o'z balandligida (biri jadvalga o'tsa, ikkinchisi cho'zilmaydi); ikki ustunli
+   to'rda izoh butun qatorni egallaydi. */
+.sku__charts {
+  align-items: start;
+}
+
+.sku__charts-note {
+  margin: 0;
+}
+
+@media (min-width: 1024px) {
+  .sku__charts > .caption {
+    grid-column: 1 / -1;
   }
+}
+
+/* KPI raqami karta kengligiga moslanadi (B4.56): "4 353 060 soʻm" kesilmaydi; hamma kartada bir xil o'lcham. */
+.sku__kpis .ui-kpi {
+  container-type: inline-size;
+  min-inline-size: 0;
+}
+
+.sku__kpis .kpi {
+  font-size: clamp(1.125rem, 8cqi, 1.5rem);
+  overflow-wrap: anywhere;
 }
