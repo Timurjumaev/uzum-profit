@@ -83,7 +83,7 @@ test.describe("mobil (360 px)", () => {
   });
 });
 
-test("SKU sahifasi (1000 px): katta KPI raqami kesilmaydi, grafik jadvali o'z ichida skroll qiladi (B4.56)", async ({ page }) => {
+test("SKU sahifasi (1000 px): katta KPI raqami kesilmaydi, jadval ko'rinishi kartalarni cho'zmaydi (B4.56)", async ({ page }) => {
   await page.setViewportSize({ width: 1000, height: 900 });
   await mockApi(page);
   // Katta summalar + uzun kunlik tarix (har kun ma'lumotli) — jadval ko'rinishi uzun bo'ladi.
@@ -108,8 +108,11 @@ test("SKU sahifasi (1000 px): katta KPI raqami kesilmaydi, grafik jadvali o'z ic
       .map((card) => card.textContent),
   );
   expect(clipped).toEqual([]);
-  // Kunlik tushum grafigi jadval ko'rinishida: uzun jadval o'z ichida skroll qiladi (karta cheksiz cho'zilmaydi).
-  await page.locator(".chart-frame").first().getByLabel("Jadval").check({ force: true });
-  const table = await page.locator(".chart-frame").first().boundingBox();
-  expect(table!.height).toBeLessThan(600);
+  const price = page.locator(".chart-frame").nth(1);
+  const before = (await price.boundingBox())!.height;
+  await page.locator(".chart-frame").nth(2).getByLabel("Jadval").check({ force: true });
+  const after = (await price.boundingBox())!.height;
+  expect(Math.abs(after - before)).toBeLessThan(2); // yonidagi karta jadvalga o'tsa ham o'z balandligida
+  const table = await page.locator(".chart-frame").nth(2).boundingBox();
+  expect(table!.height).toBeLessThan(600); // jadval o'z ichida skroll qiladi
 });

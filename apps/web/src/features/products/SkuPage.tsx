@@ -117,8 +117,6 @@ function Detail({ orgId, detail, canManage }: { orgId: string; detail: SkuDetail
         <Kpi label={t("terms.netProfit")} value={f.money(sku.net_profit)} help={help("netProfit", t("terms.netProfit"))} note={uncovered} />
         <Kpi label={t("products.col.units")} value={f.number(sku.units)} help={help("units", t("products.col.units"))} />
         <Kpi label={t("products.col.avg_price")} value={money(sku.avg_price)} help={help("avgPrice", t("products.col.avg_price"))} />
-        {/* Hozirgi narx (Uzum katalogi) — tarixsiz, faqat hozirgi qiymat (ADR-055). */}
-        <Kpi label={t("products.sku.catalogPrice")} value={money(sku.price)} note={t("products.sku.catalogPriceNote")} />
         <Kpi label={t("products.col.profit")} value={money(sku.profit_per_unit)} help={help("profitPerUnit", t("products.col.profit"))} />
         <Kpi label={t("terms.margin")} value={percent(sku.margin)} help={help("margin", t("terms.margin"))} />
         <Kpi label={t("terms.roi")} value={percent(sku.roi)} help={help("roi", t("terms.roi"))} />
@@ -150,11 +148,13 @@ function Detail({ orgId, detail, canManage }: { orgId: string; detail: SkuDetail
 
 function Charts({ detail }: { detail: SkuDetail }) {
   const { t } = useTranslation();
+  const f = useFormat();
   const { period } = detail.meta;
-  // ADR-055: faqat ishonchli manbadan (sotuvlar) chiqadigan grafik. Narx va qoldiq tarixi (Uzum snapshoti) ko'rsatilmaydi:
-  // Uzum qoldiqni postavka qabulidan bir necha kun keyin hisobga qo'shadi — grafik haqiqatga mos kelmasdi.
   const history = fillDays(detail.history, period.start, period.end);
   const days = history.map((d) => d.day);
+  // Narx va qoldiq — Uzum snapshotidan: u hamma kunga yozilmagan bo'lishi mumkin ("ma'lumot yo'q" ≠ "nol", tamoyil 8).
+  const snapshotDays = history.filter((d) => d.price !== null || d.stock !== null);
+  const sparse = snapshotDays.length < history.length;
   // B4.53: sotuvsiz kunda ham xarajat bo'lsa (sof foyda ≠ 0) chiziqda ko'rinadi — avval bunday kunlar bo'sh qolardi.
   const shows = (d: SkuDetail["history"][number]) => d.units > 0 || Number(d.net_profit) !== 0;
   const noSalesDay = history.some((d) => d.units === 0 && Number(d.net_profit) !== 0);
@@ -168,6 +168,24 @@ function Charts({ detail }: { detail: SkuDetail }) {
           { key: "revenue", name: t("terms.revenue"), color: 1, values: history.map((d) => (d.units > 0 ? d.revenue : null)) },
           { key: "profit", name: t("terms.netProfit"), color: "ink", kind: "line", values: history.map((d) => (shows(d) ? d.net_profit : null)) },
         ]}
+      />
+      {sparse && (
+        <p className="caption sku__charts-note">
+          {snapshotDays.length === 0
+            ? t("products.sku.snapshotNone")
+            : t("products.sku.snapshotNote", { count: snapshotDays.length, total: history.length, from: f.date(snapshotDays[0]!.day) })}
+        </p>
+      )}
+      <LineBarChart
+        title={t("products.sku.chartPrice")}
+        x={days}
+        series={[{ key: "price", name: t("products.sku.price"), color: 2, kind: "line", connect: true, values: history.map((d) => d.price) }]}
+      />
+      <LineBarChart
+        title={t("products.sku.chartStock")}
+        x={days}
+        unit="count"
+        series={[{ key: "stock", name: t("terms.stock"), color: 3, values: history.map((d) => (d.stock === null ? null : String(d.stock))) }]}
       />
     </section>
   );
