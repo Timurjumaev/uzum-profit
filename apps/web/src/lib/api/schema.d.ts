@@ -3459,6 +3459,8 @@ export interface components {
             uzum_url: string | null;
             /** History */
             history: components["schemas"]["SkuDayOut"][];
+            /** Supplies */
+            supplies: components["schemas"]["SupplyOut"][];
             /** Lots */
             lots: components["schemas"]["LotOut"][];
             /** Returns */
@@ -3861,6 +3863,27 @@ export interface components {
             name: string;
             /** Platform */
             platform: string | null;
+        };
+        /**
+         * SupplyOut
+         * @description FBO postavka (ta'minlash) shu SKU bo'yicha (ADR-055): yaratilgan sana → Uzum ombori qabul oynasi → savdoga chiqarilgan
+         *     (Uzum holatni ``ACCEPTED`` ga shu paytda o'tkazadi: ``dateAccepted``). Savdoga chiqquncha dona ``quantityActive`` da yo'q.
+         */
+        SupplyOut: {
+            /** Number */
+            number: number | null;
+            /** Status */
+            status: string | null;
+            /** Created On */
+            created_on: string | null;
+            /** Slot At */
+            slot_at: string | null;
+            /** Accepted On */
+            accepted_on: string | null;
+            /** To Stock */
+            to_stock: number;
+            /** Accepted */
+            accepted: number;
         };
         /** SyncStatusOut */
         SyncStatusOut: {

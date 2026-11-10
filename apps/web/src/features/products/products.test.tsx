@@ -317,7 +317,7 @@ describe("SKU sahifasi", () => {
     const linked = screen.getByRole("region", { hidden: true, name: "Tovar" }).textContent ?? "";
     expect(linked).toContain("Mashina");
     expect(screen.getByRole("link", { name: "Кружка белая" }).getAttribute("href")).toContain(`/products/${SKU_2}`);
-    expect(screen.getAllByRole("img", { name: /Tushum va sof foyda|Narx tarixi|Qoldiq tarixi/ }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("img", { name: /Kunlik tushum va sof foyda|Savdodagi qoldiq/ }).length).toBeGreaterThan(0);
   });
 
   it("B4.45: 'Tannarx/dona' KPI jadval bilan bir xil — sotuvsiz SKU'da boshlang'ich narx izoh bilan; kalkulyator manbasi", async () => {
@@ -477,8 +477,7 @@ describe("SKU sahifasi grafiklari (B4.56)", () => {
     expect(await screen.findByText(/61 kunning 2 tasi uchun bor/)).toBeTruthy();
     expect(screen.getByText(/nol emas/)).toBeTruthy();
     // "Qoldiq tarixi" jadvali: faqat 2 qator (61 kun emas).
-    const frames = document.querySelectorAll(".chart-frame");
-    const stock = frames[2] as HTMLElement;
+    const stock = screen.getByText(/Savdodagi qoldiq/).closest(".chart-frame") as HTMLElement;
     fireEvent.click(within(stock).getByLabelText("Jadval"));
     expect(within(stock).getAllByRole("row")).toHaveLength(1 + 2); // sarlavha + 2 kun
   });
@@ -491,6 +490,33 @@ describe("SKU sahifasi grafiklari (B4.56)", () => {
     await renderAt(`/products/${SKU_1}?from=2026-09-01&to=2026-10-31`, { [skuRoute(SKU_1)]: () => json(200, detail) });
     await screen.findByRole("heading", { name: "Unit kalkulyator" });
     expect(screen.queryByText(/nol emas/)).toBeNull();
+  });
+
+  it("narx grafigi faqat narx o'zgargan bo'lsa (tekis chiziq ko'rsatilmaydi); hozirgi narx — KPI", async () => {
+    const detail = skuDetail();
+    detail.history = [day("2026-10-02", { price: "200000.00", stock: 8 }), day("2026-10-03", { price: "200000.00", stock: 8 })];
+    await renderAt(`/products/${SKU_1}?from=2026-09-01&to=2026-10-31`, { [skuRoute(SKU_1)]: () => json(200, detail) });
+    await screen.findByText(/Savdodagi qoldiq/);
+    expect(screen.queryByText(/Narx tarixi/)).toBeNull();
+    expect(screen.getByText("Uzumdagi narx")).toBeTruthy();
+    cleanup();
+    detail.history = [day("2026-10-02", { price: "200000.00", stock: 8 }), day("2026-10-03", { price: "190000.00", stock: 8 })];
+    await renderAt(`/products/${SKU_1}?from=2026-09-01&to=2026-10-31`, { [skuRoute(SKU_1)]: () => json(200, detail) });
+    expect(await screen.findByText(/Narx tarixi/)).toBeTruthy();
+  });
+
+  it("postavka davri qoldiq grafigida: izoh va shtrixli oraliq legendasi (savdoga chiqarilgan sana bilan) — qoldiq 0 sababi (ADR-055)", async () => {
+    const detail = skuDetail();
+    detail.history = [day("2026-10-02", { price: "200000.00", stock: 0 }), day("2026-10-20", { price: "200000.00", stock: 82 })];
+    detail.supplies = [
+      { number: 1100041342271, status: "ACCEPTED", created_on: "2026-10-05", slot_at: "2026-10-12T05:30:00Z", accepted_on: "2026-10-20", to_stock: 99, accepted: 99 },
+      { number: 1100041342999, status: "CREATED", created_on: "2026-10-25", slot_at: null, accepted_on: null, to_stock: 7, accepted: 0 },
+    ];
+    await renderAt(`/products/${SKU_1}?from=2026-09-01&to=2026-10-31`, { [skuRoute(SKU_1)]: () => json(200, detail) });
+    expect(await screen.findByText(/shtrixli oraliqda tovar Uzum omborida/)).toBeTruthy();
+    const stock = screen.getByText(/Savdodagi qoldiq/).closest(".chart-frame") as HTMLElement;
+    expect(within(stock).getByText(/Postavkada: 99 dona — 20\.10\.2026 da savdoga chiqarildi/)).toBeTruthy();
+    expect(within(stock).getByText("Postavkada: 7 dona — hali savdoga chiqarilmagan")).toBeTruthy();
   });
 
   it("KPI va nishonlarda '?' tushuntirish: Dona (F2), O'rtacha narx (F3), Holat, ABC", async () => {

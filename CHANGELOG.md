@@ -434,6 +434,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.54b (ADR-055): SKU sahifasi — `supplies` (postavka sanalari), qoldiq grafigi "Savdodagi qoldiq" nomi bilan postavka davri shtrixli oraliq va izoh
+  bilan (Uzum postavkani qabul qilgach savdoga chiqarishga vaqt oladi — shu davrda qoldiq 0), narx grafigi faqat narx o'zgargan bo'lsa,
+  "Uzumdagi narx" KPI; ishonchlilik qoidasi.
 - B4.54a: SKU sahifasi tanqidiy tahlili — grafik kartalari jadval ko'rinishida cho'zilmaydi (ichki skroll), kunlik o'q davrning hamma
   kuni, siyrak chiziq nuqtalari ko'rinadi, snapshot izohi, KPI raqami kesilmaydi, Dona/O'rtacha narx/Holat/ABC tushuntirishi.
 - B4.54: Mahsulotlar va SKU sahifasi mobilda (360 px): KPI'lar ikki ustunda, bosish maydoni ≥ 44 px, mobil e2e; "Sotuvsiz kunlar

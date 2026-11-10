@@ -11,7 +11,7 @@ import { errorText } from "../../app/errors";
 import { useFilters } from "../../app/filters";
 import { currentOrg, meQuery, shopsQuery, skuQuery } from "../../app/query";
 import { productsSearch } from "../../app/search";
-import { LineBarChart } from "../../components/charts";
+import { LineBarChart, type Band } from "../../components/charts";
 import { Badge, Banner, Button, DataTable, FormulaPopover, Kpi, ProductThumb, Skeleton, StatusPill, type Column } from "../../components/ui";
 import type { SkuDetail, SkuLot } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
@@ -117,6 +117,8 @@ function Detail({ orgId, detail, canManage }: { orgId: string; detail: SkuDetail
         <Kpi label={t("terms.netProfit")} value={f.money(sku.net_profit)} help={help("netProfit", t("terms.netProfit"))} note={uncovered} />
         <Kpi label={t("products.col.units")} value={f.number(sku.units)} help={help("units", t("products.col.units"))} />
         <Kpi label={t("products.col.avg_price")} value={money(sku.avg_price)} help={help("avgPrice", t("products.col.avg_price"))} />
+        {/* Hozirgi narx (Uzum katalogi): narx tarixi grafigi faqat narx o'zgargan bo'lsa chiqadi (ADR-055). */}
+        <Kpi label={t("products.sku.catalogPrice")} value={money(sku.price)} note={t("products.sku.catalogPriceNote")} />
         <Kpi label={t("products.col.profit")} value={money(sku.profit_per_unit)} help={help("profitPerUnit", t("products.col.profit"))} />
         <Kpi label={t("terms.margin")} value={percent(sku.margin)} help={help("margin", t("terms.margin"))} />
         <Kpi label={t("terms.roi")} value={percent(sku.roi)} help={help("roi", t("terms.roi"))} />
@@ -157,6 +159,20 @@ function Charts({ detail }: { detail: SkuDetail }) {
   const sparse = snapshotDays.length < history.length;
   // B4.53: sotuvsiz kunda ham xarajat bo'lsa (sof foyda ≠ 0) chiziqda ko'rinadi — avval bunday kunlar bo'sh qolardi.
   const shows = (d: SkuDetail["history"][number]) => d.units > 0 || Number(d.net_profit) !== 0;
+  // ADR-055: narx chizig'i faqat narx davrda o'zgargan bo'lsa (tekis chiziq hech narsa aytmaydi; hozirgi narx — KPI).
+  const prices = new Set(history.flatMap((d) => (d.price === null ? [] : [d.price])));
+  const priceMoved = prices.size > 1;
+  // Postavka davri (yaratilgan → savdoga chiqarilgan): qoldiq grafigida shtrixli oraliq — shu oraliqda dona Uzum omborida, lekin
+  // savdoda emas (`quantityActive` = hozir sotuvda turgan dona), shuning uchun 0 ko'rinishi to'g'ri.
+  const first = days[0];
+  const last = days[days.length - 1];
+  const supplyBands: Band[] = detail.supplies.flatMap((x) => {
+    if (x.created_on === null || first === undefined || last === undefined) return [];
+    const from = x.created_on < first ? first : x.created_on;
+    const to = x.accepted_on === null || x.accepted_on > last ? last : x.accepted_on;
+    if (from > to) return [];
+    return [{ from, to, kind: "hatch" as const, label: x.accepted_on === null ? t("products.sku.supplyOpen", { qty: x.to_stock }) : t("products.sku.supplyBand", { qty: x.to_stock, date: f.date(x.accepted_on) }) }];
+  });
   const noSalesDay = history.some((d) => d.units === 0 && Number(d.net_profit) !== 0);
   return (
     <section className="sku__charts" aria-label={t("products.sku.history")}>
@@ -176,15 +192,19 @@ function Charts({ detail }: { detail: SkuDetail }) {
             : t("products.sku.snapshotNote", { count: snapshotDays.length, total: history.length, from: f.date(snapshotDays[0]!.day) })}
         </p>
       )}
+      {priceMoved && (
       <LineBarChart
         title={t("products.sku.chartPrice")}
         x={days}
         series={[{ key: "price", name: t("products.sku.price"), color: 2, kind: "line", connect: true, values: history.map((d) => d.price) }]}
       />
+      )}
+      {supplyBands.length > 0 && <p className="caption sku__charts-note">{t("products.sku.stockNote")}</p>}
       <LineBarChart
         title={t("products.sku.chartStock")}
         x={days}
         unit="count"
+        bands={supplyBands}
         series={[{ key: "stock", name: t("terms.stock"), color: 3, values: history.map((d) => (d.stock === null ? null : String(d.stock))) }]}
       />
     </section>

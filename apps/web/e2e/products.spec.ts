@@ -108,11 +108,9 @@ test("SKU sahifasi (1000 px): katta KPI raqami kesilmaydi, jadval ko'rinishi kar
       .map((card) => card.textContent),
   );
   expect(clipped).toEqual([]);
-  const price = page.locator(".chart-frame").nth(1);
-  const before = (await price.boundingBox())!.height;
-  await page.locator(".chart-frame").nth(2).getByLabel("Jadval").check({ force: true });
-  const after = (await price.boundingBox())!.height;
-  expect(Math.abs(after - before)).toBeLessThan(2); // yonidagi karta jadvalga o'tsa ham o'z balandligida
-  const table = await page.locator(".chart-frame").nth(2).boundingBox();
-  expect(table!.height).toBeLessThan(600); // jadval o'z ichida skroll qiladi
+  // Qoldiq grafigi jadval ko'rinishida: uzun jadval o'z ichida skroll qiladi, karta cheksiz cho'zilmaydi.
+  const stock = page.locator(".chart-frame", { hasText: "Savdodagi qoldiq" });
+  await stock.getByLabel("Jadval").check({ force: true });
+  const table = await stock.boundingBox();
+  expect(table!.height).toBeLessThan(600);
 });

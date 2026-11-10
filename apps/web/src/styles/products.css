@@ -200,6 +200,11 @@
   .sku__charts > figure:first-of-type {
     grid-column: 1 / -1; /* kunlik tushum grafigi butun kenglikda (izoh <p> bundan oldin turishi mumkin) */
   }
+
+  /* Narx grafigi yo'q (narx o'zgarmagan) — qoldiq grafigi butun kenglikda. */
+  .sku__charts > figure:nth-of-type(2):last-of-type {
+    grid-column: 1 / -1;
+  }
 }
 
 .sku__block,
