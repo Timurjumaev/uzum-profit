@@ -694,7 +694,7 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   SKU sahifasi API'da `supplies` (yaratilgan sana, qabul oynasi, savdoga chiqarilgan sana, dona); qoldiq grafigi "Savdodagi
   qoldiq (FBO + FBS)" nomi bilan, postavka davri shtrixli oraliq ("Postavkada: 99 dona — 09.11.2026 da savdoga chiqarildi" /
   "hali savdoga chiqarilmagan") va tushuntiruvchi izoh bilan; narx grafigi faqat narx o'zgargan bo'lsa (tekis chiziq — yo'q), "Uzumdagi
-  narx" KPI qo'shildi; qoldiq jadvali va narx — oldingidek. **T:** staging'da SKU sahifasida qoldiq grafigini ko'rish (28.10–09.11 shtrixli oraliq).
+  narx" KPI qo'shildi; qoldiq jadvali va narx — oldingidek. Izohga: qoldiq kun oxirida olinadi, bekor/qaytgan tovar qoldiqqa qaytib qayta sotilishi mumkin (Temur tasdiqladi — qoldiq 0 kunlardagi sotuvning sababi). **T:** staging'da SKU sahifasida qoldiq grafigini ko'rish (28.10–09.11 shtrixli oraliq).
 - [ ] B4.61 (toraytirildi, past ustuvorlik) Ombor: postavka tarkibi va qisman chiqarish (ADR-055 §3). Ochiq postavka "Postavkada" hisoblanadi
   (to'g'ri, 02.11–09.11 ham); kamchiliklar: (1) holat `ACCEPTED` bo'lgach (savdoga chiqarish boshlangach) hali chiqarilmagan qism
   (`quantityToStock − quantityAccepted`, masalan 25 dona 09.11 07:05–10.11 13:39) hech qaysi joyda ko'rinmaydi; (2) postavka tarkibi
