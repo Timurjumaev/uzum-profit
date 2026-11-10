@@ -14065,6 +14065,13 @@
             "type": "array",
             "title": "History"
           },
+          "supplies": {
+            "items": {
+              "$ref": "#/components/schemas/SupplyOut"
+            },
+            "type": "array",
+            "title": "Supplies"
+          },
           "lots": {
             "items": {
               "$ref": "#/components/schemas/LotOut"
@@ -14110,6 +14117,7 @@
           "statement",
           "uzum_url",
           "history",
+          "supplies",
           "lots",
           "returns",
           "stock_detail",
@@ -15422,6 +15430,88 @@
           "platform"
         ],
         "title": "SupplierOut"
+      },
+      "SupplyOut": {
+        "properties": {
+          "number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "created_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created On"
+          },
+          "slot_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slot At"
+          },
+          "accepted_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted On"
+          },
+          "to_stock": {
+            "type": "integer",
+            "title": "To Stock"
+          },
+          "accepted": {
+            "type": "integer",
+            "title": "Accepted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "number",
+          "status",
+          "created_on",
+          "slot_at",
+          "accepted_on",
+          "to_stock",
+          "accepted"
+        ],
+        "title": "SupplyOut",
+        "description": "FBO postavka (ta'minlash) shu SKU bo'yicha (ADR-055): yaratilgan sana → Uzum ombori qabul oynasi → savdoga chiqarilgan\n(Uzum holatni ``ACCEPTED`` ga shu paytda o'tkazadi: ``dateAccepted``). Savdoga chiqquncha dona ``quantityActive`` da yo'q."
       },
       "SyncStatusOut": {
         "properties": {

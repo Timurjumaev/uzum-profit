@@ -19,7 +19,7 @@ tannarx tarixi (tovar lotlari), qaytish sabablari, bog'langan tovar va unit kalk
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Any, Literal, NamedTuple
@@ -30,6 +30,8 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.metrics import (
+    TASHKENT,
+    Period,
     ProfitLabel,
 )
 from upcore.money import Currency, Money, quantize
@@ -404,12 +406,75 @@ class CalcDefaultsOut(BaseModel):
     sources: dict[str, str]
 
 
+class SupplyOut(BaseModel):
+    """FBO postavka (ta'minlash) shu SKU bo'yicha (ADR-055): yaratilgan sana → Uzum ombori qabul oynasi → savdoga chiqarilgan
+    (Uzum holatni ``ACCEPTED`` ga shu paytda o'tkazadi: ``dateAccepted``). Savdoga chiqquncha dona ``quantityActive`` da yo'q."""
+
+    number: int | None
+    status: str | None
+    created_on: date | None  # yaratilgan (Toshkent sanasi)
+    slot_at: datetime | None  # qabul oynasi boshlanishi (``timeSlotReservation.timeFrom``)
+    accepted_on: (
+        date | None
+    )  # savdoga chiqarilgan sana (``dateAccepted``), yo'q — hali chiqarilmagan
+    to_stock: int  # shu SKU bo'yicha yuborilgan dona
+    accepted: int  # shundan savdoga chiqarilgani (oxirgi sinxronda)
+
+
+def _ms(value: Any) -> datetime | None:
+    """Uzum millisekund vaqti (``int``) → ``datetime``; boshqa shakl — ``None``."""
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        return None
+    return datetime.fromtimestamp(value / 1000, UTC)
+
+
+async def _supplies(conn: AsyncConnection, sku_id: UUID, period: Period) -> list[SupplyOut]:
+    """Davr bilan kesishgan postavkalar: yaratilgan ≤ davr oxiri va (savdoga chiqarilmagan yoki davr boshidan keyin)."""
+    v, it = m.fbo_invoices, m.fbo_invoice_items
+    out: list[SupplyOut] = []
+    for r in await conn.execute(
+        select(
+            v.c.number,
+            v.c.status,
+            v.c.created_on,
+            v.c.raw,
+            it.c.quantity_to_stock,
+            it.c.quantity_accepted,
+        )
+        .join(it, it.c.invoice_id == v.c.id)
+        .where(it.c.sku_id == sku_id)
+        .order_by(v.c.created_on, v.c.number, v.c.id)
+    ):
+        raw = r.raw if isinstance(r.raw, dict) else {}
+        placed = _ms(raw.get("dateAccepted"))
+        slot = raw.get("timeSlotReservation")
+        created = r.created_on.astimezone(TASHKENT).date() if r.created_on is not None else None
+        accepted_on = placed.astimezone(TASHKENT).date() if placed is not None else None
+        if created is not None and created > period.end:
+            continue
+        if accepted_on is not None and accepted_on < period.start:
+            continue
+        out.append(
+            SupplyOut(
+                number=r.number,
+                status=r.status,
+                created_on=created,
+                slot_at=_ms(slot.get("timeFrom")) if isinstance(slot, dict) else None,
+                accepted_on=accepted_on,
+                to_stock=r.quantity_to_stock,
+                accepted=r.quantity_accepted,
+            )
+        )
+    return out
+
+
 class SkuDetailOut(BaseModel):
     meta: Meta
     sku: SkuRowOut
     statement: StatementOut
     uzum_url: str | None
     history: list[SkuDayOut]
+    supplies: list[SupplyOut]
     lots: list[LotOut]
     returns: list[ReturnCauseOut]
     stock_detail: StockDetailOut | None
@@ -547,6 +612,7 @@ async def sku_detail(
         statement=StatementOut.of(s),
         uzum_url=url,
         history=history,
+        supplies=await _supplies(conn, sku_id, f.period),
         lots=lots,
         returns=[ReturnCauseOut(cause=c, units=v) for c, v in causes],
         stock_detail=(

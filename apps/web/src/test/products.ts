@@ -109,6 +109,7 @@ export function skuDetail(over: Partial<Detail> = {}): Detail {
       { day: "2026-10-01", units: 0, revenue: "0.00", net_profit: "0.00", profit_per_unit: null, price: "200000.00", commission_pct: "20.0000", stock: 10 },
       { day: "2026-10-02", units: 2, revenue: "400000.00", net_profit: "80000.00", profit_per_unit: "40000.00", price: "200000.00", commission_pct: "20.0000", stock: 8 },
     ],
+    supplies: [],
     lots: [
       { id: "71111111-1111-4111-8111-111111111111", ready_on: "2026-09-01", qty: 100, unit_cost: "100000.000000", total: "10000000.00", flags: ["cbu_rate"] },
       { id: "72222222-2222-4222-8222-222222222222", ready_on: null, qty: 20, unit_cost: "120000.000000", total: "2400000.00", flags: [] },

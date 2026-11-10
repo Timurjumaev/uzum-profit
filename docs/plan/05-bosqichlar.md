@@ -687,6 +687,19 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   (F2), O'rtacha narx (F3), Holat va ABC nishonlarida "?" tushuntirish (SKU sahifasi). **Topildi, tuzatilmadi:** "Qaytishlar
   sabablari"da Uzum xom sabab matni (`BAD_QUALITY`, ruscha) — to'liq sabab ro'yxati kerak (Temurdan). **T:** staging'da SKU
   sahifasini 100% masshtabda ko'rish; qaytish sabablari uchun Uzumdagi hamma sabab nomlarini yuborish.
+- [x] B4.54b SKU sahifasi: qoldiq grafigi ma'noli qilindi — postavka davri, narx grafigi shartli (ADR-055; Temur: grafik noto'g'ri ko'rindi).
+  ✓ 2026-11-10: sabab Uzum xatosi emas, bizning tushunishimiz edi: `quantityActive` = savdoda turgan dona, postavka savdoga
+  chiqarilguncha (qabul oynasidan 24 soat – 7 kun) hisobda yo'q; Uzum `ACCEPTED` ni savdoga chiqarish paytida qo'yadi
+  (`dateAccepted`). Temur xom postavka ma'lumotini yubordi: 99 dona 09.11 da chiqdi, 17 sotildi → 82 (snapshot bilan mos). Endi:
+  SKU sahifasi API'da `supplies` (yaratilgan sana, qabul oynasi, savdoga chiqarilgan sana, dona); qoldiq grafigi "Savdodagi
+  qoldiq (FBO + FBS)" nomi bilan, postavka davri shtrixli oraliq ("Postavkada: 99 dona — 09.11.2026 da savdoga chiqarildi" /
+  "hali savdoga chiqarilmagan") va tushuntiruvchi izoh bilan; narx grafigi faqat narx o'zgargan bo'lsa (tekis chiziq — yo'q), "Uzumdagi
+  narx" KPI qo'shildi; qoldiq jadvali va narx — oldingidek. Izohga: qoldiq kun oxirida olinadi, bekor/qaytgan tovar qoldiqqa qaytib qayta sotilishi mumkin (Temur tasdiqladi — qoldiq 0 kunlardagi sotuvning sababi). **T:** staging'da SKU sahifasida qoldiq grafigini ko'rish (28.10–09.11 shtrixli oraliq).
+- [ ] B4.61 (toraytirildi, past ustuvorlik) Ombor: postavka tarkibi va qisman chiqarish (ADR-055 §3). Ochiq postavka "Postavkada" hisoblanadi
+  (to'g'ri, 02.11–09.11 ham); kamchiliklar: (1) holat `ACCEPTED` bo'lgach (savdoga chiqarish boshlangach) hali chiqarilmagan qism
+  (`quantityToStock − quantityAccepted`, masalan 25 dona 09.11 07:05–10.11 13:39) hech qaysi joyda ko'rinmaydi; (2) postavka tarkibi
+  (`quantityAccepted`) faqat postavka holati o'zgarganda qayta o'qiladi — keyin chiqarilgan qism yangilanmaydi. Tuzatish: tarkibni
+  qabul soni o'zgarganda qayta o'qish va qismni "postavkada (qisman qabul)" deb ko'rsatish.
 - [ ] B4.55 "Chegarada" chegarasi Sozlamalarda (Temur: "statik emas, dinamik"; standart 5%, F13).
 - [ ] B4.56–B4.60 Sahifalash (ADR-054) boshqa sahifalarga: **Buyurtmalar, Uzum xarajatlari, Xaridlar, Ombor — qilindi** (quyida,
   B4.56–B4.58 + Xaridlar; Temur bitta PR'da so'radi); qoldi: Foyda tafsiloti (drill-down) va Kargolar.

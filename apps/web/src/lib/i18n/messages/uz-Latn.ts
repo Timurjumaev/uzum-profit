@@ -699,7 +699,12 @@ export const uzLatn = {
       snapshotNone: "Bu davrda Uzum narx va qoldiq snapshoti yoʻq — grafiklar boʻsh.",
       chartSalesNote: "Sotuvsiz kunlarda faqat xarajat boʻladi — sof foyda chizigʻi oʻsha kunlari pastga tushadi.",
       chartPrice: "Narx tarixi (Uzum snapshoti)",
-      chartStock: "Qoldiq tarixi (FBO + FBS)",
+      chartStock: "Savdodagi qoldiq (FBO + FBS)",
+      catalogPrice: "Uzumdagi narx",
+      catalogPriceNote: "Katalogdagi hozirgi narx",
+      stockNote: "Qoldiq — hozir savdoda turgan dona. Uzum postavkani omborga qabul qilgach savdoga chiqarishga vaqt oladi: shtrixli oraliqda tovar Uzum omborida, lekin savdoda emas, shuning uchun qoldiq 0 koʻrinadi. Qoldiq kun oxirida olinadi: bekor qilingan va qaytgan tovar qoldiqqa qaytib, oʻsha kuni qayta sotilishi mumkin — shuning uchun qoldiq 0 boʻlgan kunlarda ham sotuv boʻlishi mumkin.",
+      supplyBand: "Postavkada: {{qty}} dona — {{date}} da savdoga chiqarildi",
+      supplyOpen: "Postavkada: {{qty}} dona — hali savdoga chiqarilmagan",
       price: "Narx",
     },
     lots: {

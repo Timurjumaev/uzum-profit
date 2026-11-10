@@ -7,6 +7,7 @@ Dunyo (``world``) — ``test_reports`` dagi bilan bir xil, lekin shu modul uchun
 
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -312,6 +313,61 @@ def test_unit_cost_same_on_table_page_and_calculator(world: World) -> None:
     # Boshlash sanasi yo'q: boshlang'ich narx ishlamaydi — oxirgi tayyor partiya (30 000).
     calc_ = world.get(f"skus/{o_sku}", shop=shop, **OCT)["calc"]
     assert calc_["sources"]["unit_cost"] == "last_lot" and money(calc_["unit_cost"]) == D(30_000)
+
+
+def test_sku_detail_supplies(world: World) -> None:
+    """ADR-055: SKU sahifasida postavka sanalari — yaratilgan, qabul oynasi, savdoga chiqarilgan (``dateAccepted``)."""
+    xa = world.ids["xa"]
+    created = datetime(2026, 10, 15, 19, 0, tzinfo=UTC)  # Toshkentda 16-oktabr
+    slot_from = int(datetime(2026, 10, 18, 5, 30, tzinfo=UTC).timestamp() * 1000)  # 10:30 Toshkent
+    placed = int(
+        datetime(2026, 10, 20, 2, 5, 29, tzinfo=UTC).timestamp() * 1000
+    )  # 07:05 Toshkent, 20-oktabr
+    rows = [
+        (
+            9101,
+            "ACCEPTED",
+            created,
+            {"dateAccepted": placed, "timeSlotReservation": {"timeFrom": slot_from}},
+            99,
+            99,
+        ),
+        (9102, "CREATED", created, {}, 7, 0),  # hali savdoga chiqarilmagan
+        (
+            9103,
+            "ACCEPTED",
+            datetime(2026, 1, 5, tzinfo=UTC),
+            {"dateAccepted": int(datetime(2026, 1, 9, tzinfo=UTC).timestamp() * 1000)},
+            5,
+            5,
+        ),  # davrdan oldin
+    ]
+    for ext, status, when, raw, qty, accepted in rows:
+        inv = world.a.insert(
+            "fbo_invoices",
+            shop_id=world.a.shop_id,
+            external_id=ext,
+            number=ext,
+            status=status,
+            created_on=when,
+            raw=json.dumps(raw),
+        )
+        world.a.insert(
+            "fbo_invoice_items",
+            invoice_id=inv,
+            sku_external_id=1,
+            sku_id=xa,
+            quantity_to_stock=qty,
+            quantity_accepted=accepted,
+        )
+    got = world.get(f"skus/{xa}", **OCT)["supplies"]
+    assert [x["number"] for x in got] == [9101, 9102]  # davrdan oldingisi chiqmaydi
+    first = got[0]
+    assert (first["status"], first["to_stock"], first["accepted"]) == ("ACCEPTED", 99, 99)
+    assert first["created_on"] == "2026-10-16"
+    assert first["accepted_on"] == "2026-10-20"
+    assert first["slot_at"].startswith("2026-10-18T05:30:00")
+    assert got[1]["accepted_on"] is None and got[1]["slot_at"] is None
 
 
 def test_sku_detail_uzum_url_and_errors(world: World) -> None:
