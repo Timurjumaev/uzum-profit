@@ -389,13 +389,21 @@ og'irligida; qolgani — `dateCreated` (Uzum yechgan kun), do'kon darajasida, ku
 **F10. O'z xarajatlari** = qo'lda kiritilgan xarajatlar, amortizatsiya bilan davrga to'g'ri keladigan qismi
 (kunlik teng taqsimot).
 
-**F11. Soliq** = soliq profili bo'yicha:
-(a) aylanmadan %: stavka × baza (baza: Tushum F3 — standart, yoki Uzum to'lovi F6);
-(b) Uzum soliq agenti sifatida ushlaydi: xarajatlardan olinadi, qayta hisoblanmaydi;
-(c) QQS + foyda solig'i: QQS va foyda solig'i stavkalari sozlamada, oylik taxmin;
-(d) yo'q.
-Stavkalar bazada sana bo'yicha (2026: YaTT 1% yillik daromad 1 mlrd so'mgacha; e-tijorat yuridik shaxslari uchun
-bazaviy 4% / 15% — 08-tadqiqot.md, buxgalter bilan tasdiqlanadi).
+**F11. Soliq** = amaldagi soliq profilining (sanadan, ADR-058) hamma qatorlari yig'indisi. Profil — soliq qatorlari
+ro'yxati; har qator o'z nomi bilan hisob varag'ida alohida ko'rinadi (`tax:<qator>`), "Soliq" — jami:
+(1) **foizli** (`percent`): stavka × baza; baza: Tushum F3 (standart; Uzum komissiyasi chegirilmaydi), Uzum to'lovi F6,
+(2-bosqich) soliqdan oldingi foyda; kunlik katakda, har qismning (yakunlangan / kutilayotgan) o'z bazasidan;
+(2) **qat'iy** (`fixed`): summa (so'm) yoki n × BHM (BHM — `ref_amounts` da sana bo'yicha), davri oy / chorak / yil;
+davr kunlariga teng taqsimlanadi (F10 mexanizmi: tashkilot darajasida, do'kon va SKU'ga tushum ulushida), sotuv
+bo'lmagan davrda ham hisoblanadi; BHM o'zgargan kundan yangi qiymat bilan;
+(3) 2-bosqich: QQS va foyda solig'i — oylik taxmin (kirim QQS kerak);
+(4) Uzum soliq agenti: axborot qatori — summa Uzum xarajatlarida keladi, qayta hisoblanmaydi;
+profilda qator yo'q — soliq 0 (sof foyda soliqsiz; UI ochiq aytadi). Tayyor shablonlar: **YaTT** (aylanmadan 1% +
+ijtimoiy soliq 1 × BHM oyiga), **MChJ aylanmadan** (4%), **MChJ umumbelgilangan** (QQS 12% + foyda 15%, 2-bosqich),
+**o'zini o'zi band qilgan** (100 mln gacha ozod), bo'sh. Stavkalar, BHM va chegaralar bazada sana bo'yicha (2026:
+YaTT aylanmadan 1% yillik daromad 1 mlrd so'mgacha; e-tijorat yuridik shaxslari uchun bazaviy 4% / 15% —
+08-tadqiqot.md §6, buxgalter bilan tasdiqlanadi). Yillik tushum chegaraning 80% iga yetsa — ogohlantirish; rejim
+o'zi almashmaydi. Hisob — hisoblangan (accrual), to'langan emas.
 
 **F12. Sof foyda** = F8 − F9 − F10 − F11. Ikki qismda (ADR-037, ADR-038): **yakunlangan** (Yakunlangan sotuvlar) +
 **kutilayotgan**

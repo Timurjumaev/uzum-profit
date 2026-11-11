@@ -273,7 +273,8 @@ saqlash (yukxat bo'yicha), qabul qilishdagi farqlar (yetishmovchilik / ortiqcha 
 - **Topilma:** kodda va rejada YATT ijtimoiy soliq (oyiga 1 BHM) umuman uchramaydi (`packages`, `docs/plan` bo'yicha qidiruv: 0 ta);
   sof foyda ijtimoiy soliq hisobiga oyiga ≈ 440 000 so'mga baland ko'rinadi. Do'kon foydasiga bo'linmaydigan
   doimiy oylik xarajat — Xarajatlar (o'z xarajati) sifatida kiritish mumkin.
-- **Q15 (yangi, Temur hal qiladi):** YATT ijtimoiy soliqni qanday ko'rsatamiz? (a) hozir: Sozlamalar → soliq matnida
+- **Q15 — hal qilindi (Temur, 2026-11-11):** soliq profili dinamik bo'lsin (ijtimoiy + aylanmadan + boshqa soliqlar), YaTT: ijtimoiy soliq har oy to'liq 1 BHM, aylanma 1% — **ADR-058**, 05 B4.77–B4.81. Quyidagi variantlar tarixiy:
+- ~~**Q15 (yangi, Temur hal qiladi):**~~ YATT ijtimoiy soliqni qanday ko'rsatamiz? (a) hozir: Sozlamalar → soliq matnida
   eslatma — "ijtimoiy soliqni Xarajatlarga o'zingiz kiriting" (hisob o'zgarmaydi; PR-3 ga kiradi); (b) Sozlamalarda
   "Ijtimoiy soliq (oyiga, so'm)" maydoni, har oy tashkilot darajasida sof foydadan ayriladi (formula o'zgaradi — F11, ADR bilan).
   **Tavsiya: (a) hozir, (b) — birinchi YATT mijoz so'raganda yoki Temur xohlasa.**

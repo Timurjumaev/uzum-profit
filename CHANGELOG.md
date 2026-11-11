@@ -615,6 +615,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   jadvallar endi o'z ichida skroll qiladi; `e2e/orders.spec.ts`.
 - B4.63 Dona grafiklarida o'q qadami butun son (kichik sonlarda yorliqlar "1, 1, 1, 0, 0, 0" bo'lib takrorlanardi).
 - B4.63 KPI kartasida pul birligi so'z o'rtasidan bo'linmaydi ("1 200 000 soʻ" / "m" o'rniga butun "soʻm" keyingi qatorga).
+- B4.77a Dinamik soliq profili — dizayn (faqat hujjat): ADR-058 (profil = soliq qatorlari: foizli va qat'iy / n × BHM; shablonlar YaTT,
+  MChJ; BHM va chegaralar `ref_amounts` da sana bo'yicha; chegara ogohlantirishi), 02 F11 qayta yozildi, 08 §6 (BHM 440 000 —
+  2026-09-01 dan), 05 da B4.77–B4.81.
 - B4.75a (audit PR-3, K7) Foyda sahifasida "Soliq hisoblanmadi" ogohlantirishi: QQS + foyda yoki Uzum agenti rejimi davrda
   amalda bo'lsa (`upcore.tax.uncalculated_regimes`, `/pnl` → `untaxed_regimes`); Sozlamalardagi rejim yordam matni
   to'g'rilandi (avval "oylik taxmin sifatida hisoblanadi" deyilardi, aslida soliq 0).
