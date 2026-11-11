@@ -11863,6 +11863,10 @@
             },
             "type": "array",
             "title": "Untaxed Regimes"
+          },
+          "tax_missing_bhm": {
+            "type": "boolean",
+            "title": "Tax Missing Bhm"
           }
         },
         "type": "object",
@@ -11875,7 +11879,8 @@
           "expected",
           "expected_shops",
           "recalculated",
-          "untaxed_regimes"
+          "untaxed_regimes",
+          "tax_missing_bhm"
         ],
         "title": "PnlOut"
       },

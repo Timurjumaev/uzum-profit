@@ -639,6 +639,8 @@ export const uzLatn = {
       agent: "«Uzum soliq agenti» rejimida dastur soliqni oʻzi hisoblamaydi: Uzum xarajatlarida soliq qatori boʻlmasa, sof foyda soliqsiz. Yakka tartibdagi tadbirkorda Uzum soliqni ushlamaydi — «Aylanmadan foiz» rejimini tanlang.",
     },
     untaxedAction: "Soliq sozlamalari",
+    taxMissingBhmTitle: "Ijtimoiy soliq toʻliq hisoblanmadi",
+    taxMissingBhm: "Davrning ayrim kunlari uchun bazaviy hisoblash miqdori (BHM) maʼlumotnomada yoʻq — BHMga bogʻliq qatʼiy soliq oʻsha kunlarga hisoblanmadi.",
   },
   products: {
     title: "Mahsulotlar, {{period}}",

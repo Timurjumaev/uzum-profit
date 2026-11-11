@@ -48,6 +48,7 @@ const FIXED: Record<string, Spec> = {
 export function rowLabel(code: string, t: TFunction): string {
   if (code.startsWith("uzum:")) return t(`home.expense.${code.slice(5)}`, { defaultValue: code.slice(5) });
   if (code.startsWith("own:")) return code.slice(4);
+  if (code.startsWith("tax:")) return code.slice(4); // F11: soliq qatori nomi (ADR-058)
   switch (code) {
     case "revenue": return t(term("revenue"));
     case "commission": return t(term("commission"));

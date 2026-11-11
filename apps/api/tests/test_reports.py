@@ -361,6 +361,51 @@ def test_pnl_untaxed_regimes(world: World) -> None:
     assert world.get("pnl", **OCT)["untaxed_regimes"] == []
 
 
+def test_pnl_tax_lines_and_fixed_tax(world: World) -> None:
+    """ADR-058: soliq qatorlari bazadan — foizli va qat'iy (n × BHM) qator hisob varag'ida "Soliq" ostida alohida."""
+    a = world.a
+    a.sql(
+        "INSERT INTO ref_amounts (code, valid_from, amount) VALUES ('bhm', %s, %s)",
+        [date(2025, 1, 1), 400_000],
+    )
+    profile = a.insert("tax_profiles", valid_from=date(2025, 2, 1), regime="turnover")
+    a.insert(
+        "tax_lines", profile_id=profile, name="Aylanmadan soliq", kind="percent", rate_pct=D(1)
+    )
+    a.insert(
+        "tax_lines",
+        profile_id=profile,
+        name="Ijtimoiy soliq",
+        kind="fixed",
+        bhm_count=D(1),
+        position=1,
+    )
+    body = world.get("pnl", start="2025-02-01", end="2025-02-28")
+    rows = {r["code"]: r for r in body["rows"]}
+    assert money(rows["tax:Ijtimoiy soliq"]["amount"]) == D(-400_000)  # fevral: 1 × BHM, aniq
+    assert money(rows["tax:Aylanmadan soliq"]["amount"]) == D(0)  # sotuv yo'q
+    assert money(rows["tax"]["amount"]) == D(-400_000)
+    assert money(body["statement"]["tax"]) == D(400_000)
+    assert "own:tax:Ijtimoiy soliq" not in rows  # o'z xarajati sifatida ko'rinmaydi
+    assert body["tax_missing_bhm"] is False
+    # Bir oy ichidagi qisman davr: 10 kun × 400 000 / 28.
+    part = world.get("pnl", start="2025-02-01", end="2025-02-10")
+    assert money(part["statement"]["tax"]) == D("142857.14")
+
+
+def test_pnl_tax_missing_bhm_flag(world: World) -> None:
+    """BHM ma'lumotnomada yo'q kunlarda BHM'ga bog'liq qat'iy soliq hisoblanmaydi va bu aytiladi (0 deb yashirilmaydi)."""
+    a = world.a
+    profile = a.insert("tax_profiles", valid_from=date(2024, 1, 1), regime="turnover")
+    a.insert("tax_lines", profile_id=profile, name="Ijtimoiy soliq", kind="fixed", bhm_count=D(1))
+    body = world.get(
+        "pnl", start="2024-12-01", end="2024-12-05"
+    )  # BHM ma'lumotnomada 2025-01-01 dan
+    assert body["tax_missing_bhm"] is True
+    assert money(body["statement"]["tax"]) == D(0)
+    assert world.get("pnl", **OCT)["tax_missing_bhm"] is False
+
+
 def test_pnl_rows_and_previous(world: World) -> None:
     body = world.get("pnl", **OCT)
     rows = {r["code"]: r for r in body["rows"]}

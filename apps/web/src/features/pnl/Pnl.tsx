@@ -126,6 +126,7 @@ export function Pnl() {
           {t(`pnl.untaxed.${regime}`)}
         </Banner>
       ))}
+      {data.tax_missing_bhm && <Banner tone="warning" title={t("pnl.taxMissingBhmTitle")}>{t("pnl.taxMissingBhm")}</Banner>}
       {data.recalculated > 0 && <Banner tone="info" title={t("pnl.recalculated", { value: f.number(data.recalculated) })} />}
 
       <div className="pnl-ledger-box">

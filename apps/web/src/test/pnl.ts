@@ -128,6 +128,7 @@ export function pnlData(over: Partial<Pnl> = {}): Pnl {
     ],
     recalculated: 0,
     untaxed_regimes: [],
+    tax_missing_bhm: false,
     ...over,
   };
 }

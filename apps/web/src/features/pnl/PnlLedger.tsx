@@ -58,7 +58,7 @@ export function PnlLedger({ lines, part, onRow }: Props) {
       </thead>
       <tbody>
         {lines.map((line) => (
-          <tr key={line.key} className={cx(line.kind !== "row" && `is-${line.kind}`)}>
+          <tr key={line.key} className={cx(line.kind !== "row" && `is-${line.kind}`, line.part && "is-part")}>
             <td className="ui-ledger__op" aria-hidden>
               {line.op}
             </td>
