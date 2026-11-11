@@ -542,8 +542,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
-- B4.75b (CI): `E2E va vizual` job'ida `playwright install --with-deps` 3 marta urinadi; xatodan keyin apt rasmiy
-  `archive.ubuntu.com` ga o'tadi. Runner'ning Ubuntu oynasi DNS'da yo'qolganda testlar ishga tushmay qizarardi (2026-11-11).
+- B4.75b (CI): `E2E va vizual` job'ida brauzer apt'siz o'rnatiladi (`playwright install chromium`), tizim paketlari
+  (`install-deps`) — 2 urinish, bo'lmasa ogohlantirish bilan davom (ular faqat qo'shimcha shriftlar; ularsiz e2e va skrinshotlar
+  bir xil o'tishi tekshirildi). Runner'dan Ubuntu arxivi ochilmaganda testlar ishga tushmay qizarardi (2026-11-11).
 - B4.41 (ADR-051): boshlang'ich qoldiq tugagach boshlashdan oldingi bekor buyurtmalardan qaytgan tovar "Taxminiy · partiyalar
   yetmadi" bo'lardi. Endi manba FBO postavkalaridan: postavka yo'q — boshlang'ich narx, belgisiz; postavka va partiya bor — partiya
   narxi, belgisiz; postavka bor, partiya kiritilmagan — "Taxminiy" yangi sabab bilan. B4.39 dagi "qoldiq tugasa ham doim boshlang'ich
