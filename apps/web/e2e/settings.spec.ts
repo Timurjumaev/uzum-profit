@@ -24,3 +24,20 @@ test("gorizontal skroll yo'q (360 px) /settings", async ({ page }) => {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 });
+
+test("soliq profili formasi: shablon qatorlari 360 px da sig'adi (gorizontal skroll yo'q)", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await mockApi(page);
+  await open(page, "/settings");
+  await page.getByRole("button", { name: "Profil qoʻshish" }).first().click();
+  const dialog = page.getByRole("dialog", { name: "Yangi soliq profili" });
+  await dialog.getByLabel("Tayyor shablon").selectOption("yatt");
+  await expect(dialog.getByRole("group", { name: "Soliq qatori 2" })).toBeVisible();
+  const overflow = await page.evaluate(() => {
+    const d = document.querySelector("[role=dialog]") as HTMLElement;
+    return { page: document.documentElement.scrollWidth - document.documentElement.clientWidth, dialog: d.scrollWidth - d.clientWidth };
+  });
+  expect(overflow.page).toBeLessThanOrEqual(0);
+  expect(overflow.dialog).toBeLessThanOrEqual(0);
+  if (process.env.SHOT) await page.screenshot({ path: process.env.SHOT });
+});

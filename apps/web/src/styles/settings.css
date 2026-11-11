@@ -94,3 +94,35 @@
   justify-self: start;
   color: var(--accent-text);
 }
+
+/* Soliq qatorlari muharriri (ADR-058): har qator — alohida blok; tor ekranda maydonlar ketma-ket (360 px). */
+.tax-lines {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.tax-line {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-3);
+  min-inline-size: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border-hairline);
+}
+
+.tax-line > * {
+  min-inline-size: 0;
+}
+
+.tax-line__actions {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.tax-line__hint {
+  color: var(--text-secondary);
+}

@@ -771,8 +771,15 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     qatorlari bor profilda eski stavka ustuni nol). Migratsiya 0019: stavkasi > 0 aylanma profillar bitta foizli qatorga
     ("Aylanmadan soliq") ko'chadi — hisob natijasi o'zgarmaydi. Testlar: API (yaratish, almashtirish, tekshiruv, cascade,
     audit, ruxsat), migratsiya (ko'chirish, orqaga qaytish). **T:** yo'q (UI keyingi vazifada).
-  - [ ] B4.79b Soliq profili: Sozlamalar UI — qatorlar muharriri va shablonlar (YaTT: aylanmadan 1% + 1 BHM; MChJ aylanmadan 4%;
-    bo'sh), BHM va ma'lumotnoma stavkasi ko'rsatiladi, qat'iy soliq oy summasi (n × BHM) ko'rinadi; 360 px; uz/ru; e2e.
+  - [x] B4.79b Soliq profili: Sozlamalar UI. Aylanma rejimida endi **soliq qatorlari muharriri** (`TaxLinesEditor`): foizli (stavka,
+    baza) yoki qat'iy (so'm yoki BHM soni; oy / chorak / yil) qatorlar, qo'shish / o'chirish (ko'pi bilan 10), takror nom va
+    to'ldirilmagan qator saqlashga yo'l qo'ymaydi; **tayyor shablonlar** — YaTT (aylanmadan foiz + 1 BHM ijtimoiy soliq),
+    MChJ aylanmadan, bo'sh (stavkalar `tax_rates` ma'lumotnomasidan, BHM soni — shablon standarti, tahrirlanadi); BHM qiymati
+    ma'lumotnomadan ko'rsatiladi (UI hisoblamaydi); jadvalda profil qatorlari ro'yxati. Qatorsiz eski aylanma profili
+    tahrirlanganda bitta foizli qatorga aylanadi. 360 px da gorizontal skroll yo'q (e2e), axe (jiddiy buzilish yo'q), uz/ru.
+    **T:** staging'da Sozlamalar → Soliq profili → "Profil qo'shish" → shablon "YaTT" (stavka 1% va 1 BHM) → saqlash;
+    keyin Foyda sahifasida "Soliq" ostida "Aylanmadan soliq" va "Ijtimoiy soliq" qatorlarini ko'rish (o'z sofi foydang bilan
+    solishtirib).
   - [ ] B4.80 Yillik tushum chegarasi ogohlantirishi (80% / 100%; YaTT 1 mlrd, MChJ 12 000 BHM, o'zini o'zi band qilgan 100 mln) — Asosiy va Sozlamalarda.
   - [ ] B4.81 (B5 boshi) 2-bosqich: QQS va foyda solig'i oylik hisobi (kirim QQS, `profit_before_tax` bazasi), shablon "MChJ umumbelgilangan".
   - [ ] B4.76 Kabinet bilan solishtirish (taklif): Foyda sahifasida "Uzum kabineti ko'rsatadigan" qator (09 §11.3) — Temur

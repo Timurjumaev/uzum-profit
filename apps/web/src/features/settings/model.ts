@@ -1,28 +1,93 @@
 // Sozlamalar (M16) uchun sof yordamchilar: soliq profili shakli (rejimga mos maydonlar), muddat va qamrov
 // kiritishlari. Hisob yo'q — F-formulalar serverda (tamoyil 4); bu yerda faqat kiritish tekshiruvi.
-import type { InventorySettingsIn, Settings, TaxBase, TaxProfile, TaxProfileIn, TaxRegime } from "../../lib/api/types";
+import type { InventorySettingsIn, Settings, TaxBase, TaxLine, TaxLineIn, TaxProfile, TaxProfileIn, TaxRate, TaxRegime } from "../../lib/api/types";
 
 export const REGIMES: TaxRegime[] = ["turnover", "agent", "vat_profit", "none"];
 export const BASES: TaxBase[] = ["revenue", "payout"];
 export const PAYOUT_KINDS = ["daily", "weekly", "biweekly", "monthly"] as const;
 
-export type TaxDraft = { valid_from: string; regime: TaxRegime; rate: string | null; base: TaxBase; vat: string | null; profit: string | null };
+export type LineKind = TaxLineIn["kind"];
+export type FixedPeriod = NonNullable<TaxLineIn["period"]>;
+export const LINE_PERIODS: FixedPeriod[] = ["month", "quarter", "year"];
+export const MAX_TAX_LINES = 10;
 
-/** Qatordan forma (stavka "4.000" → "4": ortiqcha nol tashlanadi). */
-export function taxDraft(p: TaxProfile | null, today: string): TaxDraft {
-  if (!p) return { valid_from: today, regime: "turnover", rate: null, base: "revenue", vat: null, profit: null };
-  const pct = (v: string) => (Number(v) === 0 ? null : String(Number(v)));
-  return { valid_from: p.valid_from, regime: p.regime, rate: pct(p.rate_pct), base: p.base, vat: pct(p.vat_pct), profit: pct(p.profit_pct) };
+/** Soliq qatori shakli (ADR-058). `mode` — qat'iy qatorda summa so'mda yoki BHM sonida. */
+export type LineDraft = {
+  key: string;
+  name: string;
+  kind: LineKind;
+  rate: string | null;
+  base: TaxBase;
+  mode: "sum" | "bhm";
+  amount: string | null;
+  bhm: string | null;
+  period: FixedPeriod;
+};
+
+export type TaxDraft = { valid_from: string; regime: TaxRegime; lines: LineDraft[]; vat: string | null; profit: string | null };
+
+let lineSeq = 0;
+export function newLine(kind: LineKind, over: Partial<LineDraft> = {}): LineDraft {
+  lineSeq += 1;
+  return { key: `new-${lineSeq}`, name: "", kind, rate: null, base: "revenue", mode: kind === "fixed" ? "bhm" : "sum", amount: null, bhm: null, period: "month", ...over };
+}
+
+const pct = (v: string) => (Number(v) === 0 ? null : String(Number(v)));
+
+function lineDraft(l: TaxLine): LineDraft {
+  return {
+    key: l.id,
+    name: l.name,
+    kind: l.kind,
+    rate: l.kind === "percent" ? pct(l.rate_pct) : null,
+    base: l.base,
+    mode: l.amount !== null ? "sum" : "bhm",
+    amount: l.amount !== null ? String(Number(l.amount)) : null,
+    bhm: l.bhm_count !== null ? String(Number(l.bhm_count)) : null,
+    period: l.period,
+  };
+}
+
+/** Qatordan forma (stavka "4.000" → "4": ortiqcha nol tashlanadi). Qatorsiz aylanma profili (eski) — bitta foizli qator. */
+export function taxDraft(p: TaxProfile | null, today: string, legacyName = "Aylanmadan soliq"): TaxDraft {
+  if (!p) return { valid_from: today, regime: "turnover", lines: [], vat: null, profit: null };
+  let lines: LineDraft[] = [];
+  if (p.regime === "turnover") {
+    if (p.lines.length > 0) lines = p.lines.map(lineDraft);
+    else if (Number(p.rate_pct) > 0) lines = [newLine("percent", { name: legacyName, rate: pct(p.rate_pct), base: p.base })];
+  }
+  return { valid_from: p.valid_from, regime: p.regime, lines, vat: pct(p.vat_pct), profit: pct(p.profit_pct) };
 }
 
 const inRange = (v: string | null) => v === null || (Number.isFinite(Number(v)) && Number(v) >= 0 && Number(v) <= 100);
+const positive = (v: string | null) => v !== null && Number.isFinite(Number(v)) && Number(v) > 0;
 
-/** Forma to'g'rimi: aylanma solig'ida stavka 0 dan katta, foizlar 0–100, sana bor. */
+/** Qator to'g'rimi: nom bor; foizli — stavka 0 dan katta va ≤ 100; qat'iy — summa yoki BHM soni 0 dan katta. */
+export function lineValid(l: LineDraft): boolean {
+  if (l.name.trim() === "") return false;
+  if (l.kind === "percent") return positive(l.rate) && Number(l.rate) <= 100;
+  return l.mode === "sum" ? positive(l.amount) : positive(l.bhm);
+}
+
+/** Qatorlar: kamida bitta, ko'pi bilan 10 ta, hammasi to'g'ri, nomlar takrorlanmaydi (katta-kichik harfsiz). */
+export function linesValid(lines: LineDraft[]): boolean {
+  if (lines.length === 0 || lines.length > MAX_TAX_LINES || !lines.every(lineValid)) return false;
+  return new Set(lines.map((l) => l.name.trim().toLowerCase())).size === lines.length;
+}
+
+/** Forma to'g'rimi: aylanmada qatorlar to'g'ri, foizlar 0–100, sana bor. */
 export function taxValid(d: TaxDraft): boolean {
   if (!d.valid_from) return false;
-  if (d.regime === "turnover") return d.rate !== null && Number(d.rate) > 0 && inRange(d.rate);
+  if (d.regime === "turnover") return linesValid(d.lines);
   if (d.regime === "vat_profit") return inRange(d.vat) && inRange(d.profit);
   return true;
+}
+
+export function lineBody(l: LineDraft): TaxLineIn {
+  const name = l.name.trim();
+  if (l.kind === "percent") return { name, kind: "percent", rate_pct: l.rate ?? "0", base: l.base, period: "month" };
+  const value = l.mode === "sum" ? { amount: l.amount ?? "0" } : { bhm_count: l.bhm ?? "0" };
+  return { name, kind: "fixed", rate_pct: "0", base: "revenue", period: l.period, ...value };
 }
 
 /** Serverga: rejimga tegishli bo'lmagan maydonlar nol/standart (server ham shunday normallashtiradi). */
@@ -32,11 +97,26 @@ export function taxBody(d: TaxDraft): TaxProfileIn {
   return {
     valid_from: d.valid_from,
     regime: d.regime,
-    rate_pct: turnover ? (d.rate ?? "0") : "0",
-    base: turnover ? d.base : "revenue",
+    rate_pct: "0",
+    base: "revenue",
     vat_pct: vat ? (d.vat ?? "0") : "0",
     profit_pct: vat ? (d.profit ?? "0") : "0",
+    lines: turnover ? d.lines.map(lineBody) : [],
   };
+}
+
+export type TaxTemplate = "yatt" | "ecommerce" | "empty";
+export const TAX_TEMPLATES: TaxTemplate[] = ["yatt", "ecommerce", "empty"];
+
+/** Tayyor shablon qatorlari (ADR-058). Stavkalar ma'lumotnomadan (`tax_rates`), BHM soni — shablon standarti (tahrirlanadi). */
+export function taxTemplate(kind: TaxTemplate, rates: TaxRate[], names: { turnover: string; social: string }): LineDraft[] {
+  const rate = (code: string) => {
+    const r = rates.find((x) => x.code === code);
+    return r ? String(Number(r.rate_pct)) : null;
+  };
+  if (kind === "yatt") return [newLine("percent", { name: names.turnover, rate: rate("turnover_individual") }), newLine("fixed", { name: names.social, bhm: "1" })];
+  if (kind === "ecommerce") return [newLine("percent", { name: names.turnover, rate: rate("turnover_ecommerce") })];
+  return [];
 }
 
 /** Kuchda turgan profil: `valid_from` ≤ bugun bo'lgan eng yangisi (ro'yxat yangisi birinchi). */
