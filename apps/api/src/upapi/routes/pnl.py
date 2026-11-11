@@ -21,6 +21,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from upcore.pnl import CellKey, Cells, Statement, compare
+from upcore.tax import TaxRegime, uncalculated_regimes
 
 from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission
@@ -70,6 +71,8 @@ class PnlOut(BaseModel):
     expected: ExpectedOut  # F16 (ADR-037): kutilayotgan sof foyda tafsiloti va R
     expected_shops: list[ExpectedShopOut]  # Jarayondagi sotuvi bor do'konlar
     recalculated: int  # davr sotuvlaridan oxirgi 7 kunda tannarxi o'zgarganlari (03 §7)
+    # F11 (K7): davrda amalda bo'lgan, soliq hisoblanmaydigan rejimlar (``vat_profit``, ``agent``) — sof foyda soliqsiz
+    untaxed_regimes: list[TaxRegime]
 
 
 def columns(cells: Cells, view: View) -> tuple[list[ColumnOut], Statement]:
@@ -117,6 +120,9 @@ async def pnl(ctx: Finance, f: Filter, _: Heavy, view: View = View.TOTAL) -> Pnl
             for shop, st in sorted(shops.items())
         ],
         recalculated=await rc.recalculated(ctx.conn, f, now),
+        untaxed_regimes=sorted(
+            uncalculated_regimes(await rc.tax_profiles(ctx.conn), f.period.start, f.period.end)
+        ),
     )
 
 

@@ -742,7 +742,12 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   - [ ] B4.73 (Q11) Mobil ro'yxat: Mahsulotlar → Ombor → Buyurtmalar (uch PR).
   - [ ] B4.74 (Q8, Q9, Q13, Q14) Reja hujjatlari: B4 yopish (B4.27, B4.55, B4.61 → B5 boshi), Telegram B6.1–B6.2 oldinga, rejaga
     qo'shimchalar, 03 §2 va ADR-004 haqiqatga; Uzum API shartlari (Temurdan kabinet matni).
-  - [ ] B4.75 (audit §9) PR-3…PR-8: soliq halolligi (K7 + Q15 (a)), bosish maydoni 44 px, xavfsizlik/CI, hujjat va o'lik kod,
+  - [x] B4.75a (audit PR-3, K7) Soliq hisoblanmaganda halol ogohlantirish: Foyda sahifasida (QQS + foyda yoki Uzum agenti
+    rejimi davrda amalda bo'lsa) sariq banner "Soliq hisoblanmadi" + Sozlamalarga havola; Sozlamalardagi rejim yordam matni
+    to'g'rilandi (avval "oylik taxmin sifatida hisoblanadi" deb yolg'on yozilgan edi). `upcore.tax.uncalculated_regimes` (F11),
+    `/pnl` javobida `untaxed_regimes`. **Davomi:** dinamik soliq profili (Temur, 2026-11-11) — alohida ADR bilan.
+    **T:** staging'da Foyda sahifasida (agar rejim QQS + foyda yoki agent bo'lsa) bannerni ko'rish.
+  - [ ] B4.75 (audit §9) PR-4…PR-8: soliq halolligi (K7 + Q15 (a)), bosish maydoni 44 px, xavfsizlik/CI, hujjat va o'lik kod,
     test qamrovi, jadval kengliklari va favicon.
   - [ ] B4.76 Kabinet bilan solishtirish (taklif): Foyda sahifasida "Uzum kabineti ko'rsatadigan" qator (09 §11.3) — Temur
     ko'rgach.

@@ -633,6 +633,12 @@ export const uzLatn = {
     },
     recalculated: "Bu davrdagi {{value}} ta sotuvning tannarxi oxirgi 7 kunda qayta hisoblandi (xarid yoki kurs oʻzgargan).",
     coverageText: "{{value}} ta sotuv ({{amount}}) tannarxsiz — foydaga kirmadi.",
+    untaxedTitle: "Soliq hisoblanmadi",
+    untaxed: {
+      vat_profit: "«QQS + foyda soligʻi» rejimida soliq hozircha hisoblanmaydi — sof foyda soliqsiz koʻrsatilgan. Soliqni «Xarajatlar» boʻlimida oʻzingiz kiriting.",
+      agent: "«Uzum soliq agenti» rejimida dastur soliqni oʻzi hisoblamaydi: Uzum xarajatlarida soliq qatori boʻlmasa, sof foyda soliqsiz. Yakka tartibdagi tadbirkorda Uzum soliqni ushlamaydi — «Aylanmadan foiz» rejimini tanlang.",
+    },
+    untaxedAction: "Soliq sozlamalari",
   },
   products: {
     title: "Mahsulotlar, {{period}}",
@@ -982,8 +988,8 @@ export const uzLatn = {
       },
       regimeHelp: {
         turnover: "Soliq = stavka × baza; har kun uchun hisoblanadi.",
-        agent: "Uzum soliqni oʻzi ushlaydi — summa Uzum xarajatlarida keladi, qayta hisoblanmaydi.",
-        vat_profit: "QQS va foyda soligʻi oylik taxmin sifatida hisoblanadi.",
+        agent: "Dastur soliqni hisoblamaydi: Uzum ushlagan soliq Uzum xarajatlarida qatori boʻlsagina hisobga kiradi. Yakka tartibdagi tadbirkorda Uzum soliqni ushlamaydi — «Aylanmadan foiz»ni tanlang.",
+        vat_profit: "Hozircha soliq hisoblanmaydi — sof foyda soliqsiz koʻrsatiladi. Soliqni Xarajatlar boʻlimida oʻzingiz kiriting.",
         none: "Sof foyda soliqsiz hisoblanadi.",
       },
       rate: "Stavka",

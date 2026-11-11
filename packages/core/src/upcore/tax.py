@@ -101,6 +101,25 @@ def daily_rule(profiles: Iterable[TaxProfile]) -> Callable[[date], TaxRule | Non
     return rule
 
 
+_NOT_CALCULATED = frozenset({TaxRegime.VAT_PROFIT, TaxRegime.AGENT})
+
+
+def uncalculated_regimes(
+    profiles: Iterable[TaxProfile], start: date, end: date
+) -> frozenset[TaxRegime]:
+    """F11: ``start``…``end`` kunlarida amalda bo'lgan rejimlar ichida soliq **hisoblanmaydiganlari** — QQS + foyda
+    (c, oylik taxmin hali yo'q) va Uzum agenti (b, summa faqat Uzum xarajatlarida kelsa hisobga olinadi). Sof foyda bu
+    kunlarda soliqsiz — UI shuni ochiq aytadi (tamoyil 9, 09-audit K7). Profilsiz davr va "yo'q" rejimi foydalanuvchi
+    tanlovi — bu yerga kirmaydi."""
+    items = list(profiles)
+    active = []
+    first = profile_on(items, start)
+    if first is not None:
+        active.append(first)
+    active += [p for p in items if start < p.valid_from <= end]
+    return frozenset(p.regime for p in active) & _NOT_CALCULATED
+
+
 @dataclass(frozen=True, slots=True)
 class VatProfitEstimate:
     """F11 (c) oylik taxmini."""

@@ -37,6 +37,24 @@ const row = (name: string) => within(ledger()).getByRole("row", { name: new RegE
 const pnlUrls = (api: ReturnType<typeof mockApi>) =>
   api.fetch.mock.calls.map(([r]) => new URL((r as Request).url)).filter((u) => u.pathname === PNL_ROUTE.split(" ")[1]);
 
+describe("soliq hisoblanmadi (K7)", () => {
+  it("QQS + foyda yoki agent rejimida ogohlantirish va soliq sozlamalariga havola; aylanma rejimida yo'q", async () => {
+    await renderPnl();
+    expect(screen.queryByText("Soliq hisoblanmadi")).toBeNull();
+    cleanup();
+    await renderPnl(PATH, { [PNL_ROUTE]: () => json(200, pnlData({ untaxed_regimes: ["vat_profit", "agent"] })) });
+    expect(screen.getAllByText("Soliq hisoblanmadi")).toHaveLength(2);
+    expect(screen.getByText(/«QQS \+ foyda soligʻi» rejimida soliq hozircha hisoblanmaydi/)).toBeTruthy();
+    expect(screen.getByText(/«Uzum soliq agenti» rejimida dastur soliqni oʻzi hisoblamaydi/)).toBeTruthy();
+    expect(screen.getAllByRole("link", { name: "Soliq sozlamalari" })[0].getAttribute("href")).toContain("/settings");
+  });
+
+  it("ruscha matn", async () => {
+    await renderPnl(PATH, { [PNL_ROUTE]: () => json(200, pnlData({ untaxed_regimes: ["vat_profit"] })) }, "ru");
+    expect(screen.getByText("Налог не рассчитан")).toBeTruthy();
+  });
+});
+
 describe("hisob varag'i", () => {
   it("sarlavha, qatorlar tartibi (yalpi foyda bilan) va ustunlar: yakunlangan, kutilayotgan, jami, tushumga nisbatan, oldingi, farq", async () => {
     await renderPnl();

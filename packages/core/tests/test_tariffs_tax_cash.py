@@ -35,6 +35,7 @@ from upcore.tax import (
     effective_rate,
     profile_on,
     rate_on,
+    uncalculated_regimes,
     vat_profit_estimate,
 )
 
@@ -118,6 +119,33 @@ def test_fallback_fees() -> None:
 
 
 # F11 ------------------------------------------------------------------------------------------
+
+
+def test_uncalculated_regimes() -> None:
+    """K7 (09-audit): soliq hisoblanmaydigan rejimlar (QQS + foyda, agent) davr kunlarida amalda bo'lsa — aytiladi."""
+    profiles = [
+        TaxProfile(date(2026, 1, 1), TaxRegime.TURNOVER, D(1)),
+        TaxProfile(date(2026, 10, 15), TaxRegime.VAT_PROFIT, vat_pct=D(12), profit_pct=D(15)),
+        TaxProfile(date(2026, 11, 10), TaxRegime.AGENT),
+        TaxProfile(date(2026, 12, 1), TaxRegime.NONE),
+    ]
+    # Aylanma rejimi — hisoblanadi; profilsiz va "yo'q" rejimi — foydalanuvchi tanlovi (bu yerda xabar yo'q).
+    assert uncalculated_regimes(profiles, date(2026, 10, 1), date(2026, 10, 14)) == frozenset()
+    assert uncalculated_regimes([], date(2026, 10, 1), date(2026, 10, 14)) == frozenset()
+    # Davr boshida amaldagi profil va davr ichida boshlanganlari.
+    assert uncalculated_regimes(profiles, date(2026, 10, 1), date(2026, 10, 15)) == {
+        TaxRegime.VAT_PROFIT
+    }
+    assert uncalculated_regimes(profiles, date(2026, 10, 20), date(2026, 10, 31)) == {
+        TaxRegime.VAT_PROFIT
+    }
+    assert uncalculated_regimes(profiles, date(2026, 11, 1), date(2026, 11, 30)) == {
+        TaxRegime.VAT_PROFIT,
+        TaxRegime.AGENT,
+    }
+    # Profil keyingi davrda boshlansa — oldingi davrga ta'sir qilmaydi; "yo'q" rejimi ro'yxatga kirmaydi.
+    assert uncalculated_regimes(profiles, date(2026, 12, 1), date(2026, 12, 31)) == frozenset()
+    assert uncalculated_regimes(profiles, date(2026, 1, 1), date(2026, 10, 14)) == frozenset()
 
 
 def test_tax_rates_and_profiles() -> None:
