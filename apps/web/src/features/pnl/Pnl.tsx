@@ -112,6 +112,20 @@ export function Pnl() {
           {t("pnl.coverageText", { value: f.number(s.uncovered.lines), amount: f.money(s.uncovered.revenue) })}
         </Banner>
       )}
+      {data.untaxed_regimes.map((regime) => (
+        <Banner
+          key={regime}
+          tone="warning"
+          title={t("pnl.untaxedTitle")}
+          action={
+            <Link to="/settings" search={(prev) => prev} className="ui-btn ui-btn--secondary ui-btn--md">
+              {t("pnl.untaxedAction")}
+            </Link>
+          }
+        >
+          {t(`pnl.untaxed.${regime}`)}
+        </Banner>
+      ))}
       {data.recalculated > 0 && <Banner tone="info" title={t("pnl.recalculated", { value: f.number(data.recalculated) })} />}
 
       <div className="pnl-ledger-box">

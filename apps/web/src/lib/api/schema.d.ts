@@ -2818,6 +2818,8 @@ export interface components {
             expected_shops: components["schemas"]["ExpectedShopOut"][];
             /** Recalculated */
             recalculated: number;
+            /** Untaxed Regimes */
+            untaxed_regimes: components["schemas"]["TaxRegime"][];
         };
         /** PriceIn */
         PriceIn: {

@@ -127,6 +127,7 @@ export function pnlData(over: Partial<Pnl> = {}): Pnl {
       { shop_id: SHOP_B, ...expectedPart({ units: 2, lines: 2, revenue: "300000.00", net_profit: "30000.00", uncovered_lines: 0, logistics_estimated: "0.00", logistics_estimated_units: 0, rate: null }) },
     ],
     recalculated: 0,
+    untaxed_regimes: [],
     ...over,
   };
 }

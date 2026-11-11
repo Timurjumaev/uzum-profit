@@ -343,6 +343,24 @@ def test_pnl_matches_line_level_core(world: World) -> None:
     assert set(meta["freshness"]) == {"orders", "expenses"}
 
 
+def test_pnl_untaxed_regimes(world: World) -> None:
+    """K7: QQS + foyda yoki agent rejimida soliq hisoblanmaydi — davr javobida aytiladi (aylanma rejimida bo'sh)."""
+    assert world.get("pnl", **OCT)["untaxed_regimes"] == []
+    # 2026-01-01 dan aylanma profili bor; undan oldingi davrlar ta'sir qilmaydigan eski profil qo'shiladi.
+    world.a.insert(
+        "tax_profiles",
+        valid_from=date(2025, 6, 1),
+        regime="vat_profit",
+        vat_pct=D(12),
+        profit_pct=D(15),
+    )
+    old = {"start": "2025-12-01", "end": "2025-12-31"}
+    assert world.get("pnl", **old)["untaxed_regimes"] == ["vat_profit"]
+    crossing = {"start": "2025-12-15", "end": "2026-01-15"}
+    assert world.get("pnl", **crossing)["untaxed_regimes"] == ["vat_profit"]
+    assert world.get("pnl", **OCT)["untaxed_regimes"] == []
+
+
 def test_pnl_rows_and_previous(world: World) -> None:
     body = world.get("pnl", **OCT)
     rows = {r["code"]: r for r in body["rows"]}
