@@ -40,6 +40,21 @@ export function Sparkline({ points, width = 96, height = 28 }: { points: number[
   );
 }
 
+/** Qiymat va birligi ("1 200 000 soʻm", uzilmas bo'shliqlar bilan): tor kartaga sig'masa butun birlik keyingi qatorga
+ * tushadi — so'z o'rtasidan ("soʻ" / "m") bo'linmaydi. Matn o'zgarmaydi, faqat bo'linish nuqtasi (`<wbr>`) qo'shiladi. */
+export function KpiValue({ value }: { value: string }) {
+  const at = value.lastIndexOf("\u00a0") + 1;
+  const unit = value.slice(at);
+  if (at === 0 || unit === "" || /\d/.test(unit)) return <>{value}</>;
+  return (
+    <>
+      {value.slice(0, at)}
+      <wbr />
+      {unit}
+    </>
+  );
+}
+
 export function Kpi({ label, value, change, changeLabel, good = "up", spark, help, note }: KpiProps) {
   const f = useFormat();
   const tone = change != null ? changeTone(change, good) : null;
@@ -49,7 +64,9 @@ export function Kpi({ label, value, change, changeLabel, good = "up", spark, hel
         {label}
         {help}
       </div>
-      <div className="kpi">{value}</div>
+      <div className="kpi">
+        <KpiValue value={value} />
+      </div>
       {note && <div className="caption ui-kpi__note">{note}</div>}
       {change != null && (
         <div className={cx("ui-kpi__change", `ui-text--${tone}`)}>

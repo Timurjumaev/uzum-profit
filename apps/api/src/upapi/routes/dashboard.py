@@ -71,7 +71,8 @@ class PeriodTotalOut(BaseModel):
 
 
 class ForecastOut(BaseModel):
-    """M4 "Oy prognozi" (run-rate) shu oy bo'yicha."""
+    """M4 "Oy prognozi" (run-rate) shu oy bo'yicha: oy boshidan kechagacha (to'liq o'tgan kunlar) qiymat × oydagi kunlar /
+    o'tgan to'liq kunlar. Oyning 1-kuni — ``null`` (hali to'liq kun yo'q)."""
 
     revenue: Decimal | None
     net_profit: Decimal | None
@@ -192,6 +193,15 @@ def _total(key: str, period: Period, s: Statement) -> PeriodTotalOut:
         units_processing=s.units_processing,
         revenue_processing=s.revenue_processing.amount,
     )
+
+
+def forecast_basis(today: date) -> Period | None:
+    """M4 "Oy prognozi" asosi — oyning **to'liq o'tgan** kunlari (oy boshidan kechagacha). Bugungi kun hali tugamagan:
+    uni to'liq kun deb sanash prognozni pasaytiradi (soat 10:00 da 1-sanada −60%, 10-sanada −6%). Oyning 1-kuni to'liq kun
+    yo'q — ``None`` (prognoz ko'rsatilmaydi, raqam o'ylab topilmaydi)."""
+    if today.day == 1:
+        return None
+    return Period(today.replace(day=1), today - timedelta(days=1))
 
 
 type Bucket = Literal["day", "week", "month"]
@@ -366,15 +376,19 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
         ("last_month", last_month),
     ]
     # Bir o'tishda: oldingi davr va davr chizig'i (har biri ``book.scoped(f, davr).statement()`` bilan bir xil).
+    basis = forecast_basis(today)
+    extra = [("forecast_basis", basis)] if basis is not None else []
     totals = book.scoped(f).statements(
-        {key: _days(period) for key, period in [("previous", previous), *periods]}
+        {key: _days(period) for key, period in [("previous", previous), *periods, *extra]}
     )
     by_day, s = cur.by_and_total(lambda k: k.day)
     p = totals["previous"]
-    month = totals["this_month"]
     days_in_month = calendar.monthrange(today.year, today.month)[1]
 
     empty = Cells(f.period, {}).statement()
+    # Oy prognozi asosi: oy boshidan kechagacha (to'liq kunlar); oyning 1-kuni — to'liq kun 0, prognoz yo'q (``run_rate``).
+    done_days = totals.get("forecast_basis", empty)
+    elapsed = basis.days if basis is not None else 0
     daily = []
     for i in range(f.period.days):  # sotuvsiz kun ham grafikda (0)
         day = f.period.start + timedelta(days=i)
@@ -460,7 +474,7 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
     on_hand = total([v for k, v in stock.frozen.items() if k not in ("china", "road")], UZS)
 
     def forecast(value: Decimal | int) -> Decimal | None:
-        return run_rate(value, today.day, days_in_month)
+        return run_rate(value, elapsed, days_in_month)
 
     return DashboardOut(
         meta=await meta(conn, f, KINDS, previous),
@@ -469,9 +483,9 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
         rows=[RowOut.of(r) for r in compare(s, p)],
         periods=[_total(key, period, totals[key]) for key, period in periods],
         forecast=ForecastOut(
-            revenue=forecast(month.revenue.amount),
-            net_profit=forecast(month.net_profit.amount),
-            units=forecast(month.units),
+            revenue=forecast(done_days.revenue.amount),
+            net_profit=forecast(done_days.net_profit.amount),
+            units=forecast(done_days.units),
         ),
         daily=daily,
         top=[brief(k, v) for k, v in top],

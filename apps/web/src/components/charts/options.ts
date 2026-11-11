@@ -31,7 +31,7 @@ export function xText(kind: XKind, x: string, f: Formatter): string {
   return kind === "day" ? f.day(x) : kind === "month" ? f.month(x) : x;
 }
 
-function axes(ctx: Ctx, x: string[], xKind: XKind, nonNegative: boolean) {
+function axes(ctx: Ctx, x: string[], xKind: XKind, nonNegative: boolean, unit: Unit = "money") {
   const { f, palette } = ctx;
   const label = { color: palette.textSecondary, fontFamily: palette.font, fontSize: 12 };
   return {
@@ -45,6 +45,8 @@ function axes(ctx: Ctx, x: string[], xKind: XKind, nonNegative: boolean) {
     yAxis: {
       type: "value",
       min: nonNegative ? 0 : undefined,
+      // Dona — butun son: kichik sonlarda qadam kasr bo'lib, yaxlitlangan yorliqlar takrorlanmasin ("1, 1, 1, 0, 0, 0").
+      minInterval: unit === "count" ? 1 : undefined,
       axisLine: { show: false },
       axisTick: { show: false },
       splitLine: { lineStyle: { color: palette.hairline, type: "solid", width: 1 } },
@@ -92,7 +94,7 @@ export function lineBarOption(
   return {
     ...base(ctx),
     grid: grid(direct ? 72 : 16),
-    ...axes(ctx, x, xKind, nonNegative),
+    ...axes(ctx, x, xKind, nonNegative, unit),
     tooltip: {
       ...tooltipBase(palette),
       trigger: "axis",
@@ -188,7 +190,7 @@ export function stackedBarOption(
   return {
     ...base(ctx),
     grid: grid(),
-    ...axes(ctx, x, xKind, true),
+    ...axes(ctx, x, xKind, true, unit),
     tooltip: {
       ...tooltipBase(palette),
       trigger: "axis",

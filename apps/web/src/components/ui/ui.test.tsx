@@ -320,6 +320,20 @@ describe("raqamli komponentlar", () => {
     expect(container.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
   });
 
+  it("KPI: pul birligi so'z o'rtasidan bo'linmaydi — son va birlik orasida bo'linish nuqtasi, matn o'zgarmaydi", () => {
+    const money = "1\u00a0200\u00a0000\u00a0soʻm";
+    const { container } = wrap(<Kpi label="Tushum" value={money} />);
+    const value = container.querySelector(".kpi")!;
+    expect(value.textContent).toBe(money); // matn aynan o'sha (uzilmas bo'shliqlar joyida)
+    expect(value.querySelector("wbr")?.nextSibling?.textContent).toBe("soʻm"); // sig'masa butun "soʻm" keyingi qatorga
+    // Birliksiz qiymat (dona, foiz) — o'zgarishsiz.
+    for (const plain of ["1\u00a0240", "25,9%", "—"]) {
+      const { container: c } = wrap(<Kpi label="Dona" value={plain} />);
+      expect(c.querySelector(".kpi wbr")).toBeNull();
+      expect(c.querySelector(".kpi")!.textContent).toBe(plain);
+    }
+  });
+
   it("LedgerTable: operator, tabular summa, oraliq va yakun, drill-down", () => {
     const onRow = vi.fn();
     const { container } = wrap(
