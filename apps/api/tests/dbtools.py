@@ -203,6 +203,9 @@ def row_values(
             table.name, ()
         ):
             values[col.name] = _value(table, col, allowed)
+    if table.name == "tax_lines":
+        # CHECK ``shape``: qat'iy qatorda summa yoki BHM soni kerak, foizli qatorda stavka > 0 (ADR-058).
+        values.update(kind="fixed", amount=1000)
     if table.name == "cost_components":
         values.pop(
             "shipment_id", None
@@ -242,6 +245,9 @@ def seed_two_orgs(admin_url: str) -> Seed:
         )
         insert(
             conn, "ref_tax_rates", {"code": "vat", "valid_from": date(2026, 1, 1), "rate_pct": 12}
+        )
+        insert(
+            conn, "ref_amounts", {"code": "bhm", "valid_from": date(2026, 9, 1), "amount": 440000}
         )
         insert(conn, "ref_logistics_tariffs", {"valid_from": date(2026, 6, 1), "rules": Jsonb({})})
         for i, org in enumerate(orgs):

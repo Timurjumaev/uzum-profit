@@ -105,6 +105,59 @@ def test_seed_and_org_transaction(fresh: dict[str, str]) -> None:
             conn.execute("SELECT rate_pct FROM ref_tax_rates WHERE code = 'vat'").fetchone()[0]
             == 12
         )
+        # ADR-058: BHM ma'lumotnomasi (sana bo'yicha) seed'da.
+        bhm = conn.execute(
+            "SELECT valid_from, amount FROM ref_amounts WHERE code = 'bhm' ORDER BY valid_from"
+        ).fetchall()
+        assert [(str(d), int(a)) for d, a in bhm] == [
+            ("2025-08-01", 412000),
+            ("2026-09-01", 440000),
+        ]
+
+
+def test_tax_lines_shape_check(fresh: dict[str, str]) -> None:
+    """ADR-058: foizli qatorda stavka > 0 va summa yo'q; qat'iy qatorda summa yoki BHM sonidan aynan bittasi."""
+    org, profile = uuid.uuid4(), uuid.uuid4()
+    with psycopg.connect(fresh["admin"]) as conn:
+        conn.execute("INSERT INTO orgs (id, name) VALUES (%s, 'tax-lines')", [org])
+        conn.execute(
+            "INSERT INTO tax_profiles (id, org_id, valid_from, regime) VALUES (%s, %s, '2026-01-01', 'turnover')",
+            [profile, org],
+        )
+        sql = (
+            "INSERT INTO tax_lines (org_id, profile_id, name, kind, rate_pct, amount, bhm_count) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        )
+
+        def add(name: str, kind: str, rate: int, amount: int | None, count: int | None) -> None:
+            conn.execute(sql, [org, profile, name, kind, rate, amount, count])
+
+        add("a", "percent", 1, None, None)
+        add("b", "fixed", 0, None, 1)
+        add("c", "fixed", 0, 310000, None)
+        bad = [
+            ("d", "percent", 0, None, None),  # stavka 0
+            ("e", "percent", 101, None, None),  # stavka > 100
+            ("f", "percent", 1, 5, None),  # foizli, lekin summa bor
+            ("g", "fixed", 0, None, None),  # summa ham BHM ham yo'q
+            ("h", "fixed", 0, 5, 1),  # ikkalasi ham bor
+            ("i", "fixed", 1, 5, None),  # qat'iyda stavka
+            ("j", "fixed", 0, 0, None),  # 0 summa
+        ]
+        for row in bad:
+            with pytest.raises(psycopg.errors.CheckViolation), conn.transaction():
+                add(*row)
+        # Profil ichida nom takrorlanmaydi.
+        with pytest.raises(psycopg.errors.UniqueViolation), conn.transaction():
+            add("a", "percent", 2, None, None)
+        # Profil o'chsa — qatorlari ham o'chadi.
+        conn.execute("DELETE FROM tax_profiles WHERE id = %s", [profile])
+        assert (
+            conn.execute("SELECT count(*) FROM tax_lines WHERE org_id = %s", [org]).fetchone()[0]
+            == 0
+        )
+        conn.execute("DELETE FROM orgs WHERE id = %s", [org])
+        conn.commit()
 
 
 def test_seed_cli_needs_url(
