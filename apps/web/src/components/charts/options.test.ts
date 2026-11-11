@@ -183,6 +183,12 @@ describe("lineBarOption (04 §5.1)", () => {
     expect(f.compact(1_500_000)).toContain("mln");
   });
 
+  it("dona o'qi (unit: count): qadam butun son — kichik sonlarda yorliqlar takrorlanmaydi (\"1, 1, 1, 0, 0, 0\")", () => {
+    const units = { key: "returns", name: "Qaytarilgan dona", color: 3 as const, values: X.map((_, i) => (i === 0 ? "1" : "0")) };
+    expect(build([units], { unit: "count" }).yAxis.minInterval).toBe(1);
+    expect(build([REVENUE]).yAxis.minInterval).toBeUndefined(); // pul o'qi — erkin qadam
+  });
+
   it("to'r — hairline, yaxlit (punktir emas); chiziqsiz o'q chizig'i", () => {
     const o = build();
     expect(o.yAxis.splitLine.lineStyle).toMatchObject({ color: chartPalette("light").hairline, type: "solid", width: 1 });

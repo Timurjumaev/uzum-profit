@@ -69,6 +69,9 @@
 .orders-analysis__tables {
   display: grid;
   gap: var(--space-6);
+  /* Ustun kengligi kontentga emas, ekranga bog'liq: aks holda jadval butun sahifani kengaytirardi (360 px da gorizontal
+     skroll). Jadval o'z ichida skroll qiladi (`.ui-table-wrap`). */
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .orders-analysis__tables h2 {

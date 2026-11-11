@@ -71,6 +71,24 @@ test.describe("mobil (360 px)", () => {
     const second = await kpis.nth(1).boundingBox();
     expect(Math.abs(first!.y - second!.y)).toBeLessThan(2); // bitta qatorda — ikki ustun
     expect(await smallTargets(page, ".sku")).toEqual([]);
+    // Pul birligi so'z o'rtasidan bo'linmaydi ("1 200 000 soʻ" / "m" emas): sig'masa — butun "soʻm" keyingi qatorga.
+    const split = await page.evaluate(() =>
+      [...document.querySelectorAll(".sku__kpis .kpi")].flatMap((el) => {
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        let last: Text | null = null;
+        while (walker.nextNode()) last = walker.currentNode as Text;
+        if (!last) return [];
+        const at = last.data.lastIndexOf("\u00a0") + 1; // birlik — oxirgi uzilmas bo'shliqdan keyin
+        const unit = last.data.slice(at);
+        if (!unit || /\d/.test(unit)) return [];
+        const range = document.createRange();
+        range.setStart(last, at);
+        range.setEnd(last, last.data.length);
+        const lines = new Set([...range.getClientRects()].map((r) => Math.round(r.top)));
+        return lines.size > 1 ? [el.textContent] : [];
+      }),
+    );
+    expect(split).toEqual([]);
   });
 
   test("Mahsulotlar jadvali: bosish maydoni ≥ 44 px, jadval o'z ichida skroll qiladi (B4.54)", async ({ page }) => {
