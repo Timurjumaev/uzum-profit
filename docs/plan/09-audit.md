@@ -139,6 +139,8 @@ Faqat sahifaning o'zida yozilgani; "—" — sahifada yo'q. Narxlar so'm/oy, o's
 
 "Ha" desang — ADR yozib, 02/04/05 ni yangilab, kod va testni qilaman. Tavsiya birinchi turibdi.
 
+**Temur qarori (2026-11-11): Q1–Q14 — hammasiga "ha"** (Q3 ni avval tushunmagan edi; tushuntirilgach — ha). Q4: S2 o'lchovi farqni 3% dan ancha katta ko'rsatdi (§11.2) — (a) varianti. Qarorlar: ADR-056 (Q3), ADR-057 (qolganlari); bajarilish tartibi — 05 B4.65–B4.76. Yangi savol: Q15 (§11.5).
+
 | ID | Savol | Variantlar | Tavsiya va sababi |
 |---|---|---|---|
 | Q1 | F23 sotuv tezligi (K1, K2) | (a) oxirgi 14 ta **savdoda bo'lgan** kun (60 kungacha orqaga qarab), "7 kunga bo'lish" faqat tovar yoshi < 7 kun bo'lsa; Jarayondagi dona × yakunlanish ulushi; (b) faqat birinchi qismi; (c) o'zgartirmaslik | **(a).** Hozirgi tezlik aynan tovar qaytgan kuni 3,5 barobar xato — buyurtma qarori shu kuni qilinadi |
@@ -171,6 +173,8 @@ Faqat sahifaning o'zida yozilgani; "—" — sahifada yo'q. Narxlar so'm/oy, o's
 
 ## 10. Temurdan kerak
 
+**Holat (2026-11-11): 1–3-bandlar bajarildi — natijalar §11 da.**
+
 1. **§8 dagi qarorlar** — "hammasiga ha" yoki rozi bo'lmaganlaring raqami.
 2. **Uchta o'lchov** (faqat o'qish, sir chiqmaydi) — so'rov matnini keyingi xabarda yuboraman, natijani chatga tashlaysan:
    S1 — oxirgi 14 kunlik tezlik hozir va 30 kundan keyin (K2); S2 — buyurtma yoshiga qarab yakunlanish ulushi
@@ -178,3 +182,98 @@ Faqat sahifaning o'zida yozilgani; "—" — sahifada yo'q. Narxlar so'm/oy, o's
 3. **Uchta savol** (sen bu bozorda ishlaysan): Uzum xarajat nomlarini boshqa sotuvchiga ruscha beradimi (K15);
    kabinetdagi "Analitika" bo'limida foyda yoki tannarx bormi — bir-ikki skrinshot (R5); Uzum sendan soliqni o'zi
    ushlab qoladimi (08 §6).
+
+## 11. Javoblar va o'lchovlar (2026-11-11)
+
+Manbalar: Temurning javoblari; staging'da faqat o'qish so'rovlari S1–S6 (summalar o'z do'konlarining; sir yo'q); Uzum
+kabineti "Tahlil" bo'limi skrinshotlari (Xulosa, Sotuv voronkasi, Hodisalarni tahlil qilish); SellerMax "Asosiy"
+(1–11 noyabr, ikkala do'kon, skrinshot).
+
+### 11.1 Qarorlar
+
+Q1–Q14 — "ha" (ADR-056, ADR-057). Q4 — (a): S2 farqi katta. Yangi: Q15 (11.5).
+
+### 11.2 S1–S3 o'lchovlari
+
+| | Natija | Xulosa |
+|---|---|---|
+| S1 (K2) | Oxirgi 14 kun, byDurii: 331 dona tezlikka kirgan — yakunlangan 16 (5%), jarayonda topshirilgan 132, topshirilmagan 183; bekor 115 (kirmagan). EL-ONE: 1 / 43 / 35, bekor 22 | Tezlikning 95% i yakunlanmagan buyurtmalardan. Yetilgan haftalarda 61% yakunlanadi (S2) — kutilgan yakuniy dona byDurii 0,61 × 446 = 272 (hisoblangan 331 → **≈ +22%**), EL-ONE 0,646 × 101 = 65 (79 → **≈ +21%**). Bu taxmin, aniq o'lchov emas |
+| S2 (K6, K10) | byDurii 3–11-haftalar (yetilgan): yakunlangan 60,6%, bekor 30,7%, qaytarilgan 8,7%; EL-ONE 3–5-haftalar: 64,6% / 23,2% / 12,1%. Jarayondagi dona: byDurii 337 (0–2-haftalar), EL-ONE 84 | Joriy davrda "jarayonda" to'liq sanaladi, yetilgan davrda 39% chiqib ketgan — farq 3% dan ancha katta → **Q4 (a)** |
+| S3 (K11) | Ikkala do'konda 25.10–10.11: 17 kun, 0 kun yo'q | Snapshot bo'shlig'i hozir muammo emas; Q7 baribir arzon va keyin tiklab bo'lmaydi |
+
+### 11.3 Uzum kabineti "Tahlil": Daromad va Foyda qanday hisoblanadi
+
+**Formulalar (isbot bilan):**
+- **Daromad** = Σ sotuv narxi × dona, buyurtma yaratilgan sanasi bo'yicha, bekor qilinganlarsiz, **jarayondagilar ichida**
+  (noyabrda hamma sotuv hali `PROCESSING`). Isbot: 10.11 da kabinet "Kecha" 1 383 400 — bizning bazada ham aynan 1 383 400 (S5b).
+- **Foyda** = Daromad − **faqat komissiya**. Logistika, reklama, saqlash, jarima ayirilmaydi. Isbot: foyda/daromad
+  kabinetda 6 581 043 / 8 404 200 = 78,3%, bazada 1 − 1 867 770 / 8 592 740 = 78,26% (S5a); 10.11 da kabinet foydasi
+  1 095 512, bizning `sellerProfit` (F6: tushum − komissiya − logistika) 806 762, ayirma 288 750 — logistikaning kunlik
+  hajmi. Aniq komissiya (10.11) hali o'lchanmagan. B2.11 da tasdiqlangan: `sellerProfit` = F3 − F4 − F5.
+
+**1–11 noyabr, ikkala do'kon (SellerMax, skrinshot):**
+
+| Qator | So'm | Buyurtmadan | Tushumdan |
+|---|---|---|---|
+| Buyurtmalar summasi | 11 092 970 | 100% | |
+| − Bekor qilingan | 1 947 460 | 17,6% | |
+| − Qaytarilgan | 527 790 | 4,8% | |
+| = **Tushum** (kabinet "Daromad" ga mos) | 8 617 720 | 77,7% | 100% |
+| − Uzum ushlab qolgan (komissiya, logistika, reklama, saqlash, jarima) | 4 031 538 | 36,3% | 46,8% |
+| − Tannarx | 2 647 460 | 23,9% | 30,7% |
+| = **Sof foyda** | 1 938 722 | 17,5% | **22,5%** |
+
+Kabinet "Foyda"si ≈ tushum − komissiya = 8 617 720 × 0,7826 ≈ **6,74 mln** (komissiya ulushi S5a dan). Haqiqiy sof
+foyda — 1,94 mln: kabinet raqami **≈ 3,5 barobar baland**. Farq 4,81 mln = logistika va boshqa Uzum xarajatlari ≈ 2,16
+mln (S5a: logistika 1 799 250; S6: reklama 218 398, saqlash 51 700, jarima 2 500; yig'indi 4 031 538 dan komissiya ≈ 1,87
+mln ayirilgan; ±0,1 mln — sinxron vaqti va xarajat sanasi farqi) + tannarx 2,65 mln.
+
+**Kabinet hisobidagi kamchiliklar:**
+
+| ID | Topilma | Holat |
+|---|---|---|
+| U1 | Foyda tannarxsiz (Uzum tannarxni bilmaydi) — marja 78% ko'rinadi, haqiqiy 22,5% | Tasdiqlandi |
+| U2 | Foyda logistikani ayirmaydi (tushumning ≈ 20,9%) | Tasdiqlandi (S5a, nisbat) |
+| U3 | Reklama, saqlash, jarima ayirilmaydi (1–11 noyabr: 272 598, tushumning 3,2%) | Tasdiqlandi (nisbat 78,3% = faqat komissiya) |
+| U4 | Bekor va qaytish: jarayondagilar to'liq turadi; yetilgan davrda 39% chiqib ketadi → joriy oy ≈ 20% baland. Bizda: bekor qatorlar hozir 22,6%, yakuniy 39% (S2) → yana ≈ −21% kutiladi | Hisoblangan taxmin |
+| U5 | "Bugun −82,49%" — yarim kun kechagi to'liq kun bilan (bizdagi K5 ning o'xshashi) | Tasdiqlandi (skrinshot) |
+| U6 | Logistika vaqti: qatorda buyurtma paytida (oktabr — 0), Uzum aslida olib ketilganda yechadi (B4.23). Kabinet qator qiymatini olsa, oktabr foydasi baland, noyabrniki past chiqadi. Noyabr: qatorda 1 799 250, yechilgani 1 185 000 − 152 750 = 1 032 250 | Qisman (B4.23, S6); kabinet qatorni olishi — taxmin |
+| U7 | Soliq (1% aylanma, YATT ijtimoiy soliq) ayirilmaydi | Tasdiqlandi |
+| U8 | Brak (`DEFECTED`) va yo'q qilingan (`UTILIZED`) tovar tannarxi sanalmaydi | Mantiq |
+| U9 | "Qaytarishlar" 358 dona (2 ta do'kon), davri yozilmagan — solishtirib bo'lmaydi; "O'rtacha chek" da 6 oy va joriy oy aralash | Skrinshot |
+| U10 | "Sotuv voronkasi" buyurtma yaratilgan sanasi bo'yicha; foyda ustuni yo'q (so'nggi ustun nomi o'qilmadi, qiymatlari sotib olish foiziga o'xshaydi) | Skrinshot, qisman |
+
+**Qaytish sabablari** (kabinet, 358 dona; B4.54a da so'ralgan ro'yxat): Mijoz sababni ko'rsatmadi 302 (84,3%); O'lcham
+mos kelmadi 25 (6,9%); Mahsulot sifati yoqmadi 12 (3,3%); Nuqson 7 (1,9%); Mahsulot saytdagi rasmga mos kelmaydi 7
+(1,9%); Noto'g'ri mahsulot keldi 4 (1,1%); Mahsulot to'plami bilan bog'liq muammo 1 (0,2%).
+
+**Ma'nosi mahsulot uchun:** Uzumning o'z "foyda"si sotuvchini 3,5 barobar aldaydi — bu bizning asosiy ustunligimiz
+(tannarx va hamma xarajat bilan sof foyda). Landing uchun real misol: "Kabinetda 6,7 mln, aslida 1,9 mln" — Temur ruxsati bilan
+(06 §8 ga qo'shiladi). Kod: kabinet bilan solishtirish uchun Foyda sahifasida "Uzum kabineti ko'rsatadigan" qatorni qo'shish — taklif (Temur ko'rsin).
+
+### 11.4 Xarajat nomlari (K15, S4)
+
+Temurning ikkala do'konida xarajat matnlari faqat o'zbekcha; toifa **kodga** qarab aniqlanadi (`LOGISTICS-VOLUME`,
+`Y000120`, `C000003` …) — til ta'sir qilmaydi. Matnga faqat reklama summasi tayanadi ("Xaridor tovarni olganida … so'm").
+Boshqa sotuvchida matn ruscha kelishi mumkinligi **tekshirilmadi** — birinchi tashqi sotuvchi bilan (B8), ruscha namuna
+bo'lsa regressiya testi bilan. Shablonlar: logistika xizmatlari to'lovi, logistika to'lovini qaytarish, "Buyurtmalarni
+ko'paytirish to'lovi, tovar IDsi — #. Xaridor tovarni olganida # so'm …" (reklama), saqlash xizmatlari, qaytarishni
+saqlash (yukxat bo'yicha), qabul qilishdagi farqlar (yetishmovchilik / ortiqcha — jarima), "[Kompensatsiya] …".
+
+### 11.5 Soliq (Temur javobi) va yangi savol Q15
+
+- **YATT:** Uzum soliqni **ushlamaydi** — soliq to'lovchining soliq akkauntiga keladi (Temur). Ikki to'lov: ijtimoiy soliq
+  har oy — 1 BHM (Temur: 440 000 so'm; BHM miqdori rasmiy manbadan tekshirilmadi), va aylanmadan soliq — **1%**,
+  Temurning fikricha tushumdan (rasmiy tekshirilmadi; 08 §6: 2026 da 1%, yillik 1 mlrd gacha).
+- **MChJ va o'zini o'zi band qilganlar:** aniqlanmadi. Qidiruv (gov.uz, buxgalter.uz) bo'yicha 2026 da bazaviy stavkalar:
+  QQS 12%, foyda solig'i 15%, aylanma solig'i 4% (elektron tijorat uchun pasaytirilgan stavkalar bekor — 08 §6 bilan mos);
+  platformaning soliq agentligi Uzum sotuvchilari uchun **topilmadi** (taksi agregatorlari uchun bor). Aniqlash yo'li:
+  Uzum seller yordami yoki soliq maslahatchisi — taxmin qilinmaydi. 08 §6 dagi "to'lov tashkilotlarining raqamli platformalari
+  soliq agenti" bandi YATT uchun Temurning tajribasiga zid — YATT uchun Temur gapi ustun, 08 §6 yangilandi.
+- **Topilma:** kodda va rejada YATT ijtimoiy soliq (oyiga 1 BHM) umuman uchramaydi (`packages`, `docs/plan` bo'yicha qidiruv: 0 ta);
+  sof foyda ijtimoiy soliq hisobiga oyiga ≈ 440 000 so'mga baland ko'rinadi. Do'kon foydasiga bo'linmaydigan
+  doimiy oylik xarajat — Xarajatlar (o'z xarajati) sifatida kiritish mumkin.
+- **Q15 (yangi, Temur hal qiladi):** YATT ijtimoiy soliqni qanday ko'rsatamiz? (a) hozir: Sozlamalar → soliq matnida
+  eslatma — "ijtimoiy soliqni Xarajatlarga o'zingiz kiriting" (hisob o'zgarmaydi; PR-3 ga kiradi); (b) Sozlamalarda
+  "Ijtimoiy soliq (oyiga, so'm)" maydoni, har oy tashkilot darajasida sof foydadan ayriladi (formula o'zgaradi — F11, ADR bilan).
+  **Tavsiya: (a) hozir, (b) — birinchi YATT mijoz so'raganda yoki Temur xohlasa.**

@@ -615,3 +615,4 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   jadvallar endi o'z ichida skroll qiladi; `e2e/orders.spec.ts`.
 - B4.63 Dona grafiklarida o'q qadami butun son (kichik sonlarda yorliqlar "1, 1, 1, 0, 0, 0" bo'lib takrorlanardi).
 - B4.63 KPI kartasida pul birligi so'z o'rtasidan bo'linmaydi ("1 200 000 soʻ" / "m" o'rniga butun "soʻm" keyingi qatorga).
+- B4.64 Audit, 2-qism (faqat hujjat): `09-audit.md` §11 — S1–S3 o'lchovlari, Uzum kabinetidagi "Daromad" va "Foyda" formulasi (Foyda = Daromad − faqat komissiya; 1–11 noyabrda ≈ 3,5 barobar baland), soliq va xarajat nomlari; ADR-056 (postavka "keldi" = `dateAccepted`), ADR-057 (Q1, Q2, Q4–Q14); 08 §6 YATT soliq; 05 da B4.65–B4.76.
