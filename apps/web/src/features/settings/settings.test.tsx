@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App, createAppState } from "../../App";
 import { todayTashkent } from "../../lib/dates";
+import { formatterFor } from "../../lib/format";
 import {
   ALERT_SETTINGS_ROUTE,
   COST_METHOD_ROUTE,
@@ -30,6 +31,7 @@ import {
 } from "../../test/api";
 import { PAY_1, settingsData, TAX_1, TAX_2 } from "../../test/settings";
 
+const f = formatterFor("uz-Latn");
 const norm = (text: string) => text.replace(/[\u00A0\u202F]/g, " ");
 
 afterEach(() => {
@@ -111,22 +113,90 @@ describe("tannarx usuli", () => {
 });
 
 describe("soliq profili", () => {
-  it("qo'shish: aylanma — stavka kiritilmaguncha saqlab bo'lmaydi; tana to'g'ri; ro'yxat javobdan yangilanadi", async () => {
+  const openCreate = async () => {
+    fireEvent.click(within(section("Soliq profili")).getByRole("button", { name: "Profil qoʻshish" }));
+    return screen.findByRole("dialog", { name: "Yangi soliq profili" });
+  };
+  const pickTemplate = (dialog: HTMLElement, value: string) => fireEvent.change(within(dialog).getByLabelText("Tayyor shablon"), { target: { value } });
+
+  it("qo'shish: aylanma — qator kiritilmaguncha saqlab bo'lmaydi; YaTT shabloni (1% + 1 BHM) bir bosishda; tana to'g'ri; ro'yxat javobdan yangilanadi", async () => {
     const created = settingsData();
-    created.tax_profiles = [{ id: "73333333-3333-4333-8333-333333333333", valid_from: "2026-10-31", regime: "turnover", rate_pct: "1.000", base: "revenue", vat_pct: "0.000", profit_pct: "0.000", lines: [] }, ...created.tax_profiles];
+    created.tax_profiles = [{ id: "73333333-3333-4333-8333-333333333333", valid_from: "2026-10-31", regime: "turnover", rate_pct: "0.000", base: "revenue", vat_pct: "0.000", profit_pct: "0.000", lines: [] }, ...created.tax_profiles];
     const { api } = await renderSettings({ [TAX_CREATE_ROUTE]: () => json(201, created) });
     await ready();
-    fireEvent.click(within(section("Soliq profili")).getByRole("button", { name: "Profil qoʻshish" }));
-    const dialog = await screen.findByRole("dialog", { name: "Yangi soliq profili" });
+    const dialog = await openCreate();
     const save = within(dialog).getByRole("button", { name: "Saqlash" }) as HTMLButtonElement;
     expect(save.disabled).toBe(true);
-    expect(dialog.textContent).toContain("Maʼlumotnomada: 4%"); // tavsiya
-    fireEvent.change(within(dialog).getByLabelText(/^Stavka/), { target: { value: "1" } });
+    expect(dialog.textContent).toContain("Qator yo‘q".replace("‘", "ʻ"));
+    pickTemplate(dialog, "yatt");
+    const percent = within(dialog).getByRole("group", { name: "Soliq qatori 1" });
+    const social = within(dialog).getByRole("group", { name: "Soliq qatori 2" });
+    expect((within(percent).getByLabelText("Nomi") as HTMLInputElement).value).toBe("Aylanmadan soliq");
+    expect((within(percent).getByLabelText(/^Stavka/) as HTMLInputElement).value).toBe("1"); // maʼlumotnomadan
+    expect((within(social).getByLabelText("Nomi") as HTMLInputElement).value).toBe("Ijtimoiy soliq");
+    expect((within(social).getByLabelText("BHM soni") as HTMLInputElement).value).toBe("1");
+    expect(norm(social.textContent!)).toContain(`1 BHM = ${norm(f.money("440000.00"))}`); // BHM maʼlumotnomadan ko'rsatiladi
     expect(save.disabled).toBe(false);
     fireEvent.click(save);
     await waitFor(() => expect(bodiesOf(api, TAX_CREATE_ROUTE)).toHaveLength(1));
-    expect(bodiesOf(api, TAX_CREATE_ROUTE)[0]).toEqual({ valid_from: todayTashkent(), regime: "turnover", rate_pct: "1", base: "revenue", vat_pct: "0", profit_pct: "0" });
+    expect(bodiesOf(api, TAX_CREATE_ROUTE)[0]).toEqual({
+      valid_from: todayTashkent(),
+      regime: "turnover",
+      rate_pct: "0",
+      base: "revenue",
+      vat_pct: "0",
+      profit_pct: "0",
+      lines: [
+        { name: "Aylanmadan soliq", kind: "percent", rate_pct: "1", base: "revenue", period: "month" },
+        { name: "Ijtimoiy soliq", kind: "fixed", rate_pct: "0", base: "revenue", period: "month", bhm_count: "1" },
+      ],
+    });
     await waitFor(() => expect(rowsOf("Soliq profili")).toHaveLength(3));
+  });
+
+  it("qatorlarni qo'lda boshqarish: qo'shish, turi (foizli ↔ qat'iy), so'm yoki BHM, davr, o'chirish, 10 tadan oshmaydi", async () => {
+    const { api } = await renderSettings({ [TAX_CREATE_ROUTE]: () => json(201, settingsData()) });
+    await ready();
+    const dialog = await openCreate();
+    const save = within(dialog).getByRole("button", { name: "Saqlash" }) as HTMLButtonElement;
+    fireEvent.click(within(dialog).getByRole("button", { name: "Qator qoʻshish" }));
+    const line = within(dialog).getByRole("group", { name: "Soliq qatori 1" });
+    expect(norm(line.textContent!)).toContain("Toʻldirilmagan yoki notoʻgʻri");
+    expect(save.disabled).toBe(true);
+    fireEvent.change(within(line).getByLabelText("Nomi"), { target: { value: "Ijtimoiy soliq" } });
+    fireEvent.change(within(line).getByLabelText("Turi"), { target: { value: "fixed" } });
+    expect(within(line).queryByLabelText(/^Stavka/)).toBeNull();
+    fireEvent.change(within(line).getByLabelText("Qanday kiritiladi"), { target: { value: "sum" } });
+    fireEvent.change(within(line).getByLabelText("Summa"), { target: { value: "310000" } });
+    fireEvent.change(within(line).getByLabelText("Davr"), { target: { value: "quarter" } });
+    expect(save.disabled).toBe(false);
+    fireEvent.click(save);
+    await waitFor(() => expect(bodiesOf(api, TAX_CREATE_ROUTE)).toHaveLength(1));
+    expect((bodiesOf(api, TAX_CREATE_ROUTE)[0] as { lines: unknown }).lines).toEqual([
+      { name: "Ijtimoiy soliq", kind: "fixed", rate_pct: "0", base: "revenue", period: "quarter", amount: "310000" },
+    ]);
+  });
+
+  it("takror nom saqlashga yo'l qo'ymaydi; qatorni o'chirish; 10 ta qatordan keyin 'Qator qo'shish' o'chadi", async () => {
+    await renderSettings();
+    await ready();
+    const dialog = await openCreate();
+    const save = within(dialog).getByRole("button", { name: "Saqlash" }) as HTMLButtonElement;
+    const add = within(dialog).getByRole("button", { name: "Qator qoʻshish" }) as HTMLButtonElement;
+    fireEvent.click(add);
+    fireEvent.click(add);
+    for (const n of [1, 2]) {
+      const line = within(dialog).getByRole("group", { name: `Soliq qatori ${n}` });
+      fireEvent.change(within(line).getByLabelText("Nomi"), { target: { value: n === 1 ? "Soliq" : "SOLIQ" } });
+      fireEvent.change(within(line).getByLabelText(/^Stavka/), { target: { value: "1" } });
+    }
+    expect(save.disabled).toBe(true); // nomlar takrorlandi (katta-kichik harfsiz)
+    fireEvent.click(within(within(dialog).getByRole("group", { name: "Soliq qatori 2" })).getByRole("button", { name: "Qatorni oʻchirish" }));
+    expect(within(dialog).queryByRole("group", { name: "Soliq qatori 2" })).toBeNull();
+    expect(save.disabled).toBe(false);
+    for (let i = 0; i < 9; i += 1) fireEvent.click(add);
+    expect(within(dialog).getAllByRole("group", { name: /^Soliq qatori \d+$/ })).toHaveLength(10);
+    expect(add.disabled).toBe(true);
   });
 
   it("rejimga mos maydonlar: QQS + foyda — ikki stavka; agent — stavkasiz", async () => {
@@ -152,11 +222,17 @@ describe("soliq profili", () => {
     const [first, second] = rowsOf("Soliq profili");
     fireEvent.click(within(first!).getByRole("button", { name: "Tahrirlash" }));
     const dialog = await screen.findByRole("dialog", { name: "Soliq profilini tahrirlash" });
-    expect((within(dialog).getByLabelText(/^Stavka/) as HTMLInputElement).value).toBe("4");
-    fireEvent.change(within(dialog).getByLabelText(/^Stavka/), { target: { value: "5" } });
+    const line = within(dialog).getByRole("group", { name: "Soliq qatori 1" }); // qatorsiz eski profil — bitta foizli qator
+    expect((within(line).getByLabelText(/^Stavka/) as HTMLInputElement).value).toBe("4");
+    fireEvent.change(within(line).getByLabelText(/^Stavka/), { target: { value: "5" } });
     fireEvent.click(within(dialog).getByRole("button", { name: "Saqlash" }));
     await waitFor(() => expect(bodiesOf(api, taxRoute("PATCH", TAX_2))).toHaveLength(1));
-    expect(bodiesOf(api, taxRoute("PATCH", TAX_2))[0]).toMatchObject({ regime: "turnover", rate_pct: "5", base: "payout", valid_from: "2026-07-01" });
+    expect(bodiesOf(api, taxRoute("PATCH", TAX_2))[0]).toMatchObject({
+      regime: "turnover",
+      rate_pct: "0",
+      valid_from: "2026-07-01",
+      lines: [{ name: "Aylanmadan soliq", kind: "percent", rate_pct: "5", base: "payout", period: "month" }],
+    });
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 
     fireEvent.click(within(second!).getByRole("button", { name: "O‘chirish".replace("‘", "ʻ") }));
@@ -172,10 +248,33 @@ describe("soliq profili", () => {
     await ready();
     fireEvent.click(within(section("Soliq profili")).getByRole("button", { name: "Profil qoʻshish" }));
     const dialog = await screen.findByRole("dialog", { name: "Yangi soliq profili" });
-    fireEvent.change(within(dialog).getByLabelText(/^Stavka/), { target: { value: "4" } });
+    pickTemplate(dialog, "ecommerce");
     fireEvent.click(within(dialog).getByRole("button", { name: "Saqlash" }));
     await waitFor(() => expect(document.querySelector(".ui-toasts .ui-tone--negative")).not.toBeNull());
     expect(screen.getByRole("dialog", { name: "Yangi soliq profili" })).toBeTruthy();
+  });
+});
+
+describe("soliq profili jadvali: qatorlar tavsifi", () => {
+  it("qatorli profil — qatorlar yig'indisi matni; qatorsiz eski aylanma — stavka va baza", async () => {
+    const data = settingsData();
+    data.tax_profiles = [
+      {
+        ...data.tax_profiles[0]!,
+        rate_pct: "0.000",
+        lines: [
+          { id: "L1", name: "Aylanmadan soliq", kind: "percent", rate_pct: "1.0000", base: "revenue", amount: null, bhm_count: null, period: "month" },
+          { id: "L2", name: "Ijtimoiy soliq", kind: "fixed", rate_pct: "0.0000", base: "revenue", amount: null, bhm_count: "1.00", period: "month" },
+          { id: "L3", name: "Qat'iy", kind: "fixed", rate_pct: "0.0000", base: "revenue", amount: "310000.00", bhm_count: null, period: "quarter" },
+        ],
+      },
+      data.tax_profiles[1]!,
+    ];
+    await renderSettings({ [SETTINGS_ROUTE]: () => json(200, data) });
+    await ready();
+    const text = norm(rowsOf("Soliq profili")[0]!.textContent!);
+    expect(text).toContain("Aylanmadan soliq 1% (Tushum) · Ijtimoiy soliq 1 × BHM oyiga · Qat'iy");
+    expect(text).toContain("chorakka");
   });
 });
 
@@ -311,5 +410,16 @@ it("a11y: jiddiy buzilish yo'q", async () => {
   await ready();
   await waitFor(() => expect(within(section("Doʻkonlar")).getAllByRole("row").length).toBeGreaterThan(1));
   const result = await axe.run(document.body, { rules: { "color-contrast": { enabled: false }, region: { enabled: false } } });
+  expect(result.violations.filter((v) => v.impact === "critical" || v.impact === "serious").map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
+});
+
+it("a11y: soliq profili formasi (qatorlar bilan) — jiddiy buzilish yo'q", async () => {
+  await renderSettings();
+  await ready();
+  fireEvent.click(within(section("Soliq profili")).getByRole("button", { name: "Profil qoʻshish" }));
+  const dialog = await screen.findByRole("dialog", { name: "Yangi soliq profili" });
+  fireEvent.change(within(dialog).getByLabelText("Tayyor shablon"), { target: { value: "yatt" } });
+  await within(dialog).findByRole("group", { name: "Soliq qatori 2" });
+  const result = await axe.run(dialog, { rules: { "color-contrast": { enabled: false }, region: { enabled: false } } });
   expect(result.violations.filter((v) => v.impact === "critical" || v.impact === "serious").map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
 });

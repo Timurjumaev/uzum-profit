@@ -14,7 +14,10 @@ export function settingsData(over: Partial<S["SettingsOut"]> = {}): S["SettingsO
       { id: TAX_2, valid_from: "2026-07-01", regime: "turnover", rate_pct: "4.000", base: "payout", vat_pct: "0.000", profit_pct: "0.000", lines: [] },
       { id: TAX_1, valid_from: "2026-01-01", regime: "none", rate_pct: "0.000", base: "revenue", vat_pct: "0.000", profit_pct: "0.000", lines: [] },
     ],
-    tax_rates: [{ code: "turnover_ecommerce", rate_pct: "4.000", note: "e-tijorat" }],
+    tax_rates: [
+      { code: "turnover_ecommerce", rate_pct: "4.000", note: "e-tijorat" },
+      { code: "turnover_individual", rate_pct: "1.000", note: "YaTT" },
+    ],
     tax_amounts: [{ code: "bhm", amount: "440000.00", note: "PF-115" }],
     payout_schedules: [{ id: PAY_1, shop_id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", kind: "weekly", valid_from: "2026-01-01" }],
     payout_terms: [

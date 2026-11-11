@@ -10,7 +10,8 @@ import type { Settings, TaxProfile } from "../../lib/api/types";
 import { todayTashkent } from "../../lib/dates";
 import { useFormat } from "../../lib/i18n";
 import { Confirm } from "./Confirm";
-import { activeTax, BASES, REGIMES, taxBody, taxDraft, taxValid, type TaxDraft } from "./model";
+import { activeTax, REGIMES, taxBody, taxDraft, taxValid, type TaxDraft } from "./model";
+import { TaxLinesEditor } from "./TaxLinesEditor";
 import { useSettingsMutation } from "./useSettingsMutation";
 
 type Editing = { profile: TaxProfile | null };
@@ -23,10 +24,19 @@ export function TaxProfiles({ orgId, data, canManage }: { orgId: string; data: S
   const today = todayTashkent();
   const current = activeTax(data.tax_profiles, today);
   const remove = useSettingsMutation(orgId, (id: string) => deleteTaxProfile(orgId, id), "settings.tax.deleted", () => setRemoving(null));
+  const lineText = (l: TaxProfile["lines"][number]) => {
+    const period = t(`settings.tax.lines.period.${l.period}`);
+    if (l.kind === "percent") return t("settings.tax.lines.summaryPercent", { name: l.name, rate: f.percent(String(Number(l.rate_pct) / 100)), base: t(`settings.tax.base.${l.base}`) });
+    return l.amount !== null
+      ? t("settings.tax.lines.summarySum", { name: l.name, amount: f.money(l.amount), period })
+      : t("settings.tax.lines.summaryBhm", { name: l.name, count: Number(l.bhm_count), period });
+  };
   const detail = (p: TaxProfile) =>
-    p.regime === "turnover"
-      ? t("settings.tax.detailTurnover", { rate: f.percent(String(Number(p.rate_pct) / 100)), base: t(`settings.tax.base.${p.base}`) })
-      : p.regime === "vat_profit"
+    p.regime === "turnover" && p.lines.length > 0
+      ? p.lines.map(lineText).join(" · ")
+      : p.regime === "turnover"
+        ? t("settings.tax.detailTurnover", { rate: f.percent(String(Number(p.rate_pct) / 100)), base: t(`settings.tax.base.${p.base}`) })
+        : p.regime === "vat_profit"
         ? t("settings.tax.detailVat", { vat: f.percent(String(Number(p.vat_pct) / 100)), profit: f.percent(String(Number(p.profit_pct) / 100)) })
         : "—";
   const columns: Column<TaxProfile>[] = [
@@ -86,7 +96,7 @@ export function TaxProfiles({ orgId, data, canManage }: { orgId: string; data: S
 
 function TaxForm({ orgId, data, profile, today, onClose }: { orgId: string; data: Settings; profile: TaxProfile | null; today: string; onClose: () => void }) {
   const { t } = useTranslation();
-  const [draft, setDraft] = useState<TaxDraft>(() => taxDraft(profile, today));
+  const [draft, setDraft] = useState<TaxDraft>(() => taxDraft(profile, today, t("settings.tax.lines.legacyName")));
   const patch = (p: Partial<TaxDraft>) => setDraft((d) => ({ ...d, ...p }));
   const save = useSettingsMutation(
     orgId,
@@ -98,7 +108,7 @@ function TaxForm({ orgId, data, profile, today, onClose }: { orgId: string; data
     e.preventDefault();
     if (taxValid(draft)) save.mutate(undefined);
   };
-  const hint = data.tax_rates.find((r) => (draft.regime === "turnover" ? r.code.startsWith("turnover") : false));
+  const bhm = data.tax_amounts.find((a) => a.code === "bhm")?.amount ?? null;
   return (
     <Dialog
       open
@@ -118,12 +128,7 @@ function TaxForm({ orgId, data, profile, today, onClose }: { orgId: string; data
       <form id="tax-form" className="settings-form" onSubmit={submit}>
         <TextInput label={t("settings.tax.from")} help={t("settings.tax.fromHelp")} type="date" required value={draft.valid_from} onValueChange={(valid_from) => patch({ valid_from })} />
         <Select label={t("settings.tax.regimeLabel")} value={draft.regime} onValueChange={(regime) => patch({ regime: regime as TaxDraft["regime"] })} options={REGIMES.map((r) => ({ value: r, label: t(`settings.tax.regime.${r}`) }))} help={t(`settings.tax.regimeHelp.${draft.regime}`)} />
-        {draft.regime === "turnover" && (
-          <>
-            <NumberInput label={t("settings.tax.rate")} help={hint ? t("settings.tax.rateHint", { rate: Number(hint.rate_pct) }) : undefined} suffix="%" value={draft.rate} onValueChange={(rate) => patch({ rate })} />
-            <Select label={t("settings.tax.baseLabel")} value={draft.base} onValueChange={(base) => patch({ base: base as TaxDraft["base"] })} options={BASES.map((b) => ({ value: b, label: t(`settings.tax.base.${b}`) }))} />
-          </>
-        )}
+        {draft.regime === "turnover" && <TaxLinesEditor lines={draft.lines} onChange={(lines) => patch({ lines })} rates={data.tax_rates} bhm={bhm} />}
         {draft.regime === "vat_profit" && (
           <>
             <NumberInput label={t("settings.tax.vat")} suffix="%" value={draft.vat} onValueChange={(vat) => patch({ vat })} />

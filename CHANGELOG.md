@@ -615,6 +615,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   jadvallar endi o'z ichida skroll qiladi; `e2e/orders.spec.ts`.
 - B4.63 Dona grafiklarida o'q qadami butun son (kichik sonlarda yorliqlar "1, 1, 1, 0, 0, 0" bo'lib takrorlanardi).
 - B4.63 KPI kartasida pul birligi so'z o'rtasidan bo'linmaydi ("1 200 000 soʻ" / "m" o'rniga butun "soʻm" keyingi qatorga).
+- B4.79b Dinamik soliq profili — Sozlamalar: aylanma rejimida soliq qatorlari muharriri (foizli yoki qat'iy: so'm yoki BHM soni,
+  oy / chorak / yil) va tayyor shablonlar (YaTT: aylanmadan foiz + 1 BHM; MChJ aylanmadan; bo'sh); BHM ma'lumotnomadan
+  ko'rsatiladi; profillar jadvalida qatorlar tavsifi; uz va ru; 360 px.
 - B4.79 Dinamik soliq profili — API: Sozlamalar javobida profil qatorlari (`lines`) va joriy BHM (`tax_amounts`); `POST/PATCH
   /tax-profiles` da qatorlarni berish/almashtirish (tekshiruv: shakl, takror nom, ko'pi bilan 10 ta; faqat aylanma rejimi).
   Migratsiya 0019: mavjud aylanmadan foiz profillari bitta foizli qatorga ko'chadi (hisob natijasi o'zgarmaydi).
