@@ -22,7 +22,7 @@ noma'lum holatdagi sotuvning ``sale_costs`` qatori o'chiriladi.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date, datetime, time
+from datetime import UTC, date, datetime, time
 from typing import Any
 from uuid import UUID
 
@@ -223,15 +223,29 @@ async def openings(
 VOID_INVOICES = ("CANCELED", "CANCELLED", "REJECTED", "DELETED")
 
 
+def arrival_day(status: str | None, created_on: datetime | None, raw: Any) -> date | None:
+    """ADR-056: postavka tovarni **savdoga chiqargan** kun (Toshkent) — Uzum ``dateAccepted`` ni holat ``ACCEPTED`` ga
+    tovarni savdoga chiqarganda qo'yadi (yaratilgan kun emas: orasi 12 kungacha, bu oraliqdagi sotuv — qaytgan eski
+    tovar). ``dateAccepted`` yo'q: ``ACCEPTED`` postavka — yaratilgan kun (sanasi o'qilmagan eski qator); boshqa
+    holat (``CREATED`` ...) — hali kelmagan (``None``)."""
+    accepted = raw.get("dateAccepted") if isinstance(raw, dict) else None
+    if isinstance(accepted, int | float) and not isinstance(accepted, bool):
+        return business_date(datetime.fromtimestamp(accepted / 1000, UTC))
+    if created_on is not None and (status or "").upper() == "ACCEPTED":
+        return business_date(created_on)
+    return None
+
+
 async def supplies(
     conn: AsyncConnection, start: date, items: set[UUID] | None = None
 ) -> dict[UUID, date | None]:
-    """ADR-051: FBO postavka tarixi bor tovarlar → boshlashdan (``start``) keyingi birinchi postavka kuni (Toshkent;
-    ``None`` — boshlashdan keyin postavka yo'q). Bekor qilingan postavkalar hisobga olinmaydi; sanasi o'qilmagan postavka
-    faqat "FBO tovari" belgisini beradi."""
+    """ADR-051, ADR-056: FBO postavka tarixi bor tovarlar → boshlashdan (``start``) keyingi birinchi postavka **savdoga
+    chiqqan** kuni (``arrival_day``; ``None`` — boshlashdan keyin kelgan postavka yo'q: yaratilgan, lekin hali savdoga
+    chiqarilmagan postavka ham kelmagan). Bekor qilingan postavkalar hisobga olinmaydi; kelish sanasi bo'lmagan postavka
+    ham "FBO tovari" belgisini beradi."""
     v, i, k = m.fbo_invoices, m.fbo_invoice_items, m.mp_skus
     query = (
-        select(k.c.item_id, v.c.created_on)
+        select(k.c.item_id, v.c.created_on, v.c.status, v.c.raw)
         .select_from(i.join(v, v.c.id == i.c.invoice_id).join(k, k.c.id == i.c.sku_id))
         .where(
             k.c.item_id.is_not(None) if items is None else k.c.item_id.in_(items),
@@ -240,7 +254,7 @@ async def supplies(
     )
     out: dict[UUID, date | None] = {}
     for r in await conn.execute(query):
-        day = None if r.created_on is None else business_date(r.created_on)
+        day = arrival_day(r.status, r.created_on, r.raw)
         out.setdefault(r.item_id, None)
         if day is not None and day >= start:
             current = out[r.item_id]

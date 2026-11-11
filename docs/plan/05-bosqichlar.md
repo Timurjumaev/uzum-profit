@@ -731,7 +731,12 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   Q4–Q14), 08 §6 yangilandi. Kod o'zgarmadi. **T:** Q15 — hal qilindi: dinamik soliq profili (ADR-058).
   **Navbatdagi vazifalar** (har biri alohida PR, oldingisi merge bo'lgach; xato tuzatilsa — avval qizaradigan test; 02/04/05
   shu PR ichida yangilanadi):
-  - [ ] B4.65 (ADR-056) Postavka "keldi" = `dateAccepted` (`supplies`, `Opening.supplied_on`; 02 F22/F41).
+  - [x] B4.65 (ADR-056) Postavka "keldi" = savdoga chiqarilgan kun (`dateAccepted`), yaratilgan kun emas: `calc.costs.arrival_day`
+    (`supplies()` shuni ishlatadi; `Opening.supplied_on`). Yaratilgandan savdoga chiqquncha sotilgan dona — qaytgan eski tovar
+    (boshlang'ich narx, belgisiz); `CREATED` postavka kelmagan; `dateAccepted` yo'q `ACCEPTED` (eski qator) — yaratilgan sana.
+    02 F41 yangilandi. Test: `test_supply_arrives_when_put_on_sale` (avval qizardi). **T:** deploy'dan bir necha daqiqa keyin
+    staging'da ADR-055 dagi SKU (postavka 28.10 yaratilgan → 09.11 savdoga chiqqan): shu oraliqdagi sotuvlarda "Postavka bor,
+    partiya kiritilmagan" belgisi yo'qligini ko'rish.
   - [ ] B4.66 (Q1) F23 sotuv tezligi: savdodagi kunlar, tovar yoshi < 7 kun qoidasi, yakunlanish ulushi (`inventory.velocity`).
   - [ ] B4.67 (Q2) F26/F27 ikki signal: "Buyurtma berish" va "Uzumga yuborish" (Ombor, Asosiy, Mahsulotlar holati).
   - [ ] B4.68 (Q4) Prognoz va "▲ %" da kutilayotgan qism × yakunlanish ulushi, "taxminiy" belgisi.

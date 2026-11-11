@@ -544,7 +544,10 @@ oldingi kun snapshoti, S bugun bo'lsa joriy qoldiq) + o'z omborimda (sotuvchi ta
   keyinroq tayyor partiyaga tegilmaydi (tovar Uzumda yo'q); (2) postavka bor, partiya kiritilgan — qaytgan eski tovarni ajratib
   bo'lmaydi: oxirgi partiya narxi, **belgisiz** (partiyaning o'z belgilari qoladi); (3) postavka bor, partiya kiritilmagan —
   sotuv kunidagi narx, "postavka bor, partiya kiritilmagan" belgisi (sotuvchi partiyani kiritsa yo'qoladi). Narx yo'q —
-  avvalgidek "lot yetmadi" yoki tannarxsiz. Bekor qilingan postavka hisobga olinmaydi; postavka kuni — yaratilgan sana.
+  avvalgidek "lot yetmadi" yoki tannarxsiz. Bekor qilingan postavka hisobga olinmaydi. **Postavka kuni (ADR-056) — tovar
+  savdoga chiqarilgan kun** (`dateAccepted`, Toshkent; Uzum holatni `ACCEPTED` ga shu paytda o'tkazadi), yaratilgan sana emas:
+  yaratilgandan savdoga chiqquncha oraliqda (12 kungacha) sotilgan dona — (1) holati (qaytgan eski tovar); savdoga chiqarilmagan
+  (`CREATED`) postavka kelmagan; `dateAccepted` yo'q `ACCEPTED` postavka (eski qator) — yaratilgan sana.
 - Tayyor sanasi < S bo'lgan partiyalar ishlatilmaydi (qoldiqqa kirgan); yo'ldagi (sanasiz) va S dan keyingilari — F21.
 - Ombor qiymati (F27, F29): S dan keyin tayyor partiya bo'lmasa — S kungi narx.
 - Qamrov (sahifada): S gacha bo'lgan tushumning narx yozilgan turlarga to'g'ri keladigan ulushi — shu narx qo'llanadigan
