@@ -106,7 +106,23 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter web build
-      - run: pnpm --filter web exec playwright install --with-deps chromium
+      # Brauzer va tizim paketlari. Runner'ning Ubuntu oynasi (azure.archive.ubuntu.com) ba'zan DNS'da yo'qoladi
+      # (2026-11-11: uch run shu bilan qizardi, testlar ishga tushmadi) — 3 urinish; har xatodan keyin apt rasmiy
+      # archive.ubuntu.com ga o'tkaziladi va paketlar ro'yxati yangilanadi.
+      - name: Playwright brauzeri (qayta urinish bilan)
+        timeout-minutes: 30
+        run: |
+          for i in 1 2 3; do
+            if pnpm --filter web exec playwright install --with-deps chromium; then exit 0; fi
+            echo "::warning::playwright install: ${i}-urinish muvaffaqiyatsiz"
+            [ "$i" = 3 ] && break
+            if [ -f /etc/apt/apt-mirrors.txt ]; then
+              echo "http://archive.ubuntu.com/ubuntu/" | sudo tee /etc/apt/apt-mirrors.txt > /dev/null
+            fi
+            sudo apt-get update -q || true
+            sleep $((i * 30))
+          done
+          exit 1
       # Kirish, onboarding, karkas (soxta API); axe KONTRAST bilan; skrinshot asoslari (e2e/__screenshots__) bilan taqqoslash.
       - run: pnpm --filter web e2e
       - uses: actions/upload-artifact@v4

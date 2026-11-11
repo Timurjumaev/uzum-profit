@@ -749,6 +749,8 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     **T:** staging'da Foyda sahifasida (agar rejim QQS + foyda yoki agent bo'lsa) bannerni ko'rish.
   - [ ] B4.75 (audit §9) PR-4…PR-8: bosish maydoni 44 px, xavfsizlik/CI, hujjat va o'lik kod, test qamrovi, jadval kengliklari
     va favicon.
+  - [x] B4.75b (CI) E2E job'ida brauzer o'rnatish qayta urinish bilan (3 marta, xatodan keyin apt `archive.ubuntu.com` ga):
+    2026-11-11 da runner'ning `azure.archive.ubuntu.com` oynasi DNS'da yo'qolib, main, #135 va #136 testlarsiz qizardi.
   - [x] B4.77a Dinamik soliq profili — dizayn (faqat hujjat, ADR-058; Temur talabi 2026-11-11): 02 F11 qayta yozildi, 03, 08 §6 (BHM 440 000
     — 2026-09-01 dan; manbalar), 09 §11.5 (Q15 hal).
   - [x] B4.77 Dinamik soliq profili, 1-bosqich: yadro va baza (ilova xatti-harakati o'zgarmadi) — migratsiya 0018: `tax_lines`
