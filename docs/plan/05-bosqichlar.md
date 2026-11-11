@@ -716,6 +716,15 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   xavfsizlik va testda 9 ta, rejada 5 ta, dizaynda 13 ta. Kod o'zgarmadi. **Davomi:** tasdiqsiz tuzatishlar PR-2…PR-8
   (09 §9); formula, reja va katta dizayn o'zgarishlari — Q1–Q14 (09 §8), Temur qaroridan keyin ADR bilan.
   **T:** 09 §8 dagi qarorlar va §10 dagi savollarga javob; staging'da S1–S3 so'rovlari.
+- [x] B4.63 Audit, 1-qism — aniq xatolar (09 §9, PR-2: K5, D5, D6, D7); har biriga avval qizaradigan test.
+  ✓ 2026-11-11: (1) **Oy prognozi** oy boshidan kechagacha bo'lgan to'liq kunlar bo'yicha (avval bugungi tugamagan kun
+  to'liq kun deb sanalardi: soat 10:00 da 1-sanada −60%, 10-sanada −6%); oyning 1-kuni — prognoz yo'q ("Ma'lumot
+  yetarli emas"); formula matni yangilandi (`forecast_basis`, `routes/dashboard.py`). (2) **Buyurtmalar → Bekor bo'lish /
+  Qaytarilish** 360 px da sahifani 68 / 105 px kengaytirardi (grid ustuni cheklanmagan) — endi jadval o'z ichida skroll
+  qiladi; yangi `e2e/orders.spec.ts` (uchala bo'lim, 360 px). (3) **Grafik o'qi:** dona grafigida qadam butun son
+  (avval kichik sonlarda "1, 1, 1, 0, 0, 0"). (4) **KPI qiymati** tor kartada so'z o'rtasidan bo'linardi ("1 200 000
+  soʻ" / "m") — endi sig'masa butun "soʻm" keyingi qatorga (`KpiValue`; matn o'zgarmaydi). **T:** telefonda
+  Buyurtmalar → "Qaytarilish" va SKU sahifasini ko'rish.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

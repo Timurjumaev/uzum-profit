@@ -398,8 +398,8 @@ export const uzLatn = {
       unitsValue: "{{value}} dona",
       split: "yakunlangan {{done}} · kutilayotgan {{expected}}",
       noForecast: "Maʼlumot yetarli emas",
-      forecastFormula: "Shu oyning oʻtgan kunlaridagi qiymat × oydagi kunlar / oʻtgan kunlar",
-      forecastSource: "Shu oy sotuvlari (Yakunlangan va Jarayonda)",
+      forecastFormula: "Oy boshidan kechagacha boʻlgan qiymat × oydagi kunlar / toʻliq oʻtgan kunlar (bugungi kun hali tugamagan — kirmaydi)",
+      forecastSource: "Shu oy sotuvlari, kechagacha (Yakunlangan va Jarayonda); oyning 1-kuni prognoz yoʻq",
       forecastEstimated: "Oxirigacha shu surʼatda sotilsa deb taxmin qilinadi",
     },
     chart: {

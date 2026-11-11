@@ -1815,7 +1815,8 @@ export interface components {
         };
         /**
          * ForecastOut
-         * @description M4 "Oy prognozi" (run-rate) shu oy bo'yicha.
+         * @description M4 "Oy prognozi" (run-rate) shu oy bo'yicha: oy boshidan kechagacha (to'liq o'tgan kunlar) qiymat × oydagi kunlar /
+         *     o'tgan to'liq kunlar. Oyning 1-kuni — ``null`` (hali to'liq kun yo'q).
          */
         ForecastOut: {
             /** Revenue */

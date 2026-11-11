@@ -7,6 +7,7 @@ import { dashboardData } from "../../src/test/dashboard";
 import { inventoryData } from "../../src/test/inventory";
 import { pnlData, skuColumns } from "../../src/test/pnl";
 import { openingData, openingRow } from "../../src/test/opening";
+import { analysisData, salesData } from "../../src/test/orders";
 import { settingsData } from "../../src/test/settings";
 import { skuDetail, skuRow, skusData, unitCalc } from "../../src/test/products";
 import { PURCHASE_1, purchaseDetail, purchaseRow } from "../../src/test/purchases";
@@ -236,7 +237,9 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
       const sku = url.searchParams.get("view") === "sku";
       return json(route, 200, pnlData(sku ? { columns: skuColumns() } : {}));
     }
-    if (key === `GET /orgs/${ORG_ID}/sales`) return json(route, 200, SALES);
+    // Buyurtmalar ro'yxati sahifalab so'raydi (`page`, ADR-054); P&L drill-down — kursor bilan (namuna `SALES`).
+    if (key === `GET /orgs/${ORG_ID}/sales`) return json(route, 200, url.searchParams.has("page") ? salesData() : SALES);
+    if (key === `GET /orgs/${ORG_ID}/orders/analysis`) return json(route, 200, analysisData());
     if (key === `GET /orgs/${ORG_ID}/settings`) return json(route, 200, settingsData());
     if (key === `GET /orgs/${ORG_ID}/opening`) {
       // Bitta mahsulotning ikki turi (rang) — "hammasiga bitta narx" guruhi.

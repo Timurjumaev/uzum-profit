@@ -8,6 +8,7 @@ ustidagi P&L = sotuv qatorlaridan qurilgan P&L (``upcore``). Ruxsatlar va tashki
 
 from __future__ import annotations
 
+import calendar
 import json
 import uuid
 from collections.abc import Iterator
@@ -28,7 +29,7 @@ from upapi.auth.deps import COOKIE
 from upapi.reports.common import fold
 from upcore.expenses import ExpenseCategory
 from upcore.inventory import DayStat, StockStatus, velocity
-from upcore.metrics import TASHKENT, ManualExpense, Period, SaleLine, business_date
+from upcore.metrics import TASHKENT, ManualExpense, Period, SaleLine, business_date, run_rate
 from upcore.money import Money
 from upcore.pnl import ExpenseItem, OwnExpense, TaxRule, build_cells
 
@@ -746,7 +747,13 @@ def test_dashboard_blocks(world: World) -> None:
     assert money(periods["today"]["revenue"]) == D(100_000) and periods["today"]["units"] == 1
     today = datetime.now(TASHKENT).date()
     assert periods["this_month"]["period"]["start"] == today.replace(day=1).isoformat()
-    assert dash["forecast"]["revenue"] is not None
+    # M4 "Oy prognozi" — to'liq o'tgan kunlar bo'yicha (bugungi tugamagan kun kirmaydi): oy boshidan kechagacha bo'lgan
+    # qiymat × oydagi kunlar / o'tgan to'liq kunlar; oyning 1-kuni — prognoz yo'q.
+    days_in_month = calendar.monthrange(today.year, today.month)[1]
+    to_yesterday = money(periods["this_month"]["revenue"]) - money(periods["today"]["revenue"])
+    expected = None if today.day == 1 else run_rate(to_yesterday, today.day - 1, days_in_month)
+    got = dash["forecast"]["revenue"]
+    assert (None if got is None else D(got)) == expected
     # KPI sarhisob (ADR-043): 4 guruh, har kartochkada joriy, oldingi, o'zgarish va trend.
     summary = dash["summary"]
     assert [g["key"] for g in summary["groups"]] == ["orders", "uzum", "returns", "average"]
@@ -1286,6 +1293,18 @@ def test_benchmark_dashboard_year(db: dict[str, str]) -> None:
                 assert body["total"] == 300
             p95 = sorted(times[1:])[-1]
             assert p95 < LIMIT, (path, [round(t, 3) for t in times])
+
+
+def test_forecast_basis_is_completed_days() -> None:
+    """M4 "Oy prognozi": asos — oy boshidan kechagacha; bugungi tugamagan kun kirmaydi, 1-sanada prognoz yo'q."""
+    from upapi.routes.dashboard import forecast_basis
+
+    assert forecast_basis(date(2026, 11, 1)) is None
+    assert forecast_basis(date(2026, 11, 2)) == Period(date(2026, 11, 1), date(2026, 11, 1))
+    basis = forecast_basis(date(2026, 11, 11))
+    assert basis is not None and basis.days == 10 and basis.end == date(2026, 11, 10)
+    # Kuniga 1 mln sur'at, 30 kunlik oy: 10 to'liq kun → 30 mln (bugungi yarim kun natijaga ta'sir qilmaydi).
+    assert run_rate(Decimal(10_000_000), basis.days, 30) == Decimal("30000000.00")
 
 
 def test_summary_buckets() -> None:

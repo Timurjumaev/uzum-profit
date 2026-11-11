@@ -609,3 +609,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 - Shell testlari soatga bog'liq edi (oyning 1-kunida standart "Shu oy" davri "Bugun" deb nomlanadi) — soat qotirildi.
 - Davr nomi: 30 kunlik oyning 30-kunida (va 1-yanvarda) standart "Shu oy" davri "30 kun" ("Bugun") deb ko'rinardi —
   bir xil kunlarga tushgan tayyor davrlarda taqvim nomi ustun (`matchPreset`).
+- B4.63 (audit, 09 §9 PR-2) Oy prognozi bugungi tugamagan kunni to'liq kun deb sanardi (soat 10:00 da 1-sanada −60%,
+  10-sanada −6%): endi oy boshidan kechagacha bo'lgan to'liq kunlar bo'yicha, oyning 1-kuni prognoz yo'q.
+- B4.63 Buyurtmalar → "Bekor bo'lish" va "Qaytarilish" 360 px da sahifani gorizontal skroll qildirardi (68 va 105 px) —
+  jadvallar endi o'z ichida skroll qiladi; `e2e/orders.spec.ts`.
+- B4.63 Dona grafiklarida o'q qadami butun son (kichik sonlarda yorliqlar "1, 1, 1, 0, 0, 0" bo'lib takrorlanardi).
+- B4.63 KPI kartasida pul birligi so'z o'rtasidan bo'linmaydi ("1 200 000 soʻ" / "m" o'rniga butun "soʻm" keyingi qatorga).
