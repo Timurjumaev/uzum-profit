@@ -767,6 +767,38 @@ tax_profiles = tenant(
     Column("profit_pct", PCT, nullable=False, server_default="0"),
     check_in("regime", ("turnover", "agent", "vat_profit", "none")),
 )
+# ADR-058: dinamik soliq profili — profil ostida soliq qatorlari (foizli yoki qat'iy: so'm yoki n × BHM).
+tax_lines = tenant(
+    "tax_lines",
+    Column("position", Integer, nullable=False, server_default="0"),
+    Column("name", Text, nullable=False),
+    Column("kind", Text, nullable=False),
+    Column("rate_pct", PCT, nullable=False, server_default="0"),
+    Column("base", Text, nullable=False, server_default="revenue"),
+    Column("amount", UZS),
+    Column("bhm_count", Numeric(8, 2)),
+    Column("period", Text, nullable=False, server_default="month"),
+    check_in("kind", ("percent", "fixed")),
+    check_in("base", ("revenue", "payout")),
+    check_in("period", ("month", "quarter", "year")),
+    CheckConstraint(
+        "(kind = 'percent' AND rate_pct > 0 AND rate_pct <= 100 AND amount IS NULL AND bhm_count IS NULL) "
+        "OR (kind = 'fixed' AND rate_pct = 0 AND num_nonnulls(amount, bhm_count) = 1 "
+        "AND coalesce(amount, bhm_count) > 0)",
+        name="shape",
+    ),
+    UniqueConstraint("org_id", "profile_id", "name"),
+    refs={"profile_id": ("tax_profiles", False)},
+)
+ref_amounts = global_table(
+    "ref_amounts",
+    _id(),
+    Column("code", Text, nullable=False),
+    Column("valid_from", Date, nullable=False),
+    Column("amount", UZS, nullable=False),
+    Column("note", Text),
+    UniqueConstraint("code", "valid_from"),
+)
 ref_logistics_tariffs = global_table(
     "ref_logistics_tariffs",
     _id(),

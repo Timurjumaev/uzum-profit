@@ -751,10 +751,14 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     va favicon.
   - [x] B4.77a Dinamik soliq profili — dizayn (faqat hujjat, ADR-058; Temur talabi 2026-11-11): 02 F11 qayta yozildi, 03, 08 §6 (BHM 440 000
     — 2026-09-01 dan; manbalar), 09 §11.5 (Q15 hal).
-  - [ ] B4.77 Dinamik soliq profili, 1-bosqich: yadro va baza — `tax_lines`, `ref_amounts` (BHM), migratsiya (eski profillar qatorlarga),
-    `upcore.tax` (foizli va qat'iy qator, BHM sana bo'yicha, kunlik taqsimot), golden testlar (YaTT oyi: 1% + 1 BHM; oy chegarasida
-    BHM o'zgarishi; qisman oy; sotuvsiz oy; avval qizaradigan testlar).
-  - [ ] B4.78 Soliq profili: API (qatorlar CRUD) va hisob varag'i — `/pnl` da `tax:<qator>` qatorlari, Excel, `untaxed` banneri qatorlar bo'yicha.
+  - [x] B4.77 Dinamik soliq profili, 1-bosqich: yadro va baza (ilova xatti-harakati o'zgarmadi) — migratsiya 0018: `tax_lines`
+    (CHECK `shape`: foizli — stavka 0–100, qat'iy — summa yoki BHM sonidan aynan bittasi; nom profil ichida unikal), `ref_amounts`
+    (BHM 412 000 / 440 000 — sana bo'yicha, `seed_reference`); `upcore.tax`: `TaxLine`, `profile_lines` (eski profil → qatorlar),
+    `percent_rules`, `fixed_daily` (n × BHM yoki summa, oy / chorak / yil, kunlarga kumulyativ yaxlitlash — har qanday ketma-ket
+    kunlar yig'indisi aniq; BHM noma'lum — `None`, 0 emas), `amount_on`. Golden testlar (YaTT: 1% + 1 BHM; oy chegarasida BHM
+    412 000 → 440 000; chorak, yil; qisman oy; profil almashishi), DB testlari (CHECK, cascade, seed, RLS).
+  - [ ] B4.78 Soliq profili: P&L (`pnl.py`: `tax:<qator>`, qat'iy qatorlar F10 mexanizmi bilan), API (qatorlar CRUD), eski profillarni
+    qatorlarga ko'chirish (migratsiya), Excel, `untaxed` banneri qatorlar bo'yicha.
   - [ ] B4.79 Soliq profili: Sozlamalar — qatorlar muharriri va shablonlar (YaTT, MChJ aylanmadan, bo'sh; o'zini o'zi band qilgan),
     BHM va stavka ma'lumotnomadan ko'rsatiladi; 360 px; uz/ru; e2e.
   - [ ] B4.80 Yillik tushum chegarasi ogohlantirishi (80% / 100%; YaTT 1 mlrd, MChJ 12 000 BHM, o'zini o'zi band qilgan 100 mln) — Asosiy va Sozlamalarda.

@@ -24,7 +24,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.expenses import SEED_CODEBOOK
 from upcore.tariffs import SEED_LOGISTICS
-from upcore.tax import SEED_RATES
+from upcore.tax import SEED_AMOUNTS, SEED_RATES
 
 from upapi.db import models as m
 from upapi.db.session import make_engine
@@ -59,6 +59,7 @@ async def seed_reference(conn: AsyncConnection) -> None:
         ],
     )
     await _upsert(conn, m.ref_tax_rates, [asdict(r) for r in SEED_RATES])
+    await _upsert(conn, m.ref_amounts, [asdict(a) for a in SEED_AMOUNTS])
     await _upsert(
         conn,
         m.ref_logistics_tariffs,
