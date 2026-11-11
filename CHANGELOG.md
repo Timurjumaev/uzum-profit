@@ -431,6 +431,12 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   o'rtacha), har birida oldingi davr qiymati, o'zgarish (ulushda — punkt), trend chizig'i va formula. Yangi formulalar
   F44–F48 (`upcore.metrics.OrderFlow`, `Statement.uzum_costs` / `after_uzum`), `/dashboard` → `summary`, sozlamalarda
   bekor va qaytarish ulushi ogohlantirish chegaralari (`PUT /settings/alerts`), realcheck `cancel_split`.
+- B4.62 Tanqidiy tahlil hisoboti `docs/plan/09-audit.md` (faqat hujjat, kod o'zgarmadi): hisob va ma'lumotdagi 15 ta
+  topilma (F23 tezlik tugab qolishdan keyin 3,5 barobar kam; F26/F27 o'z ombori va yo'ldagi tovarni ko'rmaydi; ADR-051
+  "postavka kuni" ADR-055 fakti bilan yangilanmagan; oy prognozi 1-sanada −60%; QQS rejimida soliq 0), xavfsizlik va
+  test qamrovi, reja (B4 yopilmayapti, rejada yo'q PWA / jamoa ekrani / hodisalar), dizayn o'lchovlari (360 / 1000 /
+  1440 px: bosish maydoni, jadval kengligi, bosh sahifa ierarxiyasi), raqobatchilar jadvali (2026-11-11 holati) va
+  Temurning qarori kerak bo'lgan 14 ta savol (Q1–Q14).
 
 ### O'zgartirildi
 

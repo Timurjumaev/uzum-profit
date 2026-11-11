@@ -709,6 +709,13 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   `page`/`limit` ≤ 100 (Excel `selection`/`rows_for` orqali sahifalashsiz); `/purchases` — ixtiyoriy `limit` ≤ 100 + `page`
   (`limit` siz — hammasi: Excel va kargoga biriktirish ro'yxati). So'ralgan sahifa oxirgisidan oshsa — API oxirgisini beradi.
   **T:** staging'da Buyurtmalar, Xarajatlar (Uzum), Xaridlar va Ombor sahifalarida sahifa raqamlari va "Sahifada" tanlovini ko'rish.
+- [x] B4.62 Tanqidiy tahlil (audit; Temur topshirig'i, 2026-11-10): reja, kod, dizayn va raqobatchilar — `09-audit.md`.
+  ✓ 2026-11-11: hamma tekshiruv yashil (pytest 1 248, vitest 598, Playwright 203); 22 sahifa 360 / 1000 / 1440 px da
+  skrinshot qilinib o'lchandi; 7 ta Uzum servisi va Sellerboard, sellerdata, MPfact, MPSTATS, TrueStats, UVIX saytlari
+  qayta o'qildi. Topildi: hisobda 15 ta (K1–K15; eng jiddiylari — F23 tezlik, F26/F27 holat, ADR-051 ↔ ADR-055),
+  xavfsizlik va testda 9 ta, rejada 5 ta, dizaynda 13 ta. Kod o'zgarmadi. **Davomi:** tasdiqsiz tuzatishlar PR-2…PR-8
+  (09 §9); formula, reja va katta dizayn o'zgarishlari — Q1–Q14 (09 §8), Temur qaroridan keyin ADR bilan.
+  **T:** 09 §8 dagi qarorlar va §10 dagi savollarga javob; staging'da S1–S3 so'rovlari.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.
