@@ -145,7 +145,7 @@ spetsifikatsiyasi, 2026-aprel asosida).
   ovqatlanish uchun 5 mlrd so'mgacha ixtiyoriy 6% ([ihisobchi.uz](https://ihisobchi.uz/uz/spravochnik/nds-uzbekistan-2026/),
   qaror matni bilan tekshirilmagan). Tekshirildi: 2026-10-24.
 - Bular yangiliklar xulosasi; dasturda stavkalar sozlanadi, standartlar buxgalter bilan tasdiqlanadi.
-- Ochiq savol: Uzum sotuvchidan soliqni agent sifatida ushlab qoladimi — B2.11 da Temurning xarajatlarida tekshiriladi.
+- **Temur (2026-11-11): YATT uchun Uzum soliqni ushlamaydi** — soliq to'lovchining soliq akkauntiga keladi: ijtimoiy soliq oyiga 1 BHM (Temur: 440 000 so'm; BHM rasmiy manbadan tekshirilmadi) va aylanmadan 1% (tushumdan, Temurning fikricha). Yuqoridagi "raqamli platformalar soliq agenti" bandi YATT uchun amal qilmaydi. MChJ va o'zini o'zi band qilganlar uchun Uzum ushlashi **aniqlanmadi** (gov.uz va buxgalter.uz qidiruvida Uzum uchun topilmadi; taksi agregatorlari uchun agentlik bor) — Uzum seller yordami yoki soliq maslahatchisidan so'rash kerak; 09-audit §11.5.
 
 ## 7. Huquq, server, to'lov
 

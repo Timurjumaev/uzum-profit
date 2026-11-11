@@ -725,6 +725,27 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   (avval kichik sonlarda "1, 1, 1, 0, 0, 0"). (4) **KPI qiymati** tor kartada so'z o'rtasidan bo'linardi ("1 200 000
   soʻ" / "m") — endi sig'masa butun "soʻm" keyingi qatorga (`KpiValue`; matn o'zgarmaydi). **T:** telefonda
   Buyurtmalar → "Qaytarilish" va SKU sahifasini ko'rish.
+- [x] B4.64 Audit, 2-qism — Temur javoblari va o'lchovlar (faqat hujjat): `09-audit.md` §11 (S1–S3 natijasi; Uzum kabineti
+  "Daromad" va "Foyda" formulasi — **Foyda = Daromad − faqat komissiya**, haqiqiy sof foydadan ≈ 3,5 barobar baland; soliq;
+  xarajat nomlari), ADR-056 (Q3: postavka "keldi" = `dateAccepted`; ADR-051 qisman almashtirildi), ADR-057 (Q1, Q2,
+  Q4–Q14), 08 §6 yangilandi. Kod o'zgarmadi. **T:** §11.5 dagi Q15 ga javob (ijtimoiy soliq: (a) eslatma / (b) maydon).
+  **Navbatdagi vazifalar** (har biri alohida PR, oldingisi merge bo'lgach; xato tuzatilsa — avval qizaradigan test; 02/04/05
+  shu PR ichida yangilanadi):
+  - [ ] B4.65 (ADR-056) Postavka "keldi" = `dateAccepted` (`supplies`, `Opening.supplied_on`; 02 F22/F41).
+  - [ ] B4.66 (Q1) F23 sotuv tezligi: savdodagi kunlar, tovar yoshi < 7 kun qoidasi, yakunlanish ulushi (`inventory.velocity`).
+  - [ ] B4.67 (Q2) F26/F27 ikki signal: "Buyurtma berish" va "Uzumga yuborish" (Ombor, Asosiy, Mahsulotlar holati).
+  - [ ] B4.68 (Q4) Prognoz va "▲ %" da kutilayotgan qism × yakunlanish ulushi, "taxminiy" belgisi.
+  - [ ] B4.69 (Q6) "Taxminiy" belgisi: tayyor sana qoidasi, Markaziy bank kursi — izoh.
+  - [ ] B4.70 (Q7) Kunlik snapshot har sinxronda; sotuvda "yakunlangan birinchi ko'rilgan vaqt" (migratsiya).
+  - [ ] B4.71 (Q12) Menyuda "Pul oqimi" va "Hisobotlar" yashiriladi.
+  - [ ] B4.72 (Q10) Bosh sahifa tartibi (ikkala variant skrinshoti PR'da).
+  - [ ] B4.73 (Q11) Mobil ro'yxat: Mahsulotlar → Ombor → Buyurtmalar (uch PR).
+  - [ ] B4.74 (Q8, Q9, Q13, Q14) Reja hujjatlari: B4 yopish (B4.27, B4.55, B4.61 → B5 boshi), Telegram B6.1–B6.2 oldinga, rejaga
+    qo'shimchalar, 03 §2 va ADR-004 haqiqatga; Uzum API shartlari (Temurdan kabinet matni).
+  - [ ] B4.75 (audit §9) PR-3…PR-8: soliq halolligi (K7 + Q15 (a)), bosish maydoni 44 px, xavfsizlik/CI, hujjat va o'lik kod,
+    test qamrovi, jadval kengliklari va favicon.
+  - [ ] B4.76 Kabinet bilan solishtirish (taklif): Foyda sahifasida "Uzum kabineti ko'rsatadigan" qator (09 §11.3) — Temur
+    ko'rgach.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.
