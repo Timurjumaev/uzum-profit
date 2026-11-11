@@ -1003,6 +1003,8 @@ export const uzLatn = {
           label: "Tayyor shablon",
           help: "Qatorlarni toʻldiradi (hozirgi qatorlar almashadi); keyin tahrirlash mumkin. Stavkalar — maʼlumotnomadan, buxgalter bilan tasdiqlang.",
           placeholder: "Tanlang…",
+          custom: "Qoʻlda tahrirlangan",
+          applied: "Shablon qoʻllandi: {{n}} ta qator — pastda tahrirlash mumkin.",
           yatt: "YaTT: aylanmadan foiz + ijtimoiy soliq (1 BHM)",
           ecommerce: "MChJ: aylanmadan soliq",
           empty: "Boshqa — qatorlarni oʻzim kiritaman",
