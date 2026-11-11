@@ -144,6 +144,13 @@ spetsifikatsiyasi, 2026-aprel asosida).
   [mf.uz](https://api.mf.uz/media/filestore/2026-2028-yillar_uchun_Budjetnoma.pdf)); 2026-06-01 dan chakana savdo va umumiy
   ovqatlanish uchun 5 mlrd so'mgacha ixtiyoriy 6% ([ihisobchi.uz](https://ihisobchi.uz/uz/spravochnik/nds-uzbekistan-2026/),
   qaror matni bilan tekshirilmagan). Tekshirildi: 2026-10-24.
+- **BHM (bazaviy hisoblash miqdori):** 2025-08-01 dan 412 000 so'm; **2026-09-01 dan 440 000** — Prezident Farmoni PF-115 (23.06.2026,
+  "Ish haqi, pensiyalar, stipendiyalar va nafaqalar miqdorini oshirish to'g'risida"); aksar manbalarda 1 sentyabr, gov.uz
+  xabarlaridan birida 1 iyul — rasmiy matn bilan tekshiriladi (qidiruv 2026-11-11: [buxgalter.uz](https://buxgalter.uz/oz/publish/doc/text215802_2026_yil_1_sentyabrdan_boshlab_qanday_bhm_va_mhtekmdan_foydalanamiz),
+  [spot.uz](https://www.spot.uz/oz/2026/06/23/bcv/)). Temur (YaTT, 2026-11-11): ijtimoiy soliq har oy to'liq 1 BHM, aylanma soliq 1% —
+  o'z amaliyoti; rasmiy manbadan qidiruvda tasdiqlanmadi (faqat 1% aylanma soliq YaTT uchun tasdiqlandi). MChJ: Google AI Overview
+  (rasmiy emas) — aylanmadan soliq 4% (yillik aylanma 12 000 BHM gacha; baza — to'liq savdo summasi, Uzum komissiyasi
+  chegirilmaydi), undan ortiq — QQS 12% + foyda 15%; 1% stavka faqat YaTT va o'zini o'zi band qilganlarga. lex.uz bilan tasdiqlanmagan.
 - Bular yangiliklar xulosasi; dasturda stavkalar sozlanadi, standartlar buxgalter bilan tasdiqlanadi.
 - **Temur (2026-11-11): YATT uchun Uzum soliqni ushlamaydi** — soliq to'lovchining soliq akkauntiga keladi: ijtimoiy soliq oyiga 1 BHM (Temur: 440 000 so'm; BHM rasmiy manbadan tekshirilmadi) va aylanmadan 1% (tushumdan, Temurning fikricha). Yuqoridagi "raqamli platformalar soliq agenti" bandi YATT uchun amal qilmaydi. MChJ va o'zini o'zi band qilganlar uchun Uzum ushlashi **aniqlanmadi** (gov.uz va buxgalter.uz qidiruvida Uzum uchun topilmadi; taksi agregatorlari uchun agentlik bor) — Uzum seller yordami yoki soliq maslahatchisidan so'rash kerak; 09-audit §11.5.
 

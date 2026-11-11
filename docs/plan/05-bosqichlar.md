@@ -728,7 +728,7 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
 - [x] B4.64 Audit, 2-qism — Temur javoblari va o'lchovlar (faqat hujjat): `09-audit.md` §11 (S1–S3 natijasi; Uzum kabineti
   "Daromad" va "Foyda" formulasi — **Foyda = Daromad − faqat komissiya**, haqiqiy sof foydadan ≈ 3,5 barobar baland; soliq;
   xarajat nomlari), ADR-056 (Q3: postavka "keldi" = `dateAccepted`; ADR-051 qisman almashtirildi), ADR-057 (Q1, Q2,
-  Q4–Q14), 08 §6 yangilandi. Kod o'zgarmadi. **T:** §11.5 dagi Q15 ga javob (ijtimoiy soliq: (a) eslatma / (b) maydon).
+  Q4–Q14), 08 §6 yangilandi. Kod o'zgarmadi. **T:** Q15 — hal qilindi: dinamik soliq profili (ADR-058).
   **Navbatdagi vazifalar** (har biri alohida PR, oldingisi merge bo'lgach; xato tuzatilsa — avval qizaradigan test; 02/04/05
   shu PR ichida yangilanadi):
   - [ ] B4.65 (ADR-056) Postavka "keldi" = `dateAccepted` (`supplies`, `Opening.supplied_on`; 02 F22/F41).
@@ -747,8 +747,18 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     to'g'rilandi (avval "oylik taxmin sifatida hisoblanadi" deb yolg'on yozilgan edi). `upcore.tax.uncalculated_regimes` (F11),
     `/pnl` javobida `untaxed_regimes`. **Davomi:** dinamik soliq profili (Temur, 2026-11-11) — alohida ADR bilan.
     **T:** staging'da Foyda sahifasida (agar rejim QQS + foyda yoki agent bo'lsa) bannerni ko'rish.
-  - [ ] B4.75 (audit §9) PR-4…PR-8: soliq halolligi (K7 + Q15 (a)), bosish maydoni 44 px, xavfsizlik/CI, hujjat va o'lik kod,
-    test qamrovi, jadval kengliklari va favicon.
+  - [ ] B4.75 (audit §9) PR-4…PR-8: bosish maydoni 44 px, xavfsizlik/CI, hujjat va o'lik kod, test qamrovi, jadval kengliklari
+    va favicon.
+  - [x] B4.77a Dinamik soliq profili — dizayn (faqat hujjat, ADR-058; Temur talabi 2026-11-11): 02 F11 qayta yozildi, 03, 08 §6 (BHM 440 000
+    — 2026-09-01 dan; manbalar), 09 §11.5 (Q15 hal).
+  - [ ] B4.77 Dinamik soliq profili, 1-bosqich: yadro va baza — `tax_lines`, `ref_amounts` (BHM), migratsiya (eski profillar qatorlarga),
+    `upcore.tax` (foizli va qat'iy qator, BHM sana bo'yicha, kunlik taqsimot), golden testlar (YaTT oyi: 1% + 1 BHM; oy chegarasida
+    BHM o'zgarishi; qisman oy; sotuvsiz oy; avval qizaradigan testlar).
+  - [ ] B4.78 Soliq profili: API (qatorlar CRUD) va hisob varag'i — `/pnl` da `tax:<qator>` qatorlari, Excel, `untaxed` banneri qatorlar bo'yicha.
+  - [ ] B4.79 Soliq profili: Sozlamalar — qatorlar muharriri va shablonlar (YaTT, MChJ aylanmadan, bo'sh; o'zini o'zi band qilgan),
+    BHM va stavka ma'lumotnomadan ko'rsatiladi; 360 px; uz/ru; e2e.
+  - [ ] B4.80 Yillik tushum chegarasi ogohlantirishi (80% / 100%; YaTT 1 mlrd, MChJ 12 000 BHM, o'zini o'zi band qilgan 100 mln) — Asosiy va Sozlamalarda.
+  - [ ] B4.81 (B5 boshi) 2-bosqich: QQS va foyda solig'i oylik hisobi (kirim QQS, `profit_before_tax` bazasi), shablon "MChJ umumbelgilangan".
   - [ ] B4.76 Kabinet bilan solishtirish (taklif): Foyda sahifasida "Uzum kabineti ko'rsatadigan" qator (09 §11.3) — Temur
     ko'rgach.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
