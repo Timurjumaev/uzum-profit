@@ -37,6 +37,35 @@ const row = (name: string) => within(ledger()).getByRole("row", { name: new RegE
 const pnlUrls = (api: ReturnType<typeof mockApi>) =>
   api.fetch.mock.calls.map(([r]) => new URL((r as Request).url)).filter((u) => u.pathname === PNL_ROUTE.split(" ")[1]);
 
+describe("soliq qatorlari (ADR-058)", () => {
+  function withTaxLines() {
+    const base = pnlData();
+    const at = base.rows.findIndex((r) => r.code === "tax");
+    const part = (code: string, amount: string) => ({ ...base.rows[at], code, amount, done: amount, processing: "0", previous: "0", diff: amount, change: null });
+    const rows = [...base.rows.slice(0, at + 1), part("tax:Aylanmadan soliq", "-10000"), part("tax:Ijtimoiy soliq", "-440000"), ...base.rows.slice(at + 1)];
+    return pnlData({ rows });
+  }
+
+  it("bir necha soliq qatori \"Soliq\" ostida alohida ko'rinadi; yagona qatorda tarqatma yo'q", async () => {
+    await renderPnl();
+    expect(within(ledger()).queryByText("Ijtimoiy soliq")).toBeNull();
+    cleanup();
+    await renderPnl(PATH, { [PNL_ROUTE]: () => json(200, withTaxLines()) });
+    const names = within(ledger())
+      .getAllByRole("rowheader")
+      .map((h) => h.querySelector(".ui-ledger__link")?.textContent ?? h.textContent);
+    const at = names.indexOf("Soliq");
+    expect(names.slice(at, at + 3)).toEqual(["Soliq", "Aylanmadan soliq", "Ijtimoiy soliq"]);
+    const social = within(ledger()).getByRole("row", { name: /^Ijtimoiy soliq/ });
+    expect(norm(social.textContent!)).toContain(n("-440000"));
+  });
+
+  it("BHM ma'lumotnomada yo'q kunlar — ogohlantirish", async () => {
+    await renderPnl(PATH, { [PNL_ROUTE]: () => json(200, pnlData({ tax_missing_bhm: true })) });
+    expect(screen.getByText("Ijtimoiy soliq toʻliq hisoblanmadi")).toBeTruthy();
+  });
+});
+
 describe("soliq hisoblanmadi (K7)", () => {
   it("QQS + foyda yoki agent rejimida ogohlantirish va soliq sozlamalariga havola; aylanma rejimida yo'q", async () => {
     await renderPnl();

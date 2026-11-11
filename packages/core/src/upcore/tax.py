@@ -18,13 +18,13 @@ from __future__ import annotations
 import calendar
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from enum import StrEnum
 
-from upcore.metrics import ratio
+from upcore.metrics import ManualExpense, ratio
 from upcore.money import Currency, DecimalLike, Money, quantize, to_decimal
-from upcore.pnl import TaxBase, TaxRule
+from upcore.pnl import TAX_PREFIX, OwnExpense, TaxBase, TaxRule, TaxRules
 
 UZS = Currency.UZS
 
@@ -243,19 +243,38 @@ def fixed_daily(
     }
 
 
-def daily_rule(profiles: Iterable[TaxProfile]) -> Callable[[date], TaxRule | None]:
-    """F11 (a) uchun P&L'ga beriladigan kunlik qoida: ``build_cells(..., tax=daily_rule(profiles))``.
-
-    (b), (c), (d) rejimlarida katakka soliq yozilmaydi: (b) xarajatlarda, (c) oylik taxmin alohida."""
+def daily_rules(profiles: Iterable[TaxProfile]) -> Callable[[date], TaxRules]:
+    """F11 foizli qatorlari uchun P&L'ga beriladigan kunlik qoidalar: ``build_cells(..., tax=daily_rules(profiles))``.
+    Qat'iy qatorlar — ``fixed_expenses`` (o'z xarajati mexanizmi bilan). Agent, QQS + foyda (hisoblanmaydi) va "yo'q"
+    rejimlarida foizli qator yo'q."""
     items = list(profiles)
+    return lambda day: percent_rules(items, day)
 
-    def rule(day: date) -> TaxRule | None:
-        p = profile_on(items, day)
-        if p is None or p.regime is not TaxRegime.TURNOVER:
-            return None
-        return TaxRule(p.rate_pct, p.base)
 
-    return rule
+def fixed_expenses(
+    profiles: Iterable[TaxProfile],
+    bhm: Callable[[date], Decimal | None],
+    start: date,
+    end: date,
+) -> tuple[list[OwnExpense], bool]:
+    """``start``…``end`` kunlarining qat'iy soliqlari — kunlik o'z xarajatlari (``tax:<qator nomi>`` toifasida, tashkilot
+    darajasida): ``build_cells`` ularni F10 kabi kataklarga taqsimlaydi, hisobotda esa "Soliq" ostida ko'rinadi. Ikkinchi
+    qiymat: BHM ma'lumotnomada yo'q kun bo'lsa ``True`` (o'sha kunlar hisobga kirmadi — UI aytadi)."""
+    items = list(profiles)
+    out: list[OwnExpense] = []
+    missing = False
+    for i in range((end - start).days + 1):
+        day = start + timedelta(days=i)
+        for name, amount in fixed_daily(items, day, bhm).items():
+            if amount is None:
+                missing = True
+            elif amount:
+                out.append(
+                    OwnExpense(
+                        ManualExpense(Money.rounded(amount, UZS), day, day), TAX_PREFIX + name
+                    )
+                )
+    return out, missing
 
 
 _NOT_CALCULATED = frozenset({TaxRegime.VAT_PROFIT, TaxRegime.AGENT})

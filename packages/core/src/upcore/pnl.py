@@ -134,6 +134,12 @@ class TaxRule:
         return quantize(base * (to_decimal(self.rate_pct) / 100), UZS.places)
 
 
+# F11 (ADR-058): kunning foizli qatorlari — (qator nomi, qoida). Qat'iy qatorlar o'z xarajati (F10) mexanizmi bilan
+# ``tax:<nom>`` toifasida kiritiladi va hisobotda "Soliq" ostiga o'tadi.
+TaxRules = tuple[tuple[str, TaxRule], ...]
+TAX_PREFIX = "tax:"
+LEGACY_TAX_NAME = "Soliq"
+
 # --- Katak ----------------------------------------------------------------------------------
 
 
@@ -171,6 +177,7 @@ class Cell:
     uzum_alloc: dict[ExpenseCategory, Decimal] | None = None
     own_alloc: dict[str, Decimal] | None = None
     tax: Decimal = _D0
+    tax_by: dict[str, Decimal] | None = None  # F11: foizli qatorlar bo'yicha (nomi → summa)
     deducted: Decimal = _D0
     idle: Decimal = (
         _D0  # B4.22: sotuvsiz katakda ayrilgan xarajat (sotilmagan tovar saqlashi, sotuvsiz kun)
@@ -286,6 +293,8 @@ class Statement:
     # ADR-026: shundan tushum ulushida taqsimlangan qism (do'kon / tashkilot xarajatidan SKU'larga).
     uzum_allocated: Mapping[ExpenseCategory, Money] = field(default_factory=dict)
     own_allocated: Mapping[str, Money] = field(default_factory=dict)
+    # F11 (ADR-058): ``tax`` ning qatorlar bo'yicha tarkibi (foizli va qat'iy); yig'indisi ``tax`` ga teng.
+    tax_lines: Mapping[str, Money] = field(default_factory=dict)
     covered_units: int = 0  # tannarxi ma'lum hisobga olingan dona
     # ADR-036: sotuvlar Yakunlangan + Jarayonda; shundan Jarayondagi (yakuniy emas) qism — "shundan jarayonda".
     units_processing: int = 0
@@ -474,6 +483,8 @@ class Statement:
         out += [(f"uzum:{c.value}", -a) for c, a in sorted(self.uzum_expenses.items())]
         out += [(f"own:{c}", -a) for c, a in sorted(self.own_expenses.items())]
         out += [("tax", -self.tax)]
+        if len(self.tax_lines) > 1:  # bir necha qator — "Soliq" ostida alohida ko'rsatiladi
+            out += [(f"{TAX_PREFIX}{n}", -a) for n, a in sorted(self.tax_lines.items())]
         if not self.uncovered_expenses.is_zero() or not self.uncovered_revenue.is_zero():
             out += [
                 ("uncovered_payout", self.uncovered_payout),
@@ -595,6 +606,7 @@ def _roll(cells: Iterable[Cell]) -> Cell:
     uzum_alloc: dict[ExpenseCategory, Decimal] = {}
     own_alloc: dict[str, Decimal] = {}
     uzum_est: dict[ExpenseCategory, Decimal] = {}
+    tax_by: dict[str, Decimal] = {}
     parts: list[Cell] = []
     for c in cells:
         revenue += c.revenue
@@ -632,6 +644,9 @@ def _roll(cells: Iterable[Cell]) -> Cell:
         if c.uzum_est:
             for cat, a in c.uzum_est.items():
                 uzum_est[cat] = uzum_est.get(cat, _D0) + a
+        if c.tax_by:
+            for name, a in c.tax_by.items():
+                tax_by[name] = tax_by.get(name, _D0) + a
     return Cell(
         revenue=revenue,
         commission=commission,
@@ -648,6 +663,7 @@ def _roll(cells: Iterable[Cell]) -> Cell:
         uzum_alloc=uzum_alloc,
         own_alloc=own_alloc,
         tax=tax,
+        tax_by=tax_by,
         deducted=deducted,
         idle=idle,
         logistics_est=logistics_est,
@@ -661,6 +677,15 @@ def _roll(cells: Iterable[Cell]) -> Cell:
 
 def _statement(c: Cell) -> Statement:
     p = c.processing
+    own, own_alloc = dict(c.own or {}), dict(c.own_alloc or {})
+    tax, tax_by = c.tax, dict(c.tax_by or {})
+    for category in [k for k in own if k.startswith(TAX_PREFIX)]:
+        # Qat'iy soliq qatori (ADR-058) F10 mexanizmi bilan taqsimlangan, lekin hisobotda "Soliq" ostida.
+        amount = own.pop(category)
+        own_alloc.pop(category, None)
+        name = category[len(TAX_PREFIX) :]
+        tax_by[name] = tax_by.get(name, _D0) + amount
+        tax += amount
     return Statement(
         revenue=_uzs(c.revenue),
         commission=_uzs(c.commission),
@@ -669,14 +694,15 @@ def _statement(c: Cell) -> Statement:
         covered_revenue=_uzs(c.covered_revenue),
         covered_payout=_uzs(c.covered_payout),
         uzum_expenses=_money_map(c.uzum or {}),
-        own_expenses=_money_map(c.own or {}),
-        tax=_uzs(c.tax),
+        own_expenses=_money_map(own),
+        tax=_uzs(tax),
+        tax_lines=_money_map(tax_by),
         expenses_deducted=_uzs(c.deducted),
         units=c.units,
         lines=c.lines,
         uncovered_lines=c.uncovered_lines,
         uzum_allocated=_money_map(c.uzum_alloc or {}),
-        own_allocated=_money_map(c.own_alloc or {}),
+        own_allocated=_money_map(own_alloc),
         covered_units=c.covered_units,
         units_processing=0 if p is None else p.units,
         revenue_processing=ZERO if p is None else _uzs(p.revenue),
@@ -716,28 +742,42 @@ def _add(
     return out
 
 
-def _rules(
-    tax: TaxRule | Callable[[date], TaxRule | None] | None,
-) -> Callable[[date], TaxRule | None]:
-    """Kun → F11 qoidasi (profil sana bo'yicha bo'lsa — kun bo'yicha keshda)."""
-    if not callable(tax):
-        return lambda _day: tax
-    cache: dict[date, TaxRule | None] = {}
+TaxArg = TaxRule | TaxRules | Callable[[date], TaxRule | TaxRules | None] | None
 
-    def rule(day: date) -> TaxRule | None:
+
+def _as_rules(value: TaxRule | TaxRules | None) -> TaxRules:
+    if value is None:
+        return ()
+    if isinstance(value, TaxRule):
+        return ((LEGACY_TAX_NAME, value),)
+    return value
+
+
+def _rules(tax: TaxArg) -> Callable[[date], TaxRules]:
+    """Kun → F11 foizli qatorlari (profil sana bo'yicha bo'lsa — kun bo'yicha keshda). Bitta ``TaxRule`` — bitta
+    "Soliq" qatori (eski ko'rinish)."""
+    if not callable(tax):
+        fixed = _as_rules(tax)
+        return lambda _day: fixed
+    cache: dict[date, TaxRules] = {}
+
+    def rule(day: date) -> TaxRules:
         if day not in cache:
-            cache[day] = tax(day)
+            cache[day] = _as_rules(tax(day))
         return cache[day]
 
     return rule
 
 
-def _deduct(a: Cell, rule: TaxRule | None) -> None:
-    """Katak (yoki uning qismi) soliq summasi (F11) va F15 bo'yicha ayriladigan xarajati: xarajat × qamrov (tushum 0
-    bo'lsa hammasi)."""
+def _deduct(a: Cell, rules: TaxRules) -> None:
+    """Katak (yoki uning qismi) foizli soliq summasi (F11, qatorlar bo'yicha) va F15 bo'yicha ayriladigan xarajati:
+    xarajat × qamrov (tushum 0 bo'lsa hammasi). Qat'iy soliq qatorlari ``own`` ichida (``tax:<nom>``) — xarajat kabi."""
     a.tax = _D0
-    if rule is not None:
-        a.tax = rule.amount_on(a.revenue, a.revenue - a.commission - a.logistics)
+    a.tax_by = None
+    if rules:
+        payout = a.revenue - a.commission - a.logistics
+        a.tax_by = {name: rule.amount_on(a.revenue, payout) for name, rule in rules}
+        a.tax = sum(a.tax_by.values(), _D0)
     overhead = a.tax
     if a.uzum:
         overhead += sum(a.uzum.values(), _D0)
@@ -750,7 +790,7 @@ def _deduct(a: Cell, rule: TaxRule | None) -> None:
         a.deducted = _cents(overhead * a.covered_revenue / a.revenue)
 
 
-def _finish(a: Cell, rule: TaxRule | None, day_share: Decimal | None = None) -> None:
+def _finish(a: Cell, rule: TaxRules, day_share: Decimal | None = None) -> None:
     """Katak F11 va F15; Jarayondagi qism (ADR-037) katak xarajatlarining (F9, F10) tushum ulushidagi qismini oladi,
     soliq va F15 — o'z tushumidan. Yakunlangan qism = katak − Jarayondagi qism (``Statement.net_profit_done``).
 
@@ -810,7 +850,7 @@ def build_cells(
     lines: Iterable[SaleLine],
     expenses: Iterable[ExpenseItem] = (),
     own_expenses: Iterable[OwnExpense] = (),
-    tax: TaxRule | Callable[[date], TaxRule | None] | None = None,
+    tax: TaxArg = None,
     totals: Iterable[tuple[CellKey, CellSales]] = (),
     logistics_fee: LogisticsFee | None = None,
 ) -> Cells:

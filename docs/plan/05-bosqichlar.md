@@ -757,10 +757,17 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     `percent_rules`, `fixed_daily` (n × BHM yoki summa, oy / chorak / yil, kunlarga kumulyativ yaxlitlash — har qanday ketma-ket
     kunlar yig'indisi aniq; BHM noma'lum — `None`, 0 emas), `amount_on`. Golden testlar (YaTT: 1% + 1 BHM; oy chegarasida BHM
     412 000 → 440 000; chorak, yil; qisman oy; profil almashishi), DB testlari (CHECK, cascade, seed, RLS).
-  - [ ] B4.78 Soliq profili: P&L (`pnl.py`: `tax:<qator>`, qat'iy qatorlar F10 mexanizmi bilan), API (qatorlar CRUD), eski profillarni
-    qatorlarga ko'chirish (migratsiya), Excel, `untaxed` banneri qatorlar bo'yicha.
-  - [ ] B4.79 Soliq profili: Sozlamalar — qatorlar muharriri va shablonlar (YaTT, MChJ aylanmadan, bo'sh; o'zini o'zi band qilgan),
-    BHM va stavka ma'lumotnomadan ko'rsatiladi; 360 px; uz/ru; e2e.
+  - [x] B4.78 Soliq profili: hisob varag'i (P&L). `upcore.pnl`: bir necha foizli qator (`TaxRules`, `Cell.tax_by`), qat'iy qatorlar
+    o'z xarajati (F10) mexanizmi bilan kataklarga taqsimlanadi (`tax:<nom>` toifasi), lekin `Statement` da "Soliq" ostiga o'tadi
+    (`tax_lines`; `own_expenses` va `direct_total` ga kirmaydi; sof foyda o'zgarmas formula bilan); `rows()` da bir necha qator
+    bo'lsa `tax:<nom>` tarqatma qatorlari. `upcore.tax`: `daily_rules`, `fixed_expenses` (eski `daily_rule` olib tashlandi).
+    API: `reports/cells.py` profillarni qatorlari bilan va BHM ni `ref_amounts` dan yuklaydi; `/pnl` da `tax_missing_bhm` (BHM
+    yo'q kunlar — hisoblanmadi va aytiladi). Web: Foyda sahifasida "Soliq" ostida qatorlar, BHM ogohlantirishi. Qatorsiz
+    profillar eskicha ishlaydi (ilova natijasi o'zgarmaydi — qatorlar API/UI orqali B4.79 da kiritiladi). Testlar: core
+    (`test_tax_pnl.py`), API (`tax_lines`, BHM bayrog'i), web. **T:** yo'q (qatorlar hali kiritilmaydi).
+  - [ ] B4.79 Soliq profili: API (qatorlar CRUD, Sozlamalar javobida `lines`, `ref_amounts` BHM), eski profillarni qatorlarga ko'chirish
+    (migratsiya), `untaxed` banneri qatorlar bo'yicha, Sozlamalar UI — qatorlar muharriri va shablonlar (YaTT, MChJ aylanmadan,
+    bo'sh; o'zini o'zi band qilgan), BHM va stavka ma'lumotnomadan ko'rsatiladi; 360 px; uz/ru; e2e.
   - [ ] B4.80 Yillik tushum chegarasi ogohlantirishi (80% / 100%; YaTT 1 mlrd, MChJ 12 000 BHM, o'zini o'zi band qilgan 100 mln) — Asosiy va Sozlamalarda.
   - [ ] B4.81 (B5 boshi) 2-bosqich: QQS va foyda solig'i oylik hisobi (kirim QQS, `profit_before_tax` bazasi), shablon "MChJ umumbelgilangan".
   - [ ] B4.76 Kabinet bilan solishtirish (taklif): Foyda sahifasida "Uzum kabineti ko'rsatadigan" qator (09 §11.3) — Temur

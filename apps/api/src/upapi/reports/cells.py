@@ -13,7 +13,7 @@
   oxirgi 30 kundagi buyurtmaga bog'liq reklama ulushi, "≈" (taxminiy).
 - O'z xarajatlari (F10) — ``manual_expenses``: tovarga bog'langan — tovarning SKU'lariga (bitta bo'lsa o'shanga, bir
   nechta bo'lsa ular orasida tushum ulushida, ADR-039), aks holda do'kon (yoki tashkilot) darajasida.
-- Soliq (F11) — ``tax_profiles`` sana bo'yicha (``upcore.tax.daily_rule``).
+- Soliq (F11) — ``tax_profiles`` sana bo'yicha (``upcore.tax.daily_rules``; qat'iy qatorlar — ``fixed_expenses``, ADR-058).
 - Kutilayotgan logistika (F5, ADR-037) — Uzum hali yozmagan Jarayondagi donalar × F40 tarifi (``reports.products``),
   hisobot kunidagi tarif bilan; yakunlangan va kutilayotgan sof foyda (F16) — ``upcore.pnl`` kataklarida.
 
@@ -51,7 +51,18 @@ from upcore.metrics import (
 from upcore.money import Currency, Money
 from upcore.pnl import CellKey, Cells, CellSales, ExpenseItem, OwnExpense, TaxBase, build_cells
 from upcore.tariffs import SEED_STORAGE_RULES, paid_storage, storage_rule
-from upcore.tax import TaxProfile, TaxRegime, daily_rule
+from upcore.tax import (
+    BHM,
+    AmountValue,
+    FixedPeriod,
+    LineKind,
+    TaxLine,
+    TaxProfile,
+    TaxRegime,
+    amount_on,
+    daily_rules,
+    fixed_expenses,
+)
 
 from upapi.calc.costs import day_start
 from upapi.db import models as m
@@ -74,9 +85,11 @@ def sku_key(sku_id: UUID | None) -> str:
 
 @dataclass(frozen=True, slots=True)
 class Book:
-    """Davr kataklari (butun tashkilot)."""
+    """Davr kataklari (butun tashkilot). ``tax_missing_bhm`` — BHM ma'lumotnomada yo'q kunlar bor: BHM'ga bog'liq
+    qat'iy soliq o'sha kunlarga hisoblanmadi (ADR-058)."""
 
     cells: Cells
+    tax_missing_bhm: bool = False
 
     def scoped(self, f: Filters, period: Period | None = None) -> Cells:
         """Tanlangan do'konlar (va ichki davr) kataklari."""
@@ -622,7 +635,21 @@ async def _own(conn: AsyncConnection, period: Period) -> list[OwnExpense]:
 
 
 async def tax_profiles(conn: AsyncConnection) -> list[TaxProfile]:
-    t = m.tax_profiles
+    """Soliq profillari qatorlari bilan (ADR-058); qatorsiz profil eski ustunlaridan o'qiladi (``upcore.tax``)."""
+    t, tl = m.tax_profiles, m.tax_lines
+    lines: dict[UUID, list[TaxLine]] = {}
+    for r in await conn.execute(select(tl).order_by(tl.c.profile_id, tl.c.position, tl.c.name)):
+        lines.setdefault(r.profile_id, []).append(
+            TaxLine(
+                name=r.name,
+                kind=LineKind(r.kind),
+                rate_pct=r.rate_pct,
+                base=TaxBase(r.base),
+                amount=r.amount,
+                bhm_count=r.bhm_count,
+                period=FixedPeriod(r.period),
+            )
+        )
     return [
         TaxProfile(
             valid_from=r.valid_from,
@@ -631,8 +658,18 @@ async def tax_profiles(conn: AsyncConnection) -> list[TaxProfile]:
             base=TaxBase(r.base),
             vat_pct=r.vat_pct,
             profit_pct=r.profit_pct,
+            lines=tuple(lines.get(r.id, ())),
         )
         for r in await conn.execute(select(t).order_by(t.c.valid_from))
+    ]
+
+
+async def bhm_values(conn: AsyncConnection) -> list[AmountValue]:
+    """BHM ma'lumotnomasi (``ref_amounts``)."""
+    t = m.ref_amounts
+    return [
+        AmountValue(r.code, r.valid_from, r.amount)
+        for r in await conn.execute(select(t).where(t.c.code == BHM))
     ]
 
 
@@ -654,16 +691,22 @@ async def load_book(conn: AsyncConnection, period: Period, today: date) -> Book:
     va hali olib ketilmagan sotuvga — F40 × dona taxmini (Uzum olib ketilganda yechadi)."""
     totals = await _totals(conn, period)
     due = sorted({(k.shop, k.sku or UNLINKED) for k, t in totals if t.lines_logistics_due})
+    profiles = await tax_profiles(conn)
+    values = await bhm_values(conn)
+    # F11 (ADR-058): qat'iy soliq qatorlari — kunlik o'z xarajatlari kabi kataklarga taqsimlanadi, "Soliq" ostida ko'rinadi.
+    fixed, missing = fixed_expenses(
+        profiles, lambda day: amount_on(values, BHM, day), period.start, period.end
+    )
     cells = build_cells(
         period,
         [],
         [*await _expenses(conn, period), *await _expected_ads(conn, period, today)],
-        await _own(conn, period),
-        tax=daily_rule(await tax_profiles(conn)),
+        [*await _own(conn, period), *fixed],
+        tax=daily_rules(profiles),
         totals=totals,
         logistics_fee=await expected_fees(conn, today, due),
     )
-    return Book(cells)
+    return Book(cells, missing)
 
 
 def span(*periods: Period) -> Period:

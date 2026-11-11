@@ -31,7 +31,7 @@ from upcore.tax import (
     SEED_RATES,
     TaxProfile,
     TaxRegime,
-    daily_rule,
+    daily_rules,
     effective_rate,
     profile_on,
     rate_on,
@@ -158,10 +158,10 @@ def test_tax_rates_and_profiles() -> None:
     ]
     assert profile_on(profiles, date(2026, 10, 14)) is profiles[0]
     assert profile_on(profiles, date(2025, 1, 1)) is None
-    rule = daily_rule(profiles)
-    assert rule(date(2026, 10, 1)) == TaxRule(D(1))
-    assert rule(date(2026, 10, 20)) == TaxRule(D(4), TaxBase.PAYOUT)
-    assert rule(date(2026, 11, 2)) is None and rule(date(2025, 1, 1)) is None
+    rule = daily_rules(profiles)
+    assert rule(date(2026, 10, 1)) == (("Soliq", TaxRule(D(1))),)
+    assert rule(date(2026, 10, 20)) == (("Soliq", TaxRule(D(4), TaxBase.PAYOUT)),)
+    assert rule(date(2026, 11, 2)) == () and rule(date(2025, 1, 1)) == ()
     lines = [sale(date(2026, 10, 1)), sale(date(2026, 10, 20)), sale(date(2026, 11, 2))]
     s = build_cells(Period(date(2026, 10, 1), date(2026, 11, 30)), lines, tax=rule).statement()
     # 1% × 100 000 + 4% × (100 000 − 20 000 − 5 000) + 0

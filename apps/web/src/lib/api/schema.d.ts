@@ -2820,6 +2820,8 @@ export interface components {
             recalculated: number;
             /** Untaxed Regimes */
             untaxed_regimes: components["schemas"]["TaxRegime"][];
+            /** Tax Missing Bhm */
+            tax_missing_bhm: boolean;
         };
         /** PriceIn */
         PriceIn: {

@@ -6,7 +6,16 @@ import { homeRows, negate, type HomeRow } from "../home/model";
 
 /** Hisob varag'i qatori: qator belgilari + M5 ustunlari — yakunlangan va kutilayotgan qism (ADR-037; jami — `amount`), tushumga
  * nisbatan, oldingi davr, farq. `estimated` — summada taxminiy qism bor (kutilayotgan logistika, F5). */
-export type PnlLine = HomeRow & { done: string; processing: string; share: string | null; previous: string; diff: string; estimated?: boolean };
+export type PnlLine = HomeRow & {
+  done: string;
+  processing: string;
+  share: string | null;
+  previous: string;
+  diff: string;
+  estimated?: boolean;
+  /** Qator ostidagi tarkib (masalan, "Soliq" ostida soliq qatorlari): yig'indiga qo'shilmaydi, ichkariroq ko'rsatiladi. */
+  part?: boolean;
+};
 
 /** Hisob varag'i ustuni (ADR-037): yakunlangan, kutilayotgan yoki jami. */
 export type Part = "done" | "processing" | "total";
@@ -35,6 +44,36 @@ export function pnlLines(rows: PnlRow[], label: (code: string) => string, grossL
     }
     return { ...row, done: api.done, processing: api.processing, share: api.share_of_revenue, previous: api.previous, diff: api.diff };
   });
+  // F11 (ADR-058): bir necha soliq qatori — "Soliq" ostida alohida (jami "Soliq" qatorida; yig'indisi unga teng).
+  const taxAt = lines.findIndex((l) => l.key === "tax");
+  const taxParts = rows.filter((r) => r.code.startsWith("tax:"));
+  if (taxAt >= 0 && taxParts.length > 0) {
+    lines.splice(
+      taxAt + 1,
+      0,
+      ...taxParts.map(
+        (r): PnlLine => ({
+          key: r.code,
+          label: label(r.code),
+          amount: r.amount,
+          op: "",
+          kind: "row",
+          part: true,
+          source: { type: "none" },
+          formula: "tax",
+          direction: "cost",
+          keep: false,
+          compactHidden: true,
+          change: r.change,
+          done: r.done,
+          processing: r.processing,
+          share: r.share_of_revenue,
+          previous: r.previous,
+          diff: r.diff,
+        }),
+      ),
+    );
+  }
   const gross = byCode.get("gross_profit");
   const uncovered = lines.findIndex((l) => l.key === "uncovered_payout");
   const moved = uncovered >= 0 ? lines.splice(uncovered, 1) : [];
