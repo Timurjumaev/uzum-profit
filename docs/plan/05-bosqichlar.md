@@ -765,9 +765,14 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     yo'q kunlar — hisoblanmadi va aytiladi). Web: Foyda sahifasida "Soliq" ostida qatorlar, BHM ogohlantirishi. Qatorsiz
     profillar eskicha ishlaydi (ilova natijasi o'zgarmaydi — qatorlar API/UI orqali B4.79 da kiritiladi). Testlar: core
     (`test_tax_pnl.py`), API (`tax_lines`, BHM bayrog'i), web. **T:** yo'q (qatorlar hali kiritilmaydi).
-  - [ ] B4.79 Soliq profili: API (qatorlar CRUD, Sozlamalar javobida `lines`, `ref_amounts` BHM), eski profillarni qatorlarga ko'chirish
-    (migratsiya), `untaxed` banneri qatorlar bo'yicha, Sozlamalar UI — qatorlar muharriri va shablonlar (YaTT, MChJ aylanmadan,
-    bo'sh; o'zini o'zi band qilgan), BHM va stavka ma'lumotnomadan ko'rsatiladi; 360 px; uz/ru; e2e.
+  - [x] B4.79 Soliq profili: API va ko'chirish (UI yo'q). Sozlamalar javobida profil `lines` va `tax_amounts` (joriy BHM);
+    `POST/PATCH /tax-profiles` da `lines` (berilsa qatorlar to'liq almashadi, `[]` — o'chadi, berilmasa o'zgarmaydi; qatorlar
+    faqat aylanma rejimida, rejim almashsa ketadi; tekshiruv `upcore.tax` bilan bir xil: shakl, takror nom, ko'pi bilan 10 ta;
+    qatorlari bor profilda eski stavka ustuni nol). Migratsiya 0019: stavkasi > 0 aylanma profillar bitta foizli qatorga
+    ("Aylanmadan soliq") ko'chadi — hisob natijasi o'zgarmaydi. Testlar: API (yaratish, almashtirish, tekshiruv, cascade,
+    audit, ruxsat), migratsiya (ko'chirish, orqaga qaytish). **T:** yo'q (UI keyingi vazifada).
+  - [ ] B4.79b Soliq profili: Sozlamalar UI — qatorlar muharriri va shablonlar (YaTT: aylanmadan 1% + 1 BHM; MChJ aylanmadan 4%;
+    bo'sh), BHM va ma'lumotnoma stavkasi ko'rsatiladi, qat'iy soliq oy summasi (n × BHM) ko'rinadi; 360 px; uz/ru; e2e.
   - [ ] B4.80 Yillik tushum chegarasi ogohlantirishi (80% / 100%; YaTT 1 mlrd, MChJ 12 000 BHM, o'zini o'zi band qilgan 100 mln) — Asosiy va Sozlamalarda.
   - [ ] B4.81 (B5 boshi) 2-bosqich: QQS va foyda solig'i oylik hisobi (kirim QQS, `profit_before_tax` bazasi), shablon "MChJ umumbelgilangan".
   - [ ] B4.76 Kabinet bilan solishtirish (taklif): Foyda sahifasida "Uzum kabineti ko'rsatadigan" qator (09 §11.3) — Temur

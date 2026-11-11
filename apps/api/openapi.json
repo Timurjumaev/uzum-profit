@@ -8544,6 +8544,15 @@
         ],
         "title": "ExpensesOut"
       },
+      "FixedPeriod": {
+        "type": "string",
+        "enum": [
+          "month",
+          "quarter",
+          "year"
+        ],
+        "title": "FixedPeriod"
+      },
       "FlowStepOut": {
         "properties": {
           "key": {
@@ -9544,6 +9553,14 @@
         ],
         "title": "LineIn",
         "description": "Xarid tovari (qator): mavjud tovar (``item_id``), SKU (``sku_id`` — tovari bo'lmasa yaratiladi) yoki \"yangi\ntovar\" (``temp_name``, havola, rasm). ``item_id`` va ``sku_id`` birga berilmaydi."
+      },
+      "LineKind": {
+        "type": "string",
+        "enum": [
+          "percent",
+          "fixed"
+        ],
+        "title": "LineKind"
       },
       "LineOut": {
         "properties": {
@@ -13070,6 +13087,13 @@
             "type": "array",
             "title": "Tax Rates"
           },
+          "tax_amounts": {
+            "items": {
+              "$ref": "#/components/schemas/TaxAmountOut"
+            },
+            "type": "array",
+            "title": "Tax Amounts"
+          },
           "payout_schedules": {
             "items": {
               "$ref": "#/components/schemas/PayoutScheduleOut"
@@ -13096,6 +13120,7 @@
           "cost_method",
           "tax_profiles",
           "tax_rates",
+          "tax_amounts",
           "payout_schedules",
           "payout_terms",
           "inventory",
@@ -15575,6 +15600,37 @@
         ],
         "title": "SyncStatusOut"
       },
+      "TaxAmountOut": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "amount",
+          "note"
+        ],
+        "title": "TaxAmountOut",
+        "description": "Ma'lumotnoma (``ref_amounts``): so'mdagi joriy qiymat (BHM) — qat'iy soliqni ko'rsatishda."
+      },
       "TaxBase": {
         "type": "string",
         "enum": [
@@ -15582,6 +15638,136 @@
           "payout"
         ],
         "title": "TaxBase"
+      },
+      "TaxLineIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/LineKind"
+          },
+          "rate_pct": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Rate Pct",
+            "default": "0"
+          },
+          "base": {
+            "$ref": "#/components/schemas/TaxBase",
+            "default": "revenue"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "bhm_count": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bhm Count"
+          },
+          "period": {
+            "$ref": "#/components/schemas/FixedPeriod",
+            "default": "month"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "kind"
+        ],
+        "title": "TaxLineIn"
+      },
+      "TaxLineOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/LineKind"
+          },
+          "rate_pct": {
+            "type": "string",
+            "title": "Rate Pct"
+          },
+          "base": {
+            "$ref": "#/components/schemas/TaxBase"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "bhm_count": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bhm Count"
+          },
+          "period": {
+            "$ref": "#/components/schemas/FixedPeriod"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "rate_pct",
+          "base",
+          "amount",
+          "bhm_count",
+          "period"
+        ],
+        "title": "TaxLineOut",
+        "description": "Soliq qatori (ADR-058): foizli (``rate_pct`` × ``base``) yoki qat'iy (``amount`` so'm yoki ``bhm_count`` × BHM,\n``period`` davriga)."
       },
       "TaxProfileIn": {
         "properties": {
@@ -15638,6 +15824,20 @@
             ],
             "title": "Profit Pct",
             "default": "0"
+          },
+          "lines": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TaxLineIn"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lines"
           }
         },
         "type": "object",
@@ -15676,6 +15876,13 @@
           "profit_pct": {
             "type": "string",
             "title": "Profit Pct"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/TaxLineOut"
+            },
+            "type": "array",
+            "title": "Lines"
           }
         },
         "type": "object",
@@ -15686,7 +15893,8 @@
           "rate_pct",
           "base",
           "vat_pct",
-          "profit_pct"
+          "profit_pct",
+          "lines"
         ],
         "title": "TaxProfileOut"
       },
@@ -15771,6 +15979,20 @@
               }
             ],
             "title": "Profit Pct"
+          },
+          "lines": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TaxLineIn"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lines"
           }
         },
         "type": "object",

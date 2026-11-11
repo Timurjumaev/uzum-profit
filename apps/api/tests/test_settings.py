@@ -381,3 +381,86 @@ def test_alerts_settings_and_dashboard_warning(world: World) -> None:
     assert body["alerts"] == {"cancel_share": None, "return_share": None}
     assert card("cancel_share")["warn"] is False
     assert "settings.alerts" in audited(w)
+
+
+def test_tax_profile_lines(world: World) -> None:
+    """ADR-058: profil soliq qatorlari — yaratish, almashtirish, tekshiruv, rejim almashsa qatorlar ketadi; BHM ma'lumotnomasi."""
+    w = world
+    w.a.sql(
+        "INSERT INTO ref_amounts (code, valid_from, amount, note) VALUES "
+        "('bhm', '2026-09-01', 440000, 'PF-115') ON CONFLICT DO NOTHING"
+    )
+    amounts = ok(send(w, "GET", "settings"))["tax_amounts"]
+    assert [(a["code"], D(a["amount"])) for a in amounts] == [("bhm", 440_000)]
+
+    yatt = [
+        {"name": "Aylanmadan soliq", "kind": "percent", "rate_pct": "1"},
+        {"name": "Ijtimoiy soliq", "kind": "fixed", "bhm_count": "1"},
+    ]
+    body = ok(
+        send(w, "POST", "tax-profiles", valid_from="2031-01-01", regime="turnover", lines=yatt), 201
+    )
+    [profile] = [p for p in body["tax_profiles"] if p["valid_from"] == "2031-01-01"]
+    assert [(x["name"], x["kind"]) for x in profile["lines"]] == [
+        ("Aylanmadan soliq", "percent"),
+        ("Ijtimoiy soliq", "fixed"),
+    ]  # tartib saqlanadi
+    assert D(profile["lines"][0]["rate_pct"]) == 1 and D(profile["lines"][1]["bhm_count"]) == 1
+    assert profile["lines"][1]["amount"] is None and profile["lines"][1]["period"] == "month"
+    assert D(profile["rate_pct"]) == 0  # qatorlar bor — eski stavka ustuni nol
+    pid = profile["id"]
+
+    # Qatorlarni to'liq almashtirish; qatorlar berilmasa — o'zgarmaydi.
+    fixed = [{"name": "Qat'iy", "kind": "fixed", "amount": "310000", "period": "quarter"}]
+    body = ok(send(w, "PATCH", f"tax-profiles/{pid}", lines=fixed))
+    [profile] = [p for p in body["tax_profiles"] if p["id"] == pid]
+    assert [(x["name"], x["period"], D(x["amount"])) for x in profile["lines"]] == [
+        ("Qat'iy", "quarter", 310_000)
+    ]
+    body = ok(send(w, "PATCH", f"tax-profiles/{pid}", valid_from="2031-02-01"))
+    [profile] = [p for p in body["tax_profiles"] if p["id"] == pid]
+    assert [x["name"] for x in profile["lines"]] == ["Qat'iy"]
+
+    # Tekshiruv: takror nom, noto'g'ri shakl, qatorlar faqat aylanma rejimida.
+    path = f"tax-profiles/{pid}"
+    bad = [
+        [
+            {"name": "x", "kind": "percent", "rate_pct": "1"},
+            {"name": "X", "kind": "percent", "rate_pct": "2"},
+        ],
+        [{"name": "x", "kind": "percent", "rate_pct": "0"}],
+        [{"name": "x", "kind": "fixed"}],
+        [{"name": "x", "kind": "fixed", "amount": "5", "bhm_count": "1"}],
+        [{"name": "x", "kind": "fixed", "amount": "0"}],
+        [{"name": "x", "kind": "percent", "rate_pct": "1", "amount": "5"}],
+        [{"name": " ", "kind": "percent", "rate_pct": "1"}],
+        [
+            {"name": f"n{i}", "kind": "percent", "rate_pct": "1"} for i in range(11)
+        ],  # juda ko'p qator
+    ]
+    for lines in bad:
+        r = send(w, "PATCH", path, lines=lines)
+        assert r.status_code == 422, (lines, r.text)
+    r = send(w, "POST", "tax-profiles", valid_from="2031-03-01", regime="agent", lines=yatt)
+    assert r.status_code == 422 and r.json()["code"] == "tax_lines_need_turnover"
+
+    # Bo'sh ro'yxat — qatorlar o'chadi; stavkasiz aylanma rejimi mumkin emas.
+    r = send(w, "PATCH", path, lines=[])
+    assert r.status_code == 422 and r.json()["code"] == "tax_rate_required"
+    body = ok(send(w, "PATCH", path, lines=[], rate_pct="2"))
+    [profile] = [p for p in body["tax_profiles"] if p["id"] == pid]
+    assert profile["lines"] == [] and D(profile["rate_pct"]) == 2
+
+    # Rejim almashsa qatorlar ketadi.
+    ok(send(w, "PATCH", path, lines=yatt))
+    body = ok(send(w, "PATCH", path, regime="none"))
+    [profile] = [p for p in body["tax_profiles"] if p["id"] == pid]
+    assert profile["lines"] == []
+    assert w.a.sql("SELECT count(*) FROM tax_lines WHERE org_id = %s", [w.org_id])[0][0] == 0
+
+    # Profil o'chsa — qatorlari ham (cascade); ruxsat va audit.
+    ok(send(w, "PATCH", path, regime="turnover", lines=yatt))
+    assert send(w, "PATCH", path, role="accountant", lines=yatt).status_code == 403
+    ok(send(w, "DELETE", path))
+    assert w.a.sql("SELECT count(*) FROM tax_lines WHERE org_id = %s", [w.org_id])[0][0] == 0
+    assert {"tax_profile.create", "tax_profile.update", "tax_profile.delete"} <= audited(w)

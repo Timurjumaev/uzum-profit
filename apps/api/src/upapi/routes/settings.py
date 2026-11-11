@@ -23,7 +23,7 @@ from sqlalchemy import delete, func, insert, select, update
 from upcore.cash import SEED_SCHEDULES, ScheduleKind
 from upcore.inventory import DEFAULT, AbcClass
 from upcore.pnl import TaxBase
-from upcore.tax import TaxRegime
+from upcore.tax import FixedPeriod, LineKind, TaxLine, TaxProfile, TaxRegime
 
 from upapi import calc, orgsettings
 from upapi.auth.deps import OrgContext, require
@@ -39,14 +39,50 @@ Manager = Annotated[OrgContext, Depends(require(Permission.MANAGE_SETTINGS))]
 Pct = Annotated[Decimal, Field(ge=0, le=100, max_digits=7, decimal_places=3)]
 
 
+MAX_TAX_LINES = 10
+
+
+class TaxLineOut(BaseModel):
+    """Soliq qatori (ADR-058): foizli (``rate_pct`` × ``base``) yoki qat'iy (``amount`` so'm yoki ``bhm_count`` × BHM,
+    ``period`` davriga)."""
+
+    id: UUID
+    name: str
+    kind: LineKind
+    rate_pct: Decimal
+    base: TaxBase
+    amount: Decimal | None
+    bhm_count: Decimal | None
+    period: FixedPeriod
+
+
+class TaxLineIn(BaseModel):
+    name: Annotated[str, Field(min_length=1, max_length=60)]
+    kind: LineKind
+    rate_pct: Annotated[Decimal, Field(ge=0, le=100, max_digits=7, decimal_places=4)] = Decimal(0)
+    base: TaxBase = TaxBase.REVENUE
+    amount: Annotated[Decimal, Field(max_digits=18, decimal_places=2)] | None = None
+    bhm_count: Annotated[Decimal, Field(max_digits=8, decimal_places=2)] | None = None
+    period: FixedPeriod = FixedPeriod.MONTH
+
+
 class TaxProfileOut(BaseModel):
     id: UUID
     valid_from: date
     regime: TaxRegime
-    rate_pct: Decimal
+    rate_pct: Decimal  # eski ustun: qatorlari bo'lmagan aylanma profili
     base: TaxBase
     vat_pct: Decimal
     profit_pct: Decimal
+    lines: list[TaxLineOut]  # ADR-058; bo'sh — eski ustunlardan (``upcore.tax.profile_lines``)
+
+
+class TaxAmountOut(BaseModel):
+    """Ma'lumotnoma (``ref_amounts``): so'mdagi joriy qiymat (BHM) — qat'iy soliqni ko'rsatishda."""
+
+    code: str
+    amount: Decimal
+    note: str | None
 
 
 class TaxRateOut(BaseModel):
@@ -88,6 +124,7 @@ class SettingsOut(BaseModel):
     cost_method: Literal["fifo", "average"]
     tax_profiles: list[TaxProfileOut]
     tax_rates: list[TaxRateOut]
+    tax_amounts: list[TaxAmountOut]
     payout_schedules: list[PayoutScheduleOut]
     payout_terms: list[PayoutTermsOut]
     inventory: InventorySettingsOut
@@ -105,6 +142,9 @@ class TaxProfileIn(BaseModel):
     base: TaxBase = TaxBase.REVENUE  # (a)
     vat_pct: Pct = Decimal(0)  # (c)
     profit_pct: Pct = Decimal(0)  # (c)
+    lines: list[TaxLineIn] | None = (
+        None  # ADR-058: faqat aylanma rejimida; berilsa eski stavka ustuni nolga tushadi
+    )
 
 
 class TaxProfilePatch(BaseModel):
@@ -114,6 +154,9 @@ class TaxProfilePatch(BaseModel):
     base: TaxBase | None = None
     vat_pct: Pct | None = None
     profit_pct: Pct | None = None
+    lines: list[TaxLineIn] | None = (
+        None  # berilsa — qatorlar to'liq almashadi (``[]`` — o'chadi); berilmasa — o'zgarmaydi
+    )
 
 
 class PayoutScheduleIn(BaseModel):
@@ -147,16 +190,46 @@ def _plain(values: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _normalized(values: dict[str, Any]) -> dict[str, Any]:
-    """Rejimga tegishli bo'lmagan maydonlar nolga qaytadi (eski qiymat jim qolib ketmasin)."""
+def _normalized(values: dict[str, Any], has_lines: bool = False) -> dict[str, Any]:
+    """Rejimga tegishli bo'lmagan maydonlar nolga qaytadi (eski qiymat jim qolib ketmasin). Qatorlari bor aylanma
+    profilida eski stavka ustuni ham nol (qatorlar ustun)."""
     regime = TaxRegime(values["regime"])
-    if regime is not TaxRegime.TURNOVER:
+    if regime is not TaxRegime.TURNOVER or has_lines:
         values["rate_pct"], values["base"] = Decimal(0), TaxBase.REVENUE
     if regime is not TaxRegime.VAT_PROFIT:
         values["vat_pct"] = values["profit_pct"] = Decimal(0)
-    if regime is TaxRegime.TURNOVER and values["rate_pct"] <= 0:
+    if regime is TaxRegime.TURNOVER and not has_lines and values["rate_pct"] <= 0:
         raise AppError("tax_rate_required", 422, detail="aylanma solig'i stavkasi 0 dan katta")
     return values
+
+
+def _checked_lines(lines: list[TaxLineIn]) -> list[TaxLineIn]:
+    """Qatorlar yaroqliligi core bilan bir xil (``TaxLine`` / ``TaxProfile``): shakl, takror nom, soni."""
+    if len(lines) > MAX_TAX_LINES:
+        raise AppError(
+            "tax_lines_too_many", 422, detail=f"soliq qatori {MAX_TAX_LINES} tadan ko'p emas"
+        )
+    try:
+        TaxProfile(
+            date(2000, 1, 1),
+            TaxRegime.TURNOVER,
+            lines=tuple(TaxLine(**line.model_dump()) for line in lines),
+        )
+    except ValueError as exc:
+        raise AppError("tax_line_invalid", 422, detail=str(exc)) from exc
+    return lines
+
+
+async def _write_lines(ctx: OrgContext, profile_id: UUID, lines: list[TaxLineIn]) -> None:
+    """Profil qatorlarini to'liq almashtiradi (tartib saqlanadi)."""
+    tl = m.tax_lines
+    await ctx.conn.execute(delete(tl).where(tl.c.profile_id == profile_id))
+    for position, line in enumerate(lines):
+        await ctx.conn.execute(
+            insert(tl).values(
+                org_id=ctx.org_id, profile_id=profile_id, position=position, **line.model_dump()
+            )
+        )
 
 
 async def _read(ctx: OrgContext) -> SettingsOut:
@@ -165,6 +238,22 @@ async def _read(ctx: OrgContext) -> SettingsOut:
     cfg = orgsettings.parse(org.settings)
     t, ps, rr = m.tax_profiles, m.payout_schedules, m.ref_tax_rates
     taxes = await conn.execute(select(t).order_by(t.c.valid_from.desc()))
+    tl = m.tax_lines
+    lines: dict[UUID, list[TaxLineOut]] = {}
+    for r in await conn.execute(select(tl).order_by(tl.c.position, tl.c.name)):
+        lines.setdefault(r.profile_id, []).append(TaxLineOut.model_validate(r._asdict()))
+    ra = m.ref_amounts
+    newest = (
+        select(ra.c.code, func.max(ra.c.valid_from).label("d"))
+        .where(ra.c.valid_from <= today())
+        .group_by(ra.c.code)
+        .subquery()
+    )
+    amounts = await conn.execute(
+        select(ra.c.code, ra.c.amount, ra.c.note)
+        .join(newest, (newest.c.code == ra.c.code) & (newest.c.d == ra.c.valid_from))
+        .order_by(ra.c.code)
+    )
     pays = await conn.execute(select(ps).order_by(ps.c.valid_from.desc(), ps.c.created_at))
     latest = (
         select(rr.c.code, func.max(rr.c.valid_from).label("d"))
@@ -180,8 +269,12 @@ async def _read(ctx: OrgContext) -> SettingsOut:
     effective = {**DEFAULT.cover_days, **cfg.cover_days}
     return SettingsOut(
         cost_method=org.cost_method,
-        tax_profiles=[TaxProfileOut.model_validate(r._asdict()) for r in taxes],
+        tax_profiles=[
+            TaxProfileOut.model_validate({**r._asdict(), "lines": lines.get(r.id, [])})
+            for r in taxes
+        ],
         tax_rates=[TaxRateOut.model_validate(r._asdict()) for r in rates],
+        tax_amounts=[TaxAmountOut.model_validate(r._asdict()) for r in amounts],
         payout_schedules=[PayoutScheduleOut.model_validate(r._asdict()) for r in pays],
         payout_terms=[
             PayoutTermsOut(
@@ -257,12 +350,20 @@ async def _tax_free(ctx: OrgContext, valid_from: date, exclude: UUID | None = No
 
 @router.post("/orgs/{org_id}/tax-profiles", response_model=SettingsOut, status_code=201)
 async def create_tax_profile(body: TaxProfileIn, ctx: Manager) -> SettingsOut:
-    values = _normalized(body.model_dump())
+    lines = _checked_lines(body.lines) if body.lines else []
+    if lines and body.regime is not TaxRegime.TURNOVER:
+        raise AppError(
+            "tax_lines_need_turnover", 422, detail="soliq qatorlari faqat aylanma rejimida"
+        )
+    values = _normalized(body.model_dump(exclude={"lines"}), bool(lines))
     await _tax_free(ctx, body.valid_from)
     row_id = await ctx.conn.scalar(
         insert(m.tax_profiles).values(org_id=ctx.org_id, **values).returning(m.tax_profiles.c.id)
     )
-    await ctx.audit("tax_profile.create", "tax_profile", row_id, after=_plain(values))
+    if lines:
+        await _write_lines(ctx, row_id, lines)
+    after = {**_plain(values), "lines": [line.model_dump(mode="json") for line in lines]}
+    await ctx.audit("tax_profile.create", "tax_profile", row_id, after=after)
     return await _read(ctx)
 
 
@@ -271,19 +372,39 @@ async def update_tax_profile(profile_id: UUID, body: TaxProfilePatch, ctx: Manag
     row = await _tax_row(ctx, profile_id)
     keys = ("valid_from", "regime", "rate_pct", "base", "vat_pct", "profit_pct")
     current = {k: getattr(row, k) for k in keys}
-    merged = _normalized({**current, **body.model_dump(exclude_unset=True, exclude_none=True)})
+    tl = m.tax_lines
+    # Qatorlar: berilsa — almashadi; berilmasa — mavjudlari qoladi (rejim aylanma bo'lmasa — ketadi).
+    new_lines = _checked_lines(body.lines) if body.lines else [] if body.lines is not None else None
+    have = await ctx.conn.scalar(
+        select(func.count()).select_from(tl).where(tl.c.profile_id == profile_id)
+    )
+    fields = body.model_dump(exclude_unset=True, exclude_none=True, exclude={"lines"})
+    regime = TaxRegime(fields.get("regime", row.regime))
+    effective = len(new_lines) if new_lines is not None else int(have or 0)
+    if regime is not TaxRegime.TURNOVER:
+        if new_lines:
+            raise AppError(
+                "tax_lines_need_turnover", 422, detail="soliq qatorlari faqat aylanma rejimida"
+            )
+        new_lines, effective = [], 0  # rejim almashdi — qatorlar ketadi
+    merged = _normalized({**current, **fields}, effective > 0)
     if merged["valid_from"] != row.valid_from:
         await _tax_free(ctx, merged["valid_from"], exclude=profile_id)
     t = m.tax_profiles
     await ctx.conn.execute(
         update(t).where(t.c.id == profile_id).values(**merged, updated_at=func.now())
     )
+    if new_lines is not None and (new_lines or have):
+        await _write_lines(ctx, profile_id, new_lines)
+    after = _plain(merged)
+    if new_lines is not None:
+        after["lines"] = [line.model_dump(mode="json") for line in new_lines]
     await ctx.audit(
         "tax_profile.update",
         "tax_profile",
         profile_id,
         before=_plain(current),
-        after=_plain(merged),
+        after=after,
     )
     return await _read(ctx)
 

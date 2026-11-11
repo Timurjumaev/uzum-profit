@@ -160,6 +160,43 @@ def test_tax_lines_shape_check(fresh: dict[str, str]) -> None:
         conn.commit()
 
 
+def test_tax_lines_backfill_from_legacy_profiles() -> None:
+    """0019: aylanmadan foiz profillari (stavka > 0) bitta foizli qatorga ko'chadi; boshqa rejimlar o'zgarmaydi (ADR-058)."""
+    dbtools.require_admin()
+    name = f"up_test_{uuid.uuid4().hex[:10]}"
+    urls = dbtools.create_database(name)
+    try:
+        dbtools.alembic(urls["owner"], "upgrade", "0018")
+        org = uuid.uuid4()
+        with psycopg.connect(urls["admin"]) as conn:
+            conn.execute("INSERT INTO orgs (id, name) VALUES (%s, 'backfill')", [org])
+            rows = [
+                ("2026-01-01", "turnover", 4, "payout"),
+                ("2026-06-01", "turnover", 0, "revenue"),  # stavkasiz — ko'chmaydi
+                ("2026-07-01", "agent", 0, "revenue"),
+                ("2026-08-01", "none", 0, "revenue"),
+            ]
+            for valid_from, regime, rate, base in rows:
+                conn.execute(
+                    "INSERT INTO tax_profiles (org_id, valid_from, regime, rate_pct, base) VALUES (%s, %s, %s, %s, %s)",
+                    [org, valid_from, regime, rate, base],
+                )
+            conn.commit()
+        dbtools.alembic(urls["owner"], "upgrade", "head")
+        with psycopg.connect(urls["admin"]) as conn:
+            lines = conn.execute(
+                "SELECT p.valid_from::text, l.name, l.kind, l.rate_pct, l.base FROM tax_lines l "
+                "JOIN tax_profiles p ON p.id = l.profile_id AND p.org_id = l.org_id ORDER BY 1"
+            ).fetchall()
+        assert [(d, n, k, int(r), b) for d, n, k, r, b in lines] == [
+            ("2026-01-01", "Aylanmadan soliq", "percent", 4, "payout")
+        ]
+        dbtools.alembic(urls["owner"], "downgrade", "0018")  # ma'lumot-migratsiya orqaga qaytadi
+        dbtools.alembic(urls["owner"], "upgrade", "head")
+    finally:
+        dbtools.drop_database(name)
+
+
 def test_seed_cli_needs_url(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

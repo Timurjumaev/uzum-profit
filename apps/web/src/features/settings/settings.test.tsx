@@ -113,7 +113,7 @@ describe("tannarx usuli", () => {
 describe("soliq profili", () => {
   it("qo'shish: aylanma — stavka kiritilmaguncha saqlab bo'lmaydi; tana to'g'ri; ro'yxat javobdan yangilanadi", async () => {
     const created = settingsData();
-    created.tax_profiles = [{ id: "73333333-3333-4333-8333-333333333333", valid_from: "2026-10-31", regime: "turnover", rate_pct: "1.000", base: "revenue", vat_pct: "0.000", profit_pct: "0.000" }, ...created.tax_profiles];
+    created.tax_profiles = [{ id: "73333333-3333-4333-8333-333333333333", valid_from: "2026-10-31", regime: "turnover", rate_pct: "1.000", base: "revenue", vat_pct: "0.000", profit_pct: "0.000", lines: [] }, ...created.tax_profiles];
     const { api } = await renderSettings({ [TAX_CREATE_ROUTE]: () => json(201, created) });
     await ready();
     fireEvent.click(within(section("Soliq profili")).getByRole("button", { name: "Profil qoʻshish" }));
