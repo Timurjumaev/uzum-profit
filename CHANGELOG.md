@@ -615,6 +615,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   jadvallar endi o'z ichida skroll qiladi; `e2e/orders.spec.ts`.
 - B4.63 Dona grafiklarida o'q qadami butun son (kichik sonlarda yorliqlar "1, 1, 1, 0, 0, 0" bo'lib takrorlanardi).
 - B4.63 KPI kartasida pul birligi so'z o'rtasidan bo'linmaydi ("1 200 000 soʻ" / "m" o'rniga butun "soʻm" keyingi qatorga).
+- B4.79 Dinamik soliq profili — API: Sozlamalar javobida profil qatorlari (`lines`) va joriy BHM (`tax_amounts`); `POST/PATCH
+  /tax-profiles` da qatorlarni berish/almashtirish (tekshiruv: shakl, takror nom, ko'pi bilan 10 ta; faqat aylanma rejimi).
+  Migratsiya 0019: mavjud aylanmadan foiz profillari bitta foizli qatorga ko'chadi (hisob natijasi o'zgarmaydi).
 - B4.78 Dinamik soliq profili — hisob varag'i: bir necha foizli qator va qat'iy qator (n × BHM yoki summa; kunlarga teng, o'z xarajati
   mexanizmi bilan taqsimlanadi) "Soliq" ostida alohida qatorlar bo'lib ko'rinadi; BHM ma'lumotnomada yo'q kunlar uchun ogohlantirish
   (`tax_missing_bhm`); sof foyda formulasi o'zgarmadi. Qatorsiz profillar avvalgidek ishlaydi. `upcore.tax.daily_rule` →

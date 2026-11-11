@@ -1800,6 +1800,11 @@ export interface components {
             pages: number;
         };
         /**
+         * FixedPeriod
+         * @enum {string}
+         */
+        FixedPeriod: "month" | "quarter" | "year";
+        /**
          * FlowStepOut
          * @description F49 "Buyurtmadan sof foydagacha" qatori (ADR-053): summa va yalpi buyurtmalar summasidagi ulushi.
          */
@@ -2112,6 +2117,11 @@ export interface components {
             /** Unit Volume */
             unit_volume?: number | string | null;
         };
+        /**
+         * LineKind
+         * @enum {string}
+         */
+        LineKind: "percent" | "fixed";
         /** LineOut */
         LineOut: {
             /**
@@ -3188,6 +3198,8 @@ export interface components {
             tax_profiles: components["schemas"]["TaxProfileOut"][];
             /** Tax Rates */
             tax_rates: components["schemas"]["TaxRateOut"][];
+            /** Tax Amounts */
+            tax_amounts: components["schemas"]["TaxAmountOut"][];
             /** Payout Schedules */
             payout_schedules: components["schemas"]["PayoutScheduleOut"][];
             /** Payout Terms */
@@ -3905,10 +3917,64 @@ export interface components {
             };
         };
         /**
+         * TaxAmountOut
+         * @description Ma'lumotnoma (``ref_amounts``): so'mdagi joriy qiymat (BHM) — qat'iy soliqni ko'rsatishda.
+         */
+        TaxAmountOut: {
+            /** Code */
+            code: string;
+            /** Amount */
+            amount: string;
+            /** Note */
+            note: string | null;
+        };
+        /**
          * TaxBase
          * @enum {string}
          */
         TaxBase: "revenue" | "payout";
+        /** TaxLineIn */
+        TaxLineIn: {
+            /** Name */
+            name: string;
+            kind: components["schemas"]["LineKind"];
+            /**
+             * Rate Pct
+             * @default 0
+             */
+            rate_pct: number | string;
+            /** @default revenue */
+            base: components["schemas"]["TaxBase"];
+            /** Amount */
+            amount?: number | string | null;
+            /** Bhm Count */
+            bhm_count?: number | string | null;
+            /** @default month */
+            period: components["schemas"]["FixedPeriod"];
+        };
+        /**
+         * TaxLineOut
+         * @description Soliq qatori (ADR-058): foizli (``rate_pct`` × ``base``) yoki qat'iy (``amount`` so'm yoki ``bhm_count`` × BHM,
+         *     ``period`` davriga).
+         */
+        TaxLineOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            kind: components["schemas"]["LineKind"];
+            /** Rate Pct */
+            rate_pct: string;
+            base: components["schemas"]["TaxBase"];
+            /** Amount */
+            amount: string | null;
+            /** Bhm Count */
+            bhm_count: string | null;
+            period: components["schemas"]["FixedPeriod"];
+        };
         /** TaxProfileIn */
         TaxProfileIn: {
             /**
@@ -3934,6 +4000,8 @@ export interface components {
              * @default 0
              */
             profit_pct: number | string;
+            /** Lines */
+            lines?: components["schemas"]["TaxLineIn"][] | null;
         };
         /** TaxProfileOut */
         TaxProfileOut: {
@@ -3955,6 +4023,8 @@ export interface components {
             vat_pct: string;
             /** Profit Pct */
             profit_pct: string;
+            /** Lines */
+            lines: components["schemas"]["TaxLineOut"][];
         };
         /** TaxProfilePatch */
         TaxProfilePatch: {
@@ -3968,6 +4038,8 @@ export interface components {
             vat_pct?: number | string | null;
             /** Profit Pct */
             profit_pct?: number | string | null;
+            /** Lines */
+            lines?: components["schemas"]["TaxLineIn"][] | null;
         };
         /**
          * TaxRateOut
