@@ -114,6 +114,22 @@ describe("ombor jadvali", () => {
     expect(queryOf(api).get("status")).toBe("critical");
   });
 
+  it("\"Uzumga yuborish\" (ADR-057 Q2): tab soni, belgi qatorda, URL va API'ga `ship`", async () => {
+    const ship = { cover_days: "4.0", handover_days: "7", own: 15 };
+    const data = inventoryData({ items: [stockRow({ ship }), deadRow()], totals: { ...inventoryData().totals, ship: 1 } });
+    const { api, history } = await renderAt("/inventory", { [INVENTORY_ROUTE]: () => json(200, data) });
+    const table = await screen.findByRole("table", { name: "Qoldiq jadvali" });
+    const [crit] = within(table).getAllByRole("row").slice(1);
+    expect(norm(crit!.textContent!)).toContain("Uzumga yuborish · omborimda 15");
+    const tab = screen.getByRole("tab", { name: /Uzumga yuborish/ });
+    expect(norm(tab.textContent!)).toContain("1");
+    fireEvent.click(tab);
+    await waitFor(() => expect(history.location.search).toContain("ship=true"));
+    await waitFor(() => expect(queryOf(api).get("ship")).toBe("true"));
+    expect(queryOf(api).get("status")).toBeNull();
+    expect(tab.getAttribute("aria-selected")).toBe("true");
+  });
+
   it("bo'sh holat: filtr bilan — tozalash taklifi; filtrsiz — sinxron haqida", async () => {
     const empty = { [INVENTORY_ROUTE]: () => json(200, inventoryData({ items: [], total: 0, totals: { ...inventoryData().totals, statuses: {} } })) };
     await renderAt("/inventory?status=good", empty);

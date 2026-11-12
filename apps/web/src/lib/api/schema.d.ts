@@ -1381,6 +1381,8 @@ export interface components {
             stock_critical: number;
             /** Stock High */
             stock_high: number;
+            /** Stock Ship */
+            stock_ship: number;
             /** Recalculated */
             recalculated: number;
         };
@@ -3207,6 +3209,18 @@ export interface components {
             inventory: components["schemas"]["InventorySettingsOut"];
             alerts: components["schemas"]["AlertsOut"];
         };
+        /**
+         * ShipOut
+         * @description F26 "Uzumga yuborish" (ADR-057 Q2): Uzumdagi + postavkadagi zaxira topshirish muddatiga yetmaydi, omborimda bor.
+         */
+        ShipOut: {
+            /** Cover Days */
+            cover_days: string;
+            /** Handover Days */
+            handover_days: string;
+            /** Own */
+            own: number;
+        };
         /** ShipmentDetailOut */
         ShipmentDetailOut: {
             shipment: components["schemas"]["ShipmentOut"];
@@ -3817,8 +3831,11 @@ export interface components {
             velocity: components["schemas"]["VelocityOut"];
             /** Days Of Stock */
             days_of_stock: string | null;
+            /** Days Of Stock All */
+            days_of_stock_all: string | null;
             lead_time: components["schemas"]["LeadOut"] | null;
             status: components["schemas"]["StockStatus"] | null;
+            ship: components["schemas"]["ShipOut"] | null;
             product_status: components["schemas"]["StockStatus"] | null;
             /** Abc */
             abc: string;
@@ -3861,6 +3878,8 @@ export interface components {
             statuses: {
                 [key: string]: number;
             };
+            /** Ship */
+            ship: number;
         };
         /** SupplierIn */
         SupplierIn: {
@@ -6146,6 +6165,8 @@ export interface operations {
                 as_of?: string | null;
                 status?: components["schemas"]["StockStatus"] | null;
                 q?: string | null;
+                /** @description Faqat "Uzumga yuborish" signali borlar */
+                ship?: boolean;
                 limit?: number;
                 page?: number;
             };
@@ -6390,6 +6411,7 @@ export interface operations {
                 as_of?: string | null;
                 status?: components["schemas"]["StockStatus"] | null;
                 q?: string | null;
+                ship?: boolean;
             };
             header?: never;
             path: {

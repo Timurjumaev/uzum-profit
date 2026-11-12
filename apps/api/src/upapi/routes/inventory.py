@@ -86,6 +86,14 @@ class LocationsOut(BaseModel):
     inbound: int  # postavkada — qabul qilinmagan (ADR-034)
 
 
+class ShipOut(BaseModel):
+    """F26 "Uzumga yuborish" (ADR-057 Q2): Uzumdagi + postavkadagi zaxira topshirish muddatiga yetmaydi, omborimda bor."""
+
+    cover_days: Decimal  # Uzum + postavka zaxirasi necha kunga yetadi
+    handover_days: Decimal  # F25 "Uzumga topshirish" bosqichi
+    own: int  # o'z omborimdagi dona
+
+
 class OrderByOut(BaseModel):
     day: date  # F27: shu kungacha buyurtma berilsa tovar tugamasdan keladi
     overdue: bool  # kechikkan — sana bugun
@@ -106,9 +114,15 @@ class StockRowOut(BaseModel):
     in_transit: int  # Xitoyda + yo'lda
     locations: LocationsOut
     velocity: VelocityOut
-    days_of_stock: Decimal | None  # F24
+    days_of_stock: Decimal | None  # F24 (Uzum qoldig'i)
+    days_of_stock_all: (
+        Decimal | None
+    )  # hamma joydagi tovar necha kunga yetadi (F26 "Buyurtma berish" asosi)
     lead_time: LeadOut | None  # F25 (tarix yo'q — null)
-    status: StockStatus | None  # F26
+    status: (
+        StockStatus | None
+    )  # F26 "Buyurtma berish" — hamma joydagi tovar to'liq muddatga nisbatan (ADR-057 Q2)
+    ship: ShipOut | None  # F26 "Uzumga yuborish" (signal yo'q — null)
     product_status: StockStatus | None
     abc: str  # F28
     xyz: str | None
@@ -129,6 +143,7 @@ class StockTotalsOut(BaseModel):
     uncosted: int  # qoldig'i bor, lot narxi yo'q SKU'lar
     units: dict[str, int]  # joylar bo'yicha dona (summasiz rolda ham)
     statuses: dict[str, int]
+    ship: int  # "Uzumga yuborish" signali bor SKU'lar
 
 
 class InventoryOut(BaseModel):
@@ -142,9 +157,9 @@ class InventoryOut(BaseModel):
 
 
 def _order(s: SkuStock) -> tuple[int, Decimal, str]:
-    """Eng og'ir holat birinchi, keyin zaxira kunlari eng kami birinchi."""
+    """Eng og'ir holat birinchi, keyin (hamma joydagi) zaxira kunlari eng kami birinchi."""
     rank = SEVERITY[s.status] if s.status is not None else len(SEVERITY)
-    days = s.days_of_stock if s.days_of_stock is not None else Decimal("Infinity")
+    days = s.days_of_stock_all if s.days_of_stock_all is not None else Decimal("Infinity")
     return (rank, days, str(s.sku_id))
 
 
@@ -200,12 +215,18 @@ def rows_for(
                     new_item=s.velocity.new_item,
                 ),
                 days_of_stock=s.days_of_stock,
+                days_of_stock_all=s.days_of_stock_all,
                 lead_time=LeadOut(
                     total=s.lead.total, stages=dict(s.lead.stages), learned=sorted(s.lead.learned)
                 )
                 if s.lead
                 else None,
                 status=s.status,
+                ship=ShipOut(
+                    cover_days=s.ship.cover_days, handover_days=s.ship.handover_days, own=s.ship.own
+                )
+                if s.ship
+                else None,
                 product_status=book.products.get(s.product_id) if s.product_id else None,
                 abc=s.abc.value,
                 xyz=s.xyz.value if s.xyz else None,
@@ -228,6 +249,7 @@ async def selection(
     as_of: date | None,
     status: StockStatus | None,
     q: str | None,
+    ship: bool = False,
 ) -> tuple[date, Filters, Any, dict[UUID, Any], list[SkuStock], bool]:
     """Filtrlangan va tartiblangan hamma SKU (sahifalashsiz): kun, filtr, kitob, katalog, tanlov, summa ruxsati."""
     day = as_of or today()
@@ -240,6 +262,7 @@ async def selection(
         s
         for s in book.skus.values()
         if (status is None or s.status is status)
+        and (not ship or s.ship is not None)
         and (not needle or needle in catalog[s.sku_id].haystack())
     ]
     chosen.sort(key=_order)
@@ -254,10 +277,11 @@ async def inventory(
     as_of: Annotated[date | None, Query(description="Qaysi kun holatiga; standart — bugun")] = None,
     status: StockStatus | None = None,
     q: Annotated[str | None, Query(max_length=100)] = None,
+    ship: Annotated[bool, Query(description='Faqat "Uzumga yuborish" signali borlar')] = False,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
     page: Annotated[int, Query(ge=1, le=100_000)] = 1,
 ) -> InventoryOut:
-    day, f, book, catalog, chosen, amounts = await selection(ctx, shop, as_of, status, q)
+    day, f, book, catalog, chosen, amounts = await selection(ctx, shop, as_of, status, q, ship)
     pages = max(1, -(-len(chosen) // limit))
     page = min(page, pages)  # filtr o'zgargach sahifa oxirgidan oshib ketsa — oxirgisi
     rows = rows_for(book, catalog, chosen[(page - 1) * limit : page * limit], amounts)
@@ -280,5 +304,6 @@ async def inventory(
             uncosted=book.uncosted,
             units=book.units,
             statuses=dict(sorted(counts.items())),
+            ship=sum(1 for s in book.skus.values() if s.ship is not None),
         ),
     )

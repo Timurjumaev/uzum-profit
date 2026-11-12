@@ -231,9 +231,9 @@ class StockStatus(StrEnum):
 def stock_status(
     stock: int, speed: DecimalLike, lead: DecimalLike, s: InventorySettings = DEFAULT
 ) -> StockStatus | None:
-    """F26. Kritik (zaxira ≤ muddat) · Yuqori (≤ +7) · O'rta (≤ +21) · Yaxshi · Harakatsiz.
-
-    Tezlik 0 va qoldiq 0 — ``None`` (sotuv ham, tovar ham yo'q)."""
+    """F26 "Buyurtma berish" (ADR-057 Q2). Kritik (zaxira ≤ muddat) · Yuqori (≤ +7) · O'rta (≤ +21) · Yaxshi ·
+    Harakatsiz. ``stock`` — **hamma joydagi** tovar (Uzum + postavka + o'z omborim + yo'lda + Xitoyda), ``lead`` —
+    to'liq muddat (F25). Tezlik 0 va qoldiq 0 — ``None`` (sotuv ham, tovar ham yo'q)."""
     v, lt = to_decimal(speed), to_decimal(lead)
     if v <= 0:
         return StockStatus.DEAD if stock > 0 else None
@@ -324,6 +324,32 @@ def order_by(
     if slack <= 0:
         return OrderBy(as_of, True)
     return OrderBy(as_of + timedelta(days=int(slack)), False)
+
+
+@dataclass(frozen=True, slots=True)
+class ShipSignal:
+    """F26 "Uzumga yuborish" signali (ADR-057 Q2): Uzumdagi (va postavkadagi) zaxira Uzumga topshirish muddatiga
+    yetmaydi, o'z omborimda esa tovar bor."""
+
+    cover_days: Decimal  # Uzum + postavka zaxirasi necha kunga yetadi
+    handover_days: Decimal  # F25 "Uzumga topshirish" bosqichi
+    own: int  # o'z omborimdagi dona (yuborish mumkin)
+
+
+def ship_signal(
+    uzum: int, own: int, speed: DecimalLike, handover_days: DecimalLike | None
+) -> ShipSignal | None:
+    """F26 "Uzumga yuborish" (ADR-057 Q2): ``uzum`` — Uzum qoldig'i + postavkadagi (yo'lda Uzumga) dona; signal —
+    o'z omborimda tovar bor va ``uzum / tezlik`` ≤ topshirish muddati. Tezlik 0, muddat noma'lum yoki omborim bo'sh
+    bo'lsa — ``None`` (yuborishga sabab yo'q yoki raqam o'ylab topilmaydi)."""
+    v = to_decimal(speed)
+    if own <= 0 or v <= 0 or handover_days is None:
+        return None
+    cover = Decimal(uzum) / v
+    lt = to_decimal(handover_days)
+    if cover > lt:
+        return None
+    return ShipSignal(quantize(cover, 1), lt, own)
 
 
 # --- M10 joylar: yo'ldagi, buyurtma qilingan va o'z omboridagi tovar -------------------------

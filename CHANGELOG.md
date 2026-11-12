@@ -440,6 +440,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.67 (ADR-057 Q2, audit K3) Ombor: ikki signal — "Buyurtma berish" (F26 holati va F27 sanasi hamma joydagi tovardan:
+  Uzum, postavka, o'z omborim, yo'lda, Xitoyda) va "Uzumga yuborish" (Uzumdagi zaxira topshirish muddatiga yetmaydi, omborimda
+  bor). `/inventory` → `ship`, `days_of_stock_all`, `?ship=true`; `/dashboard` → `attention.stock_ship`; Ombor tabi va belgi.
 - B4.66 (ADR-057 Q1, audit K1, K2) F23 sotuv tezligi: oyna — oxirgi 14 ta savdoda bo'lgan kun (60 kungacha orqaga);
   Jarayondagi dona × yakunlanish ulushi (F16 R, 90 kun); "7 kunga bo'lish" faqat 7 kundan yosh tovarda; qaytish darajasi
   ko'paytiruvchisi olib tashlandi. `/inventory` → `velocity.completion`, `new_item` (`return_rate` o'rniga).

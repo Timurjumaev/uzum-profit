@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import urllib.parse
 from pathlib import Path
 from types import ModuleType
@@ -146,8 +147,10 @@ def test_no_key_no_names_no_ids(recorded: tuple[str, list[tuple[str, str]]]) -> 
     assert KEY not in text and KEY[:12] not in text
     for secret in (SHOP_NAME, "EL-ONE do'koni", TITLE, "Saqlash xizmati", "images.uzum.uz", "Faol"):
         assert secret not in text, secret
+    # Id butun son sifatida qidiriladi: vaqt belgisi (``dateFrom`` — bugungi kundan, ms) tasodifan shu raqamlarni o'z
+    # ichiga olishi mumkin (2026-11-12: ``1786700092373`` ichida "7000") — bu id sizishi emas.
     for ident in ("106121", "135204", "4780000000001", "7000"):
-        assert ident not in text, ident
+        assert not re.search(rf"(?<!\d){ident}(?!\d)", text), ident
     assert "set-cookie" not in text
     # Faqat GET yo'llari; noto'g'ri kalit faqat 401 shakli uchun.
     assert {k for _, k in calls} == {KEY, rec.INVALID_KEY}

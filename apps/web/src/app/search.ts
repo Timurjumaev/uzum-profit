@@ -132,12 +132,13 @@ export function purchasesSearch(search: Record<string, unknown>): PurchasesSearc
 
 export const STOCK_STATUSES = ["critical", "high", "medium", "good", "dead"] as const;
 export type StockStatusId = (typeof STOCK_STATUSES)[number];
-export type InventorySearch = { status?: StockStatusId; q?: string; page?: number };
+export type InventorySearch = { status?: StockStatusId; ship?: true; q?: string; page?: number };
 
 /** Ombor (M10): holat guruhi (`status`, standart "hammasi") va qidiruv (`q`) — havola bilan ulashiladi. */
 export function inventorySearch(search: Record<string, unknown>): InventorySearch {
   const out: InventorySearch = {};
   if ((STOCK_STATUSES as readonly unknown[]).includes(search.status)) out.status = search.status as StockStatusId;
+  else if (search.ship === true || search.ship === "1" || search.ship === 1) out.ship = true; // "Uzumga yuborish" (ADR-057 Q2)
   if (typeof search.q === "string" && search.q.trim() !== "") out.q = search.q.slice(0, 100);
   const page = pageParam(search.page);
   if (page !== undefined) out.page = page;
