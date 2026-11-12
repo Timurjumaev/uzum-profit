@@ -440,6 +440,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.75 PR-5 (audit X1, X3, T4): `open_org` a'zolik so'rovi tashkilot bo'yicha ham (RLS'dan tashqari ikkinchi qavat); CI'da
+  `pip-audit` va `pnpm audit`; CI har PR'da bir marta (branch push'da emas).
 - B4.75 PR-4 (audit D4, D10, D13): telefonda bosish maydoni ≥ 44 px hamma sahifa va karkasda (umumiy CSS), Ombor KPI
   kartalari 2 ustunda, Foyda sahifasida "?" nom bilan bir qatorda; `e2e/touch.spec.ts` (13 sahifa, 360 px).
 - B4.73 (ADR-057 Q11), 3-qism: Buyurtmalar telefonda ro'yxat ko'rinishida (sana — ostida holat, SKU, yalpi foyda).

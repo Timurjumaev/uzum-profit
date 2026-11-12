@@ -816,7 +816,10 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     `components.css` ga umumiylashtirildi (`max-width: 640px` yoki `pointer: coarse`): tugma, maydon, tanlov, saralash,
     segment, "?" (manfiy chekka bilan), hisob varag'i qatori, ro'yxat nomlari, "orqaga" va h.k.; desktop o'zgarmadi. Ombor
     KPI'lari telefonda 2 ustun (D10); Foyda sahifasida "?" nom bilan bir qatorda (D13). Yangi `e2e/touch.spec.ts` — 13 sahifa
-    360 px da (matn ichidagi havola istisno). Mobil vizual asoslar yangilandi. **Qoldi:** PR-5…PR-8.
+    360 px da (matn ichidagi havola istisno). Mobil vizual asoslar yangilandi.
+    ✓ PR-5 (2026-11-12) Xavfsizlik va CI: X1 — `open_org` a'zolik so'rovi `org_id` bo'yicha ham (RLS'dan tashqari ikkinchi qavat;
+    test RLS'siz superuser ulanishida, avval qizardi); X3 — CI'da `pip-audit` (uv export, hash'lar bilan) va `pnpm audit --prod
+    --audit-level high`; T4 — CI faqat PR va main'ga push'da (avval har PR'da ikki marta). **Qoldi:** PR-6…PR-8.
   - [x] B4.75b (CI) E2E job'ida brauzer apt'siz o'rnatiladi; apt tizim paketlari ixtiyoriy (2 urinish, keyin ogohlantirish):
     2026-11-11 da runner'dan Ubuntu arxivi ochilmay, main, #135 va #136 testlarsiz qizardi. Paketlar faqat qo'shimcha shriftlar —
     ularsiz e2e va skrinshotlar bir xil o'tishi tekshirildi.
