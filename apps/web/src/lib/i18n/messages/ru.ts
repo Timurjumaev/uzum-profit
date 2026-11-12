@@ -439,6 +439,7 @@ export const ru: Messages = {
     },
     kpi: {
       title: "Сводка показателей",
+      groupsToggle: "Группы показателей",
       current: "Текущий период",
       previousPeriod: "Предыдущий период",
       previous: "ранее: {{value}}",

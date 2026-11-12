@@ -160,22 +160,28 @@ export function KpiSummary({ data }: { data: Dashboard }) {
         </p>
       </div>
       <Flow steps={s.flow} />
-      {s.groups.map((g) => (
-        <section key={g.key} aria-labelledby={`home-kpi-${g.key}`} className={cx("home-kpi__group", `home-kpi__group--${g.key}`)}>
-          <h3 id={`home-kpi-${g.key}`} className="home-kpi__group-title label">
-            {t(`home.kpi.groups.${g.key}`)}
-          </h3>
-          <ul className="home-kpi__cards">
-            {g.cards.map((card) => (
-              <SummaryCard
-                key={card.key}
-                card={card}
-                note={card.key === "margin" && uncovered ? <p className="caption home-card__note">{uncovered}</p> : undefined}
-              />
-            ))}
-          </ul>
-        </section>
-      ))}
+      {/* ADR-057 Q10: KPI guruhlari yig'iladi (sukut bo'yicha ochiq) — telefonda pastdagi bloklarga tez yetish uchun. */}
+      <details className="home-kpi__more" open>
+        <summary className="home-kpi__more-toggle label">{t("home.kpi.groupsToggle")}</summary>
+        <div className="home-kpi__more-body">
+          {s.groups.map((g) => (
+            <section key={g.key} aria-labelledby={`home-kpi-${g.key}`} className={cx("home-kpi__group", `home-kpi__group--${g.key}`)}>
+              <h3 id={`home-kpi-${g.key}`} className="home-kpi__group-title label">
+                {t(`home.kpi.groups.${g.key}`)}
+              </h3>
+              <ul className="home-kpi__cards">
+                {g.cards.map((card) => (
+                  <SummaryCard
+                    key={card.key}
+                    card={card}
+                    note={card.key === "margin" && uncovered ? <p className="caption home-card__note">{uncovered}</p> : undefined}
+                  />
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      </details>
     </section>
   );
 }

@@ -781,7 +781,11 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     ✓ 2026-11-12: `nav.ts` — ikkalasi `NAV_MAIN` dan `NAV_HIDDEN` ga (sidebar, "Yana", Ctrl+K da yo'q); marshrutlari "qurilmoqda"
     sahifasi bilan qoladi (eski havola 404 emas). Tayyor bo'lganda qaytadi (B5.7, B7). Testlar: shell (menyu ro'yxati, eski
     havola). **T:** kerak emas.
-  - [ ] B4.72 (Q10) Bosh sahifa tartibi (ikkala variant skrinshoti PR'da).
+  - [x] B4.72 (Q10) Bosh sahifa tartibi (ikkala variant skrinshoti PR'da).
+    ✓ 2026-11-12: uch raqam → davr → **Diqqat talab qiladi** → kunlik grafik → zinapoya va KPI guruhlari (`<details>`, yig'iladi,
+    sukut bo'yicha ochiq; sarlavha 44 px) → TOP/zarar → tovardagi pul. Telefonda "Diqqat talab qiladi" endi 2-ekranda (avval
+    KPI kartochkalari ostida, 7-ekranda — audit D1). 04 §7.2, §7.3. Vizual asoslar yangilandi (home, palette — 1440 va 390 px,
+    yorug'/qorong'i; eski va yangi rasm PR diff'ida). **T:** kerak emas (yoqmasa — skrinshot bilan yozish).
   - [ ] B4.73 (Q11) Mobil ro'yxat: Mahsulotlar → Ombor → Buyurtmalar (uch PR).
   - [x] B4.74 (Q8, Q9, Q13, Q14) Reja hujjatlari: B4 yopish (B4.27, B4.55, B4.61 → B5 boshi), Telegram B6.1–B6.2 oldinga, rejaga
     qo'shimchalar, 03 §2 va ADR-004 haqiqatga; Uzum API shartlari (Temurdan kabinet matni).

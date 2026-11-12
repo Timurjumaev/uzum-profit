@@ -1,6 +1,7 @@
 // Bosh sahifa (M4, ADR-037) — "bir qarashda": uch raqam (yakunlangan + kutilayotgan = jami sof foyda), davr chizig'i,
-// KPI sarhisob (ADR-043: buyurtmadan sof foydagacha yo'l va 4 guruh kartochka oldingi davr bilan), kunlik grafik (sof foyda
-// yakunlangan va kutilayotgan qatlamlarda), "Diqqat talab qiladi", eng foydali 5 / zarar 5 SKU va tovardagi pul.
+// "Diqqat talab qiladi", kunlik grafik (sof foyda yakunlangan va kutilayotgan qatlamlarda), KPI sarhisob (ADR-043:
+// buyurtmadan sof foydagacha yo'l va yig'iladigan 4 guruh kartochka oldingi davr bilan), eng foydali 5 / zarar 5 SKU va
+// tovardagi pul (tartib — ADR-057 Q10).
 // Qatorma-qator hisob — Foyda sahifasida. Maket — 04 §7.2 (desktop) / §7.3 (mobil). Davr, do'kon va solishtirish —
 // URL'da (`app/filters`), hamma raqam API'dan (`/dashboard`), bu yerda hisoblash yo'q.
 import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
@@ -77,10 +78,12 @@ export function Home() {
           </Link>
         }
       />
+      {/* ADR-057 Q10 (B4.72): uch raqam → davr → Diqqat talab qiladi → kunlik grafik → zinapoya va KPI guruhlari (yig'iladi)
+          → TOP/zarar → tovardagi pul. "Diqqat talab qiladi" telefonda yuqorida (avval 7-ekranda edi, audit D1). */}
       <PeriodStrip data={data} />
-      <KpiSummary data={data} />
-      <DailyChart data={data} />
       <Attention items={attention} />
+      <DailyChart data={data} />
+      <KpiSummary data={data} />
       <SkuLists top={data.top} bottom={data.bottom} />
       <Kpis data={data} />
     </section>

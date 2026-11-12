@@ -322,7 +322,7 @@ BUYURTMALAR VA TUSHUM
 Sidebar 232 px (yig'ilganda 64 px). Mobil: yuqorida ixcham panel (do'kon, davr), pastda tab bar:
 Asosiy · Foyda · Ombor · Xaridlar · Yana.
 
-### 7.2 Bosh sahifa (desktop, ADR-037)
+### 7.2 Bosh sahifa (desktop, ADR-037; tartib — ADR-057 Q10, B4.72)
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
@@ -330,11 +330,12 @@ Asosiy · Foyda · Ombor · Xaridlar · Yana.
 ├──────────────────────────────────────────────────────────────────────────┤
 │ Bugun | Kecha | Shu oy | Oy prognozi | O'tgan oy (sof foyda: yak. · kut.)│
 ├──────────────────────────────────────────────────────────────────────────┤
-│ KPI SARHISOB (§6.4): buyurtmadan sof foydagacha yo'l + 4 guruh kartochka  │
+│ Diqqat talab qiladi (ro'yxat, ustuvorlik bo'yicha)                        │
 ├──────────────────────────────────────────────────────────────────────────┤
 │ [Sof foyda | Tushum]  Kunlik grafik: yakunlangan + kutilayotgan qatlamlar │
 ├──────────────────────────────────────────────────────────────────────────┤
-│ Diqqat talab qiladi (ro'yxat, ustuvorlik bo'yicha)                        │
+│ KPI SARHISOB (§6.4): buyurtmadan sof foydagacha yo'l + 4 guruh kartochka  │
+│ (guruhlar yig'iladi — "Koʻrsatkichlar guruhlari", sukut bo'yicha ochiq)   │
 ├────────────────────────────────────┬─────────────────────────────────────┤
 │ Eng foydali 5                      │ Zarar qilayotgan 5                  │
 ├────────────────────────────────────┴─────────────────────────────────────┤
@@ -355,10 +356,11 @@ Sof foyda, oktabr
    =
 [Jami sof foyda      48 393 000 soʻm  ▲12,4%]
 [Bugun | Kecha | Oy prognozi] (gorizontal skroll)
-[KPI sarhisob: yo'l (nom · summa, ostida chiziq), kartochkalar 2 ustun, pul — to'liq kenglik]
-[Kunlik grafik — Sof foyda | Tushum]
 [Diqqat talab qiladi]
+[Kunlik grafik — Sof foyda | Tushum]
+[KPI sarhisob: yo'l (nom · summa, ostida chiziq); guruhlar yig'iladi — kartochkalar 2 ustun, pul — to'liq kenglik]
 [Eng foydali / Zarar — tab]
+[Tovardagi pul]
 ```
 
 ### 7.4 Boshqa sahifalar (qisqa)

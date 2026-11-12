@@ -441,6 +441,7 @@ export const uzLatn = {
     },
     kpi: {
       title: "Koʻrsatkichlar sarhisobi",
+      groupsToggle: "Koʻrsatkichlar guruhlari",
       current: "Joriy davr",
       previousPeriod: "Oldingi davr",
       previous: "oldingi: {{value}}",
