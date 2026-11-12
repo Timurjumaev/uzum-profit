@@ -811,7 +811,7 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     to'g'rilandi (avval "oylik taxmin sifatida hisoblanadi" deb yolg'on yozilgan edi). `upcore.tax.uncalculated_regimes` (F11),
     `/pnl` javobida `untaxed_regimes`. **Davomi:** dinamik soliq profili (Temur, 2026-11-11) — alohida ADR bilan.
     **T:** staging'da Foyda sahifasida (agar rejim QQS + foyda yoki agent bo'lsa) bannerni ko'rish.
-  - [ ] B4.75 (audit §9) PR-4…PR-8: bosish maydoni 44 px, xavfsizlik/CI, hujjat va o'lik kod, test qamrovi, jadval kengliklari
+  - [x] B4.75 (audit §9) PR-4…PR-8: bosish maydoni 44 px, xavfsizlik/CI, hujjat va o'lik kod, test qamrovi, jadval kengliklari
     va favicon.
     ✓ PR-4 (2026-11-12) Telefon: bosish maydoni ≥ 44 px hamma sahifa va karkasda (D4) — B4.54 dagi Mahsulotlar qoidasi
     `components.css` ga umumiylashtirildi (`max-width: 640px` yoki `pointer: coarse`): tugma, maydon, tanlov, saralash,
@@ -834,7 +834,13 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     xato tuzatildi: Mahsulotlar jadvalidagi 12 px izoh `text-muted` da edi (kontrast 3,84) → `text-secondary`. E2E soxta
     API'ga `/expenses` qo'shildi (avval Xarajatlar e2e'da xato holatini ko'rsatardi). Bosh sahifa: telefondagi KPI kartochka
     chekkasi qoidasi asosiy qoida bilan bosilib ketgan edi — tuzatildi; ikki ustunli yorliqlar bo'linish chegarasidan uzoqda
-    (CI va lokal skrinshot balandligi farq qilardi). **Qoldi:** PR-8.
+    (CI va lokal skrinshot balandligi farq qilardi).
+    ✓ PR-8 (2026-11-12) Jadval va mayda jilo: D3 — jadvallar 1440 px da sig'adi (Mahsulotlar 1 631 → 1 158 px, Ombor 1 526 →
+    1 158 px; Buyurtmalar 1000 px da 1 159 → 902 px): sarlavha so'z bo'yicha (va "/" dan keyin, `<wbr>`) bo'linadi, sarlavhadagi
+    "?" sichqonchada 24 px, keng jadvallarda katak chekkasi 8–12 px, Omborda 8rem eng kam kenglik faqat nom ustunida, qator
+    amallari ustma-ust, izohlar va "Taxminiy" belgilari qatorga o'tadi; D9 — bosh sahifadagi TOP / zarar nomlari SKU
+    sahifasiga havola (davr va do'kon saqlanadi); D11 — `favicon.svg` (Logo bilan bir xil; manifest va PNG — B6.3).
+    **B4.75 tugadi.**
   - [x] B4.75b (CI) E2E job'ida brauzer apt'siz o'rnatiladi; apt tizim paketlari ixtiyoriy (2 urinish, keyin ogohlantirish):
     2026-11-11 da runner'dan Ubuntu arxivi ochilmay, main, #135 va #136 testlarsiz qizardi. Paketlar faqat qo'shimcha shriftlar —
     ularsiz e2e va skrinshotlar bir xil o'tishi tekshirildi.

@@ -4,7 +4,7 @@
 // qator balandligi qat'iy). Ustun tanlash va saqlangan ko'rinish — sahifa darajasida (`features/products`),
 // eksport — B4.10.
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { cx } from "./cx";
@@ -21,6 +21,12 @@ export type Column<T> = {
   /** `mobileList` jadvalda telefonda ham ko'rinadigan asosiy ustun (ADR-057 Q11: nom + 2–3 asosiy raqam). */
   mobile?: boolean;
 };
+
+/** Sarlavhada "/" dan keyin qatorga o'tish mumkin ("Tannarx/dona" — audit D3); `<wbr>` matnni (va nomni) o'zgartirmaydi. */
+function breakable(s: string): ReactNode {
+  const parts = s.split("/");
+  return parts.length === 1 ? s : parts.map((p, i) => (i === 0 ? p : <Fragment key={i}>/<wbr />{p}</Fragment>));
+}
 
 export type SortState = { key: string; desc: boolean };
 
@@ -93,9 +99,10 @@ export function DataTable<T>({
               const sorted = sort && c.sortKey !== undefined && sort.key === c.sortKey ? (sort.desc ? "descending" : "ascending") : undefined;
               return (
                 <th key={c.key} scope="col" className={cx(c.numeric && "num", extra(c))} aria-sort={c.sortKey !== undefined ? (sorted ?? "none") : undefined}>
+                  <span className="ui-th">
                   {c.sortKey !== undefined && onSort ? (
                     <button type="button" className="ui-sort" onClick={() => onSort(c.sortKey!)} title={t("ui.sortBy", { name: c.header })}>
-                      {c.header}
+                      {breakable(c.header)}
                       {sorted === "ascending" ? (
                         <ArrowUp size={14} aria-label={t("ui.ascending")} />
                       ) : sorted === "descending" ? (
@@ -108,6 +115,7 @@ export function DataTable<T>({
                     c.header
                   )}
                   {c.help}
+                  </span>
                 </th>
               );
             })}

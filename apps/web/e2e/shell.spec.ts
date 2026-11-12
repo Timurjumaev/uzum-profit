@@ -86,3 +86,13 @@ test("Maʼlumotlar holati: do'kon jadvallari va akkaunt", async ({ page }) => {
   await page.getByRole("button", { name: "Hozir yangilash" }).click();
   await expect(page.getByText("Yangilash boshlandi")).toBeVisible();
 });
+
+test("brauzer yorlig'ida belgi (audit D11): favicon havolasi va fayli", async ({ page, request }) => {
+  await mockApi(page);
+  await open(page, "/");
+  const href = await page.locator('link[rel="icon"]').getAttribute("href");
+  expect(href).toBe("/favicon.svg");
+  const res = await request.get(href!);
+  expect(res.status()).toBe(200);
+  expect(res.headers()["content-type"]).toContain("image/svg+xml");
+});

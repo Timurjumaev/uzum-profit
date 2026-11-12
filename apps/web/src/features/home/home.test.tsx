@@ -243,6 +243,8 @@ describe("eng foydali 5 / zarar 5 va ko'rsatkichlar", () => {
     const top = screen.getByRole("table", { name: "Eng foydali 5" });
     expect(within(top).getByText("Sumka qora M")).toBeTruthy();
     expect(within(top).getByText("Hamyon")).toBeTruthy(); // SKU nomi yo'q — tovar nomi
+    // Audit D9: nom — SKU sahifasiga havola.
+    expect(within(top).getByRole("link", { name: "Sumka qora M" }).getAttribute("href")).toMatch(/^\/products\/d1(\?|$)/);
     expect(within(top).getByText(n("9000000.00")).className).toContain("ui-text--positive");
     const bottom = screen.getByRole("table", { name: "Zarar qilayotgan 5" });
     expect(within(bottom).getByText(n("-250000.00")).className).toContain("ui-text--negative");

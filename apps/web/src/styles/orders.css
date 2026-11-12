@@ -176,6 +176,19 @@
   display: none;
 }
 
+/* Audit D3: tor ekranda (1000 px) "Taxminiy" / "Tannarxsiz" belgisi summa ustiga o'tadi — summa o'zi bo'linmaydi (f.money
+   raqam ichida bo'linmas bo'shliq ishlatadi). */
+.orders-list .ui-table td.num {
+  white-space: normal;
+}
+
+@media (min-width: 640px) and (max-width: 1099px) {
+  .orders-list .ui-table th,
+  .orders-list .ui-table td {
+    padding-inline: var(--space-2);
+  }
+}
+
 @media (max-width: 639px) {
   .orders-cell__mobile-meta {
     display: block;

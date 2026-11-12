@@ -820,6 +820,10 @@
     white-space: normal;
   }
 
+  .ui-table--mobile-list .ui-th {
+    flex-wrap: wrap;
+  }
+
   .ui-table.ui-table--mobile-list th,
   .ui-table.ui-table--mobile-list td {
     padding-inline: var(--space-2);
@@ -878,7 +882,53 @@
   color: var(--text-secondary);
   background: var(--bg-raised);
   border-block-end: 1px solid var(--border-rule);
-  white-space: nowrap;
+}
+
+/* Audit D3: sarlavha matni so'z bo'yicha qatorga bo'linadi (keng jadval 1440 px da sig'sin), saralash belgisi va "?" esa
+   matn bilan bir qatorda qoladi — ustun kengligini ma'lumot belgilaydi, uzun sarlavha emas. */
+.ui-th {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  vertical-align: middle;
+}
+
+/* Faqat desktopda (keng jadvallar): telefonda sarlavhalar avvalgidek bir qatorda — ro'yxat ko'rinishi o'z qoidasi bilan
+   (ADR-057 Q11); bo'linish chegarasidagi sarlavha mashinalar orasida turlicha bo'linib, skrinshot farq qilardi. */
+@media (min-width: 640px) {
+  .ui-th {
+    flex-wrap: wrap;
+  }
+
+  .ui-table thead th.num {
+    white-space: normal;
+  }
+}
+
+.ui-table thead th.num .ui-th {
+  justify-content: flex-end;
+}
+
+.ui-th .ui-sort {
+  text-align: start;
+}
+
+.ui-table thead th.num .ui-sort {
+  text-align: end;
+}
+
+.ui-th .ui-sort svg,
+.ui-th .ui-icon-btn {
+  flex: none;
+}
+
+/* Sichqonchada sarlavhadagi "?" 24 px (WCAG 2.5.8 minimumi); telefonda — 44 px (pastdagi qoida). */
+@media (pointer: fine) {
+  .ui-th .ui-icon-btn {
+    min-inline-size: 24px;
+    min-block-size: 24px;
+    padding: 0;
+  }
 }
 
 .ui-table tbody tr:last-child > * {
@@ -1134,6 +1184,7 @@
   .inventory-cell__name,
   .purchase__back,
   .home-attention__link,
+  .home-skus__name,
   .home-summary__how,
   .opening__link {
     display: inline-flex;

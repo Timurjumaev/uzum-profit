@@ -571,6 +571,17 @@
   min-inline-size: 0;
 }
 
+/* Audit D9: TOP / zarar qatoridagi nom — SKU sahifasiga havola, matn rangida (ADR-048). */
+.home-skus__name {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.home-skus__name:hover {
+  color: var(--accent-text);
+  text-decoration: underline;
+}
+
 .home-skus__tabs {
   display: none;
 }

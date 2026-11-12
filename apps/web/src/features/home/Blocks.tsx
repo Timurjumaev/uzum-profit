@@ -162,7 +162,21 @@ function SkuTable({ title, rows, empty }: { title: string; rows: Brief[]; empty:
   const { t } = useTranslation();
   const f = useFormat();
   const columns: Column<Brief>[] = [
-    { key: "name", header: t("home.sku.name"), render: (r) => r.title ?? r.product_title ?? t("home.sku.unnamed") },
+    {
+      key: "name",
+      header: t("home.sku.name"),
+      // Audit D9: nom SKU sahifasiga havola (ADR-048 — matn rangida, ostiga chiziq faqat ustiga kelganda); davr va do'kon saqlanadi.
+      render: (r) => (
+        <Link
+          to="/products/$skuId"
+          params={{ skuId: r.sku_id }}
+          search={(prev) => ({ shop: prev.shop, from: prev.from, to: prev.to, cmp: prev.cmp })}
+          className="home-skus__name"
+        >
+          {r.title ?? r.product_title ?? t("home.sku.unnamed")}
+        </Link>
+      ),
+    },
     { key: "units", header: t("home.sku.units"), numeric: true, render: (r) => f.number(r.units) },
     {
       key: "profit",

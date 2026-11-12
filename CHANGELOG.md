@@ -440,6 +440,12 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.75 PR-8 (audit D3, D9, D11): jadvallar 1440 px da sig'adi — Mahsulotlar 1 631 → 1 158 px, Ombor 1 526 → 1 158 px,
+  Buyurtmalar 1000 px da 1 159 → 902 px: sarlavha matni so'z bo'yicha bo'linadi ("/" dan keyin ham, `<wbr>`), sichqonchada
+  sarlavhadagi "?" 24 px, keng jadvallarda katak chekkasi 8–12 px, Omborda 8rem eng kam kenglik faqat nom ustunida, qator
+  amallari ustma-ust, summa izohlari va "Taxminiy" belgilari qatorga o'tadi. Bosh sahifadagi TOP / zarar qatorlari SKU
+  sahifasiga havola. Brauzer yorlig'ida belgi (`favicon.svg`; manifest va PNG — B6.3).
+
 - B4.75 PR-7 (audit T1–T3): Playwright mobil loyihasi 360 px da (avval 390); vizual asoslar Mahsulotlar, SKU, Buyurtmalar,
   Xarajatlar, Ombor, Sozlamalar va Boshlang'ich holat uchun; axe Mahsulotlar, SKU, Buyurtmalar, Xarajatlar va Kargolarda.
   Tuzatildi: Mahsulotlar jadvalidagi SKU izohi kontrasti (12 px matn `text-muted` → `text-secondary`, 3,84 → AA); bosh
