@@ -74,6 +74,14 @@ describe("uch raqam (ADR-037)", () => {
     expect(card("net-profit").getByText(norm(`Marja ${f.percent("0.259400")}`))).toBeTruthy();
   });
 
+  it("taxminiy o'zgarish (ADR-057 Q4): \"≈\" belgisi va izoh", async () => {
+    const base = dashboardData();
+    const rows = base.rows.map((r) => (r.code === "net_profit" ? { ...r, change_estimated: true } : r));
+    await renderHome("/", { [DASHBOARD_ROUTE]: () => json(200, { ...base, rows }) });
+    const change = card("net-profit").getByTitle(/taxminiy: jarayondagi buyurtmalar/);
+    expect(norm(change.textContent!)).toBe(`≈ ${ch("0.124274")}`);
+  });
+
   it("formula: yakunlangan (F12), kutilayotgan (F16, taxminiy sababi bilan), jami", async () => {
     await renderHome();
     fireEvent.click(card("net-expected").getByRole("button", { name: /Qanday hisoblanadi/ }));
@@ -170,7 +178,7 @@ describe("davr chizig'i va grafik", () => {
 
   it("zarar — qizil matn; prognoz yo'q (oyning 1-kuni) — 'Maʼlumot yetarli emas'", async () => {
     const data = dashboardData({
-      forecast: { revenue: null, net_profit: null, units: null },
+      forecast: { revenue: null, net_profit: null, units: null, estimated: false },
       periods: dashboardData().periods.map((p) => (p.key === "today" ? { ...p, net_profit: "-120000.00" } : p)),
     });
     await renderHome("/", { [DASHBOARD_ROUTE]: () => json(200, data) });

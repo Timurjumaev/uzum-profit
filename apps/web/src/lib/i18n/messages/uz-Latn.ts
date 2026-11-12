@@ -343,6 +343,7 @@ export const uzLatn = {
       uncovered_payout: "Tannarxsiz sotuvlar toʻlovi (hisobga kirmadi)",
       uncovered_expenses: "Tannarxsiz qismga toʻgʻri kelgan xarajat",
       changeAria: "Oldingi davrga nisbatan oʻzgarish",
+      changeEstimated: "Oldingi davrga nisbatan oʻzgarish, taxminiy: jarayondagi buyurtmalar yakunlanish ulushiga koʻpaytirilgan (bir qismi bekor boʻladi)",
     },
     expense: {
       advertising: "Reklama",

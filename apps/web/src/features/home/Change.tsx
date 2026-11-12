@@ -7,14 +7,15 @@ import { cx } from "../../components/ui/cx";
 import { useFormat } from "../../lib/i18n";
 import { negate, type Direction } from "./model";
 
-export function Change({ value, direction }: { value: string | null; direction: Direction }) {
+export function Change({ value, direction, estimated = false }: { value: string | null; direction: Direction; estimated?: boolean }) {
   const { t } = useTranslation();
   const f = useFormat();
   if (value === null) return null;
   const shown = direction === "cost" ? negate(value) : value;
   const tone = changeTone(shown, direction === "cost" ? "down" : "up");
   return (
-    <span className={cx("home-change", `ui-text--${tone}`)} title={t("home.ledger.changeAria")}>
+    <span className={cx("home-change", `ui-text--${tone}`)} title={t(estimated ? "home.ledger.changeEstimated" : "home.ledger.changeAria")}>
+      {estimated && "≈ "}
       {f.change(shown)}
     </span>
   );

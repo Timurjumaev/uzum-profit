@@ -440,6 +440,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.68 (ADR-057 Q4, audit K6) "▲ %" va oy prognozi: Jarayondagi qism yakunlanish ulushiga (F16 R) ko'paytiriladi,
+  summalar o'zgarmaydi; `/pnl`, `/dashboard` → `rows[].change_estimated`, `forecast.estimated`; UI'da "≈" va izoh.
 - B4.70 (ADR-057 Q7) Sinxron: bugungi qoldiq snapshoti har mahsulot sinxronida yangilanadi, kun ichida 0 ko'rilsa
   `sku_daily.zero_seen`; sotuv qatori birinchi marta Yakunlangan ko'rilgan vaqt — `sale_items.completed_seen_at` (migratsiya 0020).
 - B4.67 (ADR-057 Q2, audit K3) Ombor: ikki signal — "Buyurtma berish" (F26 holati va F27 sanasi hamma joydagi tovardan:

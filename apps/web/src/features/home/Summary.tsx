@@ -105,7 +105,7 @@ export function Summary({ data, costAction }: Props) {
         <Card kind="total" op="=" label={labels.total} help={help("netTotal", labels.total)} amount={s.net_profit} testId="net-profit">
           {net?.change != null && (
             <p className="home-summary__vs">
-              <Change value={net.change} direction="income" />{" "}
+              <Change value={net.change} direction="income" estimated={net.change_estimated} />{" "}
               <span className="caption">{prev ? t("home.vsPrevious", { period: f.period(prev.start, prev.end) }) : ""}</span>
             </p>
           )}

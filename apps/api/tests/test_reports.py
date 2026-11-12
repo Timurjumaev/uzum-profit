@@ -533,6 +533,33 @@ def test_pnl_expected_profit(world: World) -> None:
     assert money(rows["uzum:storage"]["processing"]) == 0  # 15-oktabrda saqlash yo'q
 
 
+def test_change_scales_processing_by_completion(
+    world: World, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """ADR-057 Q4: R noma'lum — "▲ %" eskicha (taxminiy emas); R ma'lum — Jarayondagi qism × R bilan, summalar o'zgarmaydi."""
+    plain = {r["code"]: r for r in world.get("pnl", **OCT)["rows"]}
+    assert not any(r["change_estimated"] for r in plain.values())
+
+    from upapi.reports import cells as rc
+
+    async def half(conn: Any, f: Any) -> rc.Realization:
+        return rc.Realization(total=Decimal("0.5"), shops={})
+
+    monkeypatch.setattr(rc, "realization", half)
+    rows = {r["code"]: r for r in world.get("pnl", **OCT)["rows"]}
+    revenue = rows["revenue"]
+    assert revenue["change_estimated"] is True
+    assert (revenue["amount"], revenue["previous"]) == (
+        plain["revenue"]["amount"],
+        plain["revenue"]["previous"],
+    )
+    now = money(revenue["done"]) + money(revenue["processing"]) * Decimal("0.5")
+    before = money(revenue["previous"])  # oldingi davrda Jarayondagi sotuv yo'q
+    assert D(revenue["change"]) == ((now - before) / abs(before)).quantize(D(revenue["change"]))
+    home = world.get("dashboard", **OCT)
+    assert {r["code"]: r["change_estimated"] for r in home["rows"]}["revenue"] is True
+
+
 def test_expected_logistics_estimate(world: World) -> None:
     """F5 (ADR-037, ADR-042): Uzum logistikasini hali yozmagan (topshirilmagan, 0) Jarayondagi sotuv — F40 tarifi × dona
     (SKU'ning oxirgi pullik Yakunlangan sotuvi: 5 000/dona) taxminiy qo'shiladi; drill-down qatorida ham shu summa,

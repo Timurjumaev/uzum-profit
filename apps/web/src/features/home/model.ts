@@ -17,6 +17,8 @@ export type HomeRow = LedgerRow & {
   formula: string | null;
   /** O'zgarish ulushi (API: farq / |oldingi|) — yo'nalishga ko'ra ko'rsatiladi; `null` — oldingi davr nol. */
   change: string | null;
+  /** ADR-057 Q4: o'zgarish kutilayotgan qism × yakunlanish ulushi bilan hisoblangan — taxminiy ("≈"). */
+  changeEstimated?: boolean;
   direction: Direction;
   /** Mobilda yig'ilgan ko'rinishda ko'rinadigan qator (tushum, Uzum to'lovi, sof foyda). */
   keep: boolean;
@@ -106,6 +108,7 @@ function toRow(row: PnlRow, label: string, found: Found): HomeRow {
     keep: spec.keep,
     compactHidden: !spec.keep,
     change: found.change === null ? null : row.change,
+    changeEstimated: found.change === null ? false : row.change_estimated,
   };
 }
 
@@ -124,7 +127,7 @@ export function homeRows(rows: PnlRow[], label: (code: string) => string): HomeR
     // Xarajat zonasi tugadi (soliqdan boshlab): yetishmayotgan nol qatorlar shu yerda.
     if (row.code === "tax") {
       for (const z of missing) {
-        const zero: PnlRow = { code: z.code, amount: "0", done: "0", processing: "0", share_of_revenue: null, previous: "0", diff: "0", change: null };
+        const zero: PnlRow = { code: z.code, amount: "0", done: "0", processing: "0", share_of_revenue: null, previous: "0", diff: "0", change: null, change_estimated: false };
         out.push(toRow(zero, label(z.code), { spec: z.spec }));
       }
     }

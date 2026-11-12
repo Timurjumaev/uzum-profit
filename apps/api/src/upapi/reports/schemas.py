@@ -142,6 +142,9 @@ class RowOut(BaseModel):
     previous: Decimal
     diff: Decimal
     change: Decimal | None  # farq / |oldingi|; oldingi 0 bo'lsa yo'q
+    change_estimated: (
+        bool  # "▲ %" kutilayotgan qism × yakunlanish ulushi bilan (ADR-057 Q4) — taxminiy
+    )
 
     @classmethod
     def of(cls, r: CompareRow) -> RowOut:
@@ -154,6 +157,7 @@ class RowOut(BaseModel):
             previous=r.previous.amount,
             diff=r.diff.amount,
             change=r.change,
+            change_estimated=r.estimated,
         )
 
 

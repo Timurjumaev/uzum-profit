@@ -31,7 +31,7 @@ from upcore.metrics import (
     share_change,
 )
 from upcore.money import Currency, Money, total
-from upcore.pnl import CellKey, Cells, Statement, compare, order_to_profit
+from upcore.pnl import CellKey, Cells, Statement, compare, expected_value, order_to_profit
 
 from upapi import orgsettings
 from upapi.auth.deps import OrgContext, require
@@ -77,6 +77,8 @@ class ForecastOut(BaseModel):
     revenue: Decimal | None
     net_profit: Decimal | None
     units: Decimal | None
+    # ADR-057 Q4: asosdagi Jarayondagi qism × yakunlanish ulushi (F16 R); ulush noma'lum bo'lsa — to'liq (false).
+    estimated: bool = False
 
 
 class DayOut(BaseModel):
@@ -479,16 +481,33 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
     def forecast(value: Decimal | int) -> Decimal | None:
         return run_rate(value, elapsed, days_in_month)
 
+    # ADR-057 Q4: prognoz asosida Jarayondagi qism yakunlanish ulushiga ko'paytiriladi (bir qismi bekor bo'ladi).
+    part = done_days.processing
+    r = rates.total
+    basis_revenue = expected_value(
+        done_days.revenue, part.revenue if part else Money.zero(UZS), r
+    ).amount
+    basis_profit = expected_value(
+        done_days.net_profit, part.net_profit if part else Money.zero(UZS), r
+    ).amount
+    pending_units = done_days.units_processing
+    basis_units = (
+        Decimal(done_days.units)
+        if r is None
+        else Decimal(done_days.units - pending_units) + Decimal(pending_units) * r
+    )
+
     return DashboardOut(
         meta=await meta(conn, f, KINDS, previous),
         statement=StatementOut.of(s),
         expected=ExpectedOut.of(s, rates.total),
-        rows=[RowOut.of(r) for r in compare(s, p)],
+        rows=[RowOut.of(row) for row in compare(s, p, rates.total)],
         periods=[_total(key, period, totals[key]) for key, period in periods],
         forecast=ForecastOut(
-            revenue=forecast(done_days.revenue.amount),
-            net_profit=forecast(done_days.net_profit.amount),
-            units=forecast(done_days.units),
+            revenue=forecast(basis_revenue),
+            net_profit=forecast(basis_profit),
+            units=forecast(basis_units),
+            estimated=r is not None and part is not None,
         ),
         daily=daily,
         top=[brief(k, v) for k, v in top],

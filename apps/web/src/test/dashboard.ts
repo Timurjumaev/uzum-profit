@@ -17,6 +17,7 @@ const row = (code: string, amount: string, processing: string, previous: string,
   previous,
   diff: String(Number(amount) - Number(previous)),
   change,
+  change_estimated: false,
 });
 
 const statement = (): Dashboard["statement"] => ({
@@ -107,7 +108,7 @@ export function dashboardData(over: Partial<Dashboard> = {}, ago: (minutes: numb
       { key: "this_month", period: { start: "2026-10-01", end: "2026-10-26", days: 26 }, revenue: "186420000.00", net_profit: "48393000.00", net_profit_done: "31508700.00", net_profit_processing: "16884300.00", units: 1240, units_processing: 410, revenue_processing: "61000000.00" },
       { key: "last_month", period: { start: "2026-09-01", end: "2026-09-30", days: 30 }, revenue: "190000000.00", net_profit: "47000000.00", net_profit_done: "47000000.00", net_profit_processing: "0.00", units: 1300, units_processing: 0, revenue_processing: "0.00" },
     ],
-    forecast: { revenue: "216000000.00", net_profit: "56000000.00", units: "1437.00" },
+    forecast: { revenue: "216000000.00", net_profit: "56000000.00", units: "1437.00", estimated: false },
     daily: [
       { day: "2026-10-24", revenue: "6000000.00", net_profit: "1500000.00", units: 44, revenue_done: "1000000.00", revenue_processing: "5000000.00", net_profit_done: "250000.00", net_profit_processing: "1250000.00" },
       { day: "2026-10-25", revenue: "7100000.00", net_profit: "1810000.00", units: 52, revenue_done: "300000.00", revenue_processing: "6800000.00", net_profit_done: "60000.00", net_profit_processing: "1750000.00" },

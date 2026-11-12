@@ -88,7 +88,7 @@ export function PnlLedger({ lines, part, onRow }: Props) {
             <td className="num pnl-wide">{f.money(line.previous, { unit: false })}</td>
             <td className="num pnl-wide">{f.money(line.diff, { unit: false })}</td>
             <td className="ui-ledger__change" data-part="total">
-              <Change value={line.change} direction={line.direction} />
+              <Change value={line.change} direction={line.direction} estimated={line.changeEstimated} />
             </td>
           </tr>
         ))}

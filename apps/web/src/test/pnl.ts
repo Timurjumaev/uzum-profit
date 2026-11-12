@@ -66,6 +66,7 @@ const row = (code: string, amount: string, processing: string, previous: string,
   previous,
   diff: (Number(amount) - Number(previous)).toFixed(2),
   change,
+  change_estimated: false,
 });
 
 type ExpectedPart = components["schemas"]["ExpectedOut"];

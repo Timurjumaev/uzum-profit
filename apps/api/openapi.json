@@ -8650,6 +8650,11 @@
               }
             ],
             "title": "Units"
+          },
+          "estimated": {
+            "type": "boolean",
+            "title": "Estimated",
+            "default": false
           }
         },
         "type": "object",
@@ -12725,6 +12730,10 @@
               }
             ],
             "title": "Change"
+          },
+          "change_estimated": {
+            "type": "boolean",
+            "title": "Change Estimated"
           }
         },
         "type": "object",
@@ -12736,7 +12745,8 @@
           "share_of_revenue",
           "previous",
           "diff",
-          "change"
+          "change",
+          "change_estimated"
         ],
         "title": "RowOut",
         "description": "M5 hisob varag'i qatori: ``code`` (``revenue``, ``uzum:fine``, ``own:ijara``, ``net_profit`` ...), joriy summa\n(jami), shundan yakunlangan va kutilayotgan (ADR-037), tushumga nisbatan, oldingi davr, farq va o'zgarish ulushi\n(``upcore.pnl.compare``)."

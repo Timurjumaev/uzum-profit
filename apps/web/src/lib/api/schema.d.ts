@@ -1832,6 +1832,11 @@ export interface components {
             net_profit: string | null;
             /** Units */
             units: string | null;
+            /**
+             * Estimated
+             * @default false
+             */
+            estimated: boolean;
         };
         /** Health */
         Health: {
@@ -3066,6 +3071,8 @@ export interface components {
             diff: string;
             /** Change */
             change: string | null;
+            /** Change Estimated */
+            change_estimated: boolean;
         };
         /** SaleOut */
         SaleOut: {
