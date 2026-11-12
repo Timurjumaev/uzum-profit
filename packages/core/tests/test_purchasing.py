@@ -21,6 +21,7 @@ from upcore.purchasing import (
     PurchaseError,
     PurchaseLine,
     Stage,
+    SupplyState,
     average_unit_cost,
     compute_lots,
     compute_shipment_lots,
@@ -30,7 +31,10 @@ from upcore.purchasing import (
     residual_goods,
     split_by_purchase,
     stage_days,
+    supply_path,
+    supply_state,
     timeline,
+    transit_days,
 )
 
 D = Decimal
@@ -647,3 +651,57 @@ def test_split_by_purchase_sums_exactly(qtys: list[int], amount: int, fixed_shar
     box = CostComponent(ComponentKind.CARGO, _uzs(amount))
     lots = compute_shipment_lots(purchases, split_by_purchase(box, purchases, fixed))
     assert sum((x.total for ls in lots.values() for x in ls), _uzs(0)) == _uzs(amount)
+
+
+# --- Uch holat (ADR-061 §1, §11) ---
+
+
+@pytest.mark.parametrize(
+    ("stage", "state"),
+    [
+        (None, SupplyState.IN_TRANSIT),
+        (Stage.ORDERED, SupplyState.IN_TRANSIT),
+        (Stage.PAID, SupplyState.IN_TRANSIT),
+        (Stage.CN_WAREHOUSE, SupplyState.IN_TRANSIT),
+        (Stage.SHIPPED, SupplyState.IN_TRANSIT),
+        (Stage.ARRIVED, SupplyState.IN_TRANSIT),
+        (Stage.RECEIVED, SupplyState.IN_STOCK),
+        (Stage.SENT_TO_UZUM, SupplyState.AT_UZUM),
+        (Stage.CLOSED, SupplyState.AT_UZUM),
+    ],
+)
+def test_supply_state_from_old_stages(stage: Stage | None, state: SupplyState) -> None:
+    """ADR-061 §11: eski bosqich → yangi holat."""
+    dates = {} if stage is None else {stage: date(2026, 10, 5)}
+    assert supply_state(dates) is state
+
+
+def test_supply_path_in_transit_expected_and_delay() -> None:
+    dates = {Stage.ORDERED: date(2026, 10, 1)}
+    path = supply_path(dates, date(2026, 10, 12), Decimal("20.5"))
+    assert [m.mark for m in path] == ["current", "upcoming", "upcoming"]
+    assert path[0].days == 11 and path[0].expected == date(2026, 10, 22) and not path[0].delayed
+    assert supply_path(dates, date(2026, 10, 23), Decimal("20.5"))[0].delayed
+    unknown = supply_path(dates, date(2026, 10, 12))
+    assert unknown[0].expected is None and not unknown[0].delayed
+    undated = supply_path({}, date(2026, 10, 12), Decimal(5), started=date(2026, 10, 10))
+    assert undated[0].on == date(2026, 10, 10) and undated[0].days == 2
+    assert supply_path({}, date(2026, 10, 12))[0].days is None
+
+
+def test_supply_path_counted_and_sent() -> None:
+    dates = {Stage.PAID: date(2026, 10, 2), Stage.RECEIVED: date(2026, 10, 20)}
+    path = supply_path(dates, date(2026, 10, 25))
+    assert [(m.state, m.mark, m.on) for m in path] == [
+        (SupplyState.IN_TRANSIT, "done", date(2026, 10, 2)),
+        (SupplyState.IN_STOCK, "current", date(2026, 10, 20)),
+        (SupplyState.AT_UZUM, "upcoming", None),
+    ]
+    assert transit_days(dates) == 18
+    sent = supply_path({**dates, Stage.CLOSED: date(2026, 10, 28)}, date(2026, 11, 1))
+    assert [m.mark for m in sent] == ["done", "done", "current"]
+    assert sent[2].on == date(2026, 10, 28)
+    assert transit_days({Stage.ORDERED: date(2026, 10, 5)}) is None
+    assert (
+        transit_days({Stage.ORDERED: date(2026, 10, 5), Stage.RECEIVED: date(2026, 10, 1)}) is None
+    )

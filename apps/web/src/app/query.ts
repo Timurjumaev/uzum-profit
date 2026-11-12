@@ -3,7 +3,7 @@
 import { MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
-import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, OpeningIn } from "../lib/api/types";
+import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, QuickPurchaseIn, SupplyState, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, OpeningIn } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -273,14 +273,14 @@ export const purchasesQuery = (orgId: string, stages: PurchaseStage[]) =>
       ),
   });
 
-/** Xaridlar ro'yxati, bitta sahifa (ADR-054); bosqich filtri bilan. */
-export const purchasesPageQuery = (orgId: string, stages: PurchaseStage[], page: number | undefined, size: number) =>
+/** Xaridlar ro'yxati, bitta sahifa (ADR-054); holat filtri bilan (ADR-061: Yo'lda / Omborimda / Uzumda; bo'sh — hammasi). */
+export const purchasesPageQuery = (orgId: string, states: SupplyState[], page: number | undefined, size: number) =>
   queryOptions({
-    queryKey: ["orgs", orgId, "purchases", "list", stages, page ?? 1, size],
+    queryKey: ["orgs", orgId, "purchases", "list", states, page ?? 1, size],
     queryFn: () =>
       unwrap(
         api.GET("/api/v1/orgs/{org_id}/purchases", {
-          params: { path: { org_id: orgId }, query: { stage: stages.length > 0 ? stages : undefined, limit: size, page: page ?? 1 } },
+          params: { path: { org_id: orgId }, query: { state: states.length > 0 ? states : undefined, limit: size, page: page ?? 1 } },
         }),
       ),
   });
@@ -315,6 +315,10 @@ const purchasePath = (orgId: string, purchaseId: string) => ({ path: { org_id: o
 
 export const createPurchase = (orgId: string, body: PurchaseIn) =>
   unwrap(api.POST("/api/v1/orgs/{org_id}/purchases", { params: { path: { org_id: orgId } }, body }));
+
+/** Tez xarid (ADR-061 §2): xarid, tovarlar va tovar summasi bitta so'rovda. */
+export const createQuickPurchase = (orgId: string, body: QuickPurchaseIn) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/purchases/quick", { params: { path: { org_id: orgId } }, body }));
 
 export const updatePurchase = (orgId: string, purchaseId: string, body: PurchasePatch) =>
   unwrap(api.PATCH("/api/v1/orgs/{org_id}/purchases/{purchase_id}", { params: purchasePath(orgId, purchaseId), body }));

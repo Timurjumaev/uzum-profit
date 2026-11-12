@@ -920,7 +920,15 @@ Har vazifa — alohida branch va PR; tafsilot 07 "ADR-061 tafsiloti", 02 M9–M1
   Testlar: yadro (xossa — ulushlar yig'indisi = summa), bazadan lotgacha; mavjud xarid / kargo / hisob testlari
   o'zgarmasdan o'tadi (eski yozuvlar hisobi avvalgidek). **Keyinga:** API maydonlari va uch holat (eski bosqich → holat
   ko'chirish) — TM2 da, UI bilan birga (holat qiymati o'zgarsa hozirgi ekran buzilardi).
-- [ ] TM2 Uch holat (hosila; eski bosqich → holat, §1, §11), API maydonlari, yangi xarid oynasi (§2) va xarid sahifasi: jami to'landi + valyuta + kurs tanlovi, trek, "Tovar qo'limda", uch
+- [ ] TM2 **(yarim tayyor — `claude/keen-ramanujan-wvi9y4` branch'ida WIP commit, PR ochilmagan)**. Tayyor: yadro (`SupplyState`,
+  `supply_state`, `supply_path`, `transit_days` + testlar), API (`state`, `path`, `track_no`, `on_hand`, qator `sku_id` /
+  `line_sum` / `defect_qty` / `good_qty`; `GET /purchases?state=`; `POST /purchases/quick`; testlar `test_purchases.py` da
+  o'tadi), web (`QuickPurchaseForm.tsx`, ro'yxat va xarid sahifasi uch holatda, i18n uz + ru). **Qolgan:** web `typecheck` /
+  `lint` / unit testlarni yangilash (`purchases.test.tsx`, `model.test.ts`, `src/test/purchases.ts` fikstura — `state`, `path`,
+  yangi maydonlar), e2e `purchases.spec.ts` va vizual skrinshotlar, to'liq `make check`, README holati, CHANGELOG, PR.
+  Eski `stage` / `timeline` / `dates` API maydonlari ataylab qoldirilgan (TM8 da tozalanadi); "Tovar keldi — bugun" tugmasi
+  vaqtinchalik (TM4 sanash ekrani almashtiradi).
+- [ ] TM2 (tavsif) Uch holat (hosila; eski bosqich → holat, §1, §11), API maydonlari, yangi xarid oynasi (§2) va xarid sahifasi: jami to'landi + valyuta + kurs tanlovi, trek, "Tovar qo'limda", uch
   nuqtali Partiya yo'li, ro'yxatda uch holat; eski bosqich shakli olib tashlanadi, "Tarix" qoladi.
 - [ ] TM3 Kargo puli jadvali (§3): trekli qator va kodli quti (dona bo'yicha tayyor ulushlar, tahrir), xarajat turlari
   lug'ati (§4). Kargolar sahifasi soddalashadi (B5.0d dagi Kargolar sahifalashi shu yerda).

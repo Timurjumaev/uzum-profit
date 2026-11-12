@@ -117,11 +117,12 @@ export function expensesSearch(search: Record<string, unknown>): ExpensesSearch 
   return out;
 }
 
-export const PURCHASE_GROUPS = ["active", "draft", "transit", "closed"] as const;
+// ADR-061 §1: xarid holatlari (avval bosqich guruhlari edi: active / draft / transit / closed — eski havola "hammasi"ga tushadi).
+export const PURCHASE_GROUPS = ["in_transit", "in_stock", "at_uzum"] as const;
 export type PurchaseGroup = (typeof PURCHASE_GROUPS)[number];
 export type PurchasesSearch = { group?: PurchaseGroup; page?: number };
 
-/** Xaridlar (M9): bosqich guruhi (`group`) — standart "hammasi" (URL'da yo'q). */
+/** Xaridlar (M9): holat (`group`) — standart "hammasi" (URL'da yo'q). */
 export function purchasesSearch(search: Record<string, unknown>): PurchasesSearch {
   const out: PurchasesSearch = {};
   if ((PURCHASE_GROUPS as readonly unknown[]).includes(search.group)) out.group = search.group as PurchaseGroup;

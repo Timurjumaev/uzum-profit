@@ -12,25 +12,24 @@ import { currentOrg, meQuery, purchasesPageQuery } from "../../app/query";
 import { PURCHASE_GROUPS, purchasesSearch, type PurchaseGroup } from "../../app/search";
 import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, Pagination, Skeleton, usePageSize, type Column, PageHelp } from "../../components/ui";
 import { cx } from "../../components/ui/cx";
-import type { PurchaseRow, StageMark } from "../../lib/api/types";
+import type { PathMark, PurchaseRow } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
-import { GROUP_STAGES, isEstimated } from "./model";
-import { PurchaseForm } from "./PurchaseForm";
+import { GROUP_STATES, isEstimated } from "./model";
+import { QuickPurchaseForm } from "./QuickPurchaseForm";
 
 export const MANAGE_ROLES = ["owner", "manager", "warehouse"];
 
-/** Ixcham Partiya yo'li: nuqtalar qatori + joriy bosqich nomi, kunlari va kutilgan sana. */
-export function CompactPath({ marks }: { marks: StageMark[] }) {
+/** Ixcham Partiya yo'li (ADR-061 §1): uch nuqta (Yo'lda → Omborimda → Uzumda) + joriy holat, kunlari va kutilgan sana. */
+export function CompactPath({ marks }: { marks: PathMark[] }) {
   const { t } = useTranslation();
   const f = useFormat();
-  const current = marks.find((m) => m.state === "current");
-  const closed = marks.every((m) => m.state === "done");
-  const label = current ? t(`purchases.stage.${current.stage}`) : closed ? t("purchases.stage.closed") : t("purchases.stage.draft");
+  const current = marks.find((m) => m.mark === "current");
+  const label = t(`purchases.state.${current?.state ?? "in_transit"}`);
   return (
     <span className="purchase-path">
       <span className="purchase-path__dots" aria-hidden>
         {marks.map((m) => (
-          <span key={m.stage} className={cx("purchase-path__dot", `is-${m.state}`, m.delayed && "is-delayed")} />
+          <span key={m.state} className={cx("purchase-path__dot", `is-${m.mark}`, m.delayed && "is-delayed")} />
         ))}
       </span>
       <span className="purchase-path__label">
@@ -57,7 +56,7 @@ export function Purchases() {
   const search = purchasesSearch(useSearch({ strict: false }) as Record<string, unknown>);
   const group = search.group;
   const [size, setSize] = usePageSize();
-  const query = useQuery({ ...purchasesPageQuery(org.id, group ? GROUP_STAGES[group] : [], search.page, size), placeholderData: keepPreviousData });
+  const query = useQuery({ ...purchasesPageQuery(org.id, group ? GROUP_STATES[group] : [], search.page, size), placeholderData: keepPreviousData });
   // So'ralgan sahifa oxirgisidan oshib ketgan bo'lsa API oxirgisini beradi — URL ham shunga o'tadi.
   const shownPage = query.data?.page;
   useEffect(() => {
@@ -87,13 +86,14 @@ export function Purchases() {
             </span>
           )}
           <span className="caption purchase-cell__meta">
-            {t(`purchases.stage.${r.stage}`)} · {units(r)}
+            {t(`purchases.state.${r.state}`)} · {units(r)}
+            {r.track_no && ` · ${t("purchases.trackShort", { track: r.track_no })}`}
           </span>
         </span>
       ),
     },
     { key: "supplier", header: t("purchases.col.supplier"), render: (r) => r.supplier_name ?? "—" },
-    { key: "path", header: t("purchases.col.path"), render: (r) => <CompactPath marks={r.timeline} /> },
+    { key: "path", header: t("purchases.col.path"), render: (r) => <CompactPath marks={r.path} /> },
     { key: "units", header: t("purchases.col.units"), numeric: true, render: units },
     ...(amounts
       ? [
@@ -181,9 +181,9 @@ export function Purchases() {
         )}
       </div>
       {adding && (
-        <PurchaseForm
+        <QuickPurchaseForm
           orgId={org.id}
-          detail={null}
+          amounts={amounts}
           onClose={() => setAdding(false)}
           onSaved={(saved) => void navigate({ to: "/purchases/$purchaseId", params: { purchaseId: saved.purchase.id } })}
         />

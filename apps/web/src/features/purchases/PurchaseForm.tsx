@@ -13,7 +13,7 @@ import { todayTashkent } from "../../lib/dates";
 const NONE = "";
 const NEW = "__new";
 
-type Draft = { title: string; supplier: string; newSupplier: string; carrier: string; newCarrier: string; shipment: string; orderedOn: string; note: string };
+type Draft = { title: string; supplier: string; newSupplier: string; carrier: string; newCarrier: string; shipment: string; orderedOn: string; note: string; trackNo: string; onHand: boolean };
 
 export function PurchaseForm({ orgId, detail, onClose, onSaved }: { orgId: string; detail: PurchaseDetail | null; onClose: () => void; onSaved: (detail: PurchaseDetail) => void }) {
   const { t } = useTranslation();
@@ -32,6 +32,8 @@ export function PurchaseForm({ orgId, detail, onClose, onSaved }: { orgId: strin
     shipment: p?.shipment_id ?? NONE,
     orderedOn: detail ? "" : todayTashkent(),
     note: p?.note ?? "",
+    trackNo: p?.track_no ?? "",
+    onHand: p?.on_hand ?? false,
   });
   const patch = (x: Partial<Draft>) => setDraft((d) => ({ ...d, ...x }));
   const valid = (draft.supplier !== NEW || draft.newSupplier.trim() !== "") && (draft.carrier !== NEW || draft.newCarrier.trim() !== "");
@@ -45,7 +47,8 @@ export function PurchaseForm({ orgId, detail, onClose, onSaved }: { orgId: strin
       const note = draft.note.trim() || null;
       const shipment_id = draft.shipment === NONE ? null : draft.shipment;
       // Kargo: faqat o'zgargan bo'lsa yuboriladi (bog'langanda kargo sanalari xaridga ko'chadi, ajratilganda o'z holicha qoladi).
-      if (detail) return updatePurchase(orgId, detail.purchase.id, { title, supplier_id, carrier_id, note, ...(shipment_id !== (p?.shipment_id ?? null) ? { shipment_id } : {}) });
+      const track_no = draft.trackNo.trim() || null;
+      if (detail) return updatePurchase(orgId, detail.purchase.id, { title, supplier_id, carrier_id, note, track_no, on_hand: draft.onHand, ...(shipment_id !== (p?.shipment_id ?? null) ? { shipment_id } : {}) });
       return createPurchase(orgId, { title, supplier_id, carrier_id, ...(shipment_id ? { shipment_id } : {}), note, dates: draft.orderedOn ? { ordered: draft.orderedOn } : {} });
     },
     onSuccess: async (saved) => {
@@ -97,6 +100,11 @@ export function PurchaseForm({ orgId, detail, onClose, onSaved }: { orgId: strin
           options={[{ value: NONE, label: t("shipments.none") }, ...(shipments.data?.items ?? []).map((x) => ({ value: x.id, label: x.title || t("shipments.untitled") }))]}
         />
         {!detail && <TextInput label={t("purchases.fields.orderedOn")} type="date" optional value={draft.orderedOn} onValueChange={(orderedOn) => patch({ orderedOn })} />}
+        <TextInput label={t("purchases.quick.track")} optional value={draft.trackNo} onValueChange={(trackNo) => patch({ trackNo })} maxLength={100} />
+        <label className="quick-purchase__check">
+          <input type="checkbox" checked={draft.onHand} onChange={(e) => patch({ onHand: e.target.checked })} /> <span>{t("purchases.quick.onHand")}</span>
+          <span className="caption">{t("purchases.quick.onHandHint")}</span>
+        </label>
         <TextInput label={t("purchases.fields.note")} optional value={draft.note} onValueChange={(note) => patch({ note })} maxLength={500} />
       </form>
     </Dialog>

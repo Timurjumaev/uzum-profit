@@ -36,6 +36,7 @@ from upcore.purchasing import (
     AllocationBase,
     ComponentKind,
     CostComponent,
+    Flag,
     LotCost,
     Purchase,
     PurchaseError,
@@ -495,7 +496,8 @@ async def rebuild_lots(
                     "qty": cost.qty,
                     "total": cost.total.amount,
                     "unit_cost": round_rate(cost.total.amount / cost.qty),
-                    "flags": sorted(f.value for f in cost.flags),
+                    # "Qator summalari yo'q" — faqat xarid sahifasidagi eslatma (ADR-061 §2): lotga va sotuvlarga o'tmaydi.
+                    "flags": sorted(f.value for f in cost.flags if f is not Flag.NO_LINE_SUMS),
                 }
             )
     if new_rows:

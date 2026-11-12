@@ -635,3 +635,145 @@ def test_market_rate_fallback_is_used_and_flagged(world: World) -> None:
     det = ok(send(w, "GET", f"purchases/{pid}"))
     assert det["components"][0]["rate_source"] == "cbu"
     assert "market_rate" not in det["lines"][0]["flags"]
+
+
+# --- Ta'minot qayta loyihasi (ADR-061): tez xarid, uch holat ---
+
+
+def test_quick_purchase_one_request_in_transit(world: World) -> None:
+    """TM2 (ADR-061 §2): tovarlar, jami to'landi, kurs va trek — bitta so'rovda; darhol "Yo'lda"; jami qator
+    summalariga mutanosib (farq — ichki yetkazish), F20."""
+    w = world
+    det = ok(
+        send(
+            w,
+            "POST",
+            "purchases/quick",
+            lines=[
+                {"sku_id": str(w.ids["sku"]), "qty": 50, "line_sum": "700"},
+                {"sku_id": str(w.ids["sku2"]), "qty": 30, "line_sum": "80"},
+            ],
+            paid_amount="800",
+            currency="CNY",
+            rate_mode="manual",
+            rate="1800",
+            ordered_on="2026-10-01",
+            track_no="  YT123  ",
+        ),
+        201,
+    )
+    p = det["purchase"]
+    assert p["state"] == "in_transit" and p["track_no"] == "YT123" and not p["on_hand"]
+    assert [x["mark"] for x in p["path"]] == ["current", "upcoming", "upcoming"]
+    assert p["path"][0]["on"] == "2026-10-01"
+    assert D(p["total"]) == D(800 * 1800)
+    rows = lines_by(det)
+    assert rows["Mashina"]["sku_id"] == str(w.ids["sku"])
+    assert D(rows["Mashina"]["line_sum"]) == D(700) and rows["Mashina"]["good_qty"] == 50
+    assert D(rows["Mashina"]["cost"]["total"]) == (D(800 * 1800) * 700 / 780).quantize(D("0.01"))
+    assert "no_line_sums" not in rows["Mashina"]["flags"]
+    assert "cargo_missing" in rows["Mashina"]["flags"]  # kargo puli hali kiritilmagan — taxminiy
+    (goods,) = det["components"]
+    assert goods["kind"] == "goods" and goods["allocation"] == "line_sum"
+    assert goods["paid_on"] == "2026-10-01" and D(goods["applied_rate"]) == D(1800)
+    # Ro'yxat holat bo'yicha filtrlanadi.
+    ids = {x["id"] for x in w.get("purchases", state="in_transit")["items"]}
+    assert p["id"] in ids
+    assert p["id"] not in {
+        x["id"] for x in w.get("purchases", state="in_stock")["items"]
+    }
+    # Trek va "Tovar qo'limda" keyin ham o'zgaradi.
+    det = ok(send(w, "PATCH", f"purchases/{p['id']}", track_no="YT999", on_hand=True))
+    assert det["purchase"]["track_no"] == "YT999" and det["purchase"]["on_hand"]
+    assert "cargo_missing" not in lines_by(det)["Mashina"]["flags"]
+
+
+def test_quick_purchase_on_hand_is_counted_and_cbu_rate(world: World) -> None:
+    """ "Tovar qo'limda" (mahalliy xarid): darhol sanalgan — "Omborimda", kargo kutilmaydi. Qator summasi yo'q —
+    dona bo'yicha, eslatma (taxminiy emas). CNY — buyurtma kunidagi Markaziy bank kursi."""
+    w = world
+    det = ok(
+        send(
+            w,
+            "POST",
+            "purchases/quick",
+            lines=[{"sku_id": str(w.ids["sku"]), "qty": 30}, {"temp_name": "Yangi", "qty": 10}],
+            paid_amount="400000",
+            currency="UZS",
+            ordered_on="2026-10-05",
+            on_hand=True,
+        ),
+        201,
+    )
+    p = det["purchase"]
+    assert p["state"] == "in_stock" and p["on_hand"] and p["units_received"] == 40
+    assert [x["mark"] for x in p["path"]] == ["done", "current", "upcoming"]
+    rows = lines_by(det)
+    assert D(rows["Mashina"]["cost"]["unit_cost"]) == D(10_000)
+    assert rows["Mashina"]["flags"] == ["no_line_sums"]
+    cny = ok(
+        send(
+            w,
+            "POST",
+            "purchases/quick",
+            lines=[{"item_id": str(w.ids["item"]), "qty": 10}],
+            paid_amount="100",
+            ordered_on="2026-10-03",
+        ),
+        201,
+    )
+    assert D(cny["purchase"]["total"]) == D(175_000)  # 30-sentabr kursi 1 750 (dam olish kuni — oxirgi ish kuni)
+    assert cny["lines"][0]["sku_id"] is None
+    assert set(cny["lines"][0]["flags"]) == {"cargo_missing", "not_received", "cbu_rate"}
+
+
+def test_quick_purchase_validation_and_permissions(world: World) -> None:
+    w = world
+    line = {"sku_id": str(w.ids["sku"]), "qty": 5}
+    bad = [
+        {"lines": []},
+        {"lines": [{"qty": 5}], "paid_amount": "10", "currency": "UZS"},  # tovar ham, nom ham yo'q
+        {"lines": [line], "paid_amount": "10", "rate_mode": "manual"},  # qo'lda kurs yo'q
+        {"lines": [{**line, "line_sum": "11"}], "paid_amount": "10", "currency": "UZS"},
+        {"lines": [{**line, "item_id": str(w.ids["item"])}]},  # item_id va sku_id birga
+        {"lines": [line], "supplier_id": str(uuid.uuid4())},
+    ]
+    before = w.get("purchases")["total"]
+    for body in bad:
+        r = send(w, "POST", "purchases/quick", **body)
+        assert r.status_code in (404, 422), (body, r.text)
+    assert w.get("purchases")["total"] == before  # hammasi yoki hech biri
+    # Omborchi: summasiz yaratadi; summa bilan — 403.
+    r = send(w, "POST", "purchases/quick", "warehouse", lines=[line], paid_amount="5")
+    assert r.status_code == 403
+    det = ok(send(w, "POST", "purchases/quick", "warehouse", lines=[line]), 201)
+    assert det["components"] == [] and det["purchase"]["state"] == "in_transit"
+    assert send(w, "POST", "purchases/quick", "accountant", lines=[line]).status_code == 403
+
+
+def test_old_stages_map_to_three_states(world: World) -> None:
+    """ADR-061 §11: eski bosqichli xaridlar o'chmaydi — holat sanalardan; "Yo'lda" muddati tarixdan (F25)."""
+    w = world
+    old = new_purchase(w, dates={"ordered": "2026-07-01", "arrived": "2026-07-20"})["purchase"]
+    assert old["state"] == "in_transit" and old["stage"] == "arrived"
+    done = new_purchase(w, dates={"ordered": "2026-07-01", "received": "2026-07-21"})["purchase"]
+    assert done["state"] == "in_stock" and done["path"][1]["on"] == "2026-07-21"
+    sent = new_purchase(
+        w, dates={"ordered": "2026-07-01", "received": "2026-07-21", "closed": "2026-07-30"}
+    )["purchase"]
+    assert sent["state"] == "at_uzum" and [x["mark"] for x in sent["path"]] == [
+        "done",
+        "done",
+        "current",
+    ]
+    fresh = ok(
+        send(
+            w,
+            "POST",
+            "purchases/quick",
+            lines=[{"temp_name": "Kutilmoqda", "qty": 1}],
+            ordered_on="2026-10-10",
+        ),
+        201,
+    )["purchase"]
+    assert fresh["path"][0]["expected"] is not None  # tarixda buyurtma → sanash bor (20 kun)
