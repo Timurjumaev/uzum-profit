@@ -620,6 +620,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   jadvallar endi o'z ichida skroll qiladi; `e2e/orders.spec.ts`.
 - B4.63 Dona grafiklarida o'q qadami butun son (kichik sonlarda yorliqlar "1, 1, 1, 0, 0, 0" bo'lib takrorlanardi).
 - B4.63 KPI kartasida pul birligi so'z o'rtasidan bo'linmaydi ("1 200 000 soʻ" / "m" o'rniga butun "soʻm" keyingi qatorga).
+- B4.65 (ADR-056, audit K4) Postavka "keldi" = tovar savdoga chiqarilgan kun (`dateAccepted`), yaratilgan kun emas: yaratilgandan
+  savdoga chiqquncha sotilgan dona qaytgan eski tovar sifatida boshlang'ich narxda, belgisiz hisoblanadi (avval shu sotuvlar
+  "postavka bor, partiya kiritilmagan" belgisi yoki oxirgi partiya narxi bilan chiqardi).
 - B4.79b Dinamik soliq profili — Sozlamalar: aylanma rejimida soliq qatorlari muharriri (foizli yoki qat'iy: so'm yoki BHM soni,
   oy / chorak / yil) va tayyor shablonlar (YaTT: aylanmadan foiz + 1 BHM; MChJ aylanmadan; bo'sh); BHM ma'lumotnomadan
   ko'rsatiladi; profillar jadvalida qatorlar tavsifi; uz va ru; 360 px.

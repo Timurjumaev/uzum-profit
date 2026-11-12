@@ -750,6 +750,56 @@ def test_opening_shortage_uses_fbo_supplies(org: Org) -> None:
     assert costs[later][0] == D(100_000) and costs[later][2] == ["supply_no_lot"]
 
 
+def test_supply_arrives_when_put_on_sale(org: Org) -> None:
+    """ADR-056: postavka "keldi" = savdoga chiqarilgan kun (``dateAccepted``), yaratilgan kun emas. Yaratilgandan
+    savdoga chiqquncha sotilgan dona — qaytgan eski tovar (boshlang'ich narx, belgisiz); savdoga chiqarilmagan (CREATED)
+    postavka hech qachon "kelmagan"; boshlashdan oldin savdoga chiqqan postavka hisobga olinmaydi."""
+    item, sku = org.item("Postavka")
+    org.sql("UPDATE orgs SET cost_start_on = %s WHERE id = %s", [d(10, 1), org.org_id])
+    org.insert("item_costs", item_id=item, valid_from=None, unit_cost=D(50_000))
+    org.insert("opening_stock", item_id=item, uzum_qty=1, own_qty=0)
+    ext = 0
+
+    def invoice(created: date, status: str, accepted: date | None = None) -> None:
+        nonlocal ext
+        ext += 1
+        raw = {} if accepted is None else {"dateAccepted": int(at(accepted).timestamp() * 1000)}
+        inv = org.insert(
+            "fbo_invoices",
+            shop_id=org.shop_id,
+            external_id=ext,
+            status=status,
+            created_on=at(created),
+            raw=Jsonb(raw),
+        )
+        org.insert(
+            "fbo_invoice_items",
+            invoice_id=inv,
+            sku_external_id=1,
+            sku_id=sku,
+            quantity_to_stock=5,
+            quantity_accepted=5,
+        )
+
+    invoice(
+        d(9, 1), "ACCEPTED", d(9, 20)
+    )  # boshlashdan oldin savdoga chiqqan: boshlang'ich qoldiqda
+    invoice(d(10, 12), "CREATED")  # hali savdoga chiqarilmagan: kelmagan
+    invoice(d(10, 15), "ACCEPTED", d(10, 22))  # yaratilgan 15-da, savdoga 22-da chiqdi
+    between = org.sale(sku, d(10, 20), 2)  # 15–22 oralig'i: eski tovar
+    after = org.sale(sku, d(10, 25), 2)
+    org.request(calc.Scope.SHOP, org.shop_id)
+    org.recalc()
+    costs = org.costs()
+    assert costs[between][0] == D(100_000) and costs[between][2] == []
+    assert costs[after][0] == D(100_000) and costs[after][2] == ["supply_no_lot"]
+    # Savdoga chiqarish kuni (22-kun) o'zi — postavka bor.
+    same_day = org.sale(sku, d(10, 22), 1)
+    org.request(calc.Scope.SHOP, org.shop_id)
+    org.recalc()
+    assert org.costs()[same_day][2] == ["supply_no_lot"]
+
+
 def test_link_sales_fallbacks(org: Org) -> None:
     """Nom aynan mos kelmasa ham sotuv SKU'ga bog'lanadi (bir ma'noli bo'lsa); ikki ma'noli — bog'lanmaydi."""
     import asyncio
