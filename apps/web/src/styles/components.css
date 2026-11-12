@@ -797,6 +797,23 @@
 }
 
 /* --- Jadval --- */
+/* ADR-057 Q11: ro'yxat ko'rinishi — telefonda faqat asosiy ustunlar (nom + 2–3 raqam), gorizontal skrollsiz. */
+@media (max-width: 639px) {
+  .ui-table--mobile-list .ui-col--extra {
+    display: none;
+  }
+
+  /* Sarlavhalar qatorga bo'linadi (masalan, "Zaxira kunlari") — uch ustun 360 px ga sig'sin. */
+  .ui-table.ui-table--mobile-list thead th {
+    white-space: normal;
+  }
+
+  .ui-table.ui-table--mobile-list th,
+  .ui-table.ui-table--mobile-list td {
+    padding-inline: var(--space-2);
+  }
+}
+
 .ui-table-wrap {
   min-inline-size: 0; /* flex/grid ichida ham ekran kengligida qoladi, ichida skroll */
   max-inline-size: 100%;

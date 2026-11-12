@@ -18,6 +18,8 @@ export type Column<T> = {
   help?: ReactNode;
   /** Saralash kaliti (`onSort` ga beriladi); yo'q bo'lsa ustun saralanmaydi. */
   sortKey?: string;
+  /** `mobileList` jadvalda telefonda ham ko'rinadigan asosiy ustun (ADR-057 Q11: nom + 2–3 asosiy raqam). */
+  mobile?: boolean;
 };
 
 export type SortState = { key: string; desc: boolean };
@@ -34,6 +36,9 @@ export type DataTableProps<T> = {
   onSort?: (sortKey: string) => void;
   /** Shundan ko'p qatorda virtual skroll (standart 500). */
   virtualFrom?: number;
+  /** Telefonda (≤ 639 px) faqat `mobile` ustunlar — ro'yxat ko'rinishi, gorizontal skrollsiz (ADR-057 Q11). Birinchi
+   * ustun doim ko'rinadi (nom, tafsilotga havola). */
+  mobileList?: boolean;
 };
 
 const ROW_HEIGHT = { compact: 32, normal: 36, comfortable: 44 } as const;
@@ -51,8 +56,10 @@ export function DataTable<T>({
   sort,
   onSort,
   virtualFrom = 500,
+  mobileList = false,
 }: DataTableProps<T>) {
   const { t } = useTranslation();
+  const extra = (c: Column<T>) => (mobileList && !c.mobile && c !== columns[0] ? "ui-col--extra" : undefined);
   const wrap = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewport, setViewport] = useState(FALLBACK_VIEWPORT);
@@ -78,14 +85,14 @@ export function DataTable<T>({
       aria-label={caption}
       onScroll={virtual ? (e) => setScrollTop(e.currentTarget.scrollTop) : undefined}
     >
-      <table className={cx("ui-table", `ui-table--${density}`)} aria-rowcount={virtual ? rows.length + 1 : undefined}>
+      <table className={cx("ui-table", `ui-table--${density}`, mobileList && "ui-table--mobile-list")} aria-rowcount={virtual ? rows.length + 1 : undefined}>
         <caption className="ui-visually-hidden">{caption}</caption>
         <thead>
           <tr>
             {columns.map((c) => {
               const sorted = sort && c.sortKey !== undefined && sort.key === c.sortKey ? (sort.desc ? "descending" : "ascending") : undefined;
               return (
-                <th key={c.key} scope="col" className={cx(c.numeric && "num")} aria-sort={c.sortKey !== undefined ? (sorted ?? "none") : undefined}>
+                <th key={c.key} scope="col" className={cx(c.numeric && "num", extra(c))} aria-sort={c.sortKey !== undefined ? (sorted ?? "none") : undefined}>
                   {c.sortKey !== undefined && onSort ? (
                     <button type="button" className="ui-sort" onClick={() => onSort(c.sortKey!)} title={t("ui.sortBy", { name: c.header })}>
                       {c.header}
@@ -125,7 +132,7 @@ export function DataTable<T>({
                     {c.render(row)}
                   </th>
                 ) : (
-                  <td key={c.key} className={cx(c.numeric && "num")}>
+                  <td key={c.key} className={cx(c.numeric && "num", extra(c))}>
                     {c.render(row)}
                   </td>
                 ),
@@ -147,7 +154,7 @@ export function DataTable<T>({
                     {total[c.key]}
                   </th>
                 ) : (
-                  <td key={c.key} className={cx(c.numeric && "num")}>
+                  <td key={c.key} className={cx(c.numeric && "num", extra(c))}>
                     {total[c.key]}
                   </td>
                 ),

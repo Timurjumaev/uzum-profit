@@ -99,6 +99,20 @@ test.describe("mobil (360 px)", () => {
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
   });
+
+  test("Mahsulotlar — ro'yxat ko'rinishi (ADR-057 Q11): faqat nom, foyda/dona, zaxira; jadval ham gorizontal skrollsiz", async ({ page }) => {
+    await mockApi(page);
+    await open(page, "/products");
+    const table = page.getByRole("table", { name: TABLE });
+    await table.waitFor();
+    const visible = await table.locator("thead th").evaluateAll((ths) =>
+      ths.filter((th) => getComputedStyle(th).display !== "none").map((th) => th.textContent?.trim() ?? ""),
+    );
+    expect(visible).toHaveLength(3);
+    expect(visible[0]).toContain("Mahsulot");
+    const inner = await page.locator(".products .ui-table-wrap").evaluate((el) => el.scrollWidth - el.clientWidth);
+    expect(inner).toBeLessThanOrEqual(1);
+  });
 });
 
 test("SKU sahifasi (1000 px): katta KPI raqami kesilmaydi, jadval ko'rinishi kartalarni cho'zmaydi (B4.56)", async ({ page }) => {

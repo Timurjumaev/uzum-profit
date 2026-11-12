@@ -787,6 +787,10 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     KPI kartochkalari ostida, 7-ekranda — audit D1). 04 §7.2, §7.3. Vizual asoslar yangilandi (home, palette — 1440 va 390 px,
     yorug'/qorong'i; eski va yangi rasm PR diff'ida). **T:** kerak emas (yoqmasa — skrinshot bilan yozish).
   - [ ] B4.73 (Q11) Mobil ro'yxat: Mahsulotlar → Ombor → Buyurtmalar (uch PR).
+    ✓ 1-PR (2026-11-12) Mahsulotlar: `DataTable` ga umumiy `mobileList` rejimi (≤ 639 px da faqat `mobile` ustunlar + birinchi
+    ustun; sarlavha va nom qatorga bo'linadi) — Mahsulotlarda nom, foyda/dona, zaxira kunlari (04 §7.4); bosilsa — SKU sahifasi.
+    360 px da jadval gorizontal skrollsiz (avval 1 637 px kontent / 326 ko'rinardi, audit D2). Testlar: ui (`ui-col--extra`),
+    e2e (360 px: 3 ustun, jadval ichida ham skroll yo'q). **Qoldi:** Ombor, Buyurtmalar (2- va 3-PR).
   - [x] B4.74 (Q8, Q9, Q13, Q14) Reja hujjatlari: B4 yopish (B4.27, B4.55, B4.61 → B5 boshi), Telegram B6.1–B6.2 oldinga, rejaga
     qo'shimchalar, 03 §2 va ADR-004 haqiqatga; Uzum API shartlari (Temurdan kabinet matni).
     ✓ 2026-11-12 (ADR-059, ADR-060): B4.27, B4.55, B4.61, sahifalash qoldig'i, B4.76 va B4.81 → **B5.0** (B5 boshi); bosqichlar
