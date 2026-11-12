@@ -69,20 +69,24 @@ describe("menyu", () => {
       "Xarajatlar",
       "Xaridlar",
       "Ombor",
-      "Pul oqimi",
-      "Hisobotlar",
       "Maʼlumotlar holati",
       "Sozlamalar",
-    ]);
+    ]); // ADR-057 Q12: tayyor bo'lmagan "Pul oqimi" va "Hisobotlar" menyuda yo'q
     expect(sidebar().getByRole("link", { name: "Asosiy" }).getAttribute("aria-current")).toBe("page");
-    expect(sidebar().getByRole("link", { name: "Pul oqimi" }).getAttribute("aria-current")).toBeNull();
+    expect(sidebar().getByRole("link", { name: "Sozlamalar" }).getAttribute("aria-current")).toBeNull();
 
-    fireEvent.click(sidebar().getByRole("link", { name: "Pul oqimi" }));
+    fireEvent.click(sidebar().getByRole("link", { name: "Sozlamalar" }));
+    await waitFor(() => expect(history.location.pathname).toBe("/settings"));
+    expect(sidebar().getByRole("link", { name: "Sozlamalar" }).getAttribute("aria-current")).toBe("page");
+    expect(sidebar().getByRole("link", { name: "Asosiy" }).getAttribute("aria-current")).toBeNull();
+  });
+
+  it("menyudan olib tashlangan bo'lim eski havola bilan 404 emas — \"qurilmoqda\" sahifasi", async () => {
+    const { history } = await renderShell("/cash");
     expect(await screen.findByRole("heading", { name: "Pul oqimi" })).toBeTruthy();
     expect(screen.getByText("Sahifa qurilmoqda. Hozircha eski dasturdan foydalaning.")).toBeTruthy();
     expect(history.location.pathname).toBe("/cash");
-    expect(sidebar().getByRole("link", { name: "Pul oqimi" }).getAttribute("aria-current")).toBe("page");
-    expect(sidebar().getByRole("link", { name: "Asosiy" }).getAttribute("aria-current")).toBeNull();
+    expect(sidebar().queryByRole("link", { name: "Pul oqimi" })).toBeNull();
   });
 
   it("har bo'lim o'z sahifasiga olib boradi (404 emas)", async () => {
@@ -588,14 +592,11 @@ describe("mobil tab bar", () => {
       "Mahsulotlar",
       "Buyurtmalar",
       "Xarajatlar",
-      "Pul oqimi",
-      "Hisobotlar",
       "Maʼlumotlar holati",
       "Sozlamalar",
     ]);
-    fireEvent.click(drawer.getByRole("link", { name: "Pul oqimi" }));
-    await screen.findByRole("heading", { name: "Pul oqimi" });
-    expect(history.location.pathname).toBe("/cash");
+    fireEvent.click(drawer.getByRole("link", { name: "Sozlamalar" }));
+    await waitFor(() => expect(history.location.pathname).toBe("/settings"));
     expect(screen.queryByRole("dialog", { name: "Yana" })).toBeNull();
     expect(tabbar().getByRole("button", { name: "Yana" }).className).toContain("is-active");
   });

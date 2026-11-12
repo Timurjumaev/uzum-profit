@@ -777,7 +777,10 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     Hisob formulalari o'zgarmadi (F23 hali kun oxiridagi qoldiqdan): bu ma'lumot keyin F34 (tugab qolish yo'qotishi) va
     yakunlanish muddati (S2) uchun. Testlar: sinxron (bugungi qator yangilanadi, 0 belgisi qoladi; birinchi ko'rilgan vaqt bir
     marta). **T:** kerak emas.
-  - [ ] B4.71 (Q12) Menyuda "Pul oqimi" va "Hisobotlar" yashiriladi.
+  - [x] B4.71 (Q12) Menyuda "Pul oqimi" va "Hisobotlar" yashiriladi.
+    ✓ 2026-11-12: `nav.ts` — ikkalasi `NAV_MAIN` dan `NAV_HIDDEN` ga (sidebar, "Yana", Ctrl+K da yo'q); marshrutlari "qurilmoqda"
+    sahifasi bilan qoladi (eski havola 404 emas). Tayyor bo'lganda qaytadi (B5.7, B7). Testlar: shell (menyu ro'yxati, eski
+    havola). **T:** kerak emas.
   - [ ] B4.72 (Q10) Bosh sahifa tartibi (ikkala variant skrinshoti PR'da).
   - [ ] B4.73 (Q11) Mobil ro'yxat: Mahsulotlar → Ombor → Buyurtmalar (uch PR).
   - [x] B4.74 (Q8, Q9, Q13, Q14) Reja hujjatlari: B4 yopish (B4.27, B4.55, B4.61 → B5 boshi), Telegram B6.1–B6.2 oldinga, rejaga
