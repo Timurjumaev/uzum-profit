@@ -828,7 +828,11 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     K14 — ADR-040 havolasi M17 / B8.3. R4 — 02 M6 (sahifalash), 03 §8 (sahifa + kursor), §10 (RLS asosiy himoya, CI audit),
     §12 (360 px — PR-7), 04 §1/§2.1/§6.4 (KPI guruh sarlavhasi — yagona katta harf istisno, kartochka radiusi 10 px), §7.4
     (mobil ro'yxat ko'rinishidagi jadval), 05 B4.55/B4.56–B4.61 tartibi va belgisi, `index.html` `theme-color` `#F6F5F1`.
-    **Qoldi:** PR-7, PR-8.
+    ✓ PR-7 (2026-11-12) Test qamrovi: T1 — vizual asoslar Mahsulotlar, SKU, Buyurtmalar, Xarajatlar, Ombor, Sozlamalar,
+    Boshlang'ich holat uchun (yorug'/qorong'i × desktop/mobil); T2 — Playwright mobil loyihasi 390 → 360 px (tamoyil 10; hamma
+    mobil asoslar yangilandi); T3 — axe: Mahsulotlar, SKU, Buyurtmalar, Xarajatlar, Kargolar va kargo sahifasi. axe topgan
+    xato tuzatildi: Mahsulotlar jadvalidagi 12 px izoh `text-muted` da edi (kontrast 3,84) → `text-secondary`. E2E soxta
+    API'ga `/expenses` qo'shildi (avval Xarajatlar e2e'da xato holatini ko'rsatardi). **Qoldi:** PR-8.
   - [x] B4.75b (CI) E2E job'ida brauzer apt'siz o'rnatiladi; apt tizim paketlari ixtiyoriy (2 urinish, keyin ogohlantirish):
     2026-11-11 da runner'dan Ubuntu arxivi ochilmay, main, #135 va #136 testlarsiz qizardi. Paketlar faqat qo'shimcha shriftlar —
     ularsiz e2e va skrinshotlar bir xil o'tishi tekshirildi.

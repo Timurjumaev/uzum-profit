@@ -4,6 +4,7 @@
 import type { Page, Route } from "@playwright/test";
 
 import { dashboardData } from "../../src/test/dashboard";
+import { expensesData } from "../../src/test/expenses";
 import { inventoryData } from "../../src/test/inventory";
 import { pnlData, skuColumns } from "../../src/test/pnl";
 import { openingData, openingRow } from "../../src/test/opening";
@@ -240,6 +241,7 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
     // Buyurtmalar ro'yxati sahifalab so'raydi (`page`, ADR-054); P&L drill-down — kursor bilan (namuna `SALES`).
     if (key === `GET /orgs/${ORG_ID}/sales`) return json(route, 200, url.searchParams.has("page") ? salesData() : SALES);
     if (key === `GET /orgs/${ORG_ID}/orders/analysis`) return json(route, 200, analysisData());
+    if (key === `GET /orgs/${ORG_ID}/expenses`) return json(route, 200, expensesData());
     if (key === `GET /orgs/${ORG_ID}/settings`) return json(route, 200, settingsData());
     if (key === `GET /orgs/${ORG_ID}/opening`) {
       // Bitta mahsulotning ikki turi (rang) — "hammasiga bitta narx" guruhi.

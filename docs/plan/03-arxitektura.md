@@ -322,7 +322,7 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
 | Migratsiyalar | Alembic upgrade/downgrade CI'da | har PR |
 | Frontend | Vitest + Testing Library | formatlash va formalar |
 | E2E | Playwright | kirish, onboarding, xarid kiritish, P&L, eksport |
-| Vizual | Playwright skrinshotlari (yorug'/qorong'i, 1440 va 390 px; 360 px — B4.75 PR-7, tamoyil 10) | asosiy sahifalar |
+| Vizual | Playwright skrinshotlari (yorug'/qorong'i, 1440 va 360 px — mobil loyiha eng kichik ekranda, tamoyil 10; B4.75 PR-7) | asosiy sahifalar (Mahsulotlar, SKU, Buyurtmalar, Xarajatlar, Ombor, Sozlamalar, Boshlang'ich holat ham) |
 | Accessibility | axe-core | jiddiy xato 0 |
 
 Golden ma'lumot: sintetik generator (CI uchun) + Temurning real ma'lumoti faqat lokal (repozitoriyga kirmaydi,

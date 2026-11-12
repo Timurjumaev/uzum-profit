@@ -1,6 +1,6 @@
 // E2E va vizual testlar (03 §14): production build (`vite preview`) brauzerda, API — `e2e/support/api.ts` dagi soxta
 // (marshrut darajasida), shuning uchun backend va baza kerak emas va natija deterministik. Haqiqiy backend bilan
-// e2e (staging) — B8. Ikki o'lcham: 1440 (desktop) va 390 px (mobil) — 04 §11; yorug'/qorong'i — testlarda.
+// e2e (staging) — B8. Ikki o'lcham: 1440 (desktop) va 360 px (mobil — eng kichik ekran, tamoyil 10; audit T2) — 04 §11; yorug'/qorong'i — testlarda.
 import { defineConfig, devices } from "@playwright/test";
 
 const PORT = 4173;
@@ -29,7 +29,7 @@ export default defineConfig({
   },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } },
-    { name: "mobile", use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 }, hasTouch: true } },
+    { name: "mobile", use: { ...devices["Desktop Chrome"], viewport: { width: 360, height: 800 }, hasTouch: true } },
   ],
   webServer: {
     command: `pnpm exec vite preview --port ${PORT} --strictPort`,

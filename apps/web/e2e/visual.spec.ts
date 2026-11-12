@@ -1,4 +1,4 @@
-// Vizual regressiya (03 §14): asosiy sahifalar skrinshotlari — yorug'/qorong'i × 1440/390 px. Baza (baseline) repoda
+// Vizual regressiya (03 §14): asosiy sahifalar skrinshotlari — yorug'/qorong'i × 1440/360 px. Baza (baseline) repoda
 // (`e2e/__screenshots__`); yangilash: `pnpm --filter web e2e:update` va farqni ko'zdan kechirib commit qilish.
 // Vaqt qotirilgan, animatsiya o'chiq, tarmoq — soxta: farq faqat haqiqiy o'zgarishdan chiqadi.
 import { expect, test, type Page } from "@playwright/test";
@@ -8,6 +8,7 @@ import { SHIPMENT_1 } from "../src/test/shipments";
 import { loadingSync, mockApi, NEW_USER, SHOPS, type ApiState } from "./support/api";
 import { open } from "./support/page";
 
+const SKU = "51111111-1111-4111-8111-111111111111";
 const fresh = SHOPS.map((s) => ({ ...s, alias: null, color: null, history_status: null }));
 
 type Shot = { name: string; path: string; state?: Partial<ApiState>; prepare?: (page: Page) => Promise<void>; full?: boolean };
@@ -38,6 +39,13 @@ const SHOTS: Shot[] = [
     },
   },
   { name: "status", path: "/status" },
+  { name: "products", path: "/products" },
+  { name: "sku", path: `/products/${SKU}` },
+  { name: "orders", path: "/orders" },
+  { name: "expenses", path: "/expenses" },
+  { name: "inventory", path: "/inventory" },
+  { name: "settings", path: "/settings" },
+  { name: "opening", path: "/opening" },
   { name: "purchases", path: "/purchases" },
   { name: "purchase", path: `/purchases/${PURCHASE_1}` },
   { name: "shipments", path: "/shipments" },
