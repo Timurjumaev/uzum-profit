@@ -69,13 +69,14 @@ describe("roʻyxat", () => {
     expect(screen.getByRole("heading", { level: 1 }).textContent).toContain("Buyurtmalar");
     const rows = within(table).getAllByRole("row").slice(1);
     expect(rows).toHaveLength(4);
-    expect(within(rows[0]!).getByText("Yakunlangan")).toBeTruthy();
+    // Holat ikki joyda: holat ustuni (desktop) va sana ostida (telefon, ADR-057 Q11) — CSS bittasini ko'rsatadi.
+    expect(within(rows[0]!).getAllByText("Yakunlangan")).toHaveLength(2);
     expect(within(rows[0]!).getByText(n("310000.00"))).toBeTruthy();
-    expect(within(rows[1]!).getByText("Bekor")).toBeTruthy();
+    expect(within(rows[1]!).getAllByText("Bekor")).toHaveLength(2);
     expect(within(rows[1]!).getAllByText("—").length).toBeGreaterThan(0); // tannarx va foyda noma'lum
     expect(within(rows[2]!).queryByText("Bonus davri")).toBeNull(); // bonus belgisi yo'q (ADR-035)
     expect(within(rows[2]!).getByText("SKU bogʻlanmagan")).toBeTruthy();
-    expect(within(rows[3]!).getByText("Jarayonda")).toBeTruthy();
+    expect(within(rows[3]!).getAllByText("Jarayonda")).toHaveLength(2);
     // Tannarx taxminiy (F22) va logistika taxminiy (Uzum hali yozmagan, ADR-037) — ikkala belgi.
     expect(within(rows[3]!).getAllByText("Taxminiy")).toHaveLength(2);
     const summary = document.querySelector(".orders-summary")!.textContent!;

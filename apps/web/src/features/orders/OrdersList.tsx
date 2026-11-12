@@ -43,7 +43,19 @@ export function OrdersList({ orgId, params, group, page }: Props) {
     <FormulaPopover metric={metric} code={t(`home.formula.${key}.code`)} formula={t(`home.formula.${key}.formula`)} source={t(`home.formula.${key}.source`)} />
   );
   const columns: Column<Sale>[] = [
-    { key: "day", header: t("orders.col.day"), render: (r) => f.date(r.day) },
+    {
+      key: "day",
+      header: t("orders.col.day"),
+      // ADR-057 Q11: telefonda holat ustuni yashirin — holat sana ostida (faqat ≤ 639 px da ko'rinadi).
+      render: (r) => (
+        <span className="orders-cell">
+          {f.date(r.day)}
+          <span className="orders-cell__mobile-meta">
+            <Badge tone={GROUP_TONE[r.group]}>{t(`orders.group.${r.group}`)}</Badge>
+          </span>
+        </span>
+      ),
+    },
     {
       key: "status",
       header: t("orders.col.status"),
@@ -52,6 +64,7 @@ export function OrdersList({ orgId, params, group, page }: Props) {
     {
       key: "sku",
       header: t("orders.col.sku"),
+      mobile: true, // ADR-057 Q11: telefonda sana (ostida holat), SKU va yalpi foyda
       render: (r) => r.sku_title ?? t("orders.unlinked"),
     },
     { key: "amount", header: t("orders.col.units"), numeric: true, render: (r) => f.number(r.amount) },
@@ -76,7 +89,7 @@ export function OrdersList({ orgId, params, group, page }: Props) {
       numeric: true,
       render: (r) => <CostCell cogs={r.cogs} flags={r.cost_flags} />,
     },
-    { key: "profit", header: t("terms.grossProfit"), help: help("grossProfit", t("terms.grossProfit")), numeric: true, render: (r) => (r.gross_profit === null ? "—" : f.money(r.gross_profit, { unit: false })) },
+    { key: "profit", mobile: true, header: t("terms.grossProfit"), help: help("grossProfit", t("terms.grossProfit")), numeric: true, render: (r) => (r.gross_profit === null ? "—" : f.money(r.gross_profit, { unit: false })) },
   ];
   const s = first.summary;
   return (
@@ -105,7 +118,7 @@ export function OrdersList({ orgId, params, group, page }: Props) {
         <EmptyState title={t("orders.empty")} text={t("orders.emptyText")} />
       ) : (
         <>
-          <DataTable caption={t("orders.caption")} density="compact" columns={columns} rows={rows} rowKey={(r) => r.id} />
+          <DataTable caption={t("orders.caption")} density="compact" columns={columns} rows={rows} rowKey={(r) => r.id} mobileList />
           <Pagination
             page={first.page}
             pages={first.pages}

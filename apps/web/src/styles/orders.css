@@ -164,3 +164,24 @@
   white-space: normal;
   min-inline-size: 12rem;
 }
+
+/* ADR-057 Q11: Buyurtmalar ro'yxati telefonda — holat sana ostida (holat ustuni yashirin), SKU nomi qatorga bo'linadi. */
+.orders-cell {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: start;
+}
+
+.orders-cell__mobile-meta {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .orders-cell__mobile-meta {
+    display: block;
+  }
+
+  .orders-list .ui-table--mobile-list tbody td {
+    white-space: normal;
+  }
+}

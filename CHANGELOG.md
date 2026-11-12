@@ -440,6 +440,7 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.73 (ADR-057 Q11), 3-qism: Buyurtmalar telefonda ro'yxat ko'rinishida (sana — ostida holat, SKU, yalpi foyda).
 - B4.73 (ADR-057 Q11), 2-qism: Ombor telefonda ro'yxat ko'rinishida (nom, holat, zaxira kunlari; amallar nom ostida).
 - B4.73 (ADR-057 Q11, audit D2), 1-qism: Mahsulotlar telefonda ro'yxat ko'rinishida (nom, foyda/dona, zaxira kunlari;
   gorizontal skrollsiz); `DataTable` — umumiy `mobileList` rejimi va ustunning `mobile` belgisi.
