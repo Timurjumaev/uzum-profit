@@ -377,6 +377,18 @@ describe("raqamli komponentlar", () => {
     expect(screen.getByText("Hali sotuv yoʻq")).toBeTruthy();
   });
 
+  it("DataTable mobileList (ADR-057 Q11): asosiy bo'lmagan ustunlar `ui-col--extra` (telefonda yashirin), birinchisi doim", () => {
+    const cols = [
+      { key: "name", header: "Nom", render: (r: { n: string }) => r.n },
+      { key: "a", header: "A", numeric: true, mobile: true, render: () => "1" },
+      { key: "b", header: "B", numeric: true, render: () => "2" },
+    ];
+    const { container } = render(<DataTable caption="SKU" columns={cols} rows={[{ n: "X" }]} rowKey={(r) => r.n} mobileList />);
+    expect(container.querySelector("table")!.className).toContain("ui-table--mobile-list");
+    expect([...container.querySelectorAll("thead th")].map((th) => th.classList.contains("ui-col--extra"))).toEqual([false, false, true]);
+    expect([...container.querySelectorAll("tbody tr > *")].map((c) => c.classList.contains("ui-col--extra"))).toEqual([false, false, true]);
+  });
+
   it("DataTable: saralanadigan sarlavha — aria-sort, yo'nalish matni, bosilsa kalit; yonidagi '?' alohida", () => {
     type Row = { n: string; v: string };
     const columns = [

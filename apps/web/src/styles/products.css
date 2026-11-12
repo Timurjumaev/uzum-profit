@@ -358,6 +358,22 @@
   }
 }
 
+/* ADR-057 Q11: ro'yxat ko'rinishida nom va izoh qatorga bo'linadi — jadval ekranga sig'adi (gorizontal skrollsiz). */
+@media (max-width: 639px) {
+  .products .ui-table--mobile-list tbody th {
+    white-space: normal;
+  }
+
+  .products .ui-table--mobile-list .products-cell {
+    min-inline-size: 8rem;
+  }
+
+  .products .ui-table--mobile-list .products-cell .caption {
+    max-inline-size: none;
+    white-space: normal;
+  }
+}
+
 @media (max-width: 640px) {
   .sku__kpis {
     grid-template-columns: repeat(2, minmax(0, 1fr));

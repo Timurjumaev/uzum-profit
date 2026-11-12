@@ -194,6 +194,7 @@ export function Products() {
           rows={rows}
           rowKey={(r) => r.sku_id}
           density="compact"
+          mobileList
           sort={{ key: sort.key, desc: sort.desc }}
           onSort={(key) => {
             const next = sortParam(nextSort(sort, key as ProductSort));
@@ -228,6 +229,8 @@ const cell = (value: string | null, render: (v: string) => ReactNode) => (value 
 function tone(value: string | null): string | undefined {
   return value !== null && value.startsWith("-") && !/^-0+(\.0*)?$/.test(value) ? "ui-text--negative" : undefined;
 }
+
+const MOBILE_COLUMNS: ReadonlySet<ColumnId> = new Set(["product", "profit", "days"]);
 
 function buildColumns(ids: readonly ColumnId[], { t, f, shopName, list }: Ctx): Column<SkuRow>[] {
   const money = (v: string | null) => cell(v, (x) => <span className={tone(x)}>{f.money(x, { unit: false })}</span>);
@@ -294,6 +297,8 @@ function buildColumns(ids: readonly ColumnId[], { t, f, shopName, list }: Ctx): 
     render: all[id],
     sortKey: SORT_KEY[id],
     help: help(id),
+    // ADR-057 Q11, 04 §7.4: telefonda nom, foyda/dona va zaxira kunlari; qolgani — SKU sahifasida.
+    mobile: MOBILE_COLUMNS.has(id),
   }));
 }
 
