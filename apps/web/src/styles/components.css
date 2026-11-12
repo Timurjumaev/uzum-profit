@@ -884,14 +884,21 @@
    matn bilan bir qatorda qoladi — ustun kengligini ma'lumot belgilaydi, uzun sarlavha emas. */
 .ui-th {
   display: inline-flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 2px;
   vertical-align: middle;
 }
 
-.ui-table thead th.num {
-  white-space: normal;
+/* Faqat desktopda (keng jadvallar): telefonda sarlavhalar avvalgidek bir qatorda — ro'yxat ko'rinishi o'z qoidasi bilan
+   (ADR-057 Q11); bo'linish chegarasidagi sarlavha mashinalar orasida turlicha bo'linib, skrinshot farq qilardi. */
+@media (min-width: 640px) {
+  .ui-th {
+    flex-wrap: wrap;
+  }
+
+  .ui-table thead th.num {
+    white-space: normal;
+  }
 }
 
 .ui-table thead th.num .ui-th {
