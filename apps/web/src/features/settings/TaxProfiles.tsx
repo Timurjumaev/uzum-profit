@@ -10,7 +10,8 @@ import type { Settings, TaxProfile } from "../../lib/api/types";
 import { todayTashkent } from "../../lib/dates";
 import { useFormat } from "../../lib/i18n";
 import { Confirm } from "./Confirm";
-import { activeTax, REGIMES, taxBody, taxDraft, taxValid, type TaxDraft } from "./model";
+import { activeTax, REGIMES, TAXPAYERS, TEMPLATE_TAXPAYER, taxBody, taxDraft, taxValid, type TaxDraft } from "./model";
+import { RevenueLimitStatus } from "./RevenueLimit";
 import { TaxLinesEditor } from "./TaxLinesEditor";
 import { useSettingsMutation } from "./useSettingsMutation";
 
@@ -47,6 +48,7 @@ export function TaxProfiles({ orgId, data, canManage }: { orgId: string; data: S
       render: (p) => (
         <>
           {t(`settings.tax.regime.${p.regime}`)} {p.id === current?.id && <Badge tone="positive">{t("settings.tax.current")}</Badge>}
+          {p.taxpayer && <span className="caption settings-tax__taxpayer">{t(`settings.tax.taxpayer.${p.taxpayer}`)}</span>}
         </>
       ),
     },
@@ -84,6 +86,7 @@ export function TaxProfiles({ orgId, data, canManage }: { orgId: string; data: S
       ) : (
         <DataTable caption={t("settings.tax.title")} columns={columns} rows={data.tax_profiles} rowKey={(p) => p.id} />
       )}
+      {current && <RevenueLimitStatus limit={data.revenue_limit} />}
       {editing && <TaxForm orgId={orgId} data={data} profile={editing.profile} today={today} onClose={() => setEditing(null)} />}
       {removing && (
         <Confirm title={t("settings.tax.deleteTitle")} action={t("settings.delete")} loading={remove.isPending} onConfirm={() => remove.mutate(removing.id)} onClose={() => setRemoving(null)}>
@@ -127,8 +130,15 @@ function TaxForm({ orgId, data, profile, today, onClose }: { orgId: string; data
     >
       <form id="tax-form" className="settings-form" onSubmit={submit}>
         <TextInput label={t("settings.tax.from")} help={t("settings.tax.fromHelp")} type="date" required value={draft.valid_from} onValueChange={(valid_from) => patch({ valid_from })} />
+        <Select
+          label={t("settings.tax.taxpayerLabel")}
+          help={t("settings.tax.taxpayerHelp")}
+          value={draft.taxpayer}
+          onValueChange={(taxpayer) => patch({ taxpayer: taxpayer as TaxDraft["taxpayer"] })}
+          options={[{ value: "", label: t("settings.tax.taxpayer.none") }, ...TAXPAYERS.map((k) => ({ value: k, label: t(`settings.tax.taxpayer.${k}`) }))]}
+        />
         <Select label={t("settings.tax.regimeLabel")} value={draft.regime} onValueChange={(regime) => patch({ regime: regime as TaxDraft["regime"] })} options={REGIMES.map((r) => ({ value: r, label: t(`settings.tax.regime.${r}`) }))} help={t(`settings.tax.regimeHelp.${draft.regime}`)} />
-        {draft.regime === "turnover" && <TaxLinesEditor lines={draft.lines} onChange={(lines) => patch({ lines })} rates={data.tax_rates} bhm={bhm} />}
+        {draft.regime === "turnover" && <TaxLinesEditor lines={draft.lines} onChange={(lines) => patch({ lines })} rates={data.tax_rates} bhm={bhm} onTemplate={(kind) => TEMPLATE_TAXPAYER[kind] && patch({ taxpayer: TEMPLATE_TAXPAYER[kind] })} />}
         {draft.regime === "vat_profit" && (
           <>
             <NumberInput label={t("settings.tax.vat")} suffix="%" value={draft.vat} onValueChange={(vat) => patch({ vat })} />

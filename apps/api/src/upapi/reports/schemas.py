@@ -10,6 +10,7 @@ from decimal import Decimal
 from pydantic import BaseModel
 from upcore.money import Money
 from upcore.pnl import CompareRow, Statement
+from upcore.tax import LimitLevel, RevenueLimit, Taxpayer
 
 
 def amount(value: Money | None) -> Decimal | None:
@@ -218,4 +219,26 @@ class ExpectedOut(BaseModel):
             logistics_missing_lines=p.logistics_missing_lines,
             uzum_estimated={c.value: a.amount for c, a in sorted(p.uzum_estimated.items())},
             rate=rate,
+        )
+
+
+class RevenueLimitOut(BaseModel):
+    """F50 (B4.80): yillik tushum chegarasi — ``level`` ``near`` (≥ 80%) yoki ``over`` (≥ 100%) bo'lsa ogohlantirish."""
+
+    taxpayer: Taxpayer
+    year: int
+    revenue: Decimal  # F3, yil boshidan bugungacha, butun tashkilot
+    limit: Decimal
+    share: Decimal  # revenue / limit
+    level: LimitLevel
+
+    @classmethod
+    def of(cls, r: RevenueLimit) -> RevenueLimitOut:
+        return cls(
+            taxpayer=r.taxpayer,
+            year=r.year,
+            revenue=r.revenue.amount,
+            limit=r.limit.amount,
+            share=r.share,
+            level=r.level,
         )

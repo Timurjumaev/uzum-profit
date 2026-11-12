@@ -11,6 +11,9 @@ Rejimlar:
 
 ADR-058: profil endi **soliq qatorlari** (``TaxLine``) ro'yxati — foizli (``percent``) va qat'iy (``fixed``: so'm yoki
 n × BHM; oy / chorak / yil). Eski profillar (``lines`` bo'sh) ``profile_lines`` orqali qatorlarga o'giriladi.
+
+F50 (B4.80): yillik tushum chegarasi — soliq to'lovchi turi (``Taxpayer``) bo'yicha chegara ma'lumotnomadan, yil boshidan
+tushum uning 80% iga yetsa ogohlantirish (rejim o'zi almashmaydi).
 """
 
 from __future__ import annotations
@@ -69,6 +72,10 @@ class AmountValue:
 
 
 BHM = "bhm"
+# F50 chegaralari (ADR-058; 08 §6): so'mda, MChJ — BHM sonida (so'm = son × sanadagi BHM).
+LIMIT_INDIVIDUAL = "revenue_limit_individual"
+LIMIT_SELF_EMPLOYED = "revenue_limit_self_employed"
+LIMIT_LLC_BHM = "revenue_limit_llc_bhm"
 
 SEED_AMOUNTS: tuple[AmountValue, ...] = (
     AmountValue(BHM, date(2025, 8, 1), Decimal(412_000), "bazaviy hisoblash miqdori"),
@@ -78,7 +85,33 @@ SEED_AMOUNTS: tuple[AmountValue, ...] = (
         Decimal(440_000),
         "PF-115 (2026-06-23); aksar manbalarda 1 sentabrdan, bittasida 1 iyuldan — matn bilan tekshiriladi",
     ),
+    AmountValue(
+        LIMIT_INDIVIDUAL,
+        date(2026, 1, 1),
+        Decimal(1_000_000_000),
+        "YaTT aylanma solig'i: yillik daromad 1 mlrd so'mgacha (08 §6)",
+    ),
+    AmountValue(
+        LIMIT_SELF_EMPLOYED,
+        date(2026, 1, 1),
+        Decimal(100_000_000),
+        "o'zini o'zi band qilgan: yillik daromad 100 mln so'mgacha ozod (08 §6)",
+    ),
+    AmountValue(
+        LIMIT_LLC_BHM,
+        date(2026, 1, 1),
+        Decimal(12_000),
+        "MChJ aylanma solig'i: yillik aylanma 12 000 BHM gacha — BHM soni, so'm emas (08 §6)",
+    ),
 )
+
+
+class Taxpayer(StrEnum):
+    """Soliq to'lovchi turi (F50 chegarasi uchun; profilda ixtiyoriy)."""
+
+    INDIVIDUAL = "individual"  # YaTT
+    LLC = "llc"  # MChJ
+    SELF_EMPLOYED = "self_employed"  # o'zini o'zi band qilgan
 
 
 class LineKind(StrEnum):
@@ -134,6 +167,7 @@ class TaxProfile:
     vat_pct: Decimal = Decimal(0)  # (c)
     profit_pct: Decimal = Decimal(0)  # (c)
     lines: tuple[TaxLine, ...] = ()  # ADR-058; bo'sh bo'lsa — eski ustunlardan (``profile_lines``)
+    taxpayer: Taxpayer | None = None  # F50; ``None`` — ko'rsatilmagan (chegara ogohlantirishi yo'q)
 
     def __post_init__(self) -> None:
         names = [line.name.strip().casefold() for line in self.lines]
@@ -330,3 +364,68 @@ def vat_profit_estimate(
 def effective_rate(tax: Money, revenue: Money) -> Decimal | None:
     """Soliqning tushumga nisbati (taqqoslash uchun)."""
     return ratio(tax.amount, revenue.amount)
+
+
+# --- F50. Yillik tushum chegarasi (B4.80) -----------------------------------------------------------------------------
+
+WARN_SHARE = Decimal("0.8")  # ADR-058: chegaraning 80% i — "rejimni o'zgartirish vaqti"
+
+
+class LimitLevel(StrEnum):
+    OK = "ok"  # < 80%
+    NEAR = "near"  # ≥ 80%
+    OVER = "over"  # ≥ 100%
+
+
+def revenue_limit(taxpayer: Taxpayer, day: date, values: Iterable[AmountValue]) -> Money | None:
+    """F50 chegarasi sanada: YaTT va o'zini o'zi band qilgan — so'mda; MChJ — BHM soni × sanadagi BHM. Ma'lumotnomada
+    qiymat bo'lmasa ``None``."""
+    items = list(values)
+    if taxpayer is Taxpayer.LLC:
+        count, bhm = amount_on(items, LIMIT_LLC_BHM, day), amount_on(items, BHM, day)
+        return None if count is None or bhm is None else Money(count * bhm, UZS)
+    code = LIMIT_INDIVIDUAL if taxpayer is Taxpayer.INDIVIDUAL else LIMIT_SELF_EMPLOYED
+    value = amount_on(items, code, day)
+    return None if value is None else Money(value, UZS)
+
+
+@dataclass(frozen=True, slots=True)
+class RevenueLimit:
+    """F50 holati: ``revenue`` — yil boshidan ``day`` gacha tushum (F3, butun tashkilot), ``limit`` — chegara."""
+
+    taxpayer: Taxpayer
+    year: int
+    revenue: Money
+    limit: Money
+
+    def __post_init__(self) -> None:
+        if self.limit.amount <= 0:
+            raise ValueError("tushum chegarasi 0 dan katta bo'lishi kerak")
+
+    @property
+    def share(self) -> Decimal:
+        """Tushum / chegara (6 xona)."""
+        return ratio(self.revenue.amount, self.limit.amount) or Decimal(0)
+
+    @property
+    def level(self) -> LimitLevel:
+        """≥ 100% — oshdi; ≥ 80% — yaqin (ogohlantirish); qolgani — joyida."""
+        if self.revenue.amount >= self.limit.amount:
+            return LimitLevel.OVER
+        if self.revenue.amount >= self.limit.amount * WARN_SHARE:
+            return LimitLevel.NEAR
+        return LimitLevel.OK
+
+
+def revenue_limit_status(
+    profiles: Iterable[TaxProfile], day: date, revenue_ytd: Money, values: Iterable[AmountValue]
+) -> RevenueLimit | None:
+    """F50. Yillik tushum chegarasi: sanadagi profilning soliq to'lovchi turi bo'yicha chegara va yil boshidan tushum
+    (F3). Profil, tur yoki chegara bo'lmasa (yoki chegara ≤ 0) — ``None``. Rejim o'zi almashmaydi, faqat ogohlantirish."""
+    profile = profile_on(profiles, day)
+    if profile is None or profile.taxpayer is None:
+        return None
+    limit = revenue_limit(profile.taxpayer, day, values)
+    if limit is None or limit.amount <= 0:
+        return None
+    return RevenueLimit(profile.taxpayer, day.year, revenue_ytd, limit)

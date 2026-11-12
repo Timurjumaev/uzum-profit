@@ -71,8 +71,9 @@ describe("soliq profili shakli", () => {
         { name: "Ijtimoiy soliq", kind: "fixed", rate_pct: "0", base: "revenue", period: "month", bhm_count: "1" },
         { name: "Qat'iy", kind: "fixed", rate_pct: "0", base: "revenue", period: "quarter", amount: "310000" },
       ],
+      taxpayer: null, // F50: tanlanmagan
     });
-    expect(taxBody({ ...d, regime: "vat_profit" })).toEqual({ valid_from: today, regime: "vat_profit", rate_pct: "0", base: "revenue", vat_pct: "12", profit_pct: "15", lines: [] });
+    expect(taxBody({ ...d, regime: "vat_profit", taxpayer: "llc" })).toEqual({ valid_from: today, regime: "vat_profit", rate_pct: "0", base: "revenue", vat_pct: "12", profit_pct: "15", lines: [], taxpayer: "llc" });
     expect(taxBody({ ...d, regime: "agent" })).toMatchObject({ rate_pct: "0", vat_pct: "0", profit_pct: "0", base: "revenue", lines: [] });
   });
 

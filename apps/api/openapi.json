@@ -8068,6 +8068,16 @@
           },
           "attention": {
             "$ref": "#/components/schemas/AttentionOut"
+          },
+          "revenue_limit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RevenueLimitOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -8083,7 +8093,8 @@
           "bottom",
           "summary",
           "kpis",
-          "attention"
+          "attention",
+          "revenue_limit"
         ],
         "title": "DashboardOut"
       },
@@ -9395,6 +9406,15 @@
           "learned"
         ],
         "title": "LeadOut"
+      },
+      "LimitLevel": {
+        "type": "string",
+        "enum": [
+          "ok",
+          "near",
+          "over"
+        ],
+        "title": "LimitLevel"
       },
       "LineCostOut": {
         "properties": {
@@ -12648,6 +12668,43 @@
         ],
         "title": "ReturnCauseOut"
       },
+      "RevenueLimitOut": {
+        "properties": {
+          "taxpayer": {
+            "$ref": "#/components/schemas/Taxpayer"
+          },
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "revenue": {
+            "type": "string",
+            "title": "Revenue"
+          },
+          "limit": {
+            "type": "string",
+            "title": "Limit"
+          },
+          "share": {
+            "type": "string",
+            "title": "Share"
+          },
+          "level": {
+            "$ref": "#/components/schemas/LimitLevel"
+          }
+        },
+        "type": "object",
+        "required": [
+          "taxpayer",
+          "year",
+          "revenue",
+          "limit",
+          "share",
+          "level"
+        ],
+        "title": "RevenueLimitOut",
+        "description": "F50 (B4.80): yillik tushum chegarasi — ``level`` ``near`` (≥ 80%) yoki ``over`` (≥ 100%) bo'lsa ogohlantirish."
+      },
       "Revoked": {
         "properties": {
           "revoked": {
@@ -13150,6 +13207,16 @@
           },
           "alerts": {
             "$ref": "#/components/schemas/AlertsOut"
+          },
+          "revenue_limit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RevenueLimitOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -13161,7 +13228,8 @@
           "payout_schedules",
           "payout_terms",
           "inventory",
-          "alerts"
+          "alerts",
+          "revenue_limit"
         ],
         "title": "SettingsOut"
       },
@@ -15927,6 +15995,16 @@
               }
             ],
             "title": "Lines"
+          },
+          "taxpayer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Taxpayer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -15972,6 +16050,16 @@
             },
             "type": "array",
             "title": "Lines"
+          },
+          "taxpayer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Taxpayer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -15983,7 +16071,8 @@
           "base",
           "vat_pct",
           "profit_pct",
-          "lines"
+          "lines",
+          "taxpayer"
         ],
         "title": "TaxProfileOut"
       },
@@ -16082,6 +16171,16 @@
               }
             ],
             "title": "Lines"
+          },
+          "taxpayer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Taxpayer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -16127,6 +16226,16 @@
           "none"
         ],
         "title": "TaxRegime"
+      },
+      "Taxpayer": {
+        "type": "string",
+        "enum": [
+          "individual",
+          "llc",
+          "self_employed"
+        ],
+        "title": "Taxpayer",
+        "description": "Soliq to'lovchi turi (F50 chegarasi uchun; profilda ixtiyoriy)."
       },
       "TokenIn": {
         "properties": {

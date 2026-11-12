@@ -237,6 +237,30 @@ describe("diqqat talab qiladi", () => {
   });
 });
 
+describe("yillik tushum chegarasi (F50, B4.80)", () => {
+  const limit = (level: "ok" | "near" | "over", share: string) => ({ taxpayer: "llc" as const, year: 2026, revenue: "4300000000.00", limit: "5280000000.00", share, level });
+
+  it("80% dan — ogohlantirish va Sozlamalarga havola; 100% dan — xato rangida; past yoki tur yo'q — ko'rinmaydi", async () => {
+    await renderHome("/", { [DASHBOARD_ROUTE]: () => json(200, dashboardData({ revenue_limit: limit("near", "0.814394") })) });
+    const banner = (await screen.findByText("Yillik tushum chegarasiga yaqinlashdingiz: 81%")).closest(".ui-banner") as HTMLElement;
+    expect(banner.className).toContain("ui-tone--warning");
+    expect(banner.textContent).toContain("MChJ chegarasi");
+    expect(within(banner).getByRole("link", { name: "Soliq profili" }).getAttribute("href")).toBe("/settings");
+    cleanup();
+
+    await renderHome("/", { [DASHBOARD_ROUTE]: () => json(200, dashboardData({ revenue_limit: limit("over", "1.020000") })) });
+    expect((await screen.findByRole("alert")).textContent).toContain("Yillik tushum chegarasidan oshdingiz: 102%");
+    cleanup();
+
+    for (const value of [limit("ok", "0.5"), null]) {
+      await renderHome("/", { [DASHBOARD_ROUTE]: () => json(200, dashboardData({ revenue_limit: value })) });
+      await screen.findByRole("table", { name: "Eng foydali 5" });
+      expect(screen.queryByText(/Yillik tushum chegarasi/)).toBeNull();
+      cleanup();
+    }
+  });
+});
+
 describe("eng foydali 5 / zarar 5 va ko'rsatkichlar", () => {
   it("SKU jadvallari: nom (SKU yoki tovar nomi), dona, sof foyda rangi; mobilda tab", async () => {
     await renderHome();

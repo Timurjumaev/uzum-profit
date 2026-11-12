@@ -58,12 +58,15 @@ from upcore.tax import (
     AmountValue,
     FixedPeriod,
     LineKind,
+    RevenueLimit,
     TaxLine,
+    Taxpayer,
     TaxProfile,
     TaxRegime,
     amount_on,
     daily_rules,
     fixed_expenses,
+    revenue_limit_status,
 )
 
 from upapi.calc.costs import day_start
@@ -661,21 +664,42 @@ async def tax_profiles(conn: AsyncConnection) -> list[TaxProfile]:
             vat_pct=r.vat_pct,
             profit_pct=r.profit_pct,
             lines=tuple(lines.get(r.id, ())),
+            taxpayer=Taxpayer(r.taxpayer) if r.taxpayer else None,
         )
         for r in await conn.execute(select(t).order_by(t.c.valid_from))
     ]
 
 
-async def bhm_values(conn: AsyncConnection) -> list[AmountValue]:
-    """BHM ma'lumotnomasi: bazadagi ``ref_amounts`` (admin tahrirlaydi) + ``upcore`` boshlang'ich qiymatlari — deploy
-    ma'lumotnomani to'ldirmaydi (``seed`` faqat dev), shuning uchun baza bo'sh bo'lsa ham BHM ma'lum. Bir sanada bazadagi
-    yozuv ustun (``amount_on`` birinchisini oladi)."""
+async def amount_values(conn: AsyncConnection) -> list[AmountValue]:
+    """``ref_amounts`` ma'lumotnomasi (BHM, F50 chegaralari): bazadagi yozuv (admin tahrirlaydi) + ``upcore`` boshlang'ich
+    qiymatlari — deploy ma'lumotnomani to'ldirmaydi (``seed`` faqat dev), shuning uchun baza bo'sh bo'lsa ham qiymat
+    ma'lum. Bir sanada bazadagi yozuv ustun (``amount_on`` birinchisini oladi)."""
     t = m.ref_amounts
-    stored = [
-        AmountValue(r.code, r.valid_from, r.amount)
-        for r in await conn.execute(select(t).where(t.c.code == BHM))
-    ]
-    return [*stored, *(v for v in SEED_AMOUNTS if v.code == BHM)]
+    stored = [AmountValue(r.code, r.valid_from, r.amount) for r in await conn.execute(select(t))]
+    return [*stored, *SEED_AMOUNTS]
+
+
+async def bhm_values(conn: AsyncConnection) -> list[AmountValue]:
+    """BHM ma'lumotnomasi (``amount_values`` dan faqat BHM)."""
+    return [v for v in await amount_values(conn) if v.code == BHM]
+
+
+async def revenue_limit(conn: AsyncConnection, today: date) -> RevenueLimit | None:
+    """F50 (B4.80): yil boshidan ``today`` gacha butun tashkilot tushumi (F3, ``daily_sku_metrics`` — Yakunlangan +
+    Jarayonda, ADR-036) kuchdagi profilning soliq to'lovchi turi chegarasiga nisbatan. Do'kon filtri yo'q — chegara
+    soliq to'lovchiga (tashkilotga) tegishli."""
+    d = m.daily_sku_metrics
+    revenue = await conn.scalar(
+        select(func.coalesce(func.sum(d.c.revenue), 0)).where(
+            d.c.day >= date(today.year, 1, 1), d.c.day <= today
+        )
+    )
+    return revenue_limit_status(
+        await tax_profiles(conn),
+        today,
+        Money(revenue or Decimal(0), UZS),
+        await amount_values(conn),
+    )
 
 
 async def expected_fees(

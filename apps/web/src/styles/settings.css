@@ -126,3 +126,18 @@
 .tax-line__hint {
   color: var(--text-secondary);
 }
+
+/* F50 (B4.80): yillik tushum chegarasi — soliq profili jadvali ostida. */
+.settings-limit {
+  display: grid;
+  gap: var(--space-2);
+  margin-block-start: var(--space-4);
+}
+
+.settings-limit > :is(h3, p) {
+  margin: 0;
+}
+
+.settings-tax__taxpayer {
+  display: block;
+}

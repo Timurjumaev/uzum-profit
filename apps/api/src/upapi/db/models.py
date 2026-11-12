@@ -768,7 +768,9 @@ tax_profiles = tenant(
     Column("base", Text, nullable=False, server_default="revenue"),
     Column("vat_pct", PCT, nullable=False, server_default="0"),
     Column("profit_pct", PCT, nullable=False, server_default="0"),
+    Column("taxpayer", Text),  # F50 (B4.80): soliq to'lovchi turi; NULL — ko'rsatilmagan
     check_in("regime", ("turnover", "agent", "vat_profit", "none")),
+    check_in("taxpayer", ("individual", "llc", "self_employed")),
 )
 # ADR-058: dinamik soliq profili — profil ostida soliq qatorlari (foizli yoki qat'iy: so'm yoki n × BHM).
 tax_lines = tenant(

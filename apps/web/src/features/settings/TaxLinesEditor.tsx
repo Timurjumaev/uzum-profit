@@ -15,9 +15,11 @@ type Props = {
   rates: TaxRate[];
   /** Joriy BHM (so'm), ma'lumotnomadan; yo'q bo'lsa `null`. */
   bhm: string | null;
+  /** Shablon qo'llanganda (masalan, soliq to'lovchi turini to'ldirish uchun). */
+  onTemplate?: (kind: TaxTemplate) => void;
 };
 
-export function TaxLinesEditor({ lines, onChange, rates, bhm }: Props) {
+export function TaxLinesEditor({ lines, onChange, rates, bhm, onTemplate }: Props) {
   const { t } = useTranslation();
   const f = useFormat();
   // Tanlov tanlangan shablonni ko'rsatadi (qo'llangach "Tanlang…" ga qaytmaydi); qatorlar qo'lda o'zgarsa — "tahrirlangan".
@@ -29,6 +31,7 @@ export function TaxLinesEditor({ lines, onChange, rates, bhm }: Props) {
   const apply = (kind: TaxTemplate) => {
     setTemplate(kind);
     onChange(taxTemplate(kind, rates, names));
+    onTemplate?.(kind);
   };
   const set = (key: string, patch: Partial<LineDraft>) => edit(lines.map((l) => (l.key === key ? { ...l, ...patch } : l)));
   const names = { turnover: t("settings.tax.lines.legacyName"), social: t("settings.tax.lines.socialName") };

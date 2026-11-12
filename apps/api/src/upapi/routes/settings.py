@@ -29,16 +29,19 @@ from upcore.tax import (
     FixedPeriod,
     LineKind,
     TaxLine,
+    Taxpayer,
     TaxProfile,
     TaxRegime,
 )
 
 from upapi import calc, orgsettings
 from upapi.auth.deps import OrgContext, require
-from upapi.auth.permissions import Permission
+from upapi.auth.permissions import Permission, allowed
 from upapi.db import models as m
 from upapi.errors import AppError
+from upapi.reports import cells as rc
 from upapi.reports.common import today
+from upapi.reports.schemas import RevenueLimitOut
 from upapi.routes.purchases import _kick
 
 router = APIRouter(tags=["settings"])
@@ -83,6 +86,7 @@ class TaxProfileOut(BaseModel):
     vat_pct: Decimal
     profit_pct: Decimal
     lines: list[TaxLineOut]  # ADR-058; bo'sh — eski ustunlardan (``upcore.tax.profile_lines``)
+    taxpayer: Taxpayer | None  # F50 (B4.80); null — ko'rsatilmagan
 
 
 class TaxAmountOut(BaseModel):
@@ -137,6 +141,9 @@ class SettingsOut(BaseModel):
     payout_terms: list[PayoutTermsOut]
     inventory: InventorySettingsOut
     alerts: AlertsOut
+    revenue_limit: (
+        RevenueLimitOut | None
+    )  # F50 (B4.80): kuchdagi profil turi bo'yicha; tur yo'q — null
 
 
 class CostMethodIn(BaseModel):
@@ -153,6 +160,7 @@ class TaxProfileIn(BaseModel):
     lines: list[TaxLineIn] | None = (
         None  # ADR-058: faqat aylanma rejimida; berilsa eski stavka ustuni nolga tushadi
     )
+    taxpayer: Taxpayer | None = None  # F50 (B4.80)
 
 
 class TaxProfilePatch(BaseModel):
@@ -165,6 +173,7 @@ class TaxProfilePatch(BaseModel):
     lines: list[TaxLineIn] | None = (
         None  # berilsa — qatorlar to'liq almashadi (``[]`` — o'chadi); berilmasa — o'zgarmaydi
     )
+    taxpayer: Taxpayer | None = None  # berilsa (``null`` ham) — almashadi; berilmasa — o'zgarmaydi
 
 
 class PayoutScheduleIn(BaseModel):
@@ -279,6 +288,12 @@ async def _read(ctx: OrgContext) -> SettingsOut:
         [*stored_amounts, *((v.code, v.valid_from, v.amount, v.note or None) for v in SEED_AMOUNTS)]
     )
     effective = {**DEFAULT.cover_days, **cfg.cover_days}
+    # F50: tushum — moliya ma'lumoti; sozlamani ko'radigan, lekin foydani ko'rmaydigan rolga berilmaydi.
+    limit = (
+        await rc.revenue_limit(conn, today())
+        if allowed(ctx.role, Permission.VIEW_FINANCE)
+        else None
+    )
     return SettingsOut(
         cost_method=org.cost_method,
         tax_profiles=[
@@ -306,6 +321,7 @@ async def _read(ctx: OrgContext) -> SettingsOut:
             cancel_share=cfg.alerts.get("cancel_share"),
             return_share=cfg.alerts.get("return_share"),
         ),
+        revenue_limit=None if limit is None else RevenueLimitOut.of(limit),
     )
 
 
@@ -382,7 +398,7 @@ async def create_tax_profile(body: TaxProfileIn, ctx: Manager) -> SettingsOut:
 @router.patch("/orgs/{org_id}/tax-profiles/{profile_id}", response_model=SettingsOut)
 async def update_tax_profile(profile_id: UUID, body: TaxProfilePatch, ctx: Manager) -> SettingsOut:
     row = await _tax_row(ctx, profile_id)
-    keys = ("valid_from", "regime", "rate_pct", "base", "vat_pct", "profit_pct")
+    keys = ("valid_from", "regime", "rate_pct", "base", "vat_pct", "profit_pct", "taxpayer")
     current = {k: getattr(row, k) for k in keys}
     tl = m.tax_lines
     # Qatorlar: berilsa — almashadi; berilmasa — mavjudlari qoladi (rejim aylanma bo'lmasa — ketadi).
@@ -391,6 +407,8 @@ async def update_tax_profile(profile_id: UUID, body: TaxProfilePatch, ctx: Manag
         select(func.count()).select_from(tl).where(tl.c.profile_id == profile_id)
     )
     fields = body.model_dump(exclude_unset=True, exclude_none=True, exclude={"lines"})
+    if "taxpayer" in body.model_fields_set:
+        fields["taxpayer"] = body.taxpayer  # ``null`` — turni olib tashlash
     regime = TaxRegime(fields.get("regime", row.regime))
     effective = len(new_lines) if new_lines is not None else int(have or 0)
     if regime is not TaxRegime.TURNOVER:

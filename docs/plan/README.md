@@ -8,9 +8,9 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | | |
 |---|---|
 | Joriy bosqich | **B4. Asosiy ekranlar** — yopilish bosqichi: kod qismi (Claude mustaqil, ADR-060) + Temurning 14 kunlik sinovi. **B2 tugadi** (2026-10-27), **B3 tugadi** (2026-10-26) |
-| Keyingi vazifa | **B4 kod qismi (ADR-059):** ~~B4.66 F23 tezlik~~ ✓ → ~~B4.67 ikki signal~~ ✓ → ~~B4.70 snapshot~~ ✓ → ~~B4.68 prognoz~~ ✓ → ~~B4.69 "Taxminiy"~~ ✓ → ~~B4.71 menyu~~ ✓ → ~~B4.72 bosh sahifa~~ ✓ → ~~B4.73 mobil ro'yxat~~ ✓ → ~~B4.75 audit~~ ✓ → B4.80 tushum chegarasi ([05](05-bosqichlar.md)). **B4 chiqishi:** Temur 14 kun faqat yangi dasturda, kritik xato yo'q; keyin legacy `legacy/` ga. **Keyin:** B6.1–B6.2 (Telegram), B5 (boshida B5.0 — B4 dan ko'chganlar: B4.27, B4.55, B4.61, sahifalash qoldig'i, B4.76, B4.81). B3 qoldig'i: Q1 tovar belgisi tekshiruvi (ADR-030), `sellermax.uz` domeni |
+| Keyingi vazifa | **B4 kod qismi (ADR-059):** ~~B4.66 F23 tezlik~~ ✓ → ~~B4.67 ikki signal~~ ✓ → ~~B4.70 snapshot~~ ✓ → ~~B4.68 prognoz~~ ✓ → ~~B4.69 "Taxminiy"~~ ✓ → ~~B4.71 menyu~~ ✓ → ~~B4.72 bosh sahifa~~ ✓ → ~~B4.73 mobil ro'yxat~~ ✓ → ~~B4.75 audit~~ ✓ → ~~B4.80 tushum chegarasi~~ ✓ — **B4 kod qismi tugadi** ([05](05-bosqichlar.md)). **B4 chiqishi:** Temur 14 kun faqat yangi dasturda, kritik xato yo'q; keyin legacy `legacy/` ga. **Keyin:** B6.1–B6.2 (Telegram), B5 (boshida B5.0 — B4 dan ko'chganlar: B4.27, B4.55, B4.61, sahifalash qoldig'i, B4.76, B4.81). B3 qoldig'i: Q1 tovar belgisi tekshiruvi (ADR-030), `sellermax.uz` domeni |
 | Temurdan kutilmoqda | (ADR-059: eski tekshiruvlar ro'yxati o'rniga — "ishlatib ko'r, xato chiqsa yoz".) 1) **14 kunlik sinovni boshlash** — kundalik ish faqat staging'da, legacy ochilmaydi; 2) xato yoki noqulay joy — skrinshot bilan bir qator; 3) Uzum API'ni uchinchi tomon ishlatishi shartlari — kabinetdagi matn (Q13); 4) MChJ va o'zini o'zi band qilganlar uchun Uzum soliq ushlashi va stavkalari (08 §6, ADR-058); 5) BHM 440 000 kuchga kirish sanasi (1 sentyabr / 1 iyul) — farmon matni; 6) Q1 tovar belgisi tekshiruvi va `sellermax.uz` domeni (B3 qoldig'i) |
-| Oxirgi yangilanish | 2026-11-12 (B4.75 PR-8: jadvallar 1440 px da sig'adi, bosh sahifadagi TOP/zarar — SKU havolasi, favicon; audit D3, D9, D11 — B4.75 tugadi) |
+| Oxirgi yangilanish | 2026-11-12 (B4.80: yillik tushum chegarasi F50 — soliq profilida to'lovchi turi, bosh sahifa va Sozlamalarda 80% / 100% ogohlantirish; B4 kod qismi tugadi) |
 
 (Har vazifa tugaganda shu jadval va 05-bosqichlar.md dagi belgi yangilanadi.)
 
@@ -19,7 +19,7 @@ bulutli dasturga aylantirish. Reja 2026-10-23 da tuzilgan; har ish shu reja bo'y
 | Fayl | Nima bor |
 |---|---|
 | [01-mahsulot.md](01-mahsulot.md) | kim uchun, bozor, raqobat, ustunliklar, qilinmaydigan narsalar, tariflar, o'lchovlar |
-| [02-funksiyalar.md](02-funksiyalar.md) | modullar M1–M21, qabul mezonlari, **formulalar F1–F49** |
+| [02-funksiyalar.md](02-funksiyalar.md) | modullar M1–M21, qabul mezonlari, **formulalar F1–F50** |
 | [03-arxitektura.md](03-arxitektura.md) | texnologiyalar, repo, ma'lumotlar modeli, Uzum integratsiyasi, tannarx dvigateli, xavfsizlik, testlar, CI/CD |
 | [04-dizayn.md](04-dizayn.md) | shrift, ranglar (tekshirilgan), komponentlar, maketlar, matn va formatlash |
 | [05-bosqichlar.md](05-bosqichlar.md) | **B0–B10 vazifalar ro'yxati**, chiqish mezonlari, Temurning vazifalari |

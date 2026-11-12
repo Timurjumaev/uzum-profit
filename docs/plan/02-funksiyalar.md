@@ -1,7 +1,7 @@
 # 02. Funksiyalar: modullar, qabul mezonlari, formulalar
 
 Bu fayl dastur NIMA qilishini belgilaydi. Har modulda: vazifasi, ekranlari, funksiyalari (qaysi bosqichda),
-qabul mezonlari. Oxirida **formulalar lug'ati (F1–F49)**: dasturdagi har bir raqam shu yerdagi bitta formuladan
+qabul mezonlari. Oxirida **formulalar lug'ati (F1–F50)**: dasturdagi har bir raqam shu yerdagi bitta formuladan
 hisoblanadi. Kodda formula funksiyasi docstring'ida `F12` kabi raqam bilan belgilanadi.
 
 Belgilar: **[B4]** = shu bosqichda quriladi (05-bosqichlar.md). **[Keyin]** = ommaviy chiqishdan keyin.
@@ -403,8 +403,8 @@ profilda qator yo'q — soliq 0 (sof foyda soliqsiz; UI ochiq aytadi). Tayyor sh
 ijtimoiy soliq 1 × BHM oyiga), **MChJ aylanmadan** (4%), **MChJ umumbelgilangan** (QQS 12% + foyda 15%, 2-bosqich),
 **o'zini o'zi band qilgan** (100 mln gacha ozod), bo'sh. Stavkalar, BHM va chegaralar bazada sana bo'yicha (2026:
 YaTT aylanmadan 1% yillik daromad 1 mlrd so'mgacha; e-tijorat yuridik shaxslari uchun bazaviy 4% / 15% —
-08-tadqiqot.md §6, buxgalter bilan tasdiqlanadi). Yillik tushum chegaraning 80% iga yetsa — ogohlantirish; rejim
-o'zi almashmaydi. Hisob — hisoblangan (accrual), to'langan emas.
+08-tadqiqot.md §6, buxgalter bilan tasdiqlanadi). Yillik tushum chegaraning 80% iga yetsa — ogohlantirish (F50; profilda
+soliq to'lovchi turi: YaTT / MChJ / o'zini o'zi band qilgan, shablon to'ldiradi); rejim o'zi almashmaydi. Hisob — hisoblangan (accrual), to'langan emas.
 
 **F12. Sof foyda** = F8 − F9 − F10 − F11. Ikki qismda (ADR-037, ADR-038): **yakunlangan** (Yakunlangan sotuvlar) +
 **kutilayotgan**
@@ -612,3 +612,10 @@ sotilgan dona; buyurtmadagi tovarlar = sotilgan dona / sof buyurtmalar. Maxraj 0
 qaytarish, F3 — hisobotdagi tushum). Tannarxi kiritilmagan = tannarxsiz sotuvlar to'lovi (F6) − ularga to'g'ri keladigan
 xarajatlar (F15): sof foydaga kirmaydi, hamma sotuv tannarxli bo'lsa 0. Har bo'lak ulushi = bo'lak / F44 (F44 = 0 — "—").
 Sof foyda manfiy — ayrilganlar F44 dan ko'p. `upcore.pnl.order_to_profit`.
+
+**F50. Yillik tushum chegarasi** (B4.80, ADR-058) — ulush = yil boshidan bugungacha F3 (butun tashkilot, Yakunlangan +
+Jarayonda; do'kon filtrisiz) / chegara. Chegara kuchdagi soliq profilining **soliq to'lovchi turi** bo'yicha `ref_amounts`
+dan sana bo'yicha: YaTT — `revenue_limit_individual` (2026: 1 mlrd so'm), o'zini o'zi band qilgan —
+`revenue_limit_self_employed` (100 mln so'm), MChJ — `revenue_limit_llc_bhm` (12 000) × sanadagi BHM. ≥ 80% — "yaqin"
+(ogohlantirish), ≥ 100% — "oshdi"; tur ko'rsatilmagan yoki chegara noma'lum — hisoblanmaydi. Rejim o'zi almashmaydi.
+Faqat dasturdagi sotuvlar hisobga olinadi. `upcore.tax.revenue_limit_status`.

@@ -11,8 +11,8 @@ export function settingsData(over: Partial<S["SettingsOut"]> = {}): S["SettingsO
   return {
     cost_method: "fifo",
     tax_profiles: [
-      { id: TAX_2, valid_from: "2026-07-01", regime: "turnover", rate_pct: "4.000", base: "payout", vat_pct: "0.000", profit_pct: "0.000", lines: [] },
-      { id: TAX_1, valid_from: "2026-01-01", regime: "none", rate_pct: "0.000", base: "revenue", vat_pct: "0.000", profit_pct: "0.000", lines: [] },
+      { id: TAX_2, valid_from: "2026-07-01", regime: "turnover", rate_pct: "4.000", base: "payout", vat_pct: "0.000", profit_pct: "0.000", lines: [], taxpayer: null },
+      { id: TAX_1, valid_from: "2026-01-01", regime: "none", rate_pct: "0.000", base: "revenue", vat_pct: "0.000", profit_pct: "0.000", lines: [], taxpayer: null },
     ],
     tax_rates: [
       { code: "turnover_ecommerce", rate_pct: "4.000", note: "e-tijorat" },
@@ -33,6 +33,7 @@ export function settingsData(over: Partial<S["SettingsOut"]> = {}): S["SettingsO
       cover_defaults: { A: 60, B: 30, C: 14 },
     },
     alerts: { cancel_share: null, return_share: null },
+    revenue_limit: null,
     ...over,
   };
 }
