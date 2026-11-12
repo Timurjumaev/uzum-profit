@@ -136,10 +136,11 @@ async def open_org(
     async with org_transaction(engine, org_id, user.user_id) as conn:
         role = await conn.scalar(
             text(
+                # Audit X1: ikkinchi qavat — RLS'dan tashqari a'zolik ham aniq shu tashkilot bo'yicha tekshiriladi.
                 "SELECT m.role FROM memberships m JOIN orgs o ON o.id = m.org_id "
-                "WHERE m.user_id = :u AND o.deleted_at IS NULL"
+                "WHERE m.user_id = :u AND m.org_id = :o AND o.deleted_at IS NULL"
             ),
-            {"u": user.user_id},
+            {"u": user.user_id, "o": org_id},
         )
         if role is None:
             raise AppError("org_not_found", 404)

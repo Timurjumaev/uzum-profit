@@ -332,3 +332,32 @@ def test_users_visibility(db: dict[str, str], seed: dbtools.Seed) -> None:
         assert conn.execute("SELECT id FROM users").fetchall() == [
             (ub,)
         ]  # tashkilotsiz — faqat o'zi
+
+
+def test_membership_check_is_scoped_to_org_without_rls(
+    db: dict[str, str], seed: dbtools.Seed
+) -> None:
+    """Audit X1 (B4.75 PR-5): ikkinchi qavat — a'zolik so'rovi ``org_id`` bo'yicha ham. RLS chetlab o'tilganda ham (dev'da
+    superuser) A tashkilot a'zosi B tashkilotni ocholmaydi; oldin so'rov faqat ``user_id`` bo'yicha edi."""
+    import asyncio
+
+    from upapi.auth.deps import CurrentUser, open_org
+    from upapi.db.session import make_engine
+    from upapi.errors import AppError
+
+    a, b = seed.orgs
+    user = CurrentUser(seed.users[a], uuid.uuid4(), "+998900000000", None, "uz", b"")
+
+    async def check() -> None:
+        engine = make_engine(db["admin"], pool_size=1, max_overflow=0)  # superuser — RLS ishlamaydi
+        try:
+            async with open_org(engine, a, user) as ctx:
+                assert ctx.org_id == a  # o'z tashkiloti — ochiladi
+            with pytest.raises(AppError) as err:
+                async with open_org(engine, b, user):
+                    pass
+            assert err.value.status == 404
+        finally:
+            await engine.dispose()
+
+    asyncio.run(check())

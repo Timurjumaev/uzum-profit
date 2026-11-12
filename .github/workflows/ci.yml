@@ -1,9 +1,10 @@
-# CI (03-arxitektura.md §13): har PR va main'ga push.
+# CI (03-arxitektura.md §13): har PR va main'ga push. Branch'ga push alohida ishga tushmaydi — PR o'zi ishga tushiradi
+# (audit T4: avval har PR'da CI ikki marta ishlardi — push va pull_request).
 name: CI
 
 on:
   push:
-    branches: [main, "claude/**"]
+    branches: [main]
   pull_request:
 
 concurrency:
@@ -38,6 +39,9 @@ jobs:
         with:
           enable-cache: true
       - run: uv sync --locked
+      # Bog'liqliklar auditi (03 §10, audit X3): ma'lum zaiflik bo'lsa CI qizaradi. Hash'lari bilan qotirilgan ro'yxat.
+      - run: uv export --frozen --no-emit-workspace -o "$RUNNER_TEMP/requirements.txt"
+      - run: uvx --python 3.13 pip-audit --strict --disable-pip -r "$RUNNER_TEMP/requirements.txt"
       - run: uv run ruff check
       - run: uv run ruff format --check
       - run: uv run mypy
@@ -88,6 +92,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # API tiplari openapi.json dan generatsiya qilingan va yangi (farq bo'lsa — `pnpm --filter web api:types`).
       - run: pnpm --filter web api:types && git diff --exit-code -- apps/web/src/lib/api/schema.d.ts
+      - run: pnpm audit --prod --audit-level high  # audit X3: production bog'liqliklarda jiddiy zaiflik yo'q
       - run: pnpm --filter web lint
       - run: pnpm --filter web typecheck
       - run: pnpm --filter web test

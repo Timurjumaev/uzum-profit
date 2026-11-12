@@ -329,8 +329,10 @@ legacy'dagi `UZUM_TEST_HISTORY` kabi).
 
 ## 13. CI/CD
 
-- `ci.yml` (har PR va main): ruff, mypy, pytest (core, api, legacy), web lint/typecheck/test/build, OpenAPI tiplari
-  sinxronligi, migratsiya testi.
+- `ci.yml` (har PR va main'ga push; branch'ga push alohida ishga tushmaydi — B4.75 PR-5): ruff, mypy, pytest (core, api,
+  legacy), web lint/typecheck/test/build, OpenAPI tiplari sinxronligi, migratsiya testi, bog'liqliklar auditi (`pip-audit`,
+  `pnpm audit --prod --audit-level high`), e2e va vizual.
+- Ish tartibi (ADR-060): Claude o'z PR'ini CI yashil bo'lsa merge qiladi.
 - `deploy-staging.yml` (main'ga merge): Docker image'lar → GHCR → SSH orqali staging: zaxira → `alembic upgrade` →
   `docker compose up -d` → sog'liq tekshiruvi → muvaffaqiyatsiz bo'lsa oldingi image'ga qaytish.
 - `deploy-prod.yml` (`v*` teg): xuddi shu, production'ga; migratsiyalar faqat "kengaytir → ko'chir → toraytir"
