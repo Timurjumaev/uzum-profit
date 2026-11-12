@@ -1,5 +1,6 @@
 // Navigatsiya xaritasi (04 §7.1): sidebar, pastki tab bar va Ctrl+K bitta ro'yxatdan oladi. Marshrutlar — 03 §9.
-// Sahifalari hali yo'q bo'limlar (B4+) "qurilmoqda" sahifasiga olib boradi — karkas B4 da o'zgarmaydi.
+// Sahifalari hali yo'q bo'limlar ("Pul oqimi" — B5.7, "Hisobotlar" — B7) menyuda ko'rsatilmaydi (ADR-057 Q12, B4.71);
+// marshrutlari "qurilmoqda" sahifasi bilan qoladi (eski havola 404 bermasin), tayyor bo'lganda NAV_MAIN ga qaytadi.
 import {
   Activity,
   Banknote,
@@ -43,9 +44,10 @@ export const NAV_MAIN: readonly NavItem[] = [
   item("expenses", "/expenses", Wallet),
   item("purchases", "/purchases", ShoppingCart),
   item("inventory", "/inventory", Warehouse),
-  item("cash", "/cash", Banknote),
-  item("reports", "/reports", FileText),
 ];
+
+/** Hali tayyor bo'lmagan bo'limlar (menyuda yo'q, ADR-057 Q12) — tayyor bo'lganda `NAV_MAIN` ga ko'chadi. */
+export const NAV_HIDDEN: readonly NavItem[] = [item("cash", "/cash", Banknote), item("reports", "/reports", FileText)];
 
 /** Sidebar pastki guruhi (chiziqdan keyin). */
 export const NAV_BOTTOM: readonly NavItem[] = [item("status", "/status", Activity), item("settings", "/settings", Settings)];

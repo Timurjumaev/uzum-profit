@@ -440,6 +440,7 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.71 (ADR-057 Q12) Menyu: tayyor bo'lmagan "Pul oqimi" va "Hisobotlar" yashirildi (marshrut "qurilmoqda" bilan qoladi).
 - B4.69 (ADR-057 Q6, audit K8, K9) "Taxminiy" belgisi: Markaziy bank kursi va "tarixiy" narx — aniq (taxminiy qismga
   qo'shilmaydi, Buyurtmalarda izoh); lot tayyor sanasi qabul / kargo to'lovi bo'lmasa keyingi bosqichdan (Uzumga yuborildi, yopildi).
 - B4.68 (ADR-057 Q4, audit K6) "▲ %" va oy prognozi: Jarayondagi qism yakunlanish ulushiga (F16 R) ko'paytiriladi,
