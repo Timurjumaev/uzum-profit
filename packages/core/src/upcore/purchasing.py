@@ -5,8 +5,12 @@ qadoq ...). Har komponent kurs bilan so'mga o'tkaziladi (kurs rejimi — ``upcor
 kartadan yechilgan summa) va taqsimot asosiga ko'ra o'z qatorlariga bo'linadi. Taqsimot aniq: qatorlar
 yig'indisi komponent summasiga tiyinigacha teng (qoldiq eng katta qatorga, ``upcore.money.allocate``).
 
-Qatorning birlik tannarxi = qatorga tushgan komponentlar / qabul qilingan dona (hali qabul qilinmagan bo'lsa
-buyurtma qilingan dona, "taxminiy").
+Qatorning birlik tannarxi = qatorga tushgan komponentlar / **sog' dona** (kelgan − sanashdagi brak; hali sanalmagan
+bo'lsa buyurtma qilingan dona, "taxminiy") + tovarning qadoq qo'shimchasi (ADR-061).
+
+Ta'minot qayta loyihasi (ADR-061): tovar summasi ("jami to'landi") qator summalariga mutanosib bo'linadi
+(``AllocationBase.LINE_SUM``; kiritilmagan bo'lsa dona), sotuvchi qaytargan summa tovar summasidan ayriladi, kodli quti
+puli xaridlarga dona bo'yicha yoki qo'lda yozilgan summalar bilan bo'linadi (:func:`split_by_purchase`).
 
 Xarid hayoti — "Partiya yo'li" (M9, 04 §6.2): har bosqich ixtiyoriy, sanasi yoziladi; joriy bosqich — sanasi bor eng
 oxirgisi. Joriy bosqichda necha kun o'tgani va keyingi bosqichning kutilgan sanasi (F25 bosqichi medianasi).
@@ -62,6 +66,7 @@ class AllocationBase(StrEnum):
     WEIGHT = "weight"
     VOLUME = "volume"
     VALUE = "value"  # qatorning tovar qiymati (narx × dona) bo'yicha
+    LINE_SUM = "line_sum"  # qator summasi bo'yicha (ADR-061); kiritilmagan bo'lsa dona
     MANUAL = "manual"  # qo'lda ulushlar
 
 
@@ -88,11 +93,15 @@ class Flag(StrEnum):
         "market_rate"  # kurs bozor kursi, CBU emas (CBU serverdan ochilmadi, ADR-045) — taxminiy
     )
     BASE_FALLBACK = "base_fallback"  # vazn/hajm/qiymat yo'q — dona bo'yicha bo'lindi
+    NO_LINE_SUMS = (
+        "no_line_sums"  # bir necha qator, qator summasi yo'q — dona bo'yicha (eslatma, ADR-061 §2)
+    )
 
 
 # ADR-057 Q6 (B4.69): ma'lumot uchun belgilar — raqam noaniq emas, "Taxminiy" qo'yilmaydi. Markaziy bank kursi —
 # standart rejim (sotuvchi qo'lda kurs kiritmagan): izoh ("kurs: Markaziy bank"), taxmin emas.
-INFO_FLAGS: frozenset[Flag] = frozenset({Flag.CBU_RATE})
+# ADR-061 §2: qator summalari kiritilmagan — xarid sahifasida eslatma, taxminiy qismga qo'shilmaydi.
+INFO_FLAGS: frozenset[Flag] = frozenset({Flag.CBU_RATE, Flag.NO_LINE_SUMS})
 
 
 class PurchaseError(ValueError):
@@ -101,7 +110,12 @@ class PurchaseError(ValueError):
 
 @dataclass(frozen=True, slots=True)
 class PurchaseLine:
-    """Xarid qatori. ``unit_price`` — valyutada dona narxi (ixtiyoriy); vazn (kg) va hajm (m³) — donaga."""
+    """Xarid qatori. ``unit_price`` — valyutada dona narxi (ixtiyoriy); vazn (kg) va hajm (m³) — donaga.
+
+    ADR-061: ``received_qty`` — sanashda kelgan dona, ``defect_qty`` — sanashda topilgan brak (kelganning ichida);
+    ``line_sum`` — qator summasi (xarid valyutasida, faqat nisbat uchun); ``pack_unit_cost`` — tovarning qadoq
+    qo'shimchasi (so'm/dona), har sog' donaga qo'shiladi.
+    """
 
     id: str
     ordered_qty: int
@@ -109,15 +123,31 @@ class PurchaseLine:
     unit_price: Money | None = None
     unit_weight: Decimal | None = None
     unit_volume: Decimal | None = None
+    defect_qty: int = 0
+    line_sum: Decimal | None = None
+    pack_unit_cost: Money | None = None
 
     def __post_init__(self) -> None:
         if self.ordered_qty < 0 or (self.received_qty is not None and self.received_qty < 0):
             raise PurchaseError(f"qator {self.id}: dona manfiy bo'lishi mumkin emas")
+        if self.defect_qty < 0 or self.defect_qty > self.arrived_qty:
+            raise PurchaseError(f"qator {self.id}: brak kelgan donadan ko'p yoki manfiy")
+        if self.line_sum is not None and self.line_sum < 0:
+            raise PurchaseError(f"qator {self.id}: qator summasi manfiy")
+        if self.pack_unit_cost is not None and (
+            self.pack_unit_cost.currency is not UZS or self.pack_unit_cost.amount < 0
+        ):
+            raise PurchaseError(f"qator {self.id}: qadoq qo'shimchasi so'mda va manfiy emas")
+
+    @property
+    def arrived_qty(self) -> int:
+        """Kelgan dona (brak bilan): sanalgan, yo'q bo'lsa buyurtma qilingan."""
+        return self.ordered_qty if self.received_qty is None else self.received_qty
 
     @property
     def qty(self) -> int:
-        """Tannarx uchun dona: qabul qilingan, yo'q bo'lsa buyurtma qilingan."""
-        return self.ordered_qty if self.received_qty is None else self.received_qty
+        """F20: tannarx bo'linadigan **sog' dona** = kelgan − sanashdagi brak (sanalmagan — buyurtma qilingan)."""
+        return self.arrived_qty - self.defect_qty
 
 
 @dataclass(frozen=True, slots=True)
@@ -154,6 +184,11 @@ class Purchase:
     later_date: date | None = (
         None  # qabuldan keyingi bosqich (Uzumga yuborildi / yopildi) — eng ertasi
     )
+    # ADR-061 §6: sotuvchi qaytargan summa (tovar summasidan ayriladi); kurs — so'mdan boshqa valyutada shart.
+    refund: Money | None = None
+    refund_rate: FxRate | None = None
+    # ADR-061 §2: "Tovar qo'limda" (mahalliy xarid) — kargo kutilmaydi, "kargo kiritilmagan" belgisi chiqmaydi.
+    on_hand: bool = False
 
     @property
     def ready_date(self) -> date | None:
@@ -209,10 +244,16 @@ def _weights(
     goods_rate: FxRate | None,
 ) -> tuple[list[Decimal], bool]:
     """Taqsimot og'irliklari; ikkinchi qiymat — dona bo'yicha zaxira usul ishlatildimi."""
-    units = [Decimal(line.qty) for line in lines]
+    # Dona asosi — kelgan dona (brak bilan: puli to'langan, ADR-061 §3); eski yozuvlarda brak 0 — avvalgidek.
+    units = [Decimal(line.arrived_qty) for line in lines]
     base = component.base
     if base is AllocationBase.UNITS:
         return units, False
+    if base is AllocationBase.LINE_SUM:
+        sums = [line.line_sum for line in lines]
+        if any(x is None for x in sums) or not any(sums):
+            return units, False  # eslatma belgisi (``NO_LINE_SUMS``) — ``compute_lots`` da
+        return [x for x in sums if x is not None], False
     if base is AllocationBase.MANUAL:
         missing = [line.id for line in lines if line.id not in component.manual_shares]
         if missing:
@@ -265,8 +306,15 @@ def compute_lots(purchase: Purchase) -> list[LotCost]:
                 flags[line.id].add(Flag.CBU_RATE)
             if market:
                 flags[line.id].add(Flag.MARKET_RATE)
+            if (
+                component.base is AllocationBase.LINE_SUM
+                and len(targets) > 1
+                and any(x.line_sum is None for x in targets)
+            ):
+                flags[line.id].add(Flag.NO_LINE_SUMS)
 
-    has_cargo = any(c.kind is ComponentKind.CARGO for c in purchase.components)
+    _apply_refund(purchase, lines, parts)
+    has_cargo = purchase.on_hand or any(c.kind is ComponentKind.CARGO for c in purchase.components)
     result = []
     for lid, line in lines.items():
         line_flags = flags[lid]
@@ -274,6 +322,12 @@ def compute_lots(purchase: Purchase) -> list[LotCost]:
             line_flags.add(Flag.CARGO_MISSING)
         if line.received_qty is None:
             line_flags.add(Flag.NOT_RECEIVED)
+        if line.pack_unit_cost is not None and line.qty > 0 and not line.pack_unit_cost.is_zero():
+            bucket = parts[lid]
+            bucket[ComponentKind.PACKAGING] = (
+                bucket.get(ComponentKind.PACKAGING, Money.zero(UZS))
+                + line.pack_unit_cost * line.qty
+            )
         line_total = total(list(parts[lid].values()), UZS)
         result.append(
             LotCost(
@@ -286,6 +340,76 @@ def compute_lots(purchase: Purchase) -> list[LotCost]:
             )
         )
     return result
+
+
+def _apply_refund(
+    purchase: Purchase,
+    lines: Mapping[str, PurchaseLine],
+    parts: dict[str, dict[ComponentKind, Money]],
+) -> None:
+    """F20 (ADR-061 §6): sotuvchi qaytargan summa tovar summasidan ayriladi — qator summasiga mutanosib (yo'q bo'lsa
+    dona). Qaytarilgan summa qatorning tovar summasidan ko'p bo'lsa — xato (raqam o'ylab topilmaydi)."""
+    if purchase.refund is None or purchase.refund.is_zero():
+        return
+    if purchase.refund.amount < 0:
+        raise PurchaseError("qaytarilgan summa manfiy bo'lishi mumkin emas")
+    targets = [line for line in lines.values() if line.qty > 0]
+    if not targets:
+        raise PurchaseError("qaytarilgan summani ayiradigan qator yo'q (dona 0)")
+    pseudo = CostComponent(
+        ComponentKind.GOODS, purchase.refund, purchase.refund_rate, AllocationBase.LINE_SUM
+    )
+    weights, _ = _weights(pseudo, targets, purchase.goods_rate)
+    for line, share in zip(targets, allocate(pseudo.in_uzs(), weights), strict=True):
+        goods = parts[line.id].get(ComponentKind.GOODS, Money.zero(UZS)) - share
+        if goods.amount < 0:
+            raise PurchaseError("qaytarilgan summa tovar summasidan ko'p")
+        parts[line.id][ComponentKind.GOODS] = goods
+
+
+def split_by_purchase(
+    component: CostComponent,
+    purchases: Sequence[Purchase],
+    fixed: Mapping[str, Decimal],
+) -> list[CostComponent]:
+    """Kodli quti puli (ADR-061 §3): summa xaridlarga **dona bo'yicha** bo'linadi, ``fixed`` (xarid id → summa,
+    komponent valyutasida) — sotuvchi qo'lda yozgan ulushlar: ular o'zgarmaydi, qolgan summa qolgan xaridlarga kelgan
+    dona bo'yicha (sanashda dona o'zgarsa — o'zi qayta bo'linadi). Xarid ichida — qatorlarga dona bo'yicha.
+
+    Qaytadi: har qo'lda ulush uchun alohida komponent (o'sha xarid qatorlariga) + qoldiq komponenti. Qo'lda ulushlar
+    yig'indisi summadan ko'p bo'lsa yoki qoldiqni oladigan xarid qolmasa (qoldiq > 0) — ``PurchaseError``.
+    """
+    by_id = {p.id: p for p in purchases}
+    unknown = [pid for pid in fixed if pid not in by_id]
+    if unknown:
+        raise PurchaseError(f"{component.kind}: kargoda yo'q xaridlar {unknown}")
+    currency = component.amount.currency
+    out: list[CostComponent] = []
+    rest = component.amount
+    for pid, raw in fixed.items():
+        share = Money(to_decimal(raw), currency)
+        if share.amount < 0:
+            raise PurchaseError(f"{component.kind}: qo'lda ulush manfiy")
+        rest = rest - share
+        out.append(
+            CostComponent(
+                component.kind,
+                share,
+                component.rate,
+                AllocationBase.UNITS,
+                tuple(line.id for line in by_id[pid].lines),
+            )
+        )
+    if rest.amount < 0:
+        raise PurchaseError(f"{component.kind}: qo'lda ulushlar yig'indisi summadan ko'p")
+    others = tuple(line.id for p in purchases if p.id not in fixed for line in p.lines)
+    if not rest.is_zero():
+        if not others:
+            raise PurchaseError(f"{component.kind}: qo'lda ulushlar yig'indisi summaga teng emas")
+        out.append(
+            CostComponent(component.kind, rest, component.rate, AllocationBase.UNITS, others)
+        )
+    return out
 
 
 def compute_shipment_shares(
@@ -313,11 +437,14 @@ def compute_shipment_shares(
                     price,
                     line.unit_weight,
                     line.unit_volume,
+                    defect_qty=line.defect_qty,
+                    line_sum=line.line_sum,
                 )
             )
     return {
         lot.line_id: lot
         for lot in compute_lots(
+            # ``on_hand``: virtual xaridda "kargo kiritilmagan" belgisi kerak emas (chaqiruvchi o'zi hal qiladi).
             Purchase("shipment", tuple(virtual_lines), tuple(shipment_components))
         )
     }

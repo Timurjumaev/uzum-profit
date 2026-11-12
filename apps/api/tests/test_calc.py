@@ -803,3 +803,52 @@ def test_link_sales_fallbacks(org: Org) -> None:
     assert linked[cases["exact"]] == exact and linked[cases["renamed_single"]] == only
     assert linked[cases["spaces_case"]] is not None
     assert linked[cases["ambiguous"]] is None and linked[cases["unknown"]] is None
+
+
+def test_supply_redesign_counting_refund_pack_and_box(org: Org) -> None:
+    """TM1 (ADR-061): qator summasi, sog' dona, sotuvchi qaytargan summa, qadoq qo'shimchasi va kodli quti ulushlari
+    bazadan lotgacha — F20."""
+    org.sql(
+        "INSERT INTO fx_rates (day, currency, source, rate) VALUES (%s, 'USD', 'cbu', 12500) "
+        "ON CONFLICT DO NOTHING",
+        [d(10, 2)],
+    )
+    item, _ = org.item()
+    other, _ = org.item("Boshqa")
+    # A: jami 800 000 (qatorlar 700 + 80, farq 20 mutanosib), 50 dan 47 keldi, 2 brak → 45 sog'; 78 000 qaytdi.
+    a = org.purchase(d(10, 10), ordered_on=d(10, 1), refund_amount=D(78_000), refund_currency="UZS")
+    a1 = org.line(a, item, 50, received=47, defect_qty=2, line_sum=D(700), pack_unit_cost=D(500))
+    a2 = org.line(a, other, 30, line_sum=D(80))
+    org.component(a, "goods", 780_000, allocation="line_sum")
+    # B: bitta qator, 23 dona. A va B bitta kodli qutida: 100 USD; A ga qo'lda 40 USD, qolgani (60) B ga.
+    b = org.purchase(d(10, 10), ordered_on=d(10, 1))
+    b1 = org.line(b, item, 23)
+    org.component(b, "goods", 230_000, allocation="line_sum")
+    box = org.insert("shipments", title="Quti")
+    org.sql("UPDATE purchases SET shipment_id = %s WHERE id IN (%s, %s)", [box, a, b])
+    org.insert(
+        "cost_components",
+        shipment_id=box,
+        kind="cargo",
+        amount=D(100),
+        currency="USD",
+        paid_on=d(10, 2),
+        targets=Jsonb({"purchase_shares": {str(a): "40"}}),
+    )
+    org.request(calc.Scope.PURCHASE)
+    assert org.recalc().errors == {}
+    lots = {
+        r[0]: r[1:]
+        for r in org.sql(
+            "SELECT purchase_line_id, qty, total, flags FROM lots WHERE org_id = %s", [org.org_id]
+        )
+    }
+    goods_a1 = D(780_000) * 700 / 780 - D(78_000) * 700 / 780  # 630 000
+    cargo_a1 = (D(40) * 12500 * 47 / 77).quantize(
+        D("0.01")
+    )  # A ichida kelgan dona bo'yicha: 47 va 30
+    assert lots[a1] == (45, goods_a1 + cargo_a1 + 45 * 500, ["cbu_rate"])
+    assert lots[a2][0] == 30 and lots[a2][1] == D(72_000) + (D(500_000) - cargo_a1)
+    assert lots[b1][:2] == (23, D(230_000) + D(60) * 12500)
+    total = sum(x[1] for x in lots.values())
+    assert total == D(780_000 - 78_000 + 230_000) + D(100) * 12500 + 45 * 500

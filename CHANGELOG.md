@@ -440,6 +440,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- TM1 (ADR-061) Ta'minot modeli va yadrosi: migratsiya 0023 (faqat yangi ustunlar — trek, "Tovar qo'limda", sotuvchi
+  qaytargan summa, qator SKU'si va summasi, sanashdagi brak, qadoq qo'shimchasi, kargo vazni); `upcore.purchasing` F20 —
+  qator summasi bo'yicha taqsimot (`line_sum`), tannarx sog' donaga (kelgan − brak), qaytarilgan summa tovar summasidan
+  ayriladi, qadoq qo'shimchasi, kodli quti puli xaridlarga dona bo'yicha yoki qo'lda summalar bilan (`split_by_purchase`).
+  Mavjud xaridlar hisobi o'zgarmaydi.
 - TM0 (faqat hujjat, ADR-061) Ta'minot qayta loyihasi rejasi: 9 bosqich o'rniga uch avtomatik holat (Yo'lda → Omborimda →
   Uzumda), tez xarid oynasi (jami to'landi, CNY / USD / UZS, kurs tanlovi, ixtiyoriy trek), kargo puli jadvali (trekli
   xarid / kodli quti, dona bo'yicha), sanash (kelgan son, brak, sotuvchi qaytargan summa), tovarning qadoq qo'shimchasi,

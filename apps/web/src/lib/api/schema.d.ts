@@ -1365,7 +1365,7 @@ export interface components {
          * @description Taqsimot asosi (M9). Kargo uchun standart — vazn.
          * @enum {string}
          */
-        AllocationBase: "units" | "weight" | "volume" | "value" | "manual";
+        AllocationBase: "units" | "weight" | "volume" | "value" | "line_sum" | "manual";
         /**
          * AttentionOut
          * @description M4 "Diqqat talab qiladi" — sanoqlar; ro'yxatlar tegishli sahifalarda.

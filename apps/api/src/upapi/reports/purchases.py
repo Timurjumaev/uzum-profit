@@ -264,6 +264,7 @@ class Book:
                 [
                     r
                     for rows in (
+                        self.siblings.values(),  # sotuvchi qaytargan summa valyutasi (ADR-061)
                         *self.lines.values(),
                         *self.components.values(),
                         *self.shipment_components.values(),
