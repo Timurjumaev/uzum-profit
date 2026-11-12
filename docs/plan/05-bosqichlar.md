@@ -761,7 +761,14 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     `rows[].change_estimated`; oy prognozi asosida Jarayondagi qism × R (`forecast.estimated`). Web: taxminiy o'zgarishda
     "≈" va izoh (Asosiy, Foyda). 02 (M4 davr chizig'i, "▲ %"). Testlar: core (100 000 + 100 000 jarayonda vs 150 000, R 0,5 →
     0%, avval +33%), API (R noma'lum — eskicha; R 0,5 — taxminiy, summalar bir xil), web ("≈"). **T:** kerak emas.
-  - [ ] B4.69 (Q6) "Taxminiy" belgisi: tayyor sana qoidasi, Markaziy bank kursi — izoh.
+  - [x] B4.69 (Q6) "Taxminiy" belgisi: tayyor sana qoidasi, Markaziy bank kursi — izoh.
+    ✓ 2026-11-12: (1) F21 tayyor sana — qabul → kargo to'langan → qabuldan keyingi bosqich ("Uzumga yuborildi" / "Yopildi",
+    `Purchase.later_date`); avval qabul belgilanmagan, lekin Uzumga yuborilgan xarid "yo'lda" qolib sotuvlari "Taxminiy" edi
+    (K8). (2) Markaziy bank kursi — izoh, taxmin emas (K9): `purchasing.INFO_FLAGS`, `LotCost.estimated`; sotuvda
+    `costing.is_estimated` (Markaziy bank kursi va "tarixiy" — aniq) — kunlik agregat va P&L kataklarida taxminiy qism
+    (F22) faqat haqiqiy taxmindan. Web: Buyurtmalarda faqat CBU kursli sotuvda "Taxminiy" yo'q, kurs izohda (title).
+    02 F21, F22. Testlar: core (CBU yolg'iz — taxmin emas, keyingi bosqich sanasi, `is_estimated`), web. **T:** kerak emas
+    (deploy'dan keyin tungi qayta hisobda "Taxminiy" belgilari kamayadi).
   - [x] B4.70 (Q7) Kunlik snapshot har sinxronda; sotuvda "yakunlangan birinchi ko'rilgan vaqt" (migratsiya).
     ✓ 2026-11-12: migratsiya 0020 — `sku_daily.zero_seen`, `sale_items.completed_seen_at`. Mahsulot sinxroni (soatiga) bugungi
     `sku_daily` qatorini yangilaydi (`store.snapshot`; avval faqat 23:50 da — kun o'rtasida o'chgan sinxronda kun snapshotsiz

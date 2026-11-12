@@ -84,7 +84,7 @@ describe("roʻyxat", () => {
     expect(summary).toContain(f.percent("0.187500"));
   });
 
-  it("tannarx belgisi sababi bilan: tannarxsiz — sababi, taxminiy — F22 belgilari matni (kurs CBU oxirida)", async () => {
+  it("tannarx belgisi sababi bilan: tannarxsiz — sababi, taxminiy — F22 belgilari matni (kurs CBU — sabab emas)", async () => {
     await renderAt(PATH, {
       [SALES_ROUTE]: () =>
         json(200, salesData({ items: [sale({ id: "a", cost_flags: ["cbu_rate", "cargo_missing"] }), sale({ id: "b", cogs: null, gross_profit: null, cost_flags: ["no_lots"] }), sale({ id: "c" })] })),
@@ -96,12 +96,20 @@ describe("roʻyxat", () => {
     expect(within(taxminiy!).queryByText("kargo xarajati kiritilmagan")).toBeNull();
     fireEvent.click(badge); // bosilsa sabablar katak ichida ochiladi (muhimlik tartibida, kurs CBU oxirida)
     expect(badge.getAttribute("aria-expanded")).toBe("true");
-    expect(within(taxminiy!).getAllByRole("listitem").map((x) => x.textContent)).toEqual(["kargo xarajati kiritilmagan", "kurs Markaziy bank boʻyicha (haqiqiy toʻlangan emas)"]);
+    // ADR-057 Q6: Markaziy bank kursi — taxmin sababi emas (izoh), ro'yxatda faqat haqiqiy sabab
+    expect(within(taxminiy!).getAllByRole("listitem").map((x) => x.textContent)).toEqual(["kargo xarajati kiritilmagan"]);
     fireEvent.click(within(tannarxsiz!).getByRole("button", { name: /Tannarxsiz/ }));
     expect(within(tannarxsiz!).getByText("tovarda hali partiya yoʻq — xaridni kiriting")).toBeTruthy();
     expect(within(tannarxsiz!).queryByText("Taxminiy")).toBeNull(); // tannarxi yo'q qatorda "taxminiy" emas
     expect(within(toza!).queryByText("Taxminiy")).toBeNull();
     expect(within(toza!).queryByText("Tannarxsiz")).toBeNull();
+  });
+
+  it("faqat Markaziy bank kursi (ADR-057 Q6) — 'Taxminiy' yo'q, kurs izohda", async () => {
+    await renderAt(PATH, { [SALES_ROUTE]: () => json(200, salesData({ items: [sale({ cost_flags: ["cbu_rate"] })] })) });
+    const table = await screen.findByRole("table", { name: CAPTION });
+    expect(within(table).queryByText("Taxminiy")).toBeNull();
+    expect(within(table).getByTitle("kurs Markaziy bank boʻyicha (haqiqiy toʻlangan emas)")).toBeTruthy();
   });
 
   it("boshlang'ich holatdagi (tarixiy) narx — sotuvchi kiritgan aniq tannarx: 'Taxminiy' yo'q", async () => {

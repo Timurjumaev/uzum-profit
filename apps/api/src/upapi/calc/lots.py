@@ -233,6 +233,11 @@ def build_purchase(
         # Kargo bir necha marta to'lansa — oxirgisi (tovar to'liq qo'lga olingan kun).
         cargo_paid_date=max(cargo_paid) if cargo_paid else None,
         received_date=purchase.received_on,
+        # ADR-057 Q6: qabul ham, kargo to'lovi ham belgilanmagan, lekin keyingi bosqich bor — tovar qo'lda bo'lgan.
+        later_date=min(
+            (d for d in (purchase.sent_to_uzum_on, purchase.closed_on) if d is not None),
+            default=None,
+        ),
     )
 
 

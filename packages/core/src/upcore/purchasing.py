@@ -90,6 +90,11 @@ class Flag(StrEnum):
     BASE_FALLBACK = "base_fallback"  # vazn/hajm/qiymat yo'q — dona bo'yicha bo'lindi
 
 
+# ADR-057 Q6 (B4.69): ma'lumot uchun belgilar — raqam noaniq emas, "Taxminiy" qo'yilmaydi. Markaziy bank kursi —
+# standart rejim (sotuvchi qo'lda kurs kiritmagan): izoh ("kurs: Markaziy bank"), taxmin emas.
+INFO_FLAGS: frozenset[Flag] = frozenset({Flag.CBU_RATE})
+
+
 class PurchaseError(ValueError):
     """Xarid ma'lumoti hisoblab bo'lmaydigan holatda (raqam o'ylab topilmaydi)."""
 
@@ -146,12 +151,16 @@ class Purchase:
     order_date: date | None = None
     cargo_paid_date: date | None = None
     received_date: date | None = None
+    later_date: date | None = (
+        None  # qabuldan keyingi bosqich (Uzumga yuborildi / yopildi) — eng ertasi
+    )
 
     @property
     def ready_date(self) -> date | None:
-        """F21: lot sotuvga tayyor sanasi = qabul sanasi; yo'q bo'lsa kargo to'langan sana; ikkalasi ham
-        yo'q — ``None`` ("yo'lda")."""
-        return self.received_date or self.cargo_paid_date
+        """F21: lot sotuvga tayyor sanasi = qabul sanasi; yo'q bo'lsa kargo to'langan sana; ikkalasi ham yo'q bo'lsa
+        qabuldan keyingi bosqich sanasi (Uzumga yuborildi / yopildi — tovar qo'lda bo'lgan; ADR-057 Q6, audit K8);
+        hech biri yo'q — ``None`` ("yo'lda")."""
+        return self.received_date or self.cargo_paid_date or self.later_date
 
 
 @dataclass(frozen=True, slots=True)
@@ -167,7 +176,8 @@ class LotCost:
 
     @property
     def estimated(self) -> bool:
-        return bool(self.flags)
+        """F22: taxminiy — ma'lumot uchun belgilardan (``INFO_FLAGS``) boshqa belgi bor."""
+        return bool(self.flags - INFO_FLAGS)
 
 
 def residual_goods(

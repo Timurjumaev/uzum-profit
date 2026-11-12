@@ -29,8 +29,9 @@ export function sortFlags(flags: readonly string[]): string[] {
   return [...flags].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
 }
 
-/** Sotuvchi o'zi kiritgan narx (boshlang'ich holat, F41) aniq tannarx: "tarixiy" belgisi taxmin emas, "Taxminiy" qo'yilmaydi. */
-const EXACT = new Set(["historical"]);
+/** Aniq tannarx belgilari — "Taxminiy" qo'yilmaydi: sotuvchi o'zi kiritgan narx (boshlang'ich holat, F41, "tarixiy") va
+ * Markaziy bank kursi (ADR-057 Q6: standart rejim — izoh, taxmin emas). API ham shularni taxminiy qismga qo'shmaydi. */
+const EXACT = new Set(["historical", "cbu_rate"]);
 
 type Props = { cogs: string | null; flags: readonly string[] };
 
@@ -43,7 +44,7 @@ export function CostCell({ cogs, flags: all }: Props) {
   const id = useId();
   const reasons = sortFlags(flags).map((x) => t(`orders.flag.${x}`, { defaultValue: x }));
   const value = cogs === null ? "—" : f.money(cogs, { unit: false });
-  if (flags.length === 0) return <>{value}</>;
+  if (flags.length === 0) return all.includes("cbu_rate") ? <span title={t("orders.flag.cbu_rate")}>{value}</span> : <>{value}</>;
   const text = t(cogs === null ? "orders.uncosted" : "orders.estimated");
   return (
     <>

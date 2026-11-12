@@ -460,7 +460,8 @@ lot narxida), brak / yo'qotish (−).
 - **FIFO** (standart): sotuv eng eski ochiq lotdan.
 - **O'rtacha** (harakatlanuvchi): yangi o'rtacha = (qoldiq qiymati + kirim qiymati) / (qoldiq + kirim).
 - Lot sotuvga tayyor sanasi = qabul sanasi; yo'q bo'lsa kargo to'langan sana (Temurning jarayonida kargo tovar
-  qo'lga olinganda to'lanadi). Ikkalasi ham yo'q lot — "yo'lda".
+  qo'lga olinganda to'lanadi); ikkalasi ham yo'q bo'lsa — qabuldan keyingi bosqich sanasi ("Uzumga yuborildi" yoki
+  "Yopildi" — eng ertasi; tovar qo'lda bo'lgan; ADR-057 Q6, B4.69). Hech biri yo'q lot — "yo'lda".
 - Yo'ldagi lot sotuvga faqat tayyor lotlar tugaganda ishlatiladi ("qabul belgilanmagan" belgisi: sotuv bor — demak
   tovar kelgan). Shu bilan legacy qoidasi saqlanadi: yo'ldagi partiya eski tovar sotuvlarini buzmaydi.
 - Sotuv birinchi lotdan oldin bo'lsa — birinchi lot narxi, "erta sotuv" belgisi.
@@ -468,9 +469,10 @@ lot narxida), brak / yo'qotish (−).
 - Har o'zgarishda tovarning eng erta o'zgargan sanasidan qayta hisoblanadi.
 - Boshlang'ich holat (F41) bo'lsa — boshlash sanasigacha bo'lgan hodisalar lotlarga tegmaydi.
 
-**F22. Taxminiy belgilar:** "kargo kiritilmagan", "erta sotuv" (sotuv lotdan oldin), "lot yetmadi", "tarixiy"
-(boshlash sanasidan oldingi sotuv — F41), "postavka bor, partiya kiritilmagan" (F41, ADR-051),
-"kurs qo'lda emas, CBU". UI'da `~` va izoh.
+**F22. Taxminiy belgilar:** "kargo kiritilmagan", "erta sotuv" (sotuv lotdan oldin), "lot yetmadi", "postavka bor,
+partiya kiritilmagan" (F41, ADR-051), "qabul qilinmagan", "vazn/hajm yo'q", "bozor kursi". UI'da `~` va izoh. **Aniq
+(taxmin emas, ADR-057 Q6, B4.69):** "kurs: Markaziy bank" (standart rejim — izoh) va "tarixiy" (boshlash sanasidan oldingi
+sotuv, sotuvchi kiritgan narx — F41); ular taxminiy qismga (F22, `cogs_estimated`) qo'shilmaydi (`upcore.costing.is_estimated`).
 
 **F23. Sof sotuv tezligi** (dona/kun; ADR-057 Q1, B4.66): oyna — oxirgi 14 ta **savdoda bo'lgan** kun: qoldiq 0
 bo'lgan kunlar (snapshot) o'tkazib yuboriladi va oyna orqaga cho'ziladi, 60 kungacha; eng yangi 7 ta kun 2 barobar
