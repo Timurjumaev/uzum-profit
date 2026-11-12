@@ -377,6 +377,18 @@ describe("raqamli komponentlar", () => {
     expect(screen.getByText("Hali sotuv yoʻq")).toBeTruthy();
   });
 
+  it("DataTable: saralanadigan sarlavhada '/' dan keyin <wbr> (audit D3) — nom va matn o'zgarmaydi", () => {
+    const cols = [
+      { key: "name", header: "Nom", render: (r: { n: string }) => r.n },
+      { key: "c", header: "Tannarx/dona", numeric: true, sortKey: "cost", render: () => "1" },
+    ];
+    const { container } = render(<DataTable caption="SKU" columns={cols} rows={[{ n: "X" }]} rowKey={(r) => r.n} onSort={() => {}} />);
+    const th = container.querySelectorAll("thead th")[1]!;
+    expect(th.querySelectorAll("wbr")).toHaveLength(1);
+    expect(th.textContent).toBe("Tannarx/dona");
+    expect(th.querySelector(".ui-th")).toBeTruthy();
+  });
+
   it("DataTable mobileList (ADR-057 Q11): asosiy bo'lmagan ustunlar `ui-col--extra` (telefonda yashirin), birinchisi doim", () => {
     const cols = [
       { key: "name", header: "Nom", render: (r: { n: string }) => r.n },

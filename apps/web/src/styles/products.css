@@ -70,6 +70,14 @@
   font-weight: 400;
 }
 
+/* Audit D3: 13 ustun 1440 px da sig'sin — katak chekkasi 8 px (desktop). */
+@media (min-width: 640px) {
+  .products .ui-table th,
+  .products .ui-table td {
+    padding-inline: var(--space-2);
+  }
+}
+
 .products .ui-badge {
   margin-inline-start: var(--space-1);
 }
