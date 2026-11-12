@@ -14,6 +14,7 @@ from upcore.metrics import (
     SaleLine,
     own_expense_in_period,
     profit_summary,
+    ratio,
 )
 from upcore.money import Money, total
 from upcore.pnl import (
@@ -26,6 +27,7 @@ from upcore.pnl import (
     TaxRule,
     build_cells,
     compare,
+    expected_value,
     expense_items,
     order_to_profit,
 )
@@ -272,6 +274,30 @@ def test_rows_and_compare() -> None:
         [ExpenseItem(date(2026, 9, 5), "S1", C.FINE, uzs(500))],
     ).statement()
     assert all(r.change is None for r in compare(cur, empty))
+
+
+def test_compare_change_scales_processing_by_completion() -> None:
+    # ADR-057 Q4 (audit K6): joriy davr — 100 000 yakunlangan + 100 000 jarayonda; oldingi — 150 000 yakunlangan.
+    cur = build_cells(
+        OCT, [sale(1, cost=None), sale(2, cost=None, status="PROCESSING")], []
+    ).statement()
+    sep = Period(date(2026, 9, 1), date(2026, 9, 30))
+    prev = build_cells(
+        sep, [SaleLine("A", date(2026, 9, 5), "TO_WITHDRAW", D(150_000), 1, shop="S1")], []
+    ).statement()
+    raw = {r.code: r for r in compare(cur, prev)}
+    assert raw["revenue"].change == ratio(50_000, 150_000) and not raw["revenue"].estimated
+    # Yakunlanish ulushi 0,5: kutilgan 100 000 + 100 000 × 0,5 = 150 000 → o'sish yo'q (avval +33% ko'rinardi)
+    rows = {r.code: r for r in compare(cur, prev, D("0.5"))}
+    revenue = rows["revenue"]
+    assert revenue.change == 0 and revenue.estimated
+    assert (revenue.current, revenue.previous, revenue.diff) == (
+        uzs(200_000),
+        uzs(150_000),
+        uzs(50_000),
+    )  # summalar o'zgarmaydi
+    assert expected_value(uzs(200_000), uzs(100_000), D("0.5")) == uzs(150_000)
+    assert expected_value(uzs(200_000), uzs(100_000), None) == uzs(200_000)
 
 
 def test_expense_items_adapter() -> None:

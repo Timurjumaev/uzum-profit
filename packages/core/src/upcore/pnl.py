@@ -1087,21 +1087,50 @@ class CompareRow:
     change: Decimal | None
     processing: Money = ZERO  # ADR-037: Jarayondagi qism (kutilayotgan)
     done: Money = ZERO  # yakunlangan qism = joriy − kutilayotgan
+    estimated: bool = (
+        False  # ``change`` kutilayotgan qism × yakunlanish ulushi bilan (ADR-057 Q4) — taxminiy
+    )
 
 
-def compare(current: Statement, previous: Statement) -> list[CompareRow]:
+def expected_value(full: Money, processing: Money, completion: Decimal | None) -> Money:
+    """ADR-057 Q4 (F16 R): qiymatning kutilgan yakuniy qismi = yakunlangan + Jarayondagi × yakunlanish ulushi.
+    Ulush noma'lum (``None``) — qiymat o'zgarmaydi. Uch raqam (ADR-036/037) bunga ko'paytirilmaydi; faqat prognoz va
+    "▲ %" uchun."""
+    if completion is None:
+        return full
+    return full - processing + processing * completion
+
+
+def compare(
+    current: Statement, previous: Statement, completion: Decimal | None = None
+) -> list[CompareRow]:
     """Ikki davr hisobot qatorlari: joriy davrda yo'q qator oldingisida bo'lsa ham ko'rsatiladi. Har qatorda joriy
-    davrning Jarayondagi (kutilayotgan) va yakunlangan qismi — bir xil ``rows()`` kodlari bo'yicha (ADR-037)."""
+    davrning Jarayondagi (kutilayotgan) va yakunlangan qismi — bir xil ``rows()`` kodlari bo'yicha (ADR-037).
+
+    ADR-057 Q4: ``completion`` (F16 R) berilsa, o'zgarish ulushi (``change``, "▲ %") ikkala davrning kutilgan yakuniy
+    qiymatlari bo'yicha — Jarayondagi qism × R (joriy davrda jarayondagi buyurtmalar ko'p, oldingisida bekorlar allaqachon
+    chiqib ketgan — aks holda o'sish tizimli ravishda ko'proq ko'rinadi); shunday qatorda ``estimated``. Summalar (joriy,
+    oldingi, farq) o'zgarmaydi."""
     cur, prev = dict(current.rows()), dict(previous.rows())
     part = dict(current.processing.rows()) if current.processing is not None else {}
+    prev_part = dict(previous.processing.rows()) if previous.processing is not None else {}
     comparable = not previous.revenue.is_zero()
     codes = [c for c, _ in current.rows()]
     codes += [c for c in prev if c not in cur] + [c for c in part if c not in cur and c not in prev]
     rows = []
     for code in codes:
         now, before = cur.get(code, ZERO), prev.get(code, ZERO)
-        pending = part.get(code, ZERO)
+        pending, pending_before = part.get(code, ZERO), prev_part.get(code, ZERO)
         diff = now - before
+        estimated = completion is not None and not (pending.is_zero() and pending_before.is_zero())
+        change = None
+        if comparable:
+            if estimated:
+                now_x = expected_value(now, pending, completion)
+                before_x = expected_value(before, pending_before, completion)
+                change = ratio((now_x - before_x).amount, abs(before_x.amount))
+            else:
+                change = ratio(diff.amount, abs(before.amount))
         rows.append(
             CompareRow(
                 code,
@@ -1109,9 +1138,10 @@ def compare(current: Statement, previous: Statement) -> list[CompareRow]:
                 ratio(now.amount, current.revenue.amount),
                 before,
                 diff,
-                ratio(diff.amount, abs(before.amount)) if comparable else None,
+                change,
                 processing=pending,
                 done=now - pending,
+                estimated=estimated,
             )
         )
     return rows

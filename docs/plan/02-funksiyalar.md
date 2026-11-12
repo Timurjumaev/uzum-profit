@@ -103,7 +103,8 @@ Bloklar (joylashuvi 04-dizayn.md §7.2 desktop, §7.3 mobil):
    oldingi davrga nisbatan o'zgarish (oldingi davrda sotuv bo'lmasa — foizsiz) va marja. Har raqamda formula ("?"),
    "Qanday hisoblandi" — Foyda sahifasiga (filtrlar bilan).
 2. **Davr chizig'i:** Bugun, Kecha, Shu oy, Oy prognozi (run-rate), O'tgan oy — har birida tushum, sof foyda
-   (ostida "yakunlangan X · kutilayotgan Y"), buyurtma (dona).
+   (ostida "yakunlangan X · kutilayotgan Y"), buyurtma (dona). Prognoz asosida (oy boshidan kechagacha) Jarayondagi qism
+   yakunlanish ulushiga (F16 R) ko'paytiriladi — "taxminiy" (ADR-057 Q4, B4.68); R noma'lum bo'lsa — to'liq.
 3. **Kunlik grafik:** sof foyda (ustun: yakunlangan + ustida kutilayotgan qatlam); almashtirgich bilan — tushum (yakunlangan +
    jarayondagi qatlam).
 4. **Diqqat talab qiladi** (ustuvorlik bo'yicha): tannarxsiz sotuvlar, tugayotgan tovar, zarar bilan sotilayotgan
@@ -419,6 +420,12 @@ F12 / F3. Marja yonida doim **tannarxsiz qism ulushi** = 1 − F15 alohida ko'rs
 **F15. Tannarx qamrovi** = (tannarxi ma'lum qatorlar tushumi) / F3. Qamrov < 100% bo'lsa sof foyda faqat ma'lum
 qatorlar bo'yicha hisoblanadi; F9, F10, F11 qamrov ulushiga mutanosib qismi ayriladi; qolgani "tannarxsiz qism"
 qatorida alohida ko'rsatiladi. (Legacy hamma xarajatni ayirib, foydani kam ko'rsatardi.)
+
+**"▲ %" — oldingi davrga nisbatan o'zgarish** (M4, M5; ADR-057 Q4, B4.68): uch raqam va summalar (joriy, oldingi, farq)
+o'zgarmaydi, lekin o'zgarish ulushi ikkala davrning **kutilgan yakuniy** qiymatidan: (yakunlangan + Jarayondagi × R)
+joriy − shu oldingi davrda, / |oldingi|. Sabab: joriy davrda jarayondagi buyurtmalar to'liq turadi, oldingisidan bekorlar
+allaqachon chiqib ketgan — o'sish tizimli ravishda ko'proq ko'rinardi (09-audit K6, S2: farq 3% dan ancha katta). Shunday
+qatorda "≈" belgisi va izoh. R noma'lum (< 50 dona) — eskicha.
 
 **F16. Kutilayotgan sof foyda** (ADR-036, ADR-037; F12 ning qismi) = Jarayondagi sotuvlar qismi, xuddi yakunlangan qism kabi:
 tushum − komissiya − logistika (Uzum yozgani, F5) − tannarx − o'z reklamasi (yechilgani yoki F42 taxmini — bittasi,

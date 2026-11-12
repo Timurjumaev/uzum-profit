@@ -755,7 +755,12 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     holati yo'q (u yerdagi "Holat" — foyda holati), shuning uchun o'zgarmadi. Testlar: core (K3 misoli, chegara), API (hamma
     joydagi zaxira bilan sana, filtr), web (tab, belgi, URL/API). **T:** kerak emas (Ombor sahifasida Kritik SKU'lar kamayadi —
     yo'ldagi va omborimdagi tovar endi hisobga olinadi; omborida tovari bor SKU'larda "Uzumga yuborish" chiqadi).
-  - [ ] B4.68 (Q4) Prognoz va "▲ %" da kutilayotgan qism × yakunlanish ulushi, "taxminiy" belgisi.
+  - [x] B4.68 (Q4) Prognoz va "▲ %" da kutilayotgan qism × yakunlanish ulushi, "taxminiy" belgisi.
+    ✓ 2026-11-12: `upcore.pnl.compare(..., completion)` — o'zgarish ulushi ikkala davrning kutilgan yakuniy qiymatidan
+    (`expected_value`: yakunlangan + Jarayondagi × F16 R), qatorda `estimated`; summalar o'zgarmaydi. API: `/pnl` va `/dashboard`
+    `rows[].change_estimated`; oy prognozi asosida Jarayondagi qism × R (`forecast.estimated`). Web: taxminiy o'zgarishda
+    "≈" va izoh (Asosiy, Foyda). 02 (M4 davr chizig'i, "▲ %"). Testlar: core (100 000 + 100 000 jarayonda vs 150 000, R 0,5 →
+    0%, avval +33%), API (R noma'lum — eskicha; R 0,5 — taxminiy, summalar bir xil), web ("≈"). **T:** kerak emas.
   - [ ] B4.69 (Q6) "Taxminiy" belgisi: tayyor sana qoidasi, Markaziy bank kursi — izoh.
   - [x] B4.70 (Q7) Kunlik snapshot har sinxronda; sotuvda "yakunlangan birinchi ko'rilgan vaqt" (migratsiya).
     ✓ 2026-11-12: migratsiya 0020 — `sku_daily.zero_seen`, `sale_items.completed_seen_at`. Mahsulot sinxroni (soatiga) bugungi

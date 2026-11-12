@@ -86,22 +86,22 @@ describe("homeRows", () => {
   it("tannarxsiz qism: to'lov ayriladi, xarajat qaytariladi, o'zgarishsiz — zanjir yig'indisi to'g'ri", () => {
     const data = dashboardData();
     const extra = [
-      { code: "uncovered_payout", amount: "1000000.00", done: "1000000.00", processing: "0.00", share_of_revenue: null, previous: "0.00", diff: "1000000.00", change: null },
-      { code: "uncovered_expenses", amount: "120000.00", done: "120000.00", processing: "0.00", share_of_revenue: null, previous: "0.00", diff: "120000.00", change: null },
+      { code: "uncovered_payout", amount: "1000000.00", done: "1000000.00", processing: "0.00", share_of_revenue: null, previous: "0.00", diff: "1000000.00", change: null, change_estimated: false },
+      { code: "uncovered_expenses", amount: "120000.00", done: "120000.00", processing: "0.00", share_of_revenue: null, previous: "0.00", diff: "120000.00", change: null, change_estimated: false },
     ];
     const at = data.rows.findIndex((r) => r.code === "net_profit");
     const withUncovered = homeRows([...data.rows.slice(0, at), ...extra, ...data.rows.slice(at)], label);
     const m = Object.fromEntries(withUncovered.map((r) => [r.key, r]));
-    expect(m.uncovered_payout).toMatchObject({ op: "−", amount: "-1000000.00", change: null });
-    expect(m.uncovered_expenses).toMatchObject({ op: "+", amount: "120000.00", change: null });
+    expect(m.uncovered_payout).toMatchObject({ op: "−", amount: "-1000000.00", change: null, changeEstimated: false });
+    expect(m.uncovered_expenses).toMatchObject({ op: "+", amount: "120000.00", change: null, changeEstimated: false });
     expect(withUncovered.map((r) => r.key).slice(-3)).toEqual(["uncovered_payout", "uncovered_expenses", "net_profit"]);
   });
 
   it("kompensatsiya (musbat Uzum qatori) — plyus", () => {
     const rows2 = homeRows(
       [
-        { code: "tax", amount: "0.00", done: "0.00", processing: "0.00", share_of_revenue: null, previous: "0.00", diff: "0.00", change: null },
-        { code: "uzum:compensation", amount: "50000.00", done: "50000.00", processing: "0.00", share_of_revenue: null, previous: "0.00", diff: "50000.00", change: null },
+        { code: "tax", amount: "0.00", done: "0.00", processing: "0.00", share_of_revenue: null, previous: "0.00", diff: "0.00", change: null, change_estimated: false },
+        { code: "uzum:compensation", amount: "50000.00", done: "50000.00", processing: "0.00", share_of_revenue: null, previous: "0.00", diff: "50000.00", change: null, change_estimated: false },
       ],
       label,
     );

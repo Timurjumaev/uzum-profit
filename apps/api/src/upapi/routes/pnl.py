@@ -104,14 +104,14 @@ async def pnl(ctx: Finance, f: Filter, _: Heavy, view: View = View.TOTAL) -> Pnl
     if view is View.SKU:
         await _titles(ctx, cols)
     p = before.statement()
-    rates = await rc.realization(ctx.conn, f)
+    rates = await rc.realization(ctx.conn, f)  # F16 R: "▲ %" da kutilayotgan qism × R (ADR-057 Q4)
     shops = {k: v for k, v in cur.by_shop().items() if v.processing is not None}
     now = await db_now(ctx.conn)
     return PnlOut(
         meta=await meta(ctx.conn, f, KINDS, previous),
         statement=StatementOut.of(s),
         previous=StatementOut.of(p),
-        rows=[RowOut.of(r) for r in compare(s, p)],
+        rows=[RowOut.of(r) for r in compare(s, p, rates.total)],
         columns=cols,
         expected=ExpectedOut.of(s, rates.total),
         expected_shops=[
