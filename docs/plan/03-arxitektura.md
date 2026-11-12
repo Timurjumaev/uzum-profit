@@ -124,9 +124,11 @@ usul, xato kodi, HTTP kod), `provider_health` (tizim jadvali: Uzum uzilishi hola
 
 **Katalog:** `items` (bizning tovar: nom, rasm, vazn, o'lchamlar), `mp_products`, `mp_skus` (tashqi sku id,
 barkod, artikul, IKPU, narx, komissiya %, qoldiqlar: active/fbs/defected/pending, sotilgan, qaytgan, `avgdsales`,
-rank, saqlash narxi, holat, `item_id`), `sku_daily` (kunlik snapshot: qoldiqlar, narx, komissiya).
+rank, saqlash narxi, holat, `item_id`), `sku_daily` (kunlik snapshot: qoldiqlar, narx, komissiya; bugungi qator har mahsulot sinxronida yangilanadi,
+`zero_seen` — kun ichida Uzum qoldig'i 0 ko'rilgan; B4.70, ADR-057 Q7).
 
-**Uzum faktlari:** `sale_items` (unikal: shop, order_id, id; holat, sana, topshirilgan vaqt, narx, dona, komissiya,
+**Uzum faktlari:** `sale_items` (unikal: shop, order_id, id; holat, sana, topshirilgan vaqt, birinchi marta Yakunlangan
+ko'rilgan vaqt — `completed_seen_at`, B4.70, narx, dona, komissiya,
 logistika, `sellerProfit`, `amountReturns`, `returnCause`, `purchasePrice` — faqat ma'lumot uchun, ADR-016; SKU nomi
 `skuTitle` — `mp_skus.sku_code` = `skuFullTitle` bilan bog'lanadi), `mp_expenses`
 (tashqi id unikal; asl va normallashtirilgan kod, toifa, status, summa, tur, sanalar, bog'langan buyurtma/sotuv),
@@ -188,7 +190,7 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
   B2.6 (`upapi.sync`): `sync.tick` (har daqiqa) ulangan akkauntlar uchun `sync.account` ishini qo'yadi
   (`queueing_lock` — navbatda bitta; `lock = account:<id>` — bitta kalitga bitta ish; ustuvorlik: "Hozir yangilash" 10,
   kalit ulandi 5, jadval 0). Akkaunt ishi vaqti kelgan turlarni (`UP_SYNC_INTERVALS`; snapshot — Toshkent 23:50 dan
-  keyin kuniga bir marta) bajaradi; do'konlar va qaytarishlar butun akkaunt bo'yicha bir so'rov. Sotuv va xarajat
+  keyin kuniga bir marta, bugungi qator esa har mahsulot sinxronida ham, B4.70) bajaradi; do'konlar va qaytarishlar butun akkaunt bo'yicha bir so'rov. Sotuv va xarajat
   usullari: **tarix** (birinchi marta 2020-01-01 dan, rad etilsa 1825/1095/730/365/180/100 kun — do'konda "full" /
   "limited:N"; uzilsa kursordagi sahifa va hajmdan davom), **inkremental** (3 kun yoki oxirgi muvaffaqiyatdan 1 kun
   oldin), **chuqur** (kuniga bir marta 45 kun), **uzilish** (tiklangach uzilish davri). Postavka tarkibi — yangi yoki

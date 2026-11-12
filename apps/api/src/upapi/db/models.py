@@ -382,6 +382,8 @@ sku_daily = tenant(
     Column("qty_pending", Integer),
     Column("price", UZS),
     Column("commission_pct", PCT),
+    # B4.70 (ADR-057 Q7): shu kun biror sinxronda Uzum qoldig'i (FBO faol + FBS) 0 ko'rilgan.
+    Column("zero_seen", Boolean, nullable=False, server_default="false"),
     UniqueConstraint("org_id", "sku_id", "day"),
     refs={"sku_id": ("mp_skus", False)},
 )
@@ -407,6 +409,8 @@ sale_items = tenant(
     Column("sku_title", Text),
     Column("product_external_id", BigInteger),
     Column("issued_at", TS),
+    # B4.70 (ADR-057 Q7): birinchi marta Yakunlangan holatda ko'rilgan vaqt (Uzum yakunlanish sanasini bermaydi).
+    Column("completed_seen_at", TS),
     UniqueConstraint("org_id", "shop_id", "order_id", "external_id"),
     refs={"shop_id": ("shops", False), "sku_id": ("mp_skus", True)},
 )

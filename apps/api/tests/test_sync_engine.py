@@ -598,6 +598,49 @@ def test_daily_snapshot_after_2350_tashkent(db: dict[str, str]) -> None:
     assert [(r[0].isoformat(), r[1], str(r[2])) for r in rows] == [("2026-10-24", 10, "100000.00")]
 
 
+def test_product_sync_refreshes_today_snapshot_and_remembers_zero(db: dict[str, str]) -> None:
+    # B4.70 (ADR-057 Q7): bugungi qator har mahsulot sinxronida yangilanadi; kun ichida 0 ko'rilsa — belgi qoladi.
+    clock = Clock()  # Toshkent 17:00 — kunlik snapshot vaqti (23:50) hali kelmagan
+    fake = seller()
+    query = (
+        "SELECT d.day, d.qty_active, d.zero_seen FROM sku_daily d JOIN mp_skus k ON k.id = d.sku_id "
+        "WHERE k.shop_id = %s AND k.external_id = 5011"
+    )
+    with runtime(db, fake, clock) as run:
+        account = create_account(db, sf.settings_for(db), TOKEN, [A])
+        assert "snapshot" not in by_kind(sync(run, account), account.shops[A])
+        assert admin(db, query, [account.shops[A]]) == [(NOW.date(), 10, False)]
+        sku = fake.products[A][0]["skuList"][0]
+        sku["quantityActive"], sku["quantityFbs"] = 0, 0
+        clock.advance(minutes=61)
+        sync(run, account)
+        assert admin(db, query, [account.shops[A]]) == [(NOW.date(), 0, True)]
+        sku["quantityActive"] = 6
+        clock.advance(minutes=61)
+        sync(run, account)
+    assert admin(db, query, [account.shops[A]]) == [
+        (NOW.date(), 6, True)
+    ]  # 0 ko'rilgani unutilmaydi
+
+
+def test_completed_seen_at_set_once_when_sale_completes(db: dict[str, str]) -> None:
+    # B4.70: Uzum yakunlanish sanasini bermaydi — birinchi marta Yakunlangan ko'rilgan vaqt yoziladi, keyin o'zgarmaydi.
+    clock = Clock()
+    fake = seller()
+    query = "SELECT external_id, completed_seen_at FROM sale_items WHERE org_id = %s ORDER BY 1"
+    with runtime(db, fake, clock) as run:
+        account = create_account(db, sf.settings_for(db), TOKEN, [A])
+        fake.orders[A][2]["status"] = "PROCESSING"  # 3 — kecha, Jarayonda (inkremental oynada)
+        sync(run, account)
+        first = dict(admin(db, query, [account.org_id]))
+        assert first[1] == NOW and first[2] is None and first[3] is None
+        fake.orders[A][2]["status"] = "TO_WITHDRAW"
+        clock.advance(minutes=16)
+        sync(run, account, kinds=[eng.Kind.ORDERS])
+    later = dict(admin(db, query, [account.org_id]))
+    assert later[1] == NOW and later[2] is None and later[3] == NOW + timedelta(minutes=16)
+
+
 def test_invoice_items_fetched_once_per_status(db: dict[str, str]) -> None:
     fake = seller()
     clock = Clock()

@@ -757,7 +757,14 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     yo'ldagi va omborimdagi tovar endi hisobga olinadi; omborida tovari bor SKU'larda "Uzumga yuborish" chiqadi).
   - [ ] B4.68 (Q4) Prognoz va "▲ %" da kutilayotgan qism × yakunlanish ulushi, "taxminiy" belgisi.
   - [ ] B4.69 (Q6) "Taxminiy" belgisi: tayyor sana qoidasi, Markaziy bank kursi — izoh.
-  - [ ] B4.70 (Q7) Kunlik snapshot har sinxronda; sotuvda "yakunlangan birinchi ko'rilgan vaqt" (migratsiya).
+  - [x] B4.70 (Q7) Kunlik snapshot har sinxronda; sotuvda "yakunlangan birinchi ko'rilgan vaqt" (migratsiya).
+    ✓ 2026-11-12: migratsiya 0020 — `sku_daily.zero_seen`, `sale_items.completed_seen_at`. Mahsulot sinxroni (soatiga) bugungi
+    `sku_daily` qatorini yangilaydi (`store.snapshot`; avval faqat 23:50 da — kun o'rtasida o'chgan sinxronda kun snapshotsiz
+    qolardi); kun ichida Uzum qoldig'i 0 ko'rilsa `zero_seen` qoladi. Sotuvlar sinxroni Yakunlangan holatdagi, hali belgilanmagan
+    qatorlarga birinchi ko'rilgan vaqtni yozadi (`store.mark_completed_seen`); migratsiyadan oldingilari — `NULL` (taxmin yo'q).
+    Hisob formulalari o'zgarmadi (F23 hali kun oxiridagi qoldiqdan): bu ma'lumot keyin F34 (tugab qolish yo'qotishi) va
+    yakunlanish muddati (S2) uchun. Testlar: sinxron (bugungi qator yangilanadi, 0 belgisi qoladi; birinchi ko'rilgan vaqt bir
+    marta). **T:** kerak emas.
   - [ ] B4.71 (Q12) Menyuda "Pul oqimi" va "Hisobotlar" yashiriladi.
   - [ ] B4.72 (Q10) Bosh sahifa tartibi (ikkala variant skrinshoti PR'da).
   - [ ] B4.73 (Q11) Mobil ro'yxat: Mahsulotlar → Ombor → Buyurtmalar (uch PR).

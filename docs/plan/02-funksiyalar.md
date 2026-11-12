@@ -63,7 +63,7 @@ boshlanadi va qolgan joydan davom etadi; tannarxsiz ham bosh sahifa ishlaydi (ta
 | Sotuvlar | `GET /v1/finance/orders` (`group=false`, size≤5000) | 10–15 daq | eng yangi sahifa; kuniga 1 marta 45 kunlik chuqur |
 | Xarajatlar | `GET /v1/finance/expenses` (size≤2000) | soatiga 1 | `dateFrom` bilan |
 | Mahsulot, SKU, qoldiq, komissiya | `GET /v1/product/shop/{id}` (size=100) | 30–60 daq | to'liq |
-| Kunlik qoldiq snapshot | (mahsulotdan) | kuniga 1, 23:50 | `(shop, sku, sana)` |
+| Kunlik qoldiq snapshot | (mahsulotdan) | har mahsulot sinxronida bugungi qator (+ kun ichida 0 ko'rilgani), kun oxiri — 23:50 (B4.70) | `(shop, sku, sana)` |
 | Postavkalar | `GET /v1/shop/{id}/invoice` | soatiga 1 | ro'yxat |
 | Postavka tarkibi | `GET /v1/shop/{id}/invoice/products?invoiceId=` | yangi yoki holati o'zgarganda | bir marta |
 | Qaytarishlar | `GET /v1/return`, `/v1/shop/{id}/return` | soatiga 1 | `dateFrom` bilan |
