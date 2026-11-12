@@ -7142,6 +7142,7 @@
           "weight",
           "volume",
           "value",
+          "line_sum",
           "manual"
         ],
         "title": "AllocationBase",

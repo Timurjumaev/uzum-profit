@@ -911,11 +911,16 @@ B6.1–B6.2 (Telegram kunlik xulosa), keyin B5.0 va qolgan B5; B6.3 — B5 dan k
 Har vazifa — alohida branch va PR; tafsilot 07 "ADR-061 tafsiloti", 02 M9–M10, F20, F51–F52, 04 §6.2 va §7.4.
 
 - [x] TM0 Reja: Temur bilan uch tur savol-javob, ADR-061, 02 / 03 / 04 / 05 yangilandi (faqat hujjat). ✓ 2026-11-12
-- [ ] TM1 Model va yadro: migratsiya (ADR-061 §11 — ustunlar qo'shiladi, eski bosqich → uch holat, hech narsa o'chirilmaydi),
-  `upcore.purchasing` F20 yangi qoidalari (qator summasi, farq taqsimoti, sog' dona, qaytarilgan summa, qadoq qo'shimchasi,
-  kargo — dona / qo'lda ulush, xaridning o'z kargo puli), hosila holat; API. **Shart:** mavjud lot va sotuv tannarxlari
-  migratsiyadan keyin o'zgarmaydi (solishtirma test), xossa testlari (ulushlar yig'indisi = summa).
-- [ ] TM2 Yangi xarid oynasi (§2) va xarid sahifasi: jami to'landi + valyuta + kurs tanlovi, trek, "Tovar qo'limda", uch
+- [x] TM1 Model va yadro (ADR-061 §2, §3, §5, §6, §11). ✓ 2026-11-13: migratsiya 0023 — faqat ustunlar qo'shiladi (`purchases`:
+  trek, "Tovar qo'limda", qaytarilgan summa; `purchase_lines`: SKU, qator summasi, brak, qadoq qo'shimchasi; `items`: qadoq
+  qo'shimchasi; `cost_components`: vazn, `line_sum` asosi), mavjud yozuvlar o'zgarmaydi. `upcore.purchasing` F20: qator summasi
+  asosi (`LINE_SUM`; yo'q bo'lsa dona, `no_line_sums` — eslatma), **sog' dona** (kelgan − brak), sotuvchi qaytargan summa tovar
+  summasidan ayriladi, qadoq qo'shimchasi har sog' donaga, "Tovar qo'limda" — "kargo kiritilmagan" belgisisiz, kodli quti
+  (`split_by_purchase`: qo'lda summalar + qolgani kelgan dona bo'yicha; `targets.purchase_shares`). `calc/lots` ulangan.
+  Testlar: yadro (xossa — ulushlar yig'indisi = summa), bazadan lotgacha; mavjud xarid / kargo / hisob testlari
+  o'zgarmasdan o'tadi (eski yozuvlar hisobi avvalgidek). **Keyinga:** API maydonlari va uch holat (eski bosqich → holat
+  ko'chirish) — TM2 da, UI bilan birga (holat qiymati o'zgarsa hozirgi ekran buzilardi).
+- [ ] TM2 Uch holat (hosila; eski bosqich → holat, §1, §11), API maydonlari, yangi xarid oynasi (§2) va xarid sahifasi: jami to'landi + valyuta + kurs tanlovi, trek, "Tovar qo'limda", uch
   nuqtali Partiya yo'li, ro'yxatda uch holat; eski bosqich shakli olib tashlanadi, "Tarix" qoladi.
 - [ ] TM3 Kargo puli jadvali (§3): trekli qator va kodli quti (dona bo'yicha tayyor ulushlar, tahrir), xarajat turlari
   lug'ati (§4). Kargolar sahifasi soddalashadi (B5.0d dagi Kargolar sahifalashi shu yerda).

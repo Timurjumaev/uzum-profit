@@ -43,6 +43,7 @@ from upcore.purchasing import (
     compute_lots,
     compute_shipment_lots,
     compute_shipment_shares,
+    split_by_purchase,
 )
 
 from upapi.db import models as m
@@ -108,6 +109,13 @@ def _line(row: Row[Any]) -> PurchaseLine:
         unit_price=price,
         unit_weight=row.unit_weight,
         unit_volume=row.unit_volume,
+        defect_qty=row.defect_qty,
+        line_sum=row.line_sum,
+        pack_unit_cost=(
+            None
+            if row.pack_unit_cost is None
+            else Money(to_decimal(row.pack_unit_cost), Currency.UZS)
+        ),
     )
 
 
@@ -139,6 +147,38 @@ def targets_of(raw: Mapping[str, Any] | None) -> tuple[tuple[str, ...] | None, d
     lines = raw.get("lines")
     shares = {str(k): to_decimal(str(v)) for k, v in (raw.get("shares") or {}).items()}
     return (tuple(str(x) for x in lines) if lines is not None else None), shares
+
+
+def purchase_shares_of(raw: Mapping[str, Any] | None) -> dict[str, Decimal]:
+    """Kodli quti (ADR-061 §3): ``targets.purchase_shares`` — xarid id → sotuvchi qo'lda yozgan summa (komponent
+    valyutasida). Bo'sh — hammasi dona bo'yicha."""
+    return {
+        str(k): to_decimal(str(v)) for k, v in ((raw or {}).get("purchase_shares") or {}).items()
+    }
+
+
+def refund_of(
+    purchase: Any, components: Sequence[CostComponent], rates: Rates
+) -> tuple[Money | None, FxRate | None]:
+    """Sotuvchi qaytargan summa (ADR-061 §6) va kursi: tovar komponenti shu valyutada bo'lsa — o'sha kurs (pul qaysi
+    kursda ketgan bo'lsa shunda qaytadi), bo'lmasa qaytgan (yo'q bo'lsa to'lov / buyurtma) kunidagi CBU kursi."""
+    if getattr(purchase, "refund_amount", None) is None:
+        return None, None
+    refund = Money(to_decimal(purchase.refund_amount), currency_of(purchase.refund_currency))
+    if refund.currency is Currency.UZS:
+        return refund, None
+    goods = next(
+        (
+            c.rate
+            for c in components
+            if c.kind is ComponentKind.GOODS
+            and c.rate is not None
+            and c.rate.currency is refund.currency
+        ),
+        None,
+    )
+    day = purchase.refund_on or purchase.paid_on or purchase.ordered_on
+    return refund, goods or rates.cbu(refund.currency, day)
 
 
 class Effective:
@@ -196,6 +236,23 @@ def build_components(
     return tuple(parsed)
 
 
+def shipment_components(
+    rows: Sequence[Row[Any]], fallback: Any, rates: Rates, purchases: Sequence[Purchase]
+) -> tuple[CostComponent, ...]:
+    """Kargo komponentlari; ``purchase_shares`` bor komponent (kodli quti, ADR-061 §3) xaridlar bo'yicha bo'linadi:
+    qo'lda yozilgan summalar o'zgarmaydi, qolgani kelgan dona bo'yicha (:func:`upcore.purchasing.split_by_purchase`).
+    Kargodan chiqarilgan xaridning ulushi e'tiborga olinmaydi (qolganlarga dona bo'yicha qaytadi)."""
+    out: list[CostComponent] = []
+    known = {p.id for p in purchases}
+    for row, component in zip(rows, build_components(rows, fallback, rates), strict=True):
+        fixed = {k: v for k, v in purchase_shares_of(row.targets).items() if k in known}
+        if fixed:
+            out.extend(split_by_purchase(component, purchases, fixed))
+        else:
+            out.append(component)
+    return tuple(out)
+
+
 def build_purchase(
     purchase: Row[Any],
     lines: Sequence[Row[Any]],
@@ -224,10 +281,14 @@ def build_purchase(
         for c in (*components, *shipment_components)
         if c.kind == "cargo" and c.paid_on is not None
     ]
+    refund, refund_rate = refund_of(purchase, parsed, rates)
     return Purchase(
         id=str(purchase.id),
         lines=tuple(_line(x) for x in lines),
         components=tuple(parsed),
+        refund=refund,
+        refund_rate=refund_rate,
+        on_hand=bool(getattr(purchase, "on_hand", False)),
         goods_rate=goods_rate,
         order_date=purchase.ordered_on,
         # Kargo bir necha marta to'lansa — oxirgisi (tovar to'liq qo'lga olingan kun).
@@ -305,7 +366,9 @@ def evaluate_shipment(
             )
             for p in active
         }
-        components = build_components(shipment_comps, shipment_fallback(shipment), rates)
+        components = shipment_components(
+            shipment_comps, shipment_fallback(shipment), rates, list(models.values())
+        )
         lots = compute_shipment_lots(list(models.values()), components)
         shares = compute_shipment_shares(list(models.values()), components) if components else {}
     except CALC_ERRORS as exc:
@@ -323,7 +386,11 @@ def currencies_of(rows: Iterable[Row[Any]]) -> set[Currency]:
     """Qator va komponentlardagi valyutalar (kurslarni oldindan yuklash uchun); noto'g'ri qiymat o'tkaziladi."""
     out: set[Currency] = set()
     for r in rows:
-        for value in (getattr(r, "currency", None), getattr(r, "charged_currency", None)):
+        for value in (
+            getattr(r, "currency", None),
+            getattr(r, "charged_currency", None),
+            getattr(r, "refund_currency", None),  # xarid qatori: sotuvchi qaytargan summa (ADR-061)
+        ):
             with contextlib.suppress(PurchaseError, ValueError):
                 out.add(currency_of(value))
     return out
@@ -381,7 +448,12 @@ async def rebuild_lots(
         currencies_of(
             [
                 r
-                for rows in (*lines_by.values(), *comps_by.values(), *ship_comps.values())
+                for rows in (
+                    purchases,
+                    *lines_by.values(),
+                    *comps_by.values(),
+                    *ship_comps.values(),
+                )
                 for r in rows
             ]
         )

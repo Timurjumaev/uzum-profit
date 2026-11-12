@@ -333,6 +333,9 @@ items = tenant(
     Column("width_mm", Integer),
     Column("height_mm", Integer),
     Column("is_sim", Boolean, nullable=False, server_default="false"),
+    # ADR-061 §5: tovarning qadoq qo'shimchasi (so'm/dona, ixtiyoriy) — sanashda xarid qatoriga nusxalanadi.
+    Column("pack_unit_cost", UZS),
+    CheckConstraint("pack_unit_cost IS NULL OR pack_unit_cost >= 0", name="pack_unit_cost"),
 )
 mp_products = tenant(
     "mp_products",
@@ -532,6 +535,16 @@ purchases = tenant(
     Column("closed_on", Date),
     Column("legacy_batch_id", Integer),
     Column("note", Text),
+    # Ta'minot qayta loyihasi (ADR-061): trek, "Tovar qo'limda", sotuvchi qaytargan summa.
+    Column("track_no", Text),
+    Column("on_hand", Boolean, nullable=False, server_default="false"),
+    Column("refund_amount", FX),
+    Column("refund_currency", Text),
+    Column("refund_on", Date),
+    CheckConstraint(
+        "refund_amount IS NULL OR (refund_amount >= 0 AND refund_currency IS NOT NULL)",
+        name="refund",
+    ),
     refs={
         "supplier_id": ("suppliers", True),
         "carrier_id": ("carriers", True),
@@ -551,7 +564,21 @@ purchase_lines = tenant(
     Column("currency", Text),
     Column("unit_weight", Numeric(12, 4)),
     Column("unit_volume", Numeric(12, 6)),
-    refs={"purchase_id": ("purchases", False), "item_id": ("items", True)},
+    # ADR-061: qator summasi (xarid valyutasida), sanashdagi brak, qadoq qo'shimchasi (so'm/dona), qator SKU'si.
+    Column("line_sum", FX),
+    Column("defect_qty", Integer, nullable=False, server_default="0"),
+    Column("pack_unit_cost", UZS),
+    CheckConstraint(
+        "defect_qty >= 0 AND defect_qty <= coalesce(received_qty, ordered_qty)"
+        " AND (line_sum IS NULL OR line_sum >= 0)"
+        " AND (pack_unit_cost IS NULL OR pack_unit_cost >= 0)",
+        name="counting",
+    ),
+    refs={
+        "purchase_id": ("purchases", False),
+        "item_id": ("items", True),
+        "sku_id": ("mp_skus", True),
+    },
 )
 cost_components = tenant(
     "cost_components",
@@ -568,7 +595,8 @@ cost_components = tenant(
         "targets", JSONB
     ),  # qatorlar va qo'lda ulushlar (purchase_lines id'lari shu xarid ichida)
     check_in("rate_mode", ("cbu", "manual", "effective")),
-    check_in("allocation", ("units", "weight", "volume", "value", "manual")),
+    check_in("allocation", ("units", "weight", "volume", "value", "manual", "line_sum")),
+    Column("weight_kg", Numeric(12, 3)),  # kargo vazni — faqat ma'lumot (ADR-061 §3)
     # Xarajat yoki xaridniki, yoki kargoniki (ADR-046): aynan bittasi.
     Column("purchase_id", UUID(as_uuid=True), nullable=True),
     Column("shipment_id", UUID(as_uuid=True), nullable=True),

@@ -10,6 +10,7 @@ from upcore.fx import FxRate, RateSource, effective_fx_rate, manual_rate
 from upcore.money import Currency, Money, total
 from upcore.purchasing import (
     DATED_STAGES,
+    INFO_FLAGS,
     SHIPMENT_KINDS,
     AllocationBase,
     ComponentKind,
@@ -27,6 +28,7 @@ from upcore.purchasing import (
     default_base,
     purchase_total,
     residual_goods,
+    split_by_purchase,
     stage_days,
     timeline,
 )
@@ -496,3 +498,152 @@ def test_shipment_shares_always_sum_to_cargo_amount(
     lots = compute_shipment_lots(purchases, [CostComponent(K.CARGO, uzs(amount), base=B.WEIGHT)])
     shares = [lot.breakdown[K.CARGO] for rs in lots.values() for lot in rs]
     assert total(shares, Currency.UZS) == uzs(amount)
+
+
+# --- Ta'minot qayta loyihasi (ADR-061): qator summasi, sog' dona, qaytarilgan summa, qadoq, kodli quti ---
+
+
+def _uzs(value: str | int) -> Money:
+    return Money(Decimal(value), Currency.UZS)
+
+
+def test_line_sum_splits_total_paid_proportionally() -> None:
+    """F20 (ADR-061 §2): jami 800 = qatorlar 700 + 80 + farq 20 — farq qator summasiga mutanosib."""
+    p = Purchase(
+        "p",
+        (
+            PurchaseLine("a", 50, line_sum=Decimal(700)),
+            PurchaseLine("b", 30, line_sum=Decimal(80)),
+        ),
+        (CostComponent(ComponentKind.GOODS, _uzs(780_000 + 20_000), base=AllocationBase.LINE_SUM),),
+        on_hand=True,
+    )
+    lots = {x.line_id: x for x in compute_lots(p)}
+    assert lots["a"].total + lots["b"].total == _uzs(800_000)
+    assert lots["a"].total == _uzs("717948.72")
+    assert Flag.NO_LINE_SUMS not in lots["a"].flags
+    assert Flag.CARGO_MISSING not in lots["a"].flags  # "Tovar qo'limda" — kargo kutilmaydi
+
+
+def test_line_sum_missing_falls_back_to_units_as_info() -> None:
+    p = Purchase(
+        "p",
+        (PurchaseLine("a", 30), PurchaseLine("b", 10)),
+        (CostComponent(ComponentKind.GOODS, _uzs(400), base=AllocationBase.LINE_SUM),),
+    )
+    lots = {x.line_id: x for x in compute_lots(p)}
+    assert lots["a"].total == _uzs(300)
+    assert Flag.NO_LINE_SUMS in lots["a"].flags
+    assert Flag.NO_LINE_SUMS in INFO_FLAGS  # eslatma, taxminiy emas
+    single = Purchase(
+        "p",
+        (PurchaseLine("a", 30),),
+        (CostComponent(ComponentKind.GOODS, _uzs(400), base=AllocationBase.LINE_SUM),),
+    )
+    assert Flag.NO_LINE_SUMS not in compute_lots(single)[0].flags
+
+
+def test_counting_spreads_all_costs_over_good_units() -> None:
+    """F20 (ADR-061 §6): 100 buyurtma, 97 keldi, 2 brak → hamma chiqim 95 sog' donaga."""
+    p = Purchase(
+        "p",
+        (PurchaseLine("a", 100, received_qty=97, defect_qty=2),),
+        (
+            CostComponent(ComponentKind.GOODS, _uzs(950_000), base=AllocationBase.LINE_SUM),
+            CostComponent(ComponentKind.CARGO, _uzs(95_000)),
+        ),
+    )
+    (lot,) = compute_lots(p)
+    assert lot.qty == 95
+    assert lot.total == _uzs(1_045_000)
+    assert lot.unit_cost == _uzs(11_000)
+
+
+def test_fully_defective_line_passes_its_cost_to_good_lines() -> None:
+    p = Purchase(
+        "p",
+        (
+            PurchaseLine("a", 10, received_qty=10, defect_qty=10),
+            PurchaseLine("b", 10, received_qty=10),
+        ),
+        (CostComponent(ComponentKind.GOODS, _uzs(200), base=AllocationBase.LINE_SUM),),
+    )
+    lots = {x.line_id: x for x in compute_lots(p)}
+    assert lots["a"].qty == 0 and lots["a"].unit_cost is None
+    assert lots["b"].total == _uzs(200)
+
+
+def test_defect_more_than_arrived_is_rejected() -> None:
+    with pytest.raises(PurchaseError):
+        PurchaseLine("a", 10, received_qty=5, defect_qty=6)
+
+
+def test_supplier_refund_reduces_goods() -> None:
+    p = Purchase(
+        "p",
+        (
+            PurchaseLine("a", 50, received_qty=45, line_sum=Decimal(700)),
+            PurchaseLine("b", 30, received_qty=30, line_sum=Decimal(80)),
+        ),
+        (CostComponent(ComponentKind.GOODS, _uzs(780_000), base=AllocationBase.LINE_SUM),),
+        refund=_uzs(78_000),
+    )
+    lots = {x.line_id: x for x in compute_lots(p)}
+    assert lots["a"].total + lots["b"].total == _uzs(702_000)
+    assert lots["a"].breakdown[ComponentKind.GOODS] == _uzs(630_000)
+    with pytest.raises(PurchaseError):
+        compute_lots(
+            Purchase("p", p.lines, p.components, refund=_uzs(900_000)),
+        )
+
+
+def test_pack_unit_cost_added_per_good_unit() -> None:
+    p = Purchase(
+        "p",
+        (PurchaseLine("a", 10, received_qty=10, defect_qty=1, pack_unit_cost=_uzs(500)),),
+        (CostComponent(ComponentKind.GOODS, _uzs(90_000)),),
+    )
+    (lot,) = compute_lots(p)
+    assert lot.breakdown[ComponentKind.PACKAGING] == _uzs(4_500)
+    assert lot.unit_cost == _uzs(10_500)
+
+
+def test_split_by_purchase_units_and_fixed_shares() -> None:
+    """ADR-061 §3: quti 30 — A 20 dona, B 10 dona → 20 / 10; A ga qo'lda 12 yozilsa qolgan 18 B va C ga dona bo'yicha."""
+    a = Purchase("A", (PurchaseLine("a1", 12), PurchaseLine("a2", 8)))
+    b = Purchase("B", (PurchaseLine("b1", 10),))
+    c = Purchase("C", (PurchaseLine("c1", 5, received_qty=5),))
+    box = CostComponent(ComponentKind.CARGO, _uzs(30))
+    parts = split_by_purchase(box, [a, b], {})
+    lots = compute_shipment_lots([a, b], parts)
+    assert sum((x.total for x in lots["A"]), _uzs(0)) == _uzs(20)
+    assert lots["B"][0].total == _uzs(10)
+
+    parts = split_by_purchase(box, [a, b, c], {"A": Decimal(12)})
+    lots = compute_shipment_lots([a, b, c], parts)
+    assert sum((x.total for x in lots["A"]), _uzs(0)) == _uzs(12)
+    assert lots["B"][0].total == _uzs(12) and lots["C"][0].total == _uzs(6)
+    assert Flag.CARGO_MISSING not in lots["C"][0].flags
+
+    with pytest.raises(PurchaseError):
+        split_by_purchase(box, [a, b], {"A": Decimal(31)})
+    with pytest.raises(PurchaseError):
+        split_by_purchase(box, [a, b], {"A": Decimal(10), "B": Decimal(10)})
+    with pytest.raises(PurchaseError):
+        split_by_purchase(box, [a, b], {"X": Decimal(1)})
+
+
+@given(
+    qtys=st.lists(st.integers(min_value=1, max_value=500), min_size=1, max_size=6),
+    amount=st.integers(min_value=1, max_value=10**9),
+    fixed_share=st.integers(min_value=0, max_value=100),
+)
+def test_split_by_purchase_sums_exactly(qtys: list[int], amount: int, fixed_share: int) -> None:
+    """Xossa (M9 qabul mezoni 3): kodli qutida ulushlar yig'indisi summaga tiyinigacha teng."""
+    purchases = [Purchase(f"p{i}", (PurchaseLine(f"l{i}", q),)) for i, q in enumerate(qtys)]
+    fixed = {}
+    if len(purchases) > 1:
+        fixed = {"p0": Decimal(amount * fixed_share // 100)}
+    box = CostComponent(ComponentKind.CARGO, _uzs(amount))
+    lots = compute_shipment_lots(purchases, split_by_purchase(box, purchases, fixed))
+    assert sum((x.total for ls in lots.values() for x in ls), _uzs(0)) == _uzs(amount)
