@@ -983,7 +983,10 @@ class StockTests(unittest.TestCase):
         self.assertIsNone(by["S-FAST"]["unit_cost"])
 
     def test_page_renders_with_all_sections(self):
-        body = stock.page_stock({})
+        from unittest import mock
+        # Sahifa bugungi sanani oladi; buyurtmalar NOW atrofida — sana qotirilmasa, vaqt o'tib holatlar o'zgaradi.
+        with mock.patch.object(stock, "today", return_value=self.NOW):
+            body = stock.page_stock({})
         self.assertIn("S-FAST", body)
         self.assertIn("Buyurtma vaqti", body)
         self.assertIn("Kam sotiladigan", body)                            # S-SLOW alohida bo'limda
