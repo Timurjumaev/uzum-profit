@@ -440,6 +440,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.72 (ADR-057 Q10, audit D1) Bosh sahifa tartibi: uch raqam → davr → "Diqqat talab qiladi" → grafik → zinapoya va
+  yig'iladigan KPI guruhlari → TOP/zarar → tovardagi pul.
 - B4.71 (ADR-057 Q12) Menyu: tayyor bo'lmagan "Pul oqimi" va "Hisobotlar" yashirildi (marshrut "qurilmoqda" bilan qoladi).
 - B4.69 (ADR-057 Q6, audit K8, K9) "Taxminiy" belgisi: Markaziy bank kursi va "tarixiy" narx — aniq (taxminiy qismga
   qo'shilmaydi, Buyurtmalarda izoh); lot tayyor sanasi qabul / kargo to'lovi bo'lmasa keyingi bosqichdan (Uzumga yuborildi, yopildi).

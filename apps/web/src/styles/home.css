@@ -364,6 +364,27 @@
   margin: 0;
 }
 
+/* ADR-057 Q10: KPI guruhlari yig'iladi; sarlavha — bosish maydoni ≥ 44 px (04 §11). */
+.home-kpi__more {
+  display: grid;
+  gap: var(--space-3);
+  min-inline-size: 0;
+}
+
+.home-kpi__more-toggle {
+  display: flex;
+  align-items: center;
+  min-block-size: 44px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.home-kpi__more-body {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
 .home-kpi__group {
   display: grid;
   gap: var(--space-2);
