@@ -745,7 +745,16 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     o'rniga). 02 F23, UI formula matni (uz, ru). Testlar (avval qizardi): K1 holati (17/kun, 15 kun qoldiqsiz → 17, avval
     4,86), yoshi katta tovarda 3 kunga bo'linishi, Jarayondagi × R; API mustaqil hisob. **T:** kerak emas (Ombor sahifasida
     tezlik va zaxira kunlari o'zgaradi — odatda tezlik ≈ 20% pastroq, tovar qaytgan SKU'larda balandroq).
-  - [ ] B4.67 (Q2) F26/F27 ikki signal: "Buyurtma berish" va "Uzumga yuborish" (Ombor, Asosiy, Mahsulotlar holati).
+  - [x] B4.67 (Q2) F26/F27 ikki signal: "Buyurtma berish" va "Uzumga yuborish" (Ombor, Asosiy, Mahsulotlar holati).
+    ✓ 2026-11-12: (1) "Buyurtma berish" — F26 holati va F27 buyurtma sanasi hamma joydagi tovardan (Uzum + postavka + o'z
+    omborim + yo'lda + Xitoyda; tartiblash ham); "Harakatsiz" faqat Uzumda / postavkada turgan tovar. (2) "Uzumga yuborish" —
+    `upcore.inventory.ship_signal` (Uzum + postavka / F23 ≤ "Uzumga topshirish" bosqichi va omborimda bor). API: `/inventory`
+    → `ship`, `days_of_stock_all`, `?ship=true` filtri, `totals.ship`; `/dashboard` → `attention.stock_ship`; Excel ustuni.
+    Web: Ombor — "Uzumga yuborish" tabi va qatorda belgi ("omborimda N"), F26/F27 izohi; Asosiy "Diqqat talab qiladi" —
+    "Uzumga yuborish kerak" bandi, kritik/yuqori matnlari "Buyurtma berish" deb (uz, ru). **Mahsulotlar** sahifasida ombor
+    holati yo'q (u yerdagi "Holat" — foyda holati), shuning uchun o'zgarmadi. Testlar: core (K3 misoli, chegara), API (hamma
+    joydagi zaxira bilan sana, filtr), web (tab, belgi, URL/API). **T:** kerak emas (Ombor sahifasida Kritik SKU'lar kamayadi —
+    yo'ldagi va omborimdagi tovar endi hisobga olinadi; omborida tovari bor SKU'larda "Uzumga yuborish" chiqadi).
   - [ ] B4.68 (Q4) Prognoz va "▲ %" da kutilayotgan qism × yakunlanish ulushi, "taxminiy" belgisi.
   - [ ] B4.69 (Q6) "Taxminiy" belgisi: tayyor sana qoidasi, Markaziy bank kursi — izoh.
   - [ ] B4.70 (Q7) Kunlik snapshot har sinxronda; sotuvda "yakunlangan birinchi ko'rilgan vaqt" (migratsiya).

@@ -114,10 +114,11 @@ describe("attentionItems", () => {
 
   it("ustuvorlik tartibi, nol bo'lganlari tushiriladi", () => {
     const items = attentionItems(
-      { ...base, uncosted_lines: 12, uncosted_revenue: "1240000.00", stock_critical: 2, stock_high: 3, loss_skus: 1, recalculated: 4 },
+      { ...base, uncosted_lines: 12, uncosted_revenue: "1240000.00", stock_critical: 2, stock_high: 3, stock_ship: 5, loss_skus: 1, recalculated: 4 },
       1,
     );
-    expect(items.map((i) => i.kind)).toEqual(["uncosted", "stockCritical", "stockHigh", "lossSkus", "sync", "recalculated"]);
+    expect(items.map((i) => i.kind)).toEqual(["uncosted", "stockCritical", "stockHigh", "stockShip", "lossSkus", "sync", "recalculated"]);
+    expect(items[3]).toMatchObject({ tone: "warning", count: 5, to: "/inventory" });
     expect(items[0]).toMatchObject({ tone: "warning", count: 12, amount: "1240000.00", to: "/products" });
     expect(items[1]).toMatchObject({ tone: "negative", to: "/inventory" });
     expect(attentionItems({ ...base, loss_skus: 0, stock_critical: 0, stock_high: 0 }, 0)).toEqual([]);

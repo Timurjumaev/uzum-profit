@@ -11,6 +11,7 @@ from upcore.inventory import (
     Holding,
     InventorySettings,
     Liquidity,
+    ShipSignal,
     StockStatus,
     SupplyLine,
     XyzClass,
@@ -27,6 +28,7 @@ from upcore.inventory import (
     own_warehouse_qty,
     product_status,
     reorder,
+    ship_signal,
     stock_status,
     stockout_days,
     stockout_lost_profit,
@@ -365,3 +367,18 @@ def test_velocity_non_negative_and_bounded(sold: list[int], out: list[int]) -> N
     v = velocity(series(sold, out=set(out)), AS_OF)
     assert v.value >= 0
     assert v.value <= D(max(sold)) * D("1.2") * 2  # vazn va trend bilan ham chegaralangan
+
+
+def test_ship_signal_when_uzum_runs_short_and_own_has_stock() -> None:
+    # 09-audit K3: Uzumda 10, omborimda 15, tezlik 2, topshirish 7 kun → Uzumdagi 5 kunlik, yuborish kerak
+    assert ship_signal(10, 15, D(2), 7) == ShipSignal(D("5.0"), D(7), 15)
+    assert ship_signal(20, 15, D(2), 7) is None  # 10 kunlik — topshirish muddatidan ko'p
+    assert ship_signal(10, 0, D(2), 7) is None  # omborim bo'sh — yuboradigan narsa yo'q
+    assert ship_signal(10, 15, D(0), 7) is None and ship_signal(10, 15, D(2), None) is None
+    assert ship_signal(14, 5, D(2), 7) == ShipSignal(D("7.0"), D(7), 5)  # chegara: teng — yuborish
+
+
+def test_order_status_counts_every_location() -> None:
+    # K3: Uzumda 10, omborimda 15, yo'lda 30, Xitoyda 20 = 75; tezlik 2 → 37,5 kun; muddat 30 → O'rta (≤ 51), Kritik emas
+    assert stock_status(10, D(2), 30) is StockStatus.CRITICAL  # faqat Uzum — eski xato natija
+    assert stock_status(10 + 15 + 30 + 20, D(2), 30) is StockStatus.MEDIUM

@@ -1143,8 +1143,10 @@ def test_inventory(world: World) -> None:
         "fbo": 80, "fbs": 5, "defected": 2, "pending": 0, "china": 20, "road": 0, "own": 0,
         "inbound": 0,
     }  # fmt: skip
-    # F27 buyurtma sanasi = bugun + (zaxira kunlari − muddat 32 kun), kunga pastga yaxlitlanadi.
-    slack = D(xa["days_of_stock"]) - 32
+    # F27 buyurtma sanasi = bugun + (hamma joydagi tovar zaxira kunlari − muddat 32 kun), kunga pastga yaxlitlanadi
+    # (ADR-057 Q2: Uzumda 85 + Xitoyda 20 = 105).
+    assert D(xa["days_of_stock_all"]) == (D(105) / expected.value).quantize(D("0.1"))
+    slack = D(xa["days_of_stock_all"]) - 32
     assert xa["order_by"] == {
         "day": (AS_OF + timedelta(days=int(slack))).isoformat(),
         "overdue": False,
@@ -1183,6 +1185,8 @@ def test_inventory(world: World) -> None:
         "china": 20, "road": 0, "own": 60, "fbo": 120, "fbs": 5, "defected": 2, "inbound": 0,
     }  # fmt: skip
     assert totals["statuses"] == {"dead": 1, "good": 1}
+    # "Uzumga yuborish": zb ning omborida 50 dona bor, lekin tezlik 0 — signal yo'q; xa ning omborida tovar yo'q.
+    assert totals["ship"] == 0 and xa["ship"] is None and zb["ship"] is None
     assert body["as_of"] == "2026-10-20" and body["total"] == 4  # lampa — qoldiqsiz
     order = [r["sku_id"] for r in body["items"]]
     assert order[0] == str(world.ids["xa"])  # holati borlari birinchi
@@ -1196,6 +1200,7 @@ def test_inventory_filters_and_warehouse_amounts(world: World) -> None:
     assert hidden["totals"]["frozen_money"] is None and hidden["totals"]["frozen_total"] is None
     shown = world.get("inventory", role="manager", as_of=AS_OF.isoformat())
     assert shown["totals"]["frozen_total"] is not None
+    assert world.get("inventory", ship="true", as_of=AS_OF.isoformat())["items"] == []
     good = world.get("inventory", status="good", as_of=AS_OF.isoformat())["items"]
     assert [r["sku_id"] for r in good] == [str(world.ids["xa"])]
     b_only = world.get("inventory", shop=str(world.b.shop_id), as_of=AS_OF.isoformat())

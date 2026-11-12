@@ -156,8 +156,11 @@ class AttentionOut(BaseModel):
     uncosted_lines: int
     uncosted_revenue: Decimal
     loss_skus: int
-    stock_critical: int
+    stock_critical: (
+        int  # F26 "Buyurtma berish": Kritik (hamma joydagi tovar to'liq muddatga yetmaydi)
+    )
     stock_high: int
+    stock_ship: int  # F26 "Uzumga yuborish" signali bor SKU'lar (ADR-057 Q2)
     recalculated: int
 
 
@@ -503,6 +506,7 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
             loss_skus=sum(1 for st in skus.values() if st.sold_at_loss),
             stock_critical=statuses.count(StockStatus.CRITICAL),
             stock_high=statuses.count(StockStatus.HIGH),
+            stock_ship=sum(1 for x in stock.skus.values() if x.ship is not None),
             recalculated=await rc.recalculated(conn, f, now),
         ),
     )

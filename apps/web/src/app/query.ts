@@ -413,15 +413,15 @@ export const deleteShipmentComponent = (orgId: string, shipmentId: string, compo
 // --- Ombor (M10, B4.7) --------------------------------------------------------------------------------------------
 
 /** Qoldiq jadvali: holat (server filtri), qidiruv, do'konlar; bitta sahifa (ADR-054). `totals` — butun tanlov bo'yicha. */
-export const inventoryQuery = (orgId: string, shops: string[], l: { status?: string; q?: string; page?: number; size: number }) =>
+export const inventoryQuery = (orgId: string, shops: string[], l: { status?: string; ship?: boolean; q?: string; page?: number; size: number }) =>
   queryOptions({
-    queryKey: ["orgs", orgId, "inventory", shops, l.status ?? null, l.q ?? null, l.page ?? 1, l.size],
+    queryKey: ["orgs", orgId, "inventory", shops, l.status ?? null, l.ship ?? false, l.q ?? null, l.page ?? 1, l.size],
     queryFn: () =>
       unwrap(
         api.GET("/api/v1/orgs/{org_id}/inventory", {
           params: {
             path: { org_id: orgId },
-            query: { shop: shops.length > 0 ? shops : undefined, status: l.status as "critical" | undefined, q: l.q || undefined, limit: l.size, page: l.page ?? 1 },
+            query: { shop: shops.length > 0 ? shops : undefined, status: l.status as "critical" | undefined, ship: l.ship || undefined, q: l.q || undefined, limit: l.size, page: l.page ?? 1 },
           },
         }),
       ),

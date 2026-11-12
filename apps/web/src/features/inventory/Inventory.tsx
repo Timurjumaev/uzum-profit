@@ -82,7 +82,7 @@ export function Inventory() {
   const all = Object.values(counts).reduce((a, b) => a + b, 0);
   const amounts = totals.frozen_total !== null;
   const inbound = totals.units.inbound ?? 0; // postavkada (ADR-034)
-  const filtered = Boolean(search.q || search.status);
+  const filtered = Boolean(search.q || search.status || search.ship);
   return (
     <section className="inventory" aria-busy={query.isPlaceholderData || undefined}>
       <header className="inventory__head">
@@ -141,14 +141,25 @@ export function Inventory() {
             key={id ?? "all"}
             type="button"
             role="tab"
-            aria-selected={search.status === id}
+            aria-selected={!search.ship && search.status === id}
             aria-controls="inventory-panel"
-            className={cx("orders-tab", search.status === id && "is-active")}
-            onClick={() => update({ status: id })}
+            className={cx("orders-tab", !search.ship && search.status === id && "is-active")}
+            onClick={() => update({ status: id, ship: undefined })}
           >
             {t(`inventory.status.${id ?? "all"}`)} <span className="caption">{f.number(id ? (counts[id] ?? 0) : all)}</span>
           </button>
         ))}
+        {/* ADR-057 Q2: ikkinchi signal — Uzumdagi zaxira topshirish muddatiga yetmaydi, omborimda bor. */}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={search.ship === true}
+          aria-controls="inventory-panel"
+          className={cx("orders-tab", search.ship === true && "is-active")}
+          onClick={() => update({ status: undefined, ship: "1" })}
+        >
+          {t("inventory.ship.tab")} <span className="caption">{f.number(totals.ship)}</span>
+        </button>
       </div>
       <div className="inventory__bar" role="search">
         <input
@@ -159,7 +170,7 @@ export function Inventory() {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
         />
-        <ExportButton orgId={org.id} table="inventory" query={{ shop: filters.shops, status: search.status, q: search.q }} />
+        <ExportButton orgId={org.id} table="inventory" query={{ shop: filters.shops, status: search.status, ship: search.ship ? "true" : undefined, q: search.q }} />
       </div>
 
       <div id="inventory-panel" role="tabpanel" aria-label={t("inventory.list")} className="inventory__panel">
@@ -172,7 +183,7 @@ export function Inventory() {
                   variant="secondary"
                   onClick={() => {
                     setDraft("");
-                    update({ q: undefined, status: undefined });
+                    update({ q: undefined, status: undefined, ship: undefined });
                   }}
                 >
                   {t("inventory.resetFilters")}
@@ -291,10 +302,19 @@ function buildColumns({ t, f, canManage, onMove }: Ctx): Column<StockRow>[] {
 
 function StatusCell({ row }: { row: StockRow }) {
   const { t } = useTranslation();
-  if (!row.status) return <span className="muted" title={row.lead_time ? undefined : t("inventory.noLeadHint")}>—</span>;
+  const f = useFormat();
+  const ship = row.ship && (
+    <span title={t("inventory.ship.hint", { cover: f.number(row.ship.cover_days, { digits: 1 }), handover: f.number(row.ship.handover_days, { digits: 0 }) })}>
+      <Badge tone="warning">{t("inventory.ship.badge", { count: f.number(row.ship.own) })}</Badge>
+    </span>
+  );
+  if (!row.status) {
+    return ship ? <span className="inventory-cell">{ship}</span> : <span className="muted" title={row.lead_time ? undefined : t("inventory.noLeadHint")}>—</span>;
+  }
   return (
     <span className="inventory-cell">
       <StatusPill tone={STATUS_TONE[row.status]}>{t(`inventory.status.${row.status}`)}</StatusPill>
+      {ship}
       {row.product_status && row.product_status !== row.status && <span className="caption">{t("inventory.productStatus", { status: t(`inventory.status.${row.product_status}`) })}</span>}
       {row.liquidity && <Badge tone="warning">{t(`inventory.liquidity.${row.liquidity as "illiquid" | "slow"}`)}</Badge>}
     </span>

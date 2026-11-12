@@ -293,6 +293,7 @@ def _stock_cols(amounts: bool) -> list[xlsx.Col]:
         xlsx.Col("Sotuv tezligi (F23, dona/kun)", lambda r: r.velocity.value, "money"),
         xlsx.Col("Zaxira kunlari (F24)", lambda r: r.days_of_stock, "money"),
         xlsx.Col("Holat (F26)", lambda r: r.status.value if r.status else None),
+        xlsx.Col("Uzumga yuborish (F26)", lambda r: "ha" if r.ship else None),
         xlsx.Col("ABC (F28)", lambda r: r.abc),
         xlsx.Col("Nelikvid (F30)", lambda r: r.liquidity),
         xlsx.Col("Buyurtma sanasi (F27)", lambda r: r.order_by.day if r.order_by else None, "date"),
@@ -313,10 +314,13 @@ async def export_inventory(
     as_of: Annotated[date | None, Query(description="Qaysi kun holatiga")] = None,
     status: StockStatus | None = None,
     q: Annotated[str | None, Query(max_length=100)] = None,
+    ship: bool = False,
 ) -> Response:
     _need(ctx, Permission.VIEW_PURCHASES)
     amounts = allowed(ctx.role, Permission.VIEW_PURCHASE_AMOUNTS)
-    day, _, book, catalog, chosen, _ = await inventory_routes.selection(ctx, shop, as_of, status, q)
+    day, _, book, catalog, chosen, _ = await inventory_routes.selection(
+        ctx, shop, as_of, status, q, ship
+    )
     rows = inventory_routes.rows_for(book, catalog, chosen, amounts)  # sahifalashsiz — hamma qator
     note = [f"Holat: {day:%d.%m.%Y}"]
     data = xlsx.build("Ombor", _stock_cols(amounts), rows, note)

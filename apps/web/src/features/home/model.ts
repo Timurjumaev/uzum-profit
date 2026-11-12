@@ -133,7 +133,7 @@ export function homeRows(rows: PnlRow[], label: (code: string) => string): HomeR
   return out;
 }
 
-export type AttentionKind = "uncosted" | "stockCritical" | "stockHigh" | "lossSkus" | "recalculated" | "sync";
+export type AttentionKind = "uncosted" | "stockCritical" | "stockHigh" | "stockShip" | "lossSkus" | "recalculated" | "sync";
 export type AttentionItem = { kind: AttentionKind; tone: "negative" | "warning" | "info"; count: number; to: "/products" | "/inventory" | "/orders" | "/status"; amount?: string };
 
 /** "Diqqat talab qiladi" (M4), ustuvorlik bo'yicha: tannarxsiz sotuvlar → tugayotgan tovar → zarar qilayotgan SKU →
@@ -143,6 +143,7 @@ export function attentionItems(a: Dashboard["attention"], syncIssues: number): A
   if (a.uncosted_lines > 0) items.push({ kind: "uncosted", tone: "warning", count: a.uncosted_lines, to: "/products", amount: a.uncosted_revenue });
   if (a.stock_critical > 0) items.push({ kind: "stockCritical", tone: "negative", count: a.stock_critical, to: "/inventory" });
   if (a.stock_high > 0) items.push({ kind: "stockHigh", tone: "warning", count: a.stock_high, to: "/inventory" });
+  if (a.stock_ship > 0) items.push({ kind: "stockShip", tone: "warning", count: a.stock_ship, to: "/inventory" });
   if (a.loss_skus > 0) items.push({ kind: "lossSkus", tone: "negative", count: a.loss_skus, to: "/products" });
   if (syncIssues > 0) items.push({ kind: "sync", tone: "warning", count: syncIssues, to: "/status" });
   if (a.recalculated > 0) items.push({ kind: "recalculated", tone: "info", count: a.recalculated, to: "/orders" });

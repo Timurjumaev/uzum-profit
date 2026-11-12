@@ -480,12 +480,17 @@ hisobga olingan kunlarga (avval har SKU'da 7 ga bo'linardi — tovar qaytgan kun
 **F25. To'liq muddat** = tayyorlash + Xitoy ichki + kargo yo'li + qabul/yorliq + Uzumga topshirish. Har biri
 yetkazib beruvchi va kargo tarixidan o'rganiladi (oxirgi 5 xarid medianasi), yo'q bo'lsa sozlamadagi standart.
 
-**F26. Holat:** Kritik (zaxira ≤ F25) · Yuqori (≤ F25 + 7) · O'rta (≤ F25 + 21) · Yaxshi · Harakatsiz
-(tezlik 0, qoldiq > 0). Mahsulotning eng ko'p sotiladigan varianti (sotuvning ≥ 20%) kritik bo'lsa, butun mahsulot kritik.
+**F26. Holat — ikki signal** (ADR-057 Q2, B4.67; ikki xil qaror — ikki xil signal):
+(1) **"Buyurtma berish"**: zaxira = **hamma joydagi tovar** (Uzum FBO + FBS + postavkada + o'z omborim + yo'lda + Xitoyda)
+/ F23; Kritik (≤ F25) · Yuqori (≤ F25 + 7) · O'rta (≤ F25 + 21) · Yaxshi · Harakatsiz (tezlik 0, Uzumda yoki postavkada
+qoldiq > 0; faqat omborimda / yo'lda bo'lsa — sotuvga chiqmagan, harakatsiz emas). Mahsulotning eng ko'p sotiladigan varianti
+(sotuvning ≥ 20%) kritik bo'lsa, butun mahsulot kritik. (2) **"Uzumga yuborish"**: (Uzum qoldig'i + postavkada) / F23 ≤
+F25 ning "Uzumga topshirish" bosqichi **va** o'z omborimda tovar bor (tezlik 0 yoki bosqich muddati noma'lum — signal yo'q).
+F24 (zaxira kunlari) — faqat Uzum qoldig'i bo'yicha, o'zgarmadi.
 
 **F27. Tavsiya miqdor** = max(0, F23 × (F25 + qamrov) − (qoldiq + yo'lda + buyurtma qilingan)), qamrov ABC bo'yicha
 (A 60, B 30, C 14 kun, sozlanadi), odatiy partiya hajmiga yaxlitlanadi. Byudjet = miqdor × oxirgi lot narxi (CNY va so'm).
-**Buyurtma sanasi** = bugun + (zaxira kunlari F24 − to'liq muddat F25), butun kunga pastga yaxlitlanadi; farq ≤ 0 (F26
+**Buyurtma sanasi** = bugun + (hamma joydagi tovar zaxira kunlari, F26 (1) − to'liq muddat F25), butun kunga pastga yaxlitlanadi; farq ≤ 0 (F26
 "Kritik") bo'lsa — "hozir" (kechikkan). Tezlik 0 yoki muddat noma'lum bo'lsa sana yo'q. Qoldiq tarkibi (F27, F29):
 Xitoyda (buyurtma, to'landi, Xitoy omborida), yo'lda (yo'lda, Toshkentga keldi), o'z omborim (qabul qilindi, Uzumga
 yuborilmadi; inventarizatsiya tuzatishi va hisobdan chiqarish bilan) — xarid bosqichidan; Uzumga yuborilgani FBO'da.

@@ -43,6 +43,7 @@ from upcore.inventory import (
     Liquidity,
     OrderBy,
     Reorder,
+    ShipSignal,
     StockStatus,
     Velocity,
     XyzClass,
@@ -56,6 +57,7 @@ from upcore.inventory import (
     own_warehouse_qty,
     product_status,
     reorder,
+    ship_signal,
     stock_status,
     velocity,
     weekly_sales,
@@ -111,7 +113,9 @@ class SkuStock:
     unit_cost: Money | None
     stock_value: Money | None
     reorder: Reorder | None
-    order_by: OrderBy | None
+    order_by: OrderBy | None  # F27: hamma joydagi tovar bo'yicha (ADR-057 Q2)
+    ship: ShipSignal | None = None  # F26 "Uzumga yuborish" (ADR-057 Q2)
+    days_of_stock_all: Decimal | None = None  # hamma joydagi tovar necha kunga yetadi
 
     @property
     def in_transit(self) -> int:
@@ -397,18 +401,29 @@ async def load_stock(
         active, fbs = r.qty_active or 0, r.qty_fbs or 0
         defected = r.qty_defected or 0
         stock = active + fbs
-        lead = None
-        if r.item_id is not None:
-            learned = lead_time(history.get(r.item_id, {}), cfg.lead_days, inv)
-            lead = learned if set(learned.stages) >= set(STAGES) else None
-        if lead is not None:
-            status = stock_status(stock, v.value, lead.total)
-        else:  # muddatsiz faqat "Harakatsiz" aniq (tezlik 0)
-            status = stock_status(stock, v.value, 0) if v.value <= 0 else None
         item = lots.get(r.item_id) if r.item_id is not None else None
         place = places.get(r.item_id) if r.item_id is not None else None
         china, road, own = (place.china, place.road, place.own) if place else (0, 0, 0)
         sku_inbound = inbound.get(r.id, 0)
+        # ADR-057 Q2: "Buyurtma berish" — hamma joydagi tovar to'liq muddatga yetadimi; "Uzumga yuborish" — Uzumdagi
+        # (+ postavkadagi) zaxira topshirish muddatiga yetadimi, omborimda bor bo'lsa.
+        everywhere = stock + sku_inbound + own + road + china
+        lead, handover = None, None
+        if r.item_id is not None:
+            learned = lead_time(history.get(r.item_id, {}), cfg.lead_days, inv)
+            lead = learned if set(learned.stages) >= set(STAGES) else None
+            handover = learned.stages.get("handover")
+        if (
+            v.value <= 0
+        ):  # "Harakatsiz" — Uzumda (yoki postavkada) turib sotilmayotgan tovar; muddatsiz ham aniq.
+            # Faqat omborimda / yo'lda bo'lsa sotuvga chiqmagan, harakatsiz emas.
+            status = stock_status(stock + sku_inbound, v.value, 0)
+        elif lead is not None:
+            status = stock_status(everywhere, v.value, lead.total)
+        else:
+            status = None
+        ship = ship_signal(stock + sku_inbound, own, v.value, handover)
+        cover_all = days_of_stock(everywhere, 0, v.value)
         unit = item.unit_cost if item else None
         cover = days_of_stock(active, fbs, v.value)
         value = None
@@ -460,7 +475,9 @@ async def load_stock(
             unit_cost=unit,
             stock_value=value,
             reorder=plan,
-            order_by=order_by(as_of, cover, lead.total) if lead is not None else None,
+            order_by=order_by(as_of, cover_all, lead.total) if lead is not None else None,
+            ship=ship,
+            days_of_stock_all=cover_all,
         )
     units = {"china": 0, "road": 0, "own": 0}
     for x in (
