@@ -440,6 +440,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.66 (ADR-057 Q1, audit K1, K2) F23 sotuv tezligi: oyna — oxirgi 14 ta savdoda bo'lgan kun (60 kungacha orqaga);
+  Jarayondagi dona × yakunlanish ulushi (F16 R, 90 kun); "7 kunga bo'lish" faqat 7 kundan yosh tovarda; qaytish darajasi
+  ko'paytiruvchisi olib tashlandi. `/inventory` → `velocity.completion`, `new_item` (`return_rate` o'rniga).
 - B4.74 Reja (faqat hujjat; ADR-059, ADR-060): B4.27, B4.55, B4.61, sahifalash qoldig'i, B4.76 va B4.81 → B5.0 (B5 boshi);
   tartib B4 → B6.1–B6.2 → B5 → B6.3; PWA — B6.3, jamoa ekrani va qurilmalar — B8.0, foydalanish hodisalari — B8.9; 03 §2 va §9
   haqiqatga (o'z CSS tokenlari va komponentlari; ADR-004 qisman almashtirildi); README "Temurdan kutilmoqda" 6 bandga qisqardi;

@@ -67,7 +67,7 @@ def series(
 def test_velocity_weighted_and_steady_trend() -> None:
     v = velocity(series([2] * 30), AS_OF)
     assert v.base == D(2) and v.days_counted == 14
-    assert v.trend_ratio == D(1) and v.trend_factor == D(1) and v.return_rate == 0
+    assert v.trend_ratio == D(1) and v.trend_factor == D(1) and v.completion is None
     assert v.value == D("2.0000")
 
 
@@ -79,28 +79,39 @@ def test_velocity_recent_week_weighs_double() -> None:
     assert v.trend_factor == D("1.20") and v.value == D("3.6000")
 
 
-def test_velocity_excludes_stockout_days_and_new_item() -> None:
+def test_velocity_skips_stockout_days_and_reaches_back() -> None:
     sold = [3, 0, 0, 3, 3, 3, 3] + [3] * 23
     v = velocity(series(sold, out={1, 2}), AS_OF)
-    assert v.days_counted == 12 and v.base == D(3)
+    # ADR-057 Q1: qoldiq 0 kunlar o'tkazib yuboriladi, oyna orqaga cho'ziladi — yana 14 ta savdodagi kun
+    assert v.days_counted == 14 and v.base == D(3)
+
+
+def test_velocity_after_long_stockout_keeps_real_rate() -> None:
+    # 09-audit K1: kuniga 17 dona, 15 kun qoldiq 0, qaytgan 2-kuni. Eski hisob: 4,86 (17 o'rniga).
+    sold = [17, 17] + [0] * 15 + [17] * 43
+    v = velocity(series(sold, out=set(range(2, 17))), AS_OF)
+    assert v.days_counted == 14 and v.base == D(17) and v.value == D("17.0000")
+    whole_out = velocity(series([0] * 14 + [5] * 46, out=set(range(14))), AS_OF)
+    assert whole_out.base == D(5)  # butun 14 kunlik kalendar oyna qoldiqsiz bo'lsa ham 0 emas
+
+
+def test_velocity_seven_day_floor_only_for_new_items() -> None:
     new = velocity(series([5, 5, 5, 0, 0]), AS_OF, first_day=day(2))
-    assert new.days_counted == 3 and new.base == D(15) / 7  # kamida 7 kunga bo'linadi
-
-
-def test_velocity_return_rate_capped() -> None:
-    v = velocity(series([2] * 30, [1] * 30), AS_OF)
-    assert v.return_rate == ratio_of(14, 42)
-    heavy = velocity(series([1] * 30, [5] * 30), AS_OF)
-    assert heavy.return_rate == D("0.5")
+    assert (
+        new.new_item and new.days_counted == 3 and new.base == D(15) / 7
+    )  # yoshi 3 kun: 7 ga bo'linadi
+    # Eski tovar, oyna ichida faqat 3 ta savdodagi kun: 7 ga emas, 3 ga bo'linadi
+    old = velocity(series([5, 5, 5] + [0] * 57, out=set(range(3, 60))), AS_OF, first_day=day(200))
+    assert not old.new_item and old.days_counted == 3 and old.base == D(5)
     assert velocity([], AS_OF).base == 0 and velocity([], AS_OF).trend_ratio is None
 
 
-def ratio_of(a: int, b: int) -> Decimal:
-    from upcore.metrics import ratio
-
-    r = ratio(a, b)
-    assert r is not None
-    return r
+def test_velocity_processing_times_completion_share() -> None:
+    # Kuniga 4 dona, shundan 2 tasi Jarayonda; yakunlanish ulushi 0,6 → 2 + 2 × 0,6 = 3,2
+    days = [DayStat(day(i), 4, 0, True, processing=2) for i in range(30)]
+    v = velocity(days, AS_OF, completion=D("0.6"))
+    assert v.base == D("3.2") and v.completion == D("0.6") and v.value == D("3.2000")
+    assert velocity(days, AS_OF).base == D(4)  # ulush noma'lum — Jarayondagi to'liq
 
 
 @pytest.mark.parametrize(

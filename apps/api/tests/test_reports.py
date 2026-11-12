@@ -1117,7 +1117,8 @@ def test_inventory(world: World) -> None:
     body = world.get("inventory", as_of=AS_OF.isoformat())
     rows = {r["sku_id"]: r for r in body["items"]}
     xa = rows[str(world.ids["xa"])]
-    # F23 mustaqil: 56 kunlik oyna, 8-oktabr qoldiq 0, birinchi sotuv 20-sentabr.
+    # F23 mustaqil (ADR-057 Q1): 60 kun orqaga, 14 ta savdodagi kun; 8-oktabr qoldiq 0, birinchi sotuv 20-sentabr;
+    # yakuniy donalar 50 dan kam — yakunlanish ulushi noma'lum (Jarayondagi to'liq).
     sold = {
         d(9, 20): 2,
         d(10, 2): 2,
@@ -1130,11 +1131,12 @@ def test_inventory(world: World) -> None:
         DayStat(AS_OF - timedelta(days=i), sold.get(AS_OF - timedelta(days=i), 0),
                 1 if AS_OF - timedelta(days=i) == d(10, 5) else 0,
                 snaps.get(AS_OF - timedelta(days=i)))
-        for i in range(56)
+        for i in range(60)
     ]  # fmt: skip
     expected = velocity(sorted(days, key=lambda x: x.day), AS_OF, d(9, 20))
     assert D(xa["velocity"]["value"]) == expected.value
-    assert xa["velocity"]["days_counted"] == expected.days_counted == 13
+    assert xa["velocity"]["days_counted"] == expected.days_counted == 14
+    assert xa["velocity"]["completion"] is None and xa["velocity"]["new_item"] is False
     assert (xa["stock"], xa["qty_defected"], xa["in_transit"]) == (85, 2, 20)
     # M10 joylar: p3 — faqat buyurtma berilgan (Xitoyda), p1 Uzumga yuborilgan (FBO qoldig'ida).
     assert xa["locations"] == {
