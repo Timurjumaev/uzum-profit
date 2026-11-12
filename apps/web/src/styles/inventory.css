@@ -123,3 +123,15 @@
     text-align: start;
   }
 }
+
+/* Audit D10 (B4.75 PR-4): telefonda KPI kartalari ikki ustunda (SKU sahifasidagi kabi) — jadval birinchi ekranga yaqinlashadi. */
+@media (max-width: 640px) {
+  .inventory__kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .inventory__kpis .ui-kpi {
+    min-inline-size: 0;
+    padding: var(--space-3);
+  }
+}
