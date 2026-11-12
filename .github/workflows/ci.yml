@@ -106,7 +106,25 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter web build
-      - run: pnpm --filter web exec playwright install --with-deps chromium
+      # Brauzerning o'zi — Playwright CDN'idan (apt'siz); bu qadam majburiy.
+      - run: pnpm --filter web exec playwright install chromium
+      # Tizim paketlari (apt). 2026-11-11 da runner'dan Ubuntu arxivi (azure. va rasmiy archive.ubuntu.com) ochilmadi,
+      # `--with-deps` yiqilib, testlar umuman ishga tushmadi. Runner obrazida Chromium kutubxonalari bor; apt faqat
+      # qo'shimcha shriftlarni (CJK, Tay, unifont) qo'shadi — ilova o'z shriftlari bilan (Inter, JetBrains Mono),
+      # ularsiz e2e va skrinshotlar bir xil o'tishi tekshirilgan. Shuning uchun: 2 urinish, bo'lmasa ogohlantirish va
+      # davom. Kutubxona rostdan yetishmasa, brauzer ishga tushmaydi va keyingi qadam baribir qizaradi.
+      - name: Playwright tizim paketlari (ixtiyoriy, 2 urinish)
+        timeout-minutes: 12
+        continue-on-error: true  # vaqt tugasa ham job davom etadi
+        run: |
+          printf 'Acquire::Retries "2";\nAcquire::http::Timeout "15";\nAcquire::https::Timeout "15";\n' \
+            | sudo tee /etc/apt/apt.conf.d/99ci-timeouts > /dev/null
+          for i in 1 2; do
+            if pnpm --filter web exec playwright install-deps chromium; then exit 0; fi
+            echo "::warning::playwright install-deps: ${i}-urinish muvaffaqiyatsiz"
+            sleep 30
+          done
+          echo "::warning::apt paketlari o'rnatilmadi (Ubuntu arxivi ochilmadi) — runner obrazidagi kutubxonalar bilan davom etiladi"
       # Kirish, onboarding, karkas (soxta API); axe KONTRAST bilan; skrinshot asoslari (e2e/__screenshots__) bilan taqqoslash.
       - run: pnpm --filter web e2e
       - uses: actions/upload-artifact@v4

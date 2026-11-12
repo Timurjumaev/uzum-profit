@@ -542,6 +542,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- B4.75b (CI): `E2E va vizual` job'ida brauzer apt'siz o'rnatiladi (`playwright install chromium`), tizim paketlari
+  (`install-deps`) — 2 urinish, bo'lmasa ogohlantirish bilan davom (ular faqat qo'shimcha shriftlar; ularsiz e2e va skrinshotlar
+  bir xil o'tishi tekshirildi). Runner'dan Ubuntu arxivi ochilmaganda testlar ishga tushmay qizarardi (2026-11-11).
+- B4.75b (legacy test): `StockTests.test_page_renders_with_all_sections` sahifani haqiqiy bugungi sana bilan chizardi,
+  ma'lumot esa `NOW` (2026-10-22) atrofida — 2026-11-12 dan S-FAST "Buyurtma vaqti" dan chiqib qizardi. Sana `NOW` ga qotirildi.
 - B4.41 (ADR-051): boshlang'ich qoldiq tugagach boshlashdan oldingi bekor buyurtmalardan qaytgan tovar "Taxminiy · partiyalar
   yetmadi" bo'lardi. Endi manba FBO postavkalaridan: postavka yo'q — boshlang'ich narx, belgisiz; postavka va partiya bor — partiya
   narxi, belgisiz; postavka bor, partiya kiritilmagan — "Taxminiy" yangi sabab bilan. B4.39 dagi "qoldiq tugasa ham doim boshlang'ich
