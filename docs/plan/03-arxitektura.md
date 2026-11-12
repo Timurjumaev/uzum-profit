@@ -238,7 +238,7 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
 
 - REST, `/api/v1`, JSON, OpenAPI avtomatik; frontend tiplari undan generatsiya qilinadi (CI'da farq bo'lsa xato).
 - Pul qiymatlari satr ("123456.00"), foizlar Decimal satr; sanalar ISO 8601; vaqt UTC.
-- Ro'yxatlar: kursor pagination (Mahsulotlar `/skus` — sahifa raqami: `page` 1 dan, `limit` ≤ 100, javobda `total`, `page`, `pages`; ADR-054), `sort`, `filter[...]`; eksport endpoint'lari alohida (`.xlsx`, `.pdf`).
+- Ro'yxatlar: sahifa raqami (`page` 1 dan, `limit` ≤ 100, javobda `total`, `page`, `pages`; ADR-054) — `/skus`, `/inventory`, `/purchases`, `/sales`, `/expenses`; `/sales` va `/expenses` da `cursor` ham bor (kursor rejimi, `next_cursor` — P&L tafsiloti va Excel uchun), `sort`, filtrlar; eksport endpoint'lari alohida (`.xlsx`, `.pdf`).
 - Xatolar: RFC 9457 `application/problem+json`, `code` maydoni bilan (frontend matnni i18n'dan oladi).
 - Resurslar: `auth`, `orgs`, `members`, `accounts` (marketplace), `shops`, `sync`, `dashboard`, `pnl`, `skus`,
   `items`, `sales`, `expenses`, `purchases`, `suppliers`, `carriers`, `inventory`, `supplies`, `cash`, `goals`,
@@ -287,8 +287,9 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
 | Tarif, to'lov, tashkilotni o'chirish | ✓ | — | — | — |
 | Eksport | ✓ | ✓ | ✓ | ombor qismi |
 
-- **Tashkilotlar ajratilgani:** ilova darajasida `org_id` filtri + PostgreSQL RLS (`SET LOCAL app.org_id`);
-  admin uchun alohida DB roli. Har endpoint uchun "boshqa tashkilot ma'lumoti ko'rinmaydi" testi.
+- **Tashkilotlar ajratilgani:** asosiy himoya — PostgreSQL RLS (`SET LOCAL app.org_id`, FORCE) va ishga tushish
+  qo'riqchisi (RLS'ni chetlab o'tuvchi rol bilan ishga tushmaydi); ilova `org_id` filtri hamma so'rovda emas, a'zolik
+  tekshiruvi (`open_org`) esa `org_id` bo'yicha alohida filtrlanadi (B4.75 PR-5); admin uchun alohida DB roli. Har endpoint uchun "boshqa tashkilot ma'lumoti ko'rinmaydi" testi.
 - **Sirlar:** server `.env`/Docker secrets'da; Uzum tokeni AES-256-GCM, kalit versiyasi bilan (rotatsiya
   mumkin); shifrlash kaliti zaxira nusxalarda yo'q. Token va kod loglarga yozilmaydi (log filtri testi).
   B2.4 (`upapi.crypto`): `UP_TOKEN_KEYS` (versiya → base64 32 bayt, `python -m upapi.crypto keygen`),
@@ -301,7 +302,7 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
 - **Shaxsiy ma'lumot:** minimal (telefon, ism). DBS xaridor ma'lumoti saqlanmaydi. Ma'lumotlar O'zbekistondagi
   serverlarda (ADR-010).
 - **Sarlavhalar:** qat'iy CSP, HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `frame-ancestors 'none'`.
-- **Bog'liqliklar:** Dependabot, `pip-audit`, `pnpm audit` CI'da.
+- **Bog'liqliklar:** Dependabot; CI'da `pip-audit --strict` (uv export, hash'lar bilan) va `pnpm audit --prod --audit-level high` (B4.75 PR-5).
 - **Chiqishdan oldin:** OWASP ASVS L2 ro'yxati bo'yicha tekshiruv (B8.4).
 
 ## 11. Ishlash samaradorligi
@@ -321,7 +322,7 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
 | Migratsiyalar | Alembic upgrade/downgrade CI'da | har PR |
 | Frontend | Vitest + Testing Library | formatlash va formalar |
 | E2E | Playwright | kirish, onboarding, xarid kiritish, P&L, eksport |
-| Vizual | Playwright skrinshotlari (yorug'/qorong'i, 1440 va 390 px) | asosiy sahifalar |
+| Vizual | Playwright skrinshotlari (yorug'/qorong'i, 1440 va 390 px; 360 px — B4.75 PR-7, tamoyil 10) | asosiy sahifalar |
 | Accessibility | axe-core | jiddiy xato 0 |
 
 Golden ma'lumot: sintetik generator (CI uchun) + Temurning real ma'lumoti faqat lokal (repozitoriyga kirmaydi,

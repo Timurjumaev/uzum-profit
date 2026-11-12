@@ -695,20 +695,21 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   qoldiq (FBO + FBS)" nomi bilan, postavka davri shtrixli oraliq ("Postavkada: 99 dona — 09.11.2026 da savdoga chiqarildi" /
   "hali savdoga chiqarilmagan") va tushuntiruvchi izoh bilan; narx grafigi faqat narx o'zgargan bo'lsa (tekis chiziq — yo'q), "Uzumdagi
   narx" KPI qo'shildi; qoldiq jadvali va narx — oldingidek. Izohga: qoldiq kun oxirida olinadi, bekor/qaytgan tovar qoldiqqa qaytib qayta sotilishi mumkin (Temur tasdiqladi — qoldiq 0 kunlardagi sotuvning sababi). **T:** staging'da SKU sahifasida qoldiq grafigini ko'rish (28.10–09.11 shtrixli oraliq).
-- [→] B4.61 (**ko'chdi → B5.0c**, ADR-057 Q8; toraytirildi, past ustuvorlik) Ombor: postavka tarkibi va qisman chiqarish (ADR-055 §3). Ochiq postavka "Postavkada" hisoblanadi
-  (to'g'ri, 02.11–09.11 ham); kamchiliklar: (1) holat `ACCEPTED` bo'lgach (savdoga chiqarish boshlangach) hali chiqarilmagan qism
-  (`quantityToStock − quantityAccepted`, masalan 25 dona 09.11 07:05–10.11 13:39) hech qaysi joyda ko'rinmaydi; (2) postavka tarkibi
-  (`quantityAccepted`) faqat postavka holati o'zgarganda qayta o'qiladi — keyin chiqarilgan qism yangilanmaydi. Tuzatish: tarkibni
-  qabul soni o'zgarganda qayta o'qish va qismni "postavkada (qisman qabul)" deb ko'rsatish.
 - [→] B4.55 (**ko'chdi → B5.0b**, ADR-057 Q8) "Chegarada" chegarasi Sozlamalarda (Temur: "statik emas, dinamik"; standart 5%, F13).
-- [x] B4.56–B4.60 Sahifalash (ADR-054) boshqa sahifalarga (qoldig'i **ko'chdi → B5.0d**, ADR-057 Q8): **Buyurtmalar, Uzum xarajatlari, Xaridlar, Ombor — qilindi** (quyida,
-  B4.56–B4.58 + Xaridlar; Temur bitta PR'da so'radi); qoldi: Foyda tafsiloti (drill-down) va Kargolar.
+- [x] B4.56–B4.58 Sahifalash (ADR-054) boshqa sahifalarga: **Buyurtmalar, Uzum xarajatlari, Xaridlar, Ombor — qilindi** (quyida,
+  B4.56–B4.58 + Xaridlar; Temur bitta PR'da so'radi).
   ✓ 2026-11-09: har biri `Pagination` bilan: `page` URL'da (filtr/bo'lim/tur o'zgarsa — 1-sahifa), "Sahifada" 20/50/100 umumiy
   (brauzerda eslanadi), "Yana yuklash" olib tashlandi. API: `/sales` va `/expenses` — `page` (offset) rejimi qo'shildi,
   javobda `total`, `page`, `pages`; `cursor` rejimi saqlandi (P&L drill-down va Excel uchun); `/inventory` — `cursor` o'rniga
   `page`/`limit` ≤ 100 (Excel `selection`/`rows_for` orqali sahifalashsiz); `/purchases` — ixtiyoriy `limit` ≤ 100 + `page`
   (`limit` siz — hammasi: Excel va kargoga biriktirish ro'yxati). So'ralgan sahifa oxirgisidan oshsa — API oxirgisini beradi.
   **T:** staging'da Buyurtmalar, Xarajatlar (Uzum), Xaridlar va Ombor sahifalarida sahifa raqamlari va "Sahifada" tanlovini ko'rish.
+- [→] B4.59–B4.60 (**ko'chdi → B5.0d**, ADR-057 Q8) Sahifalash qoldig'i: Foyda tafsiloti (drill-down) va Kargolar.
+- [→] B4.61 (**ko'chdi → B5.0c**, ADR-057 Q8; toraytirildi, past ustuvorlik) Ombor: postavka tarkibi va qisman chiqarish (ADR-055 §3). Ochiq postavka "Postavkada" hisoblanadi
+  (to'g'ri, 02.11–09.11 ham); kamchiliklar: (1) holat `ACCEPTED` bo'lgach (savdoga chiqarish boshlangach) hali chiqarilmagan qism
+  (`quantityToStock − quantityAccepted`, masalan 25 dona 09.11 07:05–10.11 13:39) hech qaysi joyda ko'rinmaydi; (2) postavka tarkibi
+  (`quantityAccepted`) faqat postavka holati o'zgarganda qayta o'qiladi — keyin chiqarilgan qism yangilanmaydi. Tuzatish: tarkibni
+  qabul soni o'zgarganda qayta o'qish va qismni "postavkada (qisman qabul)" deb ko'rsatish.
 - [x] B4.62 Tanqidiy tahlil (audit; Temur topshirig'i, 2026-11-10): reja, kod, dizayn va raqobatchilar — `09-audit.md`.
   ✓ 2026-11-11: hamma tekshiruv yashil (pytest 1 248, vitest 598, Playwright 203); 22 sahifa 360 / 1000 / 1440 px da
   skrinshot qilinib o'lchandi; 7 ta Uzum servisi va Sellerboard, sellerdata, MPfact, MPSTATS, TrueStats, UVIX saytlari
@@ -819,7 +820,15 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     360 px da (matn ichidagi havola istisno). Mobil vizual asoslar yangilandi.
     ✓ PR-5 (2026-11-12) Xavfsizlik va CI: X1 — `open_org` a'zolik so'rovi `org_id` bo'yicha ham (RLS'dan tashqari ikkinchi qavat;
     test RLS'siz superuser ulanishida, avval qizardi); X3 — CI'da `pip-audit` (uv export, hash'lar bilan) va `pnpm audit --prod
-    --audit-level high`; T4 — CI faqat PR va main'ga push'da (avval har PR'da ikki marta). **Qoldi:** PR-6…PR-8.
+    --audit-level high`; T4 — CI faqat PR va main'ga push'da (avval har PR'da ikki marta).
+    ✓ PR-6 (2026-11-12) Hujjat va eskirgan kod: K13 — `upcore.metrics` dan faqat testlarda ishlatilgan `profit_summary`
+    (F12 ning eski varianti; F12–F15 — `upcore.pnl.Statement`), `payout_mismatches`, `uzum_expenses`, `own_expenses`,
+    `realization_rate`, `cancel_share`, `gross_units`, `period_return_share` olib tashlandi (testlar `pnl`, `order_flow` va
+    `realization_rate_units` ga o'tdi, qiymatlar o'zgarmadi); `daily_sku_metrics.ads` (yozilardi, o'qilmasdi) — migratsiya 0021.
+    K14 — ADR-040 havolasi M17 / B8.3. R4 — 02 M6 (sahifalash), 03 §8 (sahifa + kursor), §10 (RLS asosiy himoya, CI audit),
+    §12 (360 px — PR-7), 04 §1/§2.1/§6.4 (KPI guruh sarlavhasi — yagona katta harf istisno, kartochka radiusi 10 px), §7.4
+    (mobil ro'yxat ko'rinishidagi jadval), 05 B4.55/B4.56–B4.61 tartibi va belgisi, `index.html` `theme-color` `#F6F5F1`.
+    **Qoldi:** PR-7, PR-8.
   - [x] B4.75b (CI) E2E job'ida brauzer apt'siz o'rnatiladi; apt tizim paketlari ixtiyoriy (2 urinish, keyin ogohlantirish):
     2026-11-11 da runner'dan Ubuntu arxivi ochilmay, main, #135 va #136 testlarsiz qizardi. Paketlar faqat qo'shimcha shriftlar —
     ularsiz e2e va skrinshotlar bir xil o'tishi tekshirildi.

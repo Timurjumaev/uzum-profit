@@ -20,7 +20,6 @@ from upcore.expenses import (
     totals_by_category,
     uzum_expense_total,
 )
-from upcore.metrics import uzum_expenses
 from upcore.money import Money
 
 C = ExpenseCategory
@@ -213,10 +212,6 @@ def test_classify_dedup_and_f9_total() -> None:
         C.COMPENSATION: uzs(-400),
     }
     assert uzum_expense_total(records) == uzs(5600)
-    # metrics.uzum_expenses bilan bir xil natija
-    charges = [r.amount for r in records if r.counted and r.direction is Direction.OUTCOME]
-    refunds = [r.amount for r in records if r.counted and r.direction is Direction.INCOME]
-    assert uzum_expenses(charges, refunds) == uzs(5600)
     assert uzum_expense_total([]) == uzs(0)
 
 

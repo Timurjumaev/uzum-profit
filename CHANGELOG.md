@@ -440,6 +440,12 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.75 PR-6 (audit K13, K14, R4): `upcore.metrics` dan eskirgan va faqat testlarda ishlatilgan funksiyalar olib tashlandi
+  (`profit_summary`/`ProfitSummary` — F12–F15 endi faqat `upcore.pnl.Statement` da; `payout_mismatches`, `uzum_expenses`,
+  `own_expenses`, `realization_rate`, `cancel_share`, `gross_units`, `period_return_share`); `daily_sku_metrics.ads` ustuni
+  (yozilardi, hech kim o'qimasdi) — migratsiya 0021. Reja hujjatlari amaldagi kodga moslandi (02 M6, 03 §8/§10/§12, 04
+  §1/§2.1/§6.4/§7.4, 05 B4.55–B4.61, ADR-040 havolasi); `index.html` yorug' `theme-color` — `#F6F5F1` (`bg-page`).
+
 - B4.75 PR-5 (audit X1, X3, T4): `open_org` a'zolik so'rovi tashkilot bo'yicha ham (RLS'dan tashqari ikkinchi qavat); CI'da
   `pip-audit` va `pnpm audit`; CI har PR'da bir marta (branch push'da emas).
 - B4.75 PR-4 (audit D4, D10, D13): telefonda bosish maydoni ≥ 44 px hamma sahifa va karkasda (umumiy CSS), Ombor KPI

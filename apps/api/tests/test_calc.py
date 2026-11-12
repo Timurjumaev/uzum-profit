@@ -151,7 +151,7 @@ class Org:
 
     def metrics(self) -> dict[tuple[Any, date], tuple[Any, ...]]:
         rows = self.sql(
-            "SELECT sku_id, day, revenue, units, commission, logistics, cogs, ads, returns, canceled, "
+            "SELECT sku_id, day, revenue, units, commission, logistics, cogs, returns, canceled, "
             "revenue_costed, payout_costed, cogs_estimated FROM daily_sku_metrics WHERE org_id = %s",
             [self.org_id],
         )
@@ -254,7 +254,6 @@ def test_lots_sale_costs_and_metrics(org: Org) -> None:
         D("40000.00"),
         D("5000.00"),
         D("130000.00"),
-        D(0),
         0,
         5,
         D("200000.00"),
@@ -296,7 +295,6 @@ def test_lots_sale_costs_and_metrics(org: Org) -> None:
         D("160000.00"),
         D("20000.00"),
         D("500000.00"),
-        D(0),
         1,
         0,
         D("800000.00"),
@@ -304,9 +302,9 @@ def test_lots_sale_costs_and_metrics(org: Org) -> None:
         D("500000.00"),  # P1 qismi "base_fallback" — taxminiy (F22)
     )
     assert metrics[(sku, d(9, 10))][4] == D("960000.00")
-    assert metrics[(sku, d(9, 10))][10] == D("960000.00")  # base_fallback — taxminiy (F22)
+    assert metrics[(sku, d(9, 10))][9] == D("960000.00")  # base_fallback — taxminiy (F22)
     assert metrics[(None, d(10, 6))][0] == D("200000.00")  # bog'lanmagan sotuv tushumi yo'qolmaydi
-    assert metrics[(None, d(10, 6))][8] == D(0)  # ...lekin tannarxsiz qism (F15)
+    assert metrics[(None, d(10, 6))][7] == D(0)  # ...lekin tannarxsiz qism (F15)
 
     # Takror: navbat bo'sh — hech narsa qilinmaydi; to'liq qayta qurish — farq yo'q, yozuv yo'q.
     assert org.recalc().status == "idle"
@@ -344,7 +342,7 @@ def test_late_cargo_marks_recalculated_and_cancel_removes(org: Org) -> None:
     assert result.costs_deleted == 1
     costs = org.costs()
     assert s1 not in costs and costs[s2][0] == D("520000.00")  # 4 × 130 000 (P1 + bojxona)
-    assert org.metrics()[(sku, d(9, 10))][7] == 8
+    assert org.metrics()[(sku, d(9, 10))][6] == 8
 
 
 def test_incremental_equals_full_rebuild(org: Org) -> None:
@@ -480,42 +478,6 @@ def test_incomplete_rates_are_errors_and_empty_purchases_skipped(org: Org) -> No
     result = org.recalc()
     assert set(result.errors) == {str(manual), str(effective)}
     assert org.sql("SELECT purchase_line_id FROM lots WHERE org_id = %s", [org.org_id]) == [(ok,)]
-
-
-# --- Reklama va kunlik agregat -------------------------------------------------------------------------
-
-
-def test_ads_in_daily_metrics(org: Org) -> None:
-    _, sku = org.item()
-    org.sale(sku, d(10, 5), 1, external_id=9001)
-    org.sale(None, d(10, 5), 1, external_id=9002)
-
-    def ad(
-        ext: int, amount: int, kind: str = "OUTCOME", item: int | None = None, **kw: Any
-    ) -> None:
-        org.insert(
-            "mp_expenses",
-            shop_id=org.shop_id,
-            external_id=ext,
-            category=kw.pop("category", "advertising"),
-            type=kind,
-            amount=D(amount),
-            item_external_id=item,
-            created_on=at(d(10, 5)),
-            **kw,
-        )
-
-    ad(1, 10_000, item=9001)
-    ad(2, 3_000, "INCOME", item=9001)
-    ad(3, 4_000)  # bog'lanmagan
-    ad(4, 99_000, item=9001, excluded="status")  # bekor — hisobga kirmaydi
-    ad(5, 50_000, category="storage")  # reklama emas
-    org.request(calc.Scope.METRICS, org.shop_id, d(10, 1))
-    org.recalc()
-    metrics = org.metrics()
-    assert metrics[(sku, d(10, 5))][5] == D("7000.00")
-    assert metrics[(None, d(10, 5))][5] == D("4000.00")
-    assert org.sql("SELECT count(*) FROM sale_costs WHERE org_id = %s", [org.org_id])[0][0] == 0
 
 
 # --- Navbat --------------------------------------------------------------------------------------------

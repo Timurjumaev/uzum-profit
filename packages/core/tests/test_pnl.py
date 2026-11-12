@@ -13,7 +13,6 @@ from upcore.metrics import (
     Period,
     SaleLine,
     own_expense_in_period,
-    profit_summary,
     ratio,
 )
 from upcore.money import Money, total
@@ -70,21 +69,18 @@ def sale(
     )
 
 
-def test_single_cell_matches_profit_summary() -> None:
+def test_single_cell_statement() -> None:
     lines = [sale(3, qty=2), sale(3, price=50_000, cost=None)]
     exp = [ExpenseItem(d(3), "S1", C.STORAGE, uzs(30_000))]
     cells = build_cells(OCT, lines, exp, tax=TaxRule(D(4)))
     s = cells.statement()
-    ref = profit_summary(lines, uzs(30_000), uzs(0), uzs(10_000))  # soliq 4% × 250 000
-    assert s.revenue == ref.revenue and s.payout == ref.payout and s.cogs == ref.cogs
-    assert s.tax == uzs(10_000)
-    assert s.net_profit == ref.net_profit
-    assert s.coverage == ref.coverage and s.uncovered_share == ref.uncovered_share
-    assert s.margin == ref.margin and s.roi == ref.roi
-    assert (
-        s.uncovered_expenses == ref.uncovered_expenses
-        and s.uncovered_payout == ref.uncovered_payout
-    )
+    assert (s.revenue, s.payout, s.cogs) == (uzs(250_000), uzs(185_000), uzs(80_000))
+    assert s.tax == uzs(10_000)  # soliq 4% × 250 000
+    # Ma'lum qism: 150 000 − 80 000 = 70 000; xarajat (30 000 + 10 000) × 0,8 = 32 000 ayriladi.
+    assert s.net_profit == uzs(38_000)
+    assert s.coverage == D("0.8") and s.uncovered_share == D("0.2")
+    assert s.margin == D("0.19") and s.roi == D("0.475")
+    assert s.uncovered_expenses == uzs(8_000) and s.uncovered_payout == uzs(35_000)
     assert s.lines == 2 and s.uncovered_lines == 1 and s.units == 3
     # F46, F47 (ADR-043): komissiya 50 000 + logistika 15 000 + saqlash 30 000; tushum 250 000.
     assert s.uzum_costs == uzs(95_000) and s.uzum_costs_share == D("0.38")

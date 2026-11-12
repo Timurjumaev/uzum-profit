@@ -22,7 +22,7 @@ Qolgan hamma narsa sokin va intizomli.
 **Ikkinchi xos element — "Partiya yo'li"**: xaridning Xitoydan Uzumgacha bosqichlari vaqt chizig'ida (§6.2).
 
 **Ataylab qilinmaydigan narsalar** (shablon belgilari): bir xil yumaloq kartochkalar to'ri va bir xil soya;
-gradient bezaklar; KATTA HARFLI yorliqlar; sarlavhalarni nuqta bilan ulangan meta satrlar; havola matniga "→"
+gradient bezaklar; KATTA HARFLI yorliqlar (yagona istisno — KPI sarhisobidagi guruh sarlavhasi, §6.4); sarlavhalarni nuqta bilan ulangan meta satrlar; havola matniga "→"
 qo'shish; har bo'limga paydo bo'lish animatsiyasi; Uzum'ning binafsha rangi va uzum/uzum shingili motivlari.
 
 Tekshiruv (dizayn rejasini shablon bilan solishtirish): oddiy "SaaS dashboard" yo'li — 4 ta KPI kartochka qatori,
@@ -64,7 +64,7 @@ Tekshiruv (google/fonts fayllari, fontTools + Chromium skrinshoti, 2026-10-23):
 | `body` | 14/20 (mobil 15/22) | 400 | asosiy matn |
 | `body-strong` | 14/20 | 500 | tugmalar, menyu |
 | `table` | 13/18 | 400 | jadval qatorlari |
-| `label` | 12/16 | 500 | yorliqlar, jadval sarlavhalari (gap harfida, katta harf emas) |
+| `label` | 12/16 | 500 | yorliqlar, jadval sarlavhalari (gap harfida, katta harf emas; istisno — §6.4 guruh sarlavhasi) |
 | `kpi` | 28/34 | 600 | KPI qiymati |
 | `caption` | 12/16 | 400 | izohlar |
 
@@ -288,7 +288,8 @@ BUYURTMALAR VA TUSHUM
   (rangdan tashqari belgi), sof foyda — `positive-text`; zarar — chapdan |ulush| uzunlikda `negative-text`, 100% dan
   oshgan bo'laklar chiziq chegarasida kesiladi. 0 bo'lgan o'z xarajatlar, soliq, tannarxsiz qism qatorlari yashiriladi.
   Mobilda nom va summa bir qatorda, ostida chiziq va ulush (chiziq kengligi hamma qatorda bir xil).
-- Guruh sarlavhasi — `label`, katta harf, `text-secondary`, ostida hairline. Kartochka: radius yo'q, hairline chegara;
+- Guruh sarlavhasi — `label`, katta harf (0,04em oraliq; §1 dagi yagona istisno), `text-secondary`, ostida hairline.
+  Kartochka: radius 10 px (`radius-panel`, §3), hairline chegara;
   qiymat `type-h2`, asosiy kartochkalar (tushum, sof foyda) — `type-h1`, chap tomonda 3 px `accent` chiziq.
 - O'zgarish: pul va sonda `▲ 4,6%`, ulushda `▲ 3,2 punkt` (§8.4); rang = yo'nalish × yaxshimi (xarajat, bekor, qaytarish
   ulushi o'sishi — qizil); yaxshi yo'nalishi yo'q (o'rtacha tovar narxi) — neytral. Oldingi davr qiymati `caption`.
@@ -368,7 +369,9 @@ Sof foyda, oktabr
 - **Foyda va zarar:** yuqorida hisob varag'i to'liq — yakunlangan, kutilayotgan, jami ustunlari (§6.1); ostida sharshara
   (jami) va kutilayotgan sof foyda bloki; keyin oylar bo'yicha jadval (ustun = oy; sof foyda ostida yakunlangan va
   kutilayotgan).
-- **Mahsulotlar:** filtrlar qatori → DataTable; mobilda ro'yxat (rasm, nom, foyda/dona, zaxira kunlari) + bosilsa SKU sahifasi.
+- **Mahsulotlar:** filtrlar qatori → DataTable; mobilda (≤ 639 px) shu jadval ro'yxat ko'rinishida (ADR-057 Q11, B4.73):
+  faqat nom (rasm bilan), foyda va zaxira kunlari ustunlari, qolganlari yashirin, gorizontal skrollsiz; bosilsa SKU sahifasi.
+  Ombor va Buyurtmalar ham shunday (`DataTable` `mobile` ustunlari).
 - **SKU sahifasi:** sarlavha (rasm, nom, holat) → KPI qatori → unit kalkulyator (o'ngda) + grafiklar (chapda) →
   lotlar vaqt chizig'i → qaytishlar.
 - **Xaridlar:** ro'yxat (Partiya yo'li ixcham ko'rinishda) → xarid sahifasi: Partiya yo'li, «Partiyadagi tovarlar» jadvali,

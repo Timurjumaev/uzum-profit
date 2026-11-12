@@ -6,12 +6,12 @@ from hypothesis import given
 from hypothesis import strategies as st
 from upcore.metrics import (
     ManualExpense,
+    OrderFlow,
     Period,
     SaleLine,
     StatusGroup,
     breakeven_price,
     business_date,
-    cancel_share,
     cogs,
     commission,
     date_from_epoch_ms,
@@ -20,26 +20,27 @@ from upcore.metrics import (
     gross_profit,
     in_period,
     logistics,
+    order_flow,
     own_expense_in_period,
-    own_expenses,
     payout,
-    payout_mismatches,
-    period_return_share,
-    profit_summary,
     ratio,
-    realization_rate,
+    realization_rate_units,
     return_share,
     revenue,
     sale_totals,
     sku_acos,
     status_group,
     target_margin_price,
-    uzum_expenses,
 )
 from upcore.money import Money, total
 
 D = Decimal
 DAY = date(2026, 10, 10)
+
+
+def flow_of(lines: list[SaleLine]) -> OrderFlow:
+    """F17/F18 ulushlari qatorlardan: ``order_flow(sale_totals(...))`` (ADR-043)."""
+    return order_flow(sale_totals(lines))
 
 
 def uzs(x: int | str) -> Money:
@@ -145,13 +146,6 @@ def test_f3_to_f8() -> None:
     assert revenue([line("CANCELED"), line("SOMETHING_NEW")]).is_zero()
 
 
-def test_payout_mismatches() -> None:
-    ok = line(seller_profit=75_000)
-    off_by_one = line(seller_profit=75_001)
-    bad = line(seller_profit=74_000)
-    assert payout_mismatches([ok, off_by_one, bad, line()]) == [bad]
-
-
 def test_sale_totals() -> None:
     lines = [
         line(amount=2, comm=40_000, log=10_000, returns=1),
@@ -185,11 +179,6 @@ def test_sale_totals_additive(rows: list[tuple[int, int]]) -> None:
 # F9–F10 ---------------------------------------------------------------------------------------
 
 
-def test_uzum_expenses() -> None:
-    assert uzum_expenses([uzs(30_000), uzs(5_000)], [uzs(2_000)]) == uzs(33_000)
-    assert uzum_expenses([]) == uzs(0)
-
-
 def test_own_expense_amortization() -> None:
     rent = ManualExpense(uzs(3_100_000), date(2026, 10, 1), date(2026, 10, 31))
     assert own_expense_in_period(rent, Period(date(2026, 10, 1), date(2026, 10, 10))) == uzs(
@@ -197,7 +186,8 @@ def test_own_expense_amortization() -> None:
     )
     assert own_expense_in_period(rent, Period(date(2026, 11, 1), date(2026, 11, 5))) == uzs(0)
     one_day = ManualExpense(uzs(500), DAY, DAY)
-    assert own_expenses([rent, one_day], Period(DAY, DAY)) == uzs(100_500)
+    day = Period(DAY, DAY)
+    assert own_expense_in_period(rent, day) + own_expense_in_period(one_day, day) == uzs(100_500)
     with pytest.raises(ValueError):
         ManualExpense(uzs(1), DAY, DAY - timedelta(days=1))
 
@@ -231,81 +221,14 @@ def test_own_expense_consecutive_periods_property(
     assert total(parts, "UZS") == e.amount
 
 
-# F12–F15 --------------------------------------------------------------------------------------
-
-
-def test_profit_summary_full_coverage() -> None:
-    s = profit_summary(
-        [line(amount=2, comm=40_000, log=10_000)], uzs(20_000), uzs(10_000), uzs(2_000)
-    )
-    assert s.revenue == uzs(200_000) and s.payout == uzs(150_000) and s.cogs == uzs(80_000)
-    assert s.coverage == D(1) and s.uncovered_share == D(0)
-    assert s.net_profit == uzs(150_000 - 80_000 - 32_000)
-    assert s.uncovered_lines == 0 and s.uncovered_expenses == uzs(0)
-    assert s.margin == D("0.19")  # 38 000 / 200 000
-    assert s.roi == D("0.475")  # 38 000 / 80 000
-
-
-def test_profit_summary_partial_coverage() -> None:
-    lines = [
-        line(price=300_000, comm=0, log=0, cost=100_000),
-        line(price=100_000, comm=0, log=0, cost=None),
-    ]
-    s = profit_summary(lines, uzs(40_000), uzs(0), uzs(0))
-    assert s.coverage == D("0.75")
-    assert s.expenses_deducted == uzs(30_000)  # 40 000 × 75%
-    assert s.uncovered_expenses == uzs(10_000)
-    assert s.net_profit == uzs(300_000 - 100_000 - 30_000)
-    assert s.uncovered_revenue == uzs(100_000) and s.uncovered_payout == uzs(100_000)
-    assert s.uncovered_lines == 1
-    assert s.margin == ratio(170_000, 300_000)  # F13: maxraj — ma'lum qism tushumi (ADR-024)
-    assert s.uncovered_share == D("0.25")
-
-
-def test_profit_summary_no_sales() -> None:
-    s = profit_summary([line("CANCELED")], uzs(5_000), uzs(1_000), uzs(0))
-    assert s.coverage == D(1)
-    assert s.net_profit == uzs(-6_000)
-    assert s.margin is None and s.roi is None and s.uncovered_share == D(0)
-
-
-def test_profit_summary_nothing_covered() -> None:
-    s = profit_summary([line(cost=None)], uzs(1_000), uzs(0), uzs(0))
-    assert s.coverage == D(0) and s.uncovered_share == D(1)
-    assert s.margin is None  # tannarxi ma'lum tushum yo'q
-    assert s.net_profit == uzs(0) and s.uncovered_expenses == uzs(1_000)
-
-
-@given(
-    st.lists(
-        st.tuples(
-            st.integers(min_value=1, max_value=10**7),
-            st.integers(min_value=1, max_value=50),
-            st.one_of(st.none(), st.integers(min_value=0, max_value=10**7)),
-        ),
-        max_size=30,
-    ),
-    st.integers(min_value=0, max_value=10**8),
-)
-def test_profit_summary_reconciles(rows: list[tuple[int, int, int | None]], overhead: int) -> None:
-    lines = [line(price=p, amount=a, comm=p * a // 10, log=1000, cost=c) for p, a, c in rows]
-    s = profit_summary(lines, uzs(overhead), uzs(0), uzs(0))
-    # Ayrilgan + tannarxsiz qism xarajatlari = to'liq xarajat; qamrov 0..1.
-    assert s.expenses_deducted + s.uncovered_expenses == uzs(overhead)
-    assert D(0) <= s.coverage <= D(1)
-    assert s.net_profit + s.uncovered_payout - s.uncovered_expenses == s.payout - s.cogs - uzs(
-        overhead
-    )
-
-
 # F16–F18 --------------------------------------------------------------------------------------
 
 
 def test_realization_rate() -> None:
-    window = [line(amount=45), line("CANCELED", amount=5), line("PROCESSING", amount=100)]
-    assert realization_rate(window) == D("0.9")
-    assert realization_rate(window[:1], min_units=50) is None
-    assert realization_rate(window, min_units=51) is None
+    # 45 Yakunlangan, 5 Bekor (Jarayondagi 100 dona yakuniy emas).
+    assert realization_rate_units(45, 5) == D("0.9")
+    assert realization_rate_units(45, 0, min_units=50) is None
+    assert realization_rate_units(45, 5, min_units=51) is None
 
 
 def test_sale_totals_processing_part() -> None:
@@ -368,10 +291,10 @@ def test_cancel_and_return_share() -> None:
         line("PROCESSING", amount=5),
     ]
     # Yalpi dona = 8 + 1 + 2 + 1 + 5 = 17; bekor = 2.
-    assert cancel_share(lines) == D("0.117647")
-    assert cancel_share([]) is None
+    assert flow_of(lines).cancel_share == D("0.117647")
+    assert flow_of([]).cancel_share is None
     # Qaytgan = 1 (topshirilgan Bekor) + 1 (Yakunlangan amountReturns); sotilgan = 8 + 5.
-    assert period_return_share(lines) == D("0.133333")
+    assert flow_of(lines).return_share == D("0.133333")
     assert return_share(sold=95, returned=5) == D("0.05")
     assert return_share(0, 0) is None
 
@@ -386,12 +309,11 @@ def test_real_canceled_line_shape() -> None:
     done = SaleLine("A", date(2026, 10, 1), "TO_WITHDRAW", D(92_000), 2, D(20_000), D(5_000))
     lines = [real, done]
     assert real.revenue == 0 and real.payout == 0
-    assert cancel_share(lines) == D("0.5")  # 2 / (2 + 2)
-    assert period_return_share(lines) == 0
+    assert flow_of(lines).cancel_share == D("0.5")  # 2 / (2 + 2)
+    assert flow_of(lines).return_share == 0
     t = sale_totals(lines)
     assert (t.units, t.canceled, t.returns, t.canceled_issued) == (2, 2, 0, 0)
     assert t.canceled_revenue == uzs(184_000) and t.canceled_issued_revenue == uzs(0)
-    assert payout_mismatches([real]) == []
 
 
 def test_order_flow() -> None:
@@ -521,14 +443,15 @@ def test_sale_totals_counts_lines() -> None:
 
 
 def test_unit_rates_match_line_rates() -> None:
-    from upcore.metrics import cancel_rate, realization_rate_units
+    from upcore.metrics import cancel_rate
 
     lines = [
         SaleLine("A", date(2026, 10, 1), "TO_WITHDRAW", Decimal(1), 30),
         SaleLine("A", date(2026, 10, 1), "CANCELED", Decimal(1), 30),
     ]
-    assert cancel_rate(30, 60) == cancel_share(lines) == Decimal("0.5")
-    assert realization_rate_units(30, 30) == realization_rate(lines) == Decimal("0.5")
+    t = sale_totals(lines)
+    assert cancel_rate(30, 60) == flow_of(lines).cancel_share == Decimal("0.5")
+    assert realization_rate_units(t.units, t.canceled) == Decimal("0.5")
     assert realization_rate_units(30, 19) is None  # 49 < 50
     assert cancel_rate(0, 0) is None
 

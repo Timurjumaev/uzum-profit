@@ -1,7 +1,7 @@
 """Ma'lumotlar modeli (03-arxitektura.md §5): PostgreSQL, SQLAlchemy Core jadvallari.
 
-Tashkilotlarni ajratish (ADR-012) ikki qavatli: ilova ``org_id`` bo'yicha filtrlaydi va PostgreSQL RLS
-(``app.org_id``) ruxsat bermaydi. Qoidalar:
+Tashkilotlarni ajratish (ADR-012): asosiy himoya — PostgreSQL RLS (``app.org_id``, FORCE) va ishga tushish qo'riqchisi
+(``upapi.db.guard``); ilova ``org_id`` filtri hamma so'rovda emas (audit X1). Qoidalar:
 
 - Har **tashkilot jadvali** (``TENANT``) — ``org_id NOT NULL``, ``UNIQUE (org_id, id)``, RLS + FORCE.
 - Tashkilot ichidagi bog'lanish — **kompozit FK** ``(org_id, x_id) → x (org_id, id)``: FK tekshiruvi RLS'ni
@@ -658,7 +658,6 @@ daily_sku_metrics = tenant(
     Column("commission", UZS, nullable=False, server_default="0"),
     Column("logistics", UZS, nullable=False, server_default="0"),
     Column("cogs", UZS, nullable=False, server_default="0"),
-    Column("ads", UZS, nullable=False, server_default="0"),
     Column("returns", Integer, nullable=False, server_default="0"),
     Column("canceled", Integer, nullable=False, server_default="0"),
     # B2.8: tannarxi ma'lum qatorlar (F15, F8) va taxminiy qism (F22).
