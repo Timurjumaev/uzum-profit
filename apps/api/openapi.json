@@ -16227,9 +16227,16 @@
             "type": "string",
             "title": "Base"
           },
-          "return_rate": {
-            "type": "string",
-            "title": "Return Rate"
+          "completion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completion"
           },
           "trend_ratio": {
             "anyOf": [
@@ -16249,16 +16256,21 @@
           "days_counted": {
             "type": "integer",
             "title": "Days Counted"
+          },
+          "new_item": {
+            "type": "boolean",
+            "title": "New Item"
           }
         },
         "type": "object",
         "required": [
           "value",
           "base",
-          "return_rate",
+          "completion",
           "trend_ratio",
           "trend_factor",
-          "days_counted"
+          "days_counted",
+          "new_item"
         ],
         "title": "VelocityOut"
       },

@@ -4134,14 +4134,16 @@ export interface components {
             value: string;
             /** Base */
             base: string;
-            /** Return Rate */
-            return_rate: string;
+            /** Completion */
+            completion: string | null;
             /** Trend Ratio */
             trend_ratio: string | null;
             /** Trend Factor */
             trend_factor: string;
             /** Days Counted */
             days_counted: number;
+            /** New Item */
+            new_item: boolean;
         };
         /**
          * View

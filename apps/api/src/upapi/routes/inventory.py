@@ -47,10 +47,13 @@ UZS = Currency.UZS
 class VelocityOut(BaseModel):
     value: Decimal  # F23, dona/kun
     base: Decimal
-    return_rate: Decimal
+    completion: (
+        Decimal | None
+    )  # F16 R: Jarayondagi donaga ko'paytirilgan yakunlanish ulushi (None — ma'lumot kam)
     trend_ratio: Decimal | None
     trend_factor: Decimal
-    days_counted: int
+    days_counted: int  # oynadagi savdoda bo'lgan kunlar (≤ 14, 60 kungacha orqaga)
+    new_item: bool  # tovar yoshi 7 kundan kam — kamida 7 kunga bo'lingan
 
 
 class LeadOut(BaseModel):
@@ -190,10 +193,11 @@ def rows_for(
                 velocity=VelocityOut(
                     value=s.velocity.value,
                     base=s.velocity.base,
-                    return_rate=s.velocity.return_rate,
+                    completion=s.velocity.completion,
                     trend_ratio=s.velocity.trend_ratio,
                     trend_factor=s.velocity.trend_factor,
                     days_counted=s.velocity.days_counted,
+                    new_item=s.velocity.new_item,
                 ),
                 days_of_stock=s.days_of_stock,
                 lead_time=LeadOut(

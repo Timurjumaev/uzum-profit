@@ -14,7 +14,6 @@ from decimal import ROUND_CEILING, Decimal
 from enum import StrEnum
 from statistics import median
 
-from upcore.metrics import ratio
 from upcore.money import Currency, DecimalLike, Money, quantize, to_decimal, total
 
 D0, D1 = Decimal(0), Decimal(1)
@@ -36,11 +35,11 @@ class XyzClass(StrEnum):
 class InventorySettings:
     """F23–F30 parametrlari (standart — 02-funksiyalar.md)."""
 
-    velocity_window: int = 14  # F23
-    recent_window: int = 7  # oxirgi 7 kun 2 barobar vazn
+    velocity_window: int = 14  # F23: oxirgi 14 ta savdoda bo'lgan kun (ADR-057 Q1)
+    velocity_lookback: int = 60  # ... 60 kungacha orqaga qarab
+    recent_window: int = 7  # eng yangi 7 ta hisobga olingan kun 2 barobar vazn
     recent_weight: int = 2
-    min_divisor_days: int = 7  # yangi tovar uchun kamida 7 kunga bo'linadi
-    max_return_rate: Decimal = Decimal("0.5")
+    min_divisor_days: int = 7  # tovar yoshi 7 kundan kam bo'lsa kamida 7 kunga bo'linadi
     trend_long_window: int = 30
     # (r chegarasi, koeffitsiyent): r ≥ 1,3 → 1,20; r ≥ 1,1 → 1,10; r > 0,9 → 1,00; r > 0,7 → 0,93; aks holda 0,85
     trend_steps: tuple[tuple[Decimal, Decimal], ...] = (
@@ -75,27 +74,37 @@ DEFAULT = InventorySettings()
 
 @dataclass(frozen=True, slots=True)
 class DayStat:
-    """Kunlik SKU statistikasi. ``in_stock`` — snapshot bo'yicha (``None`` — snapshot yo'q, hisobga olinadi)."""
+    """Kunlik SKU statistikasi. ``sold`` — Yakunlangan + Jarayondagi dona (ADR-036), ``processing`` — shundan
+    Jarayondagisi; ``in_stock`` — snapshot bo'yicha (``None`` — snapshot yo'q, hisobga olinadi)."""
 
     day: date
     sold: int = 0
     returned: int = 0
     in_stock: bool | None = None
+    processing: int = 0
+
+    def expected(self, completion: Decimal | None) -> Decimal:
+        """Kutilgan yakuniy dona: Yakunlangan + Jarayondagi × yakunlanish ulushi (F16 R; noma'lum — 1)."""
+        share = D1 if completion is None else completion
+        return Decimal(self.sold - self.processing) + Decimal(self.processing) * share
 
 
 @dataclass(frozen=True, slots=True)
 class Velocity:
     """F23 natijasi va tarkibi (izoh uchun)."""
 
-    base: Decimal  # vaznli o'rtacha, dona/kun
-    return_rate: Decimal
+    base: Decimal  # vaznli o'rtacha, dona/kun (kutilgan yakuniy dona bo'yicha)
+    completion: (
+        Decimal | None
+    )  # F16 R — Jarayondagi donaga ko'paytirilgan ulush (None — ma'lumot kam, 1 olingan)
     trend_ratio: Decimal | None
     trend_factor: Decimal
     days_counted: int
+    new_item: bool = False  # tovar yoshi 7 kundan kam — kamida 7 kunga bo'lingan
 
     @property
     def value(self) -> Decimal:
-        return quantize(self.base * (1 - self.return_rate) * self.trend_factor, 4)
+        return quantize(self.base * self.trend_factor, 4)
 
 
 def _window(
@@ -107,8 +116,17 @@ def _window(
     return [d for d in days if start <= d.day <= as_of and d.in_stock is not False]
 
 
-def _rate(items: Sequence[DayStat]) -> Decimal | None:
-    return None if not items else Decimal(sum(d.sold for d in items)) / len(items)
+def _rate(items: Sequence[DayStat], completion: Decimal | None) -> Decimal | None:
+    return None if not items else sum((d.expected(completion) for d in items), D0) / len(items)
+
+
+def _on_sale_days(
+    days: Sequence[DayStat], as_of: date, s: InventorySettings, first_day: date | None
+) -> list[DayStat]:
+    """F23 oynasi: ``as_of`` dan orqaga ``velocity_lookback`` kun ichidagi savdoda bo'lgan (qoldiq 0 emas) kunlardan
+    eng yangi ``velocity_window`` tasi, yangidan eskiga."""
+    pool = _window(days, as_of, s.velocity_lookback, first_day)
+    return sorted(pool, key=lambda d: d.day, reverse=True)[: s.velocity_window]
 
 
 def trend_factor(r: Decimal | None, s: InventorySettings = DEFAULT) -> Decimal:
@@ -130,31 +148,31 @@ def velocity(
     as_of: date,
     first_day: date | None = None,
     s: InventorySettings = DEFAULT,
+    completion: Decimal | None = None,
 ) -> Velocity:
-    """F23. Sof sotuv tezligi (dona/kun).
+    """F23. Sof sotuv tezligi (dona/kun; ADR-057 Q1).
 
-    Oxirgi 14 kun, oxirgi 7 kun 2 barobar vazn bilan; snapshot bo'yicha qoldiq 0 kunlar chiqariladi;
-    ``first_day`` dan oldingi kunlar (tovar hali yo'q) olinmaydi. Hisobga olingan kunlar 7 dan kam bo'lsa —
-    sotuvlar yig'indisi / 7 (yangi tovar). Keyin × (1 − qaytish darajasi, ≤ 0,5) × trend koeffitsiyenti.
+    Oyna — oxirgi 14 ta **savdoda bo'lgan** kun (snapshot bo'yicha qoldiq 0 kunlar o'tkazib yuboriladi), 60 kungacha
+    orqaga; ``first_day`` dan oldingi kunlar (tovar hali yo'q) olinmaydi. Eng yangi 7 ta kun 2 barobar vazn bilan.
+    Kunlik dona — kutilgan yakuniy: Yakunlangan + Jarayondagi × ``completion`` (F16 R; ``None`` — 1). Tovar yoshi
+    (``first_day`` dan) 7 kundan kam bo'lsa — yig'indi / 7; aks holda faqat hisobga olingan kunlarga bo'linadi.
+    Keyin × trend koeffitsiyenti (r = v7 / v30, kalendar kunlari bo'yicha, qoldiq 0 kunlarsiz).
     """
-    window = _window(days, as_of, s.velocity_window, first_day)
-    recent_from = as_of - timedelta(days=s.recent_window - 1)
-    recent = [d for d in window if d.day >= recent_from]
-    older = [d for d in window if d.day < recent_from]
-    sold = sum(d.sold for d in window)
-    if len(window) < s.min_divisor_days:
-        base = Decimal(sold) / s.min_divisor_days
+    window = _on_sale_days(days, as_of, s, first_day)
+    new_item = first_day is not None and (as_of - first_day).days + 1 < s.min_divisor_days
+    units = [d.expected(completion) for d in window]  # yangidan eskiga
+    if new_item:
+        base = sum(units, D0) / s.min_divisor_days
+    elif not window:
+        base = D0
     else:
+        recent, older = units[: s.recent_window], units[s.recent_window :]
         w = s.recent_weight
-        num = w * sum(d.sold for d in recent) + sum(d.sold for d in older)
-        base = Decimal(num) / (w * len(recent) + len(older))
-    returned = sum(d.returned for d in window)
-    rate = ratio(returned, sold + returned) or D0
-    rate = min(rate, s.max_return_rate)
-    v7 = _rate(_window(days, as_of, s.recent_window, first_day))
-    v30 = _rate(_window(days, as_of, s.trend_long_window, first_day))
+        base = (w * sum(recent, D0) + sum(older, D0)) / (w * len(recent) + len(older))
+    v7 = _rate(_window(days, as_of, s.recent_window, first_day), completion)
+    v30 = _rate(_window(days, as_of, s.trend_long_window, first_day), completion)
     r = None if v7 is None or not v30 else quantize(v7 / v30, 4)
-    return Velocity(base, rate, r, trend_factor(r, s), len(window))
+    return Velocity(base, completion, r, trend_factor(r, s), len(window), new_item)
 
 
 # --- F24–F27 --------------------------------------------------------------------------------

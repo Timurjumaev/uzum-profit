@@ -1154,7 +1154,7 @@ export const uzLatn = {
     reorderCreated: "Qoralama xarid yaratildi — narx va kargoni kiriting",
     writeoff: "Hisobdan chiqarish",
     formula: {
-      f23: { code: "F23", formula: "Oxirgi 14 kun sotuvi (oxirgi 7 kun 2 barobar vazn bilan), qoldiq 0 kunlarsiz × (1 − qaytish darajasi) × trend koeffitsiyenti", source: "Kunlik sotuv va qoldiq snapshotlari" },
+      f23: { code: "F23", formula: "Oxirgi 14 ta savdoda boʻlgan kun (qoldiq 0 kunlar oʻtkazib yuboriladi, 60 kungacha orqaga) sotuvi, eng yangi 7 kun 2 barobar vazn bilan; jarayondagi dona × yakunlanish ulushi; × trend koeffitsiyenti. Tovar yoshi 7 kundan kam boʻlsa — kamida 7 kunga boʻlinadi", source: "Kunlik sotuv, qoldiq snapshotlari va oxirgi 90 kundagi yakunlanish ulushi" },
       f24: { code: "F24", formula: "(FBO faol qoldiq + FBS qoldiq) / sof sotuv tezligi", source: "Uzum qoldigʻi va F23" },
       f26: { code: "F26", formula: "Kritik: zaxira ≤ muddat · Yuqori: ≤ muddat + 7 · Oʻrta: ≤ muddat + 21 · Yaxshi · Harakatsiz: tezlik 0, qoldiq bor", source: "Zaxira kunlari (F24) va toʻliq muddat (F25) — oxirgi xaridlaringiz bosqich sanalaridan" },
       f27: { code: "F27", formula: "Buyurtma sanasi = bugun + (zaxira kunlari − toʻliq muddat). Tavsiya = tezlik × (muddat + qamrov) − (qoldiq + yoʻlda + buyurtma qilingan + oʻz omborim); qamrov ABC sinfiga qarab 60 / 30 / 14 kun", source: "F23, F25, ABC (F28), xarid joylari" },

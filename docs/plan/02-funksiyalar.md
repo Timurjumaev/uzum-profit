@@ -465,10 +465,15 @@ lot narxida), brak / yo'qotish (−).
 (boshlash sanasidan oldingi sotuv — F41), "postavka bor, partiya kiritilmagan" (F41, ADR-051),
 "kurs qo'lda emas, CBU". UI'da `~` va izoh.
 
-**F23. Sof sotuv tezligi** (dona/kun): oxirgi 14 kun, oxirgi 7 kun 2 barobar vazn bilan; qoldiq 0 bo'lgan kunlar
-(snapshot) hisobdan chiqariladi; yangi tovar uchun kamida 7 kunga bo'linadi; × (1 − qaytish darajasi, 14 kun,
-≤ 0,5); × trend koeffitsiyenti: r = v7/v30 → r ≥ 1,3: 1,20; 1,1 ≤ r < 1,3: 1,10; 0,9 < r < 1,1: 1,00;
-0,7 < r ≤ 0,9: 0,93; r ≤ 0,7: 0,85.
+**F23. Sof sotuv tezligi** (dona/kun; ADR-057 Q1, B4.66): oyna — oxirgi 14 ta **savdoda bo'lgan** kun: qoldiq 0
+bo'lgan kunlar (snapshot) o'tkazib yuboriladi va oyna orqaga cho'ziladi, 60 kungacha; eng yangi 7 ta kun 2 barobar
+vazn bilan. Kunlik dona — **kutilgan yakuniy dona** = Yakunlangan + Jarayondagi × yakunlanish ulushi (F16 R, do'konning
+oxirgi 90 kuni; ma'lumot kam bo'lsa — 1, Jarayondagi to'liq). Bekor va qaytgan donalar R ichida, alohida "qaytish
+darajasi" ko'paytiruvchisi yo'q (avvalgi `amountReturns` manbasi real ma'lumotda doim 0 edi — 09-audit K2). Tovar
+yoshi (birinchi sotuv yoki snapshotdan) 7 kundan kam bo'lsa — yig'indi kamida 7 kunga bo'linadi; aks holda faqat
+hisobga olingan kunlarga (avval har SKU'da 7 ga bo'linardi — tovar qaytgan kuni tezlik 3,5 barobar kam chiqardi, K1).
+× trend koeffitsiyenti: r = v7/v30 (kalendar kunlari, qoldiq 0 kunlarsiz) → r ≥ 1,3: 1,20; 1,1 ≤ r < 1,3: 1,10;
+0,9 < r < 1,1: 1,00; 0,7 < r ≤ 0,9: 0,93; r ≤ 0,7: 0,85.
 
 **F24. Zaxira kunlari** = (FBO `quantityActive` + FBS `quantityFbs`) / F23.
 

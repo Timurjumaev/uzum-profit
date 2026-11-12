@@ -737,7 +737,14 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     02 F41 yangilandi. Test: `test_supply_arrives_when_put_on_sale` (avval qizardi). **T:** deploy'dan bir necha daqiqa keyin
     staging'da ADR-055 dagi SKU (postavka 28.10 yaratilgan → 09.11 savdoga chiqqan): shu oraliqdagi sotuvlarda "Postavka bor,
     partiya kiritilmagan" belgisi yo'qligini ko'rish.
-  - [ ] B4.66 (Q1) F23 sotuv tezligi: savdodagi kunlar, tovar yoshi < 7 kun qoidasi, yakunlanish ulushi (`inventory.velocity`).
+  - [x] B4.66 (Q1) F23 sotuv tezligi: savdodagi kunlar, tovar yoshi < 7 kun qoidasi, yakunlanish ulushi (`inventory.velocity`).
+    ✓ 2026-11-12: `upcore.inventory.velocity` — oxirgi 14 ta savdoda bo'lgan kun (60 kungacha orqaga), eng yangi 7 tasi 2× vazn;
+    kunlik dona = Yakunlangan + Jarayondagi × F16 R (`DayStat.processing`, `expected`); "7 kunga bo'lish" faqat tovar yoshi
+    < 7 kun (`Velocity.new_item`); qaytish darajasi ko'paytiruvchisi olib tashlandi (R ichida). API: `reports.stock` 60 kunlik
+    oyna, do'kon bo'yicha R (`completion_by_shop`, 90 kun); `/inventory` → `velocity.completion`, `new_item` (`return_rate`
+    o'rniga). 02 F23, UI formula matni (uz, ru). Testlar (avval qizardi): K1 holati (17/kun, 15 kun qoldiqsiz → 17, avval
+    4,86), yoshi katta tovarda 3 kunga bo'linishi, Jarayondagi × R; API mustaqil hisob. **T:** kerak emas (Ombor sahifasida
+    tezlik va zaxira kunlari o'zgaradi — odatda tezlik ≈ 20% pastroq, tovar qaytgan SKU'larda balandroq).
   - [ ] B4.67 (Q2) F26/F27 ikki signal: "Buyurtma berish" va "Uzumga yuborish" (Ombor, Asosiy, Mahsulotlar holati).
   - [ ] B4.68 (Q4) Prognoz va "▲ %" da kutilayotgan qism × yakunlanish ulushi, "taxminiy" belgisi.
   - [ ] B4.69 (Q6) "Taxminiy" belgisi: tayyor sana qoidasi, Markaziy bank kursi — izoh.

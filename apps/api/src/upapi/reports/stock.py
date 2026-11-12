@@ -1,9 +1,10 @@
 """Ombor ko'rsatkichlari (M10 asos, F23–F30) bazadan → ``upcore.inventory``.
 
 - Qoldiq — ``mp_skus`` (Uzum FBO ``quantityActive`` + FBS ``quantityFbs``, M10 qabul mezoni), brak, kutilayotgan.
-- Kunlik statistika (F23) — ``daily_sku_metrics`` (Yakunlangan dona, qaytgan dona) va ``sku_daily`` snapshotlari
-  (qoldiq 0 kun — tezlikdan chiqariladi; snapshot yo'q kun hisobga olinadi). Oynadagi har kun beriladi (sotuvsiz
-  kun — 0). Tovar "paydo bo'lgan" kun — birinchi sotuv yoki birinchi snapshot.
+- Kunlik statistika (F23, ADR-057 Q1) — ``daily_sku_metrics`` (Yakunlangan + Jarayondagi dona, shundan Jarayondagi) va
+  ``sku_daily`` snapshotlari (qoldiq 0 kun — tezlikdan chiqariladi; snapshot yo'q kun hisobga olinadi), 60 kun orqaga.
+  Oynadagi har kun beriladi (sotuvsiz kun — 0). Tovar "paydo bo'lgan" kun — birinchi sotuv yoki birinchi snapshot.
+  Jarayondagi dona do'konning yakunlanish ulushiga (F16 R, oxirgi 90 kun) ko'paytiriladi.
 - To'liq muddat (F25) — tovar xaridlari sanalaridan, bosqichlar: tayyorlash (to'lov/buyurtma → Xitoy ombori), Xitoy
   ichki (→ jo'natildi), kargo yo'li (→ keldi), qabul (→ qabul qilindi), Uzumga topshirish (→ Uzumga yuborildi).
   Standart muddatlar sozlamasi B4 da (M16); hozircha biror bosqich tarixi bo'lmasa muddat noma'lum — holat (F26)
@@ -60,6 +61,7 @@ from upcore.inventory import (
     weekly_sales,
     xyz_class,
 )
+from upcore.metrics import realization_rate_units
 from upcore.money import Currency, Money
 from upcore.purchasing import LEAD_STAGES, Stage, current_stage, stage_days
 
@@ -69,7 +71,10 @@ from upapi.db import models as m
 from upapi.reports.purchases import stage_dates
 
 UZS = Currency.UZS
-WINDOW_DAYS = 56  # F28 XYZ: 8 hafta (F23 uchun 30 kun ham shu ichida)
+WINDOW_DAYS = (
+    60  # F23: 60 kungacha orqaga (ADR-057 Q1); F28 XYZ (8 hafta) va trend (30 kun) shu ichida
+)
+REALIZATION_DAYS = 90  # F16 R — do'konning oxirgi 90 kuni (``upapi.reports.cells`` dagi kabi)
 ABC_DAYS = 30
 STAGES = tuple(name for name, _, _ in LEAD_STAGES)
 LOCATIONS = ("china", "road", "own", "inbound", "fbo", "fbs", "defected")
@@ -278,15 +283,36 @@ async def _places(conn: AsyncConnection, items: Iterable[UUID]) -> dict[UUID, _P
 
 
 def _days(
-    metrics: dict[date, tuple[int, int]], snaps: dict[date, bool], as_of: date
+    metrics: dict[date, tuple[int, int, int]], snaps: dict[date, bool], as_of: date
 ) -> list[DayStat]:
     start = as_of - timedelta(days=WINDOW_DAYS - 1)
     out = []
     for i in range(WINDOW_DAYS):
         day = start + timedelta(days=i)
-        sold, returned = metrics.get(day, (0, 0))
-        out.append(DayStat(day, sold, returned, snaps.get(day)))
+        sold, returned, processing = metrics.get(day, (0, 0, 0))
+        out.append(DayStat(day, sold, returned, snaps.get(day), processing))
     return out
+
+
+async def completion_by_shop(
+    conn: AsyncConnection, shops: Iterable[UUID], as_of: date
+) -> dict[UUID, Decimal | None]:
+    """F16 R har do'kon uchun (oxirgi 90 kun): yakuniy holatga yetgan donalar ichida Yakunlangan ulushi."""
+    d = m.daily_sku_metrics
+    since = as_of - timedelta(days=REALIZATION_DAYS - 1)
+    query = (
+        select(
+            d.c.shop_id,
+            func.sum(d.c.units - d.c.units_processing).label("done"),
+            func.sum(d.c.canceled).label("canceled"),
+        )
+        .where(d.c.shop_id.in_(list(shops)), d.c.day >= since, d.c.day <= as_of)
+        .group_by(d.c.shop_id)
+    )
+    return {
+        r.shop_id: realization_rate_units(int(r.done or 0), int(r.canceled or 0))
+        for r in await conn.execute(query)
+    }
 
 
 async def load_stock(
@@ -304,15 +330,15 @@ async def load_stock(
     skus = list(await conn.execute(query))
     ids = [r.id for r in skus]
     since = as_of - timedelta(days=WINDOW_DAYS - 1)
-    metrics: dict[UUID, dict[date, tuple[int, int]]] = {}
+    metrics: dict[UUID, dict[date, tuple[int, int, int]]] = {}
     revenue30: dict[UUID, Money] = {}
     abc_from = as_of - timedelta(days=ABC_DAYS - 1)
     for mr in await conn.execute(
-        select(d.c.sku_id, d.c.day, d.c.units, d.c.returns, d.c.revenue).where(
-            d.c.sku_id.in_(ids), d.c.day >= since, d.c.day <= as_of
-        )
+        select(
+            d.c.sku_id, d.c.day, d.c.units, d.c.returns, d.c.units_processing, d.c.revenue
+        ).where(d.c.sku_id.in_(ids), d.c.day >= since, d.c.day <= as_of)
     ):
-        metrics.setdefault(mr.sku_id, {})[mr.day] = (mr.units, mr.returns)
+        metrics.setdefault(mr.sku_id, {})[mr.day] = (mr.units, mr.returns, mr.units_processing)
         if mr.day >= abc_from:
             revenue30[mr.sku_id] = revenue30.get(mr.sku_id, Money.zero(UZS)) + Money(
                 mr.revenue, UZS
@@ -356,6 +382,7 @@ async def load_stock(
     for item_id, qty in inbound_item.items():
         if item_id in places:
             places[item_id].reserved = qty
+    completion = await completion_by_shop(conn, {r.shop_id for r in skus}, as_of) if skus else {}
     abc = abc_classes({str(r.id): revenue30.get(r.id, Money.zero(UZS)) for r in skus}, inv)
 
     out: dict[UUID, SkuStock] = {}
@@ -366,7 +393,7 @@ async def load_stock(
         first_sale, last_sale = sales.get(r.id, (None, None))
         firsts = [x for x in (first_sale, first_snap.get(r.id)) if x is not None]
         days = _days(metrics.get(r.id, {}), snaps.get(r.id, {}), as_of)
-        v = velocity(days, as_of, min(firsts) if firsts else None)
+        v = velocity(days, as_of, min(firsts) if firsts else None, inv, completion.get(r.shop_id))
         active, fbs = r.qty_active or 0, r.qty_fbs or 0
         defected = r.qty_defected or 0
         stock = active + fbs
