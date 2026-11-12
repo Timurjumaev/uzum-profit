@@ -44,12 +44,12 @@ avval PostgreSQL alohida serverga/DBaaS'ga, keyin worker'lar ko'paytiriladi.
 | Paket boshqaruvi | uv (lock fayl) | |
 | Sifat | ruff (lint+format), mypy (core: strict), pytest, hypothesis | |
 | Frontend | TypeScript, React 19, Vite | SPA + PWA |
-| Marshrut / server holati / jadval | TanStack Router, TanStack Query, TanStack Table | URL'dagi filtrlar tiplangan |
-| UI | Tailwind CSS v4 + shadcn/ui (Radix) | komponentlar o'zimizda, dizayn tokenlari bilan |
+| Marshrut / server holati | TanStack Router, TanStack Query | URL'dagi filtrlar tiplangan; jadval — o'z `DataTable` (saralash, ustun tanlash, 500+ qatorda virtual skroll) |
+| UI | O'z CSS tokenlari (`styles/tokens.css`) va komponentlari (`components/ui`), lucide ikonkalari | ADR-059 (ADR-004 qisman almashtirildi): Tailwind va shadcn/ui ishlatilmaydi |
 | Grafiklar | Apache ECharts (o'z temamiz) | sharshara, issiqlik xaritasi, kalendar |
-| Formalar | React Hook Form + Zod | |
-| Til | i18next (uz-Latn, uz-Cyrl, ru) | |
-| Sana | date-fns (+ uz locale) | |
+| Formalar | O'z `Field` / `Input` / `Select` komponentlari, tekshiruv forma ichida | kutubxonasiz (ADR-059); asosiy tekshiruv — API'da |
+| Til | i18next (uz-Latn, ru; uz-Cyrl — lotindan transliteratsiya) | |
+| Sana | `Intl` + `lib/dates`, `lib/format` | date-fns ishlatilmaydi (ADR-059) |
 | API tiplari | openapi-typescript + openapi-fetch | backend sxemasidan generatsiya |
 | Frontend test | Vitest, Testing Library, Playwright, axe-core | vizual regressiya |
 | Paket boshqaruvi (web) | pnpm, Node 24 LTS | |
@@ -257,7 +257,7 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
   `/expenses`, `/purchases`, `/purchases/:id`, `/shipments`, `/shipments/:id`, `/suppliers`, `/inventory`, `/inventory/reorder`, `/inventory/supplies`,
   `/cash`, `/goals`, `/calculator`, `/reports`, `/settings/*`, `/billing`, `/status` (ma'lumotlar holati), `/admin/*`.
 - Server holati — TanStack Query (staleTime 60 s, sinxrondan keyin invalidatsiya); filtrlar va davr — URL'da.
-- Komponentlar: `components/ui` (shadcn asosida, tokenlar bilan), `components/charts` (ECharts o'ramlari),
+- Komponentlar: `components/ui` (o'zimizniki, `styles/tokens.css` tokenlari bilan; ADR-059), `components/charts` (ECharts o'ramlari),
   `features/<modul>` (sahifa logikasi).
 - Formatlash faqat `lib/format` orqali (04-dizayn.md §8): son, pul, foiz, sana; hech joyda `toLocaleString` to'g'ridan.
 - PWA: o'rnatiladigan, oxirgi bosh sahifa oflayn o'qish uchun keshda; web push [B6].

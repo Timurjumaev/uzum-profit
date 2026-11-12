@@ -480,7 +480,7 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   `/v1/return` donalari. **Topildi:** eski qaytish % faqat Yakunlangan `amountReturns` dan (real ma'lumotda doim 0), bekor %
   qaytarishlarni ham sanardi. **T:** staging'da realcheck → Uzum kabinetidagi oktabr qaytarish va bekor sonlari bilan
   solishtirish; xohlasa — Sozlamalarda chegaralar.
-- [ ] B4.27 "Yo'qotishlar va imkoniyat" bloki (ADR-043 (5), AI'siz, formula bilan): qaytarish xarajati, zarardagi SKU,
+- [→] B4.27 (**ko'chdi → B5.0a**, ADR-057 Q8) "Yo'qotishlar va imkoniyat" bloki (ADR-043 (5), AI'siz, formula bilan): qaytarish xarajati, zarardagi SKU,
   tannarxsiz sotuvlar; bekor summasi yo'qotish emas.
 - [x] B4.28 Xarid tovarlari: tanlov SKU'dan, «Qatorlar» → «Partiyadagi tovarlar» (ADR-044; Temur, 2026-11-04).
   ✓ 2026-11-04: tovar tanlash ro'yxati `items` o'rniga hamma SKU'dan (`GET /sku-picker`: do'kon, mahsulot, variant, qoldiq,
@@ -695,13 +695,13 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   qoldiq (FBO + FBS)" nomi bilan, postavka davri shtrixli oraliq ("Postavkada: 99 dona — 09.11.2026 da savdoga chiqarildi" /
   "hali savdoga chiqarilmagan") va tushuntiruvchi izoh bilan; narx grafigi faqat narx o'zgargan bo'lsa (tekis chiziq — yo'q), "Uzumdagi
   narx" KPI qo'shildi; qoldiq jadvali va narx — oldingidek. Izohga: qoldiq kun oxirida olinadi, bekor/qaytgan tovar qoldiqqa qaytib qayta sotilishi mumkin (Temur tasdiqladi — qoldiq 0 kunlardagi sotuvning sababi). **T:** staging'da SKU sahifasida qoldiq grafigini ko'rish (28.10–09.11 shtrixli oraliq).
-- [ ] B4.61 (toraytirildi, past ustuvorlik) Ombor: postavka tarkibi va qisman chiqarish (ADR-055 §3). Ochiq postavka "Postavkada" hisoblanadi
+- [→] B4.61 (**ko'chdi → B5.0c**, ADR-057 Q8; toraytirildi, past ustuvorlik) Ombor: postavka tarkibi va qisman chiqarish (ADR-055 §3). Ochiq postavka "Postavkada" hisoblanadi
   (to'g'ri, 02.11–09.11 ham); kamchiliklar: (1) holat `ACCEPTED` bo'lgach (savdoga chiqarish boshlangach) hali chiqarilmagan qism
   (`quantityToStock − quantityAccepted`, masalan 25 dona 09.11 07:05–10.11 13:39) hech qaysi joyda ko'rinmaydi; (2) postavka tarkibi
   (`quantityAccepted`) faqat postavka holati o'zgarganda qayta o'qiladi — keyin chiqarilgan qism yangilanmaydi. Tuzatish: tarkibni
   qabul soni o'zgarganda qayta o'qish va qismni "postavkada (qisman qabul)" deb ko'rsatish.
-- [ ] B4.55 "Chegarada" chegarasi Sozlamalarda (Temur: "statik emas, dinamik"; standart 5%, F13).
-- [ ] B4.56–B4.60 Sahifalash (ADR-054) boshqa sahifalarga: **Buyurtmalar, Uzum xarajatlari, Xaridlar, Ombor — qilindi** (quyida,
+- [→] B4.55 (**ko'chdi → B5.0b**, ADR-057 Q8) "Chegarada" chegarasi Sozlamalarda (Temur: "statik emas, dinamik"; standart 5%, F13).
+- [x] B4.56–B4.60 Sahifalash (ADR-054) boshqa sahifalarga (qoldig'i **ko'chdi → B5.0d**, ADR-057 Q8): **Buyurtmalar, Uzum xarajatlari, Xaridlar, Ombor — qilindi** (quyida,
   B4.56–B4.58 + Xaridlar; Temur bitta PR'da so'radi); qoldi: Foyda tafsiloti (drill-down) va Kargolar.
   ✓ 2026-11-09: har biri `Pagination` bilan: `page` URL'da (filtr/bo'lim/tur o'zgarsa — 1-sahifa), "Sahifada" 20/50/100 umumiy
   (brauzerda eslanadi), "Yana yuklash" olib tashlandi. API: `/sales` va `/expenses` — `page` (offset) rejimi qo'shildi,
@@ -745,8 +745,14 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   - [ ] B4.71 (Q12) Menyuda "Pul oqimi" va "Hisobotlar" yashiriladi.
   - [ ] B4.72 (Q10) Bosh sahifa tartibi (ikkala variant skrinshoti PR'da).
   - [ ] B4.73 (Q11) Mobil ro'yxat: Mahsulotlar → Ombor → Buyurtmalar (uch PR).
-  - [ ] B4.74 (Q8, Q9, Q13, Q14) Reja hujjatlari: B4 yopish (B4.27, B4.55, B4.61 → B5 boshi), Telegram B6.1–B6.2 oldinga, rejaga
+  - [x] B4.74 (Q8, Q9, Q13, Q14) Reja hujjatlari: B4 yopish (B4.27, B4.55, B4.61 → B5 boshi), Telegram B6.1–B6.2 oldinga, rejaga
     qo'shimchalar, 03 §2 va ADR-004 haqiqatga; Uzum API shartlari (Temurdan kabinet matni).
+    ✓ 2026-11-12 (ADR-059, ADR-060): B4.27, B4.55, B4.61, sahifalash qoldig'i, B4.76 va B4.81 → **B5.0** (B5 boshi); bosqichlar
+    tartibi **B4 → B6.1–B6.2 → B5 → B6.3 →** B7…; PWA (manifest, ikonka) — B6.3; jamoa ekrani va qurilmalar — **B8.0**;
+    foydalanish hodisalari — **B8.9**; Uzum API shartlari — Temur vazifasi hozir (B4 "T"); 03 §2 va §9, ADR-004 — o'z CSS
+    tokenlari va komponentlari (Tailwind, shadcn, TanStack Table, React Hook Form, Zod, date-fns ishlatilmaydi); README
+    "Temurdan kutilmoqda" 6 bandga qisqardi. Ish oqimi (ADR-060): B4 kod qismini Claude mustaqil yakunlaydi — CI yashil bo'lsa
+    o'z PR'ini o'zi merge qiladi. **B4 da qoldi (kod):** B4.66–B4.73, B4.75, B4.80; sinovdan keyin — legacy `legacy/` ga.
   - [x] B4.75a (audit PR-3, K7) Soliq hisoblanmaganda halol ogohlantirish: Foyda sahifasida (QQS + foyda yoki Uzum agenti
     rejimi davrda amalda bo'lsa) sariq banner "Soliq hisoblanmadi" + Sozlamalarga havola; Sozlamalardagi rejim yordam matni
     to'g'rilandi (avval "oylik taxmin sifatida hisoblanadi" deb yolg'on yozilgan edi). `upcore.tax.uncalculated_regimes` (F11),
@@ -794,17 +800,28 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     keyin Foyda sahifasida "Soliq" ostida "Aylanmadan soliq" va "Ijtimoiy soliq" qatorlarini ko'rish (o'z sofi foydang bilan
     solishtirib).
   - [ ] B4.80 Yillik tushum chegarasi ogohlantirishi (80% / 100%; YaTT 1 mlrd, MChJ 12 000 BHM, o'zini o'zi band qilgan 100 mln) — Asosiy va Sozlamalarda.
-  - [ ] B4.81 (B5 boshi) 2-bosqich: QQS va foyda solig'i oylik hisobi (kirim QQS, `profit_before_tax` bazasi), shablon "MChJ umumbelgilangan".
-  - [ ] B4.76 Kabinet bilan solishtirish (taklif): Foyda sahifasida "Uzum kabineti ko'rsatadigan" qator (09 §11.3) — Temur
+  - [→] B4.81 (**ko'chdi → B5.0e**, ADR-059) 2-bosqich: QQS va foyda solig'i oylik hisobi (kirim QQS, `profit_before_tax` bazasi), shablon "MChJ umumbelgilangan".
+  - [→] B4.76 (**ko'chdi → B5.0f**, ADR-059) Kabinet bilan solishtirish (taklif): Foyda sahifasida "Uzum kabineti ko'rsatadigan" qator (09 §11.3) — Temur
     ko'rgach.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.
+- T (ADR-057 Q8, Q13): **14 kunlik sinovni boshlash** (kundalik ish faqat staging'da; xato yoki noqulaylik — skrinshot bilan bir
+  qator); Uzum API'ni uchinchi tomon ishlatishi shartlari — kabinetdagi matn (Q13).
 
 **Chiqish:** Temur 14 kun faqat yangi dasturdan foydalangan; kritik xato yo'q; legacy `legacy/` papkaga ko'chirildi.
 
 ## B5. Ustunlik funksiyalari — 12–18 kun
 
+Tartib (ADR-057 Q9): B5 dan oldin **B6.1–B6.2** (Telegram kunlik xulosa) bajariladi; B6.3 — B5 dan keyin.
+
+- [ ] B5.0 B4 dan ko'chganlar (ADR-057 Q8, ADR-059) — B5 boshida, shu tartibda:
+  - [ ] B5.0a (avval B4.27) "Yo'qotishlar va imkoniyat" bloki (ADR-043 (5), AI'siz, formula bilan).
+  - [ ] B5.0b (avval B4.55) "Chegarada" chegarasi Sozlamalarda (standart 5%, F13).
+  - [ ] B5.0c (avval B4.61) Ombor: postavka tarkibi va qisman chiqarish (ADR-055 §3).
+  - [ ] B5.0d (avval B4.56–B4.60 qoldig'i) Sahifalash: Foyda tafsiloti (drill-down) va Kargolar (ADR-054).
+  - [ ] B5.0e (avval B4.81) Soliq, 2-bosqich: QQS va foyda solig'i oylik hisobi, shablon "MChJ umumbelgilangan" (ADR-058).
+  - [ ] B5.0f (avval B4.76, taklif) Foyda sahifasida "Uzum kabineti ko'rsatadigan" qator (09 §11.3) — Temur ko'rgach.
 - [ ] B5.1 Yetkazib beruvchilar va kargo kompaniyalari; muddatlarni o'rganish (F25).
 - [ ] B5.2 Buyurtma rejasi (F23–F27): tavsiya miqdor, CNY va so'm byudjeti, rejadan xarid yaratish.
 - [ ] B5.3 FBO yuborish rejasi + Excel; postavkalar: e'lon va qabul, kamomad (F33), bog'liq jarima.
@@ -825,9 +842,12 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
 
 ## B6. Bildirishnomalar va Telegram — 5–7 kun
 
+Tartib (ADR-057 Q9): B6.1–B6.2 — B4 dan keyin, B5 dan **oldin**; B6.3 — B5 dan keyin.
+
 - [ ] B6.1 Hodisalar katalogi (M15), qoidalar, chegaralar, tinch soatlar, dublikatsiz yuborish.
 - [ ] B6.2 Telegram bot (aiogram): bog'lash, kunlik/haftalik xulosa, buyruqlar, "Batafsil" havolalar.
-- [ ] B6.3 Ilova ichidagi bildirishnomalar markazi; web push (PWA).
+- [ ] B6.3 Ilova ichidagi bildirishnomalar markazi; web push (PWA). PWA (ADR-057 Q13, 09 R3 a): `manifest`, ikonkalar, favicon,
+  `theme-color` — o'rnatiladigan ilova.
 - T: botni Telegram'da sinash, kunlik xulosa vaqtini tanlash (bot B2 da yaratilgan).
 
 **Chiqish:** Temur 7 kun kunlik xulosa oladi, raqamlar ilova bilan bir xil, keraksiz xabar yo'q.
@@ -843,6 +863,8 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
 
 ## B8. SaaS tayyorgarlik — 10–15 kun
 
+- [ ] B8.0 (ADR-057 Q13, 09 R3 b–c) Jamoa ekrani (`/members`, `/invites` — API bor, UI yo'q), "Qurilmalarim" va
+  "Hamma qurilmadan chiqish" (M1).
 - [ ] B8.1 Tariflar, limitlar, 14 kunlik sinov, obuna holatlari (faol → qarzdor → faqat o'qish).
 - [ ] B8.2 To'lov (Q5): karta tokeni bilan takroriy to'lov, fiskal chek (MXIK), hisob-faktura, muvaffaqiyatsiz
   to'lovda 3 urinish + 7 kun muhlat.
@@ -854,6 +876,8 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   o'tkazish, Uzum API shartlarini tekshirish, MXIK kodi.
 - [ ] B8.7 Landing (uz/ru): taklif, narxlar, ochiq kalkulyator, yordam markazi, "Yangiliklar".
 - [ ] B8.8 Production server, domen (Q7), pochta, Telegram kanal va yordam chati.
+- [ ] B8.9 (ADR-057 Q13, 09 R3 e) Foydalanish hodisalari (`events`): B9.4 o'lchovlari uchun — aktivatsiya, haftalik faollik,
+  birinchi foyda vaqti.
 - T: Q4 yuridik shaxs (buxgalter maslahati), Q5 to'lov provayderi bilan shartnoma, Q6 narxlarni tasdiqlash,
   Q7 domen, production VPS to'lovi, shaxsiy ma'lumotlar bazasi arizasi.
 

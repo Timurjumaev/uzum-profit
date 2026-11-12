@@ -440,6 +440,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.74 Reja (faqat hujjat; ADR-059, ADR-060): B4.27, B4.55, B4.61, sahifalash qoldig'i, B4.76 va B4.81 → B5.0 (B5 boshi);
+  tartib B4 → B6.1–B6.2 → B5 → B6.3; PWA — B6.3, jamoa ekrani va qurilmalar — B8.0, foydalanish hodisalari — B8.9; 03 §2 va §9
+  haqiqatga (o'z CSS tokenlari va komponentlari; ADR-004 qisman almashtirildi); README "Temurdan kutilmoqda" 6 bandga qisqardi;
+  ish oqimi — Claude o'z PR'ini CI yashil bo'lsa merge qiladi (CLAUDE.md).
 - B4.54b (ADR-055): SKU sahifasi — `supplies` (postavka sanalari), qoldiq grafigi "Savdodagi qoldiq" nomi bilan postavka davri shtrixli oraliq va izoh
   bilan (Uzum postavkani qabul qilgach savdoga chiqarishga vaqt oladi — shu davrda qoldiq 0), narx grafigi faqat narx o'zgargan bo'lsa,
   "Uzumdagi narx" KPI; ishonchlilik qoidasi.
