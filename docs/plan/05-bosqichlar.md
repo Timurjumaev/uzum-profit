@@ -790,7 +790,11 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     ✓ 1-PR (2026-11-12) Mahsulotlar: `DataTable` ga umumiy `mobileList` rejimi (≤ 639 px da faqat `mobile` ustunlar + birinchi
     ustun; sarlavha va nom qatorga bo'linadi) — Mahsulotlarda nom, foyda/dona, zaxira kunlari (04 §7.4); bosilsa — SKU sahifasi.
     360 px da jadval gorizontal skrollsiz (avval 1 637 px kontent / 326 ko'rinardi, audit D2). Testlar: ui (`ui-col--extra`),
-    e2e (360 px: 3 ustun, jadval ichida ham skroll yo'q). **Qoldi:** Ombor, Buyurtmalar (2- va 3-PR).
+    e2e (360 px: 3 ustun, jadval ichida ham skroll yo'q).
+    ✓ 2-PR (2026-11-12) Ombor: nom, holat (signallar — "Uzumga yuborish" belgisi bilan), zaxira kunlari; amallar ("Xarid
+    yaratish", "Hisobdan chiqarish") telefonda nom ostida (amallar ustuni yashirin). 360 px da jadval skrollsiz (avval 1 526 px).
+    Testlar: web (tugma ikki joyda — CSS bittasini ko'rsatadi), e2e (360 px: 3 ustun, amal ko'rinadi, skroll yo'q).
+    **Qoldi:** Buyurtmalar (3-PR).
   - [x] B4.74 (Q8, Q9, Q13, Q14) Reja hujjatlari: B4 yopish (B4.27, B4.55, B4.61 → B5 boshi), Telegram B6.1–B6.2 oldinga, rejaga
     qo'shimchalar, 03 §2 va ADR-004 haqiqatga; Uzum API shartlari (Temurdan kabinet matni).
     ✓ 2026-11-12 (ADR-059, ADR-060): B4.27, B4.55, B4.61, sahifalash qoldig'i, B4.76 va B4.81 → **B5.0** (B5 boshi); bosqichlar
