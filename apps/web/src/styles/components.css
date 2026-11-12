@@ -820,6 +820,10 @@
     white-space: normal;
   }
 
+  .ui-table--mobile-list .ui-th {
+    flex-wrap: wrap;
+  }
+
   .ui-table.ui-table--mobile-list th,
   .ui-table.ui-table--mobile-list td {
     padding-inline: var(--space-2);
