@@ -24,6 +24,7 @@ from uuid import UUID
 
 from sqlalchemy import delete, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncConnection
+from upcore.costing import is_estimated
 from upcore.expenses import ExpenseCategory, signed_amount
 from upcore.metrics import SaleLine, business_date, sale_totals
 from upcore.money import Currency, Money
@@ -130,7 +131,7 @@ async def _sales(
                 logistics=r.logistics_effective,
                 amount_returns=r.amount_returns,
                 unit_cost=unit,
-                estimated=bool(r.flags),
+                estimated=is_estimated(r.flags),  # B4.69: Markaziy bank kursi, tarixiy — aniq
                 issued=r.issued_at is not None,
             )
         )

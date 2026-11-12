@@ -485,3 +485,12 @@ def test_no_opening_shortage_unchanged() -> None:
     """Boshlang'ich holat yo'q (sana berilmagan): lotlar tugasa — avvalgidek "lot yetmadi"."""
     r = compute_costs([lot("L", 1, 3, 9000)], [Sale("a", d(2), 5)], FIFO)
     assert r.sales["a"].flags == {CostFlag.LOT_SHORTAGE}
+
+
+def test_is_estimated_ignores_exact_flags() -> None:
+    # ADR-057 Q6, ADR-051: Markaziy bank kursi va tarixiy narx — aniq; boshqa belgi — taxminiy
+    from upcore.costing import is_estimated
+
+    assert not is_estimated([]) and not is_estimated(None)
+    assert not is_estimated(["cbu_rate"]) and not is_estimated(["historical", "cbu_rate"])
+    assert is_estimated(["cbu_rate", "cargo_missing"]) and is_estimated(["lot_shortage"])

@@ -37,7 +37,7 @@ from decimal import Decimal
 from enum import StrEnum
 
 from upcore.money import Currency, Money
-from upcore.purchasing import Flag, LotCost, Purchase
+from upcore.purchasing import INFO_FLAGS, Flag, LotCost, Purchase
 
 UZS = Currency.UZS
 
@@ -67,6 +67,15 @@ class CostFlag(StrEnum):
 
 
 type AnyFlag = CostFlag | Flag
+
+# ADR-057 Q6 (B4.69), ADR-051: aniq tannarx belgilari — "Taxminiy" emas: Markaziy bank kursi (izoh) va boshlash sanasidan
+# oldingi tarixiy narx (sotuvchi kiritgan, F41).
+EXACT_FLAGS: frozenset[str] = frozenset({*(f.value for f in INFO_FLAGS), CostFlag.HISTORICAL.value})
+
+
+def is_estimated(flags: Iterable[str] | None) -> bool:
+    """F22: sotuv tannarxi taxminiymi — ``EXACT_FLAGS`` dan boshqa belgi bor (bazadagi matn belgilari ham)."""
+    return any(str(f) not in EXACT_FLAGS for f in flags or ())
 
 
 class CostingError(ValueError):

@@ -440,6 +440,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.69 (ADR-057 Q6, audit K8, K9) "Taxminiy" belgisi: Markaziy bank kursi va "tarixiy" narx — aniq (taxminiy qismga
+  qo'shilmaydi, Buyurtmalarda izoh); lot tayyor sanasi qabul / kargo to'lovi bo'lmasa keyingi bosqichdan (Uzumga yuborildi, yopildi).
 - B4.68 (ADR-057 Q4, audit K6) "▲ %" va oy prognozi: Jarayondagi qism yakunlanish ulushiga (F16 R) ko'paytiriladi,
   summalar o'zgarmaydi; `/pnl`, `/dashboard` → `rows[].change_estimated`, `forecast.estimated`; UI'da "≈" va izoh.
 - B4.70 (ADR-057 Q7) Sinxron: bugungi qoldiq snapshoti har mahsulot sinxronida yangilanadi, kun ichida 0 ko'rilsa

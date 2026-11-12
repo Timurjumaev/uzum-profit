@@ -95,6 +95,27 @@ def test_flags_cargo_missing_not_received_cbu() -> None:
     assert p.ready_date is None  # yo'lda
 
 
+def test_cbu_rate_alone_is_not_estimated_and_later_stage_makes_ready() -> None:
+    # ADR-057 Q6 (audit K8, K9): Markaziy bank kursi — izoh, taxmin emas; qabul belgilanmagan, lekin "Uzumga yuborildi"
+    # sanasi bor xarid — tovar qo'lda bo'lgan, "yo'lda" emas.
+    cbu = FxRate(DAY, Currency.CNY, D("1790"))
+    p = Purchase(
+        "p",
+        (PurchaseLine("a", 10, 10),),
+        (
+            CostComponent(K.GOODS, Money.of(100, "CNY"), cbu),
+            CostComponent(K.CARGO, uzs(10_000)),
+        ),
+        later_date=date(2026, 9, 25),
+    )
+    (lot,) = compute_lots(p)
+    assert lot.flags == {Flag.CBU_RATE} and not lot.estimated
+    assert p.ready_date == date(2026, 9, 25)
+    assert Purchase("q", (), received_date=date(2026, 9, 1), later_date=DAY).ready_date == date(
+        2026, 9, 1
+    )  # qabul sanasi ustun
+
+
 def test_market_rate_is_flagged_not_cbu() -> None:
     """Zaxira bozor kursi (ADR-045) lotda `market_rate` belgisi bilan — rasmiy CBU deb ko'rsatilmaydi."""
     market = FxRate(DAY, Currency.CNY, D("1650"), RateSource.MARKET)

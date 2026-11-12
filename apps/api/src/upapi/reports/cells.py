@@ -33,6 +33,7 @@ from uuid import UUID
 
 from sqlalchemy import Text, and_, case, cast, exists, func, literal, select
 from sqlalchemy.ext.asyncio import AsyncConnection
+from upcore.costing import is_estimated
 from upcore.expenses import ExpenseCategory, signed_amount
 from upcore.metrics import (
     ManualExpense,
@@ -767,7 +768,7 @@ def sale_line(r: Any) -> SaleLine:
         amount_returns=r.amount_returns,
         unit_cost=unit,
         shop=str(r.shop_id),
-        estimated=bool(r.flags),
+        estimated=is_estimated(r.flags),  # B4.69: Markaziy bank kursi, tarixiy — aniq
         issued=r.issued_at is not None,
     )
 
