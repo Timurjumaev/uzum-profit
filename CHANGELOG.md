@@ -440,6 +440,12 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- TM0 (faqat hujjat, ADR-061) Ta'minot qayta loyihasi rejasi: 9 bosqich o'rniga uch avtomatik holat (Yo'lda → Omborimda →
+  Uzumda), tez xarid oynasi (jami to'landi, CNY / USD / UZS, kurs tanlovi, ixtiyoriy trek), kargo puli jadvali (trekli
+  xarid / kodli quti, dona bo'yicha), sanash (kelgan son, brak, sotuvchi qaytargan summa), tovarning qadoq qo'shimchasi,
+  "Boshqa SKU'ga o'tkazish", Uzumga jo'natish (Excel, band qilish, postavka bilan bog'lash), qabul farqi (kamomad ro'yxati);
+  yangi formulalar F51 (brak zarari) va F52 (Uzum qabulida yo'qotish); 05 da TM1–TM8 — B5 ning boshida.
+
 - B4.80 F50 yillik tushum chegarasi (ADR-058): soliq profilida soliq to'lovchi turi (YaTT / MChJ / o'zini o'zi band qilgan;
   migratsiya 0022, shablon to'ldiradi), chegaralar `ref_amounts` da (1 mlrd / 12 000 BHM / 100 mln so'm, sana bo'yicha);
   yil boshidan tushum chegaraning 80% iga yetsa — bosh sahifada ogohlantirish (100% — qizil), Sozlamalarda doim holat.

@@ -142,6 +142,19 @@ va qiymati, yechilgan summa, taqsimot asosi, tegishli qatorlar, qo'lda ulushlar;
 aynan bittasi), `stock_moves` (o'z ombor
 harakatlari: qabul, Uzumga o'tkazish, tuzatish, hisobdan chiqarish), `fx_rates` (sana, valyuta, kurs, manba).
 
+**Ta'minot qayta loyihasi (ADR-061, TM1–TM7) — mavjud jadvallarga qo'shiladi, hech narsa o'chirilmaydi:** `purchases` —
+trek raqami, jami to'langan summa va valyutasi, sanash sanasi, "tovar qo'limda" belgisi, sotuvchi qaytargan summa, bo'lingan
+xaridning asl xaridi; eski holat va bosqich sanalari ustunlari qoladi (faqat "Tarix" uchun o'qiladi), holat — hosila
+(Yo'lda / Omborimda / Uzumda). `purchase_lines` — `sku_id`, qator summasi, kelgan dona, brak dona, qadoq qo'shimchasi
+(so'm/dona, sanashda `items` dan nusxa). `items` — qadoq qo'shimchasi (so'm/dona, ixtiyoriy). `cost_components` —
+xaridning o'z kargo puli (kg ixtiyoriy); kodli quti — `shipments` + xarid bo'yicha qo'lda ulushlar. `cost_kinds` —
+tashkilotning xarajat turlari lug'ati (tayyor + o'ziniki). `stock_moves` — yangi turlar: SKU'ga o'tkazish, jo'natishga band
+qilish / bo'shatish. `fbo_dispatches` + `fbo_dispatch_items` — Uzumga jo'natma (do'kon, Excel chiqarilgan vaqt, SKU va dona,
+bog'langan `fbo_invoices` yozuvi, holat: jo'natilmoqda / bog'landi / bekor). `receiving_shortages` — qabul kamomadi
+(postavka, SKU, dona, tannarxdagi summa, holat: ochiq / topildi / kompensatsiya / zarar, kompensatsiya summasi, yopilgan
+sana). Aniq ustun nomlari — TM1 migratsiyasida; migratsiya qaytariladigan, mavjud lot va sotuv tannarxlari o'zgarmasligi
+test bilan tekshiriladi.
+
 **Hosila (hisoblangan) jadvallar:** `lots` (xarid qatoridan: effektiv sana, dona, birlik tannarx, belgilar),
 `sale_costs` (sotuv qatori → birlik tannarx, COGS, usul, belgilar, lot taqsimoti jsonb), `daily_sku_metrics`
 (org × do'kon × sku × sana: tushum, dona, komissiya, logistika, COGS, reklama, qaytish, bekor — bosh sahifa va

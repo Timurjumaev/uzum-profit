@@ -19,7 +19,7 @@ hisob bilan ochiladi: har qator ayiriladi, oraliq summa ustida bitta chiziq, **S
 Bu ham chiroyli, ham vazifaviy: foyda qayerdan kelganini ko'rsatadi (raqobatchilarda yo'q shaffoflik).
 Qolgan hamma narsa sokin va intizomli.
 
-**Ikkinchi xos element — "Partiya yo'li"**: xaridning Xitoydan Uzumgacha bosqichlari vaqt chizig'ida (§6.2).
+**Ikkinchi xos element — "Partiya yo'li"**: xaridning uch holati — Yo'lda → Omborimda → Uzumda — vaqt chizig'ida (§6.2, ADR-061).
 
 **Ataylab qilinmaydigan narsalar** (shablon belgilari): bir xil yumaloq kartochkalar to'ri va bir xil soya;
 gradient bezaklar; KATTA HARFLI yorliqlar (yagona istisno — KPI sarhisobidagi guruh sarlavhasi, §6.4); sarlavhalarni nuqta bilan ulangan meta satrlar; havola matniga "→"
@@ -241,11 +241,16 @@ ustuni — yuqoridagi "Yakunlangan | Kutilayotgan | Jami" almashtirgichi bilan (
 ### 6.2 Partiya yo'li
 
 ```
-Buyurtma ─● To'landi ─● Xitoy ombori ─● Yo'lda ─◐ Toshkent ─○ Qabul ─○ Uzum ─○
- 02.10        03.10        09.10         12.10 (11 kun)  kutilmoqda ~28.10
+Yo'lda ─◐──────────── Omborimda ─○──────────── Uzumda ─○
+ 02.10 (11 kun)        kutilmoqda ~28.10
+
+Yo'lda ─●──────────── Omborimda ─◐──────────── Uzumda ─◐
+ 02.10                 27.10 · 40 dona           60 dona
 ```
-To'ldirilgan nuqta — bajarilgan bosqich (sanasi bilan), yarim — joriy, bo'sh — kelajak; joriy bosqichda necha kun
-o'tgani va kutilgan sana (F25). Mobilda vertikal. Kechikish bo'lsa joriy nuqta yonida ogohlantirish ikonasi va matni.
+Uch nuqta (ADR-061; avval 7 bosqich edi). To'ldirilgan — o'tgan holat (sanasi bilan), yarim — joriy, bo'sh — kelajak;
+"Yo'lda" da necha kun o'tgani va kutilgan sana (F25). Qisman jo'natilgan xaridda ikki nuqta ham yarim, ostida dona.
+Holatlar qo'lda bosilmaydi — nuqta tugma emas. Ro'yxatda ixcham: holat belgisi (StatusBadge) + dona. Mobilda ham gorizontal
+(uch nuqta 360 px ga sig'adi). Kechikish bo'lsa joriy nuqta yonida ogohlantirish ikonasi va matni.
 
 ### 6.3 Uch raqam (bosh sahifa, ADR-037)
 
@@ -374,7 +379,21 @@ Sof foyda, oktabr
   Ombor va Buyurtmalar ham shunday (`DataTable` `mobile` ustunlari).
 - **SKU sahifasi:** sarlavha (rasm, nom, holat) → KPI qatori → unit kalkulyator (o'ngda) + grafiklar (chapda) →
   lotlar vaqt chizig'i → qaytishlar.
-- **Xaridlar:** ro'yxat (Partiya yo'li ixcham ko'rinishda) → xarid sahifasi: Partiya yo'li, «Partiyadagi tovarlar» jadvali,
+- **Ta'minot ekranlari (ADR-061; quyidagi "Xaridlar" va "Kargolar" tavsifini TM2–TM7 da almashtiradi):**
+  (1) **Yangi xarid** — bitta oyna (mobilda to'liq ekran): tovarlar ro'yxati (SKU tanlash, dona; bir nechta xil tovar bo'lsa
+  qator summasi ustuni paydo bo'ladi), "Jami to'landi" + valyuta segmenti (CNY · USD · UZS), kurs (segment: Markaziy bank ·
+  O'zim kiritaman), trek (ixtiyoriy), "Tovar qo'limda" belgisi; pastda jonli "1 dona ≈ … so'm". Asosiy tugma — "Xaridni
+  saqlash". (2) **Kargo puli** — "Yo'lda" xaridlar jadvali: belgilash katagi, xarid (tovar, dona, trek), kg (ixtiyoriy),
+  summa inputi; bir nechta belgilansa tepada "Bitta qutiga birlashtirish" paneli (umumiy summa → qatorlardagi ulush inputlari
+  dona bo'yicha to'ladi, farq qoldig'i ko'rinadi). Mobilda — kartochkalar ro'yxati, summa inputi har kartochkada. (3) **Sanash**
+  — xarid qatorlari: nom, buyurtma soni, "Kelgan" (stepper + raqam, 44 px nishon), "Brak"; tepada "Hammasi keldi"; son kam
+  bo'lsa "Sotuvchi qaytargan summa" maydoni ochiladi; pastda yangi birlik tannarx va farqi. (4) **Xarid sahifasi** — Partiya
+  yo'li (3 nuqta), tovarlar, chiqimlar (tovar, kargo, qo'shimcha), o'ngda birlik tannarx tarkibi; "Tarix" (eski bosqich
+  sanalari, tuzatishlar). (5) **Uzumga jo'natish** — do'kon tanlash → SKU jadvali (omborimdagi son to'ldirilgan, tahrirlanadi,
+  qatorni olib tashlash) → "Excel yuklab olish"; jo'natmalar ro'yxati (Jo'natilmoqda / Bog'landi / Bekor). (6) **Qabul
+  farqi** — postavka kartochkasida "2 ta kam qabul qilindi": ikki tugma — "Uzum yo'qotdi" · "Men sanashda adashganman";
+  kamomadlar ro'yxati holat belgisi bilan. Hamma ekran 360 px da to'liq; ranglar va komponentlar — §4, §5 dan.
+- **Xaridlar (ADR-061 gacha):** ro'yxat (Partiya yo'li ixcham ko'rinishda) → xarid sahifasi: Partiya yo'li, «Partiyadagi tovarlar» jadvali,
   xarajat komponentlari, birlik tannarx tarkibi (o'ngda doim ko'rinadi). **Kargolar** (ADR-046): Xaridlar sarlavhasidagi
   havola → ro'yxat (sanalar, xaridlar soni, dona, kargo xarajati) → kargo sahifasi: kargodagi xaridlar (kargo ulushi
   bilan), kargo xarajatlari (kurs bilan), tovarlar va dona boshiga ulush, o'ngda jami; xarid sahifasida kargo nomi va
@@ -404,7 +423,8 @@ Tushum · Uzum komissiyasi · Logistika · Uzum to'lovi · Tannarx · Yalpi foyd
 O'z xarajatlarim · Soliq · Sof foyda · Yakunlangan sof foyda · Kutilayotgan sof foyda · Marja · ROI · Reklama ulushi
 (DRR) ·
 Yakunlangan / Jarayonda / Bekor qilingan / Qaytarilgan · Buyurtmalar summasi (GMV) · Uzum ushlab qolgan · Uzumdan keyin
-qoladi · O'rtacha chek · Xarid (partiya) · Kargo · Yo'lda · Qoldiq ·
+qoladi · O'rtacha chek · Xarid (partiya) · Kargo · Kargo puli · Yo'lda · Omborimda · Jo'natilmoqda · Uzumda · Sanash ·
+Kelgan · Brak · Brak zarari · Qadoq qo'shimchasi · Uzumga jo'natish · Qoldiq ·
 Zaxira kunlari · Muzlagan pul · Postavka · Kamomad · Jarima · Kompensatsiya · Taxminiy.
 (Rus tilida mos ravishda: Выручка, Комиссия Uzum, Логистика, Выплата Uzum, Себестоимость, ..., Фактическая чистая
 прибыль, Ожидаемая чистая прибыль; lug'at `lib/i18n/glossary` faylida. Hisob varag'i ustunlari qisqa: Yakunlangan ·

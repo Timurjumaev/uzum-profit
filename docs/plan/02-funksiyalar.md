@@ -1,7 +1,7 @@
 # 02. Funksiyalar: modullar, qabul mezonlari, formulalar
 
 Bu fayl dastur NIMA qilishini belgilaydi. Har modulda: vazifasi, ekranlari, funksiyalari (qaysi bosqichda),
-qabul mezonlari. Oxirida **formulalar lug'ati (F1–F50)**: dasturdagi har bir raqam shu yerdagi bitta formuladan
+qabul mezonlari. Oxirida **formulalar lug'ati (F1–F52)**: dasturdagi har bir raqam shu yerdagi bitta formuladan
 hisoblanadi. Kodda formula funksiyasi docstring'ida `F12` kabi raqam bilan belgilanadi.
 
 Belgilar: **[B4]** = shu bosqichda quriladi (05-bosqichlar.md). **[Keyin]** = ommaviy chiqishdan keyin.
@@ -188,63 +188,65 @@ Qabul mezonlari: 2 000 SKU'li jadval sahifalab (100 tadan, ADR-054) silliq; har 
   tovar / tushum ulushi bo'yicha), chek rasmi [B7].
 - Excel'dan import [B7].
 
-## M9. Xaridlar (partiyalar) va tannarx — asosiy ustunligimiz [B4 asos, B5 to'liq]
+## M9. Ta'minot: xaridlar, kargo, sanash va tannarx — asosiy ustunligimiz [B4 asos, TM1–TM8 qayta loyiha (ADR-061)]
 
-**Vazifasi.** Xitoydan (yoki boshqa joydan) buyurtma bergan kundan tovar Uzum omboriga yetguncha bo'lgan har bir
-xarajatni to'g'ri yig'ish va tovarlarga to'g'ri bo'lish.
+**Vazifasi.** Tovar sotib olingan kundan Uzum omboriga yetguncha bo'lgan har bir chiqimni to'g'ri yig'ish, real kelgan
+songa bo'lish va tovar qayerda ekanini ko'rsatish. Kiritish qisqa: standartlar tayyor, har biri o'zgartiriladi.
+(ADR-061 dan oldingi tavsif — 9 bosqich, taqsimot asoslari — git tarixida; ADR-044, ADR-046–ADR-050 kuchda, ADR-061
+almashtirgan joylaridan tashqari.)
 
-- **Yetkazib beruvchilar:** nomi, platforma (1688, Pinduoduo, Taobao, WeChat, mahalliy, boshqa), aloqa, valyuta,
-  o'rtacha tayyorlash muddati (o'rganiladi), izoh.
-- **Kargo kompaniyalari:** nomi, narx usuli (kg / m³ / dona / aralash), valyuta, o'rtacha yo'l muddati (o'rganiladi).
-- **Kargo (jo'natma; ADR-046):** bitta kargo — ko'p xarid (katta sotuvchi 10 yetkazib beruvchidan bitta presslangan o'ramda olib
-  keladi). Nomi, kargo kompaniyasi, **Xitoy omborida / yo'lda / Toshkentga keldi sanalari** (kargoga bog'langan hamma
-  xaridga o'tadi) va **kargo xarajatlari** (kargo, bojxona, yorliq ...): ular kargodagi **hamma xaridlarning hamma
-  tovarlariga** bitta taqsimotda bo'linadi (dona / vazn / hajm / qiymat / qo'lda). Xarid faqat bitta kargoga tegishli
-  (ixtiyoriy); kargosiz xarid avvalgidek. Kargo sahifasida har xaridga va har tovarga tushgan ulush ko'rinadi.
-- **Xarid (partiya) hayoti:** Qoralama → Buyurtma berildi → To'landi → Xitoy omborida → Yo'lda → Toshkentga keldi →
-  Qabul qilindi → Uzumga yuborildi → Yopildi. Har bosqich ixtiyoriy, sanasi yoziladi, vaqt chizig'ida ko'rinadi.
-  Legacy'dagi kabi bosqichma-bosqich to'ldiriladi: avval faqat tovar summasi, keyin tovarlar, keyin kargo.
-- **Partiyadagi tovarlar** (qatorlar; ADR-044): xarid — ko'p tovar. Tovar tanlanadigan ro'yxat — **hamma SKU** (do'kon,
-  mahsulot, variant, qoldiq, Uzum holati; arxivlangan va bloklangan ham, hech narsa yashirilmaydi) yoki "yangi tovar"
-  (vaqtinchalik nom, rasm, 1688 havolasi). SKU tanlansa tovar o'zi yaratiladi (bor bo'lsa — o'sha); bir nechta SKU
-  birdaniga qo'shiladi (har biriga dona, narx/vazn/hajm hammasiga bir xil, keyin alohida tahrirlanadi). **Har tovar —
-  bitta `item`** (tannarx birligi, bitta lot); narxi bir xil bir nechta SKU — bitta tovarga bog'lanib bitta qator,
-  tannarxi farq qiladigani — alohida qator. Variant (rang × o'lcham), buyurtma qilingan va qabul qilingan dona (qisman
-  kelishi mumkin), dona narxi (valyutada), dona vazni va hajmi (taqsimot uchun, ixtiyoriy). Bir tovar partiyada ikki
-  marta tanlansa — belgi (taqiq emas).
-- **Xarajat komponentlari** (istalgancha): tovar, Xitoy ichki yetkazish, xarid komissiyasi (agent), kargo, bojxona,
-  qadoqlash, shtrix-kod/yorliq, Uzum omboriga yetkazish, boshqa. Har birida: summa + valyuta, to'lov sanasi,
-  hisob (karta/naqd), **kurs**, **taqsimot asosi**, qaysi qatorlarga tegishli.
-  - Kurs rejimlari: (1) CBU kursi to'lov sanasi bo'yicha (standart); (2) qo'lda; (3) **"kartadan yechilgan summa"**:
-    masalan 1 000 CNY uchun USD kartadan 142,50 $ yechildi → effektiv kurs avtomatik.
-  - Taqsimot asosi: dona / vazn / hajm / qiymat / qo'lda. Kargo uchun standart: vazn (vazn kiritilmagan bo'lsa dona).
-- **Birlik tannarx** (F20) jonli hisoblanadi, tarkibi ko'rinadi; kargo hali kiritilmagan bo'lsa "taxminiy" belgisi.
-- Qabulda brak/kamomad: hisobdan chiqarish yoki yetkazib beruvchiga da'vo.
-- "Qayta buyurtma" — eski xaridni nusxalash; zaxira rejasidan xarid yaratish [B5].
-- **Kech kiritilgan xarajat** (masalan, kargo narxi 20 kundan keyin) kiritilganda o'tgan sotuvlar tannarxi
-  avtomatik qayta hisoblanadi va P&L'da "qayta hisoblandi" belgisi chiqadi.
-- Excel import [B7]. (Legacy partiyalarini ko'chirish bekor — ADR-032: qo'lda kiritiladi.)
+- **Holatlar (ADR-061 §1):** **Yo'lda → Omborimda → Uzumda** — hosila, qo'lda bosilmaydi, dona darajasida ("60 Uzumda ·
+  40 Omborimda"); oraliq **Jo'natilmoqda**. Sanalar: buyurtma va sanash.
+- **Xarid oynasi (§2):** bitta xarid = bitta do'kondan bitta buyurtma. Tovarlar (SKU, dona — tanlov ADR-044 bo'yicha hamma
+  SKU'dan yoki "yangi tovar"), **jami to'landi** + valyuta (CNY / USD / UZS), kurs (o'sha kungi Markaziy bank kursi yoki
+  sotuvchi o'zi kiritadi), trek raqami / yetkazib beruvchi / izoh — ixtiyoriy. Har xil tovar bitta buyurtmada bo'lsa —
+  har qatorga **qator summasi**; jami bilan farq (ichki yetkazish, komissiya) qator summasiga mutanosib bo'linadi. Saqlanganda
+  "Yo'lda". **"Tovar qo'limda"** (mahalliy xarid) — darhol sanash, kargo kutilmaydi.
+- **Kargo puli jadvali (§3):** hamma "Yo'lda" xaridlar bitta jadvalda. **Trekli** — xarid qatoriga o'z summasi (kg, trek
+  ixtiyoriy). **Kodli quti** — bir nechta xarid belgilanadi, bitta summa; ulushlar **dona bo'yicha** inputlarda tayyor,
+  tahrirlanadi. Xaridda yo o'z kargo puli, yo quti. Tariflar kiritilmaydi — faqat yakuniy summa (odatda USD).
+- **Qo'shimcha chiqimlar (§4):** xaridga yoki kargoga istalgancha; turlar lug'ati tashkilotniki (tayyor ro'yxat + o'z
+  turlari). Har birida summa, valyuta, kurs, sana.
+- **Qadoq (§5):** umumiy qadoq chiqimi — O'z xarajatlarim (M8), sanasi bo'yicha, SKU'ga bog'lanmaydi; tovarga ixtiyoriy
+  **qadoq qo'shimchasi, so'm/dona** — har sog' dona tannarxiga.
+- **Sanash (§6):** kelgan son (standart = buyurtma soni) va brak; "Hammasi keldi". Hamma chiqim **sog' donaga** bo'linadi
+  (F20). "Sotuvchi qaytargan summa" — ixtiyoriy, keyin ham. Kam uchraydigan holat — "Xaridni ikkiga bo'lish".
+- **Birlik tannarx** (F20) jonli hisoblanadi, tarkibi ko'rinadi; kargo puli hali kiritilmagan bo'lsa "taxminiy" belgisi.
+- **Kech kiritilgan chiqim** (kargo narxi keyin chiqdi, sotuvchi pul qaytardi, son tuzatildi) — o'tgan sotuvlar tannarxi
+  avtomatik qayta hisoblanadi, P&L'da "qayta hisoblandi" belgisi.
+- **Yetkazib beruvchilar va kargo kompaniyalari** — ixtiyoriy ma'lumotnoma (nom, platforma, aloqa); muddat buyurtma →
+  sanash oralig'idan o'rganiladi (F25).
+- "Qayta buyurtma" — eski xaridni nusxalash; zaxira rejasidan xarid yaratish [B5.2]. Excel import [B7].
 - Eski partiyalar shart emas: boshlash sanasidan oldingisi — boshlang'ich holat (F41, ADR-033).
 
-Qabul mezonlari: legacy'dagi har partiya ko'chirilgach birlik tannarx legacy bilan bir xil (o'rtacha usulda);
-kargo vazn bo'yicha taqsimlanganda qatorlar yig'indisi kargo summasiga tiyinigacha teng (yaxlitlash qoldig'i
-eng katta qatorga, F20); kurs o'zgarsa tannarx darhol yangilanadi.
+Qabul mezonlari: (1) trekli xarid — tovar, dona, summa, trek — bitta oynada, sahifa almashmasdan saqlanadi; (2) 10 ta
+trekli xaridga kargo puli bitta jadvalda, bitta saqlash bilan kiritiladi; (3) kodli qutida ulushlar yig'indisi summaga
+tiyinigacha teng (qoldiq eng katta ulushga, F20); (4) sanashda son o'zgarsa birlik tannarx darhol yangilanadi va Σ (sog' dona
+× birlik tannarx) = xaridning hamma chiqimi; (5) migratsiyadan keyin mavjud lot va sotuv tannarxlari o'zgarmagan (ADR-061
+§11); (6) hamma ekran 360 px da to'liq ishlaydi.
 
-## M10. Ombor va zaxira rejasi [B4 asos, B5 to'liq]
+## M10. Ombor, Uzumga jo'natish va zaxira rejasi [B4 asos, TM5–TM7, B5 to'liq]
 
-- **Joylar:** Xitoyda (buyurtma qilingan) → Yo'lda → O'z omborim → Uzum FBO (API) / FBS (API) → Brak → Qaytish yo'lida.
+- **Joylar (ADR-061 §10):** Yo'lda → Omborimda (+ Jo'natilmoqda) → Uzum FBO (API) / FBS (API) → Brak → Qaytish yo'lida.
+- **Omborim:** SKU bo'yicha qoldiq (sanalgan xaridlardan), tannarxdagi qiymat; **"Boshqa SKU'ga o'tkazish"** (do'konlar
+  orasida va bir do'kon ichida, tannarx bilan); hisobdan chiqarish (keyin topilgan brak → F51); inventarizatsiya (tuzatish
+  yozuvi bilan).
+- **Uzumga jo'natish (ADR-061 §7):** do'kon tanlanadi → omborimdagi shu do'kon SKU'lari to'liq soni bilan (o'zgartiriladi)
+  → Excel Uzum kabineti shablonida (shtrix-kod, tannarx, dona; ADR-050) → donalar "Jo'natilmoqda" → postavka API'da
+  ko'ringanda o'zi bog'lanadi → "Uzumda". Bekor — donalar omborga qaytadi.
+- **Qabul farqi (ADR-061 §8):** kam — "Uzum yo'qotdi" (kamomad ro'yxati: Ochiq → Topildi / Kompensatsiya qilindi / Zarar
+  deb yopildi; F33, F52; "Diqqat" blokida) yoki "Men sanashda adashganman" (xarid soni tuzatiladi); ko'p — ochiq kamomad
+  yopiladi yoki son tuzatish taklifi. Bog'liq C000007 jarimasi ko'rsatiladi.
 - **Qoldiq jadvali:** har tovar bo'yicha joylar, tannarxdagi qiymat, zaxira kunlari (F24), holat (F26), buyurtma sanasi,
   tavsiya miqdor (F27) va byudjet (CNY va so'm), "Xarid yaratish" tugmasi.
-- **FBO yuborish rejasi:** o'z omborimdan Uzumga nima yuborish kerak (FBO zaxira maqsadi bo'yicha) + Excel — Uzum
-  kabineti shablonida (shtrix-kod, tannarx, dona), xarid sahifasidan ham (ADR-050) [B5].
-- **Postavkalar:** holat, e'lon qilingan va qabul qilingan dona, kamomad (F33), bog'liq C000007 jarimasi; har postavka
-  xaridlarga SKU bo'yicha avtomatik bog'lanadi (FIFO, qo'lda almashtirish mumkin), xaridda "Uzumga yuborildi" (ADR-050) [B5].
 - **Yo'qolgan tovar** (F31) va kompensatsiya taxmini (F32), "kabinetda tekshiring" ro'yxati bilan [B5].
 - **Nelikvid** (F30), **muzlagan pul** (F29), **tugab qolishdan yo'qotilgan foyda** (F34) [B5].
-- Qoldiq tarixi grafigi (snapshotlardan); o'z omborida inventarizatsiya (tuzatish yozuvi bilan).
+- Qoldiq tarixi grafigi (snapshotlardan).
 
 Qabul mezonlari: Uzum FBO qoldig'i `quantityActive` + `quantityFbs` dan olinadi (faqat `/fbs/sku/stocks` emas);
-tezlik hisobida qoldiq 0 bo'lgan kunlar chiqarib tashlanadi; yo'qolgan tovar ishonchsiz holatda ko'rsatilmaydi.
+tezlik hisobida qoldiq 0 bo'lgan kunlar chiqarib tashlanadi; yo'qolgan tovar ishonchsiz holatda ko'rsatilmaydi;
+jo'natishda bir dona ikki Excel'ga tushmaydi; har SKU uchun Omborimda + Jo'natilmoqda + Uzumga bog'langan + o'tkazilgan +
+hisobdan chiqarilgan = sanalgan sog' dona.
 
 ## M11. Pul oqimi [B5]
 
@@ -448,9 +450,12 @@ qaytgan / (sotilgan + qaytgan) — Uzum ta'rifi (SKU `quantityReturned`, `quanti
 **F19. Reklama ulushi (DRR)** = reklama / F3. SKU ACOS = SKU'ga bog'langan reklama (AD#id → sotuv qatori) /
 SKU tushumi. Bog'lanmagan reklama SKU'larga tushum ulushi bo'yicha taqsimlanadi (sozlamada o'chirish mumkin).
 
-**F20. Xarid (lot) birlik tannarxi.** Har komponent: summa × kurs → so'm; taqsimot asosiga ko'ra qatorlarga
-bo'linadi (dona / vazn / hajm / qiymat / qo'lda); qatorning birlik tannarxi = qatorga tushgan komponentlar
-yig'indisi / qabul qilingan dona (hali qabul qilinmagan bo'lsa buyurtma qilingan dona, "taxminiy"). Yaxlitlash
+**F20. Xarid (lot) birlik tannarxi** (ADR-061). Har chiqim: summa × kurs → so'm; qatorlarga bo'linadi: tovar summasi —
+qator summasi bo'yicha (kiritilmagan bo'lsa dona), xarid ichidagi farq (jami − Σ qator summalari) va qo'shimcha chiqimlar —
+qator summasiga mutanosib (yo'q bo'lsa dona), kargo — dona bo'yicha yoki qo'lda ulush (eski yozuvlar o'z asosida: vazn /
+hajm / qiymat). Tovar summasidan **sotuvchi qaytargan summa** ayriladi. Qatorning birlik tannarxi = qatorga tushgan chiqimlar
+yig'indisi / **sog' dona** (kelgan − sanashdagi brak; hali sanalmagan bo'lsa buyurtma qilingan dona, "taxminiy") +
+tovarning **qadoq qo'shimchasi** (so'm/dona, ixtiyoriy). Kargo ulushi xaridlar orasida real kelgan dona bo'yicha. Yaxlitlash
 qoldig'i eng katta qatorga (kargo komponenti — butun kargo bo'yicha eng katta qatorga: kargodagi xaridlarga tushgan ulushlar
 yig'indisi kargo summasiga tiyinigacha teng, ADR-046). Kurs: CBU (to'lov sanasi, dam olish kunida oxirgi ish kuni), qo'lda, yoki yechilgan
 summadan effektiv kurs. CBU serverdan ochilmasa — zaxira bozor kursi (ADR-045): bir kunda CBU bo'lsa u ustun, hisobda `market_rate` belgisi (taxminiy).
@@ -459,7 +464,7 @@ summadan effektiv kurs. CBU serverdan ochilmasa — zaxira bozor kursi (ADR-045)
 lot narxida), brak / yo'qotish (−).
 - **FIFO** (standart): sotuv eng eski ochiq lotdan.
 - **O'rtacha** (harakatlanuvchi): yangi o'rtacha = (qoldiq qiymati + kirim qiymati) / (qoldiq + kirim).
-- Lot sotuvga tayyor sanasi = qabul sanasi; yo'q bo'lsa kargo to'langan sana (Temurning jarayonida kargo tovar
+- Lot sotuvga tayyor sanasi = **sanash sanasi** (ADR-061; eski xaridlarda — qabul sanasi); yo'q bo'lsa kargo to'langan sana (Temurning jarayonida kargo tovar
   qo'lga olinganda to'lanadi); ikkalasi ham yo'q bo'lsa — qabuldan keyingi bosqich sanasi ("Uzumga yuborildi" yoki
   "Yopildi" — eng ertasi; tovar qo'lda bo'lgan; ADR-057 Q6, B4.69). Hech biri yo'q lot — "yo'lda".
 - Yo'ldagi lot sotuvga faqat tayyor lotlar tugaganda ishlatiladi ("qabul belgilanmagan" belgisi: sotuv bor — demak
@@ -486,7 +491,8 @@ hisobga olingan kunlarga (avval har SKU'da 7 ga bo'linardi — tovar qaytgan kun
 
 **F24. Zaxira kunlari** = (FBO `quantityActive` + FBS `quantityFbs`) / F23.
 
-**F25. To'liq muddat** = tayyorlash + Xitoy ichki + kargo yo'li + qabul/yorliq + Uzumga topshirish. Har biri
+**F25. To'liq muddat** = (buyurtma → sanash) + (sanash → Uzum savdoga chiqargan kun) — ADR-061: ikki bo'lak, xarid va
+postavka sanalaridan. (Avval: tayyorlash + Xitoy ichki + kargo yo'li + qabul/yorliq + Uzumga topshirish.) Har biri
 yetkazib beruvchi va kargo tarixidan o'rganiladi (oxirgi 5 xarid medianasi), yo'q bo'lsa sozlamadagi standart.
 
 **F26. Holat — ikki signal** (ADR-057 Q2, B4.67; ikki xil qaror — ikki xil signal):
@@ -501,8 +507,9 @@ F24 (zaxira kunlari) — faqat Uzum qoldig'i bo'yicha, o'zgarmadi.
 (A 60, B 30, C 14 kun, sozlanadi), odatiy partiya hajmiga yaxlitlanadi. Byudjet = miqdor × oxirgi lot narxi (CNY va so'm).
 **Buyurtma sanasi** = bugun + (hamma joydagi tovar zaxira kunlari, F26 (1) − to'liq muddat F25), butun kunga pastga yaxlitlanadi; farq ≤ 0 (F26
 "Kritik") bo'lsa — "hozir" (kechikkan). Tezlik 0 yoki muddat noma'lum bo'lsa sana yo'q. Qoldiq tarkibi (F27, F29):
-Xitoyda (buyurtma, to'landi, Xitoy omborida), yo'lda (yo'lda, Toshkentga keldi), o'z omborim (qabul qilindi, Uzumga
-yuborilmadi; inventarizatsiya tuzatishi va hisobdan chiqarish bilan) — xarid bosqichidan; Uzumga yuborilgani FBO'da.
+**ADR-061:** Yo'lda (sanalmagan xaridlar), Omborimda (sanalgan sog' dona − jo'natilgan; + Jo'natilmoqda;
+inventarizatsiya tuzatishi, SKU'ga o'tkazish va hisobdan chiqarish bilan); Uzumga bog'langani FBO'da. (Avval: Xitoyda /
+yo'lda / o'z omborim — xarid bosqichidan.)
 
 **F28. ABC / XYZ.** ABC: oxirgi 30 kun tushumi (yoki foydasi — tanlanadi) kamayish tartibida, jamlangan ulush
 0–80% A, 80–95% B, 95–100% C. XYZ: oxirgi 8 hafta haftalik sotuvlarning variatsiya koeffitsiyenti: ≤ 0,25 X,
@@ -619,3 +626,13 @@ dan sana bo'yicha: YaTT — `revenue_limit_individual` (2026: 1 mlrd so'm), o'zi
 `revenue_limit_self_employed` (100 mln so'm), MChJ — `revenue_limit_llc_bhm` (12 000) × sanadagi BHM. ≥ 80% — "yaqin"
 (ogohlantirish), ≥ 100% — "oshdi"; tur ko'rsatilmagan yoki chegara noma'lum — hisoblanmaydi. Rejim o'zi almashmaydi.
 Faqat dasturdagi sotuvlar hisobga olinadi. `upcore.tax.revenue_limit_status`.
+
+**F51. Brak zarari** (ADR-061 §6) = Σ hisobdan chiqarilgan dona × o'sha donaning lot birlik tannarxi (F20) — faqat sanashdan
+**keyin** topilgan brak (omborda, Uzumdan qaytganda). Hisobdan chiqarilgan kunga yoziladi; foyda hisobida alohida qator,
+boshqa dona tannarxiga qo'shilmaydi. Sanashdagi brak bu yerga kirmaydi — u F20 da sog' dona tannarxiga yuklangan (ikki
+marta sanalmaydi).
+
+**F52. Uzum qabulida yo'qotish** (ADR-061 §8) = Σ ("Zarar deb yopildi" yoki "Kompensatsiya qilindi" kamomad yozuvlari bo'yicha)
+(dona × lot birlik tannarxi − kompensatsiya summasi), manfiy bo'lmaydi. Yopilgan kunga yoziladi; foyda hisobida alohida
+qator. Ochiq kamomad foydaga ta'sir qilmaydi (tovar hali "Uzumga jo'natilgan" qiymatida turadi), "Diqqat" blokida
+ko'rinadi. Asos — F33 (e'lon − qabul); "Men sanashda adashganman" tanlansa yozuv ochilmaydi, xarid soni tuzatiladi (F20).

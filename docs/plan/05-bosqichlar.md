@@ -903,18 +903,48 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
 
 ## B5. Ustunlik funksiyalari — 12–18 kun
 
-Tartib (ADR-057 Q9): B5 dan oldin **B6.1–B6.2** (Telegram kunlik xulosa) bajariladi; B6.3 — B5 dan keyin.
+Tartib (ADR-061 §12; avval ADR-057 Q9): **avval ta'minot TM1–TM8** — hozir, B4 ning 14 kunlik sinovi bilan parallel; keyin
+B6.1–B6.2 (Telegram kunlik xulosa), keyin B5.0 va qolgan B5; B6.3 — B5 dan keyin.
+
+### Ta'minot qayta loyihasi (ADR-061) — birinchi navbatda
+
+Har vazifa — alohida branch va PR; tafsilot 07 "ADR-061 tafsiloti", 02 M9–M10, F20, F51–F52, 04 §6.2 va §7.4.
+
+- [x] TM0 Reja: Temur bilan uch tur savol-javob, ADR-061, 02 / 03 / 04 / 05 yangilandi (faqat hujjat). ✓ 2026-11-12
+- [ ] TM1 Model va yadro: migratsiya (ADR-061 §11 — ustunlar qo'shiladi, eski bosqich → uch holat, hech narsa o'chirilmaydi),
+  `upcore.purchasing` F20 yangi qoidalari (qator summasi, farq taqsimoti, sog' dona, qaytarilgan summa, qadoq qo'shimchasi,
+  kargo — dona / qo'lda ulush, xaridning o'z kargo puli), hosila holat; API. **Shart:** mavjud lot va sotuv tannarxlari
+  migratsiyadan keyin o'zgarmaydi (solishtirma test), xossa testlari (ulushlar yig'indisi = summa).
+- [ ] TM2 Yangi xarid oynasi (§2) va xarid sahifasi: jami to'landi + valyuta + kurs tanlovi, trek, "Tovar qo'limda", uch
+  nuqtali Partiya yo'li, ro'yxatda uch holat; eski bosqich shakli olib tashlanadi, "Tarix" qoladi.
+- [ ] TM3 Kargo puli jadvali (§3): trekli qator va kodli quti (dona bo'yicha tayyor ulushlar, tahrir), xarajat turlari
+  lug'ati (§4). Kargolar sahifasi soddalashadi (B5.0d dagi Kargolar sahifalashi shu yerda).
+- [ ] TM4 Sanash (§6): kelgan son, brak, "Hammasi keldi", sotuvchi qaytargan summa, tovarning qadoq qo'shimchasi (§5),
+  "Xaridni ikkiga bo'lish"; mobil va desktop.
+- [ ] TM5 Omborim (§7): SKU bo'yicha qoldiq, "Boshqa SKU'ga o'tkazish", keyin topilgan brak → "Brak zarari" (F51, foyda
+  hisobida qator); F27 joylari yangi holatlardan.
+- [ ] TM6 Uzumga jo'natish (§7; avval B5.3 ning bir qismi): do'kon → SKU'lar to'liq soni bilan → Excel (ADR-050 shabloni),
+  "Jo'natilmoqda" band qilish, postavka bilan avtomatik bog'lash, bekor qilish. B5.0c (postavka tarkibi) shu yerda.
+- [ ] TM7 Qabul farqi (§8; avval B5.3 ning qolgani): kamomad ro'yxati va holatlari, "Uzum yo'qotdi" / "Men sanashda
+  adashganman", ortiqcha qabul, F52 foyda hisobida, bosh sahifa "Diqqat" bloki, bog'liq C000007 jarimasi.
+- [ ] TM8 Yakun: e2e (xarid → kargo puli → sanash → jo'natish → qabul), yordam maqolasi, 04 §7.4 dagi eski "Xaridlar" tavsifini
+  tozalash; Temur real xaridlarida tekshiradi.
+- T: har TM dan keyin staging'da real xarid bilan sinash; noqulay joy — skrinshot bilan bir qator.
+
+### Qolgan B5
 
 - [ ] B5.0 B4 dan ko'chganlar (ADR-057 Q8, ADR-059) — B5 boshida, shu tartibda:
   - [ ] B5.0a (avval B4.27) "Yo'qotishlar va imkoniyat" bloki (ADR-043 (5), AI'siz, formula bilan).
   - [ ] B5.0b (avval B4.55) "Chegarada" chegarasi Sozlamalarda (standart 5%, F13).
-  - [ ] B5.0c (avval B4.61) Ombor: postavka tarkibi va qisman chiqarish (ADR-055 §3).
+  - [→] B5.0c (**ko'chdi → TM6**, ADR-061; avval B4.61) Ombor: postavka tarkibi va qisman chiqarish (ADR-055 §3).
   - [ ] B5.0d (avval B4.56–B4.60 qoldig'i) Sahifalash: Foyda tafsiloti (drill-down) va Kargolar (ADR-054).
   - [ ] B5.0e (avval B4.81) Soliq, 2-bosqich: QQS va foyda solig'i oylik hisobi, shablon "MChJ umumbelgilangan" (ADR-058).
   - [ ] B5.0f (avval B4.76, taklif) Foyda sahifasida "Uzum kabineti ko'rsatadigan" qator (09 §11.3) — Temur ko'rgach.
-- [ ] B5.1 Yetkazib beruvchilar va kargo kompaniyalari; muddatlarni o'rganish (F25).
+- [ ] B5.1 Yetkazib beruvchilar va kargo kompaniyalari (ixtiyoriy ma'lumotnoma, ADR-061); muddatlarni o'rganish (F25: buyurtma →
+  sanash → Uzum).
 - [ ] B5.2 Buyurtma rejasi (F23–F27): tavsiya miqdor, CNY va so'm byudjeti, rejadan xarid yaratish.
-- [ ] B5.3 FBO yuborish rejasi + Excel; postavkalar: e'lon va qabul, kamomad (F33), bog'liq jarima.
+- [→] B5.3 (**ko'chdi → TM6, TM7**, ADR-061; bu yerda faqat "FBO yuborish rejasi" — zaxira maqsadi bo'yicha tavsiya — qoladi,
+  B5.2 bilan) FBO yuborish rejasi + Excel; postavkalar: e'lon va qabul, kamomad (F33), bog'liq jarima.
   ADR-050: Excel — Uzum kabineti shablonida (shtrix-kod, tannarx, dona); xarid ↔ postavka SKU bo'yicha avtomatik bog'lanish
   (FIFO, qo'lda almashtirish), xarid sahifasida "Uzumga yuborildi / qabul qilindi / kamomad"; o'z omborimni postavkalar bo'yicha
   hisoblash (ADR-034 qoldig'i).
@@ -925,7 +955,7 @@ Tartib (ADR-057 Q9): B5 dan oldin **B6.1–B6.2** (Telegram kunlik xulosa) bajar
 - [ ] B5.8 Reja-fakt (M12).
 - [ ] B5.9 Kalkulyator (M13) + ochiq versiya komponenti (landing uchun).
 - [ ] B5.10 FBS (do'konda bo'lsa): faol buyurtmalar va muddatlar; FBS qoldig'i — o'z omborim manbasi, ikki marta sanash yo'q
-  (ADR-034, 3-qadam); keyin DBS va mahalliy xarid (bozor, o'z ishlab chiqarishi) uchun soddalashtirilgan xarid bosqichlari.
+  (ADR-034, 3-qadam); keyin DBS. (Mahalliy xarid — TM2 "Tovar qo'limda", ADR-061.)
 - T: yetkazib beruvchi va kargo ma'lumotlarini kiritish; har funksiyani real ma'lumotda sinab ko'rish.
 
 **Chiqish:** har funksiya Temurning real ma'lumotida tekshirilgan, yordam maqolasi yozilgan.
