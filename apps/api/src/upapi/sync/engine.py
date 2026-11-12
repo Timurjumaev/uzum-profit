@@ -704,6 +704,7 @@ async def _write_sales(run: _Run, shop: ShopRef, page: Any, save_cursor: bool = 
         )
         run.counts[shop.id].written += result.written
         run.counts[shop.id].total = page.total
+        await store.mark_completed_seen(conn, shop.id, run.job.rt.clock())
         changed = [
             r["ordered_at"]
             for r in rows
@@ -811,10 +812,13 @@ async def _products(run: _Run) -> None:
     async with run.write() as conn:
         await _link_sales(run, conn, shop)
         await store.link_children_skus(conn, shop.id)
+        # B4.70 (ADR-057 Q7): bugungi snapshot har mahsulot sinxronida yangilanadi (+ kun ichida 0 ko'rilgani).
+        await store.snapshot(conn, run.org_id, shop.id, _local(run.started).date())
 
 
 async def _snapshot(run: _Run) -> None:
-    """Kunlik qoldiq: avval mahsulotlar yangilanadi (yangi qoldiq), keyin ``sku_daily`` ga Toshkent sanasi bilan."""
+    """Kunlik qoldiq: avval mahsulotlar yangilanadi (bugungi ``sku_daily`` qatori ham), keyin kun oxiridagi holat
+    yana yoziladi (sanoq shu yerdan) — Toshkent sanasi bilan."""
     await _products(run)
     shop = run.task.shops[0]
     async with run.write() as conn:

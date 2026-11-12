@@ -20,9 +20,10 @@ from datetime import date, datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import Table, delete, func, insert, literal, select, text, tuple_
+from sqlalchemy import Table, delete, func, insert, literal, select, text, tuple_, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncConnection
+from upcore.metrics import StatusGroup, statuses
 
 from upapi.db import models as m
 
@@ -241,18 +242,40 @@ async def first_sale_on(conn: AsyncConnection, shop_id: UUID) -> date | None:
 
 async def snapshot(conn: AsyncConnection, org_id: UUID, shop_id: UUID, day: date) -> int:
     """Kunlik qoldiq snapshot (02 M3): do'kon SKU'larining joriy qoldig'i, narxi, komissiyasi → ``sku_daily``.
-    Shu kun uchun qayta ishlasa — yangilanadi."""
-    sku = m.mp_skus
+    Shu kun uchun qayta ishlasa — yangilanadi (B4.70: har mahsulot sinxronida). ``zero_seen`` — kun ichida biror marta
+    Uzum qoldig'i (FBO faol + FBS) 0 ko'rilgan bo'lsa ``true`` bo'lib qoladi."""
+    sku, daily = m.mp_skus, m.sku_daily
     columns = ["qty_active", "qty_fbs", "qty_defected", "qty_pending", "price", "commission_pct"]
+    empty = func.coalesce(sku.c.qty_active, 0) + func.coalesce(sku.c.qty_fbs, 0) == 0
     source = select(
         literal(org_id).label("org_id"),
         sku.c.id.label("sku_id"),
         literal(day).label("day"),
         *(sku.c[c] for c in columns),
+        empty.label("zero_seen"),
     ).where(sku.c.shop_id == shop_id)
-    stmt = pg_insert(m.sku_daily).from_select(["org_id", "sku_id", "day", *columns], source)
+    stmt = pg_insert(daily).from_select(["org_id", "sku_id", "day", *columns, "zero_seen"], source)
     stmt = stmt.on_conflict_do_update(
         index_elements=["org_id", "sku_id", "day"],
-        set_={**{c: stmt.excluded[c] for c in columns}, "updated_at": func.now()},
+        set_={
+            **{c: stmt.excluded[c] for c in columns},
+            "zero_seen": daily.c.zero_seen | stmt.excluded.zero_seen,
+            "updated_at": func.now(),
+        },
+    )
+    return (await conn.execute(stmt)).rowcount
+
+
+async def mark_completed_seen(conn: AsyncConnection, shop_id: UUID, now: datetime) -> int:
+    """B4.70 (ADR-057 Q7): Yakunlangan holatdagi, hali belgilanmagan sotuv qatorlariga birinchi ko'rilgan vaqt."""
+    s = m.sale_items
+    stmt = (
+        update(s)
+        .where(
+            s.c.shop_id == shop_id,
+            s.c.completed_seen_at.is_(None),
+            func.upper(func.trim(s.c.status)).in_(statuses(StatusGroup.COMPLETED)),
+        )
+        .values(completed_seen_at=now)
     )
     return (await conn.execute(stmt)).rowcount
