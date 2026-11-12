@@ -832,7 +832,9 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     Boshlang'ich holat uchun (yorug'/qorong'i × desktop/mobil); T2 — Playwright mobil loyihasi 390 → 360 px (tamoyil 10; hamma
     mobil asoslar yangilandi); T3 — axe: Mahsulotlar, SKU, Buyurtmalar, Xarajatlar, Kargolar va kargo sahifasi. axe topgan
     xato tuzatildi: Mahsulotlar jadvalidagi 12 px izoh `text-muted` da edi (kontrast 3,84) → `text-secondary`. E2E soxta
-    API'ga `/expenses` qo'shildi (avval Xarajatlar e2e'da xato holatini ko'rsatardi). **Qoldi:** PR-8.
+    API'ga `/expenses` qo'shildi (avval Xarajatlar e2e'da xato holatini ko'rsatardi). Bosh sahifa: telefondagi KPI kartochka
+    chekkasi qoidasi asosiy qoida bilan bosilib ketgan edi — tuzatildi; ikki ustunli yorliqlar bo'linish chegarasidan uzoqda
+    (CI va lokal skrinshot balandligi farq qilardi). **Qoldi:** PR-8.
   - [x] B4.75b (CI) E2E job'ida brauzer apt'siz o'rnatiladi; apt tizim paketlari ixtiyoriy (2 urinish, keyin ogohlantirish):
     2026-11-11 da runner'dan Ubuntu arxivi ochilmay, main, #135 va #136 testlarsiz qizardi. Paketlar faqat qo'shimcha shriftlar —
     ularsiz e2e va skrinshotlar bir xil o'tishi tekshirildi.

@@ -417,8 +417,14 @@
     gap: var(--space-2);
   }
 
-  .home-card {
-    padding: var(--space-2) var(--space-3);
+  /* Ikki ustunli kartochkada yorliq uchun ~106 px (avval 90): ikki so'zli yorliqlar ("Sof buyurtmalar" 92 px, "Sotilgan
+     tovarlar" 94 px) bo'linish chegarasida turardi va mashinalar orasida qatorlar soni farq qilardi (skrinshot balandligi). */
+  .home-kpi__cards .home-card {
+    padding: var(--space-2) var(--space-3); /* avval `.home-card` asosiy qoidasi (pastda) buni bosib ketardi */
+  }
+
+  .home-card__label .ui-icon-btn {
+    margin-inline: -10px;
   }
 
   .home-card--money {
