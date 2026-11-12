@@ -63,17 +63,20 @@ export function PnlLedger({ lines, part, onRow }: Props) {
               {line.op}
             </td>
             <th scope="row" className="ui-ledger__label">
-              <button type="button" className="ui-ledger__link" onClick={() => onRow(line)}>
-                {line.label}
-              </button>
-              {line.formula && (
-                <FormulaPopover
-                  metric={line.label}
-                  code={t(`home.formula.${line.formula}.code`)}
-                  formula={t(`home.formula.${line.formula}.formula`)}
-                  source={t(`home.formula.${line.formula}.source`)}
-                />
-              )}
+              {/* Audit D13: "?" nom bilan bir qatorda (nom o'zi qatorga bo'linadi, belgi alohida satrga tushmaydi). */}
+              <span className="ui-ledger__name">
+                <button type="button" className="ui-ledger__link" onClick={() => onRow(line)}>
+                  {line.label}
+                </button>
+                {line.formula && (
+                  <FormulaPopover
+                    metric={line.label}
+                    code={t(`home.formula.${line.formula}.code`)}
+                    formula={t(`home.formula.${line.formula}.formula`)}
+                    source={t(`home.formula.${line.formula}.source`)}
+                  />
+                )}
+              </span>
             </th>
             <td className="ui-ledger__amount num" data-part="done">
               {money(line, line.done, false)}

@@ -440,6 +440,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.75 PR-4 (audit D4, D10, D13): telefonda bosish maydoni ≥ 44 px hamma sahifa va karkasda (umumiy CSS), Ombor KPI
+  kartalari 2 ustunda, Foyda sahifasida "?" nom bilan bir qatorda; `e2e/touch.spec.ts` (13 sahifa, 360 px).
 - B4.73 (ADR-057 Q11), 3-qism: Buyurtmalar telefonda ro'yxat ko'rinishida (sana — ostida holat, SKU, yalpi foyda).
 - B4.73 (ADR-057 Q11), 2-qism: Ombor telefonda ro'yxat ko'rinishida (nom, holat, zaxira kunlari; amallar nom ostida).
 - B4.73 (ADR-057 Q11, audit D2), 1-qism: Mahsulotlar telefonda ro'yxat ko'rinishida (nom, foyda/dona, zaxira kunlari;

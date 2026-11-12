@@ -791,6 +791,18 @@
   cursor: pointer;
 }
 
+/* Nom va "?" bir qatorda: nom o'zi bo'linadi, belgi uning yonida qoladi (audit D13). */
+.ui-ledger__name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-inline-size: 100%;
+}
+
+.ui-ledger__name > .ui-ledger__link {
+  min-inline-size: 0;
+}
+
 .ui-ledger__link:hover {
   color: var(--accent-text);
   text-decoration: underline;
@@ -1086,4 +1098,66 @@
 .ui-pagination__gap {
   padding-inline: var(--space-1);
   color: var(--text-secondary);
+}
+
+/* --- Telefon: bosish maydoni ≥ 44 px (04 §11, audit D4; B4.75 PR-4). Hamma sahifa va karkas — B4.54 dagi Mahsulotlar
+   qoidasi umumiylashtirildi. Desktop (sichqoncha) ko'rinishi o'zgarmaydi. --- */
+@media (max-width: 640px), (pointer: coarse) {
+  .ui-btn,
+  .ui-input,
+  .ui-select,
+  .ui-sort,
+  .ui-segmented__item {
+    min-block-size: 44px;
+  }
+
+  .ui-btn {
+    min-inline-size: 44px; /* faqat ikonkali tugma (sinxron holati, qidiruv) */
+  }
+
+  .ui-segmented__item {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* "?" va boshqa ikonka tugmalari: ko'rinishi o'sha, bosish maydoni 44 px (manfiy chekka — joylashuv kengaymaydi). */
+  .ui-icon-btn {
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    margin: -6px;
+  }
+
+  /* Matnli havola va tugmalar (gap ichida emas): hisob varag'i qatori, ro'yxatdagi nom, "orqaga", "Ko'rish" va h.k. */
+  .ui-ledger__link,
+  .purchase-cell__title,
+  .purchase-cell a,
+  .inventory-cell__name,
+  .purchase__back,
+  .home-attention__link,
+  .home-summary__how,
+  .opening__link {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 44px;
+  }
+
+  .ui-ledger__link,
+  .ui-ledger__name > .ui-ledger__link {
+    min-inline-size: 44px; /* qisqa nomli qator ("Soliq", "ijara") ham */
+  }
+
+  /* Ixcham qator amallari va 24 px "barchasiga" tugmasi telefonda ham 44 px (desktop'da o'zgarmaydi). */
+  .expenses-actions .ui-btn.ui-btn--ghost {
+    min-block-size: 44px;
+  }
+
+  .ui-icon-btn.opening-table__apply {
+    min-inline-size: 44px;
+    min-block-size: 44px;
+  }
+
+  label.opening__toggle {
+    align-items: center;
+    min-block-size: 44px;
+  }
 }
