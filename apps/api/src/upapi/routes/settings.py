@@ -23,7 +23,15 @@ from sqlalchemy import delete, func, insert, select, update
 from upcore.cash import SEED_SCHEDULES, ScheduleKind
 from upcore.inventory import DEFAULT, AbcClass
 from upcore.pnl import TaxBase
-from upcore.tax import FixedPeriod, LineKind, TaxLine, TaxProfile, TaxRegime
+from upcore.tax import (
+    SEED_AMOUNTS,
+    SEED_RATES,
+    FixedPeriod,
+    LineKind,
+    TaxLine,
+    TaxProfile,
+    TaxRegime,
+)
 
 from upapi import calc, orgsettings
 from upapi.auth.deps import OrgContext, require
@@ -232,6 +240,19 @@ async def _write_lines(ctx: OrgContext, profile_id: UUID, lines: list[TaxLineIn]
         )
 
 
+def _current(
+    rows: list[tuple[str, date, Decimal, str | None]],
+) -> list[tuple[str, Decimal, str | None]]:
+    """Kod bo'yicha bugungi qiymat: ``valid_from`` ≤ bugun bo'lgan eng yangisi; sanalar teng bo'lsa — ro'yxatda
+    birinchisi (bazadagi yozuv upcore boshlang'ichidan oldin turadi)."""
+    now = today()
+    best: dict[str, tuple[date, Decimal, str | None]] = {}
+    for code, valid_from, value, note in rows:
+        if valid_from <= now and (code not in best or valid_from > best[code][0]):
+            best[code] = (valid_from, value, note)
+    return [(code, v[1], v[2]) for code, v in sorted(best.items())]
+
+
 async def _read(ctx: OrgContext) -> SettingsOut:
     conn = ctx.conn
     org = (await conn.execute(select(m.orgs.c.cost_method, m.orgs.c.settings))).one()
@@ -242,29 +263,20 @@ async def _read(ctx: OrgContext) -> SettingsOut:
     lines: dict[UUID, list[TaxLineOut]] = {}
     for r in await conn.execute(select(tl).order_by(tl.c.position, tl.c.name)):
         lines.setdefault(r.profile_id, []).append(TaxLineOut.model_validate(r._asdict()))
-    ra = m.ref_amounts
-    newest = (
-        select(ra.c.code, func.max(ra.c.valid_from).label("d"))
-        .where(ra.c.valid_from <= today())
-        .group_by(ra.c.code)
-        .subquery()
-    )
-    amounts = await conn.execute(
-        select(ra.c.code, ra.c.amount, ra.c.note)
-        .join(newest, (newest.c.code == ra.c.code) & (newest.c.d == ra.c.valid_from))
-        .order_by(ra.c.code)
-    )
     pays = await conn.execute(select(ps).order_by(ps.c.valid_from.desc(), ps.c.created_at))
-    latest = (
-        select(rr.c.code, func.max(rr.c.valid_from).label("d"))
-        .where(rr.c.valid_from <= today())
-        .group_by(rr.c.code)
-        .subquery()
+    # Ma'lumotnomalar: bazadagi yozuv (admin tahrirlaydi) + ``upcore`` boshlang'ich qiymatlari — deploy ``seed`` ni
+    # ishga tushirmaydi, baza bo'sh bo'lsa ham stavka va BHM ko'rinadi; bir sanada bazadagi yozuv ustun.
+    stored_rates = [
+        (r.code, r.valid_from, r.rate_pct, r.note) for r in await conn.execute(select(rr))
+    ]
+    stored_amounts = [
+        (r.code, r.valid_from, r.amount, r.note) for r in await conn.execute(select(m.ref_amounts))
+    ]
+    rates = _current(
+        [*stored_rates, *((r.code, r.valid_from, r.rate_pct, r.note or None) for r in SEED_RATES)]
     )
-    rates = await conn.execute(
-        select(rr.c.code, rr.c.rate_pct, rr.c.note)
-        .join(latest, (latest.c.code == rr.c.code) & (latest.c.d == rr.c.valid_from))
-        .order_by(rr.c.code)
+    amounts = _current(
+        [*stored_amounts, *((v.code, v.valid_from, v.amount, v.note or None) for v in SEED_AMOUNTS)]
     )
     effective = {**DEFAULT.cover_days, **cfg.cover_days}
     return SettingsOut(
@@ -273,8 +285,8 @@ async def _read(ctx: OrgContext) -> SettingsOut:
             TaxProfileOut.model_validate({**r._asdict(), "lines": lines.get(r.id, [])})
             for r in taxes
         ],
-        tax_rates=[TaxRateOut.model_validate(r._asdict()) for r in rates],
-        tax_amounts=[TaxAmountOut.model_validate(r._asdict()) for r in amounts],
+        tax_rates=[TaxRateOut(code=c, rate_pct=v, note=n) for c, v, n in rates],
+        tax_amounts=[TaxAmountOut(code=c, amount=v, note=n) for c, v, n in amounts],
         payout_schedules=[PayoutScheduleOut.model_validate(r._asdict()) for r in pays],
         payout_terms=[
             PayoutTermsOut(

@@ -90,7 +90,18 @@ def test_defaults(world: World) -> None:
     assert inv["lead_days"] is None
     assert inv["stages"] == ["prep", "china", "cargo", "receive", "handover"]
     assert inv["cover_days"] == inv["cover_defaults"] == {"A": 60, "B": 30, "C": 14}
-    assert [(r["code"], D(r["rate_pct"])) for r in body["tax_rates"]] == [("turnover_ecommerce", 4)]
+    # Ma'lumotnoma bazada bo'sh bo'lsa ham (deploy `seed` ishga tushirmaydi) upcore boshlang'ich qiymatlari ko'rinadi;
+    # bazadagi yozuv ustun (turnover_ecommerce — testda 4).
+    assert [(r["code"], D(r["rate_pct"])) for r in body["tax_rates"]] == [
+        ("profit", 15),
+        ("turnover_ecommerce", 4),
+        ("turnover_individual", 1),
+        ("vat", 12),
+    ]
+    assert [r["note"] for r in body["tax_rates"] if r["code"] == "turnover_ecommerce"] == [
+        "e-tijorat"
+    ]
+    assert [(a["code"], D(a["amount"])) for a in body["tax_amounts"]] == [("bhm", 440_000)]
 
 
 def test_tax_profiles(world: World) -> None:

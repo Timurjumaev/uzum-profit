@@ -129,6 +129,10 @@ describe("soliq profili", () => {
     expect(save.disabled).toBe(true);
     expect(dialog.textContent).toContain("Qator yo‘q".replace("‘", "ʻ"));
     pickTemplate(dialog, "yatt");
+    // Tanlov tanlangan shablonni ko'rsatadi ("Tanlang…" ga qaytmaydi) va nima bo'lganini aytadi.
+    const picker = within(dialog).getByLabelText("Tayyor shablon") as HTMLSelectElement;
+    expect(picker.value).toBe("yatt");
+    expect(within(dialog).getByRole("status").textContent).toBe("Shablon qoʻllandi: 2 ta qator — pastda tahrirlash mumkin.");
     const percent = within(dialog).getByRole("group", { name: "Soliq qatori 1" });
     const social = within(dialog).getByRole("group", { name: "Soliq qatori 2" });
     expect((within(percent).getByLabelText("Nomi") as HTMLInputElement).value).toBe("Aylanmadan soliq");
@@ -137,6 +141,14 @@ describe("soliq profili", () => {
     expect((within(social).getByLabelText("BHM soni") as HTMLInputElement).value).toBe("1");
     expect(norm(social.textContent!)).toContain(`1 BHM = ${norm(f.money("440000.00"))}`); // BHM maʼlumotnomadan ko'rsatiladi
     expect(save.disabled).toBe(false);
+    // Qator qo'lda o'zgarsa — tanlov "qo'lda tahrirlangan" deydi, "shablon qo'llandi" xabari ketadi; boshqa shablon baribir tanlanadi.
+    fireEvent.change(within(social).getByLabelText("Nomi"), { target: { value: "Ijtimoiy soliq" } });
+    fireEvent.click(within(social).getByRole("button", { name: "Qatorni oʻchirish" }));
+    expect(picker.value).toBe("custom");
+    expect(within(dialog).queryByRole("status")).toBeNull();
+    pickTemplate(dialog, "yatt");
+    expect(picker.value).toBe("yatt");
+    expect(within(dialog).getAllByRole("group", { name: /^Soliq qatori \d+$/ })).toHaveLength(2);
     fireEvent.click(save);
     await waitFor(() => expect(bodiesOf(api, TAX_CREATE_ROUTE)).toHaveLength(1));
     expect(bodiesOf(api, TAX_CREATE_ROUTE)[0]).toEqual({

@@ -53,6 +53,7 @@ from upcore.pnl import CellKey, Cells, CellSales, ExpenseItem, OwnExpense, TaxBa
 from upcore.tariffs import SEED_STORAGE_RULES, paid_storage, storage_rule
 from upcore.tax import (
     BHM,
+    SEED_AMOUNTS,
     AmountValue,
     FixedPeriod,
     LineKind,
@@ -665,12 +666,15 @@ async def tax_profiles(conn: AsyncConnection) -> list[TaxProfile]:
 
 
 async def bhm_values(conn: AsyncConnection) -> list[AmountValue]:
-    """BHM ma'lumotnomasi (``ref_amounts``)."""
+    """BHM ma'lumotnomasi: bazadagi ``ref_amounts`` (admin tahrirlaydi) + ``upcore`` boshlang'ich qiymatlari — deploy
+    ma'lumotnomani to'ldirmaydi (``seed`` faqat dev), shuning uchun baza bo'sh bo'lsa ham BHM ma'lum. Bir sanada bazadagi
+    yozuv ustun (``amount_on`` birinchisini oladi)."""
     t = m.ref_amounts
-    return [
+    stored = [
         AmountValue(r.code, r.valid_from, r.amount)
         for r in await conn.execute(select(t).where(t.c.code == BHM))
     ]
+    return [*stored, *(v for v in SEED_AMOUNTS if v.code == BHM)]
 
 
 async def expected_fees(

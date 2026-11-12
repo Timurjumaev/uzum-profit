@@ -780,6 +780,11 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     MChJ aylanmadan, bo'sh (stavkalar `tax_rates` ma'lumotnomasidan, BHM soni — shablon standarti, tahrirlanadi); BHM qiymati
     ma'lumotnomadan ko'rsatiladi (UI hisoblamaydi); jadvalda profil qatorlari ro'yxati. Qatorsiz eski aylanma profili
     tahrirlanganda bitta foizli qatorga aylanadi. 360 px da gorizontal skroll yo'q (e2e), axe (jiddiy buzilish yo'q), uz/ru.
+    **Tuzatish (staging'da topildi, 2026-11-11):** (1) deploy `seed` ni ishga tushirmaydi (u faqat dev) — `ref_tax_rates` va
+    `ref_amounts` stagingda bo'sh edi: YaTT shablonida stavka bo'sh qolib "Saqlash" o'chiq turardi, BHM noma'lum bo'lib soliq
+    hisoblanmasdi. Endi ma'lumotnoma = bazadagi yozuv + `upcore` boshlang'ich qiymatlari (bazadagi ustun; xarajat kodlari
+    kabi): Sozlamalar (`tax_rates`, `tax_amounts`) va hisob (`bhm_values`). (2) shablon tanlangach tanlov "Tanlang…" ga
+    qaytib, hech narsa tanlanmagandek ko'rinardi — endi tanlangan shablon va "Shablon qo'llandi: N ta qator" xabari ko'rinadi.
     **T:** staging'da Sozlamalar → Soliq profili → "Profil qo'shish" → shablon "YaTT" (stavka 1% va 1 BHM) → saqlash;
     keyin Foyda sahifasida "Soliq" ostida "Aylanmadan soliq" va "Ijtimoiy soliq" qatorlarini ko'rish (o'z sofi foydang bilan
     solishtirib).

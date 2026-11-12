@@ -623,6 +623,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 - B4.79b Dinamik soliq profili — Sozlamalar: aylanma rejimida soliq qatorlari muharriri (foizli yoki qat'iy: so'm yoki BHM soni,
   oy / chorak / yil) va tayyor shablonlar (YaTT: aylanmadan foiz + 1 BHM; MChJ aylanmadan; bo'sh); BHM ma'lumotnomadan
   ko'rsatiladi; profillar jadvalida qatorlar tavsifi; uz va ru; 360 px.
+- B4.79b (tuzatish) Soliq ma'lumotnomalari (`ref_tax_rates`, `ref_amounts`) deploy'da to'lmasdi (`seed` faqat dev): YaTT shablonida
+  stavka bo'sh qolardi, BHM noma'lum bo'lib ijtimoiy soliq hisoblanmasdi. Endi ma'lumotnoma = bazadagi yozuv + `upcore`
+  boshlang'ich qiymatlari (bazadagi ustun). Shablon tanlangach tanlov tanlangan shablonni ko'rsatadi ("Tanlang…" ga qaytmaydi).
 - B4.79 Dinamik soliq profili — API: Sozlamalar javobida profil qatorlari (`lines`) va joriy BHM (`tax_amounts`); `POST/PATCH
   /tax-profiles` da qatorlarni berish/almashtirish (tekshiruv: shakl, takror nom, ko'pi bilan 10 ta; faqat aylanma rejimi).
   Migratsiya 0019: mavjud aylanmadan foiz profillari bitta foizli qatorga ko'chadi (hisob natijasi o'zgarmaydi).

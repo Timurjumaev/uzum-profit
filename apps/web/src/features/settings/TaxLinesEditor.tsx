@@ -1,6 +1,7 @@
 // Soliq qatorlari muharriri (F11, ADR-058): har qator — alohida soliq, foizli (baza × stavka) yoki qat'iy (so'm yoki
 // n × BHM, oy / chorak / yil). Tayyor shablon qatorlarni to'ldiradi, keyin hammasi tahrirlanadi. Hisob yo'q — faqat
 // kiritish (formula serverda, tamoyil 4); BHM qiymati ma'lumotnomadan ko'rsatiladi.
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button, NumberInput, Select, TextInput } from "../../components/ui";
@@ -19,7 +20,17 @@ type Props = {
 export function TaxLinesEditor({ lines, onChange, rates, bhm }: Props) {
   const { t } = useTranslation();
   const f = useFormat();
-  const set = (key: string, patch: Partial<LineDraft>) => onChange(lines.map((l) => (l.key === key ? { ...l, ...patch } : l)));
+  // Tanlov tanlangan shablonni ko'rsatadi (qo'llangach "Tanlang…" ga qaytmaydi); qatorlar qo'lda o'zgarsa — "tahrirlangan".
+  const [template, setTemplate] = useState<TaxTemplate | "custom" | "">(lines.length > 0 ? "custom" : "");
+  const edit = (next: LineDraft[]) => {
+    setTemplate("custom");
+    onChange(next);
+  };
+  const apply = (kind: TaxTemplate) => {
+    setTemplate(kind);
+    onChange(taxTemplate(kind, rates, names));
+  };
+  const set = (key: string, patch: Partial<LineDraft>) => edit(lines.map((l) => (l.key === key ? { ...l, ...patch } : l)));
   const names = { turnover: t("settings.tax.lines.legacyName"), social: t("settings.tax.lines.socialName") };
   return (
     <fieldset className="settings-fieldset tax-lines">
@@ -28,10 +39,19 @@ export function TaxLinesEditor({ lines, onChange, rates, bhm }: Props) {
       <Select
         label={t("settings.tax.lines.template.label")}
         help={t("settings.tax.lines.template.help")}
-        value=""
-        onValueChange={(v) => v && onChange(taxTemplate(v as TaxTemplate, rates, names))}
-        options={[{ value: "", label: t("settings.tax.lines.template.placeholder") }, ...TAX_TEMPLATES.map((k) => ({ value: k, label: t(`settings.tax.lines.template.${k}`) }))]}
+        value={template}
+        onValueChange={(v) => v && v !== "custom" && apply(v as TaxTemplate)}
+        options={[
+          { value: "", label: t("settings.tax.lines.template.placeholder"), disabled: template !== "" },
+          ...TAX_TEMPLATES.map((k) => ({ value: k, label: t(`settings.tax.lines.template.${k}`) })),
+          ...(template === "custom" ? [{ value: "custom", label: t("settings.tax.lines.template.custom"), disabled: true }] : []),
+        ]}
       />
+      {template !== "" && template !== "custom" && (
+        <p className="caption" role="status">
+          {t("settings.tax.lines.template.applied", { n: lines.length })}
+        </p>
+      )}
       {lines.length === 0 && <p className="caption">{t("settings.tax.lines.none")}</p>}
       {lines.map((line, i) => {
         const n = i + 1;
@@ -78,7 +98,7 @@ export function TaxLinesEditor({ lines, onChange, rates, bhm }: Props) {
             )}
             <div className="tax-line__actions">
               {!lineValid(line) && <span className="caption tax-line__hint">{t("settings.tax.lines.incomplete")}</span>}
-              <Button size="sm" variant="ghost" onClick={() => onChange(lines.filter((l) => l.key !== line.key))}>
+              <Button size="sm" variant="ghost" onClick={() => edit(lines.filter((l) => l.key !== line.key))}>
                 {t("settings.tax.lines.remove")}
               </Button>
             </div>
@@ -86,7 +106,7 @@ export function TaxLinesEditor({ lines, onChange, rates, bhm }: Props) {
         );
       })}
       <div className="settings-actions">
-        <Button variant="secondary" size="sm" disabled={lines.length >= MAX_TAX_LINES} onClick={() => onChange([...lines, newLine("percent")])}>
+        <Button variant="secondary" size="sm" disabled={lines.length >= MAX_TAX_LINES} onClick={() => edit([...lines, newLine("percent")])}>
           {t("settings.tax.lines.add")}
         </Button>
         {lines.length >= MAX_TAX_LINES && <span className="caption">{t("settings.tax.lines.max", { n: MAX_TAX_LINES })}</span>}

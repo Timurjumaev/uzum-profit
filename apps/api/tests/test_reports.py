@@ -393,6 +393,17 @@ def test_pnl_tax_lines_and_fixed_tax(world: World) -> None:
     assert money(part["statement"]["tax"]) == D("142857.14")
 
 
+def test_pnl_fixed_tax_uses_seed_bhm_when_reference_table_lacks_it(world: World) -> None:
+    """Deploy ``ref_amounts`` ni to'ldirmaydi: bazada qiymat bo'lmasa ham BHM upcore boshlang'ich qiymatidan (bazadagi
+    yozuv ustun) olinadi — 2035-yilda eng yangi BHM (440 000) qo'llanadi, "BHM yo'q" bayrog'i ko'tarilmaydi."""
+    a = world.a
+    profile = a.insert("tax_profiles", valid_from=date(2035, 1, 1), regime="turnover")
+    a.insert("tax_lines", profile_id=profile, name="Ijtimoiy soliq", kind="fixed", bhm_count=D(1))
+    body = world.get("pnl", start="2035-01-01", end="2035-01-31")
+    assert money(body["statement"]["tax"]) == D(440_000)
+    assert body["tax_missing_bhm"] is False
+
+
 def test_pnl_tax_missing_bhm_flag(world: World) -> None:
     """BHM ma'lumotnomada yo'q kunlarda BHM'ga bog'liq qat'iy soliq hisoblanmaydi va bu aytiladi (0 deb yashirilmaydi)."""
     a = world.a
