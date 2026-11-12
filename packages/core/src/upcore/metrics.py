@@ -16,7 +16,7 @@ from decimal import Decimal
 from enum import StrEnum
 from zoneinfo import ZoneInfo
 
-from upcore.money import Currency, DecimalLike, Money, allocate, quantize, to_decimal, total
+from upcore.money import Currency, DecimalLike, Money, allocate, quantize, to_decimal
 
 TASHKENT = ZoneInfo("Asia/Tashkent")
 RATIO_PLACES = 6
@@ -226,17 +226,6 @@ def payout(lines: Iterable[SaleLine]) -> Money:
     return revenue(items) - commission(items) - logistics(items)
 
 
-def payout_mismatches(lines: Iterable[SaleLine], tolerance: DecimalLike = 1) -> list[SaleLine]:
-    """F6 tekshiruvi: ``sellerProfit`` hisobdan ``tolerance`` so'mdan ko'p farq qilgan qatorlar (log uchun)."""
-    tol = to_decimal(tolerance)
-    return [
-        line
-        for line in counted(lines)
-        if line.seller_profit is not None
-        and abs(to_decimal(line.seller_profit) - line.payout) > tol
-    ]
-
-
 def cogs(lines: Iterable[SaleLine]) -> Money:
     """F7. Tannarx = Σ birlik tannarx (F21) × ``amount`` (Yakunlangan + Jarayonda, tannarxi ma'lum qatorlar)."""
     known = (line.cogs for line in counted(lines))
@@ -351,15 +340,6 @@ def sale_totals(lines: Iterable[SaleLine]) -> SaleTotals:
 # --- F9–F10 ---------------------------------------------------------------------------------
 
 
-def uzum_expenses(charges: Iterable[Money], compensations: Iterable[Money] = ()) -> Money:
-    """F9. Uzum xarajatlari = toifalangan xarajatlar yig'indisi − kompensatsiyalar.
-
-    Summalar musbat (``abs(paymentPrice)``), toifa va filtrlar (status, dublikat, BALANCE_CORRECTION) —
-    ``upcore.expenses`` (B1.3) da.
-    """
-    return total(list(charges), UZS) - total(list(compensations), UZS)
-
-
 @dataclass(frozen=True, slots=True)
 class ManualExpense:
     """O'z xarajati: ``amount`` [start; end] kunlariga teng taqsimlanadi (bir kunlik bo'lsa start = end)."""
@@ -390,97 +370,7 @@ def own_expense_in_period(expense: ManualExpense, period: Period) -> Money:
     return Money(s * through / total_days, cur) - Money(s * before / total_days, cur)
 
 
-def own_expenses(expenses: Iterable[ManualExpense], period: Period) -> Money:
-    """F10. Davrdagi o'z xarajatlari yig'indisi (so'mda kiritilgan xarajatlar)."""
-    return total([own_expense_in_period(e, period) for e in expenses], UZS)
-
-
-# --- F12–F15 --------------------------------------------------------------------------------
-
-
-@dataclass(frozen=True, slots=True)
-class ProfitSummary:
-    """Hisob varag'i: F3 → F12, F13–F15. Qamrov < 100% bo'lsa "tannarxsiz qism" alohida."""
-
-    revenue: Money  # F3
-    commission: Money  # F4
-    logistics: Money  # F5
-    payout: Money  # F6
-    cogs: Money  # F7
-    gross_profit: Money  # F8 (tannarxi ma'lum qism)
-    uzum_expenses: Money  # F9 (to'liq)
-    own_expenses: Money  # F10 (to'liq)
-    tax: Money  # F11 (to'liq)
-    coverage: Decimal  # F15, 0..1
-    expenses_deducted: Money  # (F9 + F10 + F11) × qamrov
-    net_profit: Money  # F12
-    uncovered_revenue: Money  # tannarxsiz qism tushumi
-    uncovered_payout: Money  # tannarxsiz qism Uzum to'lovi
-    uncovered_expenses: Money  # tannarxsiz qismga to'g'ri keladigan xarajatlar
-    uncovered_lines: int
-
-    @property
-    def margin(self) -> Decimal | None:
-        """F13. Marja = F12 / tannarxi ma'lum qatorlar tushumi (ADR-024; qamrov 100% bo'lsa F12 / F3).
-
-        Doim ``uncovered_share`` bilan birga ko'rsatiladi.
-        """
-        return ratio(self.net_profit.amount, (self.revenue - self.uncovered_revenue).amount)
-
-    @property
-    def uncovered_share(self) -> Decimal:
-        """F13 yonidagi tannarxsiz qism ulushi = 1 − F15 (tushum bo'yicha)."""
-        return 1 - self.coverage
-
-    @property
-    def roi(self) -> Decimal | None:
-        """F14. ROI = F12 / F7."""
-        return ratio(self.net_profit.amount, self.cogs.amount)
-
-
-def profit_summary(
-    lines: Iterable[SaleLine],
-    uzum_expenses: Money,
-    own_expenses: Money,
-    tax: Money,
-) -> ProfitSummary:
-    """F12 sof foyda va F15 tannarx qamrovi.
-
-    Qamrov = tannarxi ma'lum qatorlar tushumi / F3. Sof foyda = (ma'lum qism F6 − F7) − (F9 + F10 + F11) ×
-    qamrov; qolgan xarajatlar va tannarxsiz qatorlar "tannarxsiz qism"da ko'rsatiladi (legacy hamma
-    xarajatni ayirib foydani kam ko'rsatardi). Tushum nol bo'lsa qamrov 1 — xarajatlar to'liq ayriladi.
-    """
-    done = completed(lines)
-    covered = [line for line in done if line.unit_cost is not None]
-    uncovered = [line for line in done if line.unit_cost is None]
-    rev, covered_rev = revenue(done), revenue(covered)
-    share = ratio(covered_rev.amount, rev.amount)
-    overhead = uzum_expenses + own_expenses + tax
-    if share is None:
-        coverage, deducted = Decimal(1), overhead
-    else:
-        # Ayriladigan qism aniq nisbatdan (yaxlitlangan qamrovdan emas) hisoblanadi.
-        coverage = share
-        deducted = Money(overhead.amount * covered_rev.amount / rev.amount, UZS)
-    gross = gross_profit(covered)
-    return ProfitSummary(
-        revenue=rev,
-        commission=commission(done),
-        logistics=logistics(done),
-        payout=payout(done),
-        cogs=cogs(covered),
-        gross_profit=gross,
-        uzum_expenses=uzum_expenses,
-        own_expenses=own_expenses,
-        tax=tax,
-        coverage=coverage,
-        expenses_deducted=deducted,
-        net_profit=gross - deducted,
-        uncovered_revenue=revenue(uncovered),
-        uncovered_payout=payout(uncovered),
-        uncovered_expenses=overhead - deducted,
-        uncovered_lines=len(uncovered),
-    )
+# F12–F15 (sof foyda, marja, ROI, tannarx qamrovi) — ``upcore.pnl.Statement`` da (audit K13).
 
 
 # --- F16–F18 --------------------------------------------------------------------------------
@@ -494,21 +384,10 @@ def _units(lines: Iterable[SaleLine], group: StatusGroup) -> int:
     return sum(line.amount for line in lines if line.group is group)
 
 
-def realization_rate(window: Iterable[SaleLine], min_units: int = 50) -> Decimal | None:
-    """F16. R = yakuniy holatga yetgan donalar ichida Yakunlangan ulushi (fakt; kutilayotgan sof foydaga
-    ko'paytirilmaydi — ADR-036, ADR-037). Kutilayotgan sof foyda o'zi — ``upcore.pnl.Statement.processing``.
-
-    ``window`` — do'konning oxirgi 90 kunidagi qatorlar (davrni chaqiruvchi tanlaydi). Yakuniy donalar
-    ``min_units`` dan kam bo'lsa ``None`` (R ko'rsatilmaydi).
-    """
-    items = list(window)
-    return realization_rate_units(
-        _units(items, StatusGroup.COMPLETED), _units(items, StatusGroup.CANCELED), min_units
-    )
-
-
 def realization_rate_units(done: int, canceled: int, min_units: int = 50) -> Decimal | None:
-    """F16. R dona yig'indilaridan (``daily_sku_metrics``: Yakunlangan = ``units − units_processing``, ``canceled``)."""
+    """F16. R = yakuniy holatga yetgan donalar ichida Yakunlangan ulushi (fakt; kutilayotgan sof foydaga
+    ko'paytirilmaydi — ADR-036, ADR-037), dona yig'indilaridan (``daily_sku_metrics``: Yakunlangan =
+    ``units − units_processing``, ``canceled``). Yakuniy donalar ``min_units`` dan kam bo'lsa ``None``."""
     final = done + canceled
     if final < min_units:
         return None
@@ -520,33 +399,6 @@ def _gross_revenue(line: SaleLine) -> Decimal:
     return to_decimal(line.sell_price) * (line.amount + line.amount_returns)
 
 
-def _returned(lines: Iterable[SaleLine]) -> int:
-    """F18 surati (ADR-043): topshirilgan Bekor qatorlar donasi + Yakunlangan qatorlardagi ``amountReturns``."""
-    items = list(lines)
-    issued = [line for line in items if line.issued]
-    return _units(issued, StatusGroup.CANCELED) + sum(
-        line.amount_returns for line in completed(items)
-    )
-
-
-def _not_issued_canceled(lines: Iterable[SaleLine]) -> int:
-    """F17 surati (ADR-043): topshirilmagan Bekor qatorlar donasi."""
-    return _units([line for line in lines if not line.issued], StatusGroup.CANCELED)
-
-
-def cancel_share(lines: Iterable[SaleLine]) -> Decimal | None:
-    """F17. Bekor ulushi (ADR-043) = bekor dona / yalpi dona (F44)."""
-    items = list(lines)
-    return cancel_rate(_not_issued_canceled(items), gross_units(items))
-
-
-def gross_units(lines: Iterable[SaleLine]) -> int:
-    """F44. Yalpi dona = hamma ma'lum holatdagi qatorlar donasi (``amount`` + ``amountReturns``)."""
-    return sum(
-        line.amount + line.amount_returns for line in lines if line.group is not StatusGroup.UNKNOWN
-    )
-
-
 def cancel_rate(canceled: int, gross: int) -> Decimal | None:
     """F17 dona yig'indilaridan (ADR-043): bekor / yalpi dona."""
     return ratio(canceled, gross)
@@ -556,12 +408,6 @@ def return_share(sold: int, returned: int) -> Decimal | None:
     """F18. Qaytarish ulushi = qaytgan / (sotilgan + qaytgan) — mijozga yetgan tovar ichida (Uzum ta'rifi, SKU
     ``quantityReturned``). ADR-043: sotilgan — F3 donasi (Yakunlangan + Jarayonda)."""
     return ratio(returned, sold + returned)
-
-
-def period_return_share(lines: Iterable[SaleLine]) -> Decimal | None:
-    """F18 davr bo'yicha (ADR-043): sotilgan = hisobga olingan ``amount``, qaytgan — ``_returned``."""
-    items = list(lines)
-    return return_share(sum(line.amount for line in counted(items)), _returned(items))
 
 
 @dataclass(frozen=True, slots=True)

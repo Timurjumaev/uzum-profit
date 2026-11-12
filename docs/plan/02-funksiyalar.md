@@ -168,7 +168,7 @@ oylar yig'indisi = butun davr; har qatorda yakunlangan + kutilayotgan = jami; ha
 - **Tovar (item) va SKU:** bitta jismoniy tovar bir necha do'kon/marketplace SKU'siga bog'lanishi mumkin.
   Tannarx va ombor tovar darajasida yuritiladi. Standart: har SKU = alohida tovar; birlashtirish qo'lda.
 
-Qabul mezonlari: 2 000 SKU'li jadval virtual skroll bilan silliq; har raqam yonidagi "?" formulani ochadi.
+Qabul mezonlari: 2 000 SKU'li jadval sahifalab (100 tadan, ADR-054) silliq; har raqam yonidagi "?" formulani ochadi.
 
 ## M7. Buyurtmalar, bekor va qaytishlar [B4; FBS B5]
 

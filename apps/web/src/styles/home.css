@@ -1,4 +1,4 @@
-/* Bosh sahifa (M4, ADR-037): maket 04 §7.2 (desktop) / §7.3 (mobil) — faqat tokenlar orqali. Kartochka va jadvallarda radius yo'q (04 §3). */
+/* Bosh sahifa (M4, ADR-037): maket 04 §7.2 (desktop) / §7.3 (mobil) — faqat tokenlar orqali. Panel va kartochkalarda radius 10 px (`radius-panel`, 04 §3). */
 
 .home {
   display: grid;
@@ -185,7 +185,7 @@
   justify-self: start;
 }
 
-/* --- KPI sarhisob (ADR-043): yo'l + 4 guruh kartochka; radius yo'q, faqat tokenlar --- */
+/* --- KPI sarhisob (ADR-043): yo'l + 4 guruh kartochka; radius — `radius-panel` (04 §6.4), faqat tokenlar --- */
 .home-kpi {
   display: grid;
   gap: var(--space-4);
