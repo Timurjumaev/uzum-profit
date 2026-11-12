@@ -47,5 +47,7 @@ Timurjumaev). Avval o'z do'konlari (byDurii 106121, EL-ONE 135204), keyin boshqa
 2. Vazifa tugagach: holat jadvali, `05` belgisi, `CHANGELOG.md` → commit → push → **PR'ni o'zim ochaman**
    (`.github/pull_request_template.md` bo'yicha) va PR faoliyatiga obuna bo'laman.
 3. CI yashil bo'lguncha kuzataman: qizarsa o'zim tuzataman, izohlarga javob beraman.
-4. **Merge faqat Temur qiladi.** U "merge bo'ldi" deganidan keyin keyingi vazifa yangi branch'da boshlanadi.
+4. **Merge (ADR-060, 2026-11-12):** o'z PR'imni o'zim merge qilaman — faqat CI'ning hamma tekshiruvi joriy commit'da yashil,
+   to'qnashuv yo'q va o'zgarish ko'rib chiqilgan bo'lsa; test o'chirilmaydi. Keyin keyingi vazifa yangi branch'da. To'xtab Temurga
+   yozaman: real ma'lumot kerak bo'lsa yoki qabul qilingan ADR'lardan tashqari qaror kerak bo'lsa.
 5. Har qadamdan keyin Temurga o'zbekcha qisqa xabar.
