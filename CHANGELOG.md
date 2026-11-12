@@ -440,6 +440,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.80 F50 yillik tushum chegarasi (ADR-058): soliq profilida soliq to'lovchi turi (YaTT / MChJ / o'zini o'zi band qilgan;
+  migratsiya 0022, shablon to'ldiradi), chegaralar `ref_amounts` da (1 mlrd / 12 000 BHM / 100 mln so'm, sana bo'yicha);
+  yil boshidan tushum chegaraning 80% iga yetsa — bosh sahifada ogohlantirish (100% — qizil), Sozlamalarda doim holat.
+  `/dashboard` va `/settings` — `revenue_limit`.
+
 - B4.75 PR-8 (audit D3, D9, D11): jadvallar 1440 px da sig'adi — Mahsulotlar 1 631 → 1 158 px, Ombor 1 526 → 1 158 px,
   Buyurtmalar 1000 px da 1 159 → 902 px: sarlavha matni so'z bo'yicha bo'linadi ("/" dan keyin ham, `<wbr>`), sichqonchada
   sarlavhadagi "?" 24 px, keng jadvallarda katak chekkasi 8–12 px, Omborda 8rem eng kam kenglik faqat nom ustunida, qator

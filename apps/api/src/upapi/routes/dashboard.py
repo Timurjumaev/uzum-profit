@@ -47,7 +47,7 @@ from upapi.reports.common import (
     meta,
     sku_catalog,
 )
-from upapi.reports.schemas import ExpectedOut, RowOut, StatementOut
+from upapi.reports.schemas import ExpectedOut, RevenueLimitOut, RowOut, StatementOut
 from upapi.reports.stock import load_stock
 
 router = APIRouter(tags=["reports"])
@@ -179,6 +179,8 @@ class DashboardOut(BaseModel):
     summary: KpiSummaryOut
     kpis: KpiOut
     attention: AttentionOut
+    # F50 (B4.80): yillik tushum chegarasi (butun tashkilot, do'kon filtrisiz); profilda soliq to'lovchi turi yo'q — null.
+    revenue_limit: RevenueLimitOut | None
 
 
 def _days(period: Period) -> Callable[[CellKey], bool]:
@@ -497,6 +499,7 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
         else Decimal(done_days.units - pending_units) + Decimal(pending_units) * r
     )
 
+    limit = await rc.revenue_limit(conn, today)
     return DashboardOut(
         meta=await meta(conn, f, KINDS, previous),
         statement=StatementOut.of(s),
@@ -528,4 +531,5 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
             stock_ship=sum(1 for x in stock.skus.values() if x.ship is not None),
             recalculated=await rc.recalculated(conn, f, now),
         ),
+        revenue_limit=None if limit is None else RevenueLimitOut.of(limit),
     )

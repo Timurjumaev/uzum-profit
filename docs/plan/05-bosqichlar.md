@@ -880,7 +880,16 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
     **T:** staging'da Sozlamalar → Soliq profili → "Profil qo'shish" → shablon "YaTT" (stavka 1% va 1 BHM) → saqlash;
     keyin Foyda sahifasida "Soliq" ostida "Aylanmadan soliq" va "Ijtimoiy soliq" qatorlarini ko'rish (o'z sofi foydang bilan
     solishtirib).
-  - [ ] B4.80 Yillik tushum chegarasi ogohlantirishi (80% / 100%; YaTT 1 mlrd, MChJ 12 000 BHM, o'zini o'zi band qilgan 100 mln) — Asosiy va Sozlamalarda.
+  - [x] B4.80 Yillik tushum chegarasi ogohlantirishi (80% / 100%; YaTT 1 mlrd, MChJ 12 000 BHM, o'zini o'zi band qilgan 100 mln) — Asosiy va Sozlamalarda.
+    ✓ 2026-11-12: F50 (`upcore.tax.revenue_limit_status`): soliq profilida yangi maydon **soliq to'lovchi turi**
+    (`tax_profiles.taxpayer`, migratsiya 0022; YaTT / MChJ / o'zini o'zi band qilgan / ko'rsatilmagan — mavjud profillar
+    "ko'rsatilmagan", tur taxmin qilinmaydi); YaTT shabloni turini YaTT, "MChJ aylanmadan" — MChJ qilib to'ldiradi. Chegaralar
+    `ref_amounts` da (`revenue_limit_individual`, `revenue_limit_self_employed`, `revenue_limit_llc_bhm` — BHM soni), bazadagi
+    yozuv seed'dan ustun. Tushum — yil boshidan bugungacha F3, butun tashkilot. Bosh sahifada ≥ 80% — ogohlantirish
+    (≥ 100% — qizil) va "Soliq profili" havolasi; Sozlamalar → Soliq profili ostida doim holat ("2026 yil tushumi … ulushi
+    …") yoki "tur tanlanmagan" izohi. `/dashboard` va `/settings` javobida `revenue_limit`.
+    **T:** staging'da Sozlamalar → Soliq profili → profilni tahrirlash → "Soliq to'lovchi" = YaTT → saqlash; jadval ostida
+    "Yillik tushum chegarasi" holatini ko'rish (o'z hisobing bilan solishtirib).
   - [→] B4.81 (**ko'chdi → B5.0e**, ADR-059) 2-bosqich: QQS va foyda solig'i oylik hisobi (kirim QQS, `profit_before_tax` bazasi), shablon "MChJ umumbelgilangan".
   - [→] B4.76 (**ko'chdi → B5.0f**, ADR-059) Kabinet bilan solishtirish (taklif): Foyda sahifasida "Uzum kabineti ko'rsatadigan" qator (09 §11.3) — Temur
     ko'rgach.

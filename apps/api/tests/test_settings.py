@@ -101,7 +101,13 @@ def test_defaults(world: World) -> None:
     assert [r["note"] for r in body["tax_rates"] if r["code"] == "turnover_ecommerce"] == [
         "e-tijorat"
     ]
-    assert [(a["code"], D(a["amount"])) for a in body["tax_amounts"]] == [("bhm", 440_000)]
+    assert [(a["code"], D(a["amount"])) for a in body["tax_amounts"]] == [
+        ("bhm", 440_000),
+        ("revenue_limit_individual", 1_000_000_000),
+        ("revenue_limit_llc_bhm", 12_000),  # BHM soni (F50)
+        ("revenue_limit_self_employed", 100_000_000),
+    ]
+    assert body["revenue_limit"] is None  # profil yo'q — F50 ogohlantirishi yo'q
 
 
 def test_tax_profiles(world: World) -> None:
@@ -402,7 +408,9 @@ def test_tax_profile_lines(world: World) -> None:
         "('bhm', '2026-09-01', 440000, 'PF-115') ON CONFLICT DO NOTHING"
     )
     amounts = ok(send(w, "GET", "settings"))["tax_amounts"]
-    assert [(a["code"], D(a["amount"])) for a in amounts] == [("bhm", 440_000)]
+    assert [(a["code"], D(a["amount"])) for a in amounts if a["code"] == "bhm"] == [
+        ("bhm", 440_000)
+    ]
 
     yatt = [
         {"name": "Aylanmadan soliq", "kind": "percent", "rate_pct": "1"},
@@ -475,3 +483,86 @@ def test_tax_profile_lines(world: World) -> None:
     ok(send(w, "DELETE", path))
     assert w.a.sql("SELECT count(*) FROM tax_lines WHERE org_id = %s", [w.org_id])[0][0] == 0
     assert {"tax_profile.create", "tax_profile.update", "tax_profile.delete"} <= audited(w)
+
+
+def test_revenue_limit(world: World) -> None:
+    """F50 (B4.80): kuchdagi profilning soliq to'lovchi turi bo'yicha yillik tushum chegarasi — Sozlamalar va bosh
+    sahifada bir xil; tur yo'q — null; ma'lumotnomadagi yozuv seed'dan ustun; tur o'zgarishi auditda."""
+    w, a = world, world.a
+    _, sku = a.item("Chegara")
+    a.sale(sku, day(-1), 2, price=150_000)
+    a.run(lambda conn: calc.request_full(conn, a.org_id))
+    a.recalc(datetime.now(UTC))
+    year_start = date(TODAY.year, 1, 1)
+    [(ytd,)] = a.sql(
+        "SELECT coalesce(sum(revenue), 0) FROM daily_sku_metrics WHERE org_id = %s AND day >= %s"
+        " AND day <= %s",
+        [a.org_id, year_start, TODAY],
+    )
+    assert ytd > 0
+    profiles = ok(send(w, "GET", "settings"))["tax_profiles"]
+    active = next((p for p in profiles if p["valid_from"] <= TODAY.isoformat()), None)
+    if active is None:  # pragma: no cover — modul tartibiga bog'liq
+        active = next(
+            p
+            for p in ok(
+                send(w, "POST", "tax-profiles", valid_from=TODAY.isoformat(), regime="none"), 201
+            )["tax_profiles"]
+            if p["valid_from"] == TODAY.isoformat()
+        )
+    pid = active["id"]
+    bad = send(w, "PATCH", f"tax-profiles/{pid}", taxpayer="sole_trader")
+    assert bad.status_code == 422
+
+    body = ok(send(w, "PATCH", f"tax-profiles/{pid}", taxpayer="self_employed"))
+    assert next(p for p in body["tax_profiles"] if p["id"] == pid)["taxpayer"] == "self_employed"
+    limit = body["revenue_limit"]
+    assert limit["taxpayer"] == "self_employed" and limit["year"] == TODAY.year
+    assert D(limit["revenue"]) == ytd and D(limit["limit"]) == 100_000_000
+    assert limit["level"] == "ok"
+
+    # Ma'lumotnomadagi yozuv (admin) seed'dan ustun: chegara tushumdan biroz katta — 80% dan oshdi.
+    near = (ytd * D("1.1")).quantize(D("0.01"))
+    a.sql(
+        "INSERT INTO ref_amounts (code, valid_from, amount, note) VALUES (%s, %s, %s, 'test')",
+        ["revenue_limit_self_employed", year_start, near],
+    )
+    try:
+        dash = ok(send(w, "GET", f"dashboard?start={day(-6).isoformat()}&end={TODAY.isoformat()}"))
+        assert (
+            dash["revenue_limit"]["level"] == "near" and D(dash["revenue_limit"]["limit"]) == near
+        )
+        assert ok(send(w, "GET", "settings", role="accountant"))["revenue_limit"]["level"] == "near"
+        a.sql(
+            "UPDATE ref_amounts SET amount = %s WHERE code = 'revenue_limit_self_employed'",
+            [ytd],
+        )
+        assert ok(send(w, "GET", "settings"))["revenue_limit"]["level"] == "over"
+    finally:
+        a.sql("DELETE FROM ref_amounts WHERE code = 'revenue_limit_self_employed'")
+
+    # Boshqa PATCH maydoni turni o'zgartirmaydi; ``null`` — turni olib tashlaydi.
+    body = ok(send(w, "PATCH", f"tax-profiles/{pid}", valid_from=active["valid_from"]))
+    assert next(p for p in body["tax_profiles"] if p["id"] == pid)["taxpayer"] == "self_employed"
+    body = ok(send(w, "PATCH", f"tax-profiles/{pid}", taxpayer=None))
+    assert next(p for p in body["tax_profiles"] if p["id"] == pid)["taxpayer"] is None
+    assert body["revenue_limit"] is None
+    dash = ok(send(w, "GET", f"dashboard?start={day(-6).isoformat()}&end={TODAY.isoformat()}"))
+    assert dash["revenue_limit"] is None
+    [(after,)] = a.sql(
+        "SELECT after FROM audit_log WHERE org_id = %s AND action = 'tax_profile.update'"
+        " ORDER BY created_at DESC LIMIT 1",
+        [a.org_id],
+    )
+    assert after["taxpayer"] is None
+
+
+def test_create_profile_with_taxpayer(world: World) -> None:
+    w = world
+    body = ok(
+        send(w, "POST", "tax-profiles", valid_from="2032-01-01", regime="none", taxpayer="llc"),
+        201,
+    )
+    row = next(p for p in body["tax_profiles"] if p["valid_from"] == "2032-01-01")
+    assert row["taxpayer"] == "llc"
+    ok(send(w, "DELETE", f"tax-profiles/{row['id']}"))

@@ -13,6 +13,7 @@ import { errorText } from "../../app/errors";
 import { useFilters } from "../../app/filters";
 import { currentOrg, dashboardQuery, meQuery, syncQuery } from "../../app/query";
 import { Banner, Button, EmptyState, Skeleton } from "../../components/ui";
+import { RevenueLimitBanner } from "../settings/RevenueLimit";
 import { syncSummary } from "../../lib/sync";
 import { Attention, DailyChart, Kpis, PeriodStrip, SkuLists } from "./Blocks";
 import { KpiSummary } from "./KpiSummary";
@@ -57,6 +58,15 @@ export function Home() {
   return (
     <section className="home" aria-busy={query.isPlaceholderData || undefined}>
       {filters.compare === "lastYear" && <Banner tone="info" title={t("home.lastYearSoon")} />}
+      {/* F50 (B4.80): yillik tushum chegarasiga yaqin (≥ 80%) yoki oshgan — rejimni o'zgartirish vaqti. */}
+      <RevenueLimitBanner
+        limit={data.revenue_limit}
+        action={
+          <Link to="/settings" className="ui-btn ui-btn--secondary ui-btn--md">
+            {t("settings.tax.limit.action")}
+          </Link>
+        }
+      />
       {noSales && (
         <EmptyState
           title={t(`home.empty.${emptyState}`)}

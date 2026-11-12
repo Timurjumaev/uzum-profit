@@ -1624,6 +1624,7 @@ export interface components {
             summary: components["schemas"]["KpiSummaryOut"];
             kpis: components["schemas"]["KpiOut"];
             attention: components["schemas"]["AttentionOut"];
+            revenue_limit: components["schemas"]["RevenueLimitOut"] | null;
         };
         /** DayOut */
         DayOut: {
@@ -2080,6 +2081,11 @@ export interface components {
             /** Learned */
             learned: string[];
         };
+        /**
+         * LimitLevel
+         * @enum {string}
+         */
+        LimitLevel: "ok" | "near" | "over";
         /**
          * LineCostOut
          * @description Qator (lot) tannarxi, F20: komponentlar bo'yicha tarkib. ``unit_cost`` — dona 0 bo'lsa ``null``.
@@ -3034,6 +3040,22 @@ export interface components {
             /** Units */
             units: number;
         };
+        /**
+         * RevenueLimitOut
+         * @description F50 (B4.80): yillik tushum chegarasi — ``level`` ``near`` (≥ 80%) yoki ``over`` (≥ 100%) bo'lsa ogohlantirish.
+         */
+        RevenueLimitOut: {
+            taxpayer: components["schemas"]["Taxpayer"];
+            /** Year */
+            year: number;
+            /** Revenue */
+            revenue: string;
+            /** Limit */
+            limit: string;
+            /** Share */
+            share: string;
+            level: components["schemas"]["LimitLevel"];
+        };
         /** Revoked */
         Revoked: {
             /** Revoked */
@@ -3215,6 +3237,7 @@ export interface components {
             payout_terms: components["schemas"]["PayoutTermsOut"][];
             inventory: components["schemas"]["InventorySettingsOut"];
             alerts: components["schemas"]["AlertsOut"];
+            revenue_limit: components["schemas"]["RevenueLimitOut"] | null;
         };
         /**
          * ShipOut
@@ -4028,6 +4051,7 @@ export interface components {
             profit_pct: number | string;
             /** Lines */
             lines?: components["schemas"]["TaxLineIn"][] | null;
+            taxpayer?: components["schemas"]["Taxpayer"] | null;
         };
         /** TaxProfileOut */
         TaxProfileOut: {
@@ -4051,6 +4075,7 @@ export interface components {
             profit_pct: string;
             /** Lines */
             lines: components["schemas"]["TaxLineOut"][];
+            taxpayer: components["schemas"]["Taxpayer"] | null;
         };
         /** TaxProfilePatch */
         TaxProfilePatch: {
@@ -4066,6 +4091,7 @@ export interface components {
             profit_pct?: number | string | null;
             /** Lines */
             lines?: components["schemas"]["TaxLineIn"][] | null;
+            taxpayer?: components["schemas"]["Taxpayer"] | null;
         };
         /**
          * TaxRateOut
@@ -4084,6 +4110,12 @@ export interface components {
          * @enum {string}
          */
         TaxRegime: "turnover" | "agent" | "vat_profit" | "none";
+        /**
+         * Taxpayer
+         * @description Soliq to'lovchi turi (F50 chegarasi uchun; profilda ixtiyoriy).
+         * @enum {string}
+         */
+        Taxpayer: "individual" | "llc" | "self_employed";
         /**
          * TokenIn
          * @description Uzum seller kabinetidagi API kalit. Javobda va xatoda qaytarilmaydi.

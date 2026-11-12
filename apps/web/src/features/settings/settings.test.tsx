@@ -121,7 +121,7 @@ describe("soliq profili", () => {
 
   it("qo'shish: aylanma — qator kiritilmaguncha saqlab bo'lmaydi; YaTT shabloni (1% + 1 BHM) bir bosishda; tana to'g'ri; ro'yxat javobdan yangilanadi", async () => {
     const created = settingsData();
-    created.tax_profiles = [{ id: "73333333-3333-4333-8333-333333333333", valid_from: "2026-10-31", regime: "turnover", rate_pct: "0.000", base: "revenue", vat_pct: "0.000", profit_pct: "0.000", lines: [] }, ...created.tax_profiles];
+    created.tax_profiles = [{ id: "73333333-3333-4333-8333-333333333333", valid_from: "2026-10-31", regime: "turnover", rate_pct: "0.000", base: "revenue", vat_pct: "0.000", profit_pct: "0.000", lines: [], taxpayer: null }, ...created.tax_profiles];
     const { api } = await renderSettings({ [TAX_CREATE_ROUTE]: () => json(201, created) });
     await ready();
     const dialog = await openCreate();
@@ -149,6 +149,7 @@ describe("soliq profili", () => {
     pickTemplate(dialog, "yatt");
     expect(picker.value).toBe("yatt");
     expect(within(dialog).getAllByRole("group", { name: /^Soliq qatori \d+$/ })).toHaveLength(2);
+    expect((within(dialog).getByLabelText("Soliq toʻlovchi") as HTMLSelectElement).value).toBe("individual");
     fireEvent.click(save);
     await waitFor(() => expect(bodiesOf(api, TAX_CREATE_ROUTE)).toHaveLength(1));
     expect(bodiesOf(api, TAX_CREATE_ROUTE)[0]).toEqual({
@@ -162,6 +163,7 @@ describe("soliq profili", () => {
         { name: "Aylanmadan soliq", kind: "percent", rate_pct: "1", base: "revenue", period: "month" },
         { name: "Ijtimoiy soliq", kind: "fixed", rate_pct: "0", base: "revenue", period: "month", bhm_count: "1" },
       ],
+      taxpayer: "individual", // F50: YaTT shabloni soliq to'lovchi turini ham to'ldiradi
     });
     await waitFor(() => expect(rowsOf("Soliq profili")).toHaveLength(3));
   });
@@ -264,6 +266,48 @@ describe("soliq profili", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Saqlash" }));
     await waitFor(() => expect(document.querySelector(".ui-toasts .ui-tone--negative")).not.toBeNull());
     expect(screen.getByRole("dialog", { name: "Yangi soliq profili" })).toBeTruthy();
+  });
+});
+
+describe("yillik tushum chegarasi (F50, B4.80)", () => {
+  const limit = (level: "ok" | "near" | "over", revenue: string) => ({ taxpayer: "individual" as const, year: 2026, revenue, limit: "1000000000.00", share: String(Number(revenue) / 1e9), level });
+
+  it("tur tanlanmagan — izoh; holat matni; 80% dan — ogohlantirish, 100% dan — oshdi", async () => {
+    await renderSettings();
+    await ready();
+    const tax = section("Soliq profili");
+    expect(within(tax).getByRole("heading", { level: 3, name: "Yillik tushum chegarasi" })).toBeTruthy();
+    expect(within(tax).getByText(/Soliq toʻlovchi turi tanlanmagan/)).toBeTruthy();
+    cleanup();
+
+    await renderSettings({ [SETTINGS_ROUTE]: () => json(200, settingsData({ revenue_limit: limit("ok", "500000000.00") })) });
+    await ready();
+    expect(within(section("Soliq profili")).getByText(/2026 yil tushumi: .*YaTT chegarasi .*ulushi 50%/)).toBeTruthy();
+    expect(screen.queryByText(/chegarasiga yaqinlashdingiz/)).toBeNull();
+    cleanup();
+
+    await renderSettings({ [SETTINGS_ROUTE]: () => json(200, settingsData({ revenue_limit: limit("near", "850000000.00") })) });
+    await ready();
+    expect(within(section("Soliq profili")).getByText("Yillik tushum chegarasiga yaqinlashdingiz: 85%")).toBeTruthy();
+    cleanup();
+
+    await renderSettings({ [SETTINGS_ROUTE]: () => json(200, settingsData({ revenue_limit: limit("over", "1100000000.00") })) });
+    await ready();
+    expect(within(section("Soliq profili")).getByRole("alert").textContent).toContain("Yillik tushum chegarasidan oshdingiz: 110%");
+  });
+
+  it("forma: soliq toʻlovchi turi tanlanadi va serverga ketadi; 'Koʻrsatilmagan' — null", async () => {
+    const { api } = await renderSettings({ [TAX_CREATE_ROUTE]: () => json(201, settingsData()) });
+    await ready();
+    fireEvent.click(screen.getByRole("button", { name: "Profil qoʻshish" }));
+    const dialog = await screen.findByRole("dialog", { name: "Yangi soliq profili" });
+    const select = within(dialog).getByLabelText("Soliq toʻlovchi") as HTMLSelectElement;
+    expect(select.value).toBe("");
+    fireEvent.change(within(dialog).getByLabelText("Rejim"), { target: { value: "none" } });
+    fireEvent.change(select, { target: { value: "self_employed" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Saqlash" }));
+    await waitFor(() => expect(bodiesOf(api, TAX_CREATE_ROUTE)).toHaveLength(1));
+    expect(bodiesOf(api, TAX_CREATE_ROUTE)[0]).toMatchObject({ regime: "none", taxpayer: "self_employed" });
   });
 });
 
