@@ -347,7 +347,7 @@ Asosiy · Foyda · Ombor · Xaridlar · Yana.
 ulushi, DRR — KPI sarhisobda, ADR-043.) Hisob varag'i (§6.1) —
 Foyda sahifasida; bosh sahifa uni takrorlamaydi.
 
-### 7.3 Bosh sahifa (mobil, 390 px)
+### 7.3 Bosh sahifa (mobil, 360–390 px; testlar 360 px da)
 
 ```
 Sof foyda, oktabr

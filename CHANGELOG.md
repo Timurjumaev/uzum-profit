@@ -440,6 +440,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B4.75 PR-7 (audit T1–T3): Playwright mobil loyihasi 360 px da (avval 390); vizual asoslar Mahsulotlar, SKU, Buyurtmalar,
+  Xarajatlar, Ombor, Sozlamalar va Boshlang'ich holat uchun; axe Mahsulotlar, SKU, Buyurtmalar, Xarajatlar va Kargolarda.
+  Tuzatildi: Mahsulotlar jadvalidagi SKU izohi kontrasti (12 px matn `text-muted` → `text-secondary`, 3,84 → AA); bosh
+  sahifadagi telefon KPI kartochkasi chekkasi (mobil qoida ishlamay qolgan edi).
+
 - B4.75 PR-6 (audit K13, K14, R4): `upcore.metrics` dan eskirgan va faqat testlarda ishlatilgan funksiyalar olib tashlandi
   (`profit_summary`/`ProfitSummary` — F12–F15 endi faqat `upcore.pnl.Statement` da; `payout_mismatches`, `uzum_expenses`,
   `own_expenses`, `realization_rate`, `cancel_share`, `gross_units`, `period_return_share`); `daily_sku_metrics.ads` ustuni

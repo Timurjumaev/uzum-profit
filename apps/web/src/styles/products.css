@@ -57,7 +57,8 @@
 }
 
 .products-cell .caption {
-  color: var(--text-muted);
+  /* 12 px matn: `text-muted` faqat ≥ 14 px uchun (04 §4.2) — axe kontrast 3,84 edi (audit T3). */
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -2,10 +2,12 @@
 // (jsdom'da o'lchanmaydi). Asosiy sahifalar × yorug'/qorong'i × desktop/mobil.
 import { expect, test, type Page } from "@playwright/test";
 
+import { SHIPMENT_1 } from "../src/test/shipments";
 import { loadingSync, mockApi, NEW_USER, SHOPS, type ApiState } from "./support/api";
 import { seriousViolations } from "./support/axe";
 import { open } from "./support/page";
 
+const SKU = "51111111-1111-4111-8111-111111111111";
 const fresh = SHOPS.map((s) => ({ ...s, alias: null, color: null, history_status: null }));
 
 type Case = { name: string; path: string; state?: Partial<ApiState>; prepare?: (page: Page) => Promise<void> };
@@ -30,6 +32,12 @@ const CASES: Case[] = [
   { name: "Foyda va zarar", path: "/pnl" },
   { name: "Foyda va zarar: SKU", path: "/pnl?view=sku" },
   { name: "Maʼlumotlar holati", path: "/status" },
+  { name: "Mahsulotlar", path: "/products" },
+  { name: "SKU sahifasi", path: `/products/${SKU}` },
+  { name: "Buyurtmalar", path: "/orders" },
+  { name: "Xarajatlar", path: "/expenses" },
+  { name: "Kargolar", path: "/shipments" },
+  { name: "Kargo sahifasi", path: `/shipments/${SHIPMENT_1}` },
   { name: "Ombor", path: "/inventory" },
   { name: "Sozlamalar", path: "/settings" },
   { name: "Boshlangʻich holat", path: "/opening" },
