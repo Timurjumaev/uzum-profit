@@ -182,7 +182,8 @@ describe("rollar", () => {
     await screen.findByRole("table", { name: "Qoldiq jadvali" });
     expect(screen.getByText("Summalar sizga koʻrinmaydi")).toBeTruthy();
     expect(screen.queryByText("Muzlagan pul")).toBeNull();
-    expect(screen.getAllByRole("button", { name: "Xarid yaratish" })).toHaveLength(1);
+    // Bitta SKU'da tavsiya bor; tugma ikki joyda (desktop — amallar ustuni, telefon — nom ostida; ADR-057 Q11), CSS bittasini ko'rsatadi.
+    expect(screen.getAllByRole("button", { name: "Xarid yaratish" })).toHaveLength(2);
     expect(norm(document.body.textContent!)).not.toContain("CNY");
   });
 
@@ -201,7 +202,7 @@ describe("xarid yaratish", () => {
       [purchaseSubRoute("POST", PURCHASE_1, "lines")]: () => json(201, purchaseDetail()),
       [purchaseRoute("GET", PURCHASE_1)]: () => json(200, purchaseDetail()),
     });
-    fireEvent.click(await screen.findByRole("button", { name: "Xarid yaratish" }));
+    fireEvent.click((await screen.findAllByRole("button", { name: "Xarid yaratish" })).at(-1)!);
     await waitFor(() => expect(history.location.pathname).toBe(`/purchases/${PURCHASE_1}`));
     expect(bodiesOf(api, PURCHASE_CREATE_ROUTE)[0]).toEqual({ title: "Qayta buyurtma: Mashina" });
     expect(bodiesOf(api, purchaseSubRoute("POST", PURCHASE_1, "lines"))[0]).toEqual({ item_id: ITEM_CRIT, ordered_qty: 90 });
@@ -213,7 +214,7 @@ describe("xarid yaratish", () => {
       [purchaseSubRoute("POST", PURCHASE_1, "lines")]: () => problem(404, "item_not_found"),
       [purchaseRoute("DELETE", PURCHASE_1)]: () => new Response(null, { status: 204 }),
     });
-    fireEvent.click(await screen.findByRole("button", { name: "Xarid yaratish" }));
+    fireEvent.click((await screen.findAllByRole("button", { name: "Xarid yaratish" })).at(-1)!);
     await waitFor(() => expect(api.count(purchaseRoute("DELETE", PURCHASE_1))).toBe(1));
     expect(history.location.pathname).toBe("/inventory");
   });

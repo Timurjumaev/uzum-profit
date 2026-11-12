@@ -194,7 +194,7 @@ export function Inventory() {
             <EmptyState title={t("inventory.empty")} text={t("inventory.emptyText")} />
           )
         ) : (
-          <DataTable caption={t("inventory.list")} columns={columns} rows={rows} rowKey={(r) => r.sku_id} density="comfortable" />
+          <DataTable caption={t("inventory.list")} columns={columns} rows={rows} rowKey={(r) => r.sku_id} density="comfortable" mobileList />
         )}
       </div>
       <Pagination
@@ -229,18 +229,26 @@ function buildColumns({ t, f, canManage, onMove }: Ctx): Column<StockRow>[] {
     {
       key: "sku",
       header: t("inventory.col.sku"),
+      mobile: true,
       render: (r) => (
         <span className="inventory-cell">
           <Link to="/products/$skuId" params={{ skuId: r.sku_id }} className="inventory-cell__name">
             {r.product_title ?? r.title ?? "—"}
           </Link>
           {r.product_title && r.title && <span className="caption">{r.title}</span>}
+          {/* ADR-057 Q11: telefonda amallar ustuni yashirin — shu yerda (faqat ≤ 639 px da ko'rinadi). */}
+          {canManage && (
+            <span className="inventory-cell__mobile-actions">
+              <RowActions row={r} onMove={() => onMove(r)} />
+            </span>
+          )}
         </span>
       ),
     },
     {
       key: "status",
       header: t("inventory.col.status"),
+      mobile: true, // ADR-057 Q11: telefonda nom (ostida amallar), holat (signallar bilan) va zaxira kunlari
       help: <Help id="f26" metric={t("inventory.col.status")} />,
       render: (r) => <StatusCell row={r} />,
     },
@@ -266,6 +274,7 @@ function buildColumns({ t, f, canManage, onMove }: Ctx): Column<StockRow>[] {
     {
       key: "days",
       header: t("inventory.col.days"),
+      mobile: true,
       numeric: true,
       help: <Help id="f24" metric={t("inventory.col.days")} />,
       render: (r) => (r.days_of_stock === null ? dash : f.number(r.days_of_stock, { digits: 0 })),

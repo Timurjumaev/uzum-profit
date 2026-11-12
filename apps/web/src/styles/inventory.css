@@ -101,3 +101,25 @@
   justify-content: space-between;
   gap: var(--space-3);
 }
+
+/* ADR-057 Q11: amallar telefonda nom ostida (amallar ustuni yashirin), desktop'da — o'z ustunida. */
+.inventory-cell__mobile-actions {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .inventory-cell__mobile-actions {
+    display: block;
+    margin-block-start: var(--space-1);
+  }
+
+  /* Ro'yxat ko'rinishida kataklar o'z mazmunidan kengaymaydi — uch ustun 360 px ga sig'adi. */
+  .inventory .ui-table--mobile-list .inventory-cell {
+    min-inline-size: 0;
+  }
+
+  .inventory-cell__mobile-actions .ui-btn {
+    white-space: normal;
+    text-align: start;
+  }
+}
