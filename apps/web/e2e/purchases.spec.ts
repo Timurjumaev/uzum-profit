@@ -63,6 +63,24 @@ test("yangi xarid oynasi (ADR-061 §2): tovar, jami toʻlandi, kurs, trek — 36
   expect(overflow).toBeLessThanOrEqual(0);
 });
 
+test("sanash oynasi (TM4): − / + 44 px, brak, 360 px da gorizontal skrollsiz", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await mockApi(page);
+  await open(page, `/purchases/${PURCHASE_1}`);
+  await page.getByRole("button", { name: "Sanash" }).click();
+  const dialog = page.getByRole("dialog", { name: "Sanash" });
+  await dialog.getByRole("button", { name: "Hammasi keldi" }).click();
+  await expect(dialog.getByLabel("Kelgan: Mashina")).toHaveValue("100");
+  await dialog.getByRole("button", { name: "Bittaga kamaytirish: Mashina" }).click();
+  await expect(dialog.getByLabel("Kelgan: Mashina")).toHaveValue("99");
+  const box = await dialog.getByRole("button", { name: "Bittaga koʻpaytirish: Mashina" }).boundingBox();
+  expect(box!.width).toBeGreaterThanOrEqual(43.5);
+  expect(box!.height).toBeGreaterThanOrEqual(43.5);
+  await expect(dialog.getByLabel(/^Sotuvchi qaytargan summa/)).toBeVisible();
+  const overflow = await dialog.evaluate((el) => el.scrollWidth - el.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+});
+
 test("kargolar: ro'yxatdan kargo sahifasiga, xaridlar va kargo ulushi", async ({ page }) => {
   await mockApi(page);
   await open(page, "/purchases");

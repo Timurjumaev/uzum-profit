@@ -1096,6 +1096,46 @@ export interface paths {
         patch: operations["update_component_api_v1_orgs__org_id__shipments__shipment_id__components__component_id__patch"];
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/purchases/{purchase_id}/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Count Purchase
+         * @description Sanash (ADR-061 §6): kelgan son, brak, qadoq qo'shimchasi va sotuvchi qaytargan summa — bitta tranzaksiyada.
+         */
+        post: operations["count_purchase_api_v1_orgs__org_id__purchases__purchase_id__count_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/purchases/{purchase_id}/split": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Split Purchase
+         * @description Xaridni ikkiga bo'lish (ADR-061 §6): ko'rsatilgan donalar yangi xaridga ("Yo'lda"), chiqimlar dona bo'yicha.
+         */
+        post: operations["split_purchase_api_v1_orgs__org_id__purchases__purchase_id__split_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/cargo-pool": {
         parameters: {
             query?: never;
@@ -1853,6 +1893,41 @@ export interface components {
             name: string;
         };
         /**
+         * CountIn
+         * @description Sanash: berilmagan qatorlar o'zgarmaydi (hamma qator sanalganda holat "Omborimda").
+         */
+        CountIn: {
+            /** Lines */
+            lines: components["schemas"]["CountLineIn"][];
+            /** Counted On */
+            counted_on?: string | null;
+            /**
+             * Remember Pack
+             * @default false
+             */
+            remember_pack: boolean;
+            /** Refund Amount */
+            refund_amount?: number | string | null;
+            refund_currency?: components["schemas"]["Currency"] | null;
+        };
+        /** CountLineIn */
+        CountLineIn: {
+            /**
+             * Line Id
+             * Format: uuid
+             */
+            line_id: string;
+            /** Received Qty */
+            received_qty: number;
+            /**
+             * Defect Qty
+             * @default 0
+             */
+            defect_qty: number;
+            /** Pack Unit Cost */
+            pack_unit_cost?: number | string | null;
+        };
+        /**
          * Currency
          * @description ISO 4217 kodlari. Yangi valyuta qo'shish uchun shu ro'yxatga yoziladi.
          * @enum {string}
@@ -2435,6 +2510,8 @@ export interface components {
             good_qty: number;
             /** Pack Unit Cost */
             pack_unit_cost: string | null;
+            /** Defect Cost */
+            defect_cost?: string | null;
             /** Flags */
             flags: string[];
             cost: components["schemas"]["LineCostOut"] | null;
@@ -3326,6 +3403,11 @@ export interface components {
             track_no?: string | null;
             /** On Hand */
             on_hand?: boolean | null;
+            /** Refund Amount */
+            refund_amount?: number | string | null;
+            refund_currency?: components["schemas"]["Currency"] | null;
+            /** Refund On */
+            refund_on?: string | null;
             /** Dates */
             dates?: {
                 [key: string]: string | null;
@@ -4055,6 +4137,30 @@ export interface components {
             pages: number;
             unlinked: components["schemas"]["StatementOut"];
             unallocated: components["schemas"]["StatementOut"];
+        };
+        /** SplitIn */
+        SplitIn: {
+            /** Lines */
+            lines: components["schemas"]["SplitLineIn"][];
+        };
+        /** SplitLineIn */
+        SplitLineIn: {
+            /**
+             * Line Id
+             * Format: uuid
+             */
+            line_id: string;
+            /** Qty */
+            qty: number;
+        };
+        /** SplitOut */
+        SplitOut: {
+            purchase: components["schemas"]["PurchaseDetailOut"];
+            /**
+             * New Purchase Id
+             * Format: uuid
+             */
+            new_purchase_id: string;
         };
         /**
          * Stage
@@ -8065,6 +8171,96 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ShipmentDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    count_purchase_api_v1_orgs__org_id__purchases__purchase_id__count_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                purchase_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CountIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    split_purchase_api_v1_orgs__org_id__purchases__purchase_id__split_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                purchase_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SplitIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SplitOut"];
                 };
             };
             /** @description Validatsiya xatosi */

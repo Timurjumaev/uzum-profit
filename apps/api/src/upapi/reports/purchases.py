@@ -31,6 +31,7 @@ from upcore.purchasing import (
     SupplyState,
     average_unit_cost,
     current_stage,
+    defect_cost,
     purchase_total,
     stage_days,
     supply_path,
@@ -103,6 +104,9 @@ class LineOut(BaseModel):
     defect_qty: int  # sanashdagi brak (kelganning ichida)
     good_qty: int  # tannarx bo'linadigan sog' dona: kelgan − brak (sanalmagan — buyurtma qilingan)
     pack_unit_cost: Decimal | None  # qadoq qo'shimchasi, so'm/dona (summalar ruxsati bilan)
+    defect_cost: Decimal | None = (
+        None  # sanashdagi brak tannarxga qancha qo'shdi (F20, so'm; summalar ruxsati bilan)
+    )
     flags: list[str]  # F22
     cost: LineCostOut | None  # summalar ruxsati yo'q yoki hisoblab bo'lmadi — ``null``
 
@@ -240,6 +244,13 @@ def _timeline(row: Any, today: date, lead: dict[str, Decimal]) -> list[StageOut]
         )
         for x in timeline(stage_dates(row), today, lead)
     ]
+
+
+def _defect_cost(row: Any, lot: LotCost | None) -> Decimal | None:
+    if lot is None:
+        return None
+    cost = defect_cost(lot, calc_lots.line_model(row))
+    return None if cost is None else cost.amount.quantize(Decimal("0.01"))
 
 
 class Book:
@@ -448,6 +459,7 @@ class Book:
             good_qty=(row.ordered_qty if row.received_qty is None else row.received_qty)
             - row.defect_qty,
             pack_unit_cost=row.pack_unit_cost if amounts else None,
+            defect_cost=_defect_cost(row, lot) if amounts else None,
             flags=sorted(f.value for f in lot.flags) if lot is not None else [],
             cost=cost,
         )

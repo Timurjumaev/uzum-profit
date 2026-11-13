@@ -99,7 +99,8 @@ def currency_of(value: str | None) -> Currency:
     return Currency(value.strip().upper())
 
 
-def _line(row: Row[Any]) -> PurchaseLine:
+def line_model(row: Row[Any]) -> PurchaseLine:
+    """Baza qatori → yadro ``PurchaseLine`` (F20)."""
     price = None
     if row.unit_price is not None:
         price = Money(to_decimal(row.unit_price), currency_of(row.currency))
@@ -285,7 +286,7 @@ def build_purchase(
     refund, refund_rate = refund_of(purchase, parsed, rates)
     return Purchase(
         id=str(purchase.id),
-        lines=tuple(_line(x) for x in lines),
+        lines=tuple(line_model(x) for x in lines),
         components=tuple(parsed),
         refund=refund,
         refund_rate=refund_rate,

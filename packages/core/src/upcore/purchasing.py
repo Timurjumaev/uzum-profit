@@ -456,6 +456,32 @@ def box_shares(
     return {pid: out[pid] for pid in units}
 
 
+def defect_cost(lot: LotCost, line: PurchaseLine) -> Money | None:
+    """F20, sanash (ADR-061 §6): sanashdagi brak tannarxga qancha qo'shdi — "5 ta brak — tannarxga X so'm qo'shdi".
+
+    Chiqim (qadoq qo'shimchasisiz — u faqat sog' donaga) kelgan dona o'rniga sog' donaga bo'linadi, shuning uchun brak
+    donalarining ulushi = chiqim × brak / kelgan. Brak yo'q yoki kelgan dona 0 — ``None``.
+    """
+    if line.defect_qty <= 0 or line.arrived_qty <= 0:
+        return None
+    pack = line.pack_unit_cost * line.qty if line.pack_unit_cost is not None else Money.zero(UZS)
+    base = lot.total - pack
+    return Money(base.amount * line.defect_qty / line.arrived_qty, UZS)
+
+
+def split_units(amount: Money, kept: int, moved: int) -> tuple[Money, Money]:
+    """F20, "Xaridni ikkiga bo'lish" (ADR-061 §6): summa qolgan va ko'chgan donaga mutanosib (yig'indi aniq teng,
+    qoldiq ko'proq donaliga). Ikkalasi 0 bo'lsa — ``PurchaseError``."""
+    if kept < 0 or moved < 0 or kept + moved == 0:
+        raise PurchaseError("bo'lish uchun dona musbat bo'lishi kerak")
+    if moved == 0:
+        return amount, Money.zero(amount.currency)
+    if kept == 0:
+        return Money.zero(amount.currency), amount
+    first, second = allocate(amount, [kept, moved])
+    return first, second
+
+
 def compute_shipment_shares(
     purchases: Sequence[Purchase], shipment_components: Sequence[CostComponent]
 ) -> dict[str, LotCost]:
