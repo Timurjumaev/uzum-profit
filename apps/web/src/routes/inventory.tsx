@@ -2,3 +2,4 @@
 export { Inventory } from "../features/inventory/Inventory";
 export { Warehouse } from "../features/warehouse/Warehouse";
 export { Dispatches } from "../features/warehouse/Dispatches";
+export { Receiving } from "../features/warehouse/Receiving";

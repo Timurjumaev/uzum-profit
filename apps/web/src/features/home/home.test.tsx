@@ -202,7 +202,7 @@ describe("davr chizig'i va grafik", () => {
 
 describe("diqqat talab qiladi", () => {
   it("ustuvorlik tartibida, har biri tegishli sahifaga (filtrlar saqlanadi)", async () => {
-    const data = dashboardData({ attention: { uncosted_lines: 12, uncosted_revenue: "1240000.00", loss_skus: 1, stock_critical: 2, stock_high: 3, stock_ship: 0, recalculated: 4 } });
+    const data = dashboardData({ attention: { uncosted_lines: 12, uncosted_revenue: "1240000.00", loss_skus: 1, stock_critical: 2, stock_high: 3, stock_ship: 0, recalculated: 4, receiving: 2 } });
     await renderHome(`/?from=2026-10-01&to=2026-10-20`, { [DASHBOARD_ROUTE]: () => json(200, data) });
     const section = screen.getByRole("region", { name: "Diqqat talab qiladi" });
     const items = within(section).getAllByRole("listitem");
@@ -210,6 +210,7 @@ describe("diqqat talab qiladi", () => {
       `Tannarxsiz sotuvlar: 12 ta (${m("1240000.00")})`,
       "Buyurtma berish kerak (kritik): 2 ta SKU",
       "Buyurtma berish vaqti yaqin: 3 ta SKU",
+      "Uzum qabulida farq yoki ochiq kamomad: 2 ta",
       "Zarar bilan sotilayotgan SKU: 1 ta",
       "Tannarxi qayta hisoblangan sotuvlar: 4 ta",
     ]);
@@ -222,7 +223,7 @@ describe("diqqat talab qiladi", () => {
     const base = syncStatus();
     const sick = syncStatus({ healthy: false, shops: [{ ...base.shops[0]!, healthy: false, errors_24h: 3 }, base.shops[1]!] });
     await renderHome("/", {
-      [DASHBOARD_ROUTE]: () => json(200, dashboardData({ attention: { uncosted_lines: 0, uncosted_revenue: "0.00", loss_skus: 0, stock_critical: 0, stock_high: 0, stock_ship: 0, recalculated: 0 } })),
+      [DASHBOARD_ROUTE]: () => json(200, dashboardData({ attention: { uncosted_lines: 0, uncosted_revenue: "0.00", loss_skus: 0, stock_critical: 0, stock_high: 0, stock_ship: 0, recalculated: 0, receiving: 0 } })),
       [SYNC_ROUTE]: () => json(200, sick),
     });
     const section = screen.getByRole("region", { name: "Diqqat talab qiladi" });
@@ -230,7 +231,7 @@ describe("diqqat talab qiladi", () => {
     expect(within(section).getByRole("link", { name: "Koʻrish" }).getAttribute("href")).toContain("/status");
     cleanup();
     await renderHome("/", {
-      [DASHBOARD_ROUTE]: () => json(200, dashboardData({ attention: { uncosted_lines: 0, uncosted_revenue: "0.00", loss_skus: 0, stock_critical: 0, stock_high: 0, stock_ship: 0, recalculated: 0 } })),
+      [DASHBOARD_ROUTE]: () => json(200, dashboardData({ attention: { uncosted_lines: 0, uncosted_revenue: "0.00", loss_skus: 0, stock_critical: 0, stock_high: 0, stock_ship: 0, recalculated: 0, receiving: 0 } })),
     });
     expect(screen.getByText("Hozir diqqat talab qiladigan narsa yoʻq.")).toBeTruthy();
     expect(screen.queryByRole("link", { name: "Koʻrish" })).toBeNull();

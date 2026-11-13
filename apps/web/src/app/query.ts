@@ -3,7 +3,7 @@
 import { MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
-import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, QuickPurchaseIn, SupplyState, TrackedIn, BoxIn, SharesIn, CountIn, SplitIn, TransferIn, DispatchIn, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, OpeningIn } from "../lib/api/types";
+import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, QuickPurchaseIn, SupplyState, TrackedIn, BoxIn, SharesIn, CountIn, SplitIn, TransferIn, DispatchIn, ResolveIn, ShortagePatch, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, OpeningIn } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -525,6 +525,18 @@ export const linkDispatch = (orgId: string, id: string, invoiceId: string | null
   unwrap(api.POST("/api/v1/orgs/{org_id}/dispatches/{dispatch_id}/link", { params: { path: { org_id: orgId, dispatch_id: id } }, body: { invoice_id: invoiceId } }));
 
 export const dispatchExcelUrl = (orgId: string, id: string) => `/api/v1/orgs/${orgId}/dispatches/${id}/excel`;
+
+/** Uzum qabulidagi farq (TM7, ADR-061 §8): farqlar va kamomad ro'yxati. */
+export const receivingQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "inventory", "receiving"],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/receiving", { params: { path: { org_id: orgId } } })),
+  });
+
+export const resolveReceiving = (orgId: string, body: ResolveIn) => unwrap(api.POST("/api/v1/orgs/{org_id}/receiving/resolve", { params: { path: { org_id: orgId } }, body }));
+
+export const updateShortage = (orgId: string, id: string, body: ShortagePatch) =>
+  unwrap(api.PATCH("/api/v1/orgs/{org_id}/receiving/shortages/{shortage_id}", { params: { path: { org_id: orgId, shortage_id: id } }, body }));
 
 export const deleteStockMove = (orgId: string, moveId: string) =>
   unwrap(api.DELETE("/api/v1/orgs/{org_id}/stock-moves/{move_id}", { params: { path: { org_id: orgId, move_id: moveId } } }));

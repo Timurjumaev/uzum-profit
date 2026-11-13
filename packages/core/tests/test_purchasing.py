@@ -32,6 +32,7 @@ from upcore.purchasing import (
     defect_cost,
     fifo_attribute,
     purchase_total,
+    receiving_loss,
     residual_goods,
     split_by_purchase,
     split_units,
@@ -850,3 +851,12 @@ def test_fifo_attribute() -> None:
     assert fifo_attribute(stock, 3) == {"old": 3}
     assert fifo_attribute(stock, 100) == {"old": 10, "new": 5}
     assert fifo_attribute(stock, 0) == {} and fifo_attribute([], 4) == {}
+
+
+def test_receiving_loss() -> None:
+    uzs = lambda x: Money(D(x), Currency.UZS)  # noqa: E731
+    assert receiving_loss(3, uzs("10000")) == uzs("30000")
+    assert receiving_loss(3, uzs("10000"), uzs("12000")) == uzs("18000")
+    assert receiving_loss(3, uzs("10000"), uzs("50000")) == uzs("0")
+    with pytest.raises(PurchaseError):
+        receiving_loss(-1, uzs("1"))

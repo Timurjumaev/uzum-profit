@@ -46,6 +46,7 @@ const CASES: Case[] = [
   { name: "Kargo puli", path: "/cargo-pool" },
   { name: "Omborim", path: "/warehouse" },
   { name: "Uzumga joʻnatish", path: "/dispatches" },
+  { name: "Uzum qabulidagi farq", path: "/receiving" },
   { name: "UI-kit", path: "/ui-kit" },
 ];
 

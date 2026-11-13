@@ -6128,6 +6128,198 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/receiving": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Receiving",
+        "description": "Qabul farqlari (qarorsizlari birinchi) va kamomad ro'yxati.",
+        "operationId": "receiving_api_v1_orgs__org_id__receiving_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceivingOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/receiving/resolve": {
+      "post": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Resolve",
+        "description": "Farq bo'yicha qaror (bir marta; keyin kamomad holati alohida o'zgaradi).",
+        "operationId": "resolve_api_v1_orgs__org_id__receiving_resolve_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceivingOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/receiving/shortages/{shortage_id}": {
+      "patch": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Update Shortage",
+        "description": "Kamomad holati: Topildi / Kompensatsiya qilindi (summa) / Zarar deb yopildi — yopilgan kun bugun; Ochiq — qayta\nochish. Zarar (F52) foyda hisobida yopilgan kunga.",
+        "operationId": "update_shortage_api_v1_orgs__org_id__receiving_shortages__shortage_id__patch",
+        "parameters": [
+          {
+            "name": "shortage_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Shortage Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShortagePatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceivingOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/dispatches/draft": {
       "get": {
         "tags": [
@@ -8513,6 +8705,11 @@
           "recalculated": {
             "type": "integer",
             "title": "Recalculated"
+          },
+          "receiving": {
+            "type": "integer",
+            "title": "Receiving",
+            "default": 0
           }
         },
         "type": "object",
@@ -9881,6 +10078,175 @@
         ],
         "title": "DayOut"
       },
+      "DiffOut": {
+        "properties": {
+          "dispatch_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dispatch Id"
+          },
+          "invoice_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Invoice Id"
+          },
+          "invoice_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Number"
+          },
+          "shop": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shop"
+          },
+          "accepted_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Accepted On"
+          },
+          "sku_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sku Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "barcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barcode"
+          },
+          "shipped": {
+            "type": "integer",
+            "title": "Shipped"
+          },
+          "accepted": {
+            "type": "integer",
+            "title": "Accepted"
+          },
+          "diff": {
+            "type": "integer",
+            "title": "Diff"
+          },
+          "unit_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Cost"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "resolution": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution"
+          },
+          "shortage_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shortage Id"
+          },
+          "open_shortages": {
+            "type": "integer",
+            "title": "Open Shortages"
+          },
+          "fines": {
+            "items": {
+              "$ref": "#/components/schemas/FineOut"
+            },
+            "type": "array",
+            "title": "Fines"
+          },
+          "fines_total": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fines Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dispatch_id",
+          "invoice_id",
+          "invoice_number",
+          "shop",
+          "accepted_on",
+          "sku_id",
+          "title",
+          "barcode",
+          "shipped",
+          "accepted",
+          "diff",
+          "unit_cost",
+          "value",
+          "resolution",
+          "shortage_id",
+          "open_shortages",
+          "fines",
+          "fines_total"
+        ],
+        "title": "DiffOut"
+      },
       "DispatchIn": {
         "properties": {
           "shop_id": {
@@ -10653,6 +11019,25 @@
           "pages"
         ],
         "title": "ExpensesOut"
+      },
+      "FineOut": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date",
+            "title": "Day"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "day",
+          "amount"
+        ],
+        "title": "FineOut"
       },
       "FixedPeriod": {
         "type": "string",
@@ -15347,6 +15732,35 @@
         "title": "QuickPurchaseIn",
         "description": "Tez xarid (ADR-061 §2) — bitta so'rovda xarid, tovarlar va tovar summasi. ``paid_amount`` — hisobdan real\nyechilgan jami summa (``currency``: CNY / USD / UZS ...); kurs: ``cbu`` (buyurtma kunidagi Markaziy bank kursi) yoki\n``manual`` (``rate``). ``on_hand`` — \"Tovar qo'limda\" (mahalliy xarid): darhol sanalgan, kargo kutilmaydi."
       },
+      "ReceivingOut": {
+        "properties": {
+          "diffs": {
+            "items": {
+              "$ref": "#/components/schemas/DiffOut"
+            },
+            "type": "array",
+            "title": "Diffs"
+          },
+          "shortages": {
+            "items": {
+              "$ref": "#/components/schemas/ShortageOut"
+            },
+            "type": "array",
+            "title": "Shortages"
+          },
+          "amounts": {
+            "type": "boolean",
+            "title": "Amounts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "diffs",
+          "shortages",
+          "amounts"
+        ],
+        "title": "ReceivingOut"
+      },
       "RefreshOut": {
         "properties": {
           "queued": {
@@ -15392,6 +15806,61 @@
           "budget"
         ],
         "title": "ReorderOut"
+      },
+      "ResolveIn": {
+        "properties": {
+          "dispatch_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dispatch Id"
+          },
+          "sku_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sku Id"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "lost",
+              "miscount",
+              "found",
+              "recount"
+            ],
+            "title": "Action"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "line_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dispatch_id",
+          "sku_id",
+          "action"
+        ],
+        "title": "ResolveIn"
       },
       "ReturnCauseOut": {
         "properties": {
@@ -16900,6 +17369,191 @@
         },
         "type": "object",
         "title": "ShopUpdate"
+      },
+      "ShortageOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "dispatch_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dispatch Id"
+          },
+          "sku_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sku Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "shop": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shop"
+          },
+          "qty": {
+            "type": "integer",
+            "title": "Qty"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "unit_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Cost"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "compensation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Compensation"
+          },
+          "loss": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Loss"
+          },
+          "closed_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed On"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "created_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Created On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "dispatch_id",
+          "sku_id",
+          "title",
+          "shop",
+          "qty",
+          "status",
+          "unit_cost",
+          "amount",
+          "compensation",
+          "loss",
+          "closed_on",
+          "note",
+          "created_on"
+        ],
+        "title": "ShortageOut"
+      },
+      "ShortagePatch": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "found",
+              "compensated",
+              "written_off"
+            ],
+            "title": "Status"
+          },
+          "compensation": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Compensation"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "ShortagePatch"
       },
       "SkuBriefOut": {
         "properties": {

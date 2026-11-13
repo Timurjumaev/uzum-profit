@@ -48,6 +48,9 @@ export function Dispatches() {
         <div className="page-title">
           <h1 className="h2">{t("dispatch.title")}</h1>
         </div>
+        <Link to="/receiving" className="ui-btn ui-btn--secondary ui-btn--md">
+          {t("receiving.link")}
+        </Link>
       </header>
       <p className="caption">{t("dispatch.lead")}</p>
       {canManage && (
