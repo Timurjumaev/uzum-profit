@@ -556,3 +556,28 @@ a.purchase-cell__title:hover {
     grid-column: 1 / -1;
   }
 }
+
+/* Omborim (TM5): SKU nomi va do'kon to'liq; o'tkazmalar alohida qatorda. */
+.warehouse .purchase-cell .caption {
+  max-inline-size: none;
+  white-space: normal;
+}
+
+.warehouse__transfer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.warehouse__mobile-actions {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .warehouse__mobile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+}

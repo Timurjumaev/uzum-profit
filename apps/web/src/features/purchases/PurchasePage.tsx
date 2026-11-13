@@ -101,6 +101,11 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
           <span className="purchase-cell__title">{l.item_name ?? l.temp_name ?? "—"}</span>
           {l.variant && <span className="caption">{l.variant}</span>}
           {l.item_id === null && <span className="caption">{t("purchases.lines.noSkuHint")}</span>}
+          {l.source_line_id && (
+            <span className="caption">
+              {t("purchases.lines.transferred")} <Link to="/warehouse">{t("warehouse.title")}</Link>
+            </span>
+          )}
           {l.url && (
             <a href={l.url} target="_blank" rel="noreferrer noopener" className="caption">
               {t("purchases.lines.link")} <ExternalLink size={12} aria-hidden />
@@ -154,16 +159,17 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
           {
             key: "actions",
             header: t("expenses.own.actions"),
-            render: (l: PurchaseLine) => (
-              <span className="expenses-actions">
-                <Button variant="ghost" onClick={() => setEditing({ kind: "line", line: l })} aria-label={`${t("purchases.lines.edit")}: ${lineLabel(l)}`}>
-                  {t("purchases.lines.edit")}
-                </Button>
-                <Button variant="ghost" loading={removeLine.isPending && removeLine.variables === l.id} onClick={() => removeLine.mutate(l.id)} aria-label={`${t("purchases.lines.delete")}: ${lineLabel(l)}`}>
-                  {t("purchases.lines.delete")}
-                </Button>
-              </span>
-            ),
+            render: (l: PurchaseLine) =>
+              l.source_line_id ? null : (
+                <span className="expenses-actions">
+                  <Button variant="ghost" onClick={() => setEditing({ kind: "line", line: l })} aria-label={`${t("purchases.lines.edit")}: ${lineLabel(l)}`}>
+                    {t("purchases.lines.edit")}
+                  </Button>
+                  <Button variant="ghost" loading={removeLine.isPending && removeLine.variables === l.id} onClick={() => removeLine.mutate(l.id)} aria-label={`${t("purchases.lines.delete")}: ${lineLabel(l)}`}>
+                    {t("purchases.lines.delete")}
+                  </Button>
+                </span>
+              ),
           },
         ]
       : []),

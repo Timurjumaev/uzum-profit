@@ -578,6 +578,8 @@ purchase_lines = tenant(
         "purchase_id": ("purchases", False),
         "item_id": ("items", True),
         "sku_id": ("mp_skus", True),
+        # ADR-061 §7 "Boshqa SKU'ga o'tkazish": shu xariddagi manba qator (dona uning tannarxi bilan o'tadi).
+        "source_line_id": ("purchase_lines", True),
     },
 )
 # Xarajat turlari lug'ati (ADR-061 §4): tashkilotning o'z turlari; tayyor turlar — ``ComponentKind``.
@@ -627,8 +629,15 @@ stock_moves = tenant(
     Column("qty", Integer, nullable=False),
     Column("day", Date, nullable=False),
     Column("note", Text),
+    # TM5 (ADR-061 §6–§7): sabab (``defect`` — keyin topilgan brak → F51), lot narxidagi qiymat (tannarx dvigateli yozadi).
+    Column("reason", Text),
+    Column("cost", UZS),
     check_in("kind", ("receive", "to_uzum", "adjust", "writeoff")),
-    refs={"item_id": ("items", False), "purchase_line_id": ("purchase_lines", True)},
+    refs={
+        "item_id": ("items", False),
+        "purchase_line_id": ("purchase_lines", True),
+        "sku_id": ("mp_skus", True),
+    },
 )
 # F41 (ADR-033): boshlang'ich holat. ``item_costs`` — tovarning tarixiy tannarxi sana bo'yicha (``valid_from`` NULL —
 # boshidan); ``opening_stock`` — boshlash sanasidagi qoldiq (Uzumda + o'z omborimda), sotuvchi tasdiqlagan son.

@@ -283,6 +283,25 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
       return json(route, 200, { rows: [row(1, "ACTIVE", 12), row(2, "ARCHIVED", 0), row(3, "BLOCKED", 0)], truncated: false });
     }
     if (key === `GET /orgs/${ORG_ID}/shipments`) return json(route, 200, { items: [shipmentRow()], amounts: true, total: 1, page: 1, pages: 1 });
+    if (key === `GET /orgs/${ORG_ID}/warehouse`) {
+      const row = (n: number, shop: string, title: string, qty: number, transfers = false) => ({
+        key: `sku:a000000${n}-0000-4000-8000-000000000000`,
+        sku_id: `a000000${n}-0000-4000-8000-000000000000`,
+        item_id: `e000000${n}-0000-4000-8000-000000000000`,
+        shop_id: SHOP_A,
+        shop,
+        title,
+        product_title: "Uzun nomli mahsulot: AirPods himoya gʻilofi silikon",
+        barcode: `478000000000${n}`,
+        qty,
+        reserved: 0,
+        unit_cost: "18500.00",
+        value: String(qty * 18500) + ".00",
+        sources: transfers ? [] : [{ line_id: `f000000${n}-0000-4000-8000-000000000000`, purchase_id: PURCHASE_1, purchase_title: "Oktabr partiyasi", counted_on: "2026-10-20", qty, unit_cost: "18500.00" }],
+        transfers_in: transfers ? [{ line_id: `f900000${n}-0000-4000-8000-000000000000`, purchase_id: PURCHASE_1, qty, from_sku_id: "a0000001-0000-4000-8000-000000000000", from_name: "AIRGILOF-RANG-1" }] : [],
+      });
+      return json(route, 200, { items: [row(1, "byDurii", "AIRGILOF-RANG-1", 70), row(2, "EL-ONE", "AIRGILOF-RANG-2", 30, true)], amounts: true, total_qty: 100, total_value: "1850000.00" });
+    }
     if (key === `GET /orgs/${ORG_ID}/cost-types`) return json(route, 200, [{ id: "t1", name: "Ombor ijarasi" }]);
     if (key === `GET /orgs/${ORG_ID}/cargo-pool`) {
       const row = (n: number, title: string, units: number, track: string | null) => ({ purchase_id: `9${n}${n}${n}${n}${n}${n}${n}-1111-4111-8111-111111111111`, title, track_no: track, supplier_name: "Yiwu Toys", ordered_on: "2026-10-02", state: "in_transit", items: ["AirPods gʻilofi", "Zaryadka kabeli"], units });

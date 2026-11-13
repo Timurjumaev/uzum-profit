@@ -104,11 +104,11 @@ class LineOut(BaseModel):
     defect_qty: int  # sanashdagi brak (kelganning ichida)
     good_qty: int  # tannarx bo'linadigan sog' dona: kelgan − brak (sanalmagan — buyurtma qilingan)
     pack_unit_cost: Decimal | None  # qadoq qo'shimchasi, so'm/dona (summalar ruxsati bilan)
-    defect_cost: Decimal | None = (
-        None  # sanashdagi brak tannarxga qancha qo'shdi (F20, so'm; summalar ruxsati bilan)
-    )
     flags: list[str]  # F22
     cost: LineCostOut | None  # summalar ruxsati yo'q yoki hisoblab bo'lmadi — ``null``
+    # Sanashdagi brak tannarxga qancha qo'shdi (F20, so'm; summalar ruxsati bilan).
+    defect_cost: Decimal | None = None
+    source_line_id: UUID | None = None  # boshqa SKU'ga o'tkazilgan qator: manba qator (ADR-061 §7)
 
 
 class ComponentOut(BaseModel):
@@ -381,7 +381,10 @@ class Book:
             name = item.name if item is not None else x.temp_name
             if name and name not in names:
                 names.append(name)
-        received = [x.received_qty for x in lines if x.received_qty is not None]
+        own = [
+            x for x in lines if x.source_line_id is None
+        ]  # o'tkazilgan qatorlar donasi ikki marta sanalmaydi
+        received = [x.received_qty for x in own if x.received_qty is not None]
         flags = sorted({f.value for lot in ev.lots for f in lot.flags})
         total = unit = None
         if amounts and ev.model is not None and ev.error is None:
@@ -417,9 +420,9 @@ class Book:
             timeline=_timeline(eff, self.today, self.lead),
             line_count=len(lines),
             items=names[:3],
-            units_ordered=sum(x.ordered_qty for x in lines),
+            units_ordered=sum(x.ordered_qty for x in own),
             units_received=sum(received) if received else None,
-            units_defect=sum(x.defect_qty for x in lines),
+            units_defect=sum(x.defect_qty for x in own),
             total=total,
             unit_cost=unit,
             flags=flags,
@@ -460,6 +463,7 @@ class Book:
             - row.defect_qty,
             pack_unit_cost=row.pack_unit_cost if amounts else None,
             defect_cost=_defect_cost(row, lot) if amounts else None,
+            source_line_id=row.source_line_id,
             flags=sorted(f.value for f in lot.flags) if lot is not None else [],
             cost=cost,
         )

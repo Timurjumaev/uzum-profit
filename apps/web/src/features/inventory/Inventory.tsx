@@ -91,6 +91,9 @@ export function Inventory() {
           <PageHelp page="inventory" />
         </div>
         <p className="caption">{t("inventory.asOf", { date: f.date(first.as_of) })}</p>
+        <Link to="/warehouse" className="ui-btn ui-btn--secondary ui-btn--md">
+          {t("warehouse.title")}
+        </Link>
       </header>
 
       {/* ADR-034: postavkadagi (qabul qilinmagan) tovar ham yo'lda — Uzumga ketmoqda. */}

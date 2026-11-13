@@ -113,6 +113,12 @@ class OwnExpense:
     skus: tuple[tuple[str, str], ...] = ()
 
 
+# F51 (ADR-061 §6): sanashdan keyin topilgan brak — hisobdan chiqarilgan kunga, lot narxida; P&L da o'z xarajatlari
+# qatori sifatida alohida (boshqa dona tannarxiga qo'shilmaydi). F52 (§8): Uzum qabulida yo'qotish — TM7 da.
+DEFECT_LOSS = "Brak zarari"
+RECEIVING_LOSS = "Uzum qabulida yo\u02bbqotish"
+
+
 class TaxBase(StrEnum):
     REVENUE = "revenue"  # F3 (standart)
     PAYOUT = "payout"  # F6

@@ -6128,6 +6128,181 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/warehouse": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Warehouse",
+        "description": "Omborim (ADR-061 §7): SKU bo'yicha qoldiq, qiymat va o'tkazish manbalari; qoldig'i bor qatorlar.",
+        "operationId": "warehouse_api_v1_orgs__org_id__warehouse_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WarehouseOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/warehouse/transfer": {
+      "post": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Transfer",
+        "description": "Boshqa SKU'ga o'tkazish (ADR-061 §7): manba qatordan N dona yangi qatorga — birlik tannarxi bilan.",
+        "operationId": "transfer_api_v1_orgs__org_id__warehouse_transfer_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WarehouseOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/warehouse/transfers/{line_id}": {
+      "delete": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Cancel Transfer",
+        "description": "O'tkazmani bekor qilish: donalar manba SKU'ga qaytadi (tannarx bilan).",
+        "operationId": "cancel_transfer_api_v1_orgs__org_id__warehouse_transfers__line_id__delete",
+        "parameters": [
+          {
+            "name": "line_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Line Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/purchases/{purchase_id}/count": {
       "post": {
         "tags": [
@@ -10998,17 +11173,6 @@
             ],
             "title": "Pack Unit Cost"
           },
-          "defect_cost": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Defect Cost"
-          },
           "flags": {
             "items": {
               "type": "string"
@@ -11025,6 +11189,29 @@
                 "type": "null"
               }
             ]
+          },
+          "defect_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Defect Cost"
+          },
+          "source_line_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Line Id"
           }
         },
         "type": "object",
@@ -16556,6 +16743,69 @@
         ],
         "title": "SkusOut"
       },
+      "SourceOut": {
+        "properties": {
+          "line_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Line Id"
+          },
+          "purchase_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Purchase Id"
+          },
+          "purchase_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Title"
+          },
+          "counted_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Counted On"
+          },
+          "qty": {
+            "type": "integer",
+            "title": "Qty"
+          },
+          "unit_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Cost"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line_id",
+          "purchase_id",
+          "purchase_title",
+          "counted_on",
+          "qty",
+          "unit_cost"
+        ],
+        "title": "SourceOut",
+        "description": "O'tkazish manbasi — sanalgan xarid qatori (qolgan sog' dona)."
+      },
       "SplitIn": {
         "properties": {
           "lines": {
@@ -17037,6 +17287,33 @@
               }
             ],
             "title": "Purchase Line Id"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "defect",
+                  "loss"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "sku_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku Id"
           }
         },
         "type": "object",
@@ -17095,6 +17372,40 @@
               }
             ],
             "title": "Purchase Line Id"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "sku_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku Id"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost"
           },
           "created_at": {
             "type": "string",
@@ -18297,6 +18608,84 @@
         ],
         "title": "TrackedRow"
       },
+      "TransferIn": {
+        "properties": {
+          "source_line_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Source Line Id"
+          },
+          "to_sku_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "To Sku Id"
+          },
+          "qty": {
+            "type": "integer",
+            "maximum": 10000000.0,
+            "minimum": 1.0,
+            "title": "Qty"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_line_id",
+          "to_sku_id",
+          "qty"
+        ],
+        "title": "TransferIn"
+      },
+      "TransferOut": {
+        "properties": {
+          "line_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Line Id"
+          },
+          "purchase_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Purchase Id"
+          },
+          "qty": {
+            "type": "integer",
+            "title": "Qty"
+          },
+          "from_sku_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Sku Id"
+          },
+          "from_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line_id",
+          "purchase_id",
+          "qty",
+          "from_sku_id",
+          "from_name"
+        ],
+        "title": "TransferOut",
+        "description": "Shu SKU'ga o'tkazilgan qator (bekor qilish uchun)."
+      },
       "UncoveredOut": {
         "properties": {
           "lines": {
@@ -18526,6 +18915,194 @@
           "sku"
         ],
         "title": "View"
+      },
+      "WarehouseOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WarehouseRow"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "amounts": {
+            "type": "boolean",
+            "title": "Amounts"
+          },
+          "total_qty": {
+            "type": "integer",
+            "title": "Total Qty"
+          },
+          "total_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "amounts",
+          "total_qty",
+          "total_value"
+        ],
+        "title": "WarehouseOut"
+      },
+      "WarehouseRow": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "sku_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku Id"
+          },
+          "item_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          },
+          "shop_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shop Id"
+          },
+          "shop": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shop"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "product_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Title"
+          },
+          "barcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barcode"
+          },
+          "qty": {
+            "type": "integer",
+            "title": "Qty"
+          },
+          "reserved": {
+            "type": "integer",
+            "title": "Reserved"
+          },
+          "unit_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Cost"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceOut"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "transfers_in": {
+            "items": {
+              "$ref": "#/components/schemas/TransferOut"
+            },
+            "type": "array",
+            "title": "Transfers In"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "sku_id",
+          "item_id",
+          "shop_id",
+          "shop",
+          "title",
+          "product_title",
+          "barcode",
+          "qty",
+          "reserved",
+          "unit_cost",
+          "value",
+          "sources",
+          "transfers_in"
+        ],
+        "title": "WarehouseRow"
       },
       "upapi__routes__inventory__PriceOut": {
         "properties": {

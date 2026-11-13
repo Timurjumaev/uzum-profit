@@ -130,6 +130,9 @@ class PurchaseLine:
     defect_qty: int = 0
     line_sum: Decimal | None = None
     pack_unit_cost: Money | None = None
+    # ADR-061 §7 "Boshqa SKU'ga o'tkazish": shu xariddagi manba qator — dona uning birlik tannarxi bilan o'tadi
+    # (taqsimotda qatnashmaydi, :func:`apply_transfers`).
+    source_id: str | None = None
 
     def __post_init__(self) -> None:
         if self.ordered_qty < 0 or (self.received_qty is not None and self.received_qty < 0):
@@ -280,10 +283,57 @@ def compute_lots(purchase: Purchase) -> list[LotCost]:
 
     Komponent ``line_ids`` dagi qatorlarga (``None`` — hamma qatorga) bo'linadi; donasi 0 qatorlar
     taqsimotda qatnashmaydi. Kargo komponenti bo'lmasa hamma lotlarda "kargo kiritilmagan" belgisi.
+    Boshqa SKU'ga o'tkazilgan donalar manba qatorning birlik tannarxi bilan o'tadi (:func:`apply_transfers`).
     """
-    lines = {line.id: line for line in purchase.lines}
-    if len(lines) != len(purchase.lines):
+    return apply_transfers(_compute_lots(purchase), purchase.lines)
+
+
+def apply_transfers(lots: Sequence[LotCost], lines: Sequence[PurchaseLine]) -> list[LotCost]:
+    """F20, "Boshqa SKU'ga o'tkazish" (ADR-061 §7): o'tkazilgan qator (``source_id``) manba qator chiqimining o'z
+    donasiga mos qismini oladi — har tur bo'yicha dona nisbatida, yig'indi aniq (``allocate``); manba lot donasi va
+    chiqimi shuncha kamayadi, birlik tannarxi o'zgarmaydi. Belgilar manbadan. O'tkazilgan dona manbaning sog' donasidan
+    ko'p bo'lsa — ``PurchaseError``."""
+    moved: dict[str, list[PurchaseLine]] = {}
+    for line in lines:
+        if line.source_id is not None:
+            moved.setdefault(line.source_id, []).append(line)
+    if not moved:
+        return list(lots)
+    by_id = {lot.line_id: lot for lot in lots}
+    out: dict[str, LotCost] = dict(by_id)
+    for source_id, takers in moved.items():
+        source = by_id.get(source_id)
+        if source is None:
+            raise PurchaseError(f"o'tkazma manbasi {source_id} shu xaridda yo'q")
+        taken = sum(x.qty for x in takers)
+        rest = source.qty - taken
+        if rest < 0:
+            raise PurchaseError(f"qator {source_id}: o'tkazilgan dona sog' donadan ko'p")
+        weights = [Decimal(rest), *(Decimal(x.qty) for x in takers)]
+        parts: list[dict[ComponentKind, Money]] = [{} for _ in weights]
+        if sum(weights, Decimal(0)) > 0:
+            for kind, amount in source.breakdown.items():
+                for i, share in enumerate(allocate(amount, weights)):
+                    parts[i][kind] = share
+        for i, (lot_id, qty) in enumerate([(source_id, rest), *((x.id, x.qty) for x in takers)]):
+            line_total = total(list(parts[i].values()), UZS)
+            out[lot_id] = LotCost(
+                line_id=lot_id,
+                qty=qty,
+                breakdown=parts[i],
+                total=line_total,
+                unit_cost=None if qty == 0 else Money(line_total.amount / qty, UZS),
+                flags=source.flags,
+            )
+    return [out[lot.line_id] for lot in lots]
+
+
+def _compute_lots(purchase: Purchase) -> list[LotCost]:
+    """F20 taqsimoti (o'tkazmalarsiz): o'tkazilgan qatorlar bo'sh lot oladi — :func:`apply_transfers` to'ldiradi."""
+    all_lines = {line.id: line for line in purchase.lines}
+    if len(all_lines) != len(purchase.lines):
         raise PurchaseError("qator id'lari takrorlangan")
+    lines = {lid: x for lid, x in all_lines.items() if x.source_id is None}
     parts: dict[str, dict[ComponentKind, Money]] = {lid: {} for lid in lines}
     flags: dict[str, set[Flag]] = {lid: set() for lid in lines}
 
@@ -343,6 +393,11 @@ def compute_lots(purchase: Purchase) -> list[LotCost]:
                 flags=frozenset(line_flags),
             )
         )
+    for lid, line in all_lines.items():
+        if line.source_id is not None:
+            result.append(LotCost(lid, line.qty, {}, Money.zero(UZS), None, frozenset()))
+    order = {lid: i for i, lid in enumerate(all_lines)}
+    result.sort(key=lambda lot: order[lot.line_id])
     return result
 
 
@@ -509,6 +564,7 @@ def compute_shipment_shares(
                     line.unit_volume,
                     defect_qty=line.defect_qty,
                     line_sum=line.line_sum,
+                    source_id=line.source_id,
                 )
             )
     return {

@@ -23,10 +23,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, time
+from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import ColumnElement, Row, delete, func, or_, select, true
+from sqlalchemy import ColumnElement, Row, delete, func, or_, select, true, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.costing import (
@@ -338,13 +339,34 @@ async def recompute_items(
     start = await start_of(conn, org_id)
     opened = await openings(conn, start, items) if start is not None else {}
     desired: dict[UUID, dict[str, Any]] = {}
+    writeoff_costs: dict[UUID, Decimal | None] = {}
     for item_id, events in by_item.items():
         opening = opened.get(item_id, Opening(start)) if start is not None else None
         result = compute_costs(lots_by.get(item_id, ()), events, method, opening)
         for sale_id, out in result.sales.items():
             desired[UUID(sale_id)] = _row(method, out)
+        for wid, out in result.writeoffs.items():
+            writeoff_costs[UUID(wid.removeprefix("w:"))] = (
+                None if out.cost is None else out.cost.amount
+            )
+    await _write_writeoff_costs(conn, writeoff_costs)
     existing = await _existing(conn, only(k.c.item_id))
     return await _apply(conn, org_id, sales, desired, existing, now)
+
+
+async def _write_writeoff_costs(conn: AsyncConnection, costs: dict[UUID, Decimal | None]) -> None:
+    """F51 (ADR-061 §6): hisobdan chiqarilgan donaning lot narxidagi qiymati ``stock_moves.cost`` ga (faqat farqlar)."""
+    if not costs:
+        return
+    sm = m.stock_moves
+    current = {
+        r.id: r.cost
+        for r in await conn.execute(select(sm.c.id, sm.c.cost).where(sm.c.id.in_(list(costs))))
+    }
+    for move_id, cost in costs.items():
+        value = None if cost is None else quantize(cost, 2)
+        if move_id in current and current[move_id] != value:
+            await conn.execute(update(sm).where(sm.c.id == move_id).values(cost=value))
 
 
 async def recompute_unlinked(

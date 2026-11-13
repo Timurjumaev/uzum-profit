@@ -22,6 +22,7 @@ from upcore.purchasing import (
     PurchaseLine,
     Stage,
     SupplyState,
+    apply_transfers,
     average_unit_cost,
     box_shares,
     compute_lots,
@@ -779,3 +780,64 @@ def test_split_units() -> None:
     assert split_units(usd("10"), 0, 5) == (usd("0"), usd("10"))
     with pytest.raises(PurchaseError):
         split_units(usd("10"), 0, 0)
+
+
+# --- Boshqa SKU'ga o'tkazish (ADR-061 §7, TM5) ------------------------------------------------
+
+
+def test_transfer_moves_units_with_unit_cost() -> None:
+    uzs = lambda x: Money(D(x), Currency.UZS)  # noqa: E731
+    src = PurchaseLine("a", 100, received_qty=100, pack_unit_cost=uzs("100"))
+    other = PurchaseLine("b", 50, received_qty=50)
+    moved = PurchaseLine("t", 30, received_qty=30, source_id="a")
+    purchase = Purchase(
+        "p",
+        (src, other, moved),
+        (CostComponent(K.GOODS, uzs("1500000")), CostComponent(K.CARGO, uzs("150000"))),
+    )
+    lots = {lot.line_id: lot for lot in compute_lots(purchase)}
+    before = {
+        lot.line_id: lot for lot in compute_lots(Purchase("p", (src, other), purchase.components))
+    }
+    # Taqsimot o'zgarmaydi (o'tkazilgan qator unda qatnashmaydi); manba birlik tannarxi saqlanadi.
+    assert lots["b"] == before["b"]
+    assert lots["a"].qty == 70 and lots["t"].qty == 30
+    assert lots["a"].total + lots["t"].total == before["a"].total
+    assert lots["a"].unit_cost == lots["t"].unit_cost == before["a"].unit_cost
+    assert lots["t"].breakdown[K.PACKAGING] == uzs("3000")
+    assert lots["t"].flags == before["a"].flags
+    assert [lot.line_id for lot in compute_lots(purchase)] == ["a", "b", "t"]
+
+
+def test_transfer_errors_and_shipment() -> None:
+    uzs = lambda x: Money(D(x), Currency.UZS)  # noqa: E731
+    src = PurchaseLine("a", 10, received_qty=10)
+    too_many = Purchase("p", (src, PurchaseLine("t", 11, received_qty=11, source_id="a")), ())
+    with pytest.raises(PurchaseError, match="ko'p"):
+        compute_lots(too_many)
+    with pytest.raises(PurchaseError, match="manbasi"):
+        apply_transfers([], [PurchaseLine("t", 1, source_id="x")])
+    # Butun qator o'tdi: manba 0 dona, chiqim to'liq o'tkazilganga.
+    whole = Purchase(
+        "p",
+        (src, PurchaseLine("t", 10, received_qty=10, source_id="a")),
+        (CostComponent(K.GOODS, uzs("1000")),),
+    )
+    lots = {lot.line_id: lot for lot in compute_lots(whole)}
+    assert lots["a"].qty == 0 and lots["a"].unit_cost is None and lots["t"].total == uzs("1000")
+    # Kargo bilan: kargo ulushi ham dona bilan o'tadi, kargo yig'indisi saqlanadi.
+    p1 = Purchase(
+        "p1",
+        (
+            PurchaseLine("a1", 10, received_qty=10),
+            PurchaseLine("t1", 4, received_qty=4, source_id="a1"),
+        ),
+        (CostComponent(K.GOODS, uzs("1000")),),
+    )
+    p2 = Purchase(
+        "p2", (PurchaseLine("b1", 10, received_qty=10),), (CostComponent(K.GOODS, uzs("1000")),)
+    )
+    res = compute_shipment_lots([p1, p2], [CostComponent(K.CARGO, uzs("200"))])
+    l1 = {lot.line_id: lot for lot in res["p1"]}
+    assert l1["t1"].breakdown[K.CARGO] == uzs("40") and l1["a1"].breakdown[K.CARGO] == uzs("60")
+    assert l1["t1"].unit_cost == l1["a1"].unit_cost

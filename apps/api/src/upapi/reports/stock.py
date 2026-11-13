@@ -14,8 +14,8 @@
 - Postavkada (ADR-034, B4.14) — qabul qilinmagan FBO postavkalar (``fbo_invoices`` holati yopiq emas) tarkibi, SKU
   bo'yicha: sotuvchida yoki Uzum logistikasi bilan omborga yo'lda. Qiymati lot narxida; F27 da yo'ldagi tovarga qo'shiladi;
   o'z omborimdan ayiriladi (ikki marta sanalmaydi).
-- Joylar (M10, B4.7) — xarid bosqichidan (``current_stage``): ``china`` (buyurtma / to'langan / Xitoy omborida),
-  ``road`` (yo'lda / Toshkentga keldi), ``own`` (qabul qilindi, Uzumga yuborilmagan; ``stock_moves`` tuzatish va
+- Joylar (M10, ADR-061 §10, TM5) — xarid holatidan (``supply_state``): ``china`` endi bo'sh (eski "Xitoyda" — "Yo'lda"),
+  ``road`` ("Yo'lda"), ``own`` ("Omborimda": sog' dona − boshqa SKU'ga o'tkazilgani; ``stock_moves`` tuzatish va
   hisobdan chiqarish bilan, ``upcore.inventory.own_warehouse_qty``). Uzumga yuborilgan xarid — FBO qoldig'ida. Qiymat —
   qatorning lot tannarxi bilan. F27: yo'lda + o'z omborim — ``in_transit``, Xitoyda — ``ordered``. Tovarning bir necha
   SKU'si bo'lsa joylar har biriga to'liq hisoblanadi (tavsiya kamroq chiqadi), F29 jamlari esa tovar bo'yicha bir
@@ -65,7 +65,7 @@ from upcore.inventory import (
 )
 from upcore.metrics import realization_rate_units
 from upcore.money import Currency, Money
-from upcore.purchasing import LEAD_STAGES, Stage, current_stage, stage_days
+from upcore.purchasing import LEAD_STAGES, SupplyState, stage_days, supply_state
 
 from upapi import orgsettings
 from upapi.calc.costs import openings
@@ -83,8 +83,6 @@ LOCATIONS = ("china", "road", "own", "inbound", "fbo", "fbs", "defected")
 # ADR-034: postavka (``fbo_invoices``) shu holatlarda yopiq; qolgani — "postavkada" (qabul qilinmagan: sotuvchida yoki
 # Uzum logistikasi bilan omborga yo'lda — ikkalasi ham Uzum qoldig'ida yo'q, o'z omborimda bo'sh emas).
 CLOSED_INVOICES = frozenset({"ACCEPTED", "CANCELED", "CANCELLED", "REJECTED", "DELETED"})
-CHINA_STAGES = frozenset({Stage.ORDERED, Stage.PAID, Stage.CN_WAREHOUSE})
-ROAD_STAGES = frozenset({Stage.SHIPPED, Stage.ARRIVED})
 
 
 @dataclass(frozen=True, slots=True)
@@ -248,30 +246,48 @@ async def inbound_by_sku(conn: AsyncConnection) -> dict[UUID, int]:
 
 
 async def _places(conn: AsyncConnection, items: Iterable[UUID]) -> dict[UUID, _Places]:
+    """Joylar (ADR-061 §10): "Yo'lda" (``road``; eski "Xitoyda" ham shu yerda) va "Omborimda" (sanalgan: sog' dona −
+    boshqa SKU'ga o'tkazilgani; o'tkazilgan qator o'z tovarida). "Uzumda" — FBO qoldig'ida."""
     p, pl, lt, sm = m.purchases, m.purchase_lines, m.lots, m.stock_moves
     out: dict[UUID, _Places] = {}
-    rows = await conn.execute(
-        select(pl.c.item_id, pl.c.ordered_qty, pl.c.received_qty, lt.c.unit_cost, p)
-        .join(p, p.c.id == pl.c.purchase_id)
-        .join(lt, lt.c.purchase_line_id == pl.c.id, isouter=True)
-        .where(pl.c.item_id.in_(list(items)))
+    rows = list(
+        await conn.execute(
+            select(
+                pl.c.id.label("line_id"),
+                pl.c.item_id,
+                pl.c.ordered_qty,
+                pl.c.received_qty,
+                pl.c.defect_qty,
+                pl.c.source_line_id,
+                lt.c.unit_cost,
+                p,
+            )
+            .join(p, p.c.id == pl.c.purchase_id)
+            .join(lt, lt.c.purchase_line_id == pl.c.id, isouter=True)
+            .where(pl.c.item_id.in_(list(items)))
+        )
     )
+    moved_out: dict[UUID, int] = {}
+    if rows:
+        for t in await conn.execute(
+            select(pl.c.source_line_id, func.sum(pl.c.received_qty).label("qty"))
+            .where(pl.c.source_line_id.in_([r.line_id for r in rows]))
+            .group_by(pl.c.source_line_id)
+        ):
+            moved_out[t.source_line_id] = int(t.qty or 0)
     for r in rows:
-        stage = current_stage(stage_dates(r))
+        state = supply_state(stage_dates(r))
         x = out.setdefault(r.item_id, _Places())
         cost = r.unit_cost
-        if stage in CHINA_STAGES:
-            x.china += r.ordered_qty
-            if cost is not None:
-                x.china_lots.append((r.ordered_qty, cost))
-        elif stage in ROAD_STAGES:
+        if state is SupplyState.IN_TRANSIT:
             x.road += r.ordered_qty
             if cost is not None:
                 x.road_lots.append((r.ordered_qty, cost))
-        elif stage is Stage.RECEIVED:
-            qty = r.received_qty if r.received_qty is not None else r.ordered_qty
+        elif state is SupplyState.IN_STOCK:
+            arrived = r.received_qty if r.received_qty is not None else r.ordered_qty
+            qty = arrived - r.defect_qty - moved_out.get(r.line_id, 0)
             x.received += qty
-            if cost is not None:
+            if cost is not None and qty > 0:
                 x.own_lots.append((qty, cost))
     for mv in await conn.execute(
         select(sm.c.item_id, sm.c.kind, func.sum(sm.c.qty).label("qty"))

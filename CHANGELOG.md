@@ -440,6 +440,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- TM5 (ADR-061 §6–§7, §10) Omborim: SKU bo'yicha qoldiq va qiymat (`/warehouse`), "Boshqa SKU'ga o'tkazish" — dona tannarxi
+  bilan (`apply_transfers`, migratsiya 0025), bekor qilish; keyin topilgan brak hisobdan chiqadi, foyda hisobida "Brak zarari"
+  (F51). Ombor joylari uch holatdan: "Xitoyda" endi "Yo'lda" ichida, qoralama xaridlar ham "Yo'lda".
 - TM4 (ADR-061 §5–§6) Sanash: kelgan son va brak (hamma chiqim sog' donaga), qadoq qo'shimchasi (tovardan nusxa, eslab qolish),
   sotuvchi qaytargan summa (sanashda yoki keyin), brak narxi qatorda; "Xaridni ikkiga bo'lish" — keyin keladigan qism alohida
   xarid bo'lib "Yo'lda" qoladi, chiqimlar dona bo'yicha bo'linadi. Vaqtinchalik "Tovar keldi — bugun" tugmasi olib tashlandi.

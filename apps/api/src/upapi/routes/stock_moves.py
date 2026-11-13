@@ -14,6 +14,7 @@ tegmaydi (tamoyil 7).
 from __future__ import annotations
 
 from datetime import date, datetime
+from decimal import Decimal
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
@@ -23,7 +24,7 @@ from sqlalchemy import delete, insert, select
 
 from upapi import calc
 from upapi.auth.deps import OrgContext, require
-from upapi.auth.permissions import Permission
+from upapi.auth.permissions import Permission, allowed
 from upapi.db import models as m
 from upapi.errors import AppError
 from upapi.reports.common import today
@@ -43,6 +44,10 @@ class StockMoveIn(BaseModel):
     day: date
     note: Annotated[str | None, Field(max_length=500)] = None
     purchase_line_id: UUID | None = None
+    # TM5 (ADR-061 §6): ``defect`` — sanashdan keyin topilgan brak (foyda hisobida "Brak zarari", F51); ``loss`` —
+    # yo'qotish. Faqat ``writeoff`` da.
+    reason: Literal["defect", "loss"] | None = None
+    sku_id: UUID | None = None  # qaysi SKU omboridan (Omborim SKU bo'yicha)
 
     @model_validator(mode="after")
     def _check(self) -> StockMoveIn:
@@ -50,6 +55,8 @@ class StockMoveIn(BaseModel):
             raise ValueError("hisobdan chiqarish donasi musbat bo'lishi kerak")
         if self.kind == "adjust" and self.qty == 0:
             raise ValueError("tuzatish donasi 0 bo'lmasligi kerak")
+        if self.reason is not None and self.kind != "writeoff":
+            raise ValueError("sabab faqat hisobdan chiqarishda")
         return self
 
 
@@ -61,6 +68,11 @@ class StockMoveOut(BaseModel):
     day: date
     note: str | None
     purchase_line_id: UUID | None
+    reason: str | None = None
+    sku_id: UUID | None = None
+    cost: Decimal | None = (
+        None  # lot narxidagi qiymat (F51; summalar ruxsati bilan, hisobdan keyin)
+    )
     created_at: datetime
 
 
@@ -68,8 +80,11 @@ class StockMovesOut(BaseModel):
     items: list[StockMoveOut]
 
 
-def _out(row: Any) -> StockMoveOut:
+def _out(row: Any, amounts: bool = False) -> StockMoveOut:
     return StockMoveOut(
+        reason=row.reason,
+        sku_id=row.sku_id,
+        cost=row.cost if amounts else None,
         id=row.id,
         item_id=row.item_id,
         kind=row.kind,
@@ -90,7 +105,8 @@ async def list_stock_moves(item_id: UUID, ctx: Viewer) -> StockMovesOut:
         .where(sm.c.item_id == item_id, sm.c.kind.in_(KINDS))
         .order_by(sm.c.day.desc(), sm.c.created_at.desc())
     )
-    return StockMovesOut(items=[_out(r) for r in rows])
+    amounts = allowed(ctx.role, Permission.VIEW_PURCHASE_AMOUNTS)
+    return StockMovesOut(items=[_out(r, amounts) for r in rows])
 
 
 @router.post("/orgs/{org_id}/stock-moves", response_model=StockMoveOut, status_code=201)
@@ -108,6 +124,15 @@ async def create_stock_move(
             raise AppError("purchase_line_not_found", 404)
         if line != body.item_id:
             raise AppError("line_item_mismatch", 422)
+    if body.sku_id is not None:
+        k = m.mp_skus
+        sku_item = (
+            await ctx.conn.execute(select(k.c.item_id).where(k.c.id == body.sku_id))
+        ).first()
+        if sku_item is None:
+            raise AppError("sku_not_found", 404)
+        if sku_item.item_id != body.item_id:
+            raise AppError("line_item_mismatch", 422, detail="SKU boshqa tovarga bog'langan")
     sm = m.stock_moves
     row = (
         await ctx.conn.execute(
