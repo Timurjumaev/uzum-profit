@@ -439,6 +439,7 @@ export const uzLatn = {
       stockCritical: "Buyurtma berish kerak (kritik): {{value}} ta SKU",
       stockHigh: "Buyurtma berish vaqti yaqin: {{value}} ta SKU",
       stockShip: "Uzumga yuborish kerak (omborimda bor): {{value}} ta SKU",
+      receiving: "Uzum qabulida farq yoki ochiq kamomad: {{value}} ta",
       lossSkus: "Zarar bilan sotilayotgan SKU: {{value}} ta",
       sync: "Sinxronda muammo: {{value}} ta doʻkon",
       recalculated: "Tannarxi qayta hisoblangan sotuvlar: {{value}} ta",

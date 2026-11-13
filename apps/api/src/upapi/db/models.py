@@ -488,6 +488,25 @@ fbo_dispatch_items = tenant(
     CheckConstraint("qty > 0", name="qty"),
     refs={"dispatch_id": ("fbo_dispatches", False), "sku_id": ("mp_skus", False)},
 )
+# TM7 (ADR-061 §8): Uzum qabulidagi farq — jo'natma × SKU bo'yicha sotuvchi qarori. ``resolution``: ``lost`` (Uzum
+# yo'qotdi — kamomad ro'yxati, holat bilan), ``miscount`` (sanashda adashganman — son tuzatildi), ``found`` (ortiqcha
+# qabul ochiq kamomadni yopdi), ``recount`` (ortiqcha — son oshirildi). F52 — ``lost`` yopilganda.
+receiving_diffs = tenant(
+    "receiving_diffs",
+    Column("qty", Integer, nullable=False),  # farq: manfiy — kam qabul qilindi
+    Column("resolution", Text, nullable=False),
+    Column("status", Text, nullable=False, server_default="closed"),
+    Column("unit_cost", UZS),
+    Column("compensation", UZS),
+    Column("closed_on", Date),
+    Column("note", Text),
+    check_in("resolution", ("lost", "miscount", "found", "recount")),
+    CheckConstraint(
+        "status IN ('open', 'found', 'compensated', 'written_off', 'closed')", name="status_allowed"
+    ),
+    UniqueConstraint("org_id", "dispatch_id", "sku_id"),
+    refs={"dispatch_id": ("fbo_dispatches", False), "sku_id": ("mp_skus", False)},
+)
 mp_returns = tenant(
     "mp_returns",
     Column("external_id", BigInteger, nullable=False),

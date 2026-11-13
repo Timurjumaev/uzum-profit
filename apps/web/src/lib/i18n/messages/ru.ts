@@ -437,6 +437,7 @@ export const ru: Messages = {
       stockCritical: "Нужно заказать (критично): {{value}} SKU",
       stockHigh: "Скоро пора заказывать: {{value}} SKU",
       stockShip: "Нужно отправить на Uzum (есть на моём складе): {{value}} SKU",
+      receiving: "Расхождение при приёмке Uzum или открытая недостача: {{value}}",
       lossSkus: "SKU, продающиеся в убыток: {{value}}",
       sync: "Проблема синхронизации: магазинов {{value}}",
       recalculated: "Продажи с пересчитанной себестоимостью: {{value}}",

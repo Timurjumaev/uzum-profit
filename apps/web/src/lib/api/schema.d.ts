@@ -1096,6 +1096,67 @@ export interface paths {
         patch: operations["update_component_api_v1_orgs__org_id__shipments__shipment_id__components__component_id__patch"];
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/receiving": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Receiving
+         * @description Qabul farqlari (qarorsizlari birinchi) va kamomad ro'yxati.
+         */
+        get: operations["receiving_api_v1_orgs__org_id__receiving_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/receiving/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resolve
+         * @description Farq bo'yicha qaror (bir marta; keyin kamomad holati alohida o'zgaradi).
+         */
+        post: operations["resolve_api_v1_orgs__org_id__receiving_resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/receiving/shortages/{shortage_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Shortage
+         * @description Kamomad holati: Topildi / Kompensatsiya qilindi (summa) / Zarar deb yopildi — yopilgan kun bugun; Ochiq — qayta
+         *     ochish. Zarar (F52) foyda hisobida yopilgan kunga.
+         */
+        patch: operations["update_shortage_api_v1_orgs__org_id__receiving_shortages__shortage_id__patch"];
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/dispatches/draft": {
         parameters: {
             query?: never;
@@ -1759,6 +1820,11 @@ export interface components {
             stock_ship: number;
             /** Recalculated */
             recalculated: number;
+            /**
+             * Receiving
+             * @default 0
+             */
+            receiving: number;
         };
         /** AuditOut */
         AuditOut: {
@@ -2142,6 +2208,53 @@ export interface components {
             /** Net Profit Processing */
             net_profit_processing: string;
         };
+        /** DiffOut */
+        DiffOut: {
+            /**
+             * Dispatch Id
+             * Format: uuid
+             */
+            dispatch_id: string;
+            /**
+             * Invoice Id
+             * Format: uuid
+             */
+            invoice_id: string;
+            /** Invoice Number */
+            invoice_number: number | null;
+            /** Shop */
+            shop: string | null;
+            /**
+             * Accepted On
+             * Format: date
+             */
+            accepted_on: string;
+            /**
+             * Sku Id
+             * Format: uuid
+             */
+            sku_id: string;
+            /** Title */
+            title: string | null;
+            /** Barcode */
+            barcode: string | null;
+            /** Shipped */
+            shipped: number;
+            /** Accepted */
+            accepted: number;
+            /** Diff */
+            diff: number;
+            /** Unit Cost */
+            unit_cost: string | null;
+            /** Resolution */
+            resolution: string | null;
+            /** Shortage Id */
+            shortage_id: string | null;
+            /** Open Shortages */
+            open_shortages: number;
+            /** Fines */
+            fines: components["schemas"]["FineOut"][];
+        };
         /** DispatchIn */
         DispatchIn: {
             /**
@@ -2403,6 +2516,16 @@ export interface components {
             page: number;
             /** Pages */
             pages: number;
+        };
+        /** FineOut */
+        FineOut: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Amount */
+            amount: string;
         };
         /**
          * FixedPeriod
@@ -3797,6 +3920,15 @@ export interface components {
              */
             on_hand: boolean;
         };
+        /** ReceivingOut */
+        ReceivingOut: {
+            /** Diffs */
+            diffs: components["schemas"]["DiffOut"][];
+            /** Shortages */
+            shortages: components["schemas"]["ShortageOut"][];
+            /** Amounts */
+            amounts: boolean;
+        };
         /** RefreshOut */
         RefreshOut: {
             /** Queued */
@@ -3810,6 +3942,28 @@ export interface components {
             raw: string;
             /** Budget */
             budget: components["schemas"]["upapi__routes__inventory__PriceOut"][] | null;
+        };
+        /** ResolveIn */
+        ResolveIn: {
+            /**
+             * Dispatch Id
+             * Format: uuid
+             */
+            dispatch_id: string;
+            /**
+             * Sku Id
+             * Format: uuid
+             */
+            sku_id: string;
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "lost" | "miscount" | "found" | "recount";
+            /** Note */
+            note?: string | null;
+            /** Line Id */
+            line_id?: string | null;
         };
         /** ReturnCauseOut */
         ReturnCauseOut: {
@@ -4283,6 +4437,61 @@ export interface components {
             alias?: string | null;
             /** Color */
             color?: string | null;
+        };
+        /** ShortageOut */
+        ShortageOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Dispatch Id
+             * Format: uuid
+             */
+            dispatch_id: string;
+            /**
+             * Sku Id
+             * Format: uuid
+             */
+            sku_id: string;
+            /** Title */
+            title: string | null;
+            /** Shop */
+            shop: string | null;
+            /** Qty */
+            qty: number;
+            /** Status */
+            status: string;
+            /** Unit Cost */
+            unit_cost: string | null;
+            /** Amount */
+            amount: string | null;
+            /** Compensation */
+            compensation: string | null;
+            /** Loss */
+            loss: string | null;
+            /** Closed On */
+            closed_on: string | null;
+            /** Note */
+            note: string | null;
+            /**
+             * Created On
+             * Format: date
+             */
+            created_on: string;
+        };
+        /** ShortagePatch */
+        ShortagePatch: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "found" | "compensated" | "written_off";
+            /** Compensation */
+            compensation?: number | string | null;
+            /** Note */
+            note?: string | null;
         };
         /** SkuBriefOut */
         SkuBriefOut: {
@@ -8596,6 +8805,135 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ShipmentDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    receiving_api_v1_orgs__org_id__receiving_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceivingOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    resolve_api_v1_orgs__org_id__receiving_resolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceivingOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    update_shortage_api_v1_orgs__org_id__receiving_shortages__shortage_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shortage_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShortagePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceivingOut"];
                 };
             };
             /** @description Validatsiya xatosi */
