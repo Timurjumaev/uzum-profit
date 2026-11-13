@@ -1165,9 +1165,9 @@ def test_inventory(world: World) -> None:
     assert xa["velocity"]["days_counted"] == expected.days_counted == 14
     assert xa["velocity"]["completion"] is None and xa["velocity"]["new_item"] is False
     assert (xa["stock"], xa["qty_defected"], xa["in_transit"]) == (85, 2, 20)
-    # M10 joylar: p3 — faqat buyurtma berilgan (Xitoyda), p1 Uzumga yuborilgan (FBO qoldig'ida).
+    # M10 joylar (ADR-061 §10): p3 — faqat buyurtma berilgan ("Yo'lda"; eski "Xitoyda" ham shu), p1 Uzumga yuborilgan.
     assert xa["locations"] == {
-        "fbo": 80, "fbs": 5, "defected": 2, "pending": 0, "china": 20, "road": 0, "own": 0,
+        "fbo": 80, "fbs": 5, "defected": 2, "pending": 0, "china": 0, "road": 20, "own": 0,
         "inbound": 0,
     }  # fmt: skip
     # F27 buyurtma sanasi = bugun + (hamma joydagi tovar zaxira kunlari − muddat 32 kun), kunga pastga yaxlitlanadi
@@ -1199,8 +1199,8 @@ def test_inventory(world: World) -> None:
     assert ya["status"] is None and ya["unit_cost"] is None  # qoldiq yo'q, sotuv oynadan tashqarida
     totals = body["totals"]
     assert {k: money(v) for k, v in totals["frozen_money"].items()} == {
-        "china": D(2_400_000),
-        "road": D(0),
+        "china": D(0),
+        "road": D(2_400_000),
         "own": D(2_800_000),  # Chiroq 50 × 50 000 + Lampa 10 × 30 000
         "fbo": D(10_000_000),
         "fbs": D(500_000),
@@ -1209,7 +1209,7 @@ def test_inventory(world: World) -> None:
     }
     assert money(totals["frozen_total"]) == D(15_900_000)
     assert totals["units"] == {
-        "china": 20, "road": 0, "own": 60, "fbo": 120, "fbs": 5, "defected": 2, "inbound": 0,
+        "china": 0, "road": 20, "own": 60, "fbo": 120, "fbs": 5, "defected": 2, "inbound": 0,
     }  # fmt: skip
     assert totals["statuses"] == {"dead": 1, "good": 1}
     # "Uzumga yuborish": zb ning omborida 50 dona bor, lekin tezlik 0 — signal yo'q; xa ning omborida tovar yo'q.

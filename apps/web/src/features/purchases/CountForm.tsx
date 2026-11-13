@@ -22,8 +22,10 @@ export function CountForm({ orgId, detail, onClose, onSaved }: { orgId: string; 
   const { t } = useTranslation();
   const amounts = detail.amounts;
   const p = detail.purchase;
+  // Boshqa SKU'ga o'tkazilgan qatorlar sanalmaydi (Omborimda boshqariladi).
+  const lines = detail.lines.filter((l) => !l.source_line_id);
   const [rows, setRows] = useState<Record<string, Row>>(() =>
-    Object.fromEntries(detail.lines.map((l) => [l.id, { received: String(l.received_qty ?? l.ordered_qty), defect: String(l.defect_qty), pack: l.pack_unit_cost }])),
+    Object.fromEntries(detail.lines.filter((l) => !l.source_line_id).map((l) => [l.id, { received: String(l.received_qty ?? l.ordered_qty), defect: String(l.defect_qty), pack: l.pack_unit_cost }])),
   );
   const [countedOn, setCountedOn] = useState(todayTashkent());
   const [refund, setRefund] = useState<string | null>(p.refund_amount);
@@ -31,8 +33,8 @@ export function CountForm({ orgId, detail, onClose, onSaved }: { orgId: string; 
   const [remember, setRemember] = useState(false);
   const set = (id: string, x: Partial<Row>) => setRows((r) => ({ ...r, [id]: { ...r[id]!, ...x } }));
   const step = (id: string, by: number) => set(id, { received: String(Math.max(0, Number(rows[id]!.received ?? 0) + by)) });
-  const short = detail.lines.some((l) => whole(rows[l.id]!.received) && Number(rows[l.id]!.received) < l.ordered_qty);
-  const valid = detail.lines.every((l) => {
+  const short = lines.some((l) => whole(rows[l.id]!.received) && Number(rows[l.id]!.received) < l.ordered_qty);
+  const valid = lines.every((l) => {
     const r = rows[l.id]!;
     return whole(r.received) && whole(r.defect ?? "0") && Number(r.defect ?? 0) <= Number(r.received);
   });
@@ -41,7 +43,7 @@ export function CountForm({ orgId, detail, onClose, onSaved }: { orgId: string; 
       countPurchase(orgId, p.id, {
         counted_on: countedOn || null,
         remember_pack: amounts && remember,
-        lines: detail.lines.map((l) => {
+        lines: lines.map((l) => {
           const r = rows[l.id]!;
           return {
             line_id: l.id,
@@ -79,12 +81,12 @@ export function CountForm({ orgId, detail, onClose, onSaved }: { orgId: string; 
         <p className="caption">{t("purchases.count.hint")}</p>
         <div className="purchase-form__row">
           <TextInput label={t("purchases.count.date")} type="date" value={countedOn} onValueChange={setCountedOn} />
-          <Button variant="secondary" onClick={() => setRows((r) => Object.fromEntries(detail.lines.map((l) => [l.id, { ...r[l.id]!, received: String(l.ordered_qty) }])))}>
+          <Button variant="secondary" onClick={() => setRows((r) => Object.fromEntries(lines.map((l) => [l.id, { ...r[l.id]!, received: String(l.ordered_qty) }])))}>
             {t("purchases.count.all")}
           </Button>
         </div>
         <ul className="count-form__lines" aria-label={t("purchases.lines.title")}>
-          {detail.lines.map((l) => {
+          {lines.map((l) => {
             const r = rows[l.id]!;
             const name = lineLabel(l);
             return (

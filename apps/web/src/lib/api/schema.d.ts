@@ -1096,6 +1096,66 @@ export interface paths {
         patch: operations["update_component_api_v1_orgs__org_id__shipments__shipment_id__components__component_id__patch"];
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/warehouse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Warehouse
+         * @description Omborim (ADR-061 §7): SKU bo'yicha qoldiq, qiymat va o'tkazish manbalari; qoldig'i bor qatorlar.
+         */
+        get: operations["warehouse_api_v1_orgs__org_id__warehouse_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/warehouse/transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Transfer
+         * @description Boshqa SKU'ga o'tkazish (ADR-061 §7): manba qatordan N dona yangi qatorga — birlik tannarxi bilan.
+         */
+        post: operations["transfer_api_v1_orgs__org_id__warehouse_transfer_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/warehouse/transfers/{line_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Cancel Transfer
+         * @description O'tkazmani bekor qilish: donalar manba SKU'ga qaytadi (tannarx bilan).
+         */
+        delete: operations["cancel_transfer_api_v1_orgs__org_id__warehouse_transfers__line_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/purchases/{purchase_id}/count": {
         parameters: {
             query?: never;
@@ -2510,11 +2570,13 @@ export interface components {
             good_qty: number;
             /** Pack Unit Cost */
             pack_unit_cost: string | null;
-            /** Defect Cost */
-            defect_cost?: string | null;
             /** Flags */
             flags: string[];
             cost: components["schemas"]["LineCostOut"] | null;
+            /** Defect Cost */
+            defect_cost?: string | null;
+            /** Source Line Id */
+            source_line_id?: string | null;
         };
         /** LinePatch */
         LinePatch: {
@@ -4138,6 +4200,30 @@ export interface components {
             unlinked: components["schemas"]["StatementOut"];
             unallocated: components["schemas"]["StatementOut"];
         };
+        /**
+         * SourceOut
+         * @description O'tkazish manbasi — sanalgan xarid qatori (qolgan sog' dona).
+         */
+        SourceOut: {
+            /**
+             * Line Id
+             * Format: uuid
+             */
+            line_id: string;
+            /**
+             * Purchase Id
+             * Format: uuid
+             */
+            purchase_id: string;
+            /** Purchase Title */
+            purchase_title: string | null;
+            /** Counted On */
+            counted_on: string | null;
+            /** Qty */
+            qty: number;
+            /** Unit Cost */
+            unit_cost: string | null;
+        };
         /** SplitIn */
         SplitIn: {
             /** Lines */
@@ -4326,6 +4412,10 @@ export interface components {
             note?: string | null;
             /** Purchase Line Id */
             purchase_line_id?: string | null;
+            /** Reason */
+            reason?: ("defect" | "loss") | null;
+            /** Sku Id */
+            sku_id?: string | null;
         };
         /** StockMoveOut */
         StockMoveOut: {
@@ -4352,6 +4442,12 @@ export interface components {
             note: string | null;
             /** Purchase Line Id */
             purchase_line_id: string | null;
+            /** Reason */
+            reason?: string | null;
+            /** Sku Id */
+            sku_id?: string | null;
+            /** Cost */
+            cost?: string | null;
             /**
              * Created At
              * Format: date-time
@@ -4706,6 +4802,43 @@ export interface components {
             /** Track No */
             track_no?: string | null;
         };
+        /** TransferIn */
+        TransferIn: {
+            /**
+             * Source Line Id
+             * Format: uuid
+             */
+            source_line_id: string;
+            /**
+             * To Sku Id
+             * Format: uuid
+             */
+            to_sku_id: string;
+            /** Qty */
+            qty: number;
+        };
+        /**
+         * TransferOut
+         * @description Shu SKU'ga o'tkazilgan qator (bekor qilish uchun).
+         */
+        TransferOut: {
+            /**
+             * Line Id
+             * Format: uuid
+             */
+            line_id: string;
+            /**
+             * Purchase Id
+             * Format: uuid
+             */
+            purchase_id: string;
+            /** Qty */
+            qty: number;
+            /** From Sku Id */
+            from_sku_id: string | null;
+            /** From Name */
+            from_name: string | null;
+        };
         /**
          * UncoveredOut
          * @description F15 "tannarxsiz qism" (sariq banner: "N ta sotuv (X so'm) tannarxsiz — foydaga kirmadi").
@@ -4787,6 +4920,48 @@ export interface components {
          * @enum {string}
          */
         View: "total" | "month" | "day" | "shop" | "sku";
+        /** WarehouseOut */
+        WarehouseOut: {
+            /** Items */
+            items: components["schemas"]["WarehouseRow"][];
+            /** Amounts */
+            amounts: boolean;
+            /** Total Qty */
+            total_qty: number;
+            /** Total Value */
+            total_value: string | null;
+        };
+        /** WarehouseRow */
+        WarehouseRow: {
+            /** Key */
+            key: string;
+            /** Sku Id */
+            sku_id: string | null;
+            /** Item Id */
+            item_id: string | null;
+            /** Shop Id */
+            shop_id: string | null;
+            /** Shop */
+            shop: string | null;
+            /** Title */
+            title: string | null;
+            /** Product Title */
+            product_title: string | null;
+            /** Barcode */
+            barcode: string | null;
+            /** Qty */
+            qty: number;
+            /** Reserved */
+            reserved: number;
+            /** Unit Cost */
+            unit_cost: string | null;
+            /** Value */
+            value: string | null;
+            /** Sources */
+            sources: components["schemas"]["SourceOut"][];
+            /** Transfers In */
+            transfers_in: components["schemas"]["TransferOut"][];
+        };
         /** PriceOut */
         upapi__routes__inventory__PriceOut: {
             /** Amount */
@@ -8172,6 +8347,129 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ShipmentDetailOut"];
                 };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    warehouse_api_v1_orgs__org_id__warehouse_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WarehouseOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    transfer_api_v1_orgs__org_id__warehouse_transfer_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WarehouseOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    cancel_transfer_api_v1_orgs__org_id__warehouse_transfers__line_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                line_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validatsiya xatosi */
             422: {

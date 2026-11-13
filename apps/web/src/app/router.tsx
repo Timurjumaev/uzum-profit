@@ -143,6 +143,13 @@ const inventory = createRoute({
   component: lazyRouteComponent(() => import("../routes/inventory"), "Inventory"),
 });
 
+/** Omborim (TM5, ADR-061 §7): SKU bo'yicha qoldiq, boshqa SKU'ga o'tkazish, keyin topilgan brak. */
+const warehouse = createRoute({
+  getParentRoute: () => app,
+  path: "/warehouse",
+  component: lazyRouteComponent(() => import("../routes/inventory"), "Warehouse"),
+});
+
 const status = createRoute({
   getParentRoute: () => app,
   path: "/status",
@@ -203,7 +210,7 @@ const uiKit = createRoute({
 
 export const routeTree = root.addChildren([
   auth.addChildren([
-    app.addChildren([home, status, pnl, products, product, orders, expenses, purchases, purchase, shipments, shipment, cargoPool, inventory, cash, reports, settings, opening]),
+    app.addChildren([home, status, pnl, products, product, orders, expenses, purchases, purchase, shipments, shipment, cargoPool, inventory, warehouse, cash, reports, settings, opening]),
     onboarding,
     invite,
   ]),

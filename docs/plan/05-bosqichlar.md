@@ -946,8 +946,15 @@ Har vazifa — alohida branch va PR; tafsilot 07 "ADR-061 tafsiloti", 02 M9–M1
   butun ko'chgan qator o'zi o'tadi; sanalgan xarid va qo'lda ulushli chiqim — rad. Web: "Sanash" oynasi ("Hammasi keldi",
   − / + 44 px, brak, qadoq, kam kelsa qaytarilgan summa) — vaqtinchalik "Tovar keldi — bugun" tugmasi o'rniga; "Xaridni
   ikkiga bo'lish" oynasi; qatorda "brak N". Testlar: yadro, API, web, e2e 360 px.
-- [ ] TM5 Omborim (§7): SKU bo'yicha qoldiq, "Boshqa SKU'ga o'tkazish", keyin topilgan brak → "Brak zarari" (F51, foyda
-  hisobida qator); F27 joylari yangi holatlardan.
+- [x] TM5 Omborim (§7, §10), "Boshqa SKU'ga o'tkazish", keyin topilgan brak (F51). ✓ 2026-11-13: `GET /warehouse` —
+  SKU bo'yicha qoldiq sanalgan xaridlardan (sog' dona − o'tkazilgan − hisobdan chiqarilgan / tuzatish − postavkaga
+  ajratilgan), lot narxidagi qiymat, o'tkazish manbalari. O'tkazish (`POST /warehouse/transfer`, bekor — `DELETE
+  /warehouse/transfers/{id}`): shu xariddagi yangi qator (`purchase_lines.source_line_id`, migratsiya 0025) — dona manba
+  birlik tannarxi bilan o'tadi (`upcore.purchasing.apply_transfers`, kargo ulushi ham). Keyin topilgan brak — `stock_moves`
+  `writeoff` + `reason = defect` (+ `sku_id`), tannarx dvigateli lot narxini `stock_moves.cost` ga yozadi, foyda hisobida
+  "Brak zarari" (o'z xarajatlari qatori, `upcore.pnl.DEFECT_LOSS`). Ombor joylari (F27) holatdan: "Yo'lda" (eski "Xitoyda"
+  va qoralama ham), "Omborimda". Web: `/warehouse` (Ombor sahifasidan havola), o'tkazish va brak oynalari; o'tkazilgan
+  qator xaridda tahrirlanmaydi va sanalmaydi. Testlar: yadro, API, web, e2e, vizual.
 - [ ] TM6 Uzumga jo'natish (§7; avval B5.3 ning bir qismi): do'kon → SKU'lar to'liq soni bilan → Excel (ADR-050 shabloni),
   "Jo'natilmoqda" band qilish, postavka bilan avtomatik bog'lash, bekor qilish. B5.0c (postavka tarkibi) shu yerda.
 - [ ] TM7 Qabul farqi (§8; avval B5.3 ning qolgani): kamomad ro'yxati va holatlari, "Uzum yo'qotdi" / "Men sanashda

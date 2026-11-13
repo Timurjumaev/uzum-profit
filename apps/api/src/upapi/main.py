@@ -36,6 +36,7 @@ from upapi.routes import (
     skus,
     stock_moves,
     sync,
+    warehouse,
 )
 from upapi.routes import settings as settings_routes
 from upapi.settings import Settings, get_settings
@@ -123,6 +124,7 @@ def create_app(
         app.include_router(reports.router, prefix=API_PREFIX)
     app.include_router(purchases.router, prefix=API_PREFIX)  # xaridlar (M9)
     app.include_router(shipments.router, prefix=API_PREFIX)  # kargolar (M9, ADR-046)
+    app.include_router(warehouse.router, prefix=API_PREFIX)  # Omborim, SKU'ga o'tkazish (TM5)
     app.include_router(counting.router, prefix=API_PREFIX)  # sanash, xaridni bo'lish (TM4)
     app.include_router(cargo.router, prefix=API_PREFIX)  # kargo puli jadvali (TM3, ADR-061 §3)
     app.include_router(settings_routes.router, prefix=API_PREFIX)  # sozlamalar (M16)

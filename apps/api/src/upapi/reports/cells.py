@@ -50,7 +50,16 @@ from upcore.metrics import (
     storage_weights,
 )
 from upcore.money import Currency, Money
-from upcore.pnl import CellKey, Cells, CellSales, ExpenseItem, OwnExpense, TaxBase, build_cells
+from upcore.pnl import (
+    DEFECT_LOSS,
+    CellKey,
+    Cells,
+    CellSales,
+    ExpenseItem,
+    OwnExpense,
+    TaxBase,
+    build_cells,
+)
 from upcore.tariffs import SEED_STORAGE_RULES, paid_storage, storage_rule
 from upcore.tax import (
     BHM,
@@ -636,6 +645,51 @@ async def _own(conn: AsyncConnection, period: Period) -> list[OwnExpense]:
                 skus=tuple((str(a), str(b)) for a, b in linked) if len(linked) > 1 else (),
             )
         )
+    return out + await _defect_losses(conn, period)
+
+
+async def _defect_losses(conn: AsyncConnection, period: Period) -> list[OwnExpense]:
+    """F51 (ADR-061 §6): keyin topilgan brak (``stock_moves`` ``writeoff``, sabab ``defect``) — hisobdan chiqarilgan
+    kunga, lot narxidagi qiymati bilan (``cost`` — tannarx dvigateli yozadi; hali hisoblanmagan — keyingi hisobda).
+    SKU ko'rsatilgan bo'lsa — o'sha SKU katagiga, bo'lmasa tovarning SKU'lariga (ADR-039 kabi)."""
+    sm, k = m.stock_moves, m.mp_skus
+    rows = list(
+        await conn.execute(
+            select(sm.c.item_id, sm.c.sku_id, sm.c.day, sm.c.cost).where(
+                sm.c.kind == "writeoff",
+                sm.c.reason == "defect",
+                sm.c.cost.is_not(None),
+                sm.c.day >= period.start,
+                sm.c.day <= period.end,
+            )
+        )
+    )
+    if not rows:
+        return []
+    skus: dict[UUID, list[tuple[UUID, UUID]]] = {}
+    shop_of: dict[UUID, UUID] = {}
+    for x in await conn.execute(
+        select(k.c.item_id, k.c.shop_id, k.c.id).where(
+            k.c.item_id.in_({r.item_id for r in rows})
+            | k.c.id.in_({r.sku_id for r in rows if r.sku_id is not None})
+        )
+    ):
+        shop_of[x.id] = x.shop_id
+        if x.item_id is not None:
+            skus.setdefault(x.item_id, []).append((x.shop_id, x.id))
+    out = []
+    for r in rows:
+        expense = ManualExpense(_uzs(r.cost), r.day, r.day)
+        if r.sku_id is not None and r.sku_id in shop_of:
+            out.append(OwnExpense(expense, DEFECT_LOSS, str(shop_of[r.sku_id]), str(r.sku_id)))
+            continue
+        linked = skus.get(r.item_id, [])
+        if len(linked) == 1:
+            out.append(OwnExpense(expense, DEFECT_LOSS, str(linked[0][0]), str(linked[0][1])))
+        else:
+            out.append(
+                OwnExpense(expense, DEFECT_LOSS, skus=tuple((str(a), str(b)) for a, b in linked))
+            )
     return out
 
 

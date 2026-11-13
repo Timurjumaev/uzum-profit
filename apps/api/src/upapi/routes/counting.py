@@ -122,10 +122,20 @@ async def count_purchase(
             )
         }
     touched: set[UUID | None] = set()
+    moved_out: dict[UUID, int] = {}
+    for r in lines.values():
+        if r.source_line_id is not None:
+            moved_out[r.source_line_id] = moved_out.get(r.source_line_id, 0) + (r.received_qty or 0)
     for x in body.lines:
         if x.defect_qty > x.received_qty:
             raise AppError("bad_line", 422, detail="brak kelgan donadan ko'p")
         line = lines[x.line_id]
+        if line.source_line_id is not None:
+            raise AppError("transfer_line", 409, detail="o'tkazilgan qator sanalmaydi")
+        if x.received_qty - x.defect_qty < moved_out.get(x.line_id, 0):
+            raise AppError(
+                "bad_line", 422, detail="sog' dona boshqa SKU'ga o'tkazilgandan kam bo'lmaydi"
+            )
         values: dict[str, Any] = {"received_qty": x.received_qty, "defect_qty": x.defect_qty}
         pack = x.pack_unit_cost
         if pack is None and line.pack_unit_cost is None and line.item_id is not None:

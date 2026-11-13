@@ -3,7 +3,7 @@
 import { MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
-import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, QuickPurchaseIn, SupplyState, TrackedIn, BoxIn, SharesIn, CountIn, SplitIn, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, OpeningIn } from "../lib/api/types";
+import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, QuickPurchaseIn, SupplyState, TrackedIn, BoxIn, SharesIn, CountIn, SplitIn, TransferIn, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, OpeningIn } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -489,6 +489,19 @@ export const stockMovesQuery = (orgId: string, itemId: string) =>
 
 export const createStockMove = (orgId: string, body: StockMoveIn) =>
   unwrap(api.POST("/api/v1/orgs/{org_id}/stock-moves", { params: { path: { org_id: orgId } }, body }));
+
+/** Omborim (TM5, ADR-061 §7): SKU bo'yicha qoldiq, o'tkazish manbalari. */
+export const warehouseQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "inventory", "warehouse"],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/warehouse", { params: { path: { org_id: orgId } } })),
+  });
+
+export const transferToSku = (orgId: string, body: TransferIn) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/warehouse/transfer", { params: { path: { org_id: orgId } }, body }));
+
+export const cancelTransfer = (orgId: string, lineId: string) =>
+  unwrap(api.DELETE("/api/v1/orgs/{org_id}/warehouse/transfers/{line_id}", { params: { path: { org_id: orgId, line_id: lineId } } }));
 
 export const deleteStockMove = (orgId: string, moveId: string) =>
   unwrap(api.DELETE("/api/v1/orgs/{org_id}/stock-moves/{move_id}", { params: { path: { org_id: orgId, move_id: moveId } } }));

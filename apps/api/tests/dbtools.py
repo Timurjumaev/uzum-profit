@@ -194,6 +194,10 @@ def row_values(
         if col.name in SKIP:
             continue
         if col.name in refs:
+            if (
+                refs[col.name] == table.name
+            ):  # o'ziga havola (masalan, o'tkazilgan qator manbasi) — bo'sh
+                continue
             values[col.name] = parents[refs[col.name]]
         elif col.name == "user_id" or col.name in ("actor_user_id", "invited_by"):
             values[col.name] = globals_["user"][org]

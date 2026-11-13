@@ -77,7 +77,8 @@ def row(w: World) -> dict[str, Any]:
 
 
 def test_locations_follow_purchase_stage(world: World) -> None:
-    """Xarid bosqichi → joy: Xitoyda / yo'lda / o'z omborim; Uzumga yuborilgan — FBO qoldig'ida (joylarda yo'q)."""
+    """Xarid holati → joy (ADR-061 §10, §11): Yo'lda (eski "Xitoyda" va qoralama ham) / Omborimda; Uzumga yuborilgan —
+    FBO qoldig'ida (joylarda yo'q)."""
     w, a = world, world.a
     item = w.ids["item"]
     for stage, qty in [
@@ -96,15 +97,15 @@ def test_locations_follow_purchase_stage(world: World) -> None:
     assert a.recalc(datetime.now(UTC)).errors == {}
     r = row(w)
     assert (r["locations"]["china"], r["locations"]["road"], r["locations"]["own"]) == (
-        30,
-        120,
+        0,
+        790,  # 10 + 20 + 40 + 80 + qoralama 640
         160,
     )
-    assert r["in_transit"] == 150  # Xitoyda + yo'lda
+    assert r["in_transit"] == 790
     body = ok(send(w, "GET", f"inventory?as_of={TODAY.isoformat()}"))
     frozen = {k: D(v) for k, v in body["totals"]["frozen_money"].items()}
     # Qiymat — qatorning lot tannarxi bilan (komponent faqat tovar: 1 000 so'm/dona).
-    assert (frozen["china"], frozen["road"], frozen["own"]) == (D(30_000), D(120_000), D(160_000))
+    assert (frozen["china"], frozen["road"], frozen["own"]) == (D(0), D(790_000), D(160_000))
     assert body["totals"]["units"]["own"] == 160
 
 

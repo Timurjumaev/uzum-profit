@@ -118,6 +118,7 @@ def line_model(row: Row[Any]) -> PurchaseLine:
             if row.pack_unit_cost is None
             else Money(to_decimal(row.pack_unit_cost), Currency.UZS)
         ),
+        source_id=None if row.source_line_id is None else str(row.source_line_id),
     )
 
 

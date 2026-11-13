@@ -884,6 +884,10 @@ async def update_line(
     background: BackgroundTasks,
 ) -> rp.PurchaseDetailOut:
     row = await _line(ctx, purchase_id, line_id)
+    if row.source_line_id is not None:
+        raise AppError(
+            "transfer_line", 409, detail="o'tkazilgan qator tahrirlanmaydi — Omborimda bekor qiling"
+        )
     values = body.model_dump(exclude_unset=True)
     if "ordered_qty" in values and values["ordered_qty"] is None:
         raise AppError("bad_line", 422, detail="ordered_qty bo'sh bo'lmaydi")
@@ -935,6 +939,13 @@ async def delete_line(
 ) -> rp.PurchaseDetailOut:
     """Qator komponentlarda alohida tanlangan bo'lsa — 409 (sotuvchi kiritgani jim o'zgartirilmaydi)."""
     row = await _line(ctx, purchase_id, line_id)
+    pl_ = m.purchase_lines
+    if await ctx.conn.scalar(select(pl_.c.id).where(pl_.c.source_line_id == line_id).limit(1)):
+        raise AppError(
+            "line_in_use",
+            409,
+            detail="qatordan boshqa SKU'ga o'tkazma bor — avval uni bekor qiling",
+        )
     cc = m.cost_components
     for comp in await ctx.conn.execute(select(cc).where(cc.c.purchase_id == purchase_id)):
         lines, shares = targets_of(comp.targets)
