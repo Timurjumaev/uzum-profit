@@ -938,8 +938,14 @@ Har vazifa — alohida branch va PR; tafsilot 07 "ADR-061 tafsiloti", 02 M9–M1
   mahalliy tashish"; o'z turlari — `cost_types` (migratsiya 0024), xarajat oynasida "Yangi tur…". Yangi yozuvlarda taqsimot
   faqat dona / qo'lda (vazn / hajm / qiymat — eski yozuvlarda). Kargolar: sahifalash (B5.0d), sanalar ustuni yo'q, yangi
   kargoda sanalar so'ralmaydi. Testlar: yadro (xossa — ulushlar yig'indisi), API, web, e2e 360 px, vizual.
-- [ ] TM4 Sanash (§6): kelgan son, brak, "Hammasi keldi", sotuvchi qaytargan summa, tovarning qadoq qo'shimchasi (§5),
-  "Xaridni ikkiga bo'lish"; mobil va desktop.
+- [x] TM4 Sanash (§6), qadoq qo'shimchasi (§5), "Xaridni ikkiga bo'lish". ✓ 2026-11-13: `POST /purchases/{id}/count` —
+  kelgan son va brak (chiqim sog' donaga, F20), qadoq qo'shimchasi qatorga (bo'sh — tovardagi qiymat; "Tovarga eslab qolish"),
+  sotuvchi qaytargan summa (sanashda yoki keyin `PATCH /purchases/{id}` `refund_*`), hamma qator sanalganda qabul sanasi →
+  "Omborimda"; qatorda `defect_cost` ("5 ta brak — tannarxga X qo'shdi", `upcore.purchasing.defect_cost`).
+  `POST /purchases/{id}/split` — keyin keladigan donalar yangi xaridga ("Yo'lda"), chiqimlar dona bo'yicha (`split_units`),
+  butun ko'chgan qator o'zi o'tadi; sanalgan xarid va qo'lda ulushli chiqim — rad. Web: "Sanash" oynasi ("Hammasi keldi",
+  − / + 44 px, brak, qadoq, kam kelsa qaytarilgan summa) — vaqtinchalik "Tovar keldi — bugun" tugmasi o'rniga; "Xaridni
+  ikkiga bo'lish" oynasi; qatorda "brak N". Testlar: yadro, API, web, e2e 360 px.
 - [ ] TM5 Omborim (§7): SKU bo'yicha qoldiq, "Boshqa SKU'ga o'tkazish", keyin topilgan brak → "Brak zarari" (F51, foyda
   hisobida qator); F27 joylari yangi holatlardan.
 - [ ] TM6 Uzumga jo'natish (§7; avval B5.3 ning bir qismi): do'kon → SKU'lar to'liq soni bilan → Excel (ADR-050 shabloni),

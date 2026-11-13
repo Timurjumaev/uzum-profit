@@ -26,7 +26,7 @@ import {
   type Routes,
 } from "../../test/api";
 import type { PickerRow } from "../../lib/api/types";
-import { component, COMP_GOODS, ITEM_1, line, LINE_1, PURCHASE_1, PURCHASE_2, path as supplyPath, purchaseDetail, purchaseRow } from "../../test/purchases";
+import { component, COMP_GOODS, ITEM_1, line, LINE_1, LINE_2, PURCHASE_1, PURCHASE_2, path as supplyPath, purchaseDetail, purchaseRow } from "../../test/purchases";
 
 const f = formatterFor("uz-Latn");
 const norm = (text: string) => text.replace(/[\u00A0\u202F]/g, " ");
@@ -214,14 +214,81 @@ describe("xarid sahifasi", () => {
     expect(within(cost).getByText("kargo kiritilmagan")).toBeTruthy();
   });
 
-  it("«Tovar keldi — bugun» — qabul sanasi PATCH; javob keshga qo'yiladi (holat Omborimda)", async () => {
-    const counted = purchaseDetail({ purchase: purchaseRow({ stage: "received", state: "in_stock", path: supplyPath("in_stock", { in_transit: "2026-10-02", in_stock: todayTashkent() }) }) });
-    const { api } = await renderAt(DETAIL, { [purchaseRoute("PATCH", PURCHASE_1)]: () => json(200, counted) });
-    fireEvent.click(await screen.findByRole("button", { name: "Tovar keldi — bugun" }));
-    await waitFor(() => expect(bodiesOf(api, purchaseRoute("PATCH", PURCHASE_1))).toHaveLength(1));
-    expect(bodiesOf(api, purchaseRoute("PATCH", PURCHASE_1))[0]).toEqual({ dates: { received: todayTashkent() } });
-    await waitFor(() => expect(screen.queryByRole("button", { name: "Tovar keldi — bugun" })).toBeNull());
-    expect(screen.getAllByText("Omborimda").length).toBeGreaterThan(0);
+  it("sanash (TM4): «Hammasi keldi», − / +, brak, qadoq; kam kelsa qaytarilgan summa; bitta POST, javob keshga", async () => {
+    const count = purchaseSubRoute("POST", PURCHASE_1, "count");
+    const counted = purchaseDetail({
+      purchase: purchaseRow({ stage: "received", state: "in_stock", path: supplyPath("in_stock", { in_transit: "2026-10-02", in_stock: todayTashkent() }) }),
+      lines: [line({ defect_qty: 5, good_qty: 93, defect_cost: "90000.00" })],
+    });
+    const { api } = await renderAt(DETAIL, { [count]: () => json(200, counted) });
+    fireEvent.click(await screen.findByRole("button", { name: "Sanash" }));
+    const dialog = await screen.findByRole("dialog", { name: "Sanash" });
+    // Standart: kelgan = mavjud qabul yoki buyurtma soni.
+    expect((within(dialog).getByLabelText("Kelgan: Mashina") as HTMLInputElement).value).toBe("98");
+    expect((within(dialog).getByLabelText("Kelgan: Yangi oʻyinchoq · qizil × M") as HTMLInputElement).value).toBe("50");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Hammasi keldi" }));
+    expect((within(dialog).getByLabelText("Kelgan: Mashina") as HTMLInputElement).value).toBe("100");
+    expect(within(dialog).queryByLabelText(/^Sotuvchi qaytargan summa/)).toBeNull();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Bittaga kamaytirish: Yangi oʻyinchoq · qizil × M" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Bittaga kamaytirish: Yangi oʻyinchoq · qizil × M" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Bittaga koʻpaytirish: Yangi oʻyinchoq · qizil × M" }));
+    fireEvent.change(within(dialog).getByLabelText("Brak: Mashina"), { target: { value: "5" } });
+    fireEvent.change(within(dialog).getByLabelText("Qadoq, soʻm/dona: Mashina"), { target: { value: "300" } });
+    fireEvent.change(within(dialog).getByLabelText(/^Sotuvchi qaytargan summa/), { target: { value: "20" } });
+    fireEvent.click(within(dialog).getByRole("checkbox", { name: /eslab qolish/ }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Sanashni saqlash" }));
+    await waitFor(() => expect(bodiesOf(api, count)).toHaveLength(1));
+    expect(bodiesOf(api, count)[0]).toEqual({
+      counted_on: todayTashkent(),
+      remember_pack: true,
+      lines: [
+        { line_id: LINE_1, received_qty: 100, defect_qty: 5, pack_unit_cost: "300" },
+        { line_id: LINE_2, received_qty: 49, defect_qty: 0 },
+      ],
+      refund_amount: "20",
+      refund_currency: "CNY",
+    });
+    expect(await screen.findByText("Sanash saqlandi")).toBeTruthy();
+    expect(screen.getByText("brak 5")).toBeTruthy();
+    expect(norm(screen.getByText(/5 ta brak — tannarxga/).textContent!)).toContain(norm(f.money("90000.00")));
+    expect(screen.getByRole("button", { name: "Sanashni tuzatish" })).toBeTruthy();
+  });
+
+  it("sanash: brak kelgandan ko'p — saqlab bo'lmaydi; omborchi qadoq va qaytarilgan summani ko'rmaydi", async () => {
+    await renderAt(DETAIL);
+    fireEvent.click(await screen.findByRole("button", { name: "Sanash" }));
+    const dialog = await screen.findByRole("dialog", { name: "Sanash" });
+    fireEvent.change(within(dialog).getByLabelText("Brak: Mashina"), { target: { value: "99" } });
+    expect((within(dialog).getByRole("button", { name: "Sanashni saqlash" }) as HTMLButtonElement).disabled).toBe(true);
+    cleanup();
+    await renderAt(DETAIL, { [purchaseRoute("GET", PURCHASE_1)]: () => json(200, purchaseDetail({ amounts: false })) }, "warehouse");
+    fireEvent.click(await screen.findByRole("button", { name: "Sanash" }));
+    const wh = await screen.findByRole("dialog", { name: "Sanash" });
+    expect(within(wh).queryByLabelText(/^Qadoq/)).toBeNull();
+    expect(within(wh).queryByRole("checkbox", { name: /eslab qolish/ })).toBeNull();
+  });
+
+  it("xaridni ikkiga bo'lish: keyin keladigan dona → POST split; yangi xarid havolasi", async () => {
+    const split = purchaseSubRoute("POST", PURCHASE_1, "split");
+    const fresh = purchaseDetail({ lines: [line({ received_qty: null, shortage: 0 }), line({ id: LINE_2, item_id: null, item_name: null, temp_name: "Yangi oʻyinchoq", received_qty: null, ordered_qty: 50, shortage: 0 })] });
+    const { api } = await renderAt(DETAIL, {
+      [purchaseRoute("GET", PURCHASE_1)]: () => json(200, fresh),
+      [split]: () => json(201, { purchase: fresh, new_purchase_id: PURCHASE_2 }),
+    });
+    fireEvent.click(await screen.findByRole("button", { name: "Xaridni ikkiga boʻlish" }));
+    const dialog = await screen.findByRole("dialog", { name: "Xaridni ikkiga boʻlish" });
+    const save = within(dialog).getByRole("button", { name: "Ikkiga boʻlish" }) as HTMLButtonElement;
+    expect(save.disabled).toBe(true);
+    const inputs = within(dialog).getAllByLabelText(/buyurtma/);
+    fireEvent.change(inputs[0]!, { target: { value: "100" } });
+    fireEvent.change(inputs[1]!, { target: { value: "50" } });
+    expect(save.disabled).toBe(true); // hammasi ko'chmaydi
+    fireEvent.change(inputs[0]!, { target: { value: "30" } });
+    fireEvent.click(save);
+    await waitFor(() => expect(bodiesOf(api, split)).toHaveLength(1));
+    expect(bodiesOf(api, split)[0]).toEqual({ lines: [{ line_id: LINE_1, qty: 30 }, { line_id: LINE_2, qty: 50 }] });
+    const link = await screen.findByRole("link", { name: "Yangi xaridni ochish" });
+    expect(link.getAttribute("href")).toBe(`/purchases/${PURCHASE_2}`);
   });
 
   it("sanalar: tartib buzilsa saqlab bo'lmaydi; faqat o'zgargan sanalar yuboriladi", async () => {

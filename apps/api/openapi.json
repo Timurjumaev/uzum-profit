@@ -6128,6 +6128,154 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/purchases/{purchase_id}/count": {
+      "post": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "Count Purchase",
+        "description": "Sanash (ADR-061 §6): kelgan son, brak, qadoq qo'shimchasi va sotuvchi qaytargan summa — bitta tranzaksiyada.",
+        "operationId": "count_purchase_api_v1_orgs__org_id__purchases__purchase_id__count_post",
+        "parameters": [
+          {
+            "name": "purchase_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Purchase Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CountIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchaseDetailOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/purchases/{purchase_id}/split": {
+      "post": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "Split Purchase",
+        "description": "Xaridni ikkiga bo'lish (ADR-061 §6): ko'rsatilgan donalar yangi xaridga (\"Yo'lda\"), chiqimlar dona bo'yicha.",
+        "operationId": "split_purchase_api_v1_orgs__org_id__purchases__purchase_id__split_post",
+        "parameters": [
+          {
+            "name": "purchase_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Purchase Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SplitIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SplitOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/cargo-pool": {
       "get": {
         "tags": [
@@ -8926,6 +9074,110 @@
         ],
         "title": "CostTypeOut"
       },
+      "CountIn": {
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/CountLineIn"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Lines"
+          },
+          "counted_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Counted On"
+          },
+          "remember_pack": {
+            "type": "boolean",
+            "title": "Remember Pack",
+            "default": false
+          },
+          "refund_amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refund Amount"
+          },
+          "refund_currency": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Currency"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "lines"
+        ],
+        "title": "CountIn",
+        "description": "Sanash: berilmagan qatorlar o'zgarmaydi (hamma qator sanalganda holat \"Omborimda\")."
+      },
+      "CountLineIn": {
+        "properties": {
+          "line_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Line Id"
+          },
+          "received_qty": {
+            "type": "integer",
+            "maximum": 10000000.0,
+            "minimum": 0.0,
+            "title": "Received Qty"
+          },
+          "defect_qty": {
+            "type": "integer",
+            "maximum": 10000000.0,
+            "minimum": 0.0,
+            "title": "Defect Qty",
+            "default": 0
+          },
+          "pack_unit_cost": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pack Unit Cost"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line_id",
+          "received_qty"
+        ],
+        "title": "CountLineIn"
+      },
       "Currency": {
         "type": "string",
         "enum": [
@@ -10745,6 +10997,17 @@
               }
             ],
             "title": "Pack Unit Cost"
+          },
+          "defect_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Defect Cost"
           },
           "flags": {
             "items": {
@@ -13780,6 +14043,43 @@
             ],
             "title": "On Hand"
           },
+          "refund_amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refund Amount"
+          },
+          "refund_currency": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Currency"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "refund_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refund On"
+          },
           "dates": {
             "anyOf": [
               {
@@ -16255,6 +16555,63 @@
           "unallocated"
         ],
         "title": "SkusOut"
+      },
+      "SplitIn": {
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/SplitLineIn"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Lines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lines"
+        ],
+        "title": "SplitIn"
+      },
+      "SplitLineIn": {
+        "properties": {
+          "line_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Line Id"
+          },
+          "qty": {
+            "type": "integer",
+            "maximum": 10000000.0,
+            "minimum": 1.0,
+            "title": "Qty"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line_id",
+          "qty"
+        ],
+        "title": "SplitLineIn"
+      },
+      "SplitOut": {
+        "properties": {
+          "purchase": {
+            "$ref": "#/components/schemas/PurchaseDetailOut"
+          },
+          "new_purchase_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "New Purchase Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "purchase",
+          "new_purchase_id"
+        ],
+        "title": "SplitOut"
       },
       "Stage": {
         "type": "string",

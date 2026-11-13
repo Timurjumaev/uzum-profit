@@ -440,6 +440,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- TM4 (ADR-061 §5–§6) Sanash: kelgan son va brak (hamma chiqim sog' donaga), qadoq qo'shimchasi (tovardan nusxa, eslab qolish),
+  sotuvchi qaytargan summa (sanashda yoki keyin), brak narxi qatorda; "Xaridni ikkiga bo'lish" — keyin keladigan qism alohida
+  xarid bo'lib "Yo'lda" qoladi, chiqimlar dona bo'yicha bo'linadi. Vaqtinchalik "Tovar keldi — bugun" tugmasi olib tashlandi.
 - TM3 (ADR-061 §3–§4) Kargo puli jadvali (`/cargo-pool`): trekli xaridlarga o'z kargo puli bitta saqlashda, kodli quti — bitta
   summa, Kargo yaratiladi, ulushlar dona bo'yicha (`box_shares`), qo'lda o'zgartirilganlari saqlanadi va kargo sahifasida
   tahrirlanadi; xarid yo o'z kargo puli, yo quti bilan. Xarajat turlari lug'ati (`cost_types`, migratsiya 0024; tayyor turlarga

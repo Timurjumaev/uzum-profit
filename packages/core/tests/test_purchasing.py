@@ -28,9 +28,11 @@ from upcore.purchasing import (
     compute_shipment_lots,
     current_stage,
     default_base,
+    defect_cost,
     purchase_total,
     residual_goods,
     split_by_purchase,
+    split_units,
     stage_days,
     supply_path,
     supply_state,
@@ -752,3 +754,28 @@ def test_box_shares_sum_equals_amount(units: list[int], amount: D) -> None:
 
 def test_new_cost_kinds_go_to_shipments() -> None:
     assert K.TRANSFER_FEE in SHIPMENT_KINDS and K.LOCAL_DELIVERY in SHIPMENT_KINDS
+
+
+# --- Sanash: brak narxi, xaridni bo'lish (ADR-061 §6, TM4) -----------------------------------
+
+
+def test_defect_cost_spreads_defect_units() -> None:
+    uzs = lambda x: Money(D(x), Currency.UZS)  # noqa: E731
+    line = PurchaseLine("l", 100, received_qty=100, defect_qty=5, pack_unit_cost=uzs("100"))
+    lot = compute_lots(Purchase("p", (line,), (CostComponent(K.GOODS, uzs("1000000")),)))[0]
+    assert lot.qty == 95
+    assert defect_cost(lot, line) == uzs("50000")  # 1 000 000 × 5 / 100; qadoq qo'shilmaydi
+    clean = PurchaseLine("c", 10, received_qty=10)
+    assert defect_cost(compute_lots(Purchase("q", (clean,), ()))[0], clean) is None
+    empty = PurchaseLine("e", 10, received_qty=0)
+    assert defect_cost(compute_lots(Purchase("r", (empty,), ()))[0], empty) is None
+
+
+def test_split_units() -> None:
+    usd = lambda x: Money(D(x), Currency.USD)  # noqa: E731
+    assert split_units(usd("100"), 60, 40) == (usd("60.00"), usd("40.00"))
+    assert split_units(usd("10"), 1, 2) == (usd("3.3333"), usd("6.6667"))
+    assert split_units(usd("10"), 5, 0) == (usd("10"), usd("0"))
+    assert split_units(usd("10"), 0, 5) == (usd("0"), usd("10"))
+    with pytest.raises(PurchaseError):
+        split_units(usd("10"), 0, 0)

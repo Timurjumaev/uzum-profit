@@ -12,16 +12,17 @@ import { errorText } from "../../app/errors";
 import { copyPurchase, createComponent, currentOrg, deleteComponent, deleteLine, deletePurchase, meQuery, purchaseQuery, updateComponent, updatePurchase } from "../../app/query";
 import { Badge, Banner, Button, DataTable, Dialog, EmptyState, FormulaPopover, Skeleton, TextInput, Timeline, useToast, type Column } from "../../components/ui";
 import type { CostComponent, PurchaseDetail, PurchaseLine, PurchaseStage } from "../../lib/api/types";
-import { todayTashkent } from "../../lib/dates";
 import { useFormat } from "../../lib/i18n";
 import { ComponentForm, componentLines, lineLabel } from "./ComponentForm";
 import { useComponentColumns } from "./componentColumns";
+import { CountForm } from "./CountForm";
 import { LineForm } from "./LineForm";
+import { SplitForm } from "./SplitForm";
 import { changedDates, DATED_STAGES, datesInOrder, isEstimated, isInfoFlag, pathStages, SHIPMENT_STAGES, visibleFlags } from "./model";
 import { PurchaseForm } from "./PurchaseForm";
 import { MANAGE_ROLES } from "./Purchases";
 
-type Editing = { kind: "header" } | { kind: "dates" } | { kind: "delete" } | { kind: "line"; line: PurchaseLine | null } | { kind: "component"; component: CostComponent | null };
+type Editing = { kind: "header" } | { kind: "count" } | { kind: "split" } | { kind: "dates" } | { kind: "delete" } | { kind: "line"; line: PurchaseLine | null } | { kind: "component"; component: CostComponent | null };
 
 export function PurchasePage() {
   const { t } = useTranslation();
@@ -56,6 +57,7 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
   const client = useQueryClient();
   const navigate = useNavigate();
   const [editing, setEditing] = useState<Editing | null>(null);
+  const [splitNew, setSplitNew] = useState<string | null>(null);
   const p = detail.purchase;
   const key = purchaseQuery(orgId, p.id).queryKey;
   /** Yozuv javobi — yangi hisob bilan butun xarid: keshga qo'yiladi; ro'yxat va hisobotlar eskiradi. */
@@ -68,11 +70,6 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
     );
   };
   const fail = (error: unknown) => toast.show(errorText(error, t), "negative");
-  const mark = useMutation({
-    mutationFn: (stage: PurchaseStage) => updatePurchase(orgId, p.id, { dates: { [stage]: todayTashkent() } }),
-    onSuccess: (next) => applied(next, t("purchases.saved")),
-    onError: fail,
-  });
   const copy = useMutation({
     mutationFn: () => copyPurchase(orgId, p.id),
     onSuccess: async (next) => {
@@ -127,6 +124,12 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
               <>
                 {" "}
                 <Badge tone="warning">{t("purchases.lines.shortage", { count: l.shortage })}</Badge>
+              </>
+            )}
+            {l.defect_qty > 0 && (
+              <>
+                {" "}
+                <Badge tone="negative">{t("purchases.count.defectBadge", { count: l.defect_qty })}</Badge>
               </>
             )}
           </>
@@ -238,9 +241,14 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
           </h2>
           {canManage && (
             <div className="purchase__actions">
-              {p.state === "in_transit" && (
-                <Button variant="secondary" loading={mark.isPending} onClick={() => mark.mutate("received")}>
-                  {t("purchases.markCounted")}
+              {detail.lines.length > 0 && p.state !== "at_uzum" && (
+                <Button variant={p.state === "in_transit" ? "primary" : "secondary"} onClick={() => setEditing({ kind: "count" })}>
+                  {t(p.state === "in_transit" ? "purchases.count.open" : "purchases.count.fix")}
+                </Button>
+              )}
+              {p.state === "in_transit" && detail.lines.length > 0 && detail.lines.every((l) => l.received_qty === null) && (
+                <Button variant="ghost" onClick={() => setEditing({ kind: "split" })}>
+                  {t("purchases.split.open")}
                 </Button>
               )}
               <Button variant="ghost" onClick={() => setEditing({ kind: "dates" })}>
@@ -253,6 +261,13 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
           <Timeline label={t("purchases.path")} stages={pathStages(p.path, (s) => t(`purchases.state.${s}`))} />
         </div>
         <p className="caption">{t("purchases.pathNote")}</p>
+        {splitNew && (
+          <Banner tone="positive" title={t("purchases.split.savedNew")}>
+            <Link to="/purchases/$purchaseId" params={{ purchaseId: splitNew }} onClick={() => setSplitNew(null)}>
+              {t("purchases.split.openNew")}
+            </Link>
+          </Banner>
+        )}
         {p.shipment_id && (
           <p className="caption">
             {t("shipments.datesFromShipment")}{" "}
@@ -326,6 +341,18 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
       </div>
 
       {editing?.kind === "header" && <PurchaseForm orgId={orgId} detail={detail} onClose={() => setEditing(null)} onSaved={(d) => void applied(d, t("purchases.saved"))} />}
+      {editing?.kind === "count" && <CountForm orgId={orgId} detail={detail} onClose={() => setEditing(null)} onSaved={(d) => void applied(d, t("purchases.count.saved"))} />}
+      {editing?.kind === "split" && (
+        <SplitForm
+          orgId={orgId}
+          detail={detail}
+          onClose={() => setEditing(null)}
+          onSaved={(d, newId) => {
+            setSplitNew(newId);
+            void applied(d, t("purchases.split.saved"));
+          }}
+        />
+      )}
       {editing?.kind === "dates" && <DatesForm orgId={orgId} detail={detail} onClose={() => setEditing(null)} onSaved={(d) => void applied(d, t("purchases.saved"))} />}
       {editing?.kind === "line" && (
         <LineForm
@@ -407,6 +434,7 @@ function CostPanel({ detail }: { detail: PurchaseDetail }) {
               <li key={l.id}>
                 <span>{lineLabel(l)}</span>
                 <span className="num">{l.cost?.unit_cost == null ? "—" : `${isEstimated(l.flags) ? "~" : ""}${f.money(l.cost.unit_cost)}`}</span>
+                {l.defect_cost !== null && l.defect_cost !== undefined && <span className="caption">{t("purchases.count.defectCost", { count: l.defect_qty, amount: f.money(l.defect_cost) })}</span>}
                 {l.cost && Object.keys(l.cost.breakdown).length > 0 && (
                   <span className="caption">
                     {Object.entries(l.cost.breakdown)

@@ -507,3 +507,52 @@ a.purchase-cell__title:hover {
   max-inline-size: none;
   white-space: normal;
 }
+
+/* Sanash oynasi (TM4, 04 §7.4 (3)): har qator — nom, kelgan (− / + 44 px), brak, qadoq; mobilda ustma-ust. */
+.count-form__lines {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.count-form__lines li {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 11rem) minmax(0, 6rem) minmax(0, 8rem);
+  align-items: end;
+  padding-block-end: var(--space-3);
+  border-block-end: 1px solid var(--border-hairline);
+}
+
+.count-form__name {
+  display: grid;
+  gap: 2px;
+  align-self: center;
+  min-inline-size: 0;
+}
+
+.count-form__qty {
+  display: grid;
+  gap: var(--space-1);
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: end;
+}
+
+.count-form__qty .ui-btn {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  padding-inline: 0;
+}
+
+@media (max-width: 39.9375rem) {
+  .count-form__lines li {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .count-form__name,
+  .count-form__qty {
+    grid-column: 1 / -1;
+  }
+}

@@ -89,6 +89,10 @@ class PurchasePatch(BaseModel):
     note: Text = None
     track_no: TrackNo = None
     on_hand: bool | None = None  # "Tovar qo'limda" — kargo kutilmaydi (ADR-061 §2)
+    # Sotuvchi qaytargan summa (ADR-061 §6; keyin ham kiritiladi): ``null`` — o'chirish; valyuta bilan birga.
+    refund_amount: Annotated[Decimal | None, Field(ge=0, max_digits=18, decimal_places=4)] = None
+    refund_currency: Currency | None = None
+    refund_on: date | None = None
     dates: dict[Stage, date | None] | None = (
         None  # faqat berilgan bosqichlar o'zgaradi; ``null`` — sanani o'chirish
     )
@@ -654,6 +658,19 @@ async def update_purchase(
     row = await _purchase(ctx, purchase_id)
     values = body.model_dump(exclude_unset=True)
     dates = values.pop("dates", None) or {}
+    if {"refund_amount", "refund_currency", "refund_on"} & set(values):
+        _require_amounts(ctx)
+        amount = values.get("refund_amount", row.refund_amount)
+        if not amount:
+            values |= {"refund_amount": None, "refund_currency": None, "refund_on": None}
+        else:
+            currency = values.get("refund_currency") or (
+                Currency(row.refund_currency) if row.refund_currency else None
+            )
+            if currency is None:
+                raise AppError("bad_refund", 422, detail="qaytarilgan summa valyutasi kerak")
+            values["refund_currency"] = currency.value
+            values.setdefault("refund_on", row.refund_on or today())
     await _exists(ctx, m.suppliers, values.get("supplier_id"), "supplier_not_found")
     await _exists(ctx, m.carriers, values.get("carrier_id"), "carrier_not_found")
     linked = values.get("shipment_id", row.shipment_id)

@@ -3,7 +3,7 @@
 import { MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
-import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, QuickPurchaseIn, SupplyState, TrackedIn, BoxIn, SharesIn, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, OpeningIn } from "../lib/api/types";
+import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, QuickPurchaseIn, SupplyState, TrackedIn, BoxIn, SharesIn, CountIn, SplitIn, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, OpeningIn } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -408,6 +408,14 @@ export const setBoxShares = (orgId: string, shipmentId: string, componentId: str
       body: { fixed },
     }),
   );
+
+/** Sanash (TM4, ADR-061 §6): kelgan son, brak, qadoq qo'shimchasi, sotuvchi qaytargan summa. */
+export const countPurchase = (orgId: string, purchaseId: string, body: CountIn) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/purchases/{purchase_id}/count", { params: purchasePath(orgId, purchaseId), body }));
+
+/** Xaridni ikkiga bo'lish (ADR-061 §6): ko'rsatilgan donalar yangi xaridga ("Yo'lda"). */
+export const splitPurchase = (orgId: string, purchaseId: string, body: SplitIn) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/purchases/{purchase_id}/split", { params: purchasePath(orgId, purchaseId), body }));
 
 /** Xarajat turlari lug'ati (ADR-061 §4): sotuvchining o'z turlari. */
 export const costTypesQuery = (orgId: string) =>
