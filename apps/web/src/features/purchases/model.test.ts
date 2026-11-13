@@ -1,16 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import type { PickerRow } from "../../lib/api/types";
-import { changedDates, datesInOrder, GROUP_STATES, isEstimated, isInfoFlag, nextStage, pickerKey, pickerLabel, pathStages, pickerOptions, timelineStages, visibleFlags } from "./model";
+import { GROUP_STATES, isEstimated, isInfoFlag, pickerKey, pickerLabel, pathStages, pickerOptions, visibleFlags } from "./model";
 
 describe("xarid modeli", () => {
-  it("keyingi bosqich: qoralama → buyurtma; yopilgan — yo'q", () => {
-    expect(nextStage("draft")).toBe("ordered");
-    expect(nextStage("shipped")).toBe("arrived");
-    expect(nextStage("sent_to_uzum")).toBe("closed");
-    expect(nextStage("closed")).toBeNull();
-  });
-
   it("guruhlar — uch holat (ADR-061 §1)", () => {
     expect(GROUP_STATES).toEqual({ in_transit: ["in_transit"], in_stock: ["in_stock"], at_uzum: ["at_uzum"] });
   });
@@ -39,28 +32,6 @@ describe("xarid modeli", () => {
     expect(isEstimated(["cbu_rate"])).toBe(false);
     expect(isEstimated(["cbu_rate", "not_received"])).toBe(true);
     expect(visibleFlags(["cbu_rate", "base_fallback", "x"])).toEqual(["base_fallback", "cbu_rate"]);
-  });
-
-  it("sanalar: faqat o'zgarganlari (bo'sh — null), tartib tekshiruvi", () => {
-    expect(changedDates({ ordered: "2026-10-01", paid: "2026-10-02" }, { ordered: "2026-10-01", paid: "", shipped: "2026-10-12" })).toEqual({ paid: null, shipped: "2026-10-12" });
-    expect(datesInOrder({ ordered: "2026-10-05", shipped: "2026-10-04" })).toBe(false);
-    expect(datesInOrder({ ordered: "2026-10-05", paid: null, shipped: "2026-10-05" })).toBe(true);
-  });
-
-  it("Timeline: kunlar va kutilgan sana faqat joriy bosqichda", () => {
-    const stages = timelineStages(
-      [
-        { stage: "ordered", state: "done", on: "2026-10-02", days: null, expected: null, delayed: false },
-        { stage: "shipped", state: "current", on: "2026-10-12", days: 11, expected: "2026-10-28", delayed: true },
-        { stage: "arrived", state: "upcoming", on: null, days: null, expected: null, delayed: false },
-      ],
-      (s) => s.toUpperCase(),
-    );
-    expect(stages).toEqual([
-      { label: "ORDERED", state: "done", date: "2026-10-02", days: undefined, expected: undefined, delayed: false },
-      { label: "SHIPPED", state: "current", date: "2026-10-12", days: 11, expected: "2026-10-28", delayed: true },
-      { label: "ARRIVED", state: "upcoming", date: undefined, days: undefined, expected: undefined, delayed: false },
-    ]);
   });
 
   it("SKU tanlovi: hech narsa yashirilmaydi, hint — variant, do'kon, qoldiq, holat, takror belgisi", () => {

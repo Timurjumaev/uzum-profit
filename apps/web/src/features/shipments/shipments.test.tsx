@@ -24,7 +24,7 @@ import {
   problem,
   type Routes,
 } from "../../test/api";
-import { PURCHASE_1, PURCHASE_2, purchaseDetail, purchaseRow, component, timeline } from "../../test/purchases";
+import { PURCHASE_1, PURCHASE_2, purchaseDetail, purchaseRow, component } from "../../test/purchases";
 import { shipmentDetail, shipmentRow, SHIPMENT_1, SHIPMENT_COMP } from "../../test/shipments";
 
 const f = formatterFor("uz-Latn");
@@ -193,25 +193,16 @@ describe("kargo sahifasi", () => {
 describe("xarid sahifasida kargo", () => {
   const linked = () =>
     purchaseDetail({
-      purchase: purchaseRow({ shipment_id: SHIPMENT_1, shipment_name: "Presslangan oʻram", timeline: timeline("shipped", { ordered: "2026-10-02", shipped: "2026-10-12" }) }),
+      purchase: purchaseRow({ shipment_id: SHIPMENT_1, shipment_name: "Presslangan oʻram" }),
       shipment_components: [component({ id: SHIPMENT_COMP, kind: "cargo", amount: "2430000.0000", currency: "UZS", applied_rate: null, rate_day: null, rate_source: null, amount_uzs: "2430000.00" })],
     });
 
-  it("kargo havolasi, kargodan xarajatlar (faqat o'qish), sanalar kargodan: kargo sana maydonlari bloklangan", async () => {
-    const patch = purchaseRoute("PATCH", PURCHASE_1);
-    const { api } = await renderAt(`/purchases/${PURCHASE_1}`, { [purchaseRoute("GET", PURCHASE_1)]: () => json(200, linked()), [patch]: () => json(200, linked()) });
+  it("kargo havolasi, kargodan xarajatlar (faqat o'qish)", async () => {
+    await renderAt(`/purchases/${PURCHASE_1}`, { [purchaseRoute("GET", PURCHASE_1)]: () => json(200, linked()) });
     expect((await screen.findAllByRole("link", { name: /Kargo: Presslangan oʻram/ }))[0]!.getAttribute("href")).toBe(`/shipments/${SHIPMENT_1}`);
     const shared = screen.getByRole("table", { name: "Kargodan xarajatlar" });
     expect(norm(shared.textContent!)).toContain(n("2430000.00"));
     expect(within(shared).queryByRole("button", { name: /Tahrirlash/ })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Sanalar" }));
-    const dialog = await screen.findByRole("dialog", { name: "Xarid sanalari" });
-    expect((within(dialog).getByLabelText(/^Yoʻlda/) as HTMLInputElement).disabled).toBe(true);
-    expect((within(dialog).getByLabelText(/^Buyurtma berildi/) as HTMLInputElement).disabled).toBe(false);
-    fireEvent.change(within(dialog).getByLabelText(/^Buyurtma berildi/), { target: { value: "2026-10-01" } });
-    fireEvent.click(within(dialog).getByRole("button", { name: "Sanalarni saqlash" }));
-    await waitFor(() => expect(bodiesOf(api, patch)).toHaveLength(1));
-    expect(bodiesOf(api, patch)[0]).toEqual({ dates: { ordered: "2026-10-01" } }); // kargo sanalari yuborilmaydi
   });
 
   it("xarid shakli: kargo tanlanadi va faqat o'zgarganda yuboriladi", async () => {
@@ -363,7 +354,7 @@ describe("kargoga xarid biriktirish — kargo sahifasidan", () => {
   const OTHER = "93333333-3333-4333-8333-333333333333";
   const rows = () => [
     purchaseRow({ id: PURCHASE_1, title: "A yetkazib beruvchi", shipment_id: SHIPMENT_1, shipment_name: "Presslangan oʻram" }), // allaqachon shu kargoda
-    purchaseRow({ id: PURCHASE_2, title: "Kargosiz xarid", supplier_name: "Yiwu Toys", shipment_id: null, shipment_name: null, stage: "ordered" }),
+    purchaseRow({ id: PURCHASE_2, title: "Kargosiz xarid", supplier_name: "Yiwu Toys", shipment_id: null, shipment_name: null }),
     purchaseRow({ id: OTHER, title: "Boshqa kargodagi", shipment_id: "b2222222-2222-4222-8222-222222222222", shipment_name: "Dekabr" }),
   ];
   const withPurchases = (items = rows()) => ({ [PURCHASES_ROUTE]: () => json(200, { items, amounts: true }) });

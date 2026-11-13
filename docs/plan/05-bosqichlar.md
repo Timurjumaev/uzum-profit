@@ -977,8 +977,15 @@ Har vazifa — alohida branch va PR; tafsilot 07 "ADR-061 tafsiloti", 02 M9–M1
   (`upcore.purchasing.receiving_loss`) foyda hisobida alohida qator (`upcore.pnl.RECEIVING_LOSS`), yopilgan kunga; bosh
   sahifa "Diqqat" — qarorsiz farq va ochiq kamomad. Web: `/receiving` (Jo'natmalardan havola), farqlar va kamomad ro'yxati
   (mobilda kartochkalar). Testlar: yadro, API, web, e2e, vizual. **T:** birinchi real qabul farqida staging'da tekshirish.
-- [ ] TM8 Yakun: e2e (xarid → kargo puli → sanash → jo'natish → qabul), yordam maqolasi, 04 §7.4 dagi eski "Xaridlar" tavsifini
-  tozalash; Temur real xaridlarida tekshiradi.
+- [x] TM8 Yakun: e2e (xarid → kargo puli → sanash → jo'natish → qabul), yordam maqolasi, 04 §7.4 dagi eski "Xaridlar" tavsifini
+  tozalash; Temur real xaridlarida tekshiradi. ✓ 2026-11-13: e2e `supply.spec.ts` — butun oqim sahifadan sahifaga, har qadamda
+  API so'rovi tekshiriladi (desktop va mobil). Yordam maqolasi `docs/help/taminot.uz.md` va `.ru.md` (Markdown, ADR-023 —
+  yordam markazi qurilganda o'sha yerga); Xaridlar sahifasidagi "?" matni uch holatga yangilandi. 04 §7.4 — ta'minot ekranlari
+  qurilgan holicha, eski "Xaridlar (ADR-061 gacha)" bandi olib tashlandi. TM2 da qoldirilganlar tozalandi: xarid javobidan
+  `stage`, `timeline`, `dates` (o'rniga `ordered_on`), `GET /purchases?stage=` va kargo xaridlaridagi `stage`; Excel'da
+  "Bosqich" o'rniga "Holat" (`?state=` filtri); tahrirlanadigan "Sanalar" oynasi o'chdi — buyurtma sanasi xarid sarlavhasi
+  shaklida tahrirlanadi, eski bosqich sanalari esa `history` maydonidan "Tarix"da faqat o'qish uchun (ADR-061 §11). Eski bosqich ustunlari bazada qoladi (F25 "Yo'lda" tarixi, ombor joylari, kargo sanalari); kirishda `dates`
+  (buyurtma sanasi va eski yozuvlar uchun) saqlanadi. **T:** Temur real xaridlarida butun oqimni staging'da sinaydi.
 - T: har TM dan keyin staging'da real xarid bilan sinash; noqulay joy — skrinshot bilan bir qator.
 
 ### Qolgan B5

@@ -110,7 +110,6 @@ class ShipmentPurchaseOut(BaseModel):
     id: UUID
     title: str | None
     supplier_name: str | None
-    stage: Stage
     state: SupplyState  # ADR-061 §1
     line_count: int
     units: int
@@ -287,7 +286,6 @@ async def _detail(ctx: OrgContext, shipment_id: UUID) -> ShipmentDetailOut:
                 id=purchase.id,
                 title=purchase.title,
                 supplier_name=out.supplier_name,
-                stage=out.stage,
                 state=out.state,
                 line_count=len(p_lines),
                 units=units,

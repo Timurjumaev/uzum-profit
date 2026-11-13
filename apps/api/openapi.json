@@ -4114,7 +4114,7 @@
             }
           },
           {
-            "name": "stage",
+            "name": "state",
             "in": "query",
             "required": false,
             "schema": {
@@ -4122,14 +4122,14 @@
                 {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Stage"
+                    "$ref": "#/components/schemas/SupplyState"
                   }
                 },
                 {
                   "type": "null"
                 }
               ],
-              "title": "Stage"
+              "title": "State"
             }
           }
         ],
@@ -4306,7 +4306,7 @@
           "purchases"
         ],
         "summary": "List Purchases",
-        "description": "Xaridlar (yangisi birinchi), joriy bosqich filtri bilan; har birida Partiya yo'li va jonli tannarx.\n\n``limit`` berilsa — sahifa (ADR-054; Excel va biriktirish ro'yxati ``limit`` siz hammasini oladi).",
+        "description": "Xaridlar (yangisi birinchi), holat filtri bilan (ADR-061 §1); har birida Partiya yo'li va jonli tannarx.\n\n``limit`` berilsa — sahifa (ADR-054; Excel va biriktirish ro'yxati ``limit`` siz hammasini oladi).",
         "operationId": "list_purchases_api_v1_orgs__org_id__purchases_get",
         "parameters": [
           {
@@ -4317,25 +4317,6 @@
               "type": "string",
               "format": "uuid",
               "title": "Org Id"
-            }
-          },
-          {
-            "name": "stage",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Stage"
-                  }
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Stage"
             }
           },
           {
@@ -11157,6 +11138,25 @@
         ],
         "title": "Health"
       },
+      "HistoryOut": {
+        "properties": {
+          "stage": {
+            "$ref": "#/components/schemas/Stage"
+          },
+          "on": {
+            "type": "string",
+            "format": "date",
+            "title": "On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stage",
+          "on"
+        ],
+        "title": "HistoryOut",
+        "description": "Eski bosqich sanasi (ADR-061 §11): xarid sahifasidagi \"Tarix\" — faqat o'qish."
+      },
       "InventoryOut": {
         "properties": {
           "meta": {
@@ -15067,9 +15067,6 @@
             ],
             "title": "Title"
           },
-          "stage": {
-            "$ref": "#/components/schemas/Stage"
-          },
           "state": {
             "$ref": "#/components/schemas/SupplyState"
           },
@@ -15186,30 +15183,24 @@
             ],
             "title": "Shipment Name"
           },
-          "dates": {
-            "additionalProperties": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "date"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "propertyNames": {
-              "$ref": "#/components/schemas/Stage"
-            },
-            "type": "object",
-            "title": "Dates"
+          "ordered_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ordered On"
           },
-          "timeline": {
+          "history": {
             "items": {
-              "$ref": "#/components/schemas/StageOut"
+              "$ref": "#/components/schemas/HistoryOut"
             },
             "type": "array",
-            "title": "Timeline"
+            "title": "History"
           },
           "line_count": {
             "type": "integer",
@@ -15312,7 +15303,6 @@
         "required": [
           "id",
           "title",
-          "stage",
           "state",
           "path",
           "track_no",
@@ -15325,8 +15315,8 @@
           "carrier_name",
           "shipment_id",
           "shipment_name",
-          "dates",
-          "timeline",
+          "ordered_on",
+          "history",
           "line_count",
           "items",
           "units_ordered",
@@ -17048,9 +17038,6 @@
             ],
             "title": "Supplier Name"
           },
-          "stage": {
-            "$ref": "#/components/schemas/Stage"
-          },
           "state": {
             "$ref": "#/components/schemas/SupplyState"
           },
@@ -17112,7 +17099,6 @@
           "id",
           "title",
           "supplier_name",
-          "stage",
           "state",
           "line_count",
           "units",
@@ -18344,67 +18330,6 @@
         ],
         "title": "Stage",
         "description": "Xarid hayoti bosqichlari tartib bilan (M9). ``DRAFT`` dan boshqa har birining sanasi bor."
-      },
-      "StageOut": {
-        "properties": {
-          "stage": {
-            "$ref": "#/components/schemas/Stage"
-          },
-          "state": {
-            "type": "string",
-            "title": "State"
-          },
-          "on": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "On"
-          },
-          "days": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Days"
-          },
-          "expected": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Expected"
-          },
-          "delayed": {
-            "type": "boolean",
-            "title": "Delayed"
-          }
-        },
-        "type": "object",
-        "required": [
-          "stage",
-          "state",
-          "on",
-          "days",
-          "expected",
-          "delayed"
-        ],
-        "title": "StageOut",
-        "description": "Partiya yo'li nuqtasi (04 §6.2): ``done`` / ``current`` / ``upcoming``."
       },
       "StatementOut": {
         "properties": {

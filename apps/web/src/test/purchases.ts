@@ -10,22 +10,6 @@ export const LINE_2 = "a2222222-2222-4222-8222-222222222222";
 export const COMP_GOODS = "c1111111-1111-4111-8111-111111111111";
 export const ITEM_1 = "e1111111-1111-4111-8111-111111111111";
 
-const STAGES: S["Stage"][] = ["ordered", "paid", "cn_warehouse", "shipped", "arrived", "received", "sent_to_uzum", "closed"];
-
-/** Partiya yo'li: `current` gacha o'tilgan, keyingilari kutilmoqda. */
-export function timeline(current: S["Stage"], dates: Partial<Record<S["Stage"], string>>, extra: Partial<S["StageOut"]> = {}): S["StageOut"][] {
-  const index = STAGES.indexOf(current);
-  return STAGES.map((stage, i) => ({
-    stage,
-    state: current === "closed" || i < index ? "done" : i === index ? "current" : "upcoming",
-    on: dates[stage] ?? null,
-    days: i === index && current !== "closed" ? 11 : null,
-    expected: null,
-    delayed: false,
-    ...(i === index ? extra : {}),
-  }));
-}
-
 /** Uch nuqtali yo'l (ADR-061 §1). */
 export function path(state: S["SupplyState"], on: Partial<Record<S["SupplyState"], string>> = {}, extra: Partial<S["PathOut"]> = {}): S["PathOut"][] {
   const order: S["SupplyState"][] = ["in_transit", "in_stock", "at_uzum"];
@@ -42,11 +26,10 @@ export function path(state: S["SupplyState"], on: Partial<Record<S["SupplyState"
 }
 
 export function purchaseRow(over: Partial<S["PurchaseOut"]> = {}): S["PurchaseOut"] {
-  const dates = { ordered: "2026-10-02", paid: "2026-10-03", cn_warehouse: "2026-10-09", shipped: "2026-10-12" };
+  const dates = { ordered: "2026-10-02" };
   return {
     id: PURCHASE_1,
     title: "Oktabr partiyasi",
-    stage: "shipped",
     state: "in_transit",
     path: path("in_transit", { in_transit: dates.ordered }, { expected: "2026-10-28" }),
     track_no: null,
@@ -59,8 +42,8 @@ export function purchaseRow(over: Partial<S["PurchaseOut"]> = {}): S["PurchaseOu
     carrier_name: "Cargo Express",
     shipment_id: null,
     shipment_name: null,
-    dates: { ordered: dates.ordered, paid: dates.paid, cn_warehouse: dates.cn_warehouse, shipped: dates.shipped, arrived: null, received: null, sent_to_uzum: null, closed: null },
-    timeline: timeline("shipped", dates, { expected: "2026-10-28" }),
+    ordered_on: dates.ordered,
+    history: [{ stage: "ordered", on: dates.ordered }],
     line_count: 2,
     items: ["Mashina", "Yangi oʻyinchoq"],
     units_ordered: 150,

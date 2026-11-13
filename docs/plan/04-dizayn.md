@@ -379,28 +379,36 @@ Sof foyda, oktabr
   Ombor va Buyurtmalar ham shunday (`DataTable` `mobile` ustunlari).
 - **SKU sahifasi:** sarlavha (rasm, nom, holat) → KPI qatori → unit kalkulyator (o'ngda) + grafiklar (chapda) →
   lotlar vaqt chizig'i → qaytishlar.
-- **Ta'minot ekranlari (ADR-061; quyidagi "Xaridlar" va "Kargolar" tavsifini TM2–TM7 da almashtiradi):**
-  (1) **Yangi xarid** — bitta oyna (mobilda to'liq ekran): tovarlar ro'yxati (SKU tanlash, dona; bir nechta xil tovar bo'lsa
-  qator summasi ustuni paydo bo'ladi), "Jami to'landi" + valyuta segmenti (CNY · USD · UZS), kurs (segment: Markaziy bank ·
-  O'zim kiritaman), trek (ixtiyoriy), "Tovar qo'limda" belgisi; pastda jonli "1 dona ≈ … so'm". Asosiy tugma — "Xaridni
-  saqlash". (2) **Kargo puli** — "Yo'lda" xaridlar jadvali: belgilash katagi, xarid (tovar, dona, trek), kg (ixtiyoriy),
-  summa inputi; bir nechta belgilansa tepada "Bitta qutiga birlashtirish" paneli (umumiy summa → qatorlardagi ulush inputlari
-  dona bo'yicha to'ladi, farq qoldig'i ko'rinadi). Mobilda — kartochkalar ro'yxati, summa inputi har kartochkada. (3) **Sanash**
-  — xarid qatorlari: nom, buyurtma soni, "Kelgan" (stepper + raqam, 44 px nishon), "Brak"; tepada "Hammasi keldi"; son kam
-  bo'lsa "Sotuvchi qaytargan summa" maydoni ochiladi; pastda yangi birlik tannarx va farqi. (4) **Xarid sahifasi** — Partiya
-  yo'li (3 nuqta), tovarlar, chiqimlar (tovar, kargo, qo'shimcha), o'ngda birlik tannarx tarkibi; "Tarix" (eski bosqich
-  sanalari, tuzatishlar). (5) **Uzumga jo'natish** — do'kon tanlash → SKU jadvali (omborimdagi son to'ldirilgan, tahrirlanadi,
-  qatorni olib tashlash) → "Excel yuklab olish"; jo'natmalar ro'yxati (Jo'natilmoqda / Bog'landi / Bekor). (6) **Qabul
-  farqi** — postavka kartochkasida "2 ta kam qabul qilindi": ikki tugma — "Uzum yo'qotdi" · "Men sanashda adashganman";
-  kamomadlar ro'yxati holat belgisi bilan. Hamma ekran 360 px da to'liq; ranglar va komponentlar — §4, §5 dan.
-- **Xaridlar (ADR-061 gacha):** ro'yxat (Partiya yo'li ixcham ko'rinishda) → xarid sahifasi: Partiya yo'li, «Partiyadagi tovarlar» jadvali,
-  xarajat komponentlari, birlik tannarx tarkibi (o'ngda doim ko'rinadi). **Kargolar** (ADR-046): Xaridlar sarlavhasidagi
-  havola → ro'yxat (sanalar, xaridlar soni, dona, kargo xarajati) → kargo sahifasi: kargodagi xaridlar (kargo ulushi
-  bilan), kargo xarajatlari (kurs bilan), tovarlar va dona boshiga ulush, o'ngda jami; xarid sahifasida kargo nomi va
-  kargodan xarajatlar (faqat o'qish). Kargo xarajati turlari — faqat kargoga tegishlilari (ADR-049); kargodagi xaridni kargo sahifasidan ajratish mumkin.
+- **Ta'minot ekranlari (ADR-061, TM1–TM8):**
+  (1) **Xaridlar** — ro'yxat uch guruhda (Yo'lda · Omborimda · Uzumda), har qatorda uch nuqtali Partiya yo'li ixcham
+  ko'rinishda; sarlavhada "Kargo puli" va "Kargolar" havolalari (Omborim — Ombor sahifasidan). **Yangi xarid** — bitta oyna (mobilda to'liq
+  ekran): tovarlar ro'yxati (SKU tanlash, dona; bir nechta xil tovar bo'lsa qator summasi ustuni paydo bo'ladi), "Jami
+  to'landi" + valyuta segmenti (CNY · USD · UZS), kurs (segment: Markaziy bank · O'zim kiritaman), trek (ixtiyoriy), "Tovar
+  qo'limda" belgisi; pastda jonli "1 dona ≈ … so'm". Asosiy tugma — "Xaridni saqlash". (2) **Kargo puli** — "Yo'lda" xaridlar:
+  belgilash katagi, xarid (tovar, dona, trek), kg (ixtiyoriy), summa inputi; bir nechta belgilansa tepada "Bitta qutiga
+  birlashtirish" paneli (umumiy summa → qatorlardagi ulush inputlari dona bo'yicha to'ladi, farq qoldig'i ko'rinadi). Mobilda —
+  kartochkalar, summa inputi har kartochkada. (3) **Sanash** — xarid qatorlari: nom, buyurtma soni, "Kelgan" (stepper + raqam,
+  44 px nishon), "Brak"; tepada "Hammasi keldi"; son kam bo'lsa "Sotuvchi qaytargan summa" maydoni ochiladi; pastda yangi birlik
+  tannarx va farqi; "Xaridni ikkiga bo'lish" — keyin keladigan qism alohida xarid. (4) **Xarid sahifasi** — Partiya yo'li
+  (3 nuqta, "Yo'lda" da o'tgan kun va kutilgan sanash sanasi — F25), «Partiyadagi tovarlar», chiqimlar (tovar, kargo,
+  qo'shimcha; kargoga bog'langan bo'lsa kargodan xarajatlar — faqat o'qish), o'ngda birlik tannarx tarkibi (doim ko'rinadi).
+  Buyurtma sanasi sarlavha shaklida ("Tahrirlash"); eski bosqichli xaridda Partiya yo'li ostida yig'ilgan "Tarix (eski bosqich
+  sanalari)" — faqat o'qish (TM8, ADR-061 §11). (5) **Omborim** — SKU bo'yicha qoldiq va qiymat, manba partiyalar; "Boshqa SKU'ga
+  o'tkazish" (tannarx bilan), keyin topilgan brak; sarlavhada "Uzumga jo'natish". (6) **Uzumga jo'natish** — do'kon tanlash →
+  SKU ro'yxati (omborimdagi son to'ldirilgan, tahrirlanadi, qatorni olib tashlash) → "Excel yuklab olish"; jo'natmalar ro'yxati
+  (Jo'natilmoqda / Uzumda · postavka № / Bekor), bir nechta nomzod postavka bo'lsa tanlov; sarlavhada "Qabul farqi". (7) **Qabul
+  farqi** (`/receiving`) — farq kartochkasi ("2 dona kam" / "1 dona ko'p", jo'natildi · qabul qilindi, tannarxdagi summa,
+  bog'liq jarima): kam — "Uzum yo'qotdi" · "Men sanashda adashganman"; ko'p — ochiq kamomad bo'lsa "Topildi", bo'lmasa "Sonni
+  oshirish"; kamomad ro'yxati holat belgisi bilan (Ochiq → Topildi / Kompensatsiya qilindi (summa) / Zarar deb yopildi; qayta
+  ochish), foyda hisobidagi zarar (F52). Bosh sahifa "Diqqat" blokida qarorsiz farq va ochiq kamomad. Hamma ekran 360 px da
+  to'liq, mobilda kartochkalar; ranglar va komponentlar — §4, §5 dan.
+- **Kargolar** (ADR-046, ADR-061 bilan soddalashgan): Xaridlar sarlavhasidagi havola → ro'yxat (sanalar, xaridlar soni, dona,
+  kargo xarajati) → kargo sahifasi: kargodagi xaridlar (holat va kargo ulushi bilan), kargo xarajatlari (kurs bilan), tovarlar
+  va dona boshiga ulush, o'ngda jami. Kargo xarajati turlari — faqat kargoga tegishlilari (ADR-049); kargodagi xaridni kargo
+  sahifasidan ajratish mumkin.
   **Ro'yxat qoidalari (ADR-048):** tovar nomlari bir qator (ortig'i "…", to'liq matn `title` da); nom — matn rangida
   sarlavha (havola faqat ustiga kelganda ostiga chiziladi); mobilda (≤ 639 px) ikkinchi darajali ustunlar yashirin,
-  ularning o'rniga nom ostida bitta meta qator (bosqich · dona yoki kompaniya · sana · dona); qator amallari
+  ularning o'rniga nom ostida bitta meta qator (holat · dona yoki kompaniya · sana · dona); qator amallari
   ("Tahrirlash", "O'chirish") jim rangda. **Yig'indi paneli** (`dl`): yorliq chapda, qiymat o'ngda, qatorlar orasida
   hairline; yig'indi ustida siyoh chiziq, yakuniy qator ostida qo'sh chiziq. **Tanlov qatorlari** (radio / checkbox
   oynada): chegarali qator, tanlanganda `info-bg` fon va aksent chegara; matn ostida ikkinchi darajali meta.

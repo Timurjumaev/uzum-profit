@@ -472,14 +472,13 @@ async def _kick(request: Request, org_id: UUID, fx_since: date | None = None) ->
 @router.get("/orgs/{org_id}/purchases", response_model=PurchasesOut)
 async def list_purchases(
     ctx: Viewer,
-    stage: Annotated[list[Stage] | None, Query()] = None,
     state: Annotated[list[SupplyState] | None, Query()] = None,
     limit: Annotated[
         int | None, Query(ge=1, le=100, description="Sahifa o'lchami; bo'lmasa — hammasi")
     ] = None,
     page: Annotated[int, Query(ge=1, le=100_000)] = 1,
 ) -> PurchasesOut:
-    """Xaridlar (yangisi birinchi), joriy bosqich filtri bilan; har birida Partiya yo'li va jonli tannarx.
+    """Xaridlar (yangisi birinchi), holat filtri bilan (ADR-061 §1); har birida Partiya yo'li va jonli tannarx.
 
     ``limit`` berilsa — sahifa (ADR-054; Excel va biriktirish ro'yxati ``limit`` siz hammasini oladi).
     """
@@ -488,7 +487,7 @@ async def list_purchases(
     matched = []
     for purchase in book.purchases:
         out = book.summary(purchase, book.evaluate(purchase), amounts)
-        if rp.matches(out, stage, state):
+        if rp.matches(out, state):
             matched.append(out)
     size = limit or max(1, len(matched))
     pages = max(1, -(-len(matched) // size))

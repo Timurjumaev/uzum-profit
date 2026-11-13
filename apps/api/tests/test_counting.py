@@ -48,7 +48,7 @@ def test_count_defects_and_refund(world: World) -> None:
         )
     )
     p, ln = out["purchase"], out["lines"][0]
-    assert p["state"] == "in_stock" and p["dates"]["received"] == "2026-10-20"
+    assert p["state"] == "in_stock" and p["path"][1]["on"] == "2026-10-20"
     assert ln["good_qty"] == 95 and ln["defect_qty"] == 5
     assert D(ln["cost"]["unit_cost"]) == (D(1_000_000) / 95).quantize(D("0.01")) or abs(
         D(ln["cost"]["unit_cost"]) - D(1_000_000) / 95

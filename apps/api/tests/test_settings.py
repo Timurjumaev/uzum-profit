@@ -267,10 +267,10 @@ def test_inventory_settings_drive_reports(world: World) -> None:
     p = a.insert("purchases", ordered_on=day(-3))
     a.line(p, item, 5)
     detail = ok(send(w, "GET", f"purchases/{p}"))
-    current = next(x for x in detail["purchase"]["timeline"] if x["state"] == "current")
+    current = detail["purchase"]["path"][0]
     assert (
-        current["stage"] == "ordered" and current["expected"] == day(5).isoformat()
-    )  # -3 + prep 8
+        current["mark"] == "current" and current["expected"] == day(27).isoformat()
+    )  # -3 + "Yo'lda" standarti (prep 8 + china 2 + cargo 13 + receive 7)
     # Tozalash — xaritalar boshiga qaytadi.
     body = ok(send(w, "PUT", "settings/inventory"))
     assert body["inventory"]["lead_days"] is None

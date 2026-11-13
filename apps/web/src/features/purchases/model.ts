@@ -1,11 +1,8 @@
-// Xaridlar (M9) sahifasi uchun sof yordamchilar: bosqichlar tartibi va guruhlari, Partiya yo'li → Timeline, taxminiy
+// Xaridlar (M9) sahifasi uchun sof yordamchilar: holat guruhlari, Partiya yo'li → Timeline, taxminiy
 // belgilar (F22). Hisob yo'q — birlik tannarx, kurs va kutilgan sana API'dan (tamoyil 4).
 import type { Stage } from "../../components/ui";
 import type { PurchaseGroup } from "../../app/search";
-import type { AllocationBase, ComponentKind, PathMark, PickerRow, PurchaseStage, StageMark, SupplyState } from "../../lib/api/types";
-
-/** Sanasi bor bosqichlar tartib bilan (qoralamadan keyin). */
-export const DATED_STAGES: PurchaseStage[] = ["ordered", "paid", "cn_warehouse", "shipped", "arrived", "received", "sent_to_uzum", "closed"];
+import type { AllocationBase, ComponentKind, PathMark, PickerRow, SupplyState } from "../../lib/api/types";
 
 /** Ro'yxat guruhlari → API `state` filtri (ADR-061 §1: guruh — holatning o'zi). */
 export const GROUP_STATES: Record<PurchaseGroup, SupplyState[]> = {
@@ -17,9 +14,6 @@ export const GROUP_STATES: Record<PurchaseGroup, SupplyState[]> = {
 /** Tez xarid valyutalari (ADR-061 §2): hisobdan real yechilgan summa. */
 export const PAID_CURRENCIES = ["CNY", "USD", "UZS"] as const;
 export type PaidCurrency = (typeof PAID_CURRENCIES)[number];
-
-/** Kargoga bog'langan xaridda shu bosqichlar kargodan olinadi (ADR-046). */
-export const SHIPMENT_STAGES: PurchaseStage[] = ["cn_warehouse", "shipped", "arrived"];
 
 export const COMPONENT_KINDS: ComponentKind[] = ["goods", "cn_delivery", "agent_fee", "cargo", "customs", "transfer_fee", "local_delivery", "packaging", "labeling", "uzum_delivery", "other"];
 /** Kargo xarajati turlari (ADR-049; backend `SHIPMENT_KINDS` bilan bir xil): tovar, Xitoy ichki yetkazish va agent komissiyasi xaridniki. */
@@ -51,25 +45,6 @@ export function visibleFlags(flags: readonly string[]): string[] {
   return order.filter((f) => flags.includes(f));
 }
 
-/** Keyingi belgilanadigan bosqich: joriydan keyingi birinchisi (yopilgan — yo'q). */
-export function nextStage(current: PurchaseStage): PurchaseStage | null {
-  if (current === "draft") return "ordered";
-  const i = DATED_STAGES.indexOf(current);
-  return DATED_STAGES[i + 1] ?? null;
-}
-
-/** API Partiya yo'li → `Timeline` (sana faqat bajarilgan va joriy bosqichda). */
-export function timelineStages(marks: StageMark[], label: (stage: PurchaseStage) => string): Stage[] {
-  return marks.map((m) => ({
-    label: label(m.stage),
-    state: m.state === "done" ? "done" : m.state === "current" ? "current" : "upcoming",
-    date: m.on ?? undefined,
-    days: m.state === "current" ? (m.days ?? undefined) : undefined,
-    expected: m.expected ?? undefined,
-    delayed: m.delayed,
-  }));
-}
-
 /** Uch nuqtali Partiya yo'li (ADR-061 §1, 04 §6.2) → `Timeline`. */
 export function pathStages(marks: PathMark[], label: (state: SupplyState) => string): Stage[] {
   return marks.map((m) => ({
@@ -80,28 +55,6 @@ export function pathStages(marks: PathMark[], label: (state: SupplyState) => str
     expected: m.expected ?? undefined,
     delayed: m.delayed,
   }));
-}
-
-/** Bosqich sanalari shaklidan API'ga: faqat o'zgarganlari (bo'sh — `null`, sanani o'chirish). */
-export function changedDates(before: Partial<Record<PurchaseStage, string | null>>, draft: Partial<Record<PurchaseStage, string>>) {
-  const out: Partial<Record<PurchaseStage, string | null>> = {};
-  for (const s of DATED_STAGES) {
-    const next = draft[s] ? draft[s]! : null;
-    if ((before[s] ?? null) !== next) out[s] = next;
-  }
-  return out;
-}
-
-/** Sanalar tartibi (keyingi bosqich oldingisidan oldin emas) — API ham tekshiradi; shaklda oldindan aytish uchun. */
-export function datesInOrder(dates: Partial<Record<PurchaseStage, string | null | undefined>>): boolean {
-  let last = "";
-  for (const s of DATED_STAGES) {
-    const d = dates[s];
-    if (!d) continue;
-    if (d < last) return false;
-    last = d;
-  }
-  return true;
 }
 
 // --- Tovar tanlash (SKU) ------------------------------------------------------------------------------------------

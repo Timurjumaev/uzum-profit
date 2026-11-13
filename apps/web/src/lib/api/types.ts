@@ -42,7 +42,6 @@ export type PurchaseDetail = Schemas["PurchaseDetailOut"];
 export type PurchaseLine = Schemas["LineOut"];
 export type CostComponent = Schemas["ComponentOut"];
 export type PurchaseStage = Schemas["Stage"];
-export type StageMark = Schemas["StageOut"];
 export type SupplyState = Schemas["SupplyState"];
 export type PathMark = Schemas["PathOut"];
 export type QuickPurchaseIn = Schemas["QuickPurchaseIn"];

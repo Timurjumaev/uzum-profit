@@ -316,7 +316,7 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
         ],
       });
     }
-    if (key === `GET /orgs/${ORG_ID}/receiving`) {
+    if (key === `GET /orgs/${ORG_ID}/receiving` || key === `POST /orgs/${ORG_ID}/receiving/resolve`) {
       const diff = (n: number, shipped: number, accepted: number, over: Record<string, unknown> = {}) => ({
         dispatch_id: "d0000002-0000-4000-8000-000000000000",
         invoice_id: "i1",
@@ -360,6 +360,16 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
         shortages: [shortage("e0000001-0000-4000-8000-000000000000", 3, 1, "open"), shortage("e0000002-0000-4000-8000-000000000000", 2, 2, "compensated", { compensation: "30000.00", loss: "7000.00", closed_on: "2026-11-10" })],
         amounts: true,
       });
+    }
+    // Ta'minot oqimidagi yozuvlar (TM8 e2e): javob — o'qish fiksturalaridan.
+    if (key === `POST /orgs/${ORG_ID}/purchases/quick`) return json(route, 201, purchaseDetail());
+    if (key === `POST /orgs/${ORG_ID}/cargo-pool/tracked`) return json(route, 201, { created: 1 });
+    if (key === `POST /orgs/${ORG_ID}/purchases/${PURCHASE_1}/count`) return json(route, 200, purchaseDetail());
+    if (key === `POST /orgs/${ORG_ID}/dispatches`) {
+      return json(route, 201, { id: "d0000009-0000-4000-8000-000000000000", shop_id: SHOP_A, shop: "byDurii", status: "sending", exported_at: ago(0), linked_at: null, canceled_at: null, note: null, units: 100, items: [], invoice: null, candidates: [] });
+    }
+    if (method === "GET" && /^\/orgs\/[^/]+\/dispatches\/[^/]+\/excel$/.test(path)) {
+      return route.fulfill({ status: 200, contentType: "application/octet-stream", headers: { "Content-Disposition": 'attachment; filename="uzum-jonatma.xlsx"' }, body: "x" });
     }
     if (key === `GET /orgs/${ORG_ID}/cost-types`) return json(route, 200, [{ id: "t1", name: "Ombor ijarasi" }]);
     if (key === `GET /orgs/${ORG_ID}/cargo-pool`) {

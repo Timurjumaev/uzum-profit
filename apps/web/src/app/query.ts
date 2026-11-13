@@ -3,7 +3,7 @@
 import { MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
-import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, QuickPurchaseIn, SupplyState, TrackedIn, BoxIn, SharesIn, CountIn, SplitIn, TransferIn, DispatchIn, ResolveIn, ShortagePatch, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, OpeningIn } from "../lib/api/types";
+import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, QuickPurchaseIn, SupplyState, TrackedIn, BoxIn, SharesIn, CountIn, SplitIn, TransferIn, DispatchIn, ResolveIn, ShortagePatch, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, OpeningIn } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -261,16 +261,11 @@ export const deleteOwnExpense = (orgId: string, id: string) =>
 
 // --- Xaridlar (M9, B4.6) ------------------------------------------------------------------------------------------
 
-/** Xaridlar ro'yxati (Partiya yo'li va jonli tannarx bilan); `stages` — joriy bosqich filtri (bo'sh — hammasi). */
-export const purchasesQuery = (orgId: string, stages: PurchaseStage[]) =>
+/** Xaridlar ro'yxati, hammasi (Partiya yo'li va jonli tannarx bilan) — kargoga biriktirish uchun. */
+export const purchasesQuery = (orgId: string) =>
   queryOptions({
-    queryKey: ["orgs", orgId, "purchases", "list", stages],
-    queryFn: () =>
-      unwrap(
-        api.GET("/api/v1/orgs/{org_id}/purchases", {
-          params: { path: { org_id: orgId }, query: { stage: stages.length > 0 ? stages : undefined } },
-        }),
-      ),
+    queryKey: ["orgs", orgId, "purchases", "list", "all"],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/purchases", { params: { path: { org_id: orgId } } })),
   });
 
 /** Xaridlar ro'yxati, bitta sahifa (ADR-054); holat filtri bilan (ADR-061: Yo'lda / Omborimda / Uzumda; bo'sh — hammasi). */

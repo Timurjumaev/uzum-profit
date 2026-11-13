@@ -5,24 +5,24 @@
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { ExternalLink } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
-import { copyPurchase, createComponent, currentOrg, deleteComponent, deleteLine, deletePurchase, meQuery, purchaseQuery, updateComponent, updatePurchase } from "../../app/query";
-import { Badge, Banner, Button, DataTable, Dialog, EmptyState, FormulaPopover, Skeleton, TextInput, Timeline, useToast, type Column } from "../../components/ui";
-import type { CostComponent, PurchaseDetail, PurchaseLine, PurchaseStage } from "../../lib/api/types";
+import { copyPurchase, createComponent, currentOrg, deleteComponent, deleteLine, deletePurchase, meQuery, purchaseQuery, updateComponent } from "../../app/query";
+import { Badge, Banner, Button, DataTable, Dialog, EmptyState, FormulaPopover, Skeleton, Timeline, useToast, type Column } from "../../components/ui";
+import type { CostComponent, PurchaseDetail, PurchaseLine } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { ComponentForm, componentLines, lineLabel } from "./ComponentForm";
 import { useComponentColumns } from "./componentColumns";
 import { CountForm } from "./CountForm";
 import { LineForm } from "./LineForm";
 import { SplitForm } from "./SplitForm";
-import { changedDates, DATED_STAGES, datesInOrder, isEstimated, isInfoFlag, pathStages, SHIPMENT_STAGES, visibleFlags } from "./model";
+import { isEstimated, isInfoFlag, pathStages, visibleFlags } from "./model";
 import { PurchaseForm } from "./PurchaseForm";
 import { MANAGE_ROLES } from "./Purchases";
 
-type Editing = { kind: "header" } | { kind: "count" } | { kind: "split" } | { kind: "dates" } | { kind: "delete" } | { kind: "line"; line: PurchaseLine | null } | { kind: "component"; component: CostComponent | null };
+type Editing = { kind: "header" } | { kind: "count" } | { kind: "split" } | { kind: "delete" } | { kind: "line"; line: PurchaseLine | null } | { kind: "component"; component: CostComponent | null };
 
 export function PurchasePage() {
   const { t } = useTranslation();
@@ -259,9 +259,6 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
                   {t("purchases.split.open")}
                 </Button>
               )}
-              <Button variant="ghost" onClick={() => setEditing({ kind: "dates" })}>
-                {t("purchases.editDates")}
-              </Button>
             </div>
           )}
         </div>
@@ -269,20 +266,24 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
           <Timeline label={t("purchases.path")} stages={pathStages(p.path, (s) => t(`purchases.state.${s}`))} />
         </div>
         <p className="caption">{t("purchases.pathNote")}</p>
+        {p.history.some((h) => h.stage !== "ordered" && h.stage !== "received") && (
+          <details className="purchase__history">
+            <summary>{t("purchases.history")}</summary>
+            <ul aria-label={t("purchases.history")}>
+              {p.history.map((h) => (
+                <li key={h.stage}>
+                  {t(`purchases.stage.${h.stage}`)} — {f.date(h.on)}
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
         {splitNew && (
           <Banner tone="positive" title={t("purchases.split.savedNew")}>
             <Link to="/purchases/$purchaseId" params={{ purchaseId: splitNew }} onClick={() => setSplitNew(null)}>
               {t("purchases.split.openNew")}
             </Link>
           </Banner>
-        )}
-        {p.shipment_id && (
-          <p className="caption">
-            {t("shipments.datesFromShipment")}{" "}
-            <Link to="/shipments/$shipmentId" params={{ shipmentId: p.shipment_id }}>
-              {p.shipment_name || t("shipments.untitled")}
-            </Link>
-          </p>
         )}
       </section>
 
@@ -361,7 +362,6 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
           }}
         />
       )}
-      {editing?.kind === "dates" && <DatesForm orgId={orgId} detail={detail} onClose={() => setEditing(null)} onSaved={(d) => void applied(d, t("purchases.saved"))} />}
       {editing?.kind === "line" && (
         <LineForm
           orgId={orgId}
@@ -456,55 +456,6 @@ function CostPanel({ detail }: { detail: PurchaseDetail }) {
         </>
       )}
     </aside>
-  );
-}
-
-function DatesForm({ orgId, detail, onClose, onSaved }: { orgId: string; detail: PurchaseDetail; onClose: () => void; onSaved: (d: PurchaseDetail) => void }) {
-  const { t } = useTranslation();
-  const before = detail.purchase.dates as Partial<Record<PurchaseStage, string | null>>;
-  const [draft, setDraft] = useState<Partial<Record<PurchaseStage, string>>>(() => Object.fromEntries(DATED_STAGES.map((s) => [s, before[s] ?? ""])));
-  const ordered = datesInOrder(draft);
-  const fromShipment = (s: PurchaseStage) => detail.purchase.shipment_id !== null && SHIPMENT_STAGES.includes(s);
-  const save = useMutation({
-    mutationFn: () => {
-      const dates = changedDates(before, draft);
-      for (const s of SHIPMENT_STAGES) if (fromShipment(s)) delete dates[s]; // kargo sanalari kargoda o'zgaradi
-      return updatePurchase(orgId, detail.purchase.id, { dates });
-    },
-    onSuccess: onSaved,
-  });
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    if (ordered) save.mutate();
-  };
-  return (
-    <Dialog
-      open
-      title={t("purchases.datesTitle")}
-      onClose={onClose}
-      footer={
-        <>
-          <Button variant="ghost" onClick={onClose}>
-            {t("purchases.cancel")}
-          </Button>
-          <Button type="submit" form="dates-form" disabled={!ordered} loading={save.isPending}>
-            {t("purchases.datesSave")}
-          </Button>
-        </>
-      }
-    >
-      <form id="dates-form" className="purchase-form" onSubmit={submit}>
-        <p className="caption">{t("purchases.datesHint")}</p>
-        {detail.purchase.shipment_id !== null && <p className="caption">{t("shipments.datesFromShipment")}</p>}
-        {save.isError && <Banner tone="negative" title={errorText(save.error, t)} />}
-        {!ordered && <Banner tone="warning" title={t("purchases.datesOrder")} />}
-        <div className="purchase-form__dates">
-          {DATED_STAGES.map((s) => (
-            <TextInput key={s} label={t(`purchases.stage.${s}`)} type="date" optional disabled={fromShipment(s)} value={draft[s] ?? ""} onValueChange={(v) => setDraft((d) => ({ ...d, [s]: v }))} />
-          ))}
-        </div>
-      </form>
-    </Dialog>
   );
 }
 
