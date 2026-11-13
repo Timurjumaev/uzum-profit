@@ -122,6 +122,13 @@ const shipments = createRoute({
   component: lazyRouteComponent(() => import("../routes/shipments"), "Shipments"),
 });
 
+/** Kargo puli jadvali (TM3, ADR-061 §3): trekli xaridlarga o'z summasi, kodli quti — bitta summa, dona bo'yicha. */
+const cargoPool = createRoute({
+  getParentRoute: () => app,
+  path: "/cargo-pool",
+  component: lazyRouteComponent(() => import("../routes/shipments"), "CargoPool"),
+});
+
 const shipment = createRoute({
   getParentRoute: () => app,
   path: "/shipments/$shipmentId",
@@ -196,7 +203,7 @@ const uiKit = createRoute({
 
 export const routeTree = root.addChildren([
   auth.addChildren([
-    app.addChildren([home, status, pnl, products, product, orders, expenses, purchases, purchase, shipments, shipment, inventory, cash, reports, settings, opening]),
+    app.addChildren([home, status, pnl, products, product, orders, expenses, purchases, purchase, shipments, shipment, cargoPool, inventory, cash, reports, settings, opening]),
     onboarding,
     invite,
   ]),

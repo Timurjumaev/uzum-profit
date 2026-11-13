@@ -74,7 +74,26 @@ test("kargolar: ro'yxatdan kargo sahifasiga, xaridlar va kargo ulushi", async ({
   await expect(page.getByRole("table", { name: "Tovarlar va kargo ulushi" })).toBeVisible();
 });
 
-for (const path of ["/shipments", `/shipments/${SHIPMENT_1}`]) {
+test("kargo puli (TM3): kartochkalar, kodli quti paneli — 360 px da gorizontal skrollsiz", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await mockApi(page);
+  await open(page, "/purchases");
+  await page.getByRole("link", { name: "Kargo puli" }).click();
+  await expect(page).toHaveURL(/\/cargo-pool$/);
+  const list = page.getByRole("list", { name: "Kargo puli kutilayotgan xaridlar" });
+  await expect(list.getByRole("listitem")).toHaveCount(3);
+  await page.getByLabel("Kargo puli: Oktabr partiyasi").fill("45");
+  await expect(page.getByRole("button", { name: "Kargo pulini saqlash (1)" })).toBeEnabled();
+  await page.getByRole("checkbox", { name: "Qutiga qoʻshish: Kabel va gʻiloflar" }).check();
+  await page.getByRole("checkbox", { name: "Qutiga qoʻshish: Kichik buyurtma" }).check();
+  const panel = page.getByRole("region", { name: "Bitta qutiga birlashtirish" });
+  await panel.getByLabel(/^Umumiy summa/).fill("100");
+  await expect(page.getByLabel("Qutidagi ulush: Kichik buyurtma")).toHaveValue("50,00");
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+});
+
+for (const path of ["/shipments", `/shipments/${SHIPMENT_1}`, "/cargo-pool"]) {
   test(`gorizontal skroll yo'q (360 px) ${path}`, async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 800 });
     await mockApi(page);

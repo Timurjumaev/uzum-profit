@@ -3,7 +3,7 @@
 import { MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
-import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, QuickPurchaseIn, SupplyState, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, OpeningIn } from "../lib/api/types";
+import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, QuickPurchaseIn, SupplyState, TrackedIn, BoxIn, SharesIn, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, OpeningIn } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -377,6 +377,47 @@ export const shipmentsQuery = (orgId: string) =>
     queryKey: ["orgs", orgId, "shipments", "list"],
     queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/shipments", { params: { path: { org_id: orgId } } })),
   });
+
+/** Kargolar ro'yxati, bitta sahifa (B5.0d, ADR-054). */
+export const shipmentsPageQuery = (orgId: string, page: number, size: number) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "shipments", "page", page, size],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/shipments", { params: { path: { org_id: orgId }, query: { limit: size, page } } })),
+  });
+
+/** Kargo puli jadvali (TM3, ADR-061 §3): kargo puli kutilayotgan xaridlar. */
+export const cargoPoolQuery = (orgId: string, counted: boolean) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "purchases", "cargo-pool", counted],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/cargo-pool", { params: { path: { org_id: orgId }, query: { counted } } })),
+  });
+
+export const saveTrackedCargo = (orgId: string, body: TrackedIn) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/cargo-pool/tracked", { params: { path: { org_id: orgId } }, body }));
+
+export const previewBoxShares = (orgId: string, body: SharesIn) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/cargo-pool/shares", { params: { path: { org_id: orgId } }, body }));
+
+export const saveCargoBox = (orgId: string, body: BoxIn) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/cargo-pool/box", { params: { path: { org_id: orgId } }, body }));
+
+export const setBoxShares = (orgId: string, shipmentId: string, componentId: string, fixed: Record<string, string>) =>
+  unwrap(
+    api.PUT("/api/v1/orgs/{org_id}/shipments/{shipment_id}/components/{component_id}/purchase-shares", {
+      params: { path: { org_id: orgId, shipment_id: shipmentId, component_id: componentId } },
+      body: { fixed },
+    }),
+  );
+
+/** Xarajat turlari lug'ati (ADR-061 §4): sotuvchining o'z turlari. */
+export const costTypesQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "cost-types"],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/cost-types", { params: { path: { org_id: orgId } } })),
+  });
+
+export const createCostType = (orgId: string, name: string) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/cost-types", { params: { path: { org_id: orgId } }, body: { name } }));
 
 /** Kargo sahifasi: xaridlar (kargo ulushi bilan), xarajatlar, tovarlar (ulush har tovarga). */
 export const shipmentQuery = (orgId: string, shipmentId: string) =>

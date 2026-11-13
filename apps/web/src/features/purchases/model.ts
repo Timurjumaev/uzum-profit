@@ -21,10 +21,13 @@ export type PaidCurrency = (typeof PAID_CURRENCIES)[number];
 /** Kargoga bog'langan xaridda shu bosqichlar kargodan olinadi (ADR-046). */
 export const SHIPMENT_STAGES: PurchaseStage[] = ["cn_warehouse", "shipped", "arrived"];
 
-export const COMPONENT_KINDS: ComponentKind[] = ["goods", "cn_delivery", "agent_fee", "cargo", "customs", "packaging", "labeling", "uzum_delivery", "other"];
+export const COMPONENT_KINDS: ComponentKind[] = ["goods", "cn_delivery", "agent_fee", "cargo", "customs", "transfer_fee", "local_delivery", "packaging", "labeling", "uzum_delivery", "other"];
 /** Kargo xarajati turlari (ADR-049; backend `SHIPMENT_KINDS` bilan bir xil): tovar, Xitoy ichki yetkazish va agent komissiyasi xaridniki. */
-export const SHIPMENT_KINDS: ComponentKind[] = ["cargo", "customs", "packaging", "labeling", "uzum_delivery", "other"];
+export const SHIPMENT_KINDS: ComponentKind[] = ["cargo", "customs", "transfer_fee", "local_delivery", "packaging", "labeling", "uzum_delivery", "other"];
 export const ALLOCATIONS: AllocationBase[] = ["units", "weight", "volume", "value", "manual", "line_sum"];
+/** Yangi yozuvlarda taqsimot (ADR-061 §3): dona yoki qo'lda (tovar summasi — qator summasi ham); vazn / hajm / qiymat — faqat
+ * eski yozuvlarni tahrirlashda (o'z asosida qoladi). */
+export const NEW_ALLOCATIONS: AllocationBase[] = ["units", "manual"];
 export const CURRENCIES = ["CNY", "USD", "UZS", "EUR", "RUB"] as const;
 export type CurrencyCode = (typeof CURRENCIES)[number];
 

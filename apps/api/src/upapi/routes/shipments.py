@@ -23,12 +23,19 @@ from decimal import Decimal
 from typing import Annotated, Any
 from uuid import UUID
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import Row, delete, func, insert, or_, select, update
 from upcore.fx import to_uzs
 from upcore.money import Currency, Money, to_decimal
-from upcore.purchasing import SHIPMENT_KINDS, ComponentKind, Stage, current_stage, default_base
+from upcore.purchasing import (
+    SHIPMENT_KINDS,
+    ComponentKind,
+    Stage,
+    SupplyState,
+    current_stage,
+    default_base,
+)
 
 from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission
@@ -49,6 +56,7 @@ from upapi.routes.purchases import (
     _shipment,
     _targets,
     check_component,
+    check_cost_type,
     fx_gap,
     request_shipment_members,
 )
@@ -93,6 +101,9 @@ class ShipmentOut(BaseModel):
 class ShipmentsOut(BaseModel):
     items: list[ShipmentOut]
     amounts: bool
+    total: int = 0  # jami kargo
+    page: int = 1  # haqiqiy sahifa (`limit` berilmasa hammasi — 1)
+    pages: int = 1
 
 
 class ShipmentPurchaseOut(BaseModel):
@@ -100,6 +111,7 @@ class ShipmentPurchaseOut(BaseModel):
     title: str | None
     supplier_name: str | None
     stage: Stage
+    state: SupplyState  # ADR-061 §1
     line_count: int
     units: int
     share: Decimal | None  # shu xaridga tushgan kargo ulushi, so'mda
@@ -276,6 +288,7 @@ async def _detail(ctx: OrgContext, shipment_id: UUID) -> ShipmentDetailOut:
                 title=purchase.title,
                 supplier_name=out.supplier_name,
                 stage=out.stage,
+                state=out.state,
                 line_count=len(p_lines),
                 units=units,
                 share=share,
@@ -338,11 +351,24 @@ async def _detail(ctx: OrgContext, shipment_id: UUID) -> ShipmentDetailOut:
 
 
 @router.get("/orgs/{org_id}/shipments", response_model=ShipmentsOut)
-async def list_shipments(ctx: Viewer) -> ShipmentsOut:
-    """Kargolar (yangisi birinchi): xaridlar soni, dona va (summalar ruxsati bilan) kargo xarajatlari jami."""
+async def list_shipments(
+    ctx: Viewer,
+    limit: Annotated[
+        int | None, Query(ge=1, le=100, description="Sahifa o'lchami; bo'lmasa — hammasi")
+    ] = None,
+    page: Annotated[int, Query(ge=1, le=100_000)] = 1,
+) -> ShipmentsOut:
+    """Kargolar (yangisi birinchi): xaridlar soni, dona va (summalar ruxsati bilan) kargo xarajatlari jami.
+    ``limit`` berilsa — sahifa (B5.0d, ADR-054; tanlov ro'yxatlari ``limit`` siz hammasini oladi)."""
     sh, p, pl, cc, c = m.shipments, m.purchases, m.purchase_lines, m.cost_components, m.carriers
     amounts = _amounts(ctx)
-    rows = list(await ctx.conn.execute(select(sh).order_by(sh.c.created_at.desc(), sh.c.id)))
+    count = int(await ctx.conn.scalar(select(func.count()).select_from(sh)) or 0)
+    pages = max(1, -(-count // limit)) if limit else 1
+    at = min(page, pages) if limit else 1
+    query = select(sh).order_by(sh.c.created_at.desc(), sh.c.id)
+    if limit:
+        query = query.limit(limit).offset((at - 1) * limit)
+    rows = list(await ctx.conn.execute(query))
     carriers = {r.id: r.name for r in await ctx.conn.execute(select(c.c.id, c.c.name))}
     counts = {
         r.shipment_id: r.n
@@ -366,7 +392,9 @@ async def list_shipments(ctx: Viewer) -> ShipmentsOut:
     }
     totals: dict[UUID, Decimal | None] = {}
     if amounts and rows:
-        comps = list(await ctx.conn.execute(select(cc).where(cc.c.shipment_id.is_not(None))))
+        comps = list(
+            await ctx.conn.execute(select(cc).where(cc.c.shipment_id.in_([x.id for x in rows])))
+        )
         rates = calc_lots.Rates(ctx.conn, today())
         await rates.load(calc_lots.currencies_of(comps))
         by_ship = {x.id: x for x in rows}
@@ -404,6 +432,9 @@ async def list_shipments(ctx: Viewer) -> ShipmentsOut:
             for x in rows
         ],
         amounts=amounts,
+        total=count,
+        page=at,
+        pages=pages,
     )
 
 
@@ -514,7 +545,9 @@ async def create_component(
     shipment = await _shipment(ctx, shipment_id)
     _check_kind(body.kind)
     await _check_targets(ctx, shipment_id, body.lines, body.shares)
-    values = _component_values(body.model_dump())
+    raw = body.model_dump()
+    await check_cost_type(ctx, raw)
+    values = _component_values(raw)
     values["allocation"] = values["allocation"] or default_base(body.kind).value
     cc = m.cost_components
     component_id = await ctx.conn.scalar(
@@ -578,8 +611,9 @@ async def update_component(
         raise AppError("bad_component", 422, detail=str(exc)) from None
     target_lines = None if new_lines is None else [UUID(str(x)) for x in new_lines]
     await _check_targets(ctx, shipment_id, target_lines, new_shares)
+    await check_cost_type(ctx, values, row.kind)
     cols = _component_values(values)
-    cols["targets"] = _targets(target_lines, new_shares)
+    cols["targets"] = _targets(target_lines, new_shares, row.targets)
     before = {k: getattr(row, k) for k in cols}
     cc = m.cost_components
     await ctx.conn.execute(

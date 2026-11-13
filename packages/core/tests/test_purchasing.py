@@ -23,6 +23,7 @@ from upcore.purchasing import (
     Stage,
     SupplyState,
     average_unit_cost,
+    box_shares,
     compute_lots,
     compute_shipment_lots,
     current_stage,
@@ -705,3 +706,49 @@ def test_supply_path_counted_and_sent() -> None:
     assert (
         transit_days({Stage.ORDERED: date(2026, 10, 5), Stage.RECEIVED: date(2026, 10, 1)}) is None
     )
+
+
+# --- Kodli quti ulushlari (ADR-061 §3, TM3) ------------------------------------------------------
+
+
+def test_box_shares_by_units_and_fixed() -> None:
+    usd = lambda x: Money(D(x), Currency.USD)  # noqa: E731
+    shares = box_shares(usd("100"), {"a": 30, "b": 60, "c": 10}, {})
+    assert shares == {"a": usd("30.00"), "b": usd("60.00"), "c": usd("10.00")}
+    # "b" qo'lda 50: qolgan 50 — a va c ga dona bo'yicha (30 : 10).
+    shares = box_shares(usd("100"), {"a": 30, "b": 60, "c": 10}, {"b": D("50")})
+    assert shares == {"a": usd("37.50"), "b": usd("50"), "c": usd("12.50")}
+    # Hammasi qo'lda va yig'indi teng — xato yo'q; qoldiqni oladigan xarid yo'q va qoldiq 0.
+    assert box_shares(usd("10"), {"a": 1, "b": 1}, {"a": D("4"), "b": D("6")})["b"] == usd("6")
+    # Dona 0 bo'lgan xarid qoldig'i 0 bo'lsa — 0.
+    assert box_shares(usd("10"), {"a": 1, "b": 0}, {"a": D("10")})["b"] == usd("0")
+
+
+@pytest.mark.parametrize(
+    ("units", "fixed", "message"),
+    [
+        ({}, {}, "kamida bitta"),
+        ({"a": 1}, {"x": D("1")}, "qutida yo'q"),
+        ({"a": 1, "b": 1}, {"a": D("-1")}, "manfiy"),
+        ({"a": 1, "b": 1}, {"a": D("11")}, "summadan ko'p"),
+        ({"a": 1, "b": 1}, {"a": D("4"), "b": D("5")}, "teng emas"),
+        ({"a": 1, "b": 0}, {"a": D("4")}, "teng emas"),
+    ],
+)
+def test_box_shares_errors(units: dict[str, int], fixed: dict[str, D], message: str) -> None:
+    with pytest.raises(PurchaseError, match=message):
+        box_shares(Money(D("10"), Currency.USD), units, fixed)
+
+
+@given(
+    st.lists(st.integers(min_value=1, max_value=500), min_size=1, max_size=8),
+    st.decimals(min_value=D("0.01"), max_value=D("99999"), places=2),
+)
+def test_box_shares_sum_equals_amount(units: list[int], amount: D) -> None:
+    money = Money(amount, Currency.USD)
+    shares = box_shares(money, {str(i): u for i, u in enumerate(units)}, {})
+    assert total(list(shares.values()), Currency.USD) == money
+
+
+def test_new_cost_kinds_go_to_shipments() -> None:
+    assert K.TRANSFER_FEE in SHIPMENT_KINDS and K.LOCAL_DELIVERY in SHIPMENT_KINDS

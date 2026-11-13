@@ -21,7 +21,7 @@ export function useComponentColumns(actions?: Actions): Column<CostComponent>[] 
     });
   };
   return [
-    { key: "kind", header: t("purchases.components.col.kind"), render: (c) => t(`purchases.components.kind.${c.kind}`) },
+    { key: "kind", header: t("purchases.components.col.kind"), render: (c) => c.type_name ?? t(`purchases.components.kind.${c.kind}`) },
     { key: "amount", header: t("purchases.components.col.amount"), numeric: true, render: (c) => (c.currency === "UZS" ? f.money(c.amount, { unit: false }) : f.currency(c.amount, c.currency)) },
     { key: "rate", header: t("purchases.components.col.rate"), render: rateText },
     { key: "uzs", header: t("purchases.components.col.uzs"), numeric: true, render: (c) => (c.amount_uzs === null ? "—" : f.money(c.amount_uzs, { unit: false })) },
@@ -37,7 +37,7 @@ export function useComponentColumns(actions?: Actions): Column<CostComponent>[] 
             key: "actions",
             header: t("expenses.own.actions"),
             render: (c: CostComponent) => {
-              const name = t(`purchases.components.kind.${c.kind}`);
+              const name = c.type_name ?? t(`purchases.components.kind.${c.kind}`);
               return (
                 <span className="expenses-actions">
                   <Button variant="ghost" onClick={() => actions.onEdit(c)} aria-label={`${t("purchases.components.edit")}: ${name}`}>

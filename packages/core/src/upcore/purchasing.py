@@ -42,7 +42,9 @@ class ComponentKind(StrEnum):
     PACKAGING = "packaging"  # qadoqlash
     LABELING = "labeling"  # shtrix-kod / yorliq
     UZUM_DELIVERY = "uzum_delivery"  # Uzum omboriga yetkazish
-    OTHER = "other"
+    TRANSFER_FEE = "transfer_fee"  # pul o'tkazma komissiyasi (ADR-061 §4)
+    LOCAL_DELIVERY = "local_delivery"  # taksi / mahalliy tashish (ADR-061 §4)
+    OTHER = "other"  # sotuvchining o'z turi (``cost_types`` lug'ati) ham shu
 
 
 # Kargo xarajatlari (ADR-046, ADR-049): kargodagi hamma xaridning hamma tovariga bo'linadigan turlar. Tovar narxi, Xitoy ichki
@@ -54,6 +56,8 @@ SHIPMENT_KINDS: frozenset[ComponentKind] = frozenset(
         ComponentKind.PACKAGING,
         ComponentKind.LABELING,
         ComponentKind.UZUM_DELIVERY,
+        ComponentKind.TRANSFER_FEE,
+        ComponentKind.LOCAL_DELIVERY,
         ComponentKind.OTHER,
     }
 )
@@ -410,6 +414,46 @@ def split_by_purchase(
             CostComponent(component.kind, rest, component.rate, AllocationBase.UNITS, others)
         )
     return out
+
+
+def box_shares(
+    amount: Money, units: Mapping[str, int], fixed: Mapping[str, Decimal]
+) -> dict[str, Money]:
+    """F20, kodli quti (ADR-061 §3): har xaridga tushadigan kargo puli — kargo puli jadvalidagi inputlar uchun tayyor
+    ulushlar. ``units`` — xarid id → dona (sanalgan bo'lsa kelgan, bo'lmasa buyurtma qilingan); ``fixed`` — sotuvchi
+    qo'lda yozgan ulushlar (o'zgarmaydi). Qolgan summa qolgan xaridlarga dona bo'yicha (qoldiq eng ko'p donali xaridga);
+    natija yig'indisi summaga tiyinigacha teng. Hisobdagi bo'linish bilan bir xil qoida (:func:`split_by_purchase`).
+
+    Xato (``PurchaseError``): noma'lum xarid, manfiy ulush, qo'lda ulushlar summadan ko'p yoki qoldiqni oladigan xarid
+    (dona > 0) qolmagan bo'lsa.
+    """
+    if not units:
+        raise PurchaseError("kodli qutida kamida bitta xarid bo'lishi kerak")
+    unknown = [pid for pid in fixed if pid not in units]
+    if unknown:
+        raise PurchaseError(f"qutida yo'q xaridlar {unknown}")
+    currency = amount.currency
+    out: dict[str, Money] = {}
+    rest = amount
+    for pid, raw in fixed.items():
+        share = Money(to_decimal(raw), currency)
+        if share.amount < 0:
+            raise PurchaseError("qo'lda ulush manfiy")
+        out[pid] = share
+        rest = rest - share
+    if rest.amount < 0:
+        raise PurchaseError("qo'lda ulushlar yig'indisi summadan ko'p")
+    others = [pid for pid in units if pid not in fixed]
+    weights = [Decimal(max(units[pid], 0)) for pid in others]
+    if not others or sum(weights, Decimal(0)) == 0:
+        if not rest.is_zero():
+            raise PurchaseError("qo'lda ulushlar yig'indisi summaga teng emas")
+        for pid in others:
+            out[pid] = Money.zero(currency)
+    else:
+        for pid, part in zip(others, allocate(rest, weights), strict=True):
+            out[pid] = part
+    return {pid: out[pid] for pid in units}
 
 
 def compute_shipment_shares(

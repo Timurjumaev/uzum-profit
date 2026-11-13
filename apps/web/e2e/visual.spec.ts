@@ -48,6 +48,7 @@ const SHOTS: Shot[] = [
   { name: "opening", path: "/opening" },
   { name: "purchases", path: "/purchases" },
   { name: "purchase", path: `/purchases/${PURCHASE_1}` },
+  { name: "cargo-pool", path: "/cargo-pool" },
   { name: "shipments", path: "/shipments" },
   { name: "shipment", path: `/shipments/${SHIPMENT_1}` },
   {

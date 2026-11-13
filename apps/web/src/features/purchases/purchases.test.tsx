@@ -347,6 +347,7 @@ describe("xarid sahifasi", () => {
       allocation: null,
       lines: [LINE_1],
       shares: {},
+      cost_type_id: null,
     });
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 

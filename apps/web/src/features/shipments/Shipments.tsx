@@ -1,13 +1,13 @@
-// Kargolar ro'yxati (M9, ADR-046): bitta kargo — ko'p xarid. Har qatorda sanalar, xaridlar soni, dona va kargo xarajatlari
-// jami (summalar ruxsati bilan). "Yangi kargo" — egasi, menejer, omborchi (`manage_purchases`).
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+// Kargolar ro'yxati (M9, ADR-046; TM3 da soddalashdi — sanalar ustuni yo'q, sahifalash B5.0d): bitta kargo — ko'p xarid.
+// Har qatorda xaridlar soni, dona va kargo xarajatlari jami (summalar ruxsati bilan). "Yangi kargo" — egasi, menejer, omborchi (`manage_purchases`).
+import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
-import { currentOrg, meQuery, shipmentsQuery } from "../../app/query";
-import { Banner, Button, DataTable, EmptyState, Skeleton, type Column } from "../../components/ui";
+import { currentOrg, meQuery, shipmentsPageQuery } from "../../app/query";
+import { Banner, Button, DataTable, EmptyState, Pagination, Skeleton, usePageSize, type Column } from "../../components/ui";
 import type { Shipment } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { MANAGE_ROLES } from "../purchases/Purchases";
@@ -20,11 +20,12 @@ export function Shipments() {
   const { data: me } = useSuspenseQuery(meQuery);
   const org = currentOrg(me)!;
   const navigate = useNavigate();
-  const query = useQuery(shipmentsQuery(org.id));
+  const [size, setSize] = usePageSize();
+  const [page, setPage] = useState(1);
+  const query = useQuery({ ...shipmentsPageQuery(org.id, page, size), placeholderData: keepPreviousData });
   const [adding, setAdding] = useState(false);
   const canManage = MANAGE_ROLES.includes(org.role);
   const amounts = query.data?.amounts ?? true;
-  const date = (d: string | null) => (d ? f.date(d) : "—");
   /** Mobil meta qator uchun holat: eng oxirgi to'ldirilgan bosqich va sanasi. */
   const status = (r: Shipment) => {
     const st = shipmentStatus(r);
@@ -47,8 +48,6 @@ export function Shipments() {
       ),
     },
     { key: "carrier", header: t("purchases.fields.carrier"), render: (r) => r.carrier_name ?? "—" },
-    { key: "shipped", header: t("purchases.stage.shipped"), render: (r) => date(r.shipped_on) },
-    { key: "arrived", header: t("purchases.stage.arrived"), render: (r) => date(r.arrived_on) },
     { key: "purchases", header: t("shipments.col.purchases"), numeric: true, render: (r) => f.number(r.purchase_count) },
     { key: "units", header: t("purchases.col.units"), numeric: true, render: (r) => f.number(r.units) },
     ...(amounts ? [{ key: "total", header: t("shipments.col.total"), numeric: true, render: (r: Shipment) => (r.total === null ? "—" : f.money(r.total, { unit: false })) }] : []),
@@ -79,7 +78,20 @@ export function Shipments() {
         ) : query.data.items.length === 0 ? (
           <EmptyState title={t("shipments.empty")} text={t("shipments.emptyText")} action={canManage ? <Button onClick={() => setAdding(true)}>{t("shipments.add")}</Button> : undefined} />
         ) : (
-          <DataTable caption={t("shipments.title")} columns={columns} rows={query.data.items} rowKey={(r) => r.id} />
+          <>
+            <DataTable caption={t("shipments.title")} columns={columns} rows={query.data.items} rowKey={(r) => r.id} />
+            <Pagination
+              page={query.data.page}
+              pages={query.data.pages}
+              total={query.data.total}
+              size={size}
+              onPage={setPage}
+              onSize={(n) => {
+                setSize(n);
+                setPage(1);
+              }}
+            />
+          </>
         )}
       </div>
       {adding && <ShipmentForm orgId={org.id} shipment={null} onClose={() => setAdding(false)} onSaved={(saved) => void navigate({ to: "/shipments/$shipmentId", params: { shipmentId: saved.shipment.id } })} />}
