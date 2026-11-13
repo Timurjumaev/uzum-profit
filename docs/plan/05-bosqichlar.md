@@ -955,8 +955,17 @@ Har vazifa — alohida branch va PR; tafsilot 07 "ADR-061 tafsiloti", 02 M9–M1
   "Brak zarari" (o'z xarajatlari qatori, `upcore.pnl.DEFECT_LOSS`). Ombor joylari (F27) holatdan: "Yo'lda" (eski "Xitoyda"
   va qoralama ham), "Omborimda". Web: `/warehouse` (Ombor sahifasidan havola), o'tkazish va brak oynalari; o'tkazilgan
   qator xaridda tahrirlanmaydi va sanalmaydi. Testlar: yadro, API, web, e2e, vizual.
-- [ ] TM6 Uzumga jo'natish (§7; avval B5.3 ning bir qismi): do'kon → SKU'lar to'liq soni bilan → Excel (ADR-050 shabloni),
-  "Jo'natilmoqda" band qilish, postavka bilan avtomatik bog'lash, bekor qilish. B5.0c (postavka tarkibi) shu yerda.
+- [x] TM6 Uzumga jo'natish (§7, ADR-050 (2)–(3)); B5.0c: postavka tarkibi jo'natma orqali ko'rinadi; "qisman chiqarish" chekkasi (ADR-055 §3) — ochiq, past ustuvorlik. ✓ 2026-11-13: `fbo_dispatches` +
+  `fbo_dispatch_items` (migratsiya 0026). `GET /dispatches/draft` — do'konning Omborimdagi SKU'lari to'liq soni bilan
+  (shtrix-kodsiz — alohida), `POST /dispatches` — donalar darhol "Jo'natilmoqda" (Omborimdan band), `GET
+  /dispatches/{id}/excel` — Uzum shabloni ("Инструкция", "Товары на отправку": shtrix-kod, tannarx, dona). Postavka bilan
+  bog'lash (`reports.dispatch.reconcile`): o'sha do'kon, Excel'dan keyin, SKU to'plami bir xil, yagona nomzod — o'zi; bir
+  nechta — `POST /dispatches/{id}/link`; postavka bekor — jo'natma bekor, donalar qaytadi; `cancel`. Jo'natilgan donalar
+  partiyalarga FIFO bog'lanadi (`upcore.purchasing.fifo_attribute`): xaridda "N dona Uzumda · M jo'natilmoqda", hammasi
+  bog'langanda holat "Uzumda". Bog'langan postavka ADR-034 ajratmasida ikki marta ayirilmaydi; Ombor (F27) joylari ham shu
+  bilan. Web: `/dispatches` (Omborimdan), qoralama (son, olib tashlash), Excel, jo'natmalar ro'yxati. Testlar: yadro, API
+  (Excel tarkibi), web, e2e, vizual. Postavka API'dan yaratilmaydi (ADR-009). **T:** birinchi real jo'natmada avtomatik
+  bog'lanishni staging'da tekshirish.
 - [ ] TM7 Qabul farqi (§8; avval B5.3 ning qolgani): kamomad ro'yxati va holatlari, "Uzum yo'qotdi" / "Men sanashda
   adashganman", ortiqcha qabul, F52 foyda hisobida, bosh sahifa "Diqqat" bloki, bog'liq C000007 jarimasi.
 - [ ] TM8 Yakun: e2e (xarid → kargo puli → sanash → jo'natish → qabul), yordam maqolasi, 04 §7.4 dagi eski "Xaridlar" tavsifini

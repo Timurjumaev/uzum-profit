@@ -150,6 +150,13 @@ const warehouse = createRoute({
   component: lazyRouteComponent(() => import("../routes/inventory"), "Warehouse"),
 });
 
+/** Uzumga jo'natish (TM6, ADR-061 §7): do'kon bo'yicha Excel, band qilish, postavka bilan bog'lash. */
+const dispatches = createRoute({
+  getParentRoute: () => app,
+  path: "/dispatches",
+  component: lazyRouteComponent(() => import("../routes/inventory"), "Dispatches"),
+});
+
 const status = createRoute({
   getParentRoute: () => app,
   path: "/status",
@@ -210,7 +217,7 @@ const uiKit = createRoute({
 
 export const routeTree = root.addChildren([
   auth.addChildren([
-    app.addChildren([home, status, pnl, products, product, orders, expenses, purchases, purchase, shipments, shipment, cargoPool, inventory, warehouse, cash, reports, settings, opening]),
+    app.addChildren([home, status, pnl, products, product, orders, expenses, purchases, purchase, shipments, shipment, cargoPool, inventory, warehouse, dispatches, cash, reports, settings, opening]),
     onboarding,
     invite,
   ]),

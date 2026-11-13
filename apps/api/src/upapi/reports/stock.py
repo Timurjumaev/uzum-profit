@@ -70,6 +70,7 @@ from upcore.purchasing import LEAD_STAGES, SupplyState, stage_days, supply_state
 from upapi import orgsettings
 from upapi.calc.costs import openings
 from upapi.db import models as m
+from upapi.reports import dispatch
 from upapi.reports.purchases import stage_dates
 
 UZS = Currency.UZS
@@ -230,10 +231,12 @@ class _Places:
         return sum((q * c for q, c in self.own_lots), Decimal(0)) / qty if qty else None
 
 
-async def inbound_by_sku(conn: AsyncConnection) -> dict[UUID, int]:
-    """ADR-034: SKU → qabul qilinmagan postavkalardagi dona (``quantityToStock``; yopiq holatdagilar — yo'q)."""
+async def inbound_by_sku(conn: AsyncConnection, exclude: Iterable[UUID] = ()) -> dict[UUID, int]:
+    """ADR-034: SKU → qabul qilinmagan postavkalardagi dona (``quantityToStock``; yopiq holatdagilar — yo'q).
+    ``exclude`` — shu postavkalar hisobga olinmaydi (TM6: jo'natmaga bog'langanlari — ular jo'natma orqali band)."""
     v, i = m.fbo_invoices, m.fbo_invoice_items
-    rows = await conn.execute(
+    skip = list(exclude)
+    query = (
         select(i.c.sku_id, func.sum(i.c.quantity_to_stock).label("qty"))
         .join(v, v.c.id == i.c.invoice_id)
         .where(
@@ -242,6 +245,9 @@ async def inbound_by_sku(conn: AsyncConnection) -> dict[UUID, int]:
         )
         .group_by(i.c.sku_id)
     )
+    if skip:
+        query = query.where(v.c.id.not_in(skip))
+    rows = await conn.execute(query)
     return {r.sku_id: int(r.qty or 0) for r in rows if r.qty}
 
 
@@ -394,11 +400,15 @@ async def load_stock(
     places = await _places(conn, items) if items else {}
     inbound = await inbound_by_sku(conn)
     # O'z omborimdan postavkaga ajratilgani ayiriladi (xarid "Uzumga yuborildi" deb belgilanmagan bo'lsa ikki marta
-    # sanalmasin; belgilangan bo'lsa o'z omborim allaqachon 0 — manfiy bo'lmaydi).
+    # sanalmasin; belgilangan bo'lsa o'z omborim allaqachon 0 — manfiy bo'lmaydi). TM6: Uzumga jo'natmalar (Jo'natilmoqda +
+    # Uzumda) ham ayiriladi; jo'natmaga bog'langan postavka esa ikki marta emas.
+    unlinked = await inbound_by_sku(conn, await dispatch.linked_invoices(conn))
+    sent = await dispatch.held(conn)
     inbound_item: dict[UUID, int] = {}
     for r in skus:
-        if r.item_id is not None and inbound.get(r.id):
-            inbound_item[r.item_id] = inbound_item.get(r.item_id, 0) + inbound[r.id]
+        qty = unlinked.get(r.id, 0) + sent.get(r.id, 0)
+        if r.item_id is not None and qty:
+            inbound_item[r.item_id] = inbound_item.get(r.item_id, 0) + qty
     for item_id, qty in inbound_item.items():
         if item_id in places:
             places[item_id].reserved = qty

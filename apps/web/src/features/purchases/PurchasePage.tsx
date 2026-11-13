@@ -194,6 +194,8 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
           <h1 className="h2">{p.title ?? t("purchases.untitled")}</h1>
           <p className="caption">
             <Badge tone={p.state === "at_uzum" ? "positive" : p.state === "in_stock" ? "info" : "neutral"}>{t(`purchases.state.${p.state}`)}</Badge>
+            {p.units_at_uzum > 0 && ` · ${t("purchases.atUzum", { count: p.units_at_uzum })}`}
+            {p.units_sending > 0 && ` · ${t("purchases.sending", { count: p.units_sending })}`}
             {p.track_no && ` · ${t("purchases.trackShort", { track: p.track_no })}`}
             {p.on_hand && ` · ${t("purchases.quick.onHand")}`}
             {p.supplier_name && ` · ${p.supplier_name}`}

@@ -12,7 +12,7 @@ o'tkazilgan qatorni o'chirish. Ruxsat — ``manage_purchases``; summalar — ``v
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Annotated, Any
 from uuid import UUID
@@ -27,6 +27,7 @@ from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission
 from upapi.db import models as m
 from upapi.errors import AppError
+from upapi.reports import dispatch
 from upapi.reports import purchases as rp
 from upapi.reports.common import sku_catalog
 from upapi.reports.stock import inbound_by_sku
@@ -70,6 +71,7 @@ class WarehouseRow(BaseModel):
     barcode: str | None
     qty: int
     reserved: int  # qabul qilinmagan postavkalarga ajratilgan (ADR-034)
+    dispatched: int = 0  # Uzumga jo'natmalarda (Jo'natilmoqda + Uzumda, TM6) — qoldiqdan ayirilgan
     unit_cost: Decimal | None
     value: Decimal | None
     sources: list[SourceOut]
@@ -128,7 +130,12 @@ async def _book(ctx: OrgContext) -> dict[str, Any]:
 @router.get("/orgs/{org_id}/warehouse", response_model=WarehouseOut)
 async def warehouse(ctx: Viewer) -> WarehouseOut:
     """Omborim (ADR-061 §7): SKU bo'yicha qoldiq, qiymat va o'tkazish manbalari; qoldig'i bor qatorlar."""
-    amounts = _amounts(ctx)
+    return await stock(ctx, _amounts(ctx))
+
+
+async def stock(ctx: OrgContext, amounts: bool) -> WarehouseOut:
+    """Omborim hisobi; ``amounts`` — summalar javobga chiqadimi (jo'natma narxi uchun ichkarida doim)."""
+    await dispatch.reconcile(ctx.conn, datetime.now(UTC))
     book = await _book(ctx)
     it, sh, sm = m.items, m.shops, m.stock_moves
     rows: dict[str, dict[str, Any]] = {}
@@ -148,10 +155,15 @@ async def warehouse(ctx: Viewer) -> WarehouseOut:
             },
         )
 
+    # TM6: Uzumga jo'natmalar (Jo'natilmoqda + Uzumda) eng eski partiyalardan FIFO ayiriladi (ADR-050 (3)).
+    sent = await dispatch.attribute(ctx.conn, book["lines"], book["purchases"], book["moved_out"])
     for line in book["lines"]:
-        qty = _good(line) - book["moved_out"].get(line.id, 0)
+        att = sent.get(line.id)
+        out_qty = 0 if att is None else att.sending + att.linked
+        qty = _good(line) - book["moved_out"].get(line.id, 0) - out_qty
         r = row(line.sku_id, line.item_id)
         r["qty"] += qty
+        r["dispatched"] = r.get("dispatched", 0) + out_qty
         cost = book["unit"].get(line.id)
         if qty > 0 and cost is not None:
             r["lots"].append((qty, cost))
@@ -180,7 +192,7 @@ async def warehouse(ctx: Viewer) -> WarehouseOut:
             continue
         delta = int(mv.qty) if mv.kind == "adjust" else -abs(int(mv.qty))
         rows[key]["qty"] += delta
-    reserved = await inbound_by_sku(ctx.conn)
+    reserved = await inbound_by_sku(ctx.conn, await dispatch.linked_invoices(ctx.conn))
     sku_ids = [r["sku_id"] for r in rows.values() if r["sku_id"] is not None]
     item_ids = [r["item_id"] for r in rows.values() if r["item_id"] is not None]
     line_sku = {x.id: x.sku_id for x in book["lines"]}
@@ -220,6 +232,7 @@ async def warehouse(ctx: Viewer) -> WarehouseOut:
                 barcode=sku.barcode if sku else None,
                 qty=qty,
                 reserved=res,
+                dispatched=r.get("dispatched", 0),
                 unit_cost=unit.quantize(Decimal("0.01")) if amounts and unit is not None else None,
                 value=value if amounts else None,
                 sources=r["sources"],

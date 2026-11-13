@@ -537,6 +537,22 @@ def split_units(amount: Money, kept: int, moved: int) -> tuple[Money, Money]:
     return first, second
 
 
+def fifo_attribute(stock: Sequence[tuple[str, int]], demand: int) -> dict[str, int]:
+    """Uzumga jo'natilgan donalarni partiyalarga bog'lash (ADR-050 (3), ADR-061 §7): ``stock`` — (qator id, omborimdagi
+    dona) eskisidan yangisiga; ``demand`` donasi eng eski qatordan boshlab yeyiladi. Natija — qator → bog'langan dona
+    (faqat musbatlari). Omborimdagidan ko'p bo'lsa ortig'i hech qaysi qatorga yozilmaydi (o'ylab topilmaydi)."""
+    out: dict[str, int] = {}
+    left = max(demand, 0)
+    for line_id, qty in stock:
+        if left == 0:
+            break
+        take = min(max(qty, 0), left)
+        if take > 0:
+            out[line_id] = out.get(line_id, 0) + take
+            left -= take
+    return out
+
+
 def compute_shipment_shares(
     purchases: Sequence[Purchase], shipment_components: Sequence[CostComponent]
 ) -> dict[str, LotCost]:

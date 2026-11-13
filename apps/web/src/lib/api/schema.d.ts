@@ -1096,6 +1096,112 @@ export interface paths {
         patch: operations["update_component_api_v1_orgs__org_id__shipments__shipment_id__components__component_id__patch"];
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/dispatches/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dispatch Draft
+         * @description Yangi jo'natma: do'konning Omborimdagi hamma SKU'lari to'liq soni bilan (jo'natmalarda band donalar — ayirilgan).
+         */
+        get: operations["dispatch_draft_api_v1_orgs__org_id__dispatches_draft_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/dispatches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Dispatches
+         * @description Jo'natmalar (yangisi birinchi): holat, tarkib, bog'langan postavka va nomzodlar. O'qishdan oldin postavkalar bilan
+         *     solishtiriladi (bog'lash, bekor qilingan postavka).
+         */
+        get: operations["list_dispatches_api_v1_orgs__org_id__dispatches_get"];
+        put?: never;
+        /**
+         * Create Dispatch
+         * @description Jo'natma: donalar darhol "Jo'natilmoqda" — Omborimdan band (keyingi Excel'da chiqmaydi).
+         */
+        post: operations["create_dispatch_api_v1_orgs__org_id__dispatches_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/dispatches/{dispatch_id}/excel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dispatch Excel
+         * @description Excel Uzum kabineti shablonida (ADR-050 (2)): "Инструкция" va "Товары на отправку".
+         */
+        get: operations["dispatch_excel_api_v1_orgs__org_id__dispatches__dispatch_id__excel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/dispatches/{dispatch_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel Dispatch
+         * @description Bekor qilish (Jo'natilmoqda yoki bog'langan — postavka bekor bo'lganda): donalar Omborimga qaytadi.
+         */
+        post: operations["cancel_dispatch_api_v1_orgs__org_id__dispatches__dispatch_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/dispatches/{dispatch_id}/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Link Dispatch
+         * @description Postavkani qo'lda tanlash (bir nechta nomzod bo'lganda) yoki bog'lanishni olib tashlash. Postavka shu do'konniki va
+         *     boshqa faol jo'natmaga bog'lanmagan bo'lishi shart.
+         */
+        post: operations["link_dispatch_api_v1_orgs__org_id__dispatches__dispatch_id__link_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/warehouse": {
         parameters: {
             query?: never;
@@ -2036,6 +2142,114 @@ export interface components {
             /** Net Profit Processing */
             net_profit_processing: string;
         };
+        /** DispatchIn */
+        DispatchIn: {
+            /**
+             * Shop Id
+             * Format: uuid
+             */
+            shop_id: string;
+            /** Items */
+            items: components["schemas"]["DispatchItemIn"][];
+            /** Note */
+            note?: string | null;
+        };
+        /** DispatchItemIn */
+        DispatchItemIn: {
+            /**
+             * Sku Id
+             * Format: uuid
+             */
+            sku_id: string;
+            /** Qty */
+            qty: number;
+        };
+        /** DispatchItemOut */
+        DispatchItemOut: {
+            /**
+             * Sku Id
+             * Format: uuid
+             */
+            sku_id: string;
+            /** Title */
+            title: string | null;
+            /** Barcode */
+            barcode: string | null;
+            /** Qty */
+            qty: number;
+            /** Unit Cost */
+            unit_cost: string | null;
+        };
+        /** DispatchOut */
+        DispatchOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Shop Id
+             * Format: uuid
+             */
+            shop_id: string;
+            /** Shop */
+            shop: string | null;
+            /** Status */
+            status: string;
+            /**
+             * Exported At
+             * Format: date-time
+             */
+            exported_at: string;
+            /** Linked At */
+            linked_at: string | null;
+            /** Canceled At */
+            canceled_at: string | null;
+            /** Note */
+            note: string | null;
+            /** Units */
+            units: number;
+            /** Items */
+            items: components["schemas"]["DispatchItemOut"][];
+            invoice: components["schemas"]["InvoiceOut"] | null;
+            /** Candidates */
+            candidates: components["schemas"]["InvoiceOut"][];
+        };
+        /** DispatchesOut */
+        DispatchesOut: {
+            /** Items */
+            items: components["schemas"]["DispatchOut"][];
+        };
+        /** DraftOut */
+        DraftOut: {
+            /**
+             * Shop Id
+             * Format: uuid
+             */
+            shop_id: string;
+            /** Rows */
+            rows: components["schemas"]["DraftRow"][];
+            /** No Barcode */
+            no_barcode: components["schemas"]["DraftRow"][];
+        };
+        /** DraftRow */
+        DraftRow: {
+            /**
+             * Sku Id
+             * Format: uuid
+             */
+            sku_id: string;
+            /** Title */
+            title: string | null;
+            /** Product Title */
+            product_title: string | null;
+            /** Barcode */
+            barcode: string | null;
+            /** Qty */
+            qty: number;
+            /** Unit Cost */
+            unit_cost: string | null;
+        };
         /**
          * ExpectedOut
          * @description F16 (ADR-037): kutilayotgan sof foyda — Jarayondagi sotuvlar qismi (mijoz hali olmagan yoki qaytarish muddati
@@ -2330,6 +2544,22 @@ export interface components {
              */
             expires_at: string;
         };
+        /** InvoiceOut */
+        InvoiceOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: number | null;
+            /** Status */
+            status: string | null;
+            /** Created On */
+            created_on: string | null;
+            /** Accepted */
+            accepted: number | null;
+        };
         /**
          * ItemLinkIn
          * @description ``existing`` — mavjud tovarga (``item_id``); ``new`` — SKU nomi (yoki ``name``) bilan yangi tovar; ``none`` —
@@ -2613,6 +2843,11 @@ export interface components {
         LinesIn: {
             /** Lines */
             lines: components["schemas"]["LineIn"][];
+        };
+        /** LinkIn */
+        LinkIn: {
+            /** Invoice Id */
+            invoice_id: string | null;
         };
         /**
          * LinkedItemOut
@@ -3433,6 +3668,16 @@ export interface components {
             units_received: number | null;
             /** Units Defect */
             units_defect: number;
+            /**
+             * Units Sending
+             * @default 0
+             */
+            units_sending: number;
+            /**
+             * Units At Uzum
+             * @default 0
+             */
+            units_at_uzum: number;
             /** Total */
             total: string | null;
             /** Unit Cost */
@@ -4953,6 +5198,11 @@ export interface components {
             qty: number;
             /** Reserved */
             reserved: number;
+            /**
+             * Dispatched
+             * @default 0
+             */
+            dispatched: number;
             /** Unit Cost */
             unit_cost: string | null;
             /** Value */
@@ -8346,6 +8596,259 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ShipmentDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    dispatch_draft_api_v1_orgs__org_id__dispatches_draft_get: {
+        parameters: {
+            query: {
+                shop_id: string;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_dispatches_api_v1_orgs__org_id__dispatches_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DispatchesOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_dispatch_api_v1_orgs__org_id__dispatches_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DispatchIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DispatchOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    dispatch_excel_api_v1_orgs__org_id__dispatches__dispatch_id__excel_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dispatch_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    cancel_dispatch_api_v1_orgs__org_id__dispatches__dispatch_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dispatch_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DispatchOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    link_dispatch_api_v1_orgs__org_id__dispatches__dispatch_id__link_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dispatch_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DispatchOut"];
                 };
             };
             /** @description Validatsiya xatosi */

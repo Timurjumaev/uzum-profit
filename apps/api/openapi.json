@@ -6128,6 +6128,386 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/dispatches/draft": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Dispatch Draft",
+        "description": "Yangi jo'natma: do'konning Omborimdagi hamma SKU'lari to'liq soni bilan (jo'natmalarda band donalar — ayirilgan).",
+        "operationId": "dispatch_draft_api_v1_orgs__org_id__dispatches_draft_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "shop_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Shop Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/dispatches": {
+      "post": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Create Dispatch",
+        "description": "Jo'natma: donalar darhol \"Jo'natilmoqda\" — Omborimdan band (keyingi Excel'da chiqmaydi).",
+        "operationId": "create_dispatch_api_v1_orgs__org_id__dispatches_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DispatchIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DispatchOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "List Dispatches",
+        "description": "Jo'natmalar (yangisi birinchi): holat, tarkib, bog'langan postavka va nomzodlar. O'qishdan oldin postavkalar bilan\nsolishtiriladi (bog'lash, bekor qilingan postavka).",
+        "operationId": "list_dispatches_api_v1_orgs__org_id__dispatches_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DispatchesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/dispatches/{dispatch_id}/excel": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Dispatch Excel",
+        "description": "Excel Uzum kabineti shablonida (ADR-050 (2)): \"Инструкция\" va \"Товары на отправку\".",
+        "operationId": "dispatch_excel_api_v1_orgs__org_id__dispatches__dispatch_id__excel_get",
+        "parameters": [
+          {
+            "name": "dispatch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Dispatch Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/dispatches/{dispatch_id}/cancel": {
+      "post": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Cancel Dispatch",
+        "description": "Bekor qilish (Jo'natilmoqda yoki bog'langan — postavka bekor bo'lganda): donalar Omborimga qaytadi.",
+        "operationId": "cancel_dispatch_api_v1_orgs__org_id__dispatches__dispatch_id__cancel_post",
+        "parameters": [
+          {
+            "name": "dispatch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Dispatch Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DispatchOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/dispatches/{dispatch_id}/link": {
+      "post": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Link Dispatch",
+        "description": "Postavkani qo'lda tanlash (bir nechta nomzod bo'lganda) yoki bog'lanishni olib tashlash. Postavka shu do'konniki va\nboshqa faol jo'natmaga bog'lanmagan bo'lishi shart.",
+        "operationId": "link_dispatch_api_v1_orgs__org_id__dispatches__dispatch_id__link_post",
+        "parameters": [
+          {
+            "name": "dispatch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Dispatch Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DispatchOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/warehouse": {
       "get": {
         "tags": [
@@ -9501,6 +9881,344 @@
         ],
         "title": "DayOut"
       },
+      "DispatchIn": {
+        "properties": {
+          "shop_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Shop Id"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DispatchItemIn"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Items"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "shop_id",
+          "items"
+        ],
+        "title": "DispatchIn"
+      },
+      "DispatchItemIn": {
+        "properties": {
+          "sku_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sku Id"
+          },
+          "qty": {
+            "type": "integer",
+            "maximum": 10000000.0,
+            "minimum": 1.0,
+            "title": "Qty"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku_id",
+          "qty"
+        ],
+        "title": "DispatchItemIn"
+      },
+      "DispatchItemOut": {
+        "properties": {
+          "sku_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sku Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "barcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barcode"
+          },
+          "qty": {
+            "type": "integer",
+            "title": "Qty"
+          },
+          "unit_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Cost"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku_id",
+          "title",
+          "barcode",
+          "qty",
+          "unit_cost"
+        ],
+        "title": "DispatchItemOut"
+      },
+      "DispatchOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "shop_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Shop Id"
+          },
+          "shop": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shop"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "exported_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Exported At"
+          },
+          "linked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linked At"
+          },
+          "canceled_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canceled At"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DispatchItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "invoice": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InvoiceOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/InvoiceOut"
+            },
+            "type": "array",
+            "title": "Candidates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "shop_id",
+          "shop",
+          "status",
+          "exported_at",
+          "linked_at",
+          "canceled_at",
+          "note",
+          "units",
+          "items",
+          "invoice",
+          "candidates"
+        ],
+        "title": "DispatchOut"
+      },
+      "DispatchesOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DispatchOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "DispatchesOut"
+      },
+      "DraftOut": {
+        "properties": {
+          "shop_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Shop Id"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/DraftRow"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "no_barcode": {
+            "items": {
+              "$ref": "#/components/schemas/DraftRow"
+            },
+            "type": "array",
+            "title": "No Barcode"
+          }
+        },
+        "type": "object",
+        "required": [
+          "shop_id",
+          "rows",
+          "no_barcode"
+        ],
+        "title": "DraftOut"
+      },
+      "DraftRow": {
+        "properties": {
+          "sku_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sku Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "product_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Title"
+          },
+          "barcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barcode"
+          },
+          "qty": {
+            "type": "integer",
+            "title": "Qty"
+          },
+          "unit_cost": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Cost"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku_id",
+          "title",
+          "product_title",
+          "barcode",
+          "qty",
+          "unit_cost"
+        ],
+        "title": "DraftRow"
+      },
       "ExpectedOut": {
         "properties": {
           "units": {
@@ -10281,6 +10999,69 @@
           "expires_at"
         ],
         "title": "InviteOut"
+      },
+      "InvoiceOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "created_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created On"
+          },
+          "accepted": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "status",
+          "created_on",
+          "accepted"
+        ],
+        "title": "InvoiceOut"
       },
       "ItemLinkIn": {
         "properties": {
@@ -11433,6 +12214,27 @@
         ],
         "title": "LinesIn",
         "description": "Bir nechta tovarni birdaniga qo'shish (bitta tranzaksiya, bitta qayta hisob)."
+      },
+      "LinkIn": {
+        "properties": {
+          "invoice_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "invoice_id"
+        ],
+        "title": "LinkIn"
       },
       "LinkedItemOut": {
         "properties": {
@@ -14053,6 +14855,16 @@
           "units_defect": {
             "type": "integer",
             "title": "Units Defect"
+          },
+          "units_sending": {
+            "type": "integer",
+            "title": "Units Sending",
+            "default": 0
+          },
+          "units_at_uzum": {
+            "type": "integer",
+            "title": "Units At Uzum",
+            "default": 0
           },
           "total": {
             "anyOf": [
@@ -19047,6 +19859,11 @@
           "reserved": {
             "type": "integer",
             "title": "Reserved"
+          },
+          "dispatched": {
+            "type": "integer",
+            "title": "Dispatched",
+            "default": 0
           },
           "unit_cost": {
             "anyOf": [
