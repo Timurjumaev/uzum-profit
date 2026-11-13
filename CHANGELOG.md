@@ -440,6 +440,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- TM8 (ADR-061) Ta'minot yakuni: butun oqim e2e testi (xarid → kargo puli → sanash → jo'natish → qabul), yordam maqolasi
+  (uz/ru, `docs/help/taminot.*.md`). Xarid API'dan eski `stage`, `timeline`, `dates` maydonlari va `?stage=` filtri olib
+  tashlandi (o'rniga `state`, `path`, `ordered_on`); Excel'da "Holat" ustuni; "Sanalar" oynasi o'rniga buyurtma sanasi xarid
+  shaklida tahrirlanadi, eski bosqich sanalari "Tarix"da faqat o'qish uchun (`history`).
 - TM7 (ADR-061 §8) Uzum qabulidagi farq (`/receiving`, Jo'natmalardan): qabul qilingan postavka jo'natma bilan SKU bo'yicha
   solishtiriladi; kam — "Uzum yo'qotdi" (kamomad ro'yxati: Topildi / Kompensatsiya qilindi / Zarar deb yopildi) yoki "Men
   sanashda adashganman" (xarid soni tuzatiladi); ko'p — "Topildi" yoki "Sonni oshirish". Zarar foyda hisobida alohida qator

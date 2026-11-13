@@ -107,19 +107,32 @@ def test_cargo_is_split_across_purchases_and_lots(world: World) -> None:
     )
 
 
+def _dates(w: World, pid: str) -> dict[str, str | None]:
+    """Xaridning eski bosqich ustunlari (API'da endi yo'q — TM8; F25 tarixi va ombor joylari shulardan)."""
+    ((shipped, arrived),) = w.a.sql(
+        "SELECT shipped_on, arrived_on FROM purchases WHERE id = %s", [pid]
+    )
+    return {
+        "shipped": shipped and shipped.isoformat(),
+        "arrived": arrived and arrived.isoformat(),
+    }
+
+
 def test_dates_come_from_shipment(world: World) -> None:
     w = world
     ship = shipment(w, title="Sanalar", shipped_on="2026-10-10")["shipment"]["id"]
     own = purchase(w, "O'z sanasi bilan", dates={"arrived": "2026-10-20", "ordered": "2026-10-01"})
     pid = purchase(w, "Kargoli", shipment_id=ship, dates={"ordered": "2026-10-02"})
-    assert ok(send(w, "GET", f"purchases/{pid}"))["purchase"]["dates"]["shipped"] == "2026-10-10"
+    assert _dates(w, pid)["shipped"] == "2026-10-10"
+    # "Tarix" (faqat o'qish, ADR-061 §11) — kargo sanasi ham ko'rinadi.
+    history = ok(send(w, "GET", f"purchases/{pid}"))["purchase"]["history"]
+    assert history == [
+        {"stage": "ordered", "on": "2026-10-02"},
+        {"stage": "shipped", "on": "2026-10-10"},
+    ]
     # Bog'langanda kargoda sana yo'q — xaridning o'zinikи yo'qolmaydi.
     ok(send(w, "PATCH", f"purchases/{own}", shipment_id=ship))
-    det = ok(send(w, "GET", f"purchases/{own}"))
-    assert (
-        det["purchase"]["dates"]["arrived"] == "2026-10-20"
-        and det["purchase"]["dates"]["shipped"] == "2026-10-10"
-    )
+    assert _dates(w, own) == {"arrived": "2026-10-20", "shipped": "2026-10-10"}
     # Kargo sanalari faqat kargoda o'zgaradi.
     r = send(w, "PATCH", f"purchases/{pid}", dates={"shipped": "2026-10-11"})
     assert r.status_code == 422 and r.json()["code"] == "dates_from_shipment"
@@ -130,12 +143,11 @@ def test_dates_come_from_shipment(world: World) -> None:
     # Kargo sanasi o'zgarsa — hamma xaridlarda (bo'sh ham); tartib tekshiriladi.
     ok(send(w, "PATCH", f"shipments/{ship}", arrived_on="2026-10-25", shipped_on=None))
     for x in (own, pid):
-        dates = ok(send(w, "GET", f"purchases/{x}"))["purchase"]["dates"]
-        assert dates["arrived"] == "2026-10-25" and dates["shipped"] is None
+        assert _dates(w, x) == {"arrived": "2026-10-25", "shipped": None}
     r = send(w, "PATCH", f"shipments/{ship}", shipped_on="2026-10-30")
     assert r.status_code == 422 and r.json()["code"] == "bad_stage_dates"
-    # Joriy bosqich ham kargodan: keldi → "arrived" (qabul qilinmaguncha).
-    assert ok(send(w, "GET", f"purchases/{pid}"))["purchase"]["stage"] == "arrived"
+    # Holat ham kargodan: keldi, lekin sanalmagan — "Yo'lda".
+    assert ok(send(w, "GET", f"purchases/{pid}"))["purchase"]["state"] == "in_transit"
 
 
 def test_unlink_delete_and_recalc_of_siblings(world: World) -> None:

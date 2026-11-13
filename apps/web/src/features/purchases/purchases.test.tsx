@@ -51,7 +51,7 @@ afterEach(() => {
 
 async function renderAt(path: string, routes: Routes = {}, role = "owner") {
   const api = mockApi({
-    [PURCHASES_ROUTE]: () => json(200, { items: [purchaseRow(), purchaseRow({ id: PURCHASE_2, title: null, stage: "draft", path: supplyPath("in_transit", {}, { days: 0, expected: null }), items: [], line_count: 0, units_ordered: 0, total: null, unit_cost: null, flags: [] })], amounts: true, total: 2, page: 1, pages: 1 }),
+    [PURCHASES_ROUTE]: () => json(200, { items: [purchaseRow(), purchaseRow({ id: PURCHASE_2, title: null, ordered_on: null, path: supplyPath("in_transit", {}, { days: 0, expected: null }), items: [], line_count: 0, units_ordered: 0, total: null, unit_cost: null, flags: [] })], amounts: true, total: 2, page: 1, pages: 1 }),
     [purchaseRoute("GET", PURCHASE_1)]: () => json(200, purchaseDetail()),
     [SUPPLIERS_ROUTE]: () => json(200, [{ id: "s1", name: "Yiwu Toys", platform: "1688" }]),
     [CARRIERS_ROUTE]: () => json(200, []),
@@ -217,7 +217,7 @@ describe("xarid sahifasi", () => {
   it("sanash (TM4): «Hammasi keldi», − / +, brak, qadoq; kam kelsa qaytarilgan summa; bitta POST, javob keshga", async () => {
     const count = purchaseSubRoute("POST", PURCHASE_1, "count");
     const counted = purchaseDetail({
-      purchase: purchaseRow({ stage: "received", state: "in_stock", path: supplyPath("in_stock", { in_transit: "2026-10-02", in_stock: todayTashkent() }) }),
+      purchase: purchaseRow({ state: "in_stock", path: supplyPath("in_stock", { in_transit: "2026-10-02", in_stock: todayTashkent() }) }),
       lines: [line({ defect_qty: 5, good_qty: 93, defect_cost: "90000.00" })],
     });
     const { api } = await renderAt(DETAIL, { [count]: () => json(200, counted) });
@@ -291,19 +291,36 @@ describe("xarid sahifasi", () => {
     expect(link.getAttribute("href")).toBe(`/purchases/${PURCHASE_2}`);
   });
 
-  it("sanalar: tartib buzilsa saqlab bo'lmaydi; faqat o'zgargan sanalar yuboriladi", async () => {
+  it("buyurtma sanasi sarlavha shaklida (TM8: \"Sanalar\" oynasi yo'q); faqat o'zgarsa yuboriladi", async () => {
     const { api } = await renderAt(DETAIL, { [purchaseRoute("PATCH", PURCHASE_1)]: () => json(200, purchaseDetail()) });
-    fireEvent.click(await screen.findByRole("button", { name: "Sanalar" }));
-    const dialog = await screen.findByRole("dialog", { name: "Xarid sanalari" });
-    fireEvent.change(within(dialog).getByLabelText(/^Toshkentga keldi/), { target: { value: "2026-10-01" } });
-    const save = within(dialog).getByRole("button", { name: "Sanalarni saqlash" }) as HTMLButtonElement;
-    expect(save.disabled).toBe(true);
-    expect(within(dialog).getByText(/Sanalar tartibi buzilgan/)).toBeTruthy();
-    fireEvent.change(within(dialog).getByLabelText(/^Toshkentga keldi/), { target: { value: "2026-10-27" } });
-    fireEvent.change(within(dialog).getByLabelText(/^Toʻlandi/), { target: { value: "" } });
-    fireEvent.click(save);
+    await screen.findByRole("button", { name: "Tahrirlash" });
+    expect(screen.queryByRole("button", { name: "Sanalar" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Tahrirlash" }));
+    const dialog = await screen.findByRole("dialog");
+    const ordered = within(dialog).getByLabelText(/^Buyurtma sanasi/) as HTMLInputElement;
+    expect(ordered.value).toBe("2026-10-02");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Xaridni saqlash" }));
     await waitFor(() => expect(bodiesOf(api, purchaseRoute("PATCH", PURCHASE_1))).toHaveLength(1));
-    expect(bodiesOf(api, purchaseRoute("PATCH", PURCHASE_1))[0]).toEqual({ dates: { paid: null, arrived: "2026-10-27" } });
+    expect(bodiesOf(api, purchaseRoute("PATCH", PURCHASE_1))[0]).not.toHaveProperty("dates");
+    cleanup();
+    const second = await renderAt(DETAIL, { [purchaseRoute("PATCH", PURCHASE_1)]: () => json(200, purchaseDetail()) });
+    fireEvent.click(await screen.findByRole("button", { name: "Tahrirlash" }));
+    const again = await screen.findByRole("dialog");
+    fireEvent.change(within(again).getByLabelText(/^Buyurtma sanasi/), { target: { value: "2026-10-01" } });
+    fireEvent.click(within(again).getByRole("button", { name: "Xaridni saqlash" }));
+    await waitFor(() => expect(bodiesOf(second.api, purchaseRoute("PATCH", PURCHASE_1))).toHaveLength(1));
+    expect(bodiesOf(second.api, purchaseRoute("PATCH", PURCHASE_1))[0]).toMatchObject({ dates: { ordered: "2026-10-01" } });
+  });
+
+  it("Tarix: eski bosqich sanalari faqat o'qish uchun; yangi xaridda yo'q (ADR-061 §11)", async () => {
+    const legacy = purchaseDetail({ purchase: purchaseRow({ history: [{ stage: "ordered", on: "2026-07-01" }, { stage: "shipped", on: "2026-07-10" }, { stage: "arrived", on: "2026-07-20" }] }) });
+    await renderAt(DETAIL, { [purchaseRoute("GET", PURCHASE_1)]: () => json(200, legacy) });
+    const list = await screen.findByRole("list", { name: "Tarix (eski bosqich sanalari)" });
+    expect(within(list).getAllByRole("listitem").map((li) => li.textContent)).toEqual(["Buyurtma berildi — 01.07.2026", "Yoʻlda — 10.07.2026", "Toshkentga keldi — 20.07.2026"]);
+    cleanup();
+    await renderAt(DETAIL);
+    await screen.findByRole("button", { name: "Tahrirlash" });
+    expect(screen.queryByText("Tarix (eski bosqich sanalari)")).toBeNull();
   });
 
   it("tovar qo'shish: yangi tovar (havola, variant), qabul bo'sh — null", async () => {
@@ -470,8 +487,8 @@ describe("xarid sahifasi", () => {
   it("qayta buyurtma — yangi qoralamaga o'tadi; o'chirish — tasdiq va ro'yxatga qaytish", async () => {
     const copy = purchaseSubRoute("POST", PURCHASE_1, "copy");
     const { api, history } = await renderAt(DETAIL, {
-      [copy]: () => json(201, purchaseDetail({ purchase: purchaseRow({ id: PURCHASE_2, stage: "draft" }) })),
-      [purchaseRoute("GET", PURCHASE_2)]: () => json(200, purchaseDetail({ purchase: purchaseRow({ id: PURCHASE_2, stage: "draft" }) })),
+      [copy]: () => json(201, purchaseDetail({ purchase: purchaseRow({ id: PURCHASE_2, ordered_on: null }) })),
+      [purchaseRoute("GET", PURCHASE_2)]: () => json(200, purchaseDetail({ purchase: purchaseRow({ id: PURCHASE_2, ordered_on: null }) })),
       [purchaseRoute("DELETE", PURCHASE_2)]: () => new Response(null, { status: 204 }),
     });
     fireEvent.click(await screen.findByRole("button", { name: "Qayta buyurtma" }));

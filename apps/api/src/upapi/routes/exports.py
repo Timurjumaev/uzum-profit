@@ -18,7 +18,7 @@ from fastapi.responses import Response
 from sqlalchemy import select
 from upcore.inventory import StockStatus
 from upcore.metrics import ProfitLabel, StatusGroup
-from upcore.purchasing import Stage
+from upcore.purchasing import SupplyState
 
 from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission, allowed
@@ -244,10 +244,18 @@ async def export_expenses(
     return _file(f"uzum-xarajatlari-{_span(f)}", data)
 
 
+# Xarid holati Excel'da (ADR-061 §1; UI matni bilan bir xil).
+STATE_LABELS = {
+    SupplyState.IN_TRANSIT: "Yoʻlda",
+    SupplyState.IN_STOCK: "Omborimda",
+    SupplyState.AT_UZUM: "Uzumda",
+}
+
+
 def _purchase_cols(amounts: bool) -> list[xlsx.Col]:
     cols = [
         xlsx.Col("Xarid", lambda r: r.title),
-        xlsx.Col("Bosqich", lambda r: r.stage.value),
+        xlsx.Col("Holat", lambda r: STATE_LABELS[r.state]),
         xlsx.Col("Yetkazib beruvchi", lambda r: r.supplier_name),
         xlsx.Col("Kargo", lambda r: r.carrier_name),
         xlsx.Col("Tovarlar", lambda r: r.items),
@@ -270,10 +278,10 @@ def _purchase_cols(amounts: bool) -> list[xlsx.Col]:
 
 @router.get("/orgs/{org_id}/exports/purchases.xlsx")
 async def export_purchases(
-    ctx: StockExporter, stage: Annotated[list[Stage] | None, Query()] = None
+    ctx: StockExporter, state: Annotated[list[SupplyState] | None, Query()] = None
 ) -> Response:
     _need(ctx, Permission.VIEW_PURCHASES)
-    page = await purchases_routes.list_purchases(ctx, stage)
+    page = await purchases_routes.list_purchases(ctx, state)
     data = xlsx.build("Xaridlar", _purchase_cols(page.amounts), page.items)
     return _file("xaridlar", data)
 

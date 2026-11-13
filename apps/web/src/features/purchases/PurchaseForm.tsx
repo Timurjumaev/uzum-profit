@@ -30,7 +30,7 @@ export function PurchaseForm({ orgId, detail, onClose, onSaved }: { orgId: strin
     carrier: p?.carrier_id ?? NONE,
     newCarrier: "",
     shipment: p?.shipment_id ?? NONE,
-    orderedOn: detail ? "" : todayTashkent(),
+    orderedOn: detail ? (p?.ordered_on ?? "") : todayTashkent(),
     note: p?.note ?? "",
     trackNo: p?.track_no ?? "",
     onHand: p?.on_hand ?? false,
@@ -48,7 +48,10 @@ export function PurchaseForm({ orgId, detail, onClose, onSaved }: { orgId: strin
       const shipment_id = draft.shipment === NONE ? null : draft.shipment;
       // Kargo: faqat o'zgargan bo'lsa yuboriladi (bog'langanda kargo sanalari xaridga ko'chadi, ajratilganda o'z holicha qoladi).
       const track_no = draft.trackNo.trim() || null;
-      if (detail) return updatePurchase(orgId, detail.purchase.id, { title, supplier_id, carrier_id, note, track_no, on_hand: draft.onHand, ...(shipment_id !== (p?.shipment_id ?? null) ? { shipment_id } : {}) });
+      // Buyurtma sanasi (TM8: eski "Sanalar" oynasi o'rniga) — faqat o'zgargan bo'lsa; bo'sh — o'chirish.
+      const ordered = draft.orderedOn || null;
+      const dates = ordered !== (p?.ordered_on ?? null) ? { dates: { ordered } } : {};
+      if (detail) return updatePurchase(orgId, detail.purchase.id, { title, supplier_id, carrier_id, note, track_no, on_hand: draft.onHand, ...dates, ...(shipment_id !== (p?.shipment_id ?? null) ? { shipment_id } : {}) });
       return createPurchase(orgId, { title, supplier_id, carrier_id, ...(shipment_id ? { shipment_id } : {}), note, dates: draft.orderedOn ? { ordered: draft.orderedOn } : {} });
     },
     onSuccess: async (saved) => {
@@ -99,7 +102,7 @@ export function PurchaseForm({ orgId, detail, onClose, onSaved }: { orgId: strin
           onValueChange={(shipment) => patch({ shipment })}
           options={[{ value: NONE, label: t("shipments.none") }, ...(shipments.data?.items ?? []).map((x) => ({ value: x.id, label: x.title || t("shipments.untitled") }))]}
         />
-        {!detail && <TextInput label={t("purchases.fields.orderedOn")} type="date" optional value={draft.orderedOn} onValueChange={(orderedOn) => patch({ orderedOn })} />}
+        <TextInput label={t("purchases.fields.orderedOn")} type="date" optional value={draft.orderedOn} onValueChange={(orderedOn) => patch({ orderedOn })} />
         <TextInput label={t("purchases.quick.track")} optional value={draft.trackNo} onValueChange={(trackNo) => patch({ trackNo })} maxLength={100} />
         <label className="quick-purchase__check">
           <input type="checkbox" checked={draft.onHand} onChange={(e) => patch({ onHand: e.target.checked })} /> <span>{t("purchases.quick.onHand")}</span>

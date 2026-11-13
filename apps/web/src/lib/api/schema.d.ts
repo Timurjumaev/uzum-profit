@@ -815,7 +815,7 @@ export interface paths {
         };
         /**
          * List Purchases
-         * @description Xaridlar (yangisi birinchi), joriy bosqich filtri bilan; har birida Partiya yo'li va jonli tannarx.
+         * @description Xaridlar (yangisi birinchi), holat filtri bilan (ADR-061 §1); har birida Partiya yo'li va jonli tannarx.
          *
          *     ``limit`` berilsa — sahifa (ADR-054; Excel va biriktirish ro'yxati ``limit`` siz hammasini oladi).
          */
@@ -2577,6 +2577,18 @@ export interface components {
             /** Env */
             env: string;
         };
+        /**
+         * HistoryOut
+         * @description Eski bosqich sanasi (ADR-061 §11): xarid sahifasidagi "Tarix" — faqat o'qish.
+         */
+        HistoryOut: {
+            stage: components["schemas"]["Stage"];
+            /**
+             * On
+             * Format: date
+             */
+            on: string;
+        };
         /** InventoryOut */
         InventoryOut: {
             meta: components["schemas"]["Meta"];
@@ -3755,7 +3767,6 @@ export interface components {
             id: string;
             /** Title */
             title: string | null;
-            stage: components["schemas"]["Stage"];
             state: components["schemas"]["SupplyState"];
             /** Path */
             path: components["schemas"]["PathOut"][];
@@ -3779,12 +3790,10 @@ export interface components {
             shipment_id: string | null;
             /** Shipment Name */
             shipment_name: string | null;
-            /** Dates */
-            dates: {
-                [key: string]: string | null;
-            };
-            /** Timeline */
-            timeline: components["schemas"]["StageOut"][];
+            /** Ordered On */
+            ordered_on: string | null;
+            /** History */
+            history: components["schemas"]["HistoryOut"][];
             /** Line Count */
             line_count: number;
             /** Items */
@@ -4340,7 +4349,6 @@ export interface components {
             title: string | null;
             /** Supplier Name */
             supplier_name: string | null;
-            stage: components["schemas"]["Stage"];
             state: components["schemas"]["SupplyState"];
             /** Line Count */
             line_count: number;
@@ -4712,23 +4720,6 @@ export interface components {
          * @enum {string}
          */
         Stage: "draft" | "ordered" | "paid" | "cn_warehouse" | "shipped" | "arrived" | "received" | "sent_to_uzum" | "closed";
-        /**
-         * StageOut
-         * @description Partiya yo'li nuqtasi (04 §6.2): ``done`` / ``current`` / ``upcoming``.
-         */
-        StageOut: {
-            stage: components["schemas"]["Stage"];
-            /** State */
-            state: string;
-            /** On */
-            on: string | null;
-            /** Days */
-            days: number | null;
-            /** Expected */
-            expected: string | null;
-            /** Delayed */
-            delayed: boolean;
-        };
         /**
          * StatementOut
          * @description Hisob varag'i (F3–F15) bitta kesim uchun — ``upcore.pnl.Statement``.
@@ -7619,7 +7610,7 @@ export interface operations {
     export_purchases_api_v1_orgs__org_id__exports_purchases_xlsx_get: {
         parameters: {
             query?: {
-                stage?: components["schemas"]["Stage"][] | null;
+                state?: components["schemas"]["SupplyState"][] | null;
             };
             header?: never;
             path: {
@@ -7709,7 +7700,6 @@ export interface operations {
     list_purchases_api_v1_orgs__org_id__purchases_get: {
         parameters: {
             query?: {
-                stage?: components["schemas"]["Stage"][] | null;
                 state?: components["schemas"]["SupplyState"][] | null;
                 /** @description Sahifa o'lchami; bo'lmasa — hammasi */
                 limit?: number | null;

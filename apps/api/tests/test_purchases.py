@@ -88,7 +88,7 @@ def test_stepwise_purchase_live_cost_and_late_cargo(world: World) -> None:
     w, a = world, world.a
     p = new_purchase(w, title="Oktabr partiyasi", dates={"ordered": "2026-09-30"})
     pid = p["purchase"]["id"]
-    assert p["purchase"]["stage"] == "ordered" and p["lines"] == [] and p["recalc_pending"]
+    assert p["purchase"]["ordered_on"] == "2026-09-30" and p["lines"] == [] and p["recalc_pending"]
     ok(
         send(
             w,
@@ -188,14 +188,12 @@ def test_stepwise_purchase_live_cost_and_late_cargo(world: World) -> None:
 
     # Ro'yxatda: jonli jami, Partiya yo'li, tovar nomlari.
     listed = {x["id"]: x for x in w.get("purchases")["items"]}[pid]
-    assert listed["stage"] == "received" and listed["line_count"] == 2
+    assert listed["state"] == "in_stock" and listed["line_count"] == 2
     assert listed["items"] == ["Mashina", "Yangi o'yinchoq"]
     assert D(listed["total"]) == D(1480 * 1800 + 2_000_000)
     assert listed["units_ordered"] == 150 and listed["units_received"] == 98
-    stages = {s["stage"]: s["state"] for s in listed["timeline"]}
-    assert stages["ordered"] == "done" and stages["received"] == "current"
-    assert stages["paid"] == "done"  # o'tkazib yuborilgan bosqich
-    assert w.get("purchases", stage=["draft"])["items"] == []
+    assert [x["mark"] for x in listed["path"]] == ["done", "current", "upcoming"]
+    assert w.get("purchases", state=["at_uzum"])["items"] == []
     actions = {
         r[0]
         for r in a.sql(
@@ -223,9 +221,9 @@ def test_list_pages(world: World) -> None:
     last = world.get("purchases", limit=2, page=999)
     assert last["page"] == last["pages"] == -(-len(order) // 2)
     assert (
-        world.get("purchases", limit=1, stage=["draft"])["total"] == 3
-    )  # bosqich filtri sahifalashdan oldin
-    assert world.get("purchases", limit=1, stage=["closed"])["total"] == 0
+        world.get("purchases", limit=1, state=["in_transit"])["total"] == 3
+    )  # holat filtri sahifalashdan oldin
+    assert world.get("purchases", limit=1, state=["at_uzum"])["total"] == 0
     assert world.call("purchases", limit=101).status_code == 422
 
 
@@ -419,8 +417,12 @@ def test_expected_date_from_history_and_suppliers(world: World) -> None:
     )
     assert det["purchase"]["supplier_name"] == "Yiwu Toys"
     assert det["purchase"]["carrier_name"] == "Cargo Express"
-    cur = next(s for s in det["purchase"]["timeline"] if s["state"] == "current")
-    assert cur["stage"] == "shipped" and cur["expected"] == "2026-10-27"
+    # Buyurtma → sanash tarixi bo'lsa — "Yo'lda" nuqtasida kutilgan sanash sanasi (F25, ADR-061; tarix modul bo'yicha
+    # umumiy, shuning uchun aniq kun emas — buyurtmadan keyin ekani tekshiriladi).
+    new_purchase(w, dates={"ordered": "2026-08-01", "received": "2026-08-26"})
+    cur = ok(send(w, "GET", f"purchases/{det['purchase']['id']}"))["purchase"]["path"][0]
+    assert cur["mark"] == "current" and cur["on"] == "2026-09-20"
+    assert cur["expected"] is not None and cur["expected"] > "2026-09-20"
 
 
 def test_copy_and_delete(world: World) -> None:
@@ -441,7 +443,7 @@ def test_copy_and_delete(world: World) -> None:
     send(w, "POST", f"purchases/{pid}/components", kind="cargo", amount="70000", currency="UZS")
     copy = ok(send(w, "POST", f"purchases/{pid}/copy"), 201)
     assert copy["purchase"]["id"] != pid and copy["purchase"]["title"] == "Qayta buyurtma"
-    assert copy["purchase"]["stage"] == "draft" and copy["components"] == []
+    assert copy["purchase"]["ordered_on"] is None and copy["components"] == []
     assert [
         (x["item_name"] or x["temp_name"], x["ordered_qty"], x["received_qty"])
         for x in copy["lines"]
@@ -755,7 +757,7 @@ def test_old_stages_map_to_three_states(world: World) -> None:
     """ADR-061 §11: eski bosqichli xaridlar o'chmaydi — holat sanalardan; "Yo'lda" muddati tarixdan (F25)."""
     w = world
     old = new_purchase(w, dates={"ordered": "2026-07-01", "arrived": "2026-07-20"})["purchase"]
-    assert old["state"] == "in_transit" and old["stage"] == "arrived"
+    assert old["state"] == "in_transit" and old["ordered_on"] == "2026-07-01"
     done = new_purchase(w, dates={"ordered": "2026-07-01", "received": "2026-07-21"})["purchase"]
     assert done["state"] == "in_stock" and done["path"][1]["on"] == "2026-07-21"
     sent = new_purchase(

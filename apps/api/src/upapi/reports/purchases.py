@@ -30,13 +30,11 @@ from upcore.purchasing import (
     Stage,
     SupplyState,
     average_unit_cost,
-    current_stage,
     defect_cost,
     purchase_total,
     stage_days,
     supply_path,
     supply_state,
-    timeline,
     transit_days,
 )
 
@@ -53,15 +51,11 @@ def stage_dates(row: Any) -> dict[Stage, date | None]:
     return {s: getattr(row, f"{s.value}_on") for s in DATED_STAGES}
 
 
-class StageOut(BaseModel):
-    """Partiya yo'li nuqtasi (04 §6.2): ``done`` / ``current`` / ``upcoming``."""
+class HistoryOut(BaseModel):
+    """Eski bosqich sanasi (ADR-061 §11): xarid sahifasidagi "Tarix" — faqat o'qish."""
 
     stage: Stage
-    state: str
-    on: date | None
-    days: int | None  # joriy bosqichda necha kun o'tdi
-    expected: date | None  # keyingi bosqich kutilgan sanasi (F25)
-    delayed: bool
+    on: date
 
 
 class PathOut(BaseModel):
@@ -146,7 +140,6 @@ class PurchaseOut(BaseModel):
 
     id: UUID
     title: str | None
-    stage: Stage
     state: SupplyState  # ADR-061 §1: Yo'lda / Omborimda / Uzumda (hosila)
     path: list[PathOut]  # uch nuqtali Partiya yo'li
     track_no: str | None
@@ -159,10 +152,10 @@ class PurchaseOut(BaseModel):
     carrier_name: str | None
     shipment_id: UUID | None  # kargo (ADR-046): xarid faqat bitta kargoga tegishli
     shipment_name: str | None
-    dates: dict[
-        Stage, date | None
-    ]  # kargoga bog'langan xaridda Xitoy omborida / yo'lda / keldi — kargodan
-    timeline: list[StageOut]
+    ordered_on: date | None  # buyurtma sanasi (sarlavha shaklida tahrirlanadi)
+    history: list[
+        HistoryOut
+    ]  # eski bosqich sanalari ("Tarix", faqat o'qish; kargodagi xaridda — kargodan)
     line_count: int
     items: list[str]  # birinchi 3 ta tovar nomi
     units_ordered: int
@@ -234,20 +227,6 @@ def _path(
             state=x.state, mark=x.mark, on=x.on, days=x.days, expected=x.expected, delayed=x.delayed
         )
         for x in supply_path(dates, today, lead.get(TRANSIT), created.date())
-    ]
-
-
-def _timeline(row: Any, today: date, lead: dict[str, Decimal]) -> list[StageOut]:
-    return [
-        StageOut(
-            stage=x.stage,
-            state=x.state,
-            on=x.on,
-            days=x.days,
-            expected=x.expected,
-            delayed=x.delayed,
-        )
-        for x in timeline(stage_dates(row), today, lead)
     ]
 
 
@@ -430,7 +409,6 @@ class Book:
         return PurchaseOut(
             id=purchase.id,
             title=purchase.title,
-            stage=current_stage(stage_dates(eff)),
             state=supply_state(dates),
             path=_path(dates, self.today, self.lead, purchase.created_at),
             units_sending=sending,
@@ -447,8 +425,10 @@ class Book:
             carrier_name=self.carriers.get(purchase.carrier_id) if purchase.carrier_id else None,
             shipment_id=purchase.shipment_id,
             shipment_name=None if shipment is None else (shipment.title or ""),
-            dates=stage_dates(eff),
-            timeline=_timeline(eff, self.today, self.lead),
+            ordered_on=eff.ordered_on,
+            history=[
+                HistoryOut(stage=k, on=v) for k, v in stage_dates(eff).items() if v is not None
+            ],
             line_count=len(lines),
             items=names[:3],
             units_ordered=sum(x.ordered_qty for x in own),
@@ -574,8 +554,6 @@ async def recalc_pending(conn: AsyncConnection, purchase_id: UUID) -> bool:
     return found is not None
 
 
-def matches(
-    out: PurchaseOut, stages: Sequence[Stage] | None, states: Sequence[SupplyState] | None = None
-) -> bool:
-    """Ro'yxat filtri: eski bosqich (``stage``) va / yoki holat (``state``, ADR-061)."""
-    return (not stages or out.stage in stages) and (not states or out.state in states)
+def matches(out: PurchaseOut, states: Sequence[SupplyState] | None) -> bool:
+    """Ro'yxat filtri: holat (``state``, ADR-061 §1)."""
+    return not states or out.state in states
