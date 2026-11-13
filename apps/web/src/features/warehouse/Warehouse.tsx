@@ -82,6 +82,7 @@ export function Warehouse() {
         <>
           {f.number(r.qty)}
           {r.reserved > 0 && <span className="caption"> {t("warehouse.reserved", { count: r.reserved })}</span>}
+          {(r.dispatched ?? 0) > 0 && <span className="caption"> {t("warehouse.dispatched", { count: r.dispatched })}</span>}
         </>
       ),
     },
@@ -112,6 +113,11 @@ export function Warehouse() {
         <div className="page-title">
           <h1 className="h2">{t("warehouse.title")}</h1>
         </div>
+        {canManage && (
+          <Link to="/dispatches" className="ui-btn ui-btn--primary ui-btn--md">
+            {t("dispatch.title")}
+          </Link>
+        )}
         {query.data && (
           <p className="caption">
             {t("warehouse.total", { count: query.data.total_qty })}

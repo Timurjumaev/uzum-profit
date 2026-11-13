@@ -302,6 +302,20 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
       });
       return json(route, 200, { items: [row(1, "byDurii", "AIRGILOF-RANG-1", 70), row(2, "EL-ONE", "AIRGILOF-RANG-2", 30, true)], amounts: true, total_qty: 100, total_value: "1850000.00" });
     }
+    if (key === `GET /orgs/${ORG_ID}/dispatches/draft`) {
+      const row = (n: number, qty: number, barcode: string | null) => ({ sku_id: `a000000${n}-0000-4000-8000-000000000000`, title: `AIRGILOF-RANG-${n}`, product_title: "Uzun nomli mahsulot: AirPods himoya gʻilofi silikon", barcode, qty, unit_cost: "18500.00" });
+      return json(route, 200, { shop_id: url.searchParams.get("shop_id"), rows: [row(1, 70, "4780000000001"), row(2, 30, "4780000000002")], no_barcode: [row(3, 4, null)] });
+    }
+    if (key === `GET /orgs/${ORG_ID}/dispatches`) {
+      const item = { sku_id: "a0000001-0000-4000-8000-000000000000", title: "AIRGILOF-RANG-1", barcode: "4780000000001", qty: 40, unit_cost: "18500.00" };
+      const base = { shop_id: SHOP_A, shop: "byDurii", exported_at: "2026-11-10T10:00:00Z", linked_at: null, canceled_at: null, note: null, units: 40, items: [item], invoice: null, candidates: [] };
+      return json(route, 200, {
+        items: [
+          { ...base, id: "d0000001-0000-4000-8000-000000000000", status: "sending" },
+          { ...base, id: "d0000002-0000-4000-8000-000000000000", status: "linked", linked_at: "2026-11-11T09:00:00Z", invoice: { id: "i1", number: 18324, status: "CREATED", created_on: "2026-11-11T08:00:00Z", accepted: null } },
+        ],
+      });
+    }
     if (key === `GET /orgs/${ORG_ID}/cost-types`) return json(route, 200, [{ id: "t1", name: "Ombor ijarasi" }]);
     if (key === `GET /orgs/${ORG_ID}/cargo-pool`) {
       const row = (n: number, title: string, units: number, track: string | null) => ({ purchase_id: `9${n}${n}${n}${n}${n}${n}${n}-1111-4111-8111-111111111111`, title, track_no: track, supplier_name: "Yiwu Toys", ordered_on: "2026-10-02", state: "in_transit", items: ["AirPods gʻilofi", "Zaryadka kabeli"], units });

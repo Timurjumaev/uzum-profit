@@ -66,6 +66,8 @@ export function purchaseRow(over: Partial<S["PurchaseOut"]> = {}): S["PurchaseOu
     units_ordered: 150,
     units_received: null,
     units_defect: 0,
+    units_sending: 0,
+    units_at_uzum: 0,
     total: "4664000.00",
     unit_cost: "31093.33",
     flags: ["cargo_missing", "not_received"],

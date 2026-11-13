@@ -43,6 +43,7 @@ from upcore.purchasing import (
 from upapi import orgsettings
 from upapi.calc import lots as calc_lots
 from upapi.db import models as m
+from upapi.reports import dispatch
 
 MAX_PURCHASES = 500
 
@@ -167,6 +168,8 @@ class PurchaseOut(BaseModel):
     units_ordered: int
     units_received: int | None  # hech bir qator qabul qilinmagan — ``null``
     units_defect: int  # sanashdagi brak
+    units_sending: int = 0  # Uzumga jo'natmada, postavka hali yo'q (Jo'natilmoqda, TM6)
+    units_at_uzum: int = 0  # postavkaga bog'langan (Uzumda, TM6)
     total: Decimal | None
     unit_cost: Decimal | None  # o'rtacha (jami / dona)
     flags: list[str]  # qatorlar F22 belgilari yig'indisi
@@ -223,12 +226,14 @@ TRANSIT = "transit"
 TRANSIT_PARTS = ("prep", "china", "cargo", "receive")
 
 
-def _path(row: Any, today: date, lead: dict[str, Decimal], created: datetime) -> list[PathOut]:
+def _path(
+    dates: dict[Stage, date | None], today: date, lead: dict[str, Decimal], created: datetime
+) -> list[PathOut]:
     return [
         PathOut(
             state=x.state, mark=x.mark, on=x.on, days=x.days, expected=x.expected, delayed=x.delayed
         )
-        for x in supply_path(stage_dates(row), today, lead.get(TRANSIT), created.date())
+        for x in supply_path(dates, today, lead.get(TRANSIT), created.date())
     ]
 
 
@@ -273,6 +278,7 @@ class Book:
         self._groups: dict[UUID, calc_lots.ShipmentEvaluation] = {}
         self.rates = calc_lots.Rates(conn, today)
         self.lead: dict[str, Decimal] = {}
+        self.dispatch: dict[UUID, dispatch.LineDispatch] = {}
 
     async def load(self, purchase_id: UUID | None = None, shipment_id: UUID | None = None) -> Book:
         """``purchase_id`` — bitta xarid; ``shipment_id`` — shu kargoning xaridlari (kargo xaridsiz bo'lsa ham o'qiladi)."""
@@ -341,7 +347,29 @@ class Book:
             )
         )
         self.lead = await org_lead(self.conn)
+        self.dispatch = await dispatch.line_states(self.conn)
         return self
+
+    def dispatch_dates(
+        self, purchase: Row[Any], eff: Any
+    ) -> tuple[dict[Stage, date | None], int, int]:
+        """TM6 (ADR-061 §1, §7): jo'natmalar bo'yicha qatorlar holati — Jo'natilmoqda va Uzumdagi dona; xaridning hamma
+        donasi postavkaga bog'langan bo'lsa holat "Uzumda" (sana — oxirgi bog'langan kun)."""
+        dates = dict(stage_dates(eff))
+        lines = self.lines.get(purchase.id, [])
+        states = [self.dispatch[x.id] for x in lines if x.id in self.dispatch]
+        sending = sum(x.sending for x in states)
+        linked = sum(x.linked for x in states)
+        if linked and dates.get(Stage.SENT_TO_UZUM) is None:
+            moved: dict[UUID, int] = {}
+            for x in lines:
+                if x.source_line_id is not None:
+                    moved[x.source_line_id] = moved.get(x.source_line_id, 0) + dispatch.available(x)
+            whole = sum(dispatch.available(x, moved.get(x.id, 0)) for x in lines)
+            if whole > 0 and linked >= whole:
+                days = [x.linked_on for x in states if x.linked_on is not None]
+                dates[Stage.SENT_TO_UZUM] = max(days) if days else self.today
+        return dates, sending, linked
 
     def effective(self, purchase: Row[Any]) -> Any:
         """Kargoga bog'langan xarid: sanalar kargodan (``stage_dates``, Partiya yo'li uchun)."""
@@ -397,13 +425,16 @@ class Book:
             avg = average_unit_cost(ev.lots)
             unit = None if avg is None else avg.amount
         eff = self.effective(purchase)
+        dates, sending, linked = self.dispatch_dates(purchase, eff)
         shipment = self.shipments.get(purchase.shipment_id) if purchase.shipment_id else None
         return PurchaseOut(
             id=purchase.id,
             title=purchase.title,
             stage=current_stage(stage_dates(eff)),
-            state=supply_state(stage_dates(eff)),
-            path=_path(eff, self.today, self.lead, purchase.created_at),
+            state=supply_state(dates),
+            path=_path(dates, self.today, self.lead, purchase.created_at),
+            units_sending=sending,
+            units_at_uzum=linked,
             track_no=purchase.track_no,
             on_hand=purchase.on_hand,
             refund_amount=purchase.refund_amount if amounts else None,

@@ -468,6 +468,26 @@ fbo_invoice_items = tenant(
     Column("quantity_accepted", Integer, nullable=False, server_default="0"),
     refs={"invoice_id": ("fbo_invoices", False), "sku_id": ("mp_skus", True)},
 )
+# TM6 (ADR-061 §7, ADR-050): Uzumga jo'natma — do'kon, Excel chiqarilgan vaqt, holat (jo'natilmoqda / bog'landi / bekor),
+# bog'langan postavka. Tarkibdagi donalar Omborimdan band qilinadi (keyingi Excel'da chiqmaydi); bekor — qaytadi.
+fbo_dispatches = tenant(
+    "fbo_dispatches",
+    Column("status", Text, nullable=False, server_default="sending"),
+    Column("exported_at", TS, nullable=False, server_default=func.now()),
+    Column("linked_at", TS),
+    Column("canceled_at", TS),
+    Column("note", Text),
+    check_in("status", ("sending", "linked", "canceled")),
+    refs={"shop_id": ("shops", False), "invoice_id": ("fbo_invoices", True)},
+)
+fbo_dispatch_items = tenant(
+    "fbo_dispatch_items",
+    Column("qty", Integer, nullable=False),
+    Column("unit_cost", UZS),  # Excel'dagi tannarx (F21 lot narxi, o'sha paytdagi)
+    Column("barcode", Text),
+    CheckConstraint("qty > 0", name="qty"),
+    refs={"dispatch_id": ("fbo_dispatches", False), "sku_id": ("mp_skus", False)},
+)
 mp_returns = tenant(
     "mp_returns",
     Column("external_id", BigInteger, nullable=False),

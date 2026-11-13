@@ -558,7 +558,8 @@ a.purchase-cell__title:hover {
 }
 
 /* Omborim (TM5): SKU nomi va do'kon to'liq; o'tkazmalar alohida qatorda. */
-.warehouse .purchase-cell .caption {
+.warehouse .purchase-cell .caption,
+.dispatches .purchase-cell .caption {
   max-inline-size: none;
   white-space: normal;
 }
@@ -579,5 +580,47 @@ a.purchase-cell__title:hover {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2);
+  }
+}
+
+/* Uzumga jo'natish (TM6): qoralama qatorlari va jo'natmalar ro'yxati. */
+.dispatch-draft,
+.dispatch-list,
+.dispatch-draft__list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dispatch-draft__list li {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 7rem) auto;
+  align-items: end;
+  padding-block-end: var(--space-3);
+  border-block-end: 1px solid var(--border-hairline);
+}
+
+.dispatch-list__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: end;
+  justify-content: flex-end;
+}
+
+@media (max-width: 39.9375rem) {
+  .dispatch-draft__list li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .dispatch-draft__list .purchase-cell {
+    grid-column: 1 / -1;
+  }
+
+  .dispatch-list__actions {
+    justify-content: flex-start;
   }
 }

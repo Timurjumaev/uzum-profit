@@ -3,7 +3,7 @@
 import { MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
-import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, QuickPurchaseIn, SupplyState, TrackedIn, BoxIn, SharesIn, CountIn, SplitIn, TransferIn, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, OpeningIn } from "../lib/api/types";
+import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, PurchaseStage, QuickPurchaseIn, SupplyState, TrackedIn, BoxIn, SharesIn, CountIn, SplitIn, TransferIn, DispatchIn, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, OpeningIn } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -502,6 +502,29 @@ export const transferToSku = (orgId: string, body: TransferIn) =>
 
 export const cancelTransfer = (orgId: string, lineId: string) =>
   unwrap(api.DELETE("/api/v1/orgs/{org_id}/warehouse/transfers/{line_id}", { params: { path: { org_id: orgId, line_id: lineId } } }));
+
+/** Uzumga jo'natish (TM6, ADR-061 §7): do'kon qoralamasi, jo'natmalar, bekor qilish, postavkani tanlash. */
+export const dispatchDraftQuery = (orgId: string, shopId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "inventory", "dispatch-draft", shopId],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/dispatches/draft", { params: { path: { org_id: orgId }, query: { shop_id: shopId } } })),
+  });
+
+export const dispatchesQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "inventory", "dispatches"],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/dispatches", { params: { path: { org_id: orgId } } })),
+  });
+
+export const createDispatch = (orgId: string, body: DispatchIn) => unwrap(api.POST("/api/v1/orgs/{org_id}/dispatches", { params: { path: { org_id: orgId } }, body }));
+
+export const cancelDispatch = (orgId: string, id: string) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/dispatches/{dispatch_id}/cancel", { params: { path: { org_id: orgId, dispatch_id: id } } }));
+
+export const linkDispatch = (orgId: string, id: string, invoiceId: string | null) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/dispatches/{dispatch_id}/link", { params: { path: { org_id: orgId, dispatch_id: id } }, body: { invoice_id: invoiceId } }));
+
+export const dispatchExcelUrl = (orgId: string, id: string) => `/api/v1/orgs/${orgId}/dispatches/${id}/excel`;
 
 export const deleteStockMove = (orgId: string, moveId: string) =>
   unwrap(api.DELETE("/api/v1/orgs/{org_id}/stock-moves/{move_id}", { params: { path: { org_id: orgId, move_id: moveId } } }));

@@ -30,6 +30,7 @@ from upcore.purchasing import (
     current_stage,
     default_base,
     defect_cost,
+    fifo_attribute,
     purchase_total,
     residual_goods,
     split_by_purchase,
@@ -841,3 +842,11 @@ def test_transfer_errors_and_shipment() -> None:
     l1 = {lot.line_id: lot for lot in res["p1"]}
     assert l1["t1"].breakdown[K.CARGO] == uzs("40") and l1["a1"].breakdown[K.CARGO] == uzs("60")
     assert l1["t1"].unit_cost == l1["a1"].unit_cost
+
+
+def test_fifo_attribute() -> None:
+    stock = [("old", 10), ("mid", 0), ("new", 5)]
+    assert fifo_attribute(stock, 12) == {"old": 10, "new": 2}
+    assert fifo_attribute(stock, 3) == {"old": 3}
+    assert fifo_attribute(stock, 100) == {"old": 10, "new": 5}
+    assert fifo_attribute(stock, 0) == {} and fifo_attribute([], 4) == {}

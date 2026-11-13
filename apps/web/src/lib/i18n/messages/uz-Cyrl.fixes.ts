@@ -9,6 +9,12 @@ export const uzCyrlFixes: Record<string, string> = {
   // Dastur nomi lotinda qoladi.
   "help.pages.expenses.c": "Excel тугмаси жорий фильтр бўйича файл беради.",
   "ui.exportExcel": "Excel юклаб олиш",
+  "dispatch.noBarcode": "Штрих-коди йўқ {{count}} та SKU Excelʼга кирмайди",
+  "dispatch.save": "Excel юклаб олиш ({{count}} дона)",
+  "dispatch.excel": "Excel",
+  "dispatch.emptyText": "Excel юклаб олинганда жўнатма шу ерда кўринади.",
+  "dispatch.lead":
+    "Дўконни танланг — Омборимдаги унинг ҳамма SKUʼлари тўлиқ сони билан чиқади. Сонни камайтириш ёки қаторни олиб ташлаш мумкин. Excel Uzum кабинети шаблонида; юклаб олингач доналар \"Жўнатилмоқда\" бўлади, поставка кабинетда яратилгач ўзи боғланади.",
   // Sayt manzili lotinda qoladi.
   "onboarding.key.howto.1": "seller.uzum.uz кабинетига киринг.",
 };

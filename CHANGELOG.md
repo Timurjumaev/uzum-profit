@@ -440,6 +440,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- TM6 (ADR-061 §7, ADR-050) Uzumga jo'natish (`/dispatches`): do'konning Omborimdagi SKU'lari to'liq soni bilan, Excel Uzum
+  kabineti shablonida; donalar "Jo'natilmoqda" deb band, postavka API'da ko'ringanda o'zi bog'lanadi (bir nechta nomzod —
+  sotuvchi tanlaydi), postavka yoki jo'natma bekor — donalar qaytadi; xaridda "N dona Uzumda" va holat "Uzumda" (FIFO).
 - TM5 (ADR-061 §6–§7, §10) Omborim: SKU bo'yicha qoldiq va qiymat (`/warehouse`), "Boshqa SKU'ga o'tkazish" — dona tannarxi
   bilan (`apply_transfers`, migratsiya 0025), bekor qilish; keyin topilgan brak hisobdan chiqadi, foyda hisobida "Brak zarari"
   (F51). Ombor joylari uch holatdan: "Xitoyda" endi "Yo'lda" ichida, qoralama xaridlar ham "Yo'lda".

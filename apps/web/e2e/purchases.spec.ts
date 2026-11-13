@@ -111,7 +111,7 @@ test("kargo puli (TM3): kartochkalar, kodli quti paneli — 360 px da gorizontal
   expect(overflow).toBeLessThanOrEqual(0);
 });
 
-for (const path of ["/shipments", `/shipments/${SHIPMENT_1}`, "/cargo-pool", "/warehouse"]) {
+for (const path of ["/shipments", `/shipments/${SHIPMENT_1}`, "/cargo-pool", "/warehouse", "/dispatches"]) {
   test(`gorizontal skroll yo'q (360 px) ${path}`, async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 800 });
     await mockApi(page);
