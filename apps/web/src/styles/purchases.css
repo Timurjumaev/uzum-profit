@@ -559,7 +559,8 @@ a.purchase-cell__title:hover {
 
 /* Omborim (TM5): SKU nomi va do'kon to'liq; o'tkazmalar alohida qatorda. */
 .warehouse .purchase-cell .caption,
-.dispatches .purchase-cell .caption {
+.dispatches .purchase-cell .caption,
+.receiving .purchase-cell .caption {
   max-inline-size: none;
   white-space: normal;
 }

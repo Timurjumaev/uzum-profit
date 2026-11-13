@@ -440,6 +440,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- TM7 (ADR-061 §8) Uzum qabulidagi farq (`/receiving`, Jo'natmalardan): qabul qilingan postavka jo'natma bilan SKU bo'yicha
+  solishtiriladi; kam — "Uzum yo'qotdi" (kamomad ro'yxati: Topildi / Kompensatsiya qilindi / Zarar deb yopildi) yoki "Men
+  sanashda adashganman" (xarid soni tuzatiladi); ko'p — "Topildi" yoki "Sonni oshirish". Zarar foyda hisobida alohida qator
+  (F52, migratsiya 0027), bog'liq C000007 jarimasi ko'rinadi, bosh sahifa "Diqqat" blokida.
 - TM6 (ADR-061 §7, ADR-050) Uzumga jo'natish (`/dispatches`): do'konning Omborimdagi SKU'lari to'liq soni bilan, Excel Uzum
   kabineti shablonida; donalar "Jo'natilmoqda" deb band, postavka API'da ko'ringanda o'zi bog'lanadi (bir nechta nomzod —
   sotuvchi tanlaydi), postavka yoki jo'natma bekor — donalar qaytadi; xaridda "N dona Uzumda" va holat "Uzumda" (FIFO).

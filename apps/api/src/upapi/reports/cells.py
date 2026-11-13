@@ -52,6 +52,7 @@ from upcore.metrics import (
 from upcore.money import Currency, Money
 from upcore.pnl import (
     DEFECT_LOSS,
+    RECEIVING_LOSS,
     CellKey,
     Cells,
     CellSales,
@@ -60,6 +61,7 @@ from upcore.pnl import (
     TaxBase,
     build_cells,
 )
+from upcore.purchasing import receiving_loss
 from upcore.tariffs import SEED_STORAGE_RULES, paid_storage, storage_rule
 from upcore.tax import (
     BHM,
@@ -645,7 +647,47 @@ async def _own(conn: AsyncConnection, period: Period) -> list[OwnExpense]:
                 skus=tuple((str(a), str(b)) for a, b in linked) if len(linked) > 1 else (),
             )
         )
-    return out + await _defect_losses(conn, period)
+    return out + await _defect_losses(conn, period) + await _receiving_losses(conn, period)
+
+
+async def _receiving_losses(conn: AsyncConnection, period: Period) -> list[OwnExpense]:
+    """F52 (ADR-061 §8): "Uzum yo'qotdi" kamomadi yopilganda (zarar deb yoki kompensatsiya bilan) — dona × lot birlik
+    tannarxi − kompensatsiya, yopilgan kunga, SKU katagiga (``upcore.purchasing.receiving_loss``)."""
+    rd, k = m.receiving_diffs, m.mp_skus
+    rows = list(
+        await conn.execute(
+            select(
+                rd.c.sku_id,
+                rd.c.qty,
+                rd.c.unit_cost,
+                rd.c.compensation,
+                rd.c.closed_on,
+                k.c.shop_id,
+            )
+            .join(k, k.c.id == rd.c.sku_id)
+            .where(
+                rd.c.resolution == "lost",
+                rd.c.status.in_(("compensated", "written_off")),
+                rd.c.unit_cost.is_not(None),
+                rd.c.closed_on >= period.start,
+                rd.c.closed_on <= period.end,
+            )
+        )
+    )
+    out = []
+    for r in rows:
+        comp = None if r.compensation is None else _uzs(r.compensation)
+        loss = receiving_loss(abs(r.qty), _uzs(r.unit_cost), comp)
+        if loss.amount > 0:
+            out.append(
+                OwnExpense(
+                    ManualExpense(loss, r.closed_on, r.closed_on),
+                    RECEIVING_LOSS,
+                    str(r.shop_id),
+                    str(r.sku_id),
+                )
+            )
+    return out
 
 
 async def _defect_losses(conn: AsyncConnection, period: Period) -> list[OwnExpense]:

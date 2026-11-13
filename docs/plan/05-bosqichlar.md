@@ -966,8 +966,17 @@ Har vazifa — alohida branch va PR; tafsilot 07 "ADR-061 tafsiloti", 02 M9–M1
   bilan. Web: `/dispatches` (Omborimdan), qoralama (son, olib tashlash), Excel, jo'natmalar ro'yxati. Testlar: yadro, API
   (Excel tarkibi), web, e2e, vizual. Postavka API'dan yaratilmaydi (ADR-009). **T:** birinchi real jo'natmada avtomatik
   bog'lanishni staging'da tekshirish.
-- [ ] TM7 Qabul farqi (§8; avval B5.3 ning qolgani): kamomad ro'yxati va holatlari, "Uzum yo'qotdi" / "Men sanashda
-  adashganman", ortiqcha qabul, F52 foyda hisobida, bosh sahifa "Diqqat" bloki, bog'liq C000007 jarimasi.
+- [x] TM7 Qabul farqi (§8; avval B5.3 ning qolgani): kamomad ro'yxati va holatlari, "Uzum yo'qotdi" / "Men sanashda
+  adashganman", ortiqcha qabul, F52 foyda hisobida, bosh sahifa "Diqqat" bloki, bog'liq C000007 jarimasi. ✓ 2026-11-13:
+  `receiving_diffs` (migratsiya 0027). `reports.receiving.diffs` — postavka qabul qilinganda (ACCEPTED, `arrival_day`)
+  jo'natma va `quantity_accepted` SKU bo'yicha solishtiriladi, bog'liq C000007 jarimalari (qabuldan −3…+45 kun). `GET
+  /receiving`, `POST /receiving/resolve`: kam — `lost` (kamomad, holat Ochiq) yoki `miscount` (xarid soni eng yangi
+  bog'langan partiyadan kamayadi, jo'natma soni qabul qilinganga tenglashadi, tannarx qayta hisoblanadi); ko'p — `found`
+  (ochiq kamomad eskisidan yopiladi) yoki `recount` (xarid soni oshadi); ixtiyoriy `line_id`. `PATCH
+  /receiving/shortages/{id}`: Topildi / Kompensatsiya qilindi (summa) / Zarar deb yopildi / qayta ochish. F52
+  (`upcore.purchasing.receiving_loss`) foyda hisobida alohida qator (`upcore.pnl.RECEIVING_LOSS`), yopilgan kunga; bosh
+  sahifa "Diqqat" — qarorsiz farq va ochiq kamomad. Web: `/receiving` (Jo'natmalardan havola), farqlar va kamomad ro'yxati
+  (mobilda kartochkalar). Testlar: yadro, API, web, e2e, vizual. **T:** birinchi real qabul farqida staging'da tekshirish.
 - [ ] TM8 Yakun: e2e (xarid → kargo puli → sanash → jo'natish → qabul), yordam maqolasi, 04 §7.4 dagi eski "Xaridlar" tavsifini
   tozalash; Temur real xaridlarida tekshiradi.
 - T: har TM dan keyin staging'da real xarid bilan sinash; noqulay joy — skrinshot bilan bir qator.

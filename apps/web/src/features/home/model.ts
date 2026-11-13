@@ -136,8 +136,8 @@ export function homeRows(rows: PnlRow[], label: (code: string) => string): HomeR
   return out;
 }
 
-export type AttentionKind = "uncosted" | "stockCritical" | "stockHigh" | "stockShip" | "lossSkus" | "recalculated" | "sync";
-export type AttentionItem = { kind: AttentionKind; tone: "negative" | "warning" | "info"; count: number; to: "/products" | "/inventory" | "/orders" | "/status"; amount?: string };
+export type AttentionKind = "uncosted" | "stockCritical" | "stockHigh" | "stockShip" | "receiving" | "lossSkus" | "recalculated" | "sync";
+export type AttentionItem = { kind: AttentionKind; tone: "negative" | "warning" | "info"; count: number; to: "/products" | "/inventory" | "/orders" | "/status" | "/receiving"; amount?: string };
 
 /** "Diqqat talab qiladi" (M4), ustuvorlik bo'yicha: tannarxsiz sotuvlar → tugayotgan tovar → zarar qilayotgan SKU →
  * sinxron xatosi → tannarxi qayta hisoblangan sotuvlar. Yangi jarimalar, kechikayotgan kargo, Uzum to'lovi — B5. */
@@ -147,6 +147,8 @@ export function attentionItems(a: Dashboard["attention"], syncIssues: number): A
   if (a.stock_critical > 0) items.push({ kind: "stockCritical", tone: "negative", count: a.stock_critical, to: "/inventory" });
   if (a.stock_high > 0) items.push({ kind: "stockHigh", tone: "warning", count: a.stock_high, to: "/inventory" });
   if (a.stock_ship > 0) items.push({ kind: "stockShip", tone: "warning", count: a.stock_ship, to: "/inventory" });
+  // TM7 (ADR-061 §8): Uzum qabulidagi qarorsiz farqlar va ochiq kamomadlar.
+  if ((a.receiving ?? 0) > 0) items.push({ kind: "receiving", tone: "negative", count: a.receiving ?? 0, to: "/receiving" });
   if (a.loss_skus > 0) items.push({ kind: "lossSkus", tone: "negative", count: a.loss_skus, to: "/products" });
   if (syncIssues > 0) items.push({ kind: "sync", tone: "warning", count: syncIssues, to: "/status" });
   if (a.recalculated > 0) items.push({ kind: "recalculated", tone: "info", count: a.recalculated, to: "/orders" });

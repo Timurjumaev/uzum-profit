@@ -316,6 +316,51 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
         ],
       });
     }
+    if (key === `GET /orgs/${ORG_ID}/receiving`) {
+      const diff = (n: number, shipped: number, accepted: number, over: Record<string, unknown> = {}) => ({
+        dispatch_id: "d0000002-0000-4000-8000-000000000000",
+        invoice_id: "i1",
+        invoice_number: 18324,
+        shop: "byDurii",
+        accepted_on: "2026-11-12",
+        sku_id: `a000000${n}-0000-4000-8000-000000000000`,
+        title: `AIRGILOF-RANG-${n}`,
+        barcode: `478000000000${n}`,
+        shipped,
+        accepted,
+        diff: accepted - shipped,
+        unit_cost: "18500.00",
+        value: (Math.abs(accepted - shipped) * 18500).toFixed(2),
+        resolution: null,
+        shortage_id: null,
+        open_shortages: 0,
+        fines: [],
+        fines_total: null,
+        ...over,
+      });
+      const shortage = (id: string, n: number, qty: number, status: string, over: Record<string, unknown> = {}) => ({
+        id,
+        dispatch_id: "d0000002-0000-4000-8000-000000000000",
+        sku_id: `a000000${n}-0000-4000-8000-000000000000`,
+        title: `AIRGILOF-RANG-${n}`,
+        shop: "byDurii",
+        qty,
+        status,
+        unit_cost: "18500.00",
+        amount: (qty * 18500).toFixed(2),
+        compensation: null,
+        loss: null,
+        closed_on: null,
+        note: null,
+        created_on: "2026-11-05",
+        ...over,
+      });
+      return json(route, 200, {
+        diffs: [diff(1, 40, 38, { fines: [{ day: "2026-11-12", amount: "7000.00" }], fines_total: "7000.00" }), diff(2, 20, 21, { open_shortages: 2 }), diff(3, 10, 9, { resolution: "lost", shortage_id: "e0000001-0000-4000-8000-000000000000" })],
+        shortages: [shortage("e0000001-0000-4000-8000-000000000000", 3, 1, "open"), shortage("e0000002-0000-4000-8000-000000000000", 2, 2, "compensated", { compensation: "30000.00", loss: "7000.00", closed_on: "2026-11-10" })],
+        amounts: true,
+      });
+    }
     if (key === `GET /orgs/${ORG_ID}/cost-types`) return json(route, 200, [{ id: "t1", name: "Ombor ijarasi" }]);
     if (key === `GET /orgs/${ORG_ID}/cargo-pool`) {
       const row = (n: number, title: string, units: number, track: string | null) => ({ purchase_id: `9${n}${n}${n}${n}${n}${n}${n}-1111-4111-8111-111111111111`, title, track_no: track, supplier_name: "Yiwu Toys", ordered_on: "2026-10-02", state: "in_transit", items: ["AirPods gʻilofi", "Zaryadka kabeli"], units });

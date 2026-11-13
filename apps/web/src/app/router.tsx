@@ -157,6 +157,13 @@ const dispatches = createRoute({
   component: lazyRouteComponent(() => import("../routes/inventory"), "Dispatches"),
 });
 
+/** Uzum qabulidagi farq (TM7, ADR-061 §8): farqlar, kamomad ro'yxati, F52. */
+const receiving = createRoute({
+  getParentRoute: () => app,
+  path: "/receiving",
+  component: lazyRouteComponent(() => import("../routes/inventory"), "Receiving"),
+});
+
 const status = createRoute({
   getParentRoute: () => app,
   path: "/status",
@@ -217,7 +224,7 @@ const uiKit = createRoute({
 
 export const routeTree = root.addChildren([
   auth.addChildren([
-    app.addChildren([home, status, pnl, products, product, orders, expenses, purchases, purchase, shipments, shipment, cargoPool, inventory, warehouse, dispatches, cash, reports, settings, opening]),
+    app.addChildren([home, status, pnl, products, product, orders, expenses, purchases, purchase, shipments, shipment, cargoPool, inventory, warehouse, dispatches, receiving, cash, reports, settings, opening]),
     onboarding,
     invite,
   ]),
