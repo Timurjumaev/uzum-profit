@@ -26,12 +26,33 @@ export function timeline(current: S["Stage"], dates: Partial<Record<S["Stage"], 
   }));
 }
 
+/** Uch nuqtali yo'l (ADR-061 §1). */
+export function path(state: S["SupplyState"], on: Partial<Record<S["SupplyState"], string>> = {}, extra: Partial<S["PathOut"]> = {}): S["PathOut"][] {
+  const order: S["SupplyState"][] = ["in_transit", "in_stock", "at_uzum"];
+  const index = order.indexOf(state);
+  return order.map((s, i) => ({
+    state: s,
+    mark: i < index ? "done" : i === index ? "current" : "upcoming",
+    on: on[s] ?? null,
+    days: i === index && s === "in_transit" ? 11 : null,
+    expected: null,
+    delayed: false,
+    ...(i === index ? extra : {}),
+  }));
+}
+
 export function purchaseRow(over: Partial<S["PurchaseOut"]> = {}): S["PurchaseOut"] {
   const dates = { ordered: "2026-10-02", paid: "2026-10-03", cn_warehouse: "2026-10-09", shipped: "2026-10-12" };
   return {
     id: PURCHASE_1,
     title: "Oktabr partiyasi",
     stage: "shipped",
+    state: "in_transit",
+    path: path("in_transit", { in_transit: dates.ordered }, { expected: "2026-10-28" }),
+    track_no: null,
+    on_hand: false,
+    refund_amount: null,
+    refund_currency: null,
     supplier_id: null,
     supplier_name: "Yiwu Toys",
     carrier_id: null,
@@ -44,6 +65,7 @@ export function purchaseRow(over: Partial<S["PurchaseOut"]> = {}): S["PurchaseOu
     items: ["Mashina", "Yangi oʻyinchoq"],
     units_ordered: 150,
     units_received: null,
+    units_defect: 0,
     total: "4664000.00",
     unit_cost: "31093.33",
     flags: ["cargo_missing", "not_received"],
@@ -71,6 +93,11 @@ export function line(over: Partial<S["LineOut"]> = {}): S["LineOut"] {
     currency: "CNY",
     unit_weight: "0.5000",
     unit_volume: null,
+    sku_id: null,
+    line_sum: null,
+    defect_qty: 0,
+    good_qty: 98,
+    pack_unit_cost: null,
     flags: ["cbu_rate"],
     cost: { total: "1764000.00", unit_cost: "18000.00", breakdown: { goods: "1764000.00" } },
     ...over,
@@ -115,6 +142,7 @@ export function purchaseDetail(over: Partial<S["PurchaseDetailOut"]> = {}): S["P
         variant: "qizil × M",
         ordered_qty: 50,
         received_qty: null,
+        good_qty: 50,
         shortage: 0,
         unit_price: null,
         currency: null,

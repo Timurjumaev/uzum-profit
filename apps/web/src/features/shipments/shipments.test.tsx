@@ -186,18 +186,15 @@ describe("xarid sahifasida kargo", () => {
       shipment_components: [component({ id: SHIPMENT_COMP, kind: "cargo", amount: "2430000.0000", currency: "UZS", applied_rate: null, rate_day: null, rate_source: null, amount_uzs: "2430000.00" })],
     });
 
-  it("kargo havolasi, kargodan xarajatlar (faqat o'qish), sanalar kargodan: «keyingi bosqich» tugmasi va sana maydonlari bloklangan", async () => {
+  it("kargo havolasi, kargodan xarajatlar (faqat o'qish), sanalar kargodan: kargo sana maydonlari bloklangan", async () => {
     const patch = purchaseRoute("PATCH", PURCHASE_1);
     const { api } = await renderAt(`/purchases/${PURCHASE_1}`, { [purchaseRoute("GET", PURCHASE_1)]: () => json(200, linked()), [patch]: () => json(200, linked()) });
     expect((await screen.findAllByRole("link", { name: /Kargo: Presslangan oʻram/ }))[0]!.getAttribute("href")).toBe(`/shipments/${SHIPMENT_1}`);
     const shared = screen.getByRole("table", { name: "Kargodan xarajatlar" });
     expect(norm(shared.textContent!)).toContain(n("2430000.00"));
     expect(within(shared).queryByRole("button", { name: /Tahrirlash/ })).toBeNull();
-    // Keyingi bosqich "Toshkentga keldi" kargo sanasi: tugma yo'q.
-    expect(screen.queryByRole("button", { name: /Toshkentga keldi.*bugun/ })).toBeNull();
-    expect(screen.getByRole("button", { name: "Bosqich sanalari" })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Bosqich sanalari" }));
-    const dialog = await screen.findByRole("dialog", { name: "Bosqich sanalari" });
+    fireEvent.click(screen.getByRole("button", { name: "Sanalar" }));
+    const dialog = await screen.findByRole("dialog", { name: "Xarid sanalari" });
     expect((within(dialog).getByLabelText(/^Yoʻlda/) as HTMLInputElement).disabled).toBe(true);
     expect((within(dialog).getByLabelText(/^Buyurtma berildi/) as HTMLInputElement).disabled).toBe(false);
     fireEvent.change(within(dialog).getByLabelText(/^Buyurtma berildi/), { target: { value: "2026-10-01" } });

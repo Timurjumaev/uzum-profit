@@ -91,14 +91,9 @@ export function QuickPurchaseForm({ orgId, amounts, onClose, onSaved }: { orgId:
           qty: Number(p.qty),
           ...(amounts && several && positive(p.sum) ? { line_sum: p.sum } : {}),
         })),
-        ...(paid !== null
-          ? {
-              paid_amount: paid,
-              currency: draft.currency,
-              rate_mode: draft.currency === "UZS" ? "cbu" : draft.rateMode,
-              ...(needsRate ? { rate: draft.rate } : {}),
-            }
-          : {}),
+        currency: draft.currency,
+        rate_mode: draft.currency === "UZS" ? "cbu" : draft.rateMode,
+        ...(paid !== null ? { paid_amount: paid, ...(needsRate ? { rate: draft.rate } : {}) } : {}),
         ordered_on: draft.orderedOn || null,
         track_no: draft.trackNo.trim() || null,
         note: draft.note.trim() || null,

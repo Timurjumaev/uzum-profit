@@ -679,9 +679,7 @@ def test_quick_purchase_one_request_in_transit(world: World) -> None:
     # Ro'yxat holat bo'yicha filtrlanadi.
     ids = {x["id"] for x in w.get("purchases", state="in_transit")["items"]}
     assert p["id"] in ids
-    assert p["id"] not in {
-        x["id"] for x in w.get("purchases", state="in_stock")["items"]
-    }
+    assert p["id"] not in {x["id"] for x in w.get("purchases", state="in_stock")["items"]}
     # Trek va "Tovar qo'limda" keyin ham o'zgaradi.
     det = ok(send(w, "PATCH", f"purchases/{p['id']}", track_no="YT999", on_hand=True))
     assert det["purchase"]["track_no"] == "YT999" and det["purchase"]["on_hand"]
@@ -722,7 +720,9 @@ def test_quick_purchase_on_hand_is_counted_and_cbu_rate(world: World) -> None:
         ),
         201,
     )
-    assert D(cny["purchase"]["total"]) == D(175_000)  # 30-sentabr kursi 1 750 (dam olish kuni — oxirgi ish kuni)
+    assert D(cny["purchase"]["total"]) == D(
+        175_000
+    )  # 30-sentabr kursi 1 750 (dam olish kuni — oxirgi ish kuni)
     assert cny["lines"][0]["sku_id"] is None
     assert set(cny["lines"][0]["flags"]) == {"cargo_missing", "not_received", "cbu_rate"}
 

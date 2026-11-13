@@ -200,9 +200,9 @@ async def org_lead(conn: AsyncConnection) -> dict[str, Decimal]:
         row = calc_lots.effective_purchase(row, shipments.get(row.shipment_id))
         for stage, days in stage_days(stage_dates(row)).items():
             history.setdefault(stage, []).append(days)
-        days = transit_days(stage_dates(row))
-        if days is not None:
-            history.setdefault(TRANSIT, []).append(days)
+        transit = transit_days(stage_dates(row))
+        if transit is not None:
+            history.setdefault(TRANSIT, []).append(transit)
     stages = dict(lead_time(history, (await orgsettings.load(conn)).lead_days).stages)
     if TRANSIT not in stages and all(x in stages for x in TRANSIT_PARTS):
         # Tarix yo'q: buyurtma → sanash standarti — sanashgacha bo'lgan eski bosqich muddatlari yig'indisi.
