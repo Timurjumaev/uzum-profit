@@ -603,3 +603,99 @@ def timeline(
         else:
             marks.append(StageMark(stage, "upcoming", on))
     return marks
+
+
+# --- Uch holat (ADR-061 §1) --------------------------------------------------------------------
+
+
+class SupplyState(StrEnum):
+    """Xaridning holati (ADR-061 §1) — hosila, qo'lda bosilmaydi."""
+
+    IN_TRANSIT = "in_transit"  # Yo'lda: saqlangan, sanalmagan
+    IN_STOCK = "in_stock"  # Omborimda: sanalgan, tovar sotuvchining qo'lida
+    AT_UZUM = "at_uzum"  # Uzumda: Uzumga jo'natilgan
+
+
+# Sanashgacha bo'lgan bosqichlar (eski xaridlarda sanasi bo'lishi mumkin): "Yo'lda" shulardan eng ertasidan boshlanadi.
+_BEFORE_COUNT: tuple[Stage, ...] = (
+    Stage.ORDERED,
+    Stage.PAID,
+    Stage.CN_WAREHOUSE,
+    Stage.SHIPPED,
+    Stage.ARRIVED,
+)
+
+
+def supply_state(dates: Mapping[Stage, date | None]) -> SupplyState:
+    """ADR-061 §1, §11: sanalar → holat. Uzumga yuborilgan yoki yopilgan — Uzumda; sanalgan (qabul sanasi bor) —
+    Omborimda; qolgan hammasi (qoralama, buyurtma, to'landi, Xitoy omborida, yo'lda, Toshkentga keldi) — Yo'lda."""
+    if dates.get(Stage.SENT_TO_UZUM) is not None or dates.get(Stage.CLOSED) is not None:
+        return SupplyState.AT_UZUM
+    if dates.get(Stage.RECEIVED) is not None:
+        return SupplyState.IN_STOCK
+    return SupplyState.IN_TRANSIT
+
+
+def transit_start(dates: Mapping[Stage, date | None]) -> date | None:
+    """ "Yo'lda" boshlangan kun: buyurtma sanasi, yo'q bo'lsa sanashgacha bo'lgan eng erta sana."""
+    known = [d for d in (dates.get(s) for s in _BEFORE_COUNT) if d is not None]
+    return dates.get(Stage.ORDERED) or (min(known) if known else None)
+
+
+def transit_days(dates: Mapping[Stage, date | None]) -> int | None:
+    """F25 o'rganish (ADR-061): buyurtma → sanash kunlari (ikkala sana bor va tartib to'g'ri bo'lsa)."""
+    start, counted = transit_start(dates), dates.get(Stage.RECEIVED)
+    if start is None or counted is None or counted < start:
+        return None
+    return (counted - start).days
+
+
+@dataclass(frozen=True, slots=True)
+class PathMark:
+    """Partiya yo'li nuqtasi (04 §6.2, uch nuqta). ``mark``: ``done`` / ``current`` / ``upcoming``; "Yo'lda" joriy
+    bo'lsa — ``days`` o'tdi, sanash ``expected`` da kutiladi."""
+
+    state: SupplyState
+    mark: str
+    on: date | None
+    days: int | None = None
+    expected: date | None = None
+    delayed: bool = False
+
+
+def supply_path(
+    dates: Mapping[Stage, date | None],
+    today: date,
+    transit_lead: Decimal | None = None,
+    started: date | None = None,
+) -> list[PathMark]:
+    """Partiya yo'li (ADR-061 §1): Yo'lda → Omborimda → Uzumda. ``transit_lead`` — buyurtma → sanash muddati (F25:
+    tashkilot tarixidan median yoki standart; noma'lum bo'lsa kutilgan sana yo'q — raqam o'ylab topilmaydi).
+    ``started`` — buyurtma sanasi yo'q xaridda "Yo'lda" boshlanishi (yaratilgan kun)."""
+    state = supply_state(dates)
+    start = transit_start(dates) or started
+    counted = dates.get(Stage.RECEIVED)
+    sent = dates.get(Stage.SENT_TO_UZUM) or dates.get(Stage.CLOSED)
+    if state is SupplyState.IN_TRANSIT:
+        expected = None
+        if start is not None and transit_lead is not None:
+            expected = start + timedelta(days=math.ceil(transit_lead))
+        first = PathMark(
+            SupplyState.IN_TRANSIT,
+            "current",
+            start,
+            days=None if start is None else max((today - start).days, 0),
+            expected=expected,
+            delayed=expected is not None and today > expected,
+        )
+        return [
+            first,
+            PathMark(SupplyState.IN_STOCK, "upcoming", None),
+            PathMark(SupplyState.AT_UZUM, "upcoming", None),
+        ]
+    at_uzum = state is SupplyState.AT_UZUM
+    return [
+        PathMark(SupplyState.IN_TRANSIT, "done", start),
+        PathMark(SupplyState.IN_STOCK, "done" if at_uzum else "current", counted),
+        PathMark(SupplyState.AT_UZUM, "current" if at_uzum else "upcoming", sent),
+    ]

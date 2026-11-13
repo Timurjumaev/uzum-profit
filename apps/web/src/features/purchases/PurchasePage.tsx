@@ -17,7 +17,7 @@ import { useFormat } from "../../lib/i18n";
 import { ComponentForm, componentLines, lineLabel } from "./ComponentForm";
 import { useComponentColumns } from "./componentColumns";
 import { LineForm } from "./LineForm";
-import { changedDates, DATED_STAGES, datesInOrder, isEstimated, nextStage, SHIPMENT_STAGES, timelineStages, visibleFlags } from "./model";
+import { changedDates, DATED_STAGES, datesInOrder, isEstimated, isInfoFlag, pathStages, SHIPMENT_STAGES, visibleFlags } from "./model";
 import { PurchaseForm } from "./PurchaseForm";
 import { MANAGE_ROLES } from "./Purchases";
 
@@ -92,7 +92,6 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
     onSuccess: (next) => applied(next, t("purchases.components.deleted")),
     onError: fail,
   });
-  const next = nextStage(p.stage);
   const amounts = detail.amounts;
   const est = (flags: string[]) => (isEstimated(flags) ? "~" : "");
 
@@ -185,7 +184,9 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
         <div>
           <h1 className="h2">{p.title ?? t("purchases.untitled")}</h1>
           <p className="caption">
-            <Badge tone={p.stage === "closed" ? "positive" : p.stage === "draft" ? "neutral" : "info"}>{t(`purchases.stage.${p.stage}`)}</Badge>
+            <Badge tone={p.state === "at_uzum" ? "positive" : p.state === "in_stock" ? "info" : "neutral"}>{t(`purchases.state.${p.state}`)}</Badge>
+            {p.track_no && ` · ${t("purchases.trackShort", { track: p.track_no })}`}
+            {p.on_hand && ` · ${t("purchases.quick.onHand")}`}
             {p.supplier_name && ` · ${p.supplier_name}`}
             {p.carrier_name && ` · ${p.carrier_name}`}
             {p.shipment_id && (
@@ -237,9 +238,9 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
           </h2>
           {canManage && (
             <div className="purchase__actions">
-              {next && !(p.shipment_id && SHIPMENT_STAGES.includes(next)) && (
-                <Button variant="secondary" loading={mark.isPending} onClick={() => mark.mutate(next)}>
-                  {t("purchases.markNext", { stage: t(`purchases.stage.${next}`) })}
+              {p.state === "in_transit" && (
+                <Button variant="secondary" loading={mark.isPending} onClick={() => mark.mutate("received")}>
+                  {t("purchases.markCounted")}
                 </Button>
               )}
               <Button variant="ghost" onClick={() => setEditing({ kind: "dates" })}>
@@ -249,7 +250,7 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
           )}
         </div>
         <div className="purchase__timeline">
-          <Timeline label={t("purchases.path")} stages={timelineStages(p.timeline, (s) => t(`purchases.stage.${s}`))} />
+          <Timeline label={t("purchases.path")} stages={pathStages(p.path, (s) => t(`purchases.state.${s}`))} />
         </div>
         <p className="caption">{t("purchases.pathNote")}</p>
         {p.shipment_id && (
@@ -395,7 +396,7 @@ function CostPanel({ detail }: { detail: PurchaseDetail }) {
             <ul className="purchase__flags">
               {flags.map((flag) => (
                 <li key={flag}>
-                  <Badge tone={flag === "cbu_rate" ? "info" : "warning"}>{flag === "cbu_rate" ? t("purchases.components.rateLabel.cbu") : t("terms.estimated")}</Badge> {t(`purchases.cost.flag.${flag}`)}
+                  <Badge tone={isInfoFlag(flag) ? "info" : "warning"}>{flag === "cbu_rate" ? t("purchases.components.rateLabel.cbu") : isInfoFlag(flag) ? t("purchases.cost.note") : t("terms.estimated")}</Badge> {t(`purchases.cost.flag.${flag}`)}
                 </li>
               ))}
             </ul>

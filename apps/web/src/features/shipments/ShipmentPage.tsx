@@ -14,7 +14,7 @@ import type { CostComponent, ShipmentDetail, ShipmentLine, ShipmentPurchase } fr
 import { useFormat } from "../../lib/i18n";
 import { ComponentForm } from "../purchases/ComponentForm";
 import { useComponentColumns } from "../purchases/componentColumns";
-import { isEstimated, SHIPMENT_KINDS, visibleFlags } from "../purchases/model";
+import { isEstimated, isInfoFlag, SHIPMENT_KINDS, visibleFlags } from "../purchases/model";
 import { MANAGE_ROLES } from "../purchases/Purchases";
 import { AttachPurchases } from "./AttachPurchases";
 import { ShipmentForm } from "./ShipmentForm";
@@ -263,7 +263,7 @@ function ShipmentView({ orgId, detail, canManage }: { orgId: string; detail: Shi
             <ul className="purchase__flags">
               {flags.map((flag) => (
                 <li key={flag}>
-                  <Badge tone={flag === "cbu_rate" ? "info" : "warning"}>{flag === "cbu_rate" ? t("purchases.components.rateLabel.cbu") : t("terms.estimated")}</Badge> {t(`purchases.cost.flag.${flag}`)}
+                  <Badge tone={isInfoFlag(flag) ? "info" : "warning"}>{flag === "cbu_rate" ? t("purchases.components.rateLabel.cbu") : isInfoFlag(flag) ? t("purchases.cost.note") : t("terms.estimated")}</Badge> {t(`purchases.cost.flag.${flag}`)}
                 </li>
               ))}
             </ul>

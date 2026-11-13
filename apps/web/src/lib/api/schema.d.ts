@@ -884,6 +884,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/purchases/quick": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Quick Purchase
+         * @description Tez xarid (ADR-061 §2): xarid + tovarlar + tovar summasi bitta tranzaksiyada (hammasi yoki hech biri), bitta
+         *     qayta hisob. Saqlanganda darhol "Yo'lda"; ``on_hand`` — sanalgan ("Omborimda"): kelgan dona = buyurtma soni.
+         *     Tovar summasi qator summalariga mutanosib bo'linadi (``line_sum`` asosi; kiritilmagan bo'lsa dona, F20).
+         */
+        post: operations["create_quick_purchase_api_v1_orgs__org_id__purchases_quick_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/purchases/{purchase_id}/copy": {
         parameters: {
             query?: never;
@@ -2129,6 +2151,8 @@ export interface components {
             unit_weight?: number | string | null;
             /** Unit Volume */
             unit_volume?: number | string | null;
+            /** Line Sum */
+            line_sum?: number | string | null;
         };
         /**
          * LineKind
@@ -2170,6 +2194,16 @@ export interface components {
             unit_weight: string | null;
             /** Unit Volume */
             unit_volume: string | null;
+            /** Sku Id */
+            sku_id: string | null;
+            /** Line Sum */
+            line_sum: string | null;
+            /** Defect Qty */
+            defect_qty: number;
+            /** Good Qty */
+            good_qty: number;
+            /** Pack Unit Cost */
+            pack_unit_cost: string | null;
             /** Flags */
             flags: string[];
             cost: components["schemas"]["LineCostOut"] | null;
@@ -2199,6 +2233,8 @@ export interface components {
             unit_weight?: number | string | null;
             /** Unit Volume */
             unit_volume?: number | string | null;
+            /** Line Sum */
+            line_sum?: number | string | null;
         };
         /**
          * LinesIn
@@ -2704,6 +2740,24 @@ export interface components {
             /** Note */
             note: string | null;
         };
+        /**
+         * PathOut
+         * @description Partiya yo'li nuqtasi (ADR-061 §1, 04 §6.2): Yo'lda → Omborimda → Uzumda. ``mark``: ``done`` / ``current`` /
+         *     ``upcoming``; "Yo'lda" joriy bo'lsa — ``days`` o'tdi, sanash ``expected`` da kutiladi (F25).
+         */
+        PathOut: {
+            state: components["schemas"]["SupplyState"];
+            /** Mark */
+            mark: string;
+            /** On */
+            on: string | null;
+            /** Days */
+            days: number | null;
+            /** Expected */
+            expected: string | null;
+            /** Delayed */
+            delayed: boolean;
+        };
         /** PayoutScheduleIn */
         PayoutScheduleIn: {
             /**
@@ -2938,6 +2992,17 @@ export interface components {
             /** Title */
             title: string | null;
             stage: components["schemas"]["Stage"];
+            state: components["schemas"]["SupplyState"];
+            /** Path */
+            path: components["schemas"]["PathOut"][];
+            /** Track No */
+            track_no: string | null;
+            /** On Hand */
+            on_hand: boolean;
+            /** Refund Amount */
+            refund_amount: string | null;
+            /** Refund Currency */
+            refund_currency: string | null;
             /** Supplier Id */
             supplier_id: string | null;
             /** Supplier Name */
@@ -2964,6 +3029,8 @@ export interface components {
             units_ordered: number;
             /** Units Received */
             units_received: number | null;
+            /** Units Defect */
+            units_defect: number;
             /** Total */
             total: string | null;
             /** Unit Cost */
@@ -2992,6 +3059,10 @@ export interface components {
             shipment_id?: string | null;
             /** Note */
             note?: string | null;
+            /** Track No */
+            track_no?: string | null;
+            /** On Hand */
+            on_hand?: boolean | null;
             /** Dates */
             dates?: {
                 [key: string]: string | null;
@@ -3018,6 +3089,61 @@ export interface components {
              * @default 1
              */
             pages: number;
+        };
+        /**
+         * QuickLineIn
+         * @description Tez xarid qatori (ADR-061 §2): SKU (yoki mavjud tovar / "yangi tovar" nomi), dona va — bir buyurtmada har xil
+         *     tovar bo'lsa — **qator summasi** (1688'dagi qator jami, dona narxi emas).
+         */
+        QuickLineIn: {
+            /** Item Id */
+            item_id?: string | null;
+            /** Sku Id */
+            sku_id?: string | null;
+            /** Temp Name */
+            temp_name?: string | null;
+            /** Variant */
+            variant?: string | null;
+            /** Qty */
+            qty: number;
+            /** Line Sum */
+            line_sum?: number | string | null;
+        };
+        /**
+         * QuickPurchaseIn
+         * @description Tez xarid (ADR-061 §2) — bitta so'rovda xarid, tovarlar va tovar summasi. ``paid_amount`` — hisobdan real
+         *     yechilgan jami summa (``currency``: CNY / USD / UZS ...); kurs: ``cbu`` (buyurtma kunidagi Markaziy bank kursi) yoki
+         *     ``manual`` (``rate``). ``on_hand`` — "Tovar qo'limda" (mahalliy xarid): darhol sanalgan, kargo kutilmaydi.
+         */
+        QuickPurchaseIn: {
+            /** Lines */
+            lines: components["schemas"]["QuickLineIn"][];
+            /** Paid Amount */
+            paid_amount?: number | string | null;
+            /** @default CNY */
+            currency: components["schemas"]["Currency"];
+            /**
+             * Rate Mode
+             * @default cbu
+             */
+            rate_mode: string;
+            /** Rate */
+            rate?: number | string | null;
+            /** Ordered On */
+            ordered_on?: string | null;
+            /** Track No */
+            track_no?: string | null;
+            /** Supplier Id */
+            supplier_id?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Note */
+            note?: string | null;
+            /**
+             * On Hand
+             * @default false
+             */
+            on_hand: boolean;
         };
         /** RefreshOut */
         RefreshOut: {
@@ -3951,6 +4077,12 @@ export interface components {
             /** Accepted */
             accepted: number;
         };
+        /**
+         * SupplyState
+         * @description Xaridning holati (ADR-061 §1) — hosila, qo'lda bosilmaydi.
+         * @enum {string}
+         */
+        SupplyState: "in_transit" | "in_stock" | "at_uzum";
         /** SyncStatusOut */
         SyncStatusOut: {
             /** Healthy */
@@ -6493,6 +6625,7 @@ export interface operations {
         parameters: {
             query?: {
                 stage?: components["schemas"]["Stage"][] | null;
+                state?: components["schemas"]["SupplyState"][] | null;
                 /** @description Sahifa o'lchami; bo'lmasa — hammasi */
                 limit?: number | null;
                 page?: number;
@@ -6849,6 +6982,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CarrierOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_quick_purchase_api_v1_orgs__org_id__purchases_quick_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuickPurchaseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseDetailOut"];
                 };
             };
             /** @description Validatsiya xatosi */

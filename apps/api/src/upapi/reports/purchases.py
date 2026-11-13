@@ -28,11 +28,15 @@ from upcore.purchasing import (
     DATED_STAGES,
     LotCost,
     Stage,
+    SupplyState,
     average_unit_cost,
     current_stage,
     purchase_total,
     stage_days,
+    supply_path,
+    supply_state,
     timeline,
+    transit_days,
 )
 
 from upapi import orgsettings
@@ -55,6 +59,18 @@ class StageOut(BaseModel):
     on: date | None
     days: int | None  # joriy bosqichda necha kun o'tdi
     expected: date | None  # keyingi bosqich kutilgan sanasi (F25)
+    delayed: bool
+
+
+class PathOut(BaseModel):
+    """Partiya yo'li nuqtasi (ADR-061 §1, 04 §6.2): Yo'lda → Omborimda → Uzumda. ``mark``: ``done`` / ``current`` /
+    ``upcoming``; "Yo'lda" joriy bo'lsa — ``days`` o'tdi, sanash ``expected`` da kutiladi (F25)."""
+
+    state: SupplyState
+    mark: str
+    on: date | None
+    days: int | None
+    expected: date | None
     delayed: bool
 
 
@@ -82,6 +98,11 @@ class LineOut(BaseModel):
     currency: str | None
     unit_weight: Decimal | None  # kg / dona
     unit_volume: Decimal | None  # m³ / dona
+    sku_id: UUID | None  # qator qaysi SKU uchun (ADR-061; eski qatorlarda ``null``)
+    line_sum: Decimal | None  # qator summasi, xarid valyutasida (summalar ruxsati bilan)
+    defect_qty: int  # sanashdagi brak (kelganning ichida)
+    good_qty: int  # tannarx bo'linadigan sog' dona: kelgan − brak (sanalmagan — buyurtma qilingan)
+    pack_unit_cost: Decimal | None  # qadoq qo'shimchasi, so'm/dona (summalar ruxsati bilan)
     flags: list[str]  # F22
     cost: LineCostOut | None  # summalar ruxsati yo'q yoki hisoblab bo'lmadi — ``null``
 
@@ -117,6 +138,12 @@ class PurchaseOut(BaseModel):
     id: UUID
     title: str | None
     stage: Stage
+    state: SupplyState  # ADR-061 §1: Yo'lda / Omborimda / Uzumda (hosila)
+    path: list[PathOut]  # uch nuqtali Partiya yo'li
+    track_no: str | None
+    on_hand: bool  # "Tovar qo'limda" — kargo kutilmaydi
+    refund_amount: Decimal | None  # sotuvchi qaytargan summa (summalar ruxsati bilan)
+    refund_currency: str | None
     supplier_id: UUID | None
     supplier_name: str | None
     carrier_id: UUID | None
@@ -131,6 +158,7 @@ class PurchaseOut(BaseModel):
     items: list[str]  # birinchi 3 ta tovar nomi
     units_ordered: int
     units_received: int | None  # hech bir qator qabul qilinmagan — ``null``
+    units_defect: int  # sanashdagi brak
     total: Decimal | None
     unit_cost: Decimal | None  # o'rtacha (jami / dona)
     flags: list[str]  # qatorlar F22 belgilari yig'indisi
@@ -172,7 +200,28 @@ async def org_lead(conn: AsyncConnection) -> dict[str, Decimal]:
         row = calc_lots.effective_purchase(row, shipments.get(row.shipment_id))
         for stage, days in stage_days(stage_dates(row)).items():
             history.setdefault(stage, []).append(days)
-    return dict(lead_time(history, (await orgsettings.load(conn)).lead_days).stages)
+        transit = transit_days(stage_dates(row))
+        if transit is not None:
+            history.setdefault(TRANSIT, []).append(transit)
+    stages = dict(lead_time(history, (await orgsettings.load(conn)).lead_days).stages)
+    if TRANSIT not in stages and all(x in stages for x in TRANSIT_PARTS):
+        # Tarix yo'q: buyurtma → sanash standarti — sanashgacha bo'lgan eski bosqich muddatlari yig'indisi.
+        stages[TRANSIT] = sum((stages[x] for x in TRANSIT_PARTS), Decimal(0))
+    return stages
+
+
+# F25 (ADR-061): "Yo'lda" muddati — buyurtma → sanash; tarix bo'lmasa eski to'rt bosqich standartlari yig'indisi.
+TRANSIT = "transit"
+TRANSIT_PARTS = ("prep", "china", "cargo", "receive")
+
+
+def _path(row: Any, today: date, lead: dict[str, Decimal], created: datetime) -> list[PathOut]:
+    return [
+        PathOut(
+            state=x.state, mark=x.mark, on=x.on, days=x.days, expected=x.expected, delayed=x.delayed
+        )
+        for x in supply_path(stage_dates(row), today, lead.get(TRANSIT), created.date())
+    ]
 
 
 def _timeline(row: Any, today: date, lead: dict[str, Decimal]) -> list[StageOut]:
@@ -332,6 +381,12 @@ class Book:
             id=purchase.id,
             title=purchase.title,
             stage=current_stage(stage_dates(eff)),
+            state=supply_state(stage_dates(eff)),
+            path=_path(eff, self.today, self.lead, purchase.created_at),
+            track_no=purchase.track_no,
+            on_hand=purchase.on_hand,
+            refund_amount=purchase.refund_amount if amounts else None,
+            refund_currency=purchase.refund_currency if amounts else None,
             supplier_id=purchase.supplier_id,
             supplier_name=self.suppliers.get(purchase.supplier_id)
             if purchase.supplier_id
@@ -346,6 +401,7 @@ class Book:
             items=names[:3],
             units_ordered=sum(x.ordered_qty for x in lines),
             units_received=sum(received) if received else None,
+            units_defect=sum(x.defect_qty for x in lines),
             total=total,
             unit_cost=unit,
             flags=flags,
@@ -379,6 +435,12 @@ class Book:
             currency=row.currency,
             unit_weight=row.unit_weight,
             unit_volume=row.unit_volume,
+            sku_id=row.sku_id,
+            line_sum=row.line_sum if amounts else None,
+            defect_qty=row.defect_qty,
+            good_qty=(row.ordered_qty if row.received_qty is None else row.received_qty)
+            - row.defect_qty,
+            pack_unit_cost=row.pack_unit_cost if amounts else None,
             flags=sorted(f.value for f in lot.flags) if lot is not None else [],
             cost=cost,
         )
@@ -454,5 +516,8 @@ async def recalc_pending(conn: AsyncConnection, purchase_id: UUID) -> bool:
     return found is not None
 
 
-def matches(stage: Stage, wanted: Sequence[Stage] | None) -> bool:
-    return not wanted or stage in wanted
+def matches(
+    out: PurchaseOut, stages: Sequence[Stage] | None, states: Sequence[SupplyState] | None = None
+) -> bool:
+    """Ro'yxat filtri: eski bosqich (``stage``) va / yoki holat (``state``, ADR-061)."""
+    return (not stages or out.stage in stages) and (not states or out.state in states)

@@ -87,6 +87,7 @@ export const OWN_CREATE_ROUTE = `POST /api/v1/orgs/${ORG_ID}/own-expenses`;
 export const ownRoute = (method: "PATCH" | "DELETE", id: string) => `${method} /api/v1/orgs/${ORG_ID}/own-expenses/${id}`;
 export const PURCHASES_ROUTE = `GET /api/v1/orgs/${ORG_ID}/purchases`;
 export const PURCHASE_CREATE_ROUTE = `POST /api/v1/orgs/${ORG_ID}/purchases`;
+export const PURCHASE_QUICK_ROUTE = `POST /api/v1/orgs/${ORG_ID}/purchases/quick`;
 export const purchaseRoute = (method: "GET" | "PATCH" | "DELETE", id: string) => `${method} /api/v1/orgs/${ORG_ID}/purchases/${id}`;
 export const purchaseSubRoute = (method: "POST" | "PATCH" | "DELETE", id: string, sub: string) => `${method} /api/v1/orgs/${ORG_ID}/purchases/${id}/${sub}`;
 export const INVENTORY_ROUTE = `GET /api/v1/orgs/${ORG_ID}/inventory`;

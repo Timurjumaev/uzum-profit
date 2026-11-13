@@ -440,6 +440,12 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- TM2 (ADR-061) Uch holat va tez xarid oynasi: `upcore.purchasing` — `SupplyState` (Yo'lda / Omborimda / Uzumda, eski
+  bosqichlardan hosila), uch nuqtali Partiya yo'li va F25 "buyurtma → sanash" muddati; API — `state`, `path`, `track_no`,
+  `on_hand`, qator `sku_id` / `line_sum` / `defect_qty` / `good_qty`, `GET /purchases?state=`, `POST /purchases/quick`
+  (xarid + tovarlar + jami to'langan summa bitta tranzaksiyada); web — "Yangi xarid" bitta qisqa oyna (tovarlar, qator
+  summalari, jami to'landi CNY / USD / UZS, Markaziy bank yoki o'z kursi, trek, "Tovar qo'limda"), ro'yxat va xarid
+  sahifasi uch holatda. Eski `stage` / `timeline` / `dates` maydonlari TM8 gacha qoladi.
 - TM1 (ADR-061) Ta'minot modeli va yadrosi: migratsiya 0023 (faqat yangi ustunlar — trek, "Tovar qo'limda", sotuvchi
   qaytargan summa, qator SKU'si va summasi, sanashdagi brak, qadoq qo'shimchasi, kargo vazni); `upcore.purchasing` F20 —
   qator summasi bo'yicha taqsimot (`line_sum`), tannarx sog' donaga (kelgan − brak), qaytarilgan summa tovar summasidan

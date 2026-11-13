@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { PickerRow } from "../../lib/api/types";
-import { changedDates, datesInOrder, GROUP_STAGES, isEstimated, nextStage, pickerKey, pickerLabel, pickerOptions, timelineStages, visibleFlags } from "./model";
+import { changedDates, datesInOrder, GROUP_STATES, isEstimated, isInfoFlag, nextStage, pickerKey, pickerLabel, pathStages, pickerOptions, timelineStages, visibleFlags } from "./model";
 
 describe("xarid modeli", () => {
   it("keyingi bosqich: qoralama → buyurtma; yopilgan — yo'q", () => {
@@ -11,10 +11,28 @@ describe("xarid modeli", () => {
     expect(nextStage("closed")).toBeNull();
   });
 
-  it("guruhlar: faol — qoralama va yopilgandan tashqari", () => {
-    expect(GROUP_STAGES.active).not.toContain("draft");
-    expect(GROUP_STAGES.active).not.toContain("closed");
-    expect(GROUP_STAGES.transit).toEqual(["cn_warehouse", "shipped", "arrived"]);
+  it("guruhlar — uch holat (ADR-061 §1)", () => {
+    expect(GROUP_STATES).toEqual({ in_transit: ["in_transit"], in_stock: ["in_stock"], at_uzum: ["at_uzum"] });
+  });
+
+  it("uch nuqtali yo'l → Timeline: kunlar faqat joriy nuqtada", () => {
+    const stages = pathStages(
+      [
+        { state: "in_transit", mark: "current", on: "2026-10-02", days: 11, expected: "2026-10-28", delayed: false },
+        { state: "in_stock", mark: "upcoming", on: null, days: null, expected: null, delayed: false },
+      ],
+      (s) => s,
+    );
+    expect(stages).toEqual([
+      { label: "in_transit", state: "current", date: "2026-10-02", days: 11, expected: "2026-10-28", delayed: false },
+      { label: "in_stock", state: "upcoming", date: undefined, days: undefined, expected: undefined, delayed: false },
+    ]);
+  });
+
+  it("ma'lumot belgilari: qator summalari yo'q — taxminiy emas", () => {
+    expect(isInfoFlag("no_line_sums")).toBe(true);
+    expect(isEstimated(["no_line_sums"])).toBe(false);
+    expect(visibleFlags(["no_line_sums", "cargo_missing", "cbu_rate"])).toEqual(["cargo_missing", "no_line_sums", "cbu_rate"]);
   });
 
   it("taxminiy belgilar (F22): kurs CBU — taxminiy emas, faqat ma'lumot", () => {

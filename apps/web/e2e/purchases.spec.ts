@@ -12,7 +12,7 @@ test("ro'yxat → xarid sahifasi: Partiya yo'li, tovarlar, tannarx tarkibi", asy
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Xaridlar");
   await page.getByRole("link", { name: "Oktabr partiyasi" }).click();
   await expect(page).toHaveURL(new RegExp(`/purchases/${PURCHASE_1}$`));
-  await expect(page.getByRole("list", { name: "Partiya yoʻli" }).getByRole("listitem")).toHaveCount(8);
+  await expect(page.getByRole("list", { name: "Partiya yoʻli" }).getByRole("listitem")).toHaveCount(3); // ADR-061: Yoʻlda → Omborimda → Uzumda
   await expect(page.getByRole("table", { name: "Partiyadagi tovarlar" })).toBeVisible();
   await expect(page.getByRole("complementary", { name: /Birlik tannarx tarkibi/ })).toContainText("kargo kiritilmagan");
 });
@@ -41,6 +41,24 @@ test("tovar qo'shish oynasi: bir nechta SKU tanlash, 360 px da gorizontal skroll
   await dialog.getByRole("combobox", { name: "Yana SKU qoʻshish" }).click();
   await dialog.getByRole("listbox").getByRole("option", { name: /BLOCKED/ }).click();
   await expect(dialog.getByRole("list", { name: "Tanlangan SKUʼlar" }).getByRole("listitem")).toHaveCount(2);
+  const overflow = await dialog.evaluate((el) => el.scrollWidth - el.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test("yangi xarid oynasi (ADR-061 §2): tovar, jami toʻlandi, kurs, trek — 360 px da gorizontal skrollsiz", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await mockApi(page);
+  await open(page, "/purchases");
+  await page.getByRole("button", { name: "Yangi xarid" }).first().click();
+  const dialog = page.getByRole("dialog", { name: "Yangi xarid (partiya)" });
+  await dialog.getByRole("combobox", { name: "Tovarlar" }).click();
+  await dialog.getByRole("listbox").getByRole("option").first().click();
+  await dialog.getByLabel(/^Yangi tovar/).fill("Paket");
+  await dialog.getByRole("button", { name: "Qoʻshish" }).click();
+  await expect(dialog.getByRole("list", { name: "Tanlangan SKUʼlar" }).getByRole("listitem")).toHaveCount(2);
+  await expect(dialog.getByLabel(/^Qator summasi/)).toHaveCount(2);
+  await expect(dialog.getByLabel(/^Jami toʻlandi/)).toBeVisible();
+  await expect(dialog.getByLabel(/^Trek raqami/)).toBeVisible();
   const overflow = await dialog.evaluate((el) => el.scrollWidth - el.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 });

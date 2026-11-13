@@ -378,3 +378,38 @@ a.purchase-cell__title:hover {
   flex-wrap: wrap;
   gap: var(--space-3);
 }
+
+/* Yangi xarid oynasi (ADR-061 §2): qator summasi ustuni bilan tanlangan tovarlar, yangi tovar qatori, belgi. */
+.purchase-form__picked li.has-sum {
+  grid-template-columns: minmax(0, 1fr) 6rem 9rem auto;
+}
+
+@media (max-width: 30rem) {
+  .purchase-form__picked li.has-sum {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.quick-purchase__new {
+  display: grid;
+  gap: var(--space-3);
+  align-items: end;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.quick-purchase__check {
+  display: grid;
+  gap: var(--space-1) var(--space-2);
+  align-items: center;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-block-size: 44px;
+  cursor: pointer;
+}
+
+.quick-purchase__check .caption {
+  grid-column: 2;
+}
+
+.quick-purchase .ui-segmented {
+  align-self: end;
+}

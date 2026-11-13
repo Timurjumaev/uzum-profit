@@ -920,8 +920,14 @@ Har vazifa — alohida branch va PR; tafsilot 07 "ADR-061 tafsiloti", 02 M9–M1
   Testlar: yadro (xossa — ulushlar yig'indisi = summa), bazadan lotgacha; mavjud xarid / kargo / hisob testlari
   o'zgarmasdan o'tadi (eski yozuvlar hisobi avvalgidek). **Keyinga:** API maydonlari va uch holat (eski bosqich → holat
   ko'chirish) — TM2 da, UI bilan birga (holat qiymati o'zgarsa hozirgi ekran buzilardi).
-- [ ] TM2 Uch holat (hosila; eski bosqich → holat, §1, §11), API maydonlari, yangi xarid oynasi (§2) va xarid sahifasi: jami to'landi + valyuta + kurs tanlovi, trek, "Tovar qo'limda", uch
-  nuqtali Partiya yo'li, ro'yxatda uch holat; eski bosqich shakli olib tashlanadi, "Tarix" qoladi.
+- [x] TM2 Uch holat (hosila; eski bosqich → holat, §1, §11), API maydonlari, yangi xarid oynasi (§2) va xarid sahifasi.
+  ✓ 2026-11-13: yadro (`SupplyState`, `supply_state`, `supply_path`, `transit_days` + testlar); API (`state`, `path`,
+  `track_no`, `on_hand`, qator `sku_id` / `line_sum` / `defect_qty` / `good_qty`; `GET /purchases?state=`;
+  `POST /purchases/quick` — bitta tranzaksiya); web: `QuickPurchaseForm` (tovarlar, qator summalari, jami to'landi + CNY /
+  USD / UZS, Markaziy bank yoki o'z kursi, trek, "Tovar qo'limda"), ro'yxat guruhlari — uch holat, xarid sahifasida uch
+  nuqtali yo'l; unit, e2e (360 px) va vizual testlar. Eski `stage` / `timeline` / `dates` API maydonlari va "Sanalar"
+  oynasi (eski bosqich sanalari — "Tarix") ataylab qoldirilgan (TM8 da tozalanadi); "Tovar keldi — bugun" tugmasi
+  vaqtinchalik (TM4 sanash ekrani almashtiradi).
 - [ ] TM3 Kargo puli jadvali (§3): trekli qator va kodli quti (dona bo'yicha tayyor ulushlar, tahrir), xarajat turlari
   lug'ati (§4). Kargolar sahifasi soddalashadi (B5.0d dagi Kargolar sahifalashi shu yerda).
 - [ ] TM4 Sanash (§6): kelgan son, brak, "Hammasi keldi", sotuvchi qaytargan summa, tovarning qadoq qo'shimchasi (§5),

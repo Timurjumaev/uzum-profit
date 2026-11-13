@@ -30,6 +30,7 @@ from upcore.purchasing import (
     AllocationBase,
     ComponentKind,
     Stage,
+    SupplyState,
     current_stage,
     default_base,
 )
@@ -54,6 +55,8 @@ Url = Annotated[str | None, Field(max_length=1000)]
 Qty = Annotated[int, Field(ge=0, le=10_000_000)]
 Positive = Annotated[Decimal, Field(gt=0, max_digits=18, decimal_places=4)]
 Measure = Annotated[Decimal, Field(gt=0, max_digits=12, decimal_places=6)]
+TrackNo = Annotated[str | None, Field(max_length=100)]
+LineSum = Annotated[Decimal | None, Field(ge=0, max_digits=18, decimal_places=4)]
 _log = get_logger("upapi.purchases")
 
 
@@ -84,12 +87,55 @@ class PurchasePatch(BaseModel):
     carrier_id: UUID | None = None
     shipment_id: UUID | None = None  # ``null`` — kargodan ajratish (sanalar o'z holicha qoladi)
     note: Text = None
+    track_no: TrackNo = None
+    on_hand: bool | None = None  # "Tovar qo'limda" — kargo kutilmaydi (ADR-061 §2)
     dates: dict[Stage, date | None] | None = (
         None  # faqat berilgan bosqichlar o'zgaradi; ``null`` — sanani o'chirish
     )
 
 
 MAX_BULK = 100
+
+
+class QuickLineIn(BaseModel):
+    """Tez xarid qatori (ADR-061 §2): SKU (yoki mavjud tovar / "yangi tovar" nomi), dona va — bir buyurtmada har xil
+    tovar bo'lsa — **qator summasi** (1688'dagi qator jami, dona narxi emas)."""
+
+    item_id: UUID | None = None
+    sku_id: UUID | None = None
+    temp_name: Annotated[str | None, Field(max_length=200)] = None
+    variant: Annotated[str | None, Field(max_length=200)] = None
+    qty: Annotated[int, Field(ge=1, le=10_000_000)]
+    line_sum: LineSum = None
+
+
+class QuickPurchaseIn(BaseModel):
+    """Tez xarid (ADR-061 §2) — bitta so'rovda xarid, tovarlar va tovar summasi. ``paid_amount`` — hisobdan real
+    yechilgan jami summa (``currency``: CNY / USD / UZS ...); kurs: ``cbu`` (buyurtma kunidagi Markaziy bank kursi) yoki
+    ``manual`` (``rate``). ``on_hand`` — "Tovar qo'limda" (mahalliy xarid): darhol sanalgan, kargo kutilmaydi."""
+
+    lines: Annotated[list[QuickLineIn], Field(min_length=1, max_length=MAX_BULK)]
+    paid_amount: Positive | None = None  # summalar ruxsatisiz (omborchi) — berilmaydi
+    currency: Currency = Currency.CNY
+    rate_mode: Annotated[str, Field(pattern="^(cbu|manual)$")] = "cbu"
+    rate: Annotated[Decimal | None, Field(gt=0, max_digits=18, decimal_places=6)] = None
+    ordered_on: date | None = None  # bo'lmasa — bugun (Toshkent)
+    track_no: TrackNo = None
+    supplier_id: UUID | None = None
+    title: Text = None
+    note: Text = None
+    on_hand: bool = False
+
+    @model_validator(mode="after")
+    def _check(self) -> QuickPurchaseIn:
+        if self.paid_amount is not None:
+            check_component(
+                {"currency": self.currency, "rate_mode": self.rate_mode, "rate": self.rate}
+            )
+            sums = [x.line_sum for x in self.lines if x.line_sum is not None]
+            if sums and sum(sums, Decimal(0)) > self.paid_amount:
+                raise ValueError("qator summalari yig'indisi jami to'langan summadan ko'p")
+        return self
 
 
 class LineIn(BaseModel):
@@ -108,6 +154,7 @@ class LineIn(BaseModel):
     currency: Currency | None = None
     unit_weight: Measure | None = None  # kg / dona
     unit_volume: Measure | None = None  # m³ / dona
+    line_sum: LineSum = None  # qator summasi, xarid valyutasida (ADR-061 §2)
 
 
 class LinesIn(BaseModel):
@@ -129,6 +176,7 @@ class LinePatch(BaseModel):
     currency: Currency | None = None
     unit_weight: Measure | None = None
     unit_volume: Measure | None = None
+    line_sum: LineSum = None
 
 
 class ComponentIn(BaseModel):
@@ -417,6 +465,7 @@ async def _kick(request: Request, org_id: UUID, fx_since: date | None = None) ->
 async def list_purchases(
     ctx: Viewer,
     stage: Annotated[list[Stage] | None, Query()] = None,
+    state: Annotated[list[SupplyState] | None, Query()] = None,
     limit: Annotated[
         int | None, Query(ge=1, le=100, description="Sahifa o'lchami; bo'lmasa — hammasi")
     ] = None,
@@ -431,7 +480,7 @@ async def list_purchases(
     matched = []
     for purchase in book.purchases:
         out = book.summary(purchase, book.evaluate(purchase), amounts)
-        if rp.matches(out.stage, stage):
+        if rp.matches(out, stage, state):
             matched.append(out)
     size = limit or max(1, len(matched))
     pages = max(1, -(-len(matched) // size))
@@ -525,6 +574,68 @@ async def create_purchase(
     await ctx.audit("purchase.create", "purchase", purchase_id, after=_plain(body.model_dump()))
     await _changed(ctx, request, background, purchase_id)
     await request_shipment_members(ctx, body.shipment_id, skip=purchase_id)
+    return await _detail(ctx, purchase_id)
+
+
+@router.post("/orgs/{org_id}/purchases/quick", response_model=rp.PurchaseDetailOut, status_code=201)
+async def create_quick_purchase(
+    body: QuickPurchaseIn, ctx: Manager, request: Request, background: BackgroundTasks
+) -> rp.PurchaseDetailOut:
+    """Tez xarid (ADR-061 §2): xarid + tovarlar + tovar summasi bitta tranzaksiyada (hammasi yoki hech biri), bitta
+    qayta hisob. Saqlanganda darhol "Yo'lda"; ``on_hand`` — sanalgan ("Omborimda"): kelgan dona = buyurtma soni.
+    Tovar summasi qator summalariga mutanosib bo'linadi (``line_sum`` asosi; kiritilmagan bo'lsa dona, F20)."""
+    if body.paid_amount is not None or any(x.line_sum is not None for x in body.lines):
+        _require_amounts(ctx)
+    await _exists(ctx, m.suppliers, body.supplier_id, "supplier_not_found")
+    day = body.ordered_on or today()
+    p, pl, cc = m.purchases, m.purchase_lines, m.cost_components
+    purchase_id: UUID = await ctx.conn.scalar(
+        insert(p)
+        .values(
+            org_id=ctx.org_id,
+            title=body.title,
+            supplier_id=body.supplier_id,
+            note=body.note,
+            track_no=(body.track_no or "").strip() or None,
+            on_hand=body.on_hand,
+            ordered_on=day,
+            received_on=day if body.on_hand else None,
+        )
+        .returning(p.c.id)
+    )
+    for line in body.lines:
+        values = line.model_dump()
+        qty = values.pop("qty")
+        await _resolve_item(ctx, values)
+        _check_line(values)
+        await _exists(ctx, m.items, values.get("item_id"), "item_not_found")
+        await ctx.conn.execute(
+            insert(pl).values(
+                org_id=ctx.org_id,
+                purchase_id=purchase_id,
+                ordered_qty=qty,
+                received_qty=qty if body.on_hand else None,
+                **values,
+            )
+        )
+    if body.paid_amount is not None:
+        await ctx.conn.execute(
+            insert(cc).values(
+                org_id=ctx.org_id,
+                purchase_id=purchase_id,
+                kind=ComponentKind.GOODS.value,
+                amount=body.paid_amount,
+                currency=body.currency.value,
+                paid_on=day,
+                rate_mode=body.rate_mode,
+                rate=body.rate if body.rate_mode == "manual" else None,
+                allocation=AllocationBase.LINE_SUM.value,
+            )
+        )
+    await ctx.audit(
+        "purchase.create", "purchase", purchase_id, after=_plain(body.model_dump(mode="json"))
+    )
+    await _changed(ctx, request, background, purchase_id)
     return await _detail(ctx, purchase_id)
 
 
@@ -675,9 +786,11 @@ async def _check_shares_targets(
 
 
 async def _resolve_item(ctx: OrgContext, values: dict[str, Any]) -> None:
-    """``sku_id`` → ``item_id`` (tovari yo'q SKU'ga tovar yaratiladi); ``sku_id`` ustuni yo'q — qatorga yozilmaydi."""
-    sku_id = values.pop("sku_id", None)
+    """``sku_id`` → ``item_id`` (tovari yo'q SKU'ga tovar yaratiladi). SKU qatorda saqlanadi (ADR-061: sanash va
+    Uzumga jo'natish SKU bo'yicha); ``item_id`` bilan berilgan qatorda SKU yo'q."""
+    sku_id = values.get("sku_id")
     if sku_id is None:
+        values.pop("sku_id", None)
         return
     if values.get("item_id") is not None:
         raise AppError("bad_line", 422, detail="item_id va sku_id birga berilmaydi")
@@ -686,7 +799,7 @@ async def _resolve_item(ctx: OrgContext, values: dict[str, Any]) -> None:
 
 async def _add_line(ctx: OrgContext, purchase_id: UUID, body: LineIn) -> UUID:
     values = body.model_dump()
-    if values["unit_price"] is not None:
+    if values["unit_price"] is not None or values["line_sum"] is not None:
         _require_amounts(ctx)
     await _resolve_item(ctx, values)
     _check_line(values)
@@ -753,14 +866,21 @@ async def update_line(
     values = body.model_dump(exclude_unset=True)
     if "ordered_qty" in values and values["ordered_qty"] is None:
         raise AppError("bad_line", 422, detail="ordered_qty bo'sh bo'lmaydi")
-    if {"unit_price", "currency"} & set(values):
+    if {"unit_price", "currency", "line_sum"} & set(values):
         _require_amounts(ctx)
     if values.get("sku_id") is None:
         values.pop("sku_id", None)
+        if values.get("item_id") is not None and values["item_id"] != row.item_id:
+            values["sku_id"] = None  # boshqa tovarga o'tdi — eski SKU bog'lanishi qolmaydi
     else:
         await _resolve_item(ctx, values)
     merged = {**row._asdict(), **values}
     _check_line(merged)
+    arrived = (
+        merged["ordered_qty"] if merged.get("received_qty") is None else merged["received_qty"]
+    )
+    if row.defect_qty > arrived:
+        raise AppError("bad_line", 422, detail="kelgan dona sanashdagi brakdan kam bo'lmaydi")
     await _exists(ctx, m.items, values.get("item_id"), "item_not_found")
     if not values:
         return await _detail(ctx, purchase_id)

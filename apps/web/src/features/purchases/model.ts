@@ -2,18 +2,21 @@
 // belgilar (F22). Hisob yo'q — birlik tannarx, kurs va kutilgan sana API'dan (tamoyil 4).
 import type { Stage } from "../../components/ui";
 import type { PurchaseGroup } from "../../app/search";
-import type { AllocationBase, ComponentKind, PickerRow, PurchaseStage, StageMark } from "../../lib/api/types";
+import type { AllocationBase, ComponentKind, PathMark, PickerRow, PurchaseStage, StageMark, SupplyState } from "../../lib/api/types";
 
 /** Sanasi bor bosqichlar tartib bilan (qoralamadan keyin). */
 export const DATED_STAGES: PurchaseStage[] = ["ordered", "paid", "cn_warehouse", "shipped", "arrived", "received", "sent_to_uzum", "closed"];
 
-/** Ro'yxat guruhlari → API `stage` filtri. */
-export const GROUP_STAGES: Record<PurchaseGroup, PurchaseStage[]> = {
-  active: ["ordered", "paid", "cn_warehouse", "shipped", "arrived", "received", "sent_to_uzum"],
-  draft: ["draft"],
-  transit: ["cn_warehouse", "shipped", "arrived"],
-  closed: ["closed"],
+/** Ro'yxat guruhlari → API `state` filtri (ADR-061 §1: guruh — holatning o'zi). */
+export const GROUP_STATES: Record<PurchaseGroup, SupplyState[]> = {
+  in_transit: ["in_transit"],
+  in_stock: ["in_stock"],
+  at_uzum: ["at_uzum"],
 };
+
+/** Tez xarid valyutalari (ADR-061 §2): hisobdan real yechilgan summa. */
+export const PAID_CURRENCIES = ["CNY", "USD", "UZS"] as const;
+export type PaidCurrency = (typeof PAID_CURRENCIES)[number];
 
 /** Kargoga bog'langan xaridda shu bosqichlar kargodan olinadi (ADR-046). */
 export const SHIPMENT_STAGES: PurchaseStage[] = ["cn_warehouse", "shipped", "arrived"];
@@ -21,7 +24,7 @@ export const SHIPMENT_STAGES: PurchaseStage[] = ["cn_warehouse", "shipped", "arr
 export const COMPONENT_KINDS: ComponentKind[] = ["goods", "cn_delivery", "agent_fee", "cargo", "customs", "packaging", "labeling", "uzum_delivery", "other"];
 /** Kargo xarajati turlari (ADR-049; backend `SHIPMENT_KINDS` bilan bir xil): tovar, Xitoy ichki yetkazish va agent komissiyasi xaridniki. */
 export const SHIPMENT_KINDS: ComponentKind[] = ["cargo", "customs", "packaging", "labeling", "uzum_delivery", "other"];
-export const ALLOCATIONS: AllocationBase[] = ["units", "weight", "volume", "value", "manual"];
+export const ALLOCATIONS: AllocationBase[] = ["units", "weight", "volume", "value", "manual", "line_sum"];
 export const CURRENCIES = ["CNY", "USD", "UZS", "EUR", "RUB"] as const;
 export type CurrencyCode = (typeof CURRENCIES)[number];
 
@@ -32,9 +35,16 @@ export function isEstimated(flags: readonly string[]): boolean {
   return flags.some((f) => (ESTIMATE_FLAGS as readonly string[]).includes(f));
 }
 
-/** Ko'rsatiladigan belgilar tartib bilan (kurs CBU — ma'lumot uchun, oxirida). */
+/** Ma'lumot uchun belgilar (taxminiy emas): kurs Markaziy bank bo'yicha; qator summalari kiritilmagan (ADR-061 §2). */
+export const INFO_FLAGS = ["no_line_sums", "cbu_rate"] as const;
+
+export function isInfoFlag(flag: string): boolean {
+  return (INFO_FLAGS as readonly string[]).includes(flag);
+}
+
+/** Ko'rsatiladigan belgilar tartib bilan (ma'lumot uchun belgilar — oxirida). */
 export function visibleFlags(flags: readonly string[]): string[] {
-  const order = [...ESTIMATE_FLAGS, "cbu_rate"];
+  const order = [...ESTIMATE_FLAGS, ...INFO_FLAGS];
   return order.filter((f) => flags.includes(f));
 }
 
@@ -52,6 +62,18 @@ export function timelineStages(marks: StageMark[], label: (stage: PurchaseStage)
     state: m.state === "done" ? "done" : m.state === "current" ? "current" : "upcoming",
     date: m.on ?? undefined,
     days: m.state === "current" ? (m.days ?? undefined) : undefined,
+    expected: m.expected ?? undefined,
+    delayed: m.delayed,
+  }));
+}
+
+/** Uch nuqtali Partiya yo'li (ADR-061 §1, 04 §6.2) → `Timeline`. */
+export function pathStages(marks: PathMark[], label: (state: SupplyState) => string): Stage[] {
+  return marks.map((m) => ({
+    label: label(m.state),
+    state: m.mark === "done" ? "done" : m.mark === "current" ? "current" : "upcoming",
+    date: m.on ?? undefined,
+    days: m.mark === "current" ? (m.days ?? undefined) : undefined,
     expected: m.expected ?? undefined,
     delayed: m.delayed,
   }));
