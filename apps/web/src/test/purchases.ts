@@ -123,6 +123,10 @@ export function component(over: Partial<S["ComponentOut"]> = {}): S["ComponentOu
     rate_source: "cbu",
     amount_uzs: "2664000.00",
     error: null,
+    cost_type_id: null,
+    type_name: null,
+    weight_kg: null,
+    purchase_shares: {},
     ...over,
   };
 }

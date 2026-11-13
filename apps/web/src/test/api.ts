@@ -75,6 +75,12 @@ export const skuRoute = (skuId: string) => `GET /api/v1/orgs/${ORG_ID}/skus/${sk
 export const UNIT_CALC_ROUTE = `GET /api/v1/orgs/${ORG_ID}/unit-calc`;
 export const ITEMS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/items`;
 export const SHIPMENTS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/shipments`;
+export const COST_TYPES_ROUTE = `GET /api/v1/orgs/${ORG_ID}/cost-types`;
+export const COST_TYPE_CREATE_ROUTE = `POST /api/v1/orgs/${ORG_ID}/cost-types`;
+export const CARGO_POOL_ROUTE = `GET /api/v1/orgs/${ORG_ID}/cargo-pool`;
+export const CARGO_TRACKED_ROUTE = `POST /api/v1/orgs/${ORG_ID}/cargo-pool/tracked`;
+export const CARGO_SHARES_ROUTE = `POST /api/v1/orgs/${ORG_ID}/cargo-pool/shares`;
+export const CARGO_BOX_ROUTE = `POST /api/v1/orgs/${ORG_ID}/cargo-pool/box`;
 export const shipmentRoute = (id: string) => `GET /api/v1/orgs/${ORG_ID}/shipments/${id}`;
 export const shipmentSubRoute = (method: "POST" | "PATCH" | "DELETE", id: string, sub = "") => `${method} /api/v1/orgs/${ORG_ID}/shipments${id ? `/${id}` : ""}${sub ? `/${sub}` : ""}`;
 export const SKU_PICKER_ROUTE = `GET /api/v1/orgs/${ORG_ID}/sku-picker`;
@@ -126,6 +132,7 @@ export function mockApi(routes: Routes = {}) {
     [REFRESH_ROUTE]: () => json(202, { queued: 3 }),
     [LOGOUT_ROUTE]: () => new Response(null, { status: 204 }),
     [PROFILE_ROUTE]: () => json(200, ME.user),
+    [COST_TYPES_ROUTE]: () => json(200, []),
     ...routes,
   };
   const calls: string[] = [];

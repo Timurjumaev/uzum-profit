@@ -130,6 +130,10 @@ class ComponentOut(BaseModel):
     )  # ``cbu`` / ``market`` (zaxira, rasmiy emas) / ``manual`` / ``effective``
     amount_uzs: Decimal | None
     error: str | None
+    cost_type_id: UUID | None = None  # sotuvchining o'z turi (ADR-061 §4; ``kind`` — ``other``)
+    type_name: str | None = None
+    weight_kg: Decimal | None = None  # kargo vazni — faqat ma'lumot (ADR-061 §3)
+    purchase_shares: dict[str, Decimal] = {}  # kodli quti: qo'lda o'zgartirilgan xarid ulushlari
 
 
 class PurchaseOut(BaseModel):
@@ -249,6 +253,7 @@ class Book:
         self.items: dict[UUID, Any] = {}
         self.suppliers: dict[UUID, str] = {}
         self.carriers: dict[UUID, str] = {}
+        self.cost_types: dict[UUID, str] = {}
         self.shipments: dict[UUID, Row[Any]] = {}
         self.shipment_components: dict[UUID, list[Row[Any]]] = {}
         self.siblings: dict[
@@ -308,6 +313,8 @@ class Book:
         s, c = m.suppliers, m.carriers
         self.suppliers = {r.id: r.name for r in await self.conn.execute(select(s.c.id, s.c.name))}
         self.carriers = {r.id: r.name for r in await self.conn.execute(select(c.c.id, c.c.name))}
+        t = m.cost_types
+        self.cost_types = {r.id: r.name for r in await self.conn.execute(select(t.c.id, t.c.name))}
         await self.rates.load(
             calc_lots.currencies_of(
                 [
@@ -473,6 +480,10 @@ class Book:
             rate_source=None if rate is None else rate.source.value,
             amount_uzs=uzs,
             error=error,
+            cost_type_id=row.cost_type_id,
+            type_name=self.cost_types.get(row.cost_type_id) if row.cost_type_id else None,
+            weight_kg=row.weight_kg,
+            purchase_shares=calc_lots.purchase_shares_of(row.targets),
         )
 
     def shipment_component_outs(self, purchase: Row[Any]) -> list[ComponentOut]:

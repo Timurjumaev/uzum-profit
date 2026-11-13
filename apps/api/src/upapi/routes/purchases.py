@@ -197,6 +197,8 @@ class ComponentIn(BaseModel):
     shares: dict[UUID, Annotated[Decimal, Field(ge=0, max_digits=18, decimal_places=6)]] = Field(
         default_factory=dict
     )
+    cost_type_id: UUID | None = None  # sotuvchining o'z turi (ADR-061 §4): ``kind`` — ``other``
+    weight_kg: Annotated[Decimal | None, Field(gt=0, max_digits=12, decimal_places=3)] = None
 
     @model_validator(mode="after")
     def _rate(self) -> ComponentIn:
@@ -218,6 +220,8 @@ class ComponentPatch(BaseModel):
     shares: dict[UUID, Annotated[Decimal, Field(ge=0, max_digits=18, decimal_places=6)]] | None = (
         None
     )
+    cost_type_id: UUID | None = None
+    weight_kg: Annotated[Decimal | None, Field(gt=0, max_digits=12, decimal_places=3)] = None
 
 
 class SupplierIn(BaseModel):
@@ -939,6 +943,23 @@ async def delete_line(
 # --- Xarajat komponentlari --------------------------------------------------------------------
 
 
+async def check_cost_type(
+    ctx: OrgContext, values: dict[str, Any], current_kind: str | None = None
+) -> None:
+    """Sotuvchining o'z turi (ADR-061 §4): lug'atda bo'lishi shart, ``kind`` — ``other``. Boshqa turga o'tsa (``kind``
+    ``other`` emas) — bog'lanish olib tashlanadi."""
+    type_id = values.get("cost_type_id")
+    if type_id is not None:
+        found = await ctx.conn.scalar(select(m.cost_types.c.id).where(m.cost_types.c.id == type_id))
+        if found is None:
+            raise AppError("cost_type_not_found", 404)
+        values["kind"] = ComponentKind.OTHER
+        return
+    kind = values.get("kind")
+    if kind is not None and kind is not ComponentKind.OTHER and current_kind is not None:
+        values["cost_type_id"] = None
+
+
 def _component_values(values: dict[str, Any]) -> dict[str, Any]:
     """API maydonlari → ustunlar: ``lines``/``shares`` → ``targets`` (jsonb)."""
     out = {k: v for k, v in values.items() if k not in ("lines", "shares")}
@@ -948,10 +969,16 @@ def _component_values(values: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
-def _targets(lines: list[UUID] | None, shares: dict[Any, Decimal]) -> dict[str, Any] | None:
-    if lines is None and not shares:
-        return None
+def _targets(
+    lines: list[UUID] | None, shares: dict[Any, Decimal], before: Any = None
+) -> dict[str, Any] | None:
+    """``before`` — eski ``targets``: kodli quti ulushlari (``purchase_shares``) tahrirda saqlanadi."""
     out: dict[str, Any] = {}
+    kept = (before or {}).get("purchase_shares")
+    if kept:
+        out["purchase_shares"] = kept
+    if lines is None and not shares:
+        return out or None
     if lines is not None:
         out["lines"] = [str(x) for x in lines]
     if shares:
@@ -974,7 +1001,9 @@ async def create_component(
     _require_amounts(ctx)
     await _purchase(ctx, purchase_id)
     await _check_shares_targets(ctx, purchase_id, body.lines, body.shares)
-    values = _component_values(body.model_dump())
+    raw = body.model_dump()
+    await check_cost_type(ctx, raw)
+    values = _component_values(raw)
     values["allocation"] = values["allocation"] or default_base(body.kind).value
     cc = m.cost_components
     component_id = await ctx.conn.scalar(
@@ -1033,8 +1062,9 @@ async def update_component(
         raise AppError("bad_component", 422, detail=str(exc)) from None
     target_lines = None if new_lines is None else [UUID(str(x)) for x in new_lines]
     await _check_shares_targets(ctx, purchase_id, target_lines, new_shares)
+    await check_cost_type(ctx, values, row.kind)
     cols = _component_values(values)
-    cols["targets"] = _targets(target_lines, new_shares)
+    cols["targets"] = _targets(target_lines, new_shares, row.targets)
     before = {k: getattr(row, k) for k in cols}
     cc = m.cost_components
     await ctx.conn.execute(

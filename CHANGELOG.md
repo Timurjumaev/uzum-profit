@@ -440,6 +440,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- TM3 (ADR-061 §3–§4) Kargo puli jadvali (`/cargo-pool`): trekli xaridlarga o'z kargo puli bitta saqlashda, kodli quti — bitta
+  summa, Kargo yaratiladi, ulushlar dona bo'yicha (`box_shares`), qo'lda o'zgartirilganlari saqlanadi va kargo sahifasida
+  tahrirlanadi; xarid yo o'z kargo puli, yo quti bilan. Xarajat turlari lug'ati (`cost_types`, migratsiya 0024; tayyor turlarga
+  o'tkazma komissiyasi va taksi). Yangi xarajatlarda taqsimot — dona yoki qo'lda. Kargolar ro'yxati sahifalanadi, sanalar
+  ustuni olib tashlandi, yangi kargoda sanalar so'ralmaydi.
 - TM2 (ADR-061) Uch holat va tez xarid oynasi: `upcore.purchasing` — `SupplyState` (Yo'lda / Omborimda / Uzumda, eski
   bosqichlardan hosila), uch nuqtali Partiya yo'li va F25 "buyurtma → sanash" muddati; API — `state`, `path`, `track_no`,
   `on_hand`, qator `sku_id` / `line_sum` / `defect_qty` / `good_qty`, `GET /purchases?state=`, `POST /purchases/quick`

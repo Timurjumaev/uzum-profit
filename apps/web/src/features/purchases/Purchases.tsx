@@ -125,6 +125,9 @@ export function Purchases() {
           <PageHelp page="purchases" />
         </div>
         <span className="purchases__actions">
+          <Link to="/cargo-pool" className="ui-btn ui-btn--secondary ui-btn--md">
+            {t("cargo.title")}
+          </Link>
           <Link to="/shipments" className="ui-btn ui-btn--secondary ui-btn--md">
             {t("shipments.title")}
           </Link>

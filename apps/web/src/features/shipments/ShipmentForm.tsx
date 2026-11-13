@@ -32,14 +32,14 @@ export function ShipmentForm({ orgId, shipment, onClose, onSaved }: { orgId: str
   });
   const patch = (x: Partial<Draft>) => setDraft((d) => ({ ...d, ...x }));
   const valid = ordered(draft);
+  // ADR-061 §9: yangi kargoda sanalar so'ralmaydi; eski kargoda sanasi bo'lsa — tahrirlanadi (tamoyil 7).
+  const showDates = shipment !== null && Boolean(shipment.cn_warehouse_on || shipment.shipped_on || shipment.arrived_on);
   const save = useMutation({
     mutationFn: () => {
       const body = {
         title: draft.title.trim() || null,
         carrier_id: draft.carrier === NONE ? null : draft.carrier,
-        cn_warehouse_on: draft.cn || null,
-        shipped_on: draft.shipped || null,
-        arrived_on: draft.arrived || null,
+        ...(showDates ? { cn_warehouse_on: draft.cn || null, shipped_on: draft.shipped || null, arrived_on: draft.arrived || null } : {}),
         note: draft.note.trim() || null,
       };
       return shipment ? updateShipment(orgId, shipment.id, body) : createShipment(orgId, body);
@@ -80,13 +80,17 @@ export function ShipmentForm({ orgId, shipment, onClose, onSaved }: { orgId: str
           onValueChange={(carrier) => patch({ carrier })}
           options={[{ value: NONE, label: t("purchases.fields.none") }, ...(carriers.data ?? []).map((c) => ({ value: c.id, label: c.name }))]}
         />
-        <p className="caption">{t("shipments.datesHint")}</p>
-        {!valid && <Banner tone="warning" title={t("purchases.datesOrder")} />}
-        <div className="purchase-form__dates">
-          <TextInput label={t("purchases.stage.cn_warehouse")} type="date" optional value={draft.cn} onValueChange={(cn) => patch({ cn })} />
-          <TextInput label={t("purchases.stage.shipped")} type="date" optional value={draft.shipped} onValueChange={(shipped) => patch({ shipped })} />
-          <TextInput label={t("purchases.stage.arrived")} type="date" optional value={draft.arrived} onValueChange={(arrived) => patch({ arrived })} />
-        </div>
+        {showDates && (
+          <>
+            <p className="caption">{t("shipments.datesHint")}</p>
+            {!valid && <Banner tone="warning" title={t("purchases.datesOrder")} />}
+            <div className="purchase-form__dates">
+              <TextInput label={t("purchases.stage.cn_warehouse")} type="date" optional value={draft.cn} onValueChange={(cn) => patch({ cn })} />
+              <TextInput label={t("purchases.stage.shipped")} type="date" optional value={draft.shipped} onValueChange={(shipped) => patch({ shipped })} />
+              <TextInput label={t("purchases.stage.arrived")} type="date" optional value={draft.arrived} onValueChange={(arrived) => patch({ arrived })} />
+            </div>
+          </>
+        )}
         <TextInput label={t("purchases.fields.note")} optional value={draft.note} onValueChange={(note) => patch({ note })} maxLength={500} />
       </form>
     </Dialog>

@@ -147,8 +147,8 @@ trek raqami, jami to'langan summa va valyutasi, sanash sanasi, "tovar qo'limda" 
 xaridning asl xaridi; eski holat va bosqich sanalari ustunlari qoladi (faqat "Tarix" uchun o'qiladi), holat — hosila
 (Yo'lda / Omborimda / Uzumda). `purchase_lines` — `sku_id`, qator summasi, kelgan dona, brak dona, qadoq qo'shimchasi
 (so'm/dona, sanashda `items` dan nusxa). `items` — qadoq qo'shimchasi (so'm/dona, ixtiyoriy). `cost_components` —
-xaridning o'z kargo puli (kg ixtiyoriy); kodli quti — `shipments` + xarid bo'yicha qo'lda ulushlar. `cost_kinds` —
-tashkilotning xarajat turlari lug'ati (tayyor + o'ziniki). `stock_moves` — yangi turlar: SKU'ga o'tkazish, jo'natishga band
+xaridning o'z kargo puli (kg ixtiyoriy); kodli quti — `shipments` + xarid bo'yicha qo'lda ulushlar. `cost_types` —
+tashkilotning o'z xarajat turlari lug'ati (`cost_components.cost_type_id`; tayyor turlar — `ComponentKind`). `stock_moves` — yangi turlar: SKU'ga o'tkazish, jo'natishga band
 qilish / bo'shatish. `fbo_dispatches` + `fbo_dispatch_items` — Uzumga jo'natma (do'kon, Excel chiqarilgan vaqt, SKU va dona,
 bog'langan `fbo_invoices` yozuvi, holat: jo'natilmoqda / bog'landi / bekor). `receiving_shortages` — qabul kamomadi
 (postavka, SKU, dona, tannarxdagi summa, holat: ochiq / topildi / kompensatsiya / zarar, kompensatsiya summasi, yopilgan

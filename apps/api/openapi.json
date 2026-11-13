@@ -5572,7 +5572,7 @@
           "purchases"
         ],
         "summary": "List Shipments",
-        "description": "Kargolar (yangisi birinchi): xaridlar soni, dona va (summalar ruxsati bilan) kargo xarajatlari jami.",
+        "description": "Kargolar (yangisi birinchi): xaridlar soni, dona va (summalar ruxsati bilan) kargo xarajatlari jami.\n``limit`` berilsa — sahifa (B5.0d, ADR-054; tanlov ro'yxatlari ``limit`` siz hammasini oladi).",
         "operationId": "list_shipments_api_v1_orgs__org_id__shipments_get",
         "parameters": [
           {
@@ -5583,6 +5583,38 @@
               "type": "string",
               "format": "uuid",
               "title": "Org Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Sahifa o'lchami; bo'lmasa — hammasi",
+              "title": "Limit"
+            },
+            "description": "Sahifa o'lchami; bo'lmasa — hammasi"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100000,
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
             }
           }
         ],
@@ -6072,6 +6104,524 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/cargo-pool": {
+      "get": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "Cargo Pool",
+        "description": "Kargo puli kutilayotgan xaridlar (eskisi birinchi): \"Yo'lda\" (``counted`` — \"Omborimda\" ham), \"Tovar qo'limda\"\nemas, kargo (quti) ga biriktirilmagan va o'z \"Kargo\" xarajati yo'q.",
+        "operationId": "cargo_pool_api_v1_orgs__org_id__cargo_pool_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "counted",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Sanalgan (Omborimda), kargo puli kiritilmagan xaridlar ham",
+              "default": false,
+              "title": "Counted"
+            },
+            "description": "Sanalgan (Omborimda), kargo puli kiritilmagan xaridlar ham"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoolOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/cargo-pool/tracked": {
+      "post": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "Save Tracked",
+        "description": "Trekli kargo puli: har qatorga xaridning o'z \"Kargo\" xarajati (xarid ichida dona bo'yicha). Hammasi yoki hech\nbiri (bitta tranzaksiya).",
+        "operationId": "save_tracked_api_v1_orgs__org_id__cargo_pool_tracked_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrackedIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackedOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/cargo-pool/shares": {
+      "post": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "Preview Shares",
+        "description": "Kodli quti: har xaridga tushadigan ulush (F20 ``box_shares``) — inputlarda tayyor turadi. Hech narsa yozilmaydi.",
+        "operationId": "preview_shares_api_v1_orgs__org_id__cargo_pool_shares_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SharesIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/cargo-pool/box": {
+      "post": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "Save Box",
+        "description": "Kodli quti: Kargo yaratiladi, xaridlar biriktiriladi, bitta \"Kargo\" xarajati (ulushlar dona bo'yicha, qo'lda\no'zgartirilganlari — ``targets.purchase_shares``).",
+        "operationId": "save_box_api_v1_orgs__org_id__cargo_pool_box_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BoxIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoxOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/shipments/{shipment_id}/components/{component_id}/purchase-shares": {
+      "put": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "Set Box Shares",
+        "description": "Qutining qo'lda ulushlarini almashtirish (ADR-061 §3): yig'indi summadan oshmaydi; hamma xarid qo'lda bo'lsa —\nsummaga teng. Javob — yangi ulushlar.",
+        "operationId": "set_box_shares_api_v1_orgs__org_id__shipments__shipment_id__components__component_id__purchase_shares_put",
+        "parameters": [
+          {
+            "name": "shipment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Shipment Id"
+            }
+          },
+          {
+            "name": "component_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Component Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BoxSharesIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/cost-types": {
+      "get": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "List Cost Types",
+        "description": "Sotuvchining o'z xarajat turlari (tayyor turlar — ``ComponentKind``, UI'da).",
+        "operationId": "list_cost_types_api_v1_orgs__org_id__cost_types_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CostTypeOut"
+                  },
+                  "title": "Response List Cost Types Api V1 Orgs  Org Id  Cost Types Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "Create Cost Type",
+        "operationId": "create_cost_type_api_v1_orgs__org_id__cost_types_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CostTypeIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostTypeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/cost-types/{type_id}": {
+      "delete": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "Delete Cost Type",
+        "description": "Faqat ishlatilmagan tur o'chadi (aks holda xarajat turi jim yo'qolardi).",
+        "operationId": "delete_cost_type_api_v1_orgs__org_id__cost_types__type_id__delete",
+        "parameters": [
+          {
+            "name": "type_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Type Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validatsiya xatosi",
@@ -7357,6 +7907,167 @@
         ],
         "title": "AuditOut"
       },
+      "BoxIn": {
+        "properties": {
+          "currency": {
+            "$ref": "#/components/schemas/Currency",
+            "default": "USD"
+          },
+          "rate_mode": {
+            "type": "string",
+            "pattern": "^(cbu|manual)$",
+            "title": "Rate Mode",
+            "default": "cbu"
+          },
+          "rate": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate"
+          },
+          "paid_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid On"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "carrier_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Carrier Id"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount"
+          },
+          "weight_kg": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight Kg"
+          },
+          "purchase_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Purchase Ids"
+          },
+          "fixed": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "propertyNames": {
+              "format": "uuid"
+            },
+            "type": "object",
+            "title": "Fixed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "amount",
+          "purchase_ids"
+        ],
+        "title": "BoxIn",
+        "description": "Kodli quti: bitta summa bir nechta xaridga. ``title`` — shaxsiy kod yoki quti nomi."
+      },
+      "BoxOut": {
+        "properties": {
+          "shipment_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Shipment Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "shipment_id"
+        ],
+        "title": "BoxOut"
+      },
+      "BoxSharesIn": {
+        "properties": {
+          "fixed": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "propertyNames": {
+              "format": "uuid"
+            },
+            "type": "object",
+            "title": "Fixed"
+          }
+        },
+        "type": "object",
+        "title": "BoxSharesIn",
+        "description": "Qutining qo'lda ulushlari (to'liq almashtiriladi; bo'sh — hammasi dona bo'yicha)."
+      },
       "CalcDefaultsOut": {
         "properties": {
           "price": {
@@ -7710,6 +8421,33 @@
             },
             "type": "object",
             "title": "Shares"
+          },
+          "cost_type_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Type Id"
+          },
+          "weight_kg": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight Kg"
           }
         },
         "type": "object",
@@ -7732,6 +8470,8 @@
           "packaging",
           "labeling",
           "uzum_delivery",
+          "transfer_fee",
+          "local_delivery",
           "other"
         ],
         "title": "ComponentKind",
@@ -7886,6 +8626,48 @@
               }
             ],
             "title": "Error"
+          },
+          "cost_type_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Type Id"
+          },
+          "type_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type Name"
+          },
+          "weight_kg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight Kg"
+          },
+          "purchase_shares": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Purchase Shares",
+            "default": {}
           }
         },
         "type": "object",
@@ -8061,6 +8843,33 @@
               }
             ],
             "title": "Shares"
+          },
+          "cost_type_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Type Id"
+          },
+          "weight_kg": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight Kg"
           }
         },
         "type": "object",
@@ -8082,6 +8891,40 @@
           "cost_method"
         ],
         "title": "CostMethodIn"
+      },
+      "CostTypeIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "CostTypeIn"
+      },
+      "CostTypeOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "CostTypeOut"
       },
       "Currency": {
         "type": "string",
@@ -12175,6 +13018,108 @@
         ],
         "title": "PnlOut"
       },
+      "PoolOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PoolRow"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "amounts": {
+            "type": "boolean",
+            "title": "Amounts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "amounts"
+        ],
+        "title": "PoolOut"
+      },
+      "PoolRow": {
+        "properties": {
+          "purchase_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Purchase Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "track_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Track No"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name"
+          },
+          "ordered_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ordered On"
+          },
+          "state": {
+            "$ref": "#/components/schemas/SupplyState"
+          },
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "units": {
+            "type": "integer",
+            "title": "Units"
+          }
+        },
+        "type": "object",
+        "required": [
+          "purchase_id",
+          "title",
+          "track_no",
+          "supplier_name",
+          "ordered_on",
+          "state",
+          "items",
+          "units"
+        ],
+        "title": "PoolRow",
+        "description": "Kargo puli kutilayotgan xarid. ``units`` — sanalgan bo'lsa kelgan, bo'lmasa buyurtma qilingan dona (ulushlar\nshu bo'yicha)."
+      },
       "PriceIn": {
         "properties": {
           "valid_from": {
@@ -13739,6 +14684,91 @@
         ],
         "title": "SettingsOut"
       },
+      "SharesIn": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency",
+            "default": "USD"
+          },
+          "purchase_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Purchase Ids"
+          },
+          "fixed": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "propertyNames": {
+              "format": "uuid"
+            },
+            "type": "object",
+            "title": "Fixed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "amount",
+          "purchase_ids"
+        ],
+        "title": "SharesIn",
+        "description": "Kodli quti ulushlarini hisoblash: ``fixed`` — sotuvchi o'zgartirgan ulushlar (komponent valyutasida)."
+      },
+      "SharesOut": {
+        "properties": {
+          "shares": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "format": "uuid"
+            },
+            "type": "object",
+            "title": "Shares"
+          },
+          "units": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "format": "uuid"
+            },
+            "type": "object",
+            "title": "Units"
+          }
+        },
+        "type": "object",
+        "required": [
+          "shares",
+          "units"
+        ],
+        "title": "SharesOut"
+      },
       "ShipOut": {
         "properties": {
           "cover_days": {
@@ -14253,6 +15283,9 @@
           "stage": {
             "$ref": "#/components/schemas/Stage"
           },
+          "state": {
+            "$ref": "#/components/schemas/SupplyState"
+          },
           "line_count": {
             "type": "integer",
             "title": "Line Count"
@@ -14312,6 +15345,7 @@
           "title",
           "supplier_name",
           "stage",
+          "state",
           "line_count",
           "units",
           "share",
@@ -14333,6 +15367,21 @@
           "amounts": {
             "type": "boolean",
             "title": "Amounts"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page",
+            "default": 1
+          },
+          "pages": {
+            "type": "integer",
+            "title": "Pages",
+            "default": 1
           }
         },
         "type": "object",
@@ -16768,6 +17817,128 @@
         ],
         "title": "TokenIn",
         "description": "Uzum seller kabinetidagi API kalit. Javobda va xatoda qaytarilmaydi."
+      },
+      "TrackedIn": {
+        "properties": {
+          "currency": {
+            "$ref": "#/components/schemas/Currency",
+            "default": "USD"
+          },
+          "rate_mode": {
+            "type": "string",
+            "pattern": "^(cbu|manual)$",
+            "title": "Rate Mode",
+            "default": "cbu"
+          },
+          "rate": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate"
+          },
+          "paid_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid On"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/TrackedRow"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rows"
+        ],
+        "title": "TrackedIn"
+      },
+      "TrackedOut": {
+        "properties": {
+          "created": {
+            "type": "integer",
+            "title": "Created"
+          }
+        },
+        "type": "object",
+        "required": [
+          "created"
+        ],
+        "title": "TrackedOut"
+      },
+      "TrackedRow": {
+        "properties": {
+          "purchase_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Purchase Id"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount"
+          },
+          "weight_kg": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weight Kg"
+          },
+          "track_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Track No"
+          }
+        },
+        "type": "object",
+        "required": [
+          "purchase_id",
+          "amount"
+        ],
+        "title": "TrackedRow"
       },
       "UncoveredOut": {
         "properties": {

@@ -38,7 +38,7 @@ afterEach(() => {
 
 async function renderAt(path: string, routes: Routes = {}, role = "owner") {
   const api = mockApi({
-    [SHIPMENTS_ROUTE]: () => json(200, { items: [shipmentRow(), shipmentRow({ id: "b2222222-2222-4222-8222-222222222222", title: null, carrier_name: null, purchase_count: 0, units: 0, total: "0.00", shipped_on: null, cn_warehouse_on: null })], amounts: true }),
+    [SHIPMENTS_ROUTE]: () => json(200, { items: [shipmentRow(), shipmentRow({ id: "b2222222-2222-4222-8222-222222222222", title: null, carrier_name: null, purchase_count: 0, units: 0, total: "0.00", shipped_on: null, cn_warehouse_on: null })], amounts: true, total: 2, page: 1, pages: 1 }),
     [shipmentRoute(SHIPMENT_1)]: () => json(200, shipmentDetail()),
     [purchaseRoute("GET", PURCHASE_1)]: () => json(200, purchaseDetail()),
     [SKU_PICKER_ROUTE]: () => json(200, { rows: [], truncated: false }),
@@ -69,28 +69,39 @@ describe("kargolar ro'yxati", () => {
   });
 
   it("omborchi summalarni ko'rmaydi; bo'sh holat taklif bilan", async () => {
-    await renderAt("/shipments", { [SHIPMENTS_ROUTE]: () => json(200, { items: [shipmentRow({ total: null })], amounts: false }) }, "warehouse");
+    await renderAt("/shipments", { [SHIPMENTS_ROUTE]: () => json(200, { items: [shipmentRow({ total: null })], amounts: false, total: 1, page: 1, pages: 1 }) }, "warehouse");
     const table = await screen.findByRole("table", { name: "Kargolar" });
     expect(within(table).queryByRole("columnheader", { name: "Kargo xarajati" })).toBeNull();
     cleanup();
-    await renderAt("/shipments", { [SHIPMENTS_ROUTE]: () => json(200, { items: [], amounts: true }) });
+    await renderAt("/shipments", { [SHIPMENTS_ROUTE]: () => json(200, { items: [], amounts: true, total: 0, page: 1, pages: 1 }) });
     expect(await screen.findByText("Kargolar yoʻq")).toBeTruthy();
   });
 
-  it("yangi kargo: nomi, sanalar tartibi tekshiriladi, saqlangach kargo sahifasiga o'tiladi", async () => {
+  it("yangi kargo: nomi va kompaniya — sanalar so'ralmaydi (ADR-061 §9); saqlangach kargo sahifasiga o'tiladi", async () => {
     const create = shipmentSubRoute("POST", "");
     const { api, history } = await renderAt("/shipments", { [create]: () => json(201, shipmentDetail()) });
     fireEvent.click((await screen.findAllByRole("button", { name: "Yangi kargo" }))[0]!);
     const dialog = await screen.findByRole("dialog", { name: "Yangi kargo" });
+    expect(within(dialog).queryByLabelText(/^Yoʻlda/)).toBeNull();
     fireEvent.change(within(dialog).getByLabelText(/^Nomi/), { target: { value: "Noyabr" } });
-    fireEvent.change(within(dialog).getByLabelText(/^Yoʻlda/), { target: { value: "2026-10-12" } });
-    fireEvent.change(within(dialog).getByLabelText(/^Toshkentga keldi/), { target: { value: "2026-10-10" } });
-    expect((within(dialog).getByRole("button", { name: "Kargoni saqlash" }) as HTMLButtonElement).disabled).toBe(true);
-    fireEvent.change(within(dialog).getByLabelText(/^Toshkentga keldi/), { target: { value: "2026-10-25" } });
     fireEvent.click(within(dialog).getByRole("button", { name: "Kargoni saqlash" }));
     await waitFor(() => expect(bodiesOf(api, create)).toHaveLength(1));
-    expect(bodiesOf(api, create)[0]).toEqual({ title: "Noyabr", carrier_id: null, cn_warehouse_on: null, shipped_on: "2026-10-12", arrived_on: "2026-10-25", note: null });
+    expect(bodiesOf(api, create)[0]).toEqual({ title: "Noyabr", carrier_id: null, note: null });
     await waitFor(() => expect(history.location.pathname).toBe(`/shipments/${SHIPMENT_1}`));
+  });
+
+  it("sahifalash: keyingi sahifa `page` va `limit` bilan", async () => {
+    const { api } = await renderAt("/shipments", {
+      [SHIPMENTS_ROUTE]: (r) => {
+        const page = Number(new URL(r.url).searchParams.get("page"));
+        return json(200, { items: [shipmentRow({ title: page === 2 ? "Ikkinchi sahifa" : "Birinchi sahifa" })], amounts: true, total: 60, page, pages: 2 });
+      },
+    });
+    expect(await screen.findByText("Birinchi sahifa")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Keyingi sahifa" }));
+    expect(await screen.findByText("Ikkinchi sahifa")).toBeTruthy();
+    const urls = api.fetch.mock.calls.map(([r]) => new URL((r as Request).url)).filter((u) => u.pathname.endsWith("/shipments"));
+    expect(urls.some((u) => u.searchParams.get("page") === "2" && u.searchParams.get("limit") === "50")).toBe(true);
   });
 });
 
@@ -296,7 +307,7 @@ describe("xaridni kargoga biriktirish — xarid sahifasidan (Turi = Kargo)", () 
     const dialog = await screen.findByRole("dialog", { name: "Yangi xarajat" });
     const kind = within(dialog).getByLabelText("Turi") as HTMLSelectElement;
     expect(kind.value).toBe("cargo");
-    expect([...kind.options].map((o) => o.textContent)).toEqual(["Kargo", "Bojxona", "Qadoqlash", "Shtrix-kod / yorliq", "Uzum omboriga yetkazish", "Boshqa"]);
+    expect([...kind.options].map((o) => o.textContent)).toEqual(["Kargo", "Bojxona", "Oʻtkazma komissiyasi", "Taksi / mahalliy tashish", "Qadoqlash", "Shtrix-kod / yorliq", "Uzum omboriga yetkazish", "Boshqa", "Yangi tur…"]);
     // Taqsimot standarti matni kargoga mos (tovar qiymati haqida gap yo'q).
     expect(within(dialog).getByRole("option", { name: "Standart (kargo — vazn, qolgani — dona)" })).toBeTruthy();
     expect(within(dialog).getByRole("button", { name: "Xarajatni saqlash" })).toBeTruthy();
@@ -307,7 +318,7 @@ describe("xaridni kargoga biriktirish — xarid sahifasidan (Turi = Kargo)", () 
     const purchaseDialog = await screen.findByRole("dialog", { name: "Yangi xarajat" });
     const purchaseKind = within(purchaseDialog).getByLabelText("Turi") as HTMLSelectElement;
     expect(purchaseKind.value).toBe("goods");
-    expect(purchaseKind.options).toHaveLength(9);
+    expect(purchaseKind.options).toHaveLength(12); // 11 tayyor tur + "Yangi tur…" (ADR-061 §4)
   });
 
   it("kargodagi xaridni shu sahifadan ajratish: PATCH shipment_id=null; faqat o'qiy oladigan rolda tugma yo'q", async () => {
@@ -330,7 +341,7 @@ describe("xaridni kargoga biriktirish — xarid sahifasidan (Turi = Kargo)", () 
     const dialog = await screen.findByRole("dialog", { name: "Xarajatni tahrirlash" });
     const kind = within(dialog).getByLabelText("Turi") as HTMLSelectElement;
     expect(kind.value).toBe("goods");
-    expect([...kind.options].map((o) => o.value)).toEqual(["goods", "cargo", "customs", "packaging", "labeling", "uzum_delivery", "other"]);
+    expect([...kind.options].map((o) => o.value)).toEqual(["goods", "cargo", "customs", "transfer_fee", "local_delivery", "packaging", "labeling", "uzum_delivery", "other", "__new_type"]);
     cleanup();
     const empty = shipmentDetail({ shipment: shipmentRow({ purchase_count: 0, units: 0, total: "0.00" }), purchases: [], lines: [], components: [], by_kind: {} });
     await renderAt(`/shipments/${SHIPMENT_1}`, { [shipmentRoute(SHIPMENT_1)]: () => json(200, empty) });

@@ -580,6 +580,12 @@ purchase_lines = tenant(
         "sku_id": ("mp_skus", True),
     },
 )
+# Xarajat turlari lug'ati (ADR-061 §4): tashkilotning o'z turlari; tayyor turlar — ``ComponentKind``.
+cost_types = tenant(
+    "cost_types",
+    Column("name", Text, nullable=False),
+    UniqueConstraint("org_id", "name"),
+)
 cost_components = tenant(
     "cost_components",
     Column("kind", Text, nullable=False),
@@ -613,7 +619,7 @@ cost_components = tenant(
         ondelete="CASCADE",
     ),
     CheckConstraint("num_nonnulls(purchase_id, shipment_id) = 1", name="owner_exactly_one"),
-    refs={"account_id": ("cash_accounts", True)},
+    refs={"account_id": ("cash_accounts", True), "cost_type_id": ("cost_types", True)},
 )
 stock_moves = tenant(
     "stock_moves",

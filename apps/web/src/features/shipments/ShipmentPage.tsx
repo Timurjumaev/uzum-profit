@@ -17,9 +17,10 @@ import { useComponentColumns } from "../purchases/componentColumns";
 import { isEstimated, isInfoFlag, SHIPMENT_KINDS, visibleFlags } from "../purchases/model";
 import { MANAGE_ROLES } from "../purchases/Purchases";
 import { AttachPurchases } from "./AttachPurchases";
+import { BoxSharesDialog } from "./BoxSharesDialog";
 import { ShipmentForm } from "./ShipmentForm";
 
-type Editing = { kind: "header" } | { kind: "delete" } | { kind: "attach" } | { kind: "component"; component: CostComponent | null };
+type Editing = { kind: "header" } | { kind: "delete" } | { kind: "attach" } | { kind: "component"; component: CostComponent | null } | { kind: "shares"; component: CostComponent };
 
 function BackLink() {
   const { t } = useTranslation();
@@ -102,7 +103,7 @@ function ShipmentView({ orgId, detail, canManage }: { orgId: string; detail: Shi
       ),
     },
     { key: "supplier", header: t("purchases.col.supplier"), render: (r) => r.supplier_name ?? "—" },
-    { key: "stage", header: t("purchases.col.path"), render: (r) => <Badge tone={r.stage === "closed" ? "positive" : r.stage === "draft" ? "neutral" : "info"}>{t(`purchases.stage.${r.stage}`)}</Badge> },
+    { key: "stage", header: t("purchases.col.path"), render: (r) => <Badge tone={r.state === "at_uzum" ? "positive" : r.state === "in_stock" ? "info" : "neutral"}>{t(`purchases.state.${r.state}`)}</Badge> },
     { key: "units", header: t("purchases.col.units"), numeric: true, render: (r) => f.number(r.units) },
     ...(amounts
       ? [
@@ -154,7 +155,7 @@ function ShipmentView({ orgId, detail, canManage }: { orgId: string; detail: Shi
           <h1 className="h2">{s.title || t("shipments.untitled")}</h1>
           <p className="caption">
             {s.carrier_name ?? t("shipments.noCarrier")}
-            {` · ${t("shipments.datesLine", { cn: date(s.cn_warehouse_on), shipped: date(s.shipped_on), arrived: date(s.arrived_on) })}`}
+            {(s.cn_warehouse_on || s.shipped_on || s.arrived_on) && ` · ${t("shipments.datesLine", { cn: date(s.cn_warehouse_on), shipped: date(s.shipped_on), arrived: date(s.arrived_on) })}`}
           </p>
           {s.note && <p className="caption">{s.note}</p>}
         </div>
@@ -217,6 +218,17 @@ function ShipmentView({ orgId, detail, canManage }: { orgId: string; detail: Shi
                 <EmptyState title={t("shipments.noCosts")} text={t(detail.lines.length === 0 ? "shipments.noCostsNoLines" : "shipments.noCostsText")} />
               ) : (
                 <DataTable caption={t("shipments.costs")} density="compact" columns={componentColumns} rows={detail.components} rowKey={(c) => c.id} />
+              )}
+              {canManage && detail.purchases.length > 1 && (
+                <div className="purchase__actions">
+                  {detail.components
+                    .filter((c) => c.allocation === "units" && (c.lines === null || c.lines.length === 0))
+                    .map((c) => (
+                      <Button key={c.id} variant="secondary" onClick={() => setEditing({ kind: "shares", component: c })}>
+                        {t("shipments.shares.button", { kind: c.type_name ?? t(`purchases.components.kind.${c.kind}`), amount: f.number(c.amount) })}
+                      </Button>
+                    ))}
+                </div>
               )}
             </section>
           )}
@@ -282,6 +294,20 @@ function ShipmentView({ orgId, detail, canManage }: { orgId: string; detail: Shi
           submit={(body, id) => (id ? updateShipmentComponent(orgId, s.id, id, body) : createShipmentComponent(orgId, s.id, body))}
           onClose={() => setEditing(null)}
           onSaved={(d) => void applied(d, t("purchases.components.saved"))}
+        />
+      )}
+      {editing?.kind === "shares" && (
+        <BoxSharesDialog
+          orgId={orgId}
+          shipmentId={s.id}
+          component={editing.component}
+          purchases={detail.purchases}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null);
+            toast.show(t("shipments.shares.saved"), "positive");
+            void refresh();
+          }}
         />
       )}
       {editing?.kind === "attach" && (

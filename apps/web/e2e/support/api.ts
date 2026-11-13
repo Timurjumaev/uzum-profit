@@ -282,7 +282,16 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
       });
       return json(route, 200, { rows: [row(1, "ACTIVE", 12), row(2, "ARCHIVED", 0), row(3, "BLOCKED", 0)], truncated: false });
     }
-    if (key === `GET /orgs/${ORG_ID}/shipments`) return json(route, 200, { items: [shipmentRow()], amounts: true });
+    if (key === `GET /orgs/${ORG_ID}/shipments`) return json(route, 200, { items: [shipmentRow()], amounts: true, total: 1, page: 1, pages: 1 });
+    if (key === `GET /orgs/${ORG_ID}/cost-types`) return json(route, 200, [{ id: "t1", name: "Ombor ijarasi" }]);
+    if (key === `GET /orgs/${ORG_ID}/cargo-pool`) {
+      const row = (n: number, title: string, units: number, track: string | null) => ({ purchase_id: `9${n}${n}${n}${n}${n}${n}${n}-1111-4111-8111-111111111111`, title, track_no: track, supplier_name: "Yiwu Toys", ordered_on: "2026-10-02", state: "in_transit", items: ["AirPods gʻilofi", "Zaryadka kabeli"], units });
+      return json(route, 200, { items: [row(1, "Oktabr partiyasi", 150, "YT7781234560"), row(2, "Kabel va gʻiloflar", 300, null), row(3, "Kichik buyurtma", 12, null)], amounts: true });
+    }
+    if (key === `POST /orgs/${ORG_ID}/cargo-pool/shares`) {
+      const ids = (body?.purchase_ids as string[] | undefined) ?? [];
+      return json(route, 200, { shares: Object.fromEntries(ids.map((id) => [id, (Number(body?.amount ?? 0) / Math.max(ids.length, 1)).toFixed(2)])), units: Object.fromEntries(ids.map((id) => [id, 1])) });
+    }
     if (key === `GET /orgs/${ORG_ID}/shipments/${SHIPMENT_1}`) return json(route, 200, shipmentDetail());
     if (key === `GET /orgs/${ORG_ID}/suppliers` || key === `GET /orgs/${ORG_ID}/carriers`) return json(route, 200, []);
     if (key === `POST /orgs/${ORG_ID}/sync/refresh`) return json(route, 202, { queued: 3 });

@@ -928,8 +928,16 @@ Har vazifa — alohida branch va PR; tafsilot 07 "ADR-061 tafsiloti", 02 M9–M1
   nuqtali yo'l; unit, e2e (360 px) va vizual testlar. Eski `stage` / `timeline` / `dates` API maydonlari va "Sanalar"
   oynasi (eski bosqich sanalari — "Tarix") ataylab qoldirilgan (TM8 da tozalanadi); "Tovar keldi — bugun" tugmasi
   vaqtinchalik (TM4 sanash ekrani almashtiradi).
-- [ ] TM3 Kargo puli jadvali (§3): trekli qator va kodli quti (dona bo'yicha tayyor ulushlar, tahrir), xarajat turlari
-  lug'ati (§4). Kargolar sahifasi soddalashadi (B5.0d dagi Kargolar sahifalashi shu yerda).
+- [x] TM3 Kargo puli jadvali (§3), xarajat turlari lug'ati (§4), Kargolar soddalashdi. ✓ 2026-11-13: `/cargo-pool` —
+  "Yo'lda" (so'rovda "Omborimda" ham), kargo puli kiritilmagan xaridlar kartochkalarda; **trekli** — har xaridga o'z "Kargo"
+  xarajati (kg, trek — ma'lumot) bitta saqlashda (`POST /cargo-pool/tracked`); **kodli quti** — belgilangan xaridlar, bitta
+  summa → Kargo yaratiladi, ulushlar dona bo'yicha serverdan (`upcore.purchasing.box_shares`, `POST /cargo-pool/shares`),
+  sotuvchi o'zgartirganlari `targets.purchase_shares` da (`POST /cargo-pool/box`; kargo sahifasida "Xaridlar ulushi" —
+  `PUT .../purchase-shares`), sanashda dona o'zgarsa qolganlari o'zi qayta bo'linadi; "ikki marta emas" (`cargo_twice`).
+  Valyuta standarti USD, kurs Markaziy bank / o'zim. Xarajat turlari: tayyor turlarga "O'tkazma komissiyasi", "Taksi /
+  mahalliy tashish"; o'z turlari — `cost_types` (migratsiya 0024), xarajat oynasida "Yangi tur…". Yangi yozuvlarda taqsimot
+  faqat dona / qo'lda (vazn / hajm / qiymat — eski yozuvlarda). Kargolar: sahifalash (B5.0d), sanalar ustuni yo'q, yangi
+  kargoda sanalar so'ralmaydi. Testlar: yadro (xossa — ulushlar yig'indisi), API, web, e2e 360 px, vizual.
 - [ ] TM4 Sanash (§6): kelgan son, brak, "Hammasi keldi", sotuvchi qaytargan summa, tovarning qadoq qo'shimchasi (§5),
   "Xaridni ikkiga bo'lish"; mobil va desktop.
 - [ ] TM5 Omborim (§7): SKU bo'yicha qoldiq, "Boshqa SKU'ga o'tkazish", keyin topilgan brak → "Brak zarari" (F51, foyda
@@ -948,7 +956,7 @@ Har vazifa — alohida branch va PR; tafsilot 07 "ADR-061 tafsiloti", 02 M9–M1
   - [ ] B5.0a (avval B4.27) "Yo'qotishlar va imkoniyat" bloki (ADR-043 (5), AI'siz, formula bilan).
   - [ ] B5.0b (avval B4.55) "Chegarada" chegarasi Sozlamalarda (standart 5%, F13).
   - [→] B5.0c (**ko'chdi → TM6**, ADR-061; avval B4.61) Ombor: postavka tarkibi va qisman chiqarish (ADR-055 §3).
-  - [ ] B5.0d (avval B4.56–B4.60 qoldig'i) Sahifalash: Foyda tafsiloti (drill-down) va Kargolar (ADR-054).
+  - [ ] B5.0d (avval B4.56–B4.60 qoldig'i) Sahifalash: Foyda tafsiloti (drill-down) (ADR-054). Kargolar — ✓ TM3 da.
   - [ ] B5.0e (avval B4.81) Soliq, 2-bosqich: QQS va foyda solig'i oylik hisobi, shablon "MChJ umumbelgilangan" (ADR-058).
   - [ ] B5.0f (avval B4.76, taklif) Foyda sahifasida "Uzum kabineti ko'rsatadigan" qator (09 §11.3) — Temur ko'rgach.
 - [ ] B5.1 Yetkazib beruvchilar va kargo kompaniyalari (ixtiyoriy ma'lumotnoma, ADR-061); muddatlarni o'rganish (F25: buyurtma →

@@ -1,19 +1,27 @@
 // Xarajat komponenti shakli (M9): tur, summa + valyuta, to'lov sanasi, kurs rejimi (CBU — to'lov sanasi bo'yicha;
 // qo'lda; "kartadan yechilgan summa" — effektiv kurs serverda), taqsimot asosi (bo'sh — tur standarti, serverda),
 // tegishli qatorlar va qo'lda ulushlar. Kurs va so'mdagi summa shu yerda hisoblanmaydi — saqlangach API'dan.
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
+import { costTypesQuery, createCostType, currentOrg, meQuery } from "../../app/query";
 import { Banner, Button, Dialog, MoneyInput, NumberInput, Select, TextInput } from "../../components/ui";
 import type { AllocationBase, ComponentIn, ComponentKind, ComponentPatch, CostComponent, PurchaseLine } from "../../lib/api/types";
 import { ShipmentLinkFields, useShipmentLink, type ShipmentLinkProps } from "../shipments/ShipmentLink";
-import { ALLOCATIONS, COMPONENT_KINDS, CURRENCIES, type CurrencyCode } from "./model";
+import { ALLOCATIONS, COMPONENT_KINDS, CURRENCIES, NEW_ALLOCATIONS, type CurrencyCode } from "./model";
+
+/** Turi tanlovida sotuvchining o'z turi (ADR-061 §4): `type:<id>`; "Yangi tur…" — `NEW_TYPE`. */
+const TYPE_PREFIX = "type:";
+const NEW_TYPE = "__new_type";
 
 type RateMode = "cbu" | "manual" | "effective";
 type Draft = {
   kind: ComponentKind;
+  /** Turi tanlovi qiymati: tayyor tur, `type:<id>` yoki `NEW_TYPE`. */
+  choice: string;
+  newType: string;
   amount: string | null;
   currency: CurrencyCode;
   paidOn: string;
@@ -30,6 +38,8 @@ type Draft = {
 function draftOf(c: CostComponent | null, lines: ComponentLine[], kind: ComponentKind): Draft {
   return {
     kind: (c?.kind as ComponentKind | undefined) ?? kind,
+    choice: c?.cost_type_id ? `${TYPE_PREFIX}${c.cost_type_id}` : ((c?.kind as ComponentKind | undefined) ?? kind),
+    newType: "",
     amount: c?.amount ?? null,
     currency: (c?.currency as CurrencyCode | undefined) ?? "CNY",
     paidOn: c?.paid_on ?? "",
@@ -65,6 +75,10 @@ type Props<D> = {
 
 export function ComponentForm<D>({ component, lines, submit: send, onClose, onSaved, cargoLink, kinds = COMPONENT_KINDS }: Props<D>) {
   const { t } = useTranslation();
+  const { data: me } = useSuspenseQuery(meQuery);
+  const orgId = currentOrg(me)!.id;
+  const client = useQueryClient();
+  const types = useQuery(costTypesQuery(orgId));
   const [draft, setDraft] = useState(() => draftOf(component, lines, kinds.includes("goods") ? "goods" : kinds[0]!));
   const patch = (x: Partial<Draft>) => setDraft((d) => ({ ...d, ...x }));
   // Eski yozuvning turi ro'yxatda bo'lmasa ham tahrirlashda ko'rinadi (masalan, kargoga avval yozilgan "Tovar").
@@ -73,7 +87,13 @@ export function ComponentForm<D>({ component, lines, submit: send, onClose, onSa
   const linking = cargoLink !== undefined && component === null && draft.kind === "cargo";
   const foreign = draft.currency !== "UZS";
   const targets = draft.all ? lines.map((l) => l.id) : draft.lines;
+  const typeId = draft.choice.startsWith(TYPE_PREFIX) ? draft.choice.slice(TYPE_PREFIX.length) : null;
+  const creatingType = draft.choice === NEW_TYPE;
+  const choose = (choice: string) => patch({ choice, kind: choice.startsWith(TYPE_PREFIX) || choice === NEW_TYPE ? "other" : (choice as ComponentKind) });
+  // Yangi yozuvda vazn / hajm / qiymat asoslari yo'q (ADR-061 §3); eski yozuv o'z asosi bilan tahrirlanadi.
+  const allocations = component === null ? [...NEW_ALLOCATIONS, ...(kinds.includes("goods") ? (["line_sum"] as AllocationBase[]) : [])] : ALLOCATIONS;
   const valid =
+    (!creatingType || draft.newType.trim() !== "") &&
     draft.amount !== null &&
     Number(draft.amount) > 0 &&
     (!foreign || draft.rateMode !== "manual" || (draft.rate !== null && Number(draft.rate) > 0)) &&
@@ -81,10 +101,16 @@ export function ComponentForm<D>({ component, lines, submit: send, onClose, onSa
     targets.length > 0 &&
     (draft.allocation !== "manual" || targets.every((id) => draft.shares[id] !== null));
   const save = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const rateMode = foreign ? draft.rateMode : "cbu";
+      let costType = typeId;
+      if (creatingType) {
+        costType = (await createCostType(orgId, draft.newType.trim())).id;
+        await client.invalidateQueries({ queryKey: ["orgs", orgId, "cost-types"] });
+      }
       const body = {
         kind: draft.kind,
+        cost_type_id: costType,
         amount: draft.amount!,
         currency: draft.currency,
         paid_on: draft.paidOn || null,
@@ -129,10 +155,16 @@ export function ComponentForm<D>({ component, lines, submit: send, onClose, onSa
         {!linking && save.isError && <Banner tone="negative" title={errorText(save.error, t)} />}
         <Select
           label={t("purchases.components.col.kind")}
-          value={draft.kind}
-          onValueChange={(kind) => patch({ kind: kind as ComponentKind })}
-          options={kindOptions.map((k) => ({ value: k, label: t(`purchases.components.kind.${k}`) }))}
+          value={draft.choice}
+          onValueChange={choose}
+          options={[
+            ...kindOptions.map((k) => ({ value: k as string, label: t(`purchases.components.kind.${k}`) })),
+            ...(types.data ?? []).map((x) => ({ value: `${TYPE_PREFIX}${x.id}`, label: x.name })),
+            ...(component?.cost_type_id && !(types.data ?? []).some((x) => x.id === component.cost_type_id) ? [{ value: `${TYPE_PREFIX}${component.cost_type_id}`, label: component.type_name ?? "—" }] : []),
+            { value: NEW_TYPE, label: t("purchases.components.newType") },
+          ]}
         />
+        {creatingType && <TextInput label={t("purchases.components.newTypeName")} help={t("purchases.components.newTypeHint")} value={draft.newType} onValueChange={(newType) => patch({ newType })} maxLength={80} />}
         {linking ? (
           <ShipmentLinkFields state={link} />
         ) : (
@@ -163,7 +195,7 @@ export function ComponentForm<D>({ component, lines, submit: send, onClose, onSa
               label={t("purchases.components.allocationLabel")}
               value={draft.allocation}
               onValueChange={(a) => patch({ allocation: a as AllocationBase | "" })}
-              options={[{ value: "", label: t(kinds.includes("goods") ? "purchases.components.allocation.default" : "purchases.components.allocation.defaultShipment") }, ...ALLOCATIONS.map((a) => ({ value: a, label: t(`purchases.components.allocation.${a}`) }))]}
+              options={[{ value: "", label: t(kinds.includes("goods") ? "purchases.components.allocation.default" : "purchases.components.allocation.defaultShipment") }, ...allocations.map((a) => ({ value: a, label: t(`purchases.components.allocation.${a}`) }))]}
             />
             <fieldset className="purchase-form__lines">
               <legend className="ui-field__label">{t("purchases.components.targets")}</legend>

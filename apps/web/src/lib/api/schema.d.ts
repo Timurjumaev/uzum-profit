@@ -1030,6 +1030,7 @@ export interface paths {
         /**
          * List Shipments
          * @description Kargolar (yangisi birinchi): xaridlar soni, dona va (summalar ruxsati bilan) kargo xarajatlari jami.
+         *     ``limit`` berilsa — sahifa (B5.0d, ADR-054; tanlov ro'yxatlari ``limit`` siz hammasini oladi).
          */
         get: operations["list_shipments_api_v1_orgs__org_id__shipments_get"];
         put?: never;
@@ -1093,6 +1094,151 @@ export interface paths {
         head?: never;
         /** Update Component */
         patch: operations["update_component_api_v1_orgs__org_id__shipments__shipment_id__components__component_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/cargo-pool": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cargo Pool
+         * @description Kargo puli kutilayotgan xaridlar (eskisi birinchi): "Yo'lda" (``counted`` — "Omborimda" ham), "Tovar qo'limda"
+         *     emas, kargo (quti) ga biriktirilmagan va o'z "Kargo" xarajati yo'q.
+         */
+        get: operations["cargo_pool_api_v1_orgs__org_id__cargo_pool_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/cargo-pool/tracked": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Save Tracked
+         * @description Trekli kargo puli: har qatorga xaridning o'z "Kargo" xarajati (xarid ichida dona bo'yicha). Hammasi yoki hech
+         *     biri (bitta tranzaksiya).
+         */
+        post: operations["save_tracked_api_v1_orgs__org_id__cargo_pool_tracked_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/cargo-pool/shares": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Shares
+         * @description Kodli quti: har xaridga tushadigan ulush (F20 ``box_shares``) — inputlarda tayyor turadi. Hech narsa yozilmaydi.
+         */
+        post: operations["preview_shares_api_v1_orgs__org_id__cargo_pool_shares_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/cargo-pool/box": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Save Box
+         * @description Kodli quti: Kargo yaratiladi, xaridlar biriktiriladi, bitta "Kargo" xarajati (ulushlar dona bo'yicha, qo'lda
+         *     o'zgartirilganlari — ``targets.purchase_shares``).
+         */
+        post: operations["save_box_api_v1_orgs__org_id__cargo_pool_box_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/shipments/{shipment_id}/components/{component_id}/purchase-shares": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Box Shares
+         * @description Qutining qo'lda ulushlarini almashtirish (ADR-061 §3): yig'indi summadan oshmaydi; hamma xarid qo'lda bo'lsa —
+         *     summaga teng. Javob — yangi ulushlar.
+         */
+        put: operations["set_box_shares_api_v1_orgs__org_id__shipments__shipment_id__components__component_id__purchase_shares_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/cost-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Cost Types
+         * @description Sotuvchining o'z xarajat turlari (tayyor turlar — ``ComponentKind``, UI'da).
+         */
+        get: operations["list_cost_types_api_v1_orgs__org_id__cost_types_get"];
+        put?: never;
+        /** Create Cost Type */
+        post: operations["create_cost_type_api_v1_orgs__org_id__cost_types_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/cost-types/{type_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Cost Type
+         * @description Faqat ishlatilmagan tur o'chadi (aks holda xarajat turi jim yo'qolardi).
+         */
+        delete: operations["delete_cost_type_api_v1_orgs__org_id__cost_types__type_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/orgs/{org_id}/settings": {
@@ -1438,6 +1584,55 @@ export interface components {
             created_at: string;
         };
         /**
+         * BoxIn
+         * @description Kodli quti: bitta summa bir nechta xaridga. ``title`` — shaxsiy kod yoki quti nomi.
+         */
+        BoxIn: {
+            /** @default USD */
+            currency: components["schemas"]["Currency"];
+            /**
+             * Rate Mode
+             * @default cbu
+             */
+            rate_mode: string;
+            /** Rate */
+            rate?: number | string | null;
+            /** Paid On */
+            paid_on?: string | null;
+            /** Title */
+            title: string;
+            /** Carrier Id */
+            carrier_id?: string | null;
+            /** Amount */
+            amount: number | string;
+            /** Weight Kg */
+            weight_kg?: number | string | null;
+            /** Purchase Ids */
+            purchase_ids: string[];
+            /** Fixed */
+            fixed?: {
+                [key: string]: number | string;
+            };
+        };
+        /** BoxOut */
+        BoxOut: {
+            /**
+             * Shipment Id
+             * Format: uuid
+             */
+            shipment_id: string;
+        };
+        /**
+         * BoxSharesIn
+         * @description Qutining qo'lda ulushlari (to'liq almashtiriladi; bo'sh — hammasi dona bo'yicha).
+         */
+        BoxSharesIn: {
+            /** Fixed */
+            fixed?: {
+                [key: string]: number | string;
+            };
+        };
+        /**
          * CalcDefaultsOut
          * @description Unit kalkulyator boshlang'ich qiymatlari (F35, F36) va ularning manbasi; ``null`` — qiymat yo'q (UI so'raydi).
          *
@@ -1537,13 +1732,17 @@ export interface components {
             shares?: {
                 [key: string]: number | string;
             };
+            /** Cost Type Id */
+            cost_type_id?: string | null;
+            /** Weight Kg */
+            weight_kg?: number | string | null;
         };
         /**
          * ComponentKind
          * @description Xarajat komponenti turlari (M9).
          * @enum {string}
          */
-        ComponentKind: "goods" | "cn_delivery" | "agent_fee" | "cargo" | "customs" | "packaging" | "labeling" | "uzum_delivery" | "other";
+        ComponentKind: "goods" | "cn_delivery" | "agent_fee" | "cargo" | "customs" | "packaging" | "labeling" | "uzum_delivery" | "transfer_fee" | "local_delivery" | "other";
         /**
          * ComponentOut
          * @description Xarajat komponenti. ``applied_rate`` — hisobda ishlatilgan kurs (so'mda ``null``), ``rate_day`` — uning sanasi
@@ -1589,6 +1788,19 @@ export interface components {
             amount_uzs: string | null;
             /** Error */
             error: string | null;
+            /** Cost Type Id */
+            cost_type_id?: string | null;
+            /** Type Name */
+            type_name?: string | null;
+            /** Weight Kg */
+            weight_kg?: string | null;
+            /**
+             * Purchase Shares
+             * @default {}
+             */
+            purchase_shares: {
+                [key: string]: string;
+            };
         };
         /** ComponentPatch */
         ComponentPatch: {
@@ -1612,6 +1824,10 @@ export interface components {
             shares?: {
                 [key: string]: number | string;
             } | null;
+            /** Cost Type Id */
+            cost_type_id?: string | null;
+            /** Weight Kg */
+            weight_kg?: number | string | null;
         };
         /** CostMethodIn */
         CostMethodIn: {
@@ -1620,6 +1836,21 @@ export interface components {
              * @enum {string}
              */
             cost_method: "fifo" | "average";
+        };
+        /** CostTypeIn */
+        CostTypeIn: {
+            /** Name */
+            name: string;
+        };
+        /** CostTypeOut */
+        CostTypeOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
         };
         /**
          * Currency
@@ -2900,6 +3131,38 @@ export interface components {
             /** Tax Missing Bhm */
             tax_missing_bhm: boolean;
         };
+        /** PoolOut */
+        PoolOut: {
+            /** Items */
+            items: components["schemas"]["PoolRow"][];
+            /** Amounts */
+            amounts: boolean;
+        };
+        /**
+         * PoolRow
+         * @description Kargo puli kutilayotgan xarid. ``units`` — sanalgan bo'lsa kelgan, bo'lmasa buyurtma qilingan dona (ulushlar
+         *     shu bo'yicha).
+         */
+        PoolRow: {
+            /**
+             * Purchase Id
+             * Format: uuid
+             */
+            purchase_id: string;
+            /** Title */
+            title: string | null;
+            /** Track No */
+            track_no: string | null;
+            /** Supplier Name */
+            supplier_name: string | null;
+            /** Ordered On */
+            ordered_on: string | null;
+            state: components["schemas"]["SupplyState"];
+            /** Items */
+            items: string[];
+            /** Units */
+            units: number;
+        };
         /** PriceIn */
         PriceIn: {
             /** Valid From */
@@ -3366,6 +3629,33 @@ export interface components {
             revenue_limit: components["schemas"]["RevenueLimitOut"] | null;
         };
         /**
+         * SharesIn
+         * @description Kodli quti ulushlarini hisoblash: ``fixed`` — sotuvchi o'zgartirgan ulushlar (komponent valyutasida).
+         */
+        SharesIn: {
+            /** Amount */
+            amount: number | string;
+            /** @default USD */
+            currency: components["schemas"]["Currency"];
+            /** Purchase Ids */
+            purchase_ids: string[];
+            /** Fixed */
+            fixed?: {
+                [key: string]: number | string;
+            };
+        };
+        /** SharesOut */
+        SharesOut: {
+            /** Shares */
+            shares: {
+                [key: string]: string;
+            };
+            /** Units */
+            units: {
+                [key: string]: number;
+            };
+        };
+        /**
          * ShipOut
          * @description F26 "Uzumga yuborish" (ADR-057 Q2): Uzumdagi + postavkadagi zaxira topshirish muddatiga yetmaydi, omborimda bor.
          */
@@ -3504,6 +3794,7 @@ export interface components {
             /** Supplier Name */
             supplier_name: string | null;
             stage: components["schemas"]["Stage"];
+            state: components["schemas"]["SupplyState"];
             /** Line Count */
             line_count: number;
             /** Units */
@@ -3523,6 +3814,21 @@ export interface components {
             items: components["schemas"]["ShipmentOut"][];
             /** Amounts */
             amounts: boolean;
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Page
+             * @default 1
+             */
+            page: number;
+            /**
+             * Pages
+             * @default 1
+             */
+            pages: number;
         };
         /** ShopOut */
         ShopOut: {
@@ -4258,6 +4564,41 @@ export interface components {
              * Format: password
              */
             token: string;
+        };
+        /** TrackedIn */
+        TrackedIn: {
+            /** @default USD */
+            currency: components["schemas"]["Currency"];
+            /**
+             * Rate Mode
+             * @default cbu
+             */
+            rate_mode: string;
+            /** Rate */
+            rate?: number | string | null;
+            /** Paid On */
+            paid_on?: string | null;
+            /** Rows */
+            rows: components["schemas"]["TrackedRow"][];
+        };
+        /** TrackedOut */
+        TrackedOut: {
+            /** Created */
+            created: number;
+        };
+        /** TrackedRow */
+        TrackedRow: {
+            /**
+             * Purchase Id
+             * Format: uuid
+             */
+            purchase_id: string;
+            /** Amount */
+            amount: number | string;
+            /** Weight Kg */
+            weight_kg?: number | string | null;
+            /** Track No */
+            track_no?: string | null;
         };
         /**
          * UncoveredOut
@@ -7402,7 +7743,11 @@ export interface operations {
     };
     list_shipments_api_v1_orgs__org_id__shipments_get: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Sahifa o'lchami; bo'lmasa — hammasi */
+                limit?: number | null;
+                page?: number;
+            };
             header?: never;
             path: {
                 org_id: string;
@@ -7721,6 +8066,350 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ShipmentDetailOut"];
                 };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    cargo_pool_api_v1_orgs__org_id__cargo_pool_get: {
+        parameters: {
+            query?: {
+                /** @description Sanalgan (Omborimda), kargo puli kiritilmagan xaridlar ham */
+                counted?: boolean;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PoolOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    save_tracked_api_v1_orgs__org_id__cargo_pool_tracked_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrackedIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrackedOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    preview_shares_api_v1_orgs__org_id__cargo_pool_shares_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SharesIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SharesOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    save_box_api_v1_orgs__org_id__cargo_pool_box_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BoxIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoxOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    set_box_shares_api_v1_orgs__org_id__shipments__shipment_id__components__component_id__purchase_shares_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shipment_id: string;
+                component_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BoxSharesIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SharesOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_cost_types_api_v1_orgs__org_id__cost_types_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostTypeOut"][];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_cost_type_api_v1_orgs__org_id__cost_types_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CostTypeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostTypeOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    delete_cost_type_api_v1_orgs__org_id__cost_types__type_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validatsiya xatosi */
             422: {

@@ -30,8 +30,8 @@ export function shipmentDetail(over: Partial<S["ShipmentDetailOut"]> = {}): S["S
     shipment: shipmentRow(),
     amounts: true,
     purchases: [
-      { id: PURCHASE_1, title: "A yetkazib beruvchi", supplier_name: "Yiwu Toys", stage: "shipped", line_count: 2, units: 140, share: "1682307.69", total: "1782307.69", unit_cost: "12730.77", error: null },
-      { id: PURCHASE_2, title: "B yetkazib beruvchi", supplier_name: null, stage: "shipped", line_count: 1, units: 200, share: "747692.31", total: "747692.31", unit_cost: "3738.46", error: null },
+      { id: PURCHASE_1, title: "A yetkazib beruvchi", supplier_name: "Yiwu Toys", stage: "shipped", state: "in_transit", line_count: 2, units: 140, share: "1682307.69", total: "1782307.69", unit_cost: "12730.77", error: null },
+      { id: PURCHASE_2, title: "B yetkazib beruvchi", supplier_name: null, stage: "shipped", state: "in_transit", line_count: 1, units: 200, share: "747692.31", total: "747692.31", unit_cost: "3738.46", error: null },
     ],
     lines: [
       { id: LINE_1, purchase_id: PURCHASE_1, purchase_title: "A yetkazib beruvchi", name: "Mashina", qty: 100, unit_weight: "0.5000", unit_volume: null, share: "934615.38", share_per_unit: "9346.15", flags: [] },
