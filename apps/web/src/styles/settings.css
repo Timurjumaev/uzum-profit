@@ -185,3 +185,11 @@
 .notify-quiet__times > * {
   inline-size: min(12rem, 100%);
 }
+
+.notify-telegram {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  margin-block: var(--space-3);
+}

@@ -43,6 +43,10 @@ started() {
 
 if UP_TAG=$tag started "$tag"; then
 	echo "$tag" >"$TAG_FILE"
+	# Telegram boti (B6.2) — faqat token kiritilgan bo'lsa; sog'liq tekshiruviga ta'sir qilmaydi.
+	if [ -n "$(env_get UP_TELEGRAM_BOT_TOKEN)" ]; then
+		UP_TAG=$tag compose --profile bot up -d --no-build bot || log "deploy: bot ishga tushmadi (loglarni tekshiring)"
+	fi
 	# Disk kichik: faqat joriy va oldingi versiya image'lari qoladi (qaytish uchun).
 	docker image ls --format '{{.Repository}}:{{.Tag}}' | grep -E -- '-(api|web):' |
 		grep -v -e ":$tag\$" ${prev:+-e ":$prev\$"} | xargs -r docker image rm >/dev/null 2>&1 || true

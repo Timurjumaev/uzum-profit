@@ -59,6 +59,24 @@ services:
       postgres:
         condition: service_healthy
 
+  # Telegram boti (B6.2) — faqat `UP_TELEGRAM_BOT_TOKEN` bilan: `docker compose --profile bot up bot`.
+  bot:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    environment:
+      UP_DATABASE_URL: postgresql://up_app:up_app@postgres:5432/uzum
+      UP_TELEGRAM_BOT_TOKEN: ${UP_TELEGRAM_BOT_TOKEN:-}
+    command: ["python", "-m", "upbot"]
+    profiles: ["bot"]
+    volumes:
+      - ../../apps/api/src:/app/apps/api/src:ro
+      - ../../apps/bot/src:/app/apps/bot/src:ro
+      - ../../packages/core/src:/app/packages/core/src:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   web:
     image: node:24-slim
     working_dir: /repo

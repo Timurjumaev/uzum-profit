@@ -67,6 +67,16 @@ services:
       postgres:
         condition: service_healthy
 
+  # Telegram boti (B6.2): bog'lash, buyruqlar, bildirishnomalarni yuborish. `UP_TELEGRAM_BOT_TOKEN` `.env` da bo'lmasa
+  # ishga tushmaydi — shuning uchun alohida profil (token kiritilgach: `docker compose --profile bot up -d bot`).
+  bot:
+    <<: *app
+    command: ["python", "-m", "upbot"]
+    profiles: ["bot"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   caddy:
     image: ${UP_IMAGE_PREFIX:-ghcr.io/timurjumaev/uzum-profit}-web:${UP_TAG:?UP_TAG kerak}
     build:

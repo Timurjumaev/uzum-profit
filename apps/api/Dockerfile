@@ -1,4 +1,4 @@
-# API image. Kontekst — repozitoriy ildizi (uv workspace).
+# API image (api, worker va Telegram boti — B6.2). Kontekst — repozitoriy ildizi (uv workspace).
 FROM python:3.13-slim
 COPY --from=ghcr.io/astral-sh/uv:0.11.32 /uv /bin/uv
 
@@ -12,11 +12,12 @@ COPY pyproject.toml uv.lock ./
 COPY packages/core/pyproject.toml packages/core/
 COPY apps/api/pyproject.toml apps/api/
 COPY apps/bot/pyproject.toml apps/bot/
-RUN uv sync --locked --no-dev --package upapi --no-install-workspace
+RUN uv sync --locked --no-dev --package upbot --no-install-workspace
 
 COPY packages/core packages/core
 COPY apps/api apps/api
-RUN uv sync --locked --no-dev --package upapi
+COPY apps/bot apps/bot
+RUN uv sync --locked --no-dev --package upbot
 
 RUN useradd --system --uid 10001 app
 USER app

@@ -440,6 +440,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B6.2 Telegram bot (`apps/bot`, aiogram 3): Sozlamalarda «Telegramʼni ulash» (bir martalik havola), bildirishnomalar
+  botga keladi ("Batafsil" — ilova sahifasi), buyruqlar `/bugun`, `/kecha`, `/hafta`, `/oy`, `/qoldiq`, `/sozlamalar`
+  (rol bo'yicha, uz/ru). Bot staging'da token kiritilgach ishga tushadi (`docs/staging.md`).
 - B6.1 Bildirishnomalar (M15): hodisalar katalogi, Sozlamalar → "Bildirishnomalar" (har kim o'zi uchun: hodisalar,
   xulosa vaqti, chegaralar, tinch soatlar). Har 5 daqiqada hodisalar topilib navbatga yoziladi (takrorsiz): kunlik va
   haftalik xulosa, qoldiq kritik, zarar bilan sotuv (F53), tannarxsiz sotuv, yangi jarima, postavka kamomadi, sinxron

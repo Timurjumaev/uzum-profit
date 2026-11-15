@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
-import { notificationSettingsQuery, setNotificationSettings } from "../../app/query";
+import { notificationSettingsQuery, setNotificationSettings, telegramLink, telegramUnlink } from "../../app/query";
 import { Badge, Banner, Button, NumberInput, Skeleton, TextInput, useToast } from "../../components/ui";
 import type { NotificationEvent, NotificationSettings as Data, NotificationSettingsIn } from "../../lib/api/types";
 
@@ -41,7 +41,16 @@ export function NotificationSettings({ orgId }: { orgId: string }) {
         {t("settings.notifications.title")}
       </h2>
       <p className="caption">{t("settings.notifications.lead")}</p>
-      {query.isError ? <Banner tone="negative" title={errorText(query.error, t)} /> : !query.data ? <Skeleton label={t("common.loading")} lines={4} /> : <Form key={JSON.stringify(query.data)} orgId={orgId} data={query.data} />}
+      {query.isError ? (
+        <Banner tone="negative" title={errorText(query.error, t)} />
+      ) : !query.data ? (
+        <Skeleton label={t("common.loading")} lines={4} />
+      ) : (
+        <>
+          <Telegram orgId={orgId} linked={query.data.telegram_linked} />
+          <Form key={JSON.stringify(query.data)} orgId={orgId} data={query.data} />
+        </>
+      )}
     </section>
   );
 }
@@ -101,13 +110,64 @@ function Form({ orgId, data }: { orgId: string; data: Data }) {
         <p className="caption">{t("settings.notifications.quietHint")}</p>
       </fieldset>
       {!valid && <Banner tone="warning" title={t("settings.notifications.invalid")} />}
-      <p className="caption">{t("settings.notifications.channelSoon")}</p>
       <div className="settings-section__row">
         <Button type="submit" variant="primary" disabled={!valid} loading={save.isPending}>
           {t("settings.save")}
         </Button>
       </div>
     </form>
+  );
+}
+
+/** Telegram (B6.2): bir martalik havola botni ochadi ("Start" — chat shu foydalanuvchiga ulanadi, 15 daqiqa). */
+function Telegram({ orgId, linked }: { orgId: string; linked: boolean }) {
+  const { t } = useTranslation();
+  const toast = useToast();
+  const client = useQueryClient();
+  const [url, setUrl] = useState<string | null>(null);
+  const create = useMutation({
+    mutationFn: () => telegramLink(orgId),
+    onSuccess: (out) => {
+      setUrl(out.url);
+      globalThis.open?.(out.url, "_blank", "noopener");
+    },
+    onError: (error) => toast.show(errorText(error, t), "negative"),
+  });
+  const remove = useMutation({
+    mutationFn: () => telegramUnlink(orgId),
+    onSuccess: async () => {
+      setUrl(null);
+      await client.invalidateQueries({ queryKey: notificationSettingsQuery(orgId).queryKey });
+      toast.show(t("settings.notifications.telegram.unlinked"), "positive");
+    },
+    onError: (error) => toast.show(errorText(error, t), "negative"),
+  });
+  return (
+    <div className="notify-telegram" role="group" aria-label="Telegram">
+      {linked ? (
+        <>
+          <Badge tone="positive">{t("settings.notifications.telegram.linked")}</Badge>
+          <Button variant="ghost" loading={remove.isPending} onClick={() => remove.mutate()}>
+            {t("settings.notifications.telegram.unlink")}
+          </Button>
+        </>
+      ) : (
+        <>
+          <Button variant="primary" loading={create.isPending} onClick={() => create.mutate()}>
+            {t("settings.notifications.telegram.link")}
+          </Button>
+          {url && (
+            <p className="caption">
+              {t("settings.notifications.telegram.opened")}{" "}
+              <a href={url} target="_blank" rel="noopener noreferrer">
+                {t("settings.notifications.telegram.openAgain")}
+              </a>
+            </p>
+          )}
+          {!url && <p className="caption">{t("settings.notifications.telegram.hint")}</p>}
+        </>
+      )}
+    </div>
   );
 }
 

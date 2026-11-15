@@ -1144,7 +1144,15 @@ export const uzLatn = {
       quietTo: "Tugashi",
       quietHint: "Tinch soatlarda kelgan xabar ular tugaganda yuboriladi. Kritik xabarlar (sinxron toʻxtadi) — darhol.",
       invalid: "Vaqtni SS:DD koʻrinishida kiriting; chegaralar: ketma-ket sotuvlar 2–10, soat 1–24. Tinch soat boshi va oxiri har xil boʻlsin.",
-      channelSoon: "Xabarlar Telegram orqali keladi — botni ulash tez orada shu yerda.",
+      telegram: {
+        link: "Telegramʼni ulash",
+        hint: "Bot ochiladi — «Start» tugmasini bosing. Havola 15 daqiqa amal qiladi.",
+        opened: "Telegramʼda «Start» tugmasini bosing, keyin sahifani yangilang.",
+        openAgain: "Botni qayta ochish",
+        linked: "Telegram ulangan",
+        unlink: "Uzish",
+        unlinked: "Telegram uzildi",
+      },
       saved: "Bildirishnoma sozlamalari saqlandi",
     },
     alerts: {

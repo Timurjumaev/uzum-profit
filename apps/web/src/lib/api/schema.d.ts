@@ -1165,17 +1165,42 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Settings
+         * Notification Settings
          * @description Hodisalar katalogi foydalanuvchining qoidalari bilan (yo'q bo'lsa — standart).
          */
-        get: operations["get_settings_api_v1_orgs__org_id__notifications_settings_get"];
+        get: operations["notification_settings_api_v1_orgs__org_id__notifications_settings_get"];
         /**
-         * Put Settings
+         * Set Notification Settings
          * @description Berilgan hodisalar qoidasi va tinch soatlar (berilmagan hodisa o'zgarmaydi).
          */
-        put: operations["put_settings_api_v1_orgs__org_id__notifications_settings_put"];
+        put: operations["set_notification_settings_api_v1_orgs__org_id__notifications_settings_put"];
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/notifications/telegram": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Telegram Link
+         * @description Telegram'ni ulash havolasi (B6.2): bot ``/start`` da tokenni tekshiradi va shu tashkilotda chatni yozadi.
+         *     Parametr — tashkilot id'si (32 belgi) + tasodifiy token; bazada faqat token xeshi.
+         */
+        post: operations["telegram_link_api_v1_orgs__org_id__notifications_telegram_post"];
+        /**
+         * Telegram Unlink
+         * @description Shu tashkilotda Telegram'ni uzish (boshqa tashkilotlardagi ulanish qoladi).
+         */
+        delete: operations["telegram_unlink_api_v1_orgs__org_id__notifications_telegram_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3255,6 +3280,8 @@ export interface components {
             quiet_from: string | null;
             /** Quiet To */
             quiet_to: string | null;
+            /** Telegram Linked */
+            telegram_linked: boolean;
         };
         /** NotificationsOut */
         NotificationsOut: {
@@ -5339,6 +5366,16 @@ export interface components {
          * @enum {string}
          */
         Taxpayer: "individual" | "llc" | "self_employed";
+        /** TelegramLinkOut */
+        TelegramLinkOut: {
+            /** Url */
+            url: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
         /**
          * TokenIn
          * @description Uzum seller kabinetidagi API kalit. Javobda va xatoda qaytarilmaydi.
@@ -9084,7 +9121,7 @@ export interface operations {
             };
         };
     };
-    get_settings_api_v1_orgs__org_id__notifications_settings_get: {
+    notification_settings_api_v1_orgs__org_id__notifications_settings_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -9124,7 +9161,7 @@ export interface operations {
             };
         };
     };
-    put_settings_api_v1_orgs__org_id__notifications_settings_put: {
+    set_notification_settings_api_v1_orgs__org_id__notifications_settings_put: {
         parameters: {
             query?: never;
             header?: never;
@@ -9147,6 +9184,84 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["NotificationSettingsOut"];
                 };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    telegram_link_api_v1_orgs__org_id__notifications_telegram_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TelegramLinkOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    telegram_unlink_api_v1_orgs__org_id__notifications_telegram_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validatsiya xatosi */
             422: {

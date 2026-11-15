@@ -65,6 +65,25 @@ describe("bildirishnomalar sozlamasi", () => {
     expect(api.bodiesOf(PUT)[0]).toMatchObject({ quiet_from: null, quiet_to: null });
   });
 
+  it("Telegram: havola ochiladi; ulangan bo'lsa — belgi va uzish", async () => {
+    const open = vi.fn();
+    vi.stubGlobal("open", open);
+    const LINK = `POST /api/v1/orgs/${ORG}/notifications/telegram`;
+    const url = "https://t.me/sellermax_bot?start=abc";
+    const { api, box } = await renderAt({ [LINK]: () => json(200, { url, expires_at: "2026-11-15T10:15:00Z" }) });
+    fireEvent.click(within(box()).getByRole("button", { name: "Telegramʼni ulash" }));
+    await waitFor(() => expect(open).toHaveBeenCalledWith(url, "_blank", "noopener"));
+    expect(api.count(LINK)).toBe(1);
+    expect(within(box()).getByRole("link", { name: "Botni qayta ochish" }).getAttribute("href")).toBe(url);
+    cleanup();
+    const DEL = `DELETE /api/v1/orgs/${ORG}/notifications/telegram`;
+    const linked = await renderAt({ [`GET /api/v1/orgs/${ORG}/notifications/settings`]: () => json(200, notificationSettings({ telegram_linked: true })), [DEL]: () => new Response(null, { status: 204 }) });
+    expect(within(linked.box()).getByText("Telegram ulangan")).toBeTruthy();
+    fireEvent.click(within(linked.box()).getByRole("button", { name: "Uzish" }));
+    await waitFor(() => expect(linked.api.count(DEL)).toBe(1));
+    expect(await screen.findByText("Telegram uzildi")).toBeTruthy();
+  });
+
   it("chegara tekshiruvi", () => {
     expect(paramValid("at", "23:59")).toBe(true);
     expect(paramValid("at", "24:00")).toBe(false);

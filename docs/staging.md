@@ -61,6 +61,26 @@ systemctl list-timers uzum-backup.timer          # keyingi tungi zaxira (03:30 T
 
 Qo'lda deploy yoki qaytish: `infra/staging/deploy.sh <git sha>` (image'lar GHCR'da yoki serverda bo'lishi kerak).
 
+## Telegram boti (B6.2)
+
+Bildirishnomalar va `/bugun`, `/kecha`, `/hafta`, `/oy`, `/qoldiq` buyruqlari uchun. Token faqat serverdagi `.env` da
+(menga berilmaydi). Bir marta, Temur:
+
+1. Telegram'da @BotFather → `/newbot` (yoki B2 da yaratilgan bot bo'lsa `/mybots` → bot → API Token). Token
+   `123456:ABC...` ko'rinishida; bot nomi `..._bot` bilan tugaydi.
+2. Serverda (token ekranga va tarixga chiqmasligi uchun `read -s` bilan):
+
+```bash
+ssh KEY USER@IP
+sudo -u deploy bash -c 'cd /srv/uzum-profit && read -rsp "Bot token: " T && echo &&
+  printf "UP_TELEGRAM_BOT_TOKEN=%s\nUP_TELEGRAM_BOT_USERNAME=%s\n" "$T" "BOT_NOMI_bot" >> .env &&
+  infra/staging/deploy.sh $(cat .deployed-tag)'
+```
+
+`BOT_NOMI_bot` — bot nomi (@ siz). Deploy API'ni (ulash havolasi uchun nom) va botni qayta ishga tushiradi; keyingi
+deploy'larda bot o'zi yangilanadi. Tekshirish: ilovada Sozlamalar → Bildirishnomalar → «Telegramʼni ulash» → botda
+«Start» → «✅ Telegram ulandi». Loglar: `... logs -f bot` (yuqoridagi buyruqda `api worker` o'rniga).
+
 ## CBU kurslari diagnostikasi
 
 "CNY uchun ... sanasigacha kurs yo'q" kabi xatoda: cbu.uz serverdan ochiladimi, bazada qaysi kurslar bor va `fx.cbu`

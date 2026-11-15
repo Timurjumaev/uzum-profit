@@ -261,3 +261,24 @@ def test_job_runs_every_org_and_reports_invalid_key(world: World) -> None:
     ]
     assert invalid and all(r["key"].endswith("2026-11-19") for r in invalid)
     w.a.sql("UPDATE mp_accounts SET status = 'active' WHERE org_id = %s", [w.org_id])
+
+
+def test_telegram_link_url(world: World) -> None:
+    """B6.2: ulash havolasi — bot sozlanmagan bo'lsa 503; bo'lsa t.me/<bot>?start=<tashkilot><token>, xeshi bazada."""
+    w = world
+    r = send(w, "POST", "notifications/telegram")
+    assert r.status_code == 503 and r.json()["code"] == "telegram_not_configured"
+    state = w.api.client.app.state  # type: ignore[attr-defined]
+    original = state.settings
+    state.settings = original.model_copy(update={"telegram_bot_username": "sellermax_bot"})
+    try:
+        out = ok(send(w, "POST", "notifications/telegram", "warehouse"))
+    finally:
+        state.settings = original
+    prefix = f"https://t.me/sellermax_bot?start={w.org_id.hex}"
+    assert out["url"].startswith(prefix) and len(out["url"]) - len(prefix) == 24
+    token = out["url"][len(prefix) :]
+    assert w.a.sql(
+        "SELECT count(*) FROM notification_links WHERE token_hash = sha256(%s::bytea)",
+        [token.encode()],
+    ) == [(1,)]

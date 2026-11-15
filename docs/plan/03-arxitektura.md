@@ -170,6 +170,8 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
 (foydalanuvchi × hodisa: yoqilgan, parametrlar; yo'q — `upcore.notify.CATALOG` standarti), `notification_prefs`
 (foydalanuvchining tinch soatlari), `notifications` (foydalanuvchi, hodisa, `dedupe_key` — `UNIQUE (org, user, key)`,
 kritik, `due_at` — tinch soat tugaganda, holat). Hodisalar `notify.tick` (har 5 daqiqa, `upapi.notify`) bilan topiladi.
+B6.2 (0029): `notification_links` (Telegram ulash tokeni xeshi, 15 daqiqa); `telegram_memberships(tg)` — bot uchun
+SECURITY DEFINER (egasi `up_sync`). Bot servisi (`apps/bot`, aiogram) navbatni yuboradi va buyruqlarga javob beradi.
 
 **To'lov (bizning tarif):** `plans`, `subscriptions` (sinov / faol / qarzdor / faqat o'qish / bekor),
 `billing_invoices` (fiskal chek havolasi), `payments`.
