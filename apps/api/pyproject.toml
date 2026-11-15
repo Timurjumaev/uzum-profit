@@ -5,7 +5,7 @@ description = "Backend: FastAPI + worker + migratsiyalar"
 requires-python = ">=3.13,<3.14"
 dependencies = [
     "upcore",
-    "fastapi>=0.161",
+    "fastapi>=0.162.0",
     "uvicorn[standard]>=0.30",
     "pydantic-settings>=2.6",
     "structlog>=24.4",
