@@ -11,14 +11,18 @@ from collections.abc import Iterator
 from datetime import timedelta
 from decimal import Decimal
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import psycopg
 import pytest
 import sellerfake as sf
 from sellerfake import BOTH, NOW, TOKEN, A, B, Clock, admin, create_account, runtime, seller
+from test_calc import Org
+from upapi.reports import cells as rc
 from upapi.sync import engine as eng
 from upapi.sync import health
 from upapi.uzum import client as uz
+from upcore.metrics import Period
 
 
 @pytest.fixture(autouse=True)
@@ -229,6 +233,12 @@ def test_account_level_expense_written_once(db: dict[str, str]) -> None:
     )
     assert rows == [(account.shops[A], Decimal(62_000))]
     assert count(db, "mp_expenses", account) > 1  # do'kon xarajatlari ikkala do'konda
+    # P&L'da — tashkilot darajasi (do'konlarga tushum ulushida, A do'koniga to'liq emas).
+    day = (NOW - timedelta(hours=1)).astimezone(ZoneInfo("Asia/Tashkent")).date()
+    a = Org(db, account.org_id, account.shops[A])
+    items = a.run(lambda conn: rc._expenses(conn, Period(day, day)))
+    fees = [x for x in items if x.category.value == "withdrawal_fee"]
+    assert [(x.shop, x.amount.amount) for x in fees] == [(None, Decimal(62_000))]
 
 
 # --- Tarix: cheklangan va davom ettirish -------------------------------------------------------------

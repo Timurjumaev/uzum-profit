@@ -741,7 +741,8 @@ async def _orders(run: _Run) -> None:
 
 
 async def _account_owner(conn: AsyncConnection, shop_id: UUID) -> UUID:
-    """Akkaunt xarajati yoziladigan do'kon: shu akkauntning eng kichik Uzum id'li do'koni (barqaror tanlov)."""
+    """Akkaunt xarajati saqlanadigan do'kon qatori: shu akkauntning eng kichik Uzum id'li do'koni (barqaror tanlov;
+    faqat saqlash uchun — foyda hisobida u tashkilot darajasida, ``reports.cells``)."""
     s = m.shops
     owner = await conn.scalar(
         select(s.c.id)

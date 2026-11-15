@@ -2,9 +2,9 @@
 
 Uzum akkaunt darajasidagi xarajatni (``shopId: 0`` — shoshilinch pul yechish C000011) akkauntning har bir do'koni
 so'roviga qaytaradi; ``mp_expenses`` kaliti ``(org, shop, external_id)`` bo'lgani uchun bitta to'lov har do'konga
-yozilgan (staging: 210635460 — 62 000 so'm ikki marta). Endi sinxron uni faqat akkauntning eng kichik Uzum id'li
-do'koniga yozadi (``upapi.sync.engine._write_expenses``); bu migratsiya mavjud takrorlarni o'chiradi (o'sha do'kondagi
-qator qoladi). Sinxron ma'lumoti (sotuvchi kiritgani emas). Hosila jadvallar ishchi ishga tushganda to'liq qayta
+yozilgan (staging: 210635460 — 62 000 so'm ikki marta). Endi sinxron uni bir marta saqlaydi (akkauntning eng kichik
+Uzum id'li do'koni qatorida, ``upapi.sync.engine._write_expenses``), foyda hisobida esa u tashkilot darajasida —
+do'konlarga tushum ulushida (``upapi.reports.cells``). Bu migratsiya mavjud takrorlarni o'chiradi (o'sha qator qoladi). Sinxron ma'lumoti (sotuvchi kiritgani emas). Hosila jadvallar ishchi ishga tushganda to'liq qayta
 quriladi (``rebuild_all``). Tenant jadvallarida RLS majburiy (FORCE) — migratsiya roli uchun shu tranzaksiyada vaqtincha
 o'chiriladi (0019 kabi).
 

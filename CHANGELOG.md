@@ -638,8 +638,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 ### Tuzatildi
 
 - Akkaunt darajasidagi Uzum xarajati (`shopId: 0`, masalan shoshilinch pul yechish C000011) har do'konga alohida yozilib,
-  sof foydadan ikki marta ayrilardi (Temur topdi, 2026-11-16: 15-noyabrda 62 000 o'rniga 124 000). Endi akkauntning bitta
-  (eng kichik Uzum id'li) do'koniga yoziladi; mavjud takror migratsiya 0030 bilan o'chirildi.
+  sof foydadan ikki marta ayrilardi (Temur topdi, 2026-11-16: 15-noyabrda 62 000 o'rniga 124 000). Endi bir marta saqlanadi va
+  foyda hisobida **tashkilot darajasida** turadi — do'konlarga o'sha kungi tushum ulushida bo'linadi (do'konsiz o'z xarajatlari
+  kabi); mavjud takror migratsiya 0030 bilan o'chirildi.
 - B4.75b (CI): `E2E va vizual` job'ida brauzer apt'siz o'rnatiladi (`playwright install chromium`), tizim paketlari
   (`install-deps`) — 2 urinish, bo'lmasa ogohlantirish bilan davom (ular faqat qo'shimcha shriftlar; ularsiz e2e va skrinshotlar
   bir xil o'tishi tekshirildi). Runner'dan Ubuntu arxivi ochilmaganda testlar ishga tushmay qizarardi (2026-11-11).
