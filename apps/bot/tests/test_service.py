@@ -1,0 +1,206 @@
+"""Bot mantiqi (haqiqiy PostgreSQL, B6.2): bog'lash (bir martalik token, muddat, boshqa foydalanuvchiga ulangan),
+``telegram_memberships()``, buyruqlar (rol bo'yicha), navbatni yuborish (faqat ulangan chatga, 24 soat oynasi, doimiy
+va vaqtinchalik xato, takror yuborilmaydi)."""
+
+from __future__ import annotations
+
+import asyncio
+import secrets
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
+import test_purchases as tp
+from psycopg.types.json import Jsonb
+from test_reports import World
+from upapi.db.session import make_engine
+from upapi.routes.notifications import link_hash
+from upbot import service
+from upbot.service import LinkResult, SendError
+
+db = tp.db
+world = tp.world
+
+NOW = datetime(2026, 11, 16, 5, 0, tzinfo=UTC)  # Toshkent 10:00
+TG_OWNER, TG_ACC = 7001, 7002
+
+
+def run(w: World, fn: Any) -> Any:
+    async def main() -> Any:
+        engine = make_engine(w.a.db["app"])
+        try:
+            return await fn(engine)
+        finally:
+            await engine.dispose()
+
+    return asyncio.run(main())
+
+
+def user_of(w: World, role: str) -> Any:
+    return w.a.sql(
+        "SELECT m.user_id FROM memberships m JOIN users u ON u.id = m.user_id "
+        "WHERE m.org_id = %s AND m.role = %s ORDER BY u.created_at DESC LIMIT 1",
+        [w.org_id, role],
+    )[0][0]
+
+
+def new_link(w: World, role: str, expires: datetime = NOW + timedelta(minutes=15)) -> str:
+    token = secrets.token_urlsafe(18)
+    w.a.insert(
+        "notification_links",
+        user_id=user_of(w, role),
+        token_hash=link_hash(token),
+        expires_at=expires,
+    )
+    return w.org_id.hex + token
+
+
+def link(w: World, param: str, tg: int) -> tuple[LinkResult, str | None]:
+    return run(w, lambda e: service.link(e, param, tg, tg, NOW))  # type: ignore[no-any-return]
+
+
+class FakeSender:
+    def __init__(self, fail: dict[int, SendError] | None = None) -> None:
+        self.sent: list[tuple[int, str, str | None]] = []
+        self.fail = fail or {}
+
+    async def send(self, chat_id: int, text: str, url: str | None) -> None:
+        if chat_id in self.fail:
+            raise self.fail[chat_id]
+        self.sent.append((chat_id, text, url))
+
+
+def test_link_once_expiry_and_taken(world: World) -> None:
+    w = world
+    assert link(w, "x", TG_OWNER) == (LinkResult.INVALID, None)
+    assert link(w, "0" * 32 + "abc", TG_OWNER) == (
+        LinkResult.INVALID,
+        None,
+    )  # boshqa (yo'q) tashkilot
+    assert link(w, "z" * 40, TG_OWNER) == (LinkResult.INVALID, None)
+    assert (
+        link(w, new_link(w, "owner", NOW - timedelta(seconds=1)), TG_OWNER)[0] is LinkResult.EXPIRED
+    )
+    param = new_link(w, "owner")
+    result, org = link(w, param, TG_OWNER)
+    assert result is LinkResult.OK and org
+    assert link(w, param, TG_OWNER) == (LinkResult.INVALID, None)  # bir marta
+    owner = user_of(w, "owner")
+    assert w.a.sql(
+        "SELECT target, active FROM notification_channels WHERE user_id = %s AND kind = 'telegram'",
+        [owner],
+    ) == [(str(TG_OWNER), True)]
+    # Qayta ulash — eski chat almashadi (bitta kanal).
+    assert link(w, new_link(w, "owner"), TG_OWNER)[0] is LinkResult.OK
+    assert len(w.a.sql("SELECT 1 FROM notification_channels WHERE user_id = %s", [owner])) == 1
+    # Shu chat (shaxsiy chat id = Telegram id) tashkilotda boshqa foydalanuvchiga ulana olmaydi.
+    assert link(w, new_link(w, "manager"), TG_OWNER) == (LinkResult.TAKEN, None)
+    assert link(w, new_link(w, "accountant"), TG_ACC)[0] is LinkResult.OK
+    people = run(w, lambda e: service.identities(e, TG_OWNER))
+    assert [(p.org_id, p.role) for p in people] == [(w.org_id, "owner")]
+    assert run(w, lambda e: service.identities(e, 999)) == []
+    # API: holat ko'rinadi; uzish — shu tashkilotda.
+    assert tp.ok(tp.send(w, "GET", "notifications/settings"))["telegram_linked"] is True
+    assert tp.ok(tp.send(w, "GET", "notifications/settings", "manager"))["telegram_linked"] is False
+
+
+def test_commands_by_role(world: World) -> None:
+    w = world
+    out = run(w, lambda e: service.command(e, TG_OWNER, "kecha", NOW, "https://app.example"))
+    assert len(out) == 1 and out[0].text.startswith("📊 Kecha, 15.11.2026")
+    assert out[0].path == "/pnl?from=2026-11-15&to=2026-11-15"
+    assert (
+        "Buyurtmalar hali yangilanmagan" in out[0].text
+    )  # sinxron yo'q — to'liq emas deb aytiladi
+    for name, head in (
+        ("bugun", "📊 Bugun"),
+        ("hafta", "📊 Hafta: 16.11.2026"),
+        ("oy", "📊 Oy: 01.11.2026"),
+    ):
+        assert run(w, lambda e, n=name: service.command(e, TG_OWNER, n, NOW, ""))[
+            0
+        ].text.startswith(head)
+    stock = run(w, lambda e: service.command(e, TG_OWNER, "qoldiq", NOW, ""))
+    assert stock[0].text == "Kritik qoldiq yoʻq." and stock[0].path == "/inventory"
+    assert run(w, lambda e: service.command(e, TG_ACC, "qoldiq", NOW, ""))[0].text.startswith(
+        "Bu maʼlumot"
+    )
+    assert (
+        run(w, lambda e: service.command(e, TG_OWNER, "sozlamalar", NOW, ""))[0].path == "/settings"
+    )
+    assert "Buyruqlar" in run(w, lambda e: service.command(e, TG_OWNER, "nima", NOW, ""))[0].text
+    assert run(w, lambda e: service.command(e, 999, "kecha", NOW, ""))[0].text.startswith(
+        "Bu Telegram hali"
+    )
+    assert service.page_url("https://app.example/", "/x") == "https://app.example/x"
+    assert service.page_url("http://localhost:5173", "/x") is None
+    assert service.page_url("https://a", None) is None
+
+
+def _queue(
+    w: World, role: str, event: str, key: str, payload: dict[str, Any], **extra: Any
+) -> None:
+    w.a.insert(
+        "notifications",
+        user_id=user_of(w, role),
+        event=event,
+        dedupe_key=key,
+        payload=Jsonb(payload),
+        due_at=extra.pop("due_at", NOW - timedelta(minutes=1)),
+        **extra,
+    )
+
+
+def test_deliver_sends_once_and_handles_errors(world: World) -> None:
+    w = world
+    fine = {
+        "amount": "7000.00",
+        "name": "Jarima",
+        "shop": "byDurii",
+        "on": "2026-11-15",
+        "code": None,
+    }
+    _queue(w, "owner", "new_fine", "fine:1", fine)
+    _queue(
+        w, "owner", "new_fine", "fine:later", fine, due_at=NOW + timedelta(hours=1)
+    )  # tinch soat
+    _queue(
+        w, "owner", "new_fine", "fine:old", fine, created_at=NOW - timedelta(days=2)
+    )  # eski navbat
+    _queue(w, "manager", "new_fine", "fine:1", fine)  # Telegram ulanmagan
+    _queue(w, "owner", "payout_late", "bad:1", {})  # matni yo'q hodisa
+    _queue(w, "accountant", "new_fine", "fine:1", fine)
+    sender = FakeSender(fail={TG_ACC: SendError("RetryAfter", permanent=False)})
+    assert run(w, lambda e: service.deliver(e, sender, "https://app.example", NOW)) == 1
+    assert sender.sent[0][0] == TG_OWNER
+    assert sender.sent[0][1].startswith("Yangi jarima: 7 000 soʻm")
+    assert sender.sent[0][2] == "https://app.example/expenses"
+    status = dict(
+        w.a.sql(
+            "SELECT n.dedupe_key || ':' || m.role, n.status FROM notifications n JOIN memberships m "
+            "ON m.user_id = n.user_id AND m.org_id = n.org_id WHERE n.event IN ('new_fine', 'payout_late')"
+        )
+    )
+    assert status["fine:1:owner"] == "sent" and status["fine:later:owner"] == "pending"
+    assert status["fine:old:owner"] == "pending" and status["fine:1:manager"] == "pending"
+    assert status["bad:1:owner"] == "failed" and status["fine:1:accountant"] == "pending"
+    # Takror yuborilmaydi; vaqtinchalik xato — 5 urinishdan keyin failed.
+    for _ in range(4):
+        assert run(w, lambda e: service.deliver(e, sender, "", NOW)) == 0
+    assert w.a.sql(
+        "SELECT n.status, n.attempts FROM notifications n JOIN memberships m ON m.user_id = n.user_id "
+        "AND m.org_id = n.org_id WHERE m.role = 'accountant' AND n.dedupe_key = 'fine:1'"
+    ) == [("failed", 5)]
+    # Doimiy xato (bot bloklangan) — failed va kanal o'chadi.
+    _queue(w, "owner", "new_fine", "fine:2", fine)
+    blocked = FakeSender(fail={TG_OWNER: SendError("TelegramForbiddenError", permanent=True)})
+    assert run(w, lambda e: service.deliver(e, blocked, "", NOW)) == 0
+    owner = user_of(w, "owner")
+    assert w.a.sql("SELECT active FROM notification_channels WHERE user_id = %s", [owner]) == [
+        (False,)
+    ]
+    assert tp.ok(tp.send(w, "GET", "notifications/settings"))["telegram_linked"] is False
+    # Uzish (API) — kanal o'chiriladi.
+    assert tp.send(w, "DELETE", "notifications/telegram", "accountant").status_code == 204
+    assert not w.a.sql(
+        "SELECT 1 FROM notification_channels WHERE user_id = %s", [user_of(w, "accountant")]
+    )

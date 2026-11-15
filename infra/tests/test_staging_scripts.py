@@ -135,6 +135,20 @@ def test_deploy_order_and_tag(root: Path) -> None:
     removed = log[index(log, "image rm")]
     assert "uzum-profit-api:old" in removed and ":v1" not in removed and ":v2" not in removed
     assert len(list((root / "backups").glob("uzum-*-pre-deploy.dump"))) == 1
+    assert not [line for line in log if "--profile bot" in line]  # token yo'q — bot ishga tushmaydi
+
+
+def test_deploy_starts_bot_when_token_set(root: Path) -> None:
+    """B6.2: ``.env`` da ``UP_TELEGRAM_BOT_TOKEN`` bo'lsa — sog'liq tekshiruvidan keyin bot ham yangilanadi."""
+    env = root / ".env"
+    env.write_text(env.read_text() + "UP_TELEGRAM_BOT_TOKEN=123:abc\n")
+    r = run(root, "infra/staging/deploy.sh", "v2", UP_SKIP_PULL="1")
+    assert r.returncode == 0, r.stderr
+    log = calls(root)
+    assert index(log, "ps --status running --services") < index(
+        log, "--profile bot up -d --no-build bot"
+    )
+    assert "123:abc" not in (root / "calls.log").read_text()
 
 
 def test_failed_health_rolls_back(root: Path) -> None:

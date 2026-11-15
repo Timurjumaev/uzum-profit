@@ -17,6 +17,7 @@ export function notificationSettings(over: Partial<NotificationSettings> = {}): 
     ],
     quiet_from: "22:00:00",
     quiet_to: "08:00:00",
+    telegram_linked: false,
     ...over,
   };
 }

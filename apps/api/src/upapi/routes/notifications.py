@@ -7,13 +7,15 @@ hodisa (masalan, omborchiga moliya xulosasi) ro'yxatda ``available=false``.
 
 from __future__ import annotations
 
-from datetime import datetime, time
+import hashlib
+import secrets
+from datetime import UTC, datetime, time, timedelta
 from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert
 from upcore.notify import (
     CATALOG,
@@ -26,12 +28,20 @@ from upcore.notify import (
     parse_hhmm,
 )
 
-from upapi.auth.deps import OrgContext, org_context
+from upapi.auth.deps import OrgContext, get_settings, org_context
 from upapi.db import models as m
 from upapi.errors import AppError
+from upapi.settings import Settings
 
 router = APIRouter(tags=["notifications"])
 Member = Annotated[OrgContext, Depends(org_context, scope="function")]
+Config = Annotated[Settings, Depends(get_settings)]
+LINK_BYTES = 18  # 24 belgi; + tashkilot id'si 32 = 56 ≤ 64 (Telegram ``start`` chegarasi)
+LINK_TTL = timedelta(minutes=15)
+
+
+def link_hash(token: str) -> bytes:
+    return hashlib.sha256(token.encode()).digest()
 
 
 class NotificationEventOut(BaseModel):
@@ -47,6 +57,12 @@ class NotificationSettingsOut(BaseModel):
     events: list[NotificationEventOut]
     quiet_from: time | None
     quiet_to: time | None
+    telegram_linked: bool  # shu tashkilotda Telegram chat ulangan (B6.2)
+
+
+class TelegramLinkOut(BaseModel):
+    url: str  # t.me/<bot>?start=<token> — bir martalik, 15 daqiqa
+    expires_at: datetime
 
 
 class NotificationRuleIn(BaseModel):
@@ -121,21 +137,30 @@ async def _view(ctx: OrgContext) -> NotificationSettingsOut:
                 stage=spec.stage,
             )
         )
+    nc = m.notification_channels
+    linked = await ctx.conn.scalar(
+        select(nc.c.id)
+        .where(nc.c.user_id == ctx.user.user_id, nc.c.kind == "telegram", nc.c.active)
+        .limit(1)
+    )
     return NotificationSettingsOut(
         events=events,
         quiet_from=QUIET_FROM if pref is None else pref.quiet_from,
         quiet_to=QUIET_TO if pref is None else pref.quiet_to,
+        telegram_linked=linked is not None,
     )
 
 
 @router.get("/orgs/{org_id}/notifications/settings", response_model=NotificationSettingsOut)
-async def get_settings(ctx: Member) -> NotificationSettingsOut:
+async def notification_settings(ctx: Member) -> NotificationSettingsOut:
     """Hodisalar katalogi foydalanuvchining qoidalari bilan (yo'q bo'lsa — standart)."""
     return await _view(ctx)
 
 
 @router.put("/orgs/{org_id}/notifications/settings", response_model=NotificationSettingsOut)
-async def put_settings(body: NotificationSettingsIn, ctx: Member) -> NotificationSettingsOut:
+async def set_notification_settings(
+    body: NotificationSettingsIn, ctx: Member
+) -> NotificationSettingsOut:
     """Berilgan hodisalar qoidasi va tinch soatlar (berilmagan hodisa o'zgarmaydi)."""
     if (body.quiet_from is None) != (body.quiet_to is None):
         raise AppError("bad_quiet_hours", 422, detail="ikkalasi ham kerak yoki ikkalasi bo'sh")
@@ -168,6 +193,37 @@ async def put_settings(body: NotificationSettingsIn, ctx: Member) -> Notificatio
         )
     )
     return await _view(ctx)
+
+
+@router.post("/orgs/{org_id}/notifications/telegram", response_model=TelegramLinkOut)
+async def telegram_link(ctx: Member, settings: Config) -> TelegramLinkOut:
+    """Telegram'ni ulash havolasi (B6.2): bot ``/start`` da tokenni tekshiradi va shu tashkilotda chatni yozadi.
+    Parametr — tashkilot id'si (32 belgi) + tasodifiy token; bazada faqat token xeshi."""
+    if not settings.telegram_bot_username:
+        raise AppError("telegram_not_configured", 503, detail="bot sozlanmagan")
+    token = secrets.token_urlsafe(LINK_BYTES)
+    expires = datetime.now(UTC) + LINK_TTL
+    await ctx.conn.execute(
+        insert(m.notification_links).values(
+            org_id=ctx.org_id,
+            user_id=ctx.user.user_id,
+            token_hash=link_hash(token),
+            expires_at=expires,
+        )
+    )
+    return TelegramLinkOut(
+        url=f"https://t.me/{settings.telegram_bot_username}?start={ctx.org_id.hex}{token}",
+        expires_at=expires,
+    )
+
+
+@router.delete("/orgs/{org_id}/notifications/telegram", status_code=204)
+async def telegram_unlink(ctx: Member) -> None:
+    """Shu tashkilotda Telegram'ni uzish (boshqa tashkilotlardagi ulanish qoladi)."""
+    nc = m.notification_channels
+    await ctx.conn.execute(
+        delete(nc).where(nc.c.user_id == ctx.user.user_id, nc.c.kind == "telegram")
+    )
 
 
 @router.get("/orgs/{org_id}/notifications", response_model=NotificationsOut)

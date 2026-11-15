@@ -585,6 +585,10 @@ export const notificationSettingsQuery = (orgId: string) =>
 export const setNotificationSettings = (orgId: string, body: NotificationSettingsIn) =>
   unwrap(api.PUT("/api/v1/orgs/{org_id}/notifications/settings", { params: orgPath(orgId), body }));
 
+export const telegramLink = (orgId: string) => unwrap(api.POST("/api/v1/orgs/{org_id}/notifications/telegram", { params: orgPath(orgId) }));
+
+export const telegramUnlink = (orgId: string) => unwrap(api.DELETE("/api/v1/orgs/{org_id}/notifications/telegram", { params: orgPath(orgId) }));
+
 // --- Boshlang'ich holat (F41, ADR-033) ---------------------------------------------------------------------------
 
 export const openingKey = (orgId: string, start: string | null, shops: string[] = []) => ["orgs", orgId, "opening", start ?? "", ...shops] as const;

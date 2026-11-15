@@ -1,9 +1,12 @@
 [project]
 name = "upbot"
 version = "0.0.0"
-description = "Telegram bot (aiogram 3) — B2.3 va B6 da to'ldiriladi"
+description = "Telegram bot (aiogram 3): bog'lash, buyruqlar va bildirishnomalarni yuborish (B6.2)"
 requires-python = ">=3.13,<3.14"
-dependencies = []
+dependencies = ["upapi", "aiogram>=3.22"]
+
+[tool.uv.sources]
+upapi = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

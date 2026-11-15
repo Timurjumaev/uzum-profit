@@ -1030,7 +1030,15 @@ Tartib (ADR-057 Q9): B6.1–B6.2 — B4 dan keyin, B5 dan **oldin**; B6.3 — B5
   to'xtadi / kalit yaroqsiz (kritik — tinch soatda ham). Qaytish keskin oshdi va yo'qolgan tovar (B5.4), to'lov kechikishi
   (B5.7), kargo kechikishi (B5.1), komissiya (B5.5), FBS (B5.10) — katalogda "tez orada". API: `GET/PUT
   /notifications/settings` (shaxsiy), `GET /notifications`. Web: Sozlamalar → "Bildirishnomalar". Yuborish — B6.2.
-- [ ] B6.2 Telegram bot (aiogram): bog'lash, kunlik/haftalik xulosa, buyruqlar, "Batafsil" havolalar.
+- [x] B6.2 Telegram bot (aiogram): bog'lash, kunlik/haftalik xulosa, buyruqlar, "Batafsil" havolalar. ✓ 2026-11-15:
+  `apps/bot` (aiogram 3.32, `python -m upbot`, API image ichida; compose'da `bot` profili, `deploy.sh` token bo'lsa
+  ko'taradi). Bog'lash: `POST /notifications/telegram` → `t.me/<bot>?start=<tashkilot><token>` (bir martalik, 15 daqiqa,
+  xeshi `notification_links` da, migratsiya 0029); bot chatni `notification_channels` ga yozadi (`users.telegram_user_id`
+  ga ilova yozmaydi — B2.3 huquqi); `DELETE` — uzish. Buyruqlar `telegram_memberships()` (SECURITY DEFINER) orqali, rol bo'yicha: `/bugun`
+  `/kecha` `/hafta` `/oy` (moliya; ma'lumot yangiligi bilan), `/qoldiq` (ombor), `/sozlamalar`. Yuborish har 30 s: vaqti
+  kelgan `pending`, oxirgi 24 soat, "Batafsil" — ilova sahifasi (HTTPS); bloklangan chat — kanal o'chadi, vaqtinchalik
+  xato — 5 urinish. Matnlar uz/ru. Web: Sozlamalar → Bildirishnomalar → «Telegramʼni ulash» / «Uzish». Yo'riqnoma —
+  `docs/staging.md`. **T:** bot tokenini staging'ga kiritish va 7 kun kunlik xulosani olish (B6 chiqish mezoni).
 - [ ] B6.3 Ilova ichidagi bildirishnomalar markazi; web push (PWA). PWA (ADR-057 Q13, 09 R3 a): `manifest`, ikonkalar, favicon,
   `theme-color` — o'rnatiladigan ilova.
 - T: botni Telegram'da sinash, kunlik xulosa vaqtini tanlash (bot B2 da yaratilgan).

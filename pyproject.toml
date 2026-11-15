@@ -51,6 +51,8 @@ allowed-confusables = ["×", "−", "–", "ʻ", "ʼ"]
 [tool.ruff.lint.per-file-ignores]
 # Testlarda kirill kodlar (С000003, У000120) ataylab yoziladi.
 "**/tests/**" = ["RUF001", "RUF003"]
+# Bot xabarlari: ruscha matn ichida lotincha nomlar (Uzum, SKU, Telegram) va minglar ajratgichi (bo'linmas bo'sh joy).
+"apps/bot/src/upbot/messages.py" = ["RUF001"]
 
 [tool.mypy]
 python_version = "3.13"

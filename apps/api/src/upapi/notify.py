@@ -116,12 +116,15 @@ def _num(value: Decimal) -> str:
     return str(value.quantize(Decimal("0.01")))
 
 
-async def summary(conn: AsyncConnection, period: Period, today: date) -> dict[str, Any] | None:
+async def summary(
+    conn: AsyncConnection, period: Period, today: date, *, require_fresh: bool = True
+) -> dict[str, Any] | None:
     """Davr xulosasi (Dashboard bilan bitta hisob — ``reports.cells``). Buyurtmalar sinxroni davr oxirigacha yetib
-    kelmagan bo'lsa ``None`` (raqam yo'q ≠ sotuv yo'q, tamoyil 8)."""
+    kelmagan bo'lsa ``None`` (raqam yo'q ≠ sotuv yo'q, tamoyil 8); ``require_fresh=False`` (bot buyrug'i, davr hali
+    tugamagan) — raqamlar beriladi, ``fresh_at`` bilan (xabarda "ma'lumot yangiligi")."""
     fresh = (await freshness(conn, ["orders"]))["orders"]
     end = datetime.combine(period.end + timedelta(days=1), time(0), TASHKENT)
-    if fresh is None or fresh < end:
+    if require_fresh and (fresh is None or fresh < end):
         return None
     f = Filters(period, None, today)
     book = await rc.load_book(conn, period, today)
@@ -137,6 +140,7 @@ async def summary(conn: AsyncConnection, period: Period, today: date) -> dict[st
         "net_profit": _num(s.net_profit.amount),
         "canceled": flow.canceled if flow else 0,
         "uncosted_lines": s.uncovered_lines,
+        "fresh_at": None if fresh is None else fresh.isoformat(),
     }
 
 

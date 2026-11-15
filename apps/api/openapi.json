@@ -6306,9 +6306,9 @@
         "tags": [
           "notifications"
         ],
-        "summary": "Get Settings",
+        "summary": "Notification Settings",
         "description": "Hodisalar katalogi foydalanuvchining qoidalari bilan (yo'q bo'lsa — standart).",
-        "operationId": "get_settings_api_v1_orgs__org_id__notifications_settings_get",
+        "operationId": "notification_settings_api_v1_orgs__org_id__notifications_settings_get",
         "parameters": [
           {
             "name": "org_id",
@@ -6358,9 +6358,9 @@
         "tags": [
           "notifications"
         ],
-        "summary": "Put Settings",
+        "summary": "Set Notification Settings",
         "description": "Berilgan hodisalar qoidasi va tinch soatlar (berilmagan hodisa o'zgarmaydi).",
-        "operationId": "put_settings_api_v1_orgs__org_id__notifications_settings_put",
+        "operationId": "set_notification_settings_api_v1_orgs__org_id__notifications_settings_put",
         "parameters": [
           {
             "name": "org_id",
@@ -6393,6 +6393,105 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/notifications/telegram": {
+      "post": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Telegram Link",
+        "description": "Telegram'ni ulash havolasi (B6.2): bot ``/start`` da tokenni tekshiradi va shu tashkilotda chatni yozadi.\nParametr — tashkilot id'si (32 belgi) + tasodifiy token; bazada faqat token xeshi.",
+        "operationId": "telegram_link_api_v1_orgs__org_id__notifications_telegram_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelegramLinkOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Telegram Unlink",
+        "description": "Shu tashkilotda Telegram'ni uzish (boshqa tashkilotlardagi ulanish qoladi).",
+        "operationId": "telegram_unlink_api_v1_orgs__org_id__notifications_telegram_delete",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validatsiya xatosi",
@@ -13366,13 +13465,18 @@
               }
             ],
             "title": "Quiet To"
+          },
+          "telegram_linked": {
+            "type": "boolean",
+            "title": "Telegram Linked"
           }
         },
         "type": "object",
         "required": [
           "events",
           "quiet_from",
-          "quiet_to"
+          "quiet_to",
+          "telegram_linked"
         ],
         "title": "NotificationSettingsOut"
       },
@@ -20287,6 +20391,25 @@
         ],
         "title": "Taxpayer",
         "description": "Soliq to'lovchi turi (F50 chegarasi uchun; profilda ixtiyoriy)."
+      },
+      "TelegramLinkOut": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url",
+          "expires_at"
+        ],
+        "title": "TelegramLinkOut"
       },
       "TokenIn": {
         "properties": {

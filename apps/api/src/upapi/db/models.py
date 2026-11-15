@@ -914,6 +914,16 @@ notification_channels = tenant(
     Column("active", Boolean, nullable=False, server_default="true"),
     check_in("kind", ("telegram", "push")),
 )
+notification_links = tenant(
+    # B6.2: Telegram'ni ulash uchun bir martalik token (xeshi; 15 daqiqa). Bot ``/start`` da tekshiradi.
+    "notification_links",
+    Column(
+        "user_id", UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    ),
+    Column("token_hash", LargeBinary, nullable=False, unique=True),
+    Column("expires_at", TS, nullable=False),
+    Column("used_at", TS),
+)
 notification_rules = tenant(
     # B6.1: har foydalanuvchining hodisa qoidasi (yo'q bo'lsa — katalog standarti, ``upcore.notify.CATALOG``).
     "notification_rules",
