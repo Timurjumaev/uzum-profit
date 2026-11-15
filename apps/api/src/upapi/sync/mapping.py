@@ -205,6 +205,13 @@ def expense(row: Mapping[str, Any], book: CodeBook) -> Row:
     }
 
 
+def account_level(row: Mapping[str, Any]) -> bool:
+    """Akkaunt darajasidagi xarajat (``shopId: 0`` — masalan, shoshilinch pul yechish C000011): Uzum uni akkauntning
+    **har bir** do'koni so'roviga qaytaradi. Faqat bitta do'konga yoziladi (:func:`upapi.sync.engine._write_expenses`),
+    aks holda bitta to'lov do'konlar soniga ko'payadi."""
+    return "shopId" in row and as_int(row.get("shopId")) == 0
+
+
 # Xarajat qatoridagi hosila ustunlar: har safar qayta hisoblanadi (``NULL`` ham to'g'ri qiymat — masalan, status
 # CANCELED dan qaytsa ``excluded`` bo'shaydi).
 EXPENSE_DERIVED = frozenset(

@@ -9,6 +9,7 @@ import dataclasses
 import uuid
 from collections.abc import Iterator
 from datetime import timedelta
+from decimal import Decimal
 from typing import Any
 
 import psycopg
@@ -208,6 +209,26 @@ def test_expense_status_change_recomputes_derived(db: dict[str, str]) -> None:
         fake.expenses[A][2]["status"] = "CONFIRMED"
         sync(run, account, kinds=[eng.Kind.EXPENSES])
     assert admin(db, query, [account.org_id]) == [(None,)]
+
+
+def test_account_level_expense_written_once(db: dict[str, str]) -> None:
+    """``shopId: 0`` (akkaunt xarajati, masalan shoshilinch pul yechish C000011) Uzum har do'kon so'roviga qaytaradi —
+    faqat bitta (eng kichik Uzum id'li) do'konga yoziladi; do'konniki o'z joyida (Temur topdi, 2026-11-16)."""
+    fake = seller()
+    fee = sf.expense(990_011, 0, NOW - timedelta(hours=1), "C000011", 62_000)
+    fake.expenses[A].append(fee)
+    fake.expenses[B].append(dict(fee))
+    with runtime(db, fake) as run:
+        account = create_account(db, sf.settings_for(db), TOKEN, [A, B])
+        sync(run, account, kinds=[eng.Kind.EXPENSES])
+        sync(run, account, kinds=[eng.Kind.EXPENSES])  # takroriy sinxron ham ikkinchisini yozmaydi
+    rows = admin(
+        db,
+        "SELECT shop_id, amount FROM mp_expenses WHERE external_id = 990011 AND org_id = %s",
+        [account.org_id],
+    )
+    assert rows == [(account.shops[A], Decimal(62_000))]
+    assert count(db, "mp_expenses", account) > 1  # do'kon xarajatlari ikkala do'konda
 
 
 # --- Tarix: cheklangan va davom ettirish -------------------------------------------------------------

@@ -740,9 +740,27 @@ async def _orders(run: _Run) -> None:
         )
 
 
+async def _account_owner(conn: AsyncConnection, shop_id: UUID) -> UUID:
+    """Akkaunt xarajati yoziladigan do'kon: shu akkauntning eng kichik Uzum id'li do'koni (barqaror tanlov)."""
+    s = m.shops
+    owner = await conn.scalar(
+        select(s.c.id)
+        .where(s.c.account_id == select(s.c.account_id).where(s.c.id == shop_id).scalar_subquery())
+        .order_by(s.c.external_id)
+        .limit(1)
+    )
+    return owner if owner is not None else shop_id
+
+
 async def _write_expenses(run: _Run, shop: ShopRef, page: Any, save_cursor: bool = False) -> None:
     book = await run.job.codebook()
-    rows = run.map_rows(shop, page.rows, lambda raw: mapping.expense(raw, book))
+    raw_rows = page.rows
+    if any(mapping.account_level(r) for r in raw_rows):
+        async with run.job.tx() as conn:
+            owner = await _account_owner(conn, shop.id)
+        if owner != shop.id:  # akkaunt xarajati boshqa (egasi) do'kon so'rovidan yoziladi
+            raw_rows = [r for r in raw_rows if not mapping.account_level(r)]
+    rows = run.map_rows(shop, raw_rows, lambda raw: mapping.expense(raw, book))
     async with run.write() as conn:
         result = await store.upsert(
             conn,
