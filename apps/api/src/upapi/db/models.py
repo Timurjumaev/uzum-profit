@@ -915,20 +915,44 @@ notification_channels = tenant(
     check_in("kind", ("telegram", "push")),
 )
 notification_rules = tenant(
+    # B6.1: har foydalanuvchining hodisa qoidasi (yo'q bo'lsa — katalog standarti, ``upcore.notify.CATALOG``).
     "notification_rules",
+    Column(
+        "user_id", UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    ),
     Column("event", Text, nullable=False),
     Column("enabled", Boolean, nullable=False, server_default="true"),
     Column("params", JSONB),
+    UniqueConstraint("org_id", "user_id", "event"),
+)
+notification_prefs = tenant(
+    # Tinch soatlar (mahalliy vaqt; ikkalasi bo'sh — tinch soat yo'q). Qator yo'q — 22:00–08:00.
+    "notification_prefs",
+    Column(
+        "user_id", UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    ),
     Column("quiet_from", Time),
     Column("quiet_to", Time),
+    UniqueConstraint("org_id", "user_id"),
 )
 notifications = tenant(
+    # Navbat (B6.1 yozadi, B6.2 yuboradi): bitta hodisa bitta foydalanuvchiga bir marta (``dedupe_key``).
     "notifications",
+    Column(
+        "user_id", UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    ),
+    Column("event", Text, nullable=False),
     Column("dedupe_key", Text, nullable=False),
     Column("status", Text, nullable=False, server_default="pending"),
+    Column("critical", Boolean, nullable=False, server_default="false"),
     Column("payload", JSONB, nullable=False),
+    Column("due_at", TS, nullable=False),
+    Column("attempts", Integer, nullable=False, server_default="0"),
+    Column("error", Text),
     Column("sent_at", TS),
-    UniqueConstraint("org_id", "dedupe_key"),
+    UniqueConstraint("org_id", "user_id", "dedupe_key"),
+    Index(None, "status", "due_at"),
+    check_in("status", ("pending", "sent", "failed", "skipped")),
     refs={"rule_id": ("notification_rules", True), "channel_id": ("notification_channels", True)},
 )
 

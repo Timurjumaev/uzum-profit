@@ -1021,7 +1021,15 @@ Har vazifa — alohida branch va PR; tafsilot 07 "ADR-061 tafsiloti", 02 M9–M1
 
 Tartib (ADR-057 Q9): B6.1–B6.2 — B4 dan keyin, B5 dan **oldin**; B6.3 — B5 dan keyin.
 
-- [ ] B6.1 Hodisalar katalogi (M15), qoidalar, chegaralar, tinch soatlar, dublikatsiz yuborish.
+- [x] B6.1 Hodisalar katalogi (M15), qoidalar, chegaralar, tinch soatlar, dublikatsiz yuborish. ✓ 2026-11-15: yadro
+  `upcore.notify` (14 hodisali katalog — rol auditoriyasi, kritiklik, chegaralar, hali ishlamaydiganlari bosqich bilan;
+  tinch soatlar `due_at`; F53 zarar zanjiri). Migratsiya 0028 (qoidalar foydalanuvchi bo'yicha, `notification_prefs`,
+  navbat `notifications`: `UNIQUE (org, user, dedupe_key)`, `due_at`). `upapi.notify` + `notify.tick` (har 5 daqiqa):
+  kunlik va haftalik xulosa (Dashboard bilan bitta hisob; buyurtmalar sinxroni kecha oxirigacha yetmagan bo'lsa
+  yuborilmaydi), qoldiq kritik, zarar bilan sotuv (F53), tannarxsiz sotuvlar, yangi jarima, postavka kamomadi, sinxron
+  to'xtadi / kalit yaroqsiz (kritik — tinch soatda ham). Qaytish keskin oshdi va yo'qolgan tovar (B5.4), to'lov kechikishi
+  (B5.7), kargo kechikishi (B5.1), komissiya (B5.5), FBS (B5.10) — katalogda "tez orada". API: `GET/PUT
+  /notifications/settings` (shaxsiy), `GET /notifications`. Web: Sozlamalar → "Bildirishnomalar". Yuborish — B6.2.
 - [ ] B6.2 Telegram bot (aiogram): bog'lash, kunlik/haftalik xulosa, buyruqlar, "Batafsil" havolalar.
 - [ ] B6.3 Ilova ichidagi bildirishnomalar markazi; web push (PWA). PWA (ADR-057 Q13, 09 R3 a): `manifest`, ikonkalar, favicon,
   `theme-color` — o'rnatiladigan ilova.

@@ -166,8 +166,10 @@ taqsimot), `payout_schedules` (do'kon, jadval turi, amal qilish sanasi), `goals`
 **Sozlama va ma'lumotnoma:** `tax_profiles` (org, sanadan, soliq to'lovchi turi — F50) + `tax_lines` (profil, tartib, tur, nom, baza, stavka, summa yoki BHM soni, davr; ADR-058), `ref_amounts` (BHM va chegaralar, sanadan), `ref_logistics_tariffs`
 (sanadan, qoidalar jsonb), `ref_tax_rates` (`fee_waivers` — Uzum bonus davrlari, 0008 — ADR-035 bilan 0011 da olib tashlandi).
 
-**Bildirishnoma:** `notification_channels` (telegram chat_id, push endpoint), `notification_rules`
-(hodisa, yoqilgan, parametrlar, tinch soatlar), `notifications` (`dedupe_key` unikal, holat).
+**Bildirishnoma (B6.1, migratsiya 0028):** `notification_channels` (telegram chat_id, push endpoint), `notification_rules`
+(foydalanuvchi × hodisa: yoqilgan, parametrlar; yo'q — `upcore.notify.CATALOG` standarti), `notification_prefs`
+(foydalanuvchining tinch soatlari), `notifications` (foydalanuvchi, hodisa, `dedupe_key` — `UNIQUE (org, user, key)`,
+kritik, `due_at` — tinch soat tugaganda, holat). Hodisalar `notify.tick` (har 5 daqiqa, `upapi.notify`) bilan topiladi.
 
 **To'lov (bizning tarif):** `plans`, `subscriptions` (sinov / faol / qarzdor / faqat o'qish / bekor),
 `billing_invoices` (fiskal chek havolasi), `payments`.

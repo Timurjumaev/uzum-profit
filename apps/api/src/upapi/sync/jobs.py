@@ -13,6 +13,8 @@
   (:func:`rebuild_all`, B4.40): deploy hisob qoidasini (dvigatel, belgilar) o'zgartirsa, saqlangan natijalar
   (``sale_costs``, ``daily_sku_metrics``) tungi hisobni kutmay darhol yangi qoida bo'yicha qayta yoziladi.
 
+``notify.tick`` (B6.1) — har 5 daqiqada bildirishnoma hodisalari (``upapi.notify``) navbatga yoziladi.
+
 Sotuvchi tahrirlari (xaridlar, B4.6) ham ``calc.org`` ni API'dan navbatga qo'yadi (:meth:`JobQueue.defer_calc`).
 
 Ish argumentlarida faqat id'lar (kalit yo'q). Ishchi — ``python -m upapi.worker``; API navbatga :class:`JobQueue`
@@ -31,7 +33,7 @@ from procrastinate.exceptions import AlreadyEnqueued
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from upapi import calc
+from upapi import calc, notify
 from upapi.db.session import org_transaction
 from upapi.db.url import normalize_url
 from upapi.fx import sync_fx
@@ -50,6 +52,8 @@ CALC_QUEUE = "calc"
 CALC = "calc.org"
 CALC_NIGHTLY = "calc.nightly"
 CALC_CRON = "40 22 * * *"  # Toshkent 03:40 — sinxron va CBU ishlaridan uzoqda
+NOTIFY = "notify.tick"
+NOTIFY_CRON = "*/5 * * * *"  # B6.1: hodisalar har 5 daqiqada (takror — ``dedupe_key`` bilan yo'q)
 QUEUES = [QUEUE, CALC_QUEUE]
 _log = get_logger("upapi.sync.jobs")
 
@@ -211,7 +215,25 @@ def build_app(connector: BaseConnector) -> App:
     async def calc_nightly(context: JobContext, timestamp: int) -> int:
         return await rebuild_all(context.app, runtime(context).engine)
 
+    @app.periodic(cron=NOTIFY_CRON, periodic_id="notify")
+    @app.task(name=NOTIFY, queue=CALC_QUEUE, queueing_lock=NOTIFY, pass_context=True)
+    async def notify_tick(context: JobContext, timestamp: int) -> int:
+        return await notify_all(runtime(context))
+
     return app
+
+
+async def notify_all(rt: Runtime) -> int:
+    """Ulangan har tashkilot uchun bildirishnoma hodisalari (B6.1, ``upapi.notify``). Bitta tashkilot xatosi
+    qolganlarini to'xtatmaydi (log qilinadi, keyingi tekshiruvda qayta)."""
+    created = 0
+    now = rt.clock()
+    for org_id in sorted({org for org, _ in await due_accounts(rt.engine)}):
+        try:
+            created += await notify.evaluate_org(rt.engine, org_id, now)
+        except Exception as exc:
+            _log.warning("notify_failed", org_id=str(org_id), error_code=type(exc).__name__)
+    return created
 
 
 class JobQueue:

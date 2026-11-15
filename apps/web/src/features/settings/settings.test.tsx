@@ -448,8 +448,10 @@ describe("rollar", () => {
     await ready();
     await waitFor(() => expect(within(section("Doʻkonlar")).getAllByRole("row").length).toBeGreaterThan(1));
     expect(screen.getByText("Sozlamalarni faqat koʻrasiz")).toBeTruthy();
+    // Bildirishnomalar — shaxsiy sozlama, buxgalter ham o'zinikini saqlaydi (B6.1); qolgan bo'limlar faqat ko'rish.
+    const outside = (name: string) => screen.queryAllByRole("button", { name }).filter((b) => !b.closest('[aria-labelledby="settings-notifications"]'));
     for (const name of ["Profil qoʻshish", "Jadval qoʻshish", "Tahrirlash", "Oʻchirish", "Saqlash", "Standartga qaytarish"]) {
-      expect(screen.queryByRole("button", { name })).toBeNull();
+      expect(outside(name)).toEqual([]);
     }
   });
 
