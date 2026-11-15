@@ -197,6 +197,54 @@ def test_tax_lines_backfill_from_legacy_profiles() -> None:
         dbtools.drop_database(name)
 
 
+def test_account_expense_duplicates_removed() -> None:
+    """0030: akkaunt xarajati (``shopId: 0``) ikki do'konga yozilgan bo'lsa — eng kichik Uzum id'li do'kondagisi qoladi;
+    do'kon xarajati va boshqa akkaunt tegilmaydi (staging: C000011, 62 000 so'm ikki marta)."""
+    dbtools.require_admin()
+    name = f"up_test_{uuid.uuid4().hex[:10]}"
+    urls = dbtools.create_database(name)
+    try:
+        dbtools.alembic(urls["owner"], "upgrade", "0029")
+        org, acc = uuid.uuid4(), uuid.uuid4()
+        shops = {106121: uuid.uuid4(), 135204: uuid.uuid4()}
+        with psycopg.connect(urls["admin"]) as conn:
+            conn.execute("INSERT INTO orgs (id, name) VALUES (%s, 'dedupe')", [org])
+            conn.execute(
+                "INSERT INTO mp_accounts (id, org_id, status) VALUES (%s, %s, 'disconnected')",
+                [acc, org],
+            )
+            for ext, sid in shops.items():
+                conn.execute(
+                    "INSERT INTO shops (id, org_id, account_id, external_id, name) VALUES (%s, %s, %s, %s, 'd')",
+                    [sid, org, acc, ext],
+                )
+            rows = [
+                (shops[106121], 210635460, '{"shopId": 0}'),
+                (shops[135204], 210635460, '{"shopId": 0}'),
+                (shops[135204], 777, '{"shopId": 135204}'),  # do'kon xarajati
+                (
+                    shops[106121],
+                    777,
+                    '{"shopId": 106121}',
+                ),  # boshqa do'konda shu id (shopId bor) — tegilmaydi
+            ]
+            for sid, ext, raw in rows:
+                conn.execute(
+                    "INSERT INTO mp_expenses (org_id, shop_id, external_id, category, type, amount, created_on, raw) "
+                    "VALUES (%s, %s, %s, 'withdrawal_fee', 'OUTCOME', 62000, now(), %s::jsonb)",
+                    [org, sid, ext, raw],
+                )
+            conn.commit()
+        dbtools.alembic(urls["owner"], "upgrade", "head")
+        with psycopg.connect(urls["admin"]) as conn:
+            left = conn.execute(
+                "SELECT s.external_id, e.external_id FROM mp_expenses e JOIN shops s ON s.id = e.shop_id ORDER BY 2, 1"
+            ).fetchall()
+        assert left == [(106121, 777), (135204, 777), (106121, 210635460)]
+    finally:
+        dbtools.drop_database(name)
+
+
 def test_seed_cli_needs_url(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:

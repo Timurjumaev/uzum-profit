@@ -177,6 +177,22 @@ def test_expense_allocation_rules() -> None:
     assert whole.allocated_total == uzs(36_000) and whole.direct_total == uzs(16_000)
 
 
+def test_account_level_uzum_expense_spread_across_shops() -> None:
+    """Akkaunt xarajati (``shop=None``, Uzum ``shopId: 0`` — shoshilinch pul yechish) bir marta, hamma do'konlarga tushum
+    ulushida; sotuvsiz kunda — tashkilot darajasidagi taqsimlanmagan katakda (Temur topdi, 2026-11-16)."""
+    lines = [sale(1, "A", "S1", price=300_000), sale(1, "B", "S2", price=100_000)]
+    fee = [
+        ExpenseItem(d(1), None, C.WITHDRAWAL_FEE, uzs(62_000)),
+        ExpenseItem(d(5), None, C.WITHDRAWAL_FEE, uzs(10_000)),  # sotuvsiz kun
+    ]
+    cells = build_cells(OCT, lines, fee)
+    assert cells.statement().uzum_total == uzs(72_000)  # bir marta
+    assert cells.items[CellKey(d(1), "S1", "A")].uzum_expenses == {C.WITHDRAWAL_FEE: uzs(46_500)}
+    assert cells.items[CellKey(d(1), "S2", "B")].uzum_expenses == {C.WITHDRAWAL_FEE: uzs(15_500)}
+    assert cells.items[CellKey(d(1), "S2", "B")].uzum_allocated == {C.WITHDRAWAL_FEE: uzs(15_500)}
+    assert cells.items[CellKey(d(5), "", None)].uzum_expenses == {C.WITHDRAWAL_FEE: uzs(10_000)}
+
+
 def test_own_expenses_amortized_and_scoped() -> None:
     lines = [sale(1, "A", "S1"), sale(1, "B", "S2", price=300_000)]
     rent = OwnExpense(ManualExpense(uzs(3_100_000), d(1), d(31)), "ijara")  # kuniga 100 000

@@ -8,7 +8,7 @@
   (ADR-039, :func:`expense_day`): sotuv qatoriga bog'langani (buyurtmaga bog'liq reklama) — o'sha sotuvning buyurtma
   kuni, SKU'si va qismiga (Jarayonda — kutilayotgan, aks holda yakunlangan); saqlash — shu kuni SKU'larga Uzum
   omboridagi qoldiq × saqlash narxi og'irligida (F43, ``sku_daily``; snapshot yo'q kun — tushum ulushida); qolgani —
-  yechilgan kuni do'kon darajasida (tushum ulushida).
+  yechilgan kuni do'kon darajasida (tushum ulushida); akkaunt xarajati (``shopId: 0``) — tashkilot darajasida.
 - Kutilayotgan reklama (F42) — hali topshirilmagan Jarayondagi sotuvlar tushumi × SKU'ning (bo'lmasa do'konning)
   oxirgi 30 kundagi buyurtmaga bog'liq reklama ulushi, "≈" (taxminiy).
 - O'z xarajatlari (F10) — ``manual_expenses``: tovarga bog'langan — tovarning SKU'lariga (bitta bo'lsa o'shanga, bir
@@ -357,6 +357,7 @@ async def _expenses(conn: AsyncConnection, period: Period) -> list[ExpenseItem]:
                 e.c.amount,
                 e.c.sale_item_id,
                 e.c.name,
+                e.c.raw["shopId"].astext.label("raw_shop"),
                 s.c.sku_id,
                 s.c.ordered_at,
                 s.c.status,
@@ -409,7 +410,9 @@ async def _expenses(conn: AsyncConnection, period: Period) -> list[ExpenseItem]:
         out.append(
             ExpenseItem(
                 day=day,
-                shop=str(r.shop_id),
+                # Akkaunt xarajati (``shopId: 0`` — shoshilinch pul yechish) — tashkilot darajasi: do'konlarga tushum
+                # ulushida taqsimlanadi, do'konsiz o'z xarajatlari kabi.
+                shop=None if r.raw_shop == "0" else str(r.shop_id),
                 category=category,
                 amount=amount,
                 weights=weights.get((r.shop_id, day))

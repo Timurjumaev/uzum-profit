@@ -74,10 +74,12 @@ class ExpenseItem:
     ulushida bo'linmaydi, o'sha sotuv qismiga yoziladi (``True`` — kutilayotgan, ``False`` — yakunlangan); ``None`` —
     katak xarajati, qismlarga tushum ulushida. ``estimated`` — taxminiy summa (F42 kutilayotgan reklama, "≈").
     ``weights`` — do'kon xarajatini shu kungi SKU kataklariga berilgan og'irliklarda (F43 saqlash: qoldiq × narx)
-    bo'lish; bo'sh yoki yig'indisi 0 — odatdagidek (tushum ulushida)."""
+    bo'lish; bo'sh yoki yig'indisi 0 — odatdagidek (tushum ulushida). ``shop=None`` — akkaunt (tashkilot) xarajati
+    (Uzum ``shopId: 0``, masalan shoshilinch pul yechish): o'sha kuni hamma do'kon SKU'lariga tushum ulushida, o'z
+    xarajatlari kabi."""
 
     day: date
-    shop: str
+    shop: str | None
     category: ExpenseCategory
     amount: Money
     sku: str | None = None
@@ -987,10 +989,10 @@ def build_cells(
             if chosen:
                 parts = split(e.amount.amount, [w for _, w in chosen], UZS.places)
                 for (sku, _), share in zip(chosen, parts, strict=True):
-                    _put(acc[CellKey(e.day, e.shop, sku)], False, e.category, share)
+                    _put(acc[CellKey(e.day, e.shop or "", sku)], False, e.category, share)
                 continue
         if e.sku is not None:
-            a = acc[CellKey(e.day, e.shop, e.sku)]
+            a = acc[CellKey(e.day, e.shop or "", e.sku)]
             amount = e.amount.amount
             _put(a, False, e.category, amount)
             if e.processing is True:
