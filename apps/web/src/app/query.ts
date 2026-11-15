@@ -3,7 +3,7 @@
 import { MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
-import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, QuickPurchaseIn, SupplyState, TrackedIn, BoxIn, SharesIn, CountIn, SplitIn, TransferIn, DispatchIn, ResolveIn, ShortagePatch, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, OpeningIn } from "../lib/api/types";
+import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, QuickPurchaseIn, SupplyState, TrackedIn, BoxIn, SharesIn, CountIn, SplitIn, TransferIn, DispatchIn, ResolveIn, ShortagePatch, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, NotificationSettingsIn, OpeningIn } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -573,6 +573,17 @@ export const setInventorySettings = (orgId: string, body: InventorySettingsIn) =
 /** ADR-043: bekor va qaytarish ulushi ogohlantirish chegaralari (kasr, 0..1; `null` — o'chirish). */
 export const setAlertSettings = (orgId: string, body: AlertsIn) =>
   unwrap(api.PUT("/api/v1/orgs/{org_id}/settings/alerts", { params: orgPath(orgId), body }));
+
+// --- Bildirishnomalar (B6.1, M15): har foydalanuvchining o'z sozlamasi ------------------------------------------
+
+export const notificationSettingsQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "notifications", "settings"],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/notifications/settings", { params: orgPath(orgId) })),
+  });
+
+export const setNotificationSettings = (orgId: string, body: NotificationSettingsIn) =>
+  unwrap(api.PUT("/api/v1/orgs/{org_id}/notifications/settings", { params: orgPath(orgId), body }));
 
 // --- Boshlang'ich holat (F41, ADR-033) ---------------------------------------------------------------------------
 

@@ -440,6 +440,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- B6.1 Bildirishnomalar (M15): hodisalar katalogi, Sozlamalar → "Bildirishnomalar" (har kim o'zi uchun: hodisalar,
+  xulosa vaqti, chegaralar, tinch soatlar). Har 5 daqiqada hodisalar topilib navbatga yoziladi (takrorsiz): kunlik va
+  haftalik xulosa, qoldiq kritik, zarar bilan sotuv (F53), tannarxsiz sotuv, yangi jarima, postavka kamomadi, sinxron
+  to'xtadi. Telegram'ga yuborish — B6.2.
 - TM8 (ADR-061) Ta'minot yakuni: butun oqim e2e testi (xarid → kargo puli → sanash → jo'natish → qabul), yordam maqolasi
   (uz/ru, `docs/help/taminot.*.md`). Xarid API'dan eski `stage`, `timeline`, `dates` maydonlari va `?stage=` filtri olib
   tashlandi (o'rniga `state`, `path`, `ordered_on`); Excel'da "Holat" ustuni; "Sanalar" oynasi o'rniga buyurtma sanasi xarid

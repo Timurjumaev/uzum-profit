@@ -11,6 +11,7 @@ import { openingData, openingRow } from "../../src/test/opening";
 import { analysisData, salesData } from "../../src/test/orders";
 import { settingsData } from "../../src/test/settings";
 import { skuDetail, skuRow, skusData, unitCalc } from "../../src/test/products";
+import { notificationSettings } from "../../src/test/notifications";
 import { PURCHASE_1, purchaseDetail, purchaseRow } from "../../src/test/purchases";
 import { SHIPMENT_1, shipmentDetail, shipmentRow } from "../../src/test/shipments";
 
@@ -361,6 +362,7 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
         amounts: true,
       });
     }
+    if (key === `GET /orgs/${ORG_ID}/notifications/settings` || key === `PUT /orgs/${ORG_ID}/notifications/settings`) return json(route, 200, notificationSettings());
     // Ta'minot oqimidagi yozuvlar (TM8 e2e): javob — o'qish fiksturalaridan.
     if (key === `POST /orgs/${ORG_ID}/purchases/quick`) return json(route, 201, purchaseDetail());
     if (key === `POST /orgs/${ORG_ID}/cargo-pool/tracked`) return json(route, 201, { created: 1 });

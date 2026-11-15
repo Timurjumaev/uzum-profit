@@ -26,6 +26,7 @@ from upapi.routes import (
     health,
     inventory,
     items,
+    notifications,
     opening,
     orders,
     orgs,
@@ -127,6 +128,7 @@ def create_app(
     app.include_router(purchases.router, prefix=API_PREFIX)  # xaridlar (M9)
     app.include_router(shipments.router, prefix=API_PREFIX)  # kargolar (M9, ADR-046)
     app.include_router(receiving.router, prefix=API_PREFIX)  # Uzum qabulidagi farq (TM7)
+    app.include_router(notifications.router, prefix=API_PREFIX)  # bildirishnomalar (B6.1)
     app.include_router(dispatches.router, prefix=API_PREFIX)  # Uzumga jo'natish (TM6)
     app.include_router(warehouse.router, prefix=API_PREFIX)  # Omborim, SKU'ga o'tkazish (TM5)
     app.include_router(counting.router, prefix=API_PREFIX)  # sanash, xaridni bo'lish (TM4)

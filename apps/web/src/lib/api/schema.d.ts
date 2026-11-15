@@ -1157,6 +1157,50 @@ export interface paths {
         patch: operations["update_shortage_api_v1_orgs__org_id__receiving_shortages__shortage_id__patch"];
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/notifications/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Settings
+         * @description Hodisalar katalogi foydalanuvchining qoidalari bilan (yo'q bo'lsa — standart).
+         */
+        get: operations["get_settings_api_v1_orgs__org_id__notifications_settings_get"];
+        /**
+         * Put Settings
+         * @description Berilgan hodisalar qoidasi va tinch soatlar (berilmagan hodisa o'zgarmaydi).
+         */
+        put: operations["put_settings_api_v1_orgs__org_id__notifications_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Notifications
+         * @description Foydalanuvchining oxirgi bildirishnomalari (yangisi birinchi).
+         */
+        get: operations["list_notifications_api_v1_orgs__org_id__notifications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/dispatches/draft": {
         parameters: {
             query?: never;
@@ -2368,6 +2412,11 @@ export interface components {
             unit_cost: string | null;
         };
         /**
+         * Event
+         * @enum {string}
+         */
+        Event: "daily_summary" | "weekly_summary" | "stock_critical" | "loss_sales" | "uncosted_sales" | "new_fine" | "returns_spike" | "receiving_shortage" | "lost_goods" | "sync_stopped" | "payout_late" | "cargo_late" | "commission_changed" | "fbs_deadline";
+        /**
          * ExpectedOut
          * @description F16 (ADR-037): kutilayotgan sof foyda — Jarayondagi sotuvlar qismi (mijoz hali olmagan yoki qaytarish muddati
          *     tugamagan): tushumdan komissiya, logistika (Uzum hali yozmagani — F40 bo'yicha taxminiy), tannarx, o'z reklamasi
@@ -3126,6 +3175,91 @@ export interface components {
             categories: {
                 [key: string]: string;
             };
+        };
+        /** NotificationEventOut */
+        NotificationEventOut: {
+            event: components["schemas"]["Event"];
+            /** Enabled */
+            enabled: boolean;
+            /** Params */
+            params: {
+                [key: string]: unknown;
+            };
+            /** Critical */
+            critical: boolean;
+            /** Available */
+            available: boolean;
+            /** Stage */
+            stage: string | null;
+        };
+        /** NotificationOut */
+        NotificationOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Event */
+            event: string;
+            /** Status */
+            status: string;
+            /** Critical */
+            critical: boolean;
+            /** Payload */
+            payload: {
+                [key: string]: unknown;
+            };
+            /**
+             * Due At
+             * Format: date-time
+             */
+            due_at: string;
+            /** Sent At */
+            sent_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** NotificationRuleIn */
+        NotificationRuleIn: {
+            event: components["schemas"]["Event"];
+            /** Enabled */
+            enabled: boolean;
+            /** Params */
+            params?: {
+                [key: string]: unknown;
+            };
+        };
+        /** NotificationSettingsIn */
+        NotificationSettingsIn: {
+            /** Rules */
+            rules?: components["schemas"]["NotificationRuleIn"][];
+            /**
+             * Quiet From
+             * @default 22:00:00
+             */
+            quiet_from: string | null;
+            /**
+             * Quiet To
+             * @default 08:00:00
+             */
+            quiet_to: string | null;
+        };
+        /** NotificationSettingsOut */
+        NotificationSettingsOut: {
+            /** Events */
+            events: components["schemas"]["NotificationEventOut"][];
+            /** Quiet From */
+            quiet_from: string | null;
+            /** Quiet To */
+            quiet_to: string | null;
+        };
+        /** NotificationsOut */
+        NotificationsOut: {
+            /** Items */
+            items: components["schemas"]["NotificationOut"][];
         };
         /** OpeningIn */
         OpeningIn: {
@@ -8928,6 +9062,132 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReceivingOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_settings_api_v1_orgs__org_id__notifications_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationSettingsOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    put_settings_api_v1_orgs__org_id__notifications_settings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationSettingsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationSettingsOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_notifications_api_v1_orgs__org_id__notifications_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationsOut"];
                 };
             };
             /** @description Validatsiya xatosi */

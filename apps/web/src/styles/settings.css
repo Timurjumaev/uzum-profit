@@ -141,3 +141,47 @@
 .settings-tax__taxpayer {
   display: block;
 }
+
+/* Bildirishnomalar (B6.1): hodisalar ro'yxati, chegaralar va tinch soatlar. */
+.notify-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notify-row {
+  display: grid;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+  border-block-end: 1px solid var(--border-hairline);
+}
+
+.notify-check {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  min-block-size: 44px;
+  cursor: pointer;
+}
+
+.notify-check input {
+  inline-size: 20px;
+  block-size: 20px;
+  accent-color: var(--accent);
+}
+
+.notify-row__params,
+.notify-quiet__times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding-inline-start: calc(20px + var(--space-2));
+}
+
+.notify-row__params > *,
+.notify-quiet__times > * {
+  inline-size: min(12rem, 100%);
+}

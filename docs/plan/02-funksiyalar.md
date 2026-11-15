@@ -1,7 +1,7 @@
 # 02. Funksiyalar: modullar, qabul mezonlari, formulalar
 
 Bu fayl dastur NIMA qilishini belgilaydi. Har modulda: vazifasi, ekranlari, funksiyalari (qaysi bosqichda),
-qabul mezonlari. Oxirida **formulalar lug'ati (F1–F52)**: dasturdagi har bir raqam shu yerdagi bitta formuladan
+qabul mezonlari. Oxirida **formulalar lug'ati (F1–F53)**: dasturdagi har bir raqam shu yerdagi bitta formuladan
 hisoblanadi. Kodda formula funksiyasi docstring'ida `F12` kabi raqam bilan belgilanadi.
 
 Belgilar: **[B4]** = shu bosqichda quriladi (05-bosqichlar.md). **[Keyin]** = ommaviy chiqishdan keyin.
@@ -636,3 +636,7 @@ marta sanalmaydi).
 (dona × lot birlik tannarxi − kompensatsiya summasi), manfiy bo'lmaydi. Yopilgan kunga yoziladi; foyda hisobida alohida
 qator. Ochiq kamomad foydaga ta'sir qilmaydi (tovar hali "Uzumga jo'natilgan" qiymatida turadi), "Diqqat" blokida
 ko'rinadi. Asos — F33 (e'lon − qabul); "Men sanashda adashganman" tanlansa yozuv ochilmaydi, xarid soni tuzatiladi (F20).
+
+**F53. Zarar bilan sotuv signali** (M15, B6.1) — SKU'ning oxirgi N ta hisobga olinadigan (F2) sotuvining hammasida qator
+foydasi = Uzum to'lovi (F6 `sellerProfit`) − tannarx (F21) < 0; N — sozlanadi (standart 3, 2–10). Tannarxi noma'lum sotuv
+zanjirni uzadi (taxmin bilan signal yo'q, tamoyil 9); soliq va reklama bu signalga kirmaydi. Oxirgi 30 kun.

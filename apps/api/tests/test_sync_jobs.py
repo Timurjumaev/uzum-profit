@@ -116,6 +116,7 @@ def test_periodic_tick_registered() -> None:
     assert sorted((p.task.name, p.cron) for p in periodic) == [
         (jobs.CALC_NIGHTLY, jobs.CALC_CRON),
         (jobs.FX, jobs.FX_CRON),
+        (jobs.NOTIFY, jobs.NOTIFY_CRON),
         (jobs.TICK, "* * * * *"),
     ]
     assert jobs.connector_for(sf.settings_for({"app": "postgresql://u:p@h:5/d"}))
@@ -148,9 +149,10 @@ def test_worker_starts_and_stops(monkeypatch: pytest.MonkeyPatch) -> None:
 
     Rejalashtiruvchi vaqti kelgan hamma davriy ishni ishga tushishda navbatga qo'yadi: ``tick`` har daqiqada, kurs va
     tungi hisob esa faqat o'z soatidan keyingi bir necha daqiqada (UTC 04:05, 11:05, 22:40). Test devor soatiga
-    bog'liq bo'lmasligi uchun uchalasi doim "vaqti kelgan" deb olinadi."""
+    bog'liq bo'lmasligi uchun hammasi (bildirishnoma ham, B6.1) doim "vaqti kelgan" deb olinadi."""
     monkeypatch.setattr(jobs, "FX_CRON", "* * * * *")
     monkeypatch.setattr(jobs, "CALC_CRON", "* * * * *")
+    monkeypatch.setattr(jobs, "NOTIFY_CRON", "* * * * *")
     rebuilds: list[Any] = []
     real_rebuild = worker.rebuild_all
 
@@ -179,7 +181,7 @@ def test_worker_starts_and_stops(monkeypatch: pytest.MonkeyPatch) -> None:
         )
     # Davriy rejalashtiruvchi ishladi: sync.tick (har daqiqa — 1.5 s ichida daqiqa chegarasi o'tsa ikkinchisi ham)
     # va qolgan davriy ishlar navbatga qo'yildi.
-    assert defers.keys() == {"tick", "fx", "calc"}
+    assert defers.keys() == {"tick", "fx", "calc", "notify"}
     assert defers["tick"] >= 1
     # B4.40: ishga tushishda bir marta to'liq qayta hisob (deploy hisob qoidasini o'zgartirgan bo'lishi mumkin).
     assert len(rebuilds) == 1

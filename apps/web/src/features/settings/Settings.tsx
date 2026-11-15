@@ -1,5 +1,5 @@
 // Sozlamalar (M16, B4.8): bo'limlar ketma-ket — tannarx usuli, soliq profili, Uzum to'lov jadvali, muddatlar va qamrov,
-// do'konlar. O'qish — egasi, menejer, buxgalter; yozish — egasi va menejer (do'konlar — faqat egasi).
+// do'konlar, bildirishnomalar (shaxsiy, B6.1). O'qish — egasi, menejer, buxgalter; yozish — egasi va menejer (do'konlar — faqat egasi).
 // Hamma raqam va qoida serverdan (`/settings`); bu yerda faqat kiritish (tamoyil 4).
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -10,6 +10,7 @@ import { Banner, Button, Skeleton, PageHelp } from "../../components/ui";
 import { CostMethod } from "./CostMethod";
 import { AlertSettings } from "./AlertSettings";
 import { InventorySettings } from "./InventorySettings";
+import { NotificationSettings } from "./NotificationSettings";
 import { Payouts } from "./Payouts";
 import { Shops } from "./Shops";
 import { TaxProfiles } from "./TaxProfiles";
@@ -50,6 +51,7 @@ export function Settings() {
           <Shops orgId={org.id} canEdit={org.role === "owner"} />
         </>
       )}
+      <NotificationSettings orgId={org.id} />
     </section>
   );
 }

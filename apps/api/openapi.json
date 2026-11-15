@@ -6301,6 +6301,188 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/notifications/settings": {
+      "get": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Get Settings",
+        "description": "Hodisalar katalogi foydalanuvchining qoidalari bilan (yo'q bo'lsa — standart).",
+        "operationId": "get_settings_api_v1_orgs__org_id__notifications_settings_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationSettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Put Settings",
+        "description": "Berilgan hodisalar qoidasi va tinch soatlar (berilmagan hodisa o'zgarmaydi).",
+        "operationId": "put_settings_api_v1_orgs__org_id__notifications_settings_put",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationSettingsIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationSettingsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/notifications": {
+      "get": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "List Notifications",
+        "description": "Foydalanuvchining oxirgi bildirishnomalari (yangisi birinchi).",
+        "operationId": "list_notifications_api_v1_orgs__org_id__notifications_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/dispatches/draft": {
       "get": {
         "tags": [
@@ -10566,6 +10748,26 @@
         ],
         "title": "DraftRow"
       },
+      "Event": {
+        "type": "string",
+        "enum": [
+          "daily_summary",
+          "weekly_summary",
+          "stock_critical",
+          "loss_sales",
+          "uncosted_sales",
+          "new_fine",
+          "returns_spike",
+          "receiving_shortage",
+          "lost_goods",
+          "sync_stopped",
+          "payout_late",
+          "cargo_late",
+          "commission_changed",
+          "fbs_deadline"
+        ],
+        "title": "Event"
+      },
       "ExpectedOut": {
         "properties": {
           "units": {
@@ -12964,6 +13166,231 @@
           "categories"
         ],
         "title": "MonthOut"
+      },
+      "NotificationEventOut": {
+        "properties": {
+          "event": {
+            "$ref": "#/components/schemas/Event"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "params": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Params"
+          },
+          "critical": {
+            "type": "boolean",
+            "title": "Critical"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "event",
+          "enabled",
+          "params",
+          "critical",
+          "available",
+          "stage"
+        ],
+        "title": "NotificationEventOut"
+      },
+      "NotificationOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "event": {
+            "type": "string",
+            "title": "Event"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "critical": {
+            "type": "boolean",
+            "title": "Critical"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload"
+          },
+          "due_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Due At"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "event",
+          "status",
+          "critical",
+          "payload",
+          "due_at",
+          "sent_at",
+          "created_at"
+        ],
+        "title": "NotificationOut"
+      },
+      "NotificationRuleIn": {
+        "properties": {
+          "event": {
+            "$ref": "#/components/schemas/Event"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "params": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Params"
+          }
+        },
+        "type": "object",
+        "required": [
+          "event",
+          "enabled"
+        ],
+        "title": "NotificationRuleIn"
+      },
+      "NotificationSettingsIn": {
+        "properties": {
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/NotificationRuleIn"
+            },
+            "type": "array",
+            "maxItems": 14,
+            "title": "Rules"
+          },
+          "quiet_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quiet From",
+            "default": "22:00:00"
+          },
+          "quiet_to": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quiet To",
+            "default": "08:00:00"
+          }
+        },
+        "type": "object",
+        "title": "NotificationSettingsIn"
+      },
+      "NotificationSettingsOut": {
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/NotificationEventOut"
+            },
+            "type": "array",
+            "title": "Events"
+          },
+          "quiet_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quiet From"
+          },
+          "quiet_to": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quiet To"
+          }
+        },
+        "type": "object",
+        "required": [
+          "events",
+          "quiet_from",
+          "quiet_to"
+        ],
+        "title": "NotificationSettingsOut"
+      },
+      "NotificationsOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NotificationOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "NotificationsOut"
       },
       "OpeningIn": {
         "properties": {
