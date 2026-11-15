@@ -63,21 +63,20 @@ Qo'lda deploy yoki qaytish: `infra/staging/deploy.sh <git sha>` (image'lar GHCR'
 
 ## Telegram boti (B6.2)
 
+Holat: 2026-11-15 token kiritildi, bot ulandi.
+
 Bildirishnomalar va `/bugun`, `/kecha`, `/hafta`, `/oy`, `/qoldiq` buyruqlari uchun. Token faqat serverdagi `.env` da
 (menga berilmaydi). Bir marta, Temur:
 
 1. Telegram'da @BotFather → `/newbot` (yoki B2 da yaratilgan bot bo'lsa `/mybots` → bot → API Token). Token
    `123456:ABC...` ko'rinishida; bot nomi `..._bot` bilan tugaydi.
-2. Serverda (token ekranga va tarixga chiqmasligi uchun `read -s` bilan):
+2. Mac'da (token ekranga va tarixga chiqmasligi uchun `read -s` bilan; token bor bo'lsa hech narsa o'zgarmaydi):
 
 ```bash
-ssh KEY USER@IP
-sudo -u deploy bash -c 'cd /srv/uzum-profit && read -rsp "Bot token: " T && echo &&
-  printf "UP_TELEGRAM_BOT_TOKEN=%s\nUP_TELEGRAM_BOT_USERNAME=%s\n" "$T" "BOT_NOMI_bot" >> .env &&
-  infra/staging/deploy.sh $(cat .deployed-tag)'
+ssh -t -i ~/Downloads/awskey.pem ubuntu@16.170.178.179 'sudo -u deploy bash -c '\''cd /srv/uzum-profit && grep -q "^UP_TELEGRAM_BOT_TOKEN=" .env && { echo "Token allaqachon bor"; exit 1; }; read -rp "Bot nomi (@ siz): " N && read -rsp "Bot token: " T && echo && printf "UP_TELEGRAM_BOT_TOKEN=%s\nUP_TELEGRAM_BOT_USERNAME=%s\n" "$T" "$N" >> .env && UP_SKIP_PULL=1 infra/staging/deploy.sh $(cat .deployed-tag)'\'''
 ```
 
-`BOT_NOMI_bot` — bot nomi (@ siz). Deploy API'ni (ulash havolasi uchun nom) va botni qayta ishga tushiradi; keyingi
+Qo'lda deploy'da GHCR ruxsati yo'q — shuning uchun `UP_SKIP_PULL=1` (image'lar serverda bor). Deploy API'ni (ulash havolasi uchun nom) va botni qayta ishga tushiradi; keyingi
 deploy'larda bot o'zi yangilanadi. Tekshirish: ilovada Sozlamalar → Bildirishnomalar → «Telegramʼni ulash» → botda
 «Start» → «✅ Telegram ulandi». Loglar: `... logs -f bot` (yuqoridagi buyruqda `api worker` o'rniga).
 
