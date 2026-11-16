@@ -278,3 +278,40 @@ saqlash (yukxat bo'yicha), qabul qilishdagi farqlar (yetishmovchilik / ortiqcha 
   eslatma — "ijtimoiy soliqni Xarajatlarga o'zingiz kiriting" (hisob o'zgarmaydi; PR-3 ga kiradi); (b) Sozlamalarda
   "Ijtimoiy soliq (oyiga, so'm)" maydoni, har oy tashkilot darajasida sof foydadan ayriladi (formula o'zgaradi — F11, ADR bilan).
   **Tavsiya: (a) hozir, (b) — birinchi YATT mijoz so'raganda yoki Temur xohlasa.**
+
+## 12. B5 bandining tanqidiy tahlili (2026-11-16)
+
+Temur topshirig'i: "B5 ni to'liq tanqidiy tahlil qil, xatosini top, ortiqchasini olib tashla, keragini qo'sh". 05 dagi B5,
+02 (M4–M13, F19–F40), 07 (ADR-034, 043, 050, 057–062), 08 va tegishli kod (`upcore.inventory`, `upcore.cash`,
+`upcore.purchasing`, `upcore.notify`, `reports/stock.py`, jadvallar) solishtirildi. Qaror — ADR-063; 05 B5 shunga
+ko'ra qayta tuzildi. **Real ma'lumot ko'rilmadi** — B4, B5, B6, B13 `realcheck` bilan o'lchanadi.
+
+Xavf: **Y** — yuqori, **O'** — o'rta, **P** — past.
+
+| ID | Xavf | Topilma | Dalil | Nima qilindi (05) |
+|---|---|---|---|---|
+| B1 | Y | **F25 kodda eski 5 bosqichda qolgan.** 02 da ADR-061 bo'yicha ikki bo'lak, kodda esa `LEAD_STAGES` (tayyorlash, Xitoy ichki, kargo, qabul, topshirish); 5 tasi ham bo'lmasa muddat "noma'lum". Yangi xaridda faqat buyurtma va sanash sanasi bor — yangi xaridlar hech narsa o'rgatmaydi, F26 holat, F27 tavsiya va "Uzumga yuborish" signali faqat Sozlamalardagi 5 ta qo'lda raqamga tayanadi | `upcore/purchasing.py` `LEAD_STAGES`, `stage_days`; `reports/stock.py` (`set(learned.stages) >= set(STAGES)`); `orgsettings.STAGES`; `transit_days` faqat xarid yo'lida ishlatiladi | B5.1 — tuzatish, birinchi navbatda |
+| B2 | Y | **Chiqish mezoni bajarilmaydi** ("har funksiya Temurning real ma'lumotida"): FBS (B5.10) — Temurda faqat FBO; QQS (B5.0e) — Temur YaTT. B4 dagi R1 takrorlanardi | 08 §4 (B4.13: faqat FBO); 09 §11.5 | B5.10 → B9.5, B5.0e → B8.10; chiqish mezoni aniq ro'yxat bilan |
+| B3 | Y | **B5.0e ADR-057 Q5 ga zid.** Q5: "to'liq hisob QQS to'lovchi birinchi mijoz paydo bo'lganda"; ADR-059 esa uni "B5 boshida, shu tartibda" qo'ygan. MChJ stavkalari va Uzum ushlashi tasdiqlanmagan, kirim QQS manbasi yo'q | 07 ADR-057, ADR-059; 08 §6; README "Temurdan kutilmoqda" 4-band | B8.10 |
+| B4 | Y | **F38/F39: 90 kunlik kalendar soxta "kassa uzilishi" beradi.** F38 faqat allaqachon Yakunlangan summani biladi — kirimlar keyingi to'lov sanasida tugaydi, chiqimlar (takroriy xarajat, xarid) esa 90 kunga yoziladi | `upcore/cash.py` `forecast_payouts` (kirish — faqat `daily_net`), `cash_forecast` | B5.7: Jarayondagi × R kutilgan kunga; ufq ikki qatlam (aniq / taxminiy) |
+| B5 | Y | **F31 tarixi cheklangan do'konda ishlamaydi va shovqinli.** Formula butun tarix bo'yicha (qabul − sotilgan); byDurii API'da 2026-07-14 dan. "Qaytish yo'lida" API'da yo'q, bekor esa ≈ 30% — ayirma taxmin ustiga quriladi. Uzumning `quantityMissing` maydoni formulada yo'q | 02 F31; `inventory.lost_goods`; 08 §4; §11.2 S2 | B5.4: avval `realcheck lost`, langar F41 / snapshot, barqarorlik sharti, `quantityMissing` |
+| B6 | O' | **F32 asosi tasdiqlanmagan.** "Sotuv narxi × (1 − komissiya)" — taxmin; Uzum har postavkada tannarxni so'raydi (`Себестоимость`) — kompensatsiya shundan bo'lishi mumkin. Real "[Kompensatsiya]" qatorlari bor, solishtirilmagan | 08 §4 (shablon); §11.4 | B5.4: tasdiqlanmaguncha summa yo'q |
+| B7 | O' | **F30: yangi tovar birinchi kundan "nelikvid".** `last_sale is None` → nelikvid; tovar yoshi sharti yo'q | `inventory.liquidity` | B5.4: yosh sharti (≥ 30 kun) |
+| B8 | O' | **Ikki kamomad ro'yxati xavfi.** TM7 da kamomad ro'yxati (holatlar, F52) bor; B5.4 "yo'qolgan tovar + kompensatsiya" alohida yozilgan | 05 TM7 ↔ B5.4 | Bitta ro'yxat, ikki manba |
+| B9 | O' | **B5.0a vaqtidan oldin.** B5.4 gacha blokka faqat "Diqqat" va "Zarar 5 SKU" dagi raqamlar tushadi; bosh sahifa shundoq ham uzun (D1) | 02 M4 4-, 5-, 8-bloklar | B5.4 ga qo'shildi |
+| B10 | O' | **B5.3 belgisi chalkash:** `[→]` (ko'chgan), lekin "bu yerda … qoladi" va eski matn turibdi — qoldiq ro'yxatda ko'rinmaydi. "Uzumga yuborish" miqdori uchun formula umuman yo'q (F26 (2) — faqat signal) | 05 B5.3; 02 F26 | Qoldiq B5.2 ga, yangi F54 (60 kunlik saqlash chegarasi bilan, F43) |
+| B11 | O' | **B5.2: tovar bir necha SKU'da bo'lsa tavsiya noto'g'ri** (joylar har SKU'ga to'liq sanaladi); "odatiy partiya hajmi" manbasi yo'q (`batch=1`); "rejadan xarid" bittalab | `reports/stock.py` moduli izohi; `inventory.reorder` | B5.2 da aniq yozildi |
+| B12 | O' | **B5.7 doirasi katta va kiritishni talab qiladi.** Hisoblar va tranzaksiyalar — sotuvchi doimiy yuritishi kerak bo'lgan daftar (ADR-061 saboqi: kiritish ko'p bo'lsa ishlatilmaydi). Tez xarid oynasida hisob so'ralmaydi — "avtomatik tranzaksiya" qaysi hisobga tushishi noma'lum; F39 bir necha valyutali hisoblarni so'mda qo'shadi | 02 M11; `cash_forecast` (`total(..., UZS)`); TM2 | Prognoz + kalendar qoldi; daftar — "Keyinga" |
+| B13 | O' | **To'lov jadvali egasi tekshirilmagan:** `payout_schedules` do'kon bo'yicha, pul yechish haqi esa akkaunt darajasida keladi (`shopId: 0`). `withdrawnProfit` (qator bo'yicha yechilgan summa) prognozda ishlatilmaydi — "tushdi" ni qo'lda belgilash rejalashtirilgan | `db/models.py`; ADR-062; `realcheck.logistics_payout_check` | B5.7 `realcheck payout` |
+| B14 | O' | **Rejadan tushib qolganlar:** "Nega o'zgardi" (08 §3 da B5 ga yozilgan, vazifa yo'q); bildirishnoma katalogidagi "tez orada" hodisalar va "Diqqat" qatorlari (jarima, kargo, Uzum to'lovi) B5 vazifalarida aytilmagan; "Qaytish keskin oshdi" va "Komissiya o'zgardi" aloqasi yo'q vazifalarga biriktirilgan | `upcore/notify.py` (`stage=`); 05 B4.3 qoldig'i | B5.6 ga "Nega o'zgardi"; umumiy qoida — har vazifa o'z hodisasini ulaydi |
+| B15 | O' | **B5.5 va'dasi API'dan katta.** Open API'da kampaniya, ko'rish, klik yo'q — faqat yechilgan summa; ABC va XYZ esa allaqachon hisoblanadi | 08 §4; `/inventory` (`abc`, `xyz`) | Doira toraytirildi; issiqlik xaritasi — "Keyinga" |
+| B16 | P | **B5.6 chegarasiz** ("barcha hisobotlarda"); "o'tgan yil" Temurning ma'lumotida 2027-07 gacha bo'sh | 08 §4 (tarix 2026-07-14 dan) | Aniq doira |
+| B17 | P | **B5.9: ochiq versiya ikki joyda** (B5.9 va B8.7); landing — alohida Astro sayt, hisob esa Python'da: komponent qayta ishlatilmaydi, TS'da takrorlash tamoyil 4 ga zid. M13 dagi "$/kg, $/m³" ADR-061 ga zid (tarif kiritilmaydi) | ADR-023; `upcore.unit` | Ochiq versiya faqat B8.7 da, API orqali |
+| B18 | P | **B5.1 da ortiqcha:** "kargo kompaniyalari" ADR-061 §12 bilan TM ga ko'chgan, lekin sarlavhada qolgan; `suppliers`, `carriers` jadvallari va API bor. Temurning vazifasi "yetkazib beruvchi va kargo ma'lumotlarini kiritish" ADR-061 ga ("ixtiyoriy") va tamoyil 12 ga zid | `routes/purchases.py` (`/suppliers`, `/carriers`) | Olib tashlandi |
+| B19 | P | **B5.8: tovar bo'yicha maqsad** — ko'p kiritish, P1 uchun foydasi kam; oy prognozi bosh sahifada bor | 02 M12; 01 §2 | Tashkilot va do'kon; tovar — "Keyinga" |
+| B20 | P | **Tartib qiymat bo'yicha emas:** B5.0a–f "shu tartibda" birinchi, asosiy ustunlik (D4 buyurtma rejasi) ulardan keyin. B5 ustuvorliklari mijoz suhbatlari bilan tasdiqlanishi kerak edi — birorta suhbat yo'q (`suhbatlar.md` yo'q) | 05 "Parallel yo'l" | Yangi tartib; "Keyinga" ro'yxati suhbatlarga bog'landi |
+| B21 | P | TM6 dagi ochiq qoldiq ("qisman chiqarish") bajarilgan `[x]` band ichida yashirin | 05 TM6 | "Keyinga" ro'yxatiga |
+
+**Temurdan kerak (B5 davomida, har biri bitta buyruq yoki bitta javob):** `realcheck` natijalari (B5.1 muddatlar,
+B5.4 `lost`, B5.7 `payout`) — buyruq matni o'sha vazifa kelganda yuboriladi; bitta savol — Uzum pul yechish jadvali
+kabinetda do'kon bo'yicha tanlanadimi yoki butun akkauntga bittami (B13).

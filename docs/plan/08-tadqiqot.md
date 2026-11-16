@@ -56,7 +56,7 @@ Faqat ochib o'qilgan sahifalar. Narxlar o'sha kungi; o'zgarishi mumkin.
 | Ulanishda butun tarix bepul | TrueStats, legacy | M2 / B2 |
 | AI yordamchi + MCP (ruxsatlar, amal tarixi) | TrueStats, SellerPro | M19 / B10 |
 | Aylanmaga bog'liq tarif | MPfact, TrueStats, sellerdata | 01 §7 / B8 |
-| "Nega o'zgardi" tushuntirishi | MARGN | M4 (Diqqat talab qiladi) / B5 |
+| "Nega o'zgardi" tushuntirishi | MARGN | M5 (Foyda) / B5.6 |
 
 ## 4. Uzum Seller Open API faktlari
 
@@ -98,7 +98,7 @@ spetsifikatsiyasi, 2026-aprel asosida).
   "Товары на отправку"; ustunlar `Штрихкод товара*` (faqat shu do'kon shtrix-kodlari; xato bo'lsa tovar qo'shilmaydi),
   `Себестоимость (сум)*` (Uzum har postavkada dolzarb tannarxni so'raydi — `purchasePrice` shu yerdan), `Количество (шт)*`;
   B2:C1000 — son ≥ 0 tekshiruvi. Izoh yoki tashqi raqam maydoni yo'q — postavkani xaridga faqat SKU bo'yicha bog'lash mumkin
-  (ADR-050). Uzum shablonni yangilab turadi ("kabinetdan dolzarbini yuklang") — B5.3 da format qayta tekshiriladi.
+  (ADR-050). Uzum shablonni yangilab turadi ("kabinetdan dolzarbini yuklang") — format TM6 da tekshirilgan; o'zgarsa `GET /dispatches/{id}/excel` yangilanadi.
 - Xarajat kodlari: `C000003` saqlash, `C000004` qaytim saqlash, `C000005` pullik jo'natish, `C000007` qabul kamomadi
   jarimasi, `00001` yetkazishni buzish jarimasi, `Y000119` / `Y000120` / `Y000050` reklama, `Y000002` / `Y000003`
   fotostudiya, `C000010` / `C000011` pul yechish xizmati, `FBS001`–`FBS004`, `DBS003` jarimalar,

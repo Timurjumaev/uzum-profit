@@ -909,8 +909,7 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
 
 ## B5. Ustunlik funksiyalari — 12–18 kun
 
-Tartib (ADR-061 §12; avval ADR-057 Q9): **avval ta'minot TM1–TM8** — hozir, B4 ning 14 kunlik sinovi bilan parallel; keyin
-B6.1–B6.2 (Telegram kunlik xulosa), keyin B5.0 va qolgan B5; B6.3 — B5 dan keyin.
+Tartib: ta'minot TM1–TM8 ✓ (ADR-061) → B6.1–B6.2 ✓ → **qolgan B5** (ADR-063 tartibida, pastda) → B6.3.
 
 ### Ta'minot qayta loyihasi (ADR-061) — birinchi navbatda
 
@@ -994,34 +993,129 @@ Har vazifa — alohida branch va PR; tafsilot 07 "ADR-061 tafsiloti", 02 M9–M1
   (buyurtma sanasi va eski yozuvlar uchun) saqlanadi. **T:** Temur real xaridlarida butun oqimni staging'da sinaydi.
 - T: har TM dan keyin staging'da real xarid bilan sinash; noqulay joy — skrinshot bilan bir qator.
 
-### Qolgan B5
+### Qolgan B5 (ADR-063, 2026-11-16 — tanqidiy tahlil: 09 §12)
 
-- [ ] B5.0 B4 dan ko'chganlar (ADR-057 Q8, ADR-059) — B5 boshida, shu tartibda:
-  - [ ] B5.0a (avval B4.27) "Yo'qotishlar va imkoniyat" bloki (ADR-043 (5), AI'siz, formula bilan).
-  - [ ] B5.0b (avval B4.55) "Chegarada" chegarasi Sozlamalarda (standart 5%, F13).
+**Tartib** (qiymat va bog'liqlik bo'yicha; raqamlar o'zgarmadi — kod va hujjatlardagi havolalar buzilmasin):
+B5.0b → B5.0d → **B5.1** → **B5.2** → **B5.4** (+ B5.0a) → **B5.7** → B5.6 (+ B5.0f) → B5.5 → B5.9 → B5.8.
+
+Har vazifaga umumiy qoidalar (alohida yozilmaydi):
+- **O'lchov avval.** Real ma'lumotga tayanadigan formula (F25, F31, F32, F34, F38) uchun avval `realcheck` bo'limi
+  (faqat o'qish), keyin UI. Temur staging'da **bitta** buyruq ishga tushiradi va chiqqan matnni chatga tashlaydi; natija
+  ishonchsiz bo'lsa raqam ko'rsatilmaydi (tamoyil 9, M10 qabul mezoni).
+- **Formula o'zgarsa** — 02 dagi F-band shu vazifada, kod va test bilan birga yangilanadi (02 kod bilan mos turadi; istisno — F25, B5.1).
+- **Bildirishnoma va "Diqqat".** Vazifaga tegishli hodisa (`upcore.notify` katalogida "tez orada") va bosh sahifa
+  "Diqqat talab qiladi" qatori shu vazifada ulanadi.
+- Yordam maqolasi (`docs/help`, uz/ru) va `?` matni — shu vazifada.
+
+- [ ] B5.0 B4 dan ko'chganlar (ADR-057 Q8, ADR-059):
+  - [→] B5.0a (**qo'shildi → B5.4**, ADR-063; avval B4.27) "Yo'qotishlar va imkoniyat" bloki. Sabab: B5.4 dan oldin blokka
+    faqat "Diqqat" va "Zarar 5 SKU" da bor raqamlar tushardi (tannarxsiz sotuvlar, zarardagi SKU) — takror; haqiqiy
+    yo'qotishlar (F34, F51, F52, nelikvid saqlash) B5.4 da paydo bo'ladi.
+  - [ ] B5.0b (avval B4.55) "Chegarada" chegarasi Sozlamalarda (standart 5%, F13; hozir `upcore.metrics.profit_label` da
+    `0.05` qotirilgan — tamoyil 2).
   - [→] B5.0c (**ko'chdi → TM6**, ADR-061; avval B4.61) Ombor: postavka tarkibi va qisman chiqarish (ADR-055 §3).
   - [ ] B5.0d (avval B4.56–B4.60 qoldig'i) Sahifalash: Foyda tafsiloti (drill-down) (ADR-054). Kargolar — ✓ TM3 da.
-  - [ ] B5.0e (avval B4.81) Soliq, 2-bosqich: QQS va foyda solig'i oylik hisobi, shablon "MChJ umumbelgilangan" (ADR-058).
-  - [ ] B5.0f (avval B4.76, taklif) Foyda sahifasida "Uzum kabineti ko'rsatadigan" qator (09 §11.3) — Temur ko'rgach.
-- [ ] B5.1 Yetkazib beruvchilar va kargo kompaniyalari (ixtiyoriy ma'lumotnoma, ADR-061); muddatlarni o'rganish (F25: buyurtma →
-  sanash → Uzum).
-- [ ] B5.2 Buyurtma rejasi (F23–F27): tavsiya miqdor, CNY va so'm byudjeti, rejadan xarid yaratish.
-- [→] B5.3 (**ko'chdi → TM6, TM7**, ADR-061; bu yerda faqat "FBO yuborish rejasi" — zaxira maqsadi bo'yicha tavsiya — qoladi,
-  B5.2 bilan) FBO yuborish rejasi + Excel; postavkalar: e'lon va qabul, kamomad (F33), bog'liq jarima.
-  ADR-050: Excel — Uzum kabineti shablonida (shtrix-kod, tannarx, dona); xarid ↔ postavka SKU bo'yicha avtomatik bog'lanish
-  (FIFO, qo'lda almashtirish), xarid sahifasida "Uzumga yuborildi / qabul qilindi / kamomad"; o'z omborimni postavkalar bo'yicha
-  hisoblash (ADR-034 qoldig'i).
-- [ ] B5.4 Yo'qolgan tovar (F31) + kompensatsiya (F32); nelikvid (F30); muzlagan pul (F29); yo'qotilgan foyda (F34).
-- [ ] B5.5 Reklama tahlili (DRR, ACOS, SKU bo'yicha), ABC/XYZ, hafta kuni × soat issiqlik xaritasi.
-- [ ] B5.6 Davrlarni solishtirish barcha hisobotlarda.
-- [ ] B5.7 Pul oqimi (M11): hisoblar, tranzaksiyalar, Uzum to'lov prognozi (F38), 90 kunlik kalendar (F39).
-- [ ] B5.8 Reja-fakt (M12).
-- [ ] B5.9 Kalkulyator (M13) + ochiq versiya komponenti (landing uchun).
-- [ ] B5.10 FBS (do'konda bo'lsa): faol buyurtmalar va muddatlar; FBS qoldig'i — o'z omborim manbasi, ikki marta sanash yo'q
-  (ADR-034, 3-qadam); keyin DBS. (Mahalliy xarid — TM2 "Tovar qo'limda", ADR-061.)
-- T: yetkazib beruvchi va kargo ma'lumotlarini kiritish; har funksiyani real ma'lumotda sinab ko'rish.
+  - [→] B5.0e (**ko'chdi → B8.10**, ADR-063; avval B4.81) Soliq, 2-bosqich (QQS va foyda solig'i). Sabab: ADR-057 Q5 —
+    "to'liq hisob QQS to'lovchi birinchi mijoz paydo bo'lganda"; hozir bunday foydalanuvchi yo'q, MChJ stavkalari va Uzum
+    ushlashi tasdiqlanmagan (08 §6), import tovarida kirim QQS manbasi aniqlanmagan — real ma'lumotda tekshirib bo'lmaydi.
+  - [ ] B5.0f (avval B4.76, taklif) Foyda sahifasida "Uzum kabineti ko'rsatadigan" qator (09 §11.3: tushum − komissiya) —
+    B5.6 bilan birga; Temur ko'rgach qoladi yoki olinadi.
+- [ ] B5.1 **Muddatni o'rganish — F25 ikki bo'lak (tuzatish, birinchi navbatda).** Hozir kodda F25 hali eski 5 bosqich
+  (`upcore.purchasing.LEAD_STAGES`: tayyorlash, Xitoy ichki, kargo, qabul, topshirish), `reports/stock.py` esa 5 tasi ham
+  bo'lmasa muddatni "noma'lum" deydi. ADR-061 dan keyingi xaridda faqat buyurtma va sanash sanasi bor — yangi xaridlar
+  hech narsa o'rgatmaydi; F26 holat, F27 tavsiya va "Uzumga yuborish" signali faqat Sozlamalardagi 5 ta qo'lda raqamga
+  tayanadi yoki chiqmaydi. Qilinadi:
+  - Ikki bo'lak (02 F25 allaqachon shunday): **yo'l** = buyurtma → sanash (`transit_days` bor; eski xaridlarda eski
+    bosqichlar yig'indisi), **topshirish** = jo'natma Excel'i → postavka savdoga chiqqan kun (`fbo_dispatches` →
+    `dateAccepted`, ADR-056; eski xaridlarda qabul → "Uzumga yuborildi").
+  - O'rganish tartibi: tovar (oxirgi 5 xarid medianasi) → yetkazib beruvchi (ko'rsatilgan bo'lsa) → tashkilot medianasi
+    → Sozlamalardagi standart; manba UI'da yoziladi ("5 xaridingizdan" / "standart").
+  - Sozlamalar: 5 maydon → 2 ("Yo'l", "Uzumga topshirish"); saqlangan eski qiymatlar yig'indiga ko'chadi.
+  - `LEAD_STAGES` va eski bosqichli `timeline` kodi tozalanadi (TM8 qoldig'i).
+  - Hodisa "Kargo kechikmoqda" (kutilgan sanash sanasi + 5 kun) va "Diqqat" qatori.
+  - Yetkazib beruvchi — tez xarid oynasida ixtiyoriy maydon (jadval va `/suppliers` API bor; M9 da va'da qilingan, oynada
+    yo'q). **Qilinmaydi:** kargo kompaniyalari ma'lumotnomasi ekrani (ADR-061 §9: ixtiyoriy maydon — bor), yetkazib
+    beruvchi / kargo kartochkasida qo'lda "o'rtacha muddat" (`avg_prep_days`, `avg_transit_days` — o'rganiladi).
+- [ ] B5.2 **Buyurtma rejasi va Uzumga yuborish rejasi** (F23–F27, F54; D4 — asosiy ustunlik). Bor: Omborda tavsiya
+  miqdor, buyurtma sanasi, bitta tovar uchun "Xarid yaratish". Qoladi:
+  - Tovar darajasida reja: bir tovar bir necha SKU'da bo'lsa talab — SKU'lar yig'indisi, yo'ldagi va omborimdagi dona —
+    bir marta (hozir har SKU'ga to'liq sanaladi, `reports/stock.py` izohi).
+  - Tanlangan qatorlar bo'yicha jami byudjet (xarid valyutasi va so'm); tanlanganlardan **bitta** tez xarid oynasi (ko'p
+    tovar, TM2).
+  - "Odatiy partiya hajmi" (F27 yaxlitlash): manbasi yo'q (`reorder(batch=1)`) — tovarda ixtiyoriy maydon yoki oxirgi
+    xarid donasidan taklif.
+  - **Uzumga yuborish rejasi** (avval B5.3 qoldig'i) — yangi formula **F54**: yuborish = min(Omborimda, max(0, F23 ×
+    (topshirish muddati + maqsad qamrov) − (Uzum qoldig'i + postavkada))); maqsad qamrov sozlanadi; (Uzumdagi +
+    yuboriladigan) / F23 > 60 kun bo'lsa ogohlantirish — Uzum 60 kundan oshgan aylanmaga saqlash haqi oladi (F43).
+    Jo'natish qoralamasida (TM6) "Tavsiya bo'yicha to'ldirish" tugmasi; standart — to'liq son (ADR-061 §7) o'zgarmaydi.
+- [→] B5.3 (**ko'chdi → TM6, TM7**, ADR-061; qoldig'i — "Uzumga yuborish rejasi" — **B5.2** da, ADR-063.)
+- [ ] B5.4 **Yo'qotishlar** (F30–F34; D5) + bosh sahifa bloki (B5.0a). F29 muzlagan pul — ✓ B4 da (Asosiy, Ombor).
+  - `realcheck lost` (avval): har SKU uchun balans farqi, uning vaqt bo'yicha barqarorligi, `quantityMissing`, real
+    "[Kompensatsiya]" qatorlari summasi ↔ F32.
+  - **F31 qayta yoziladi.** (a) Hozirgi "butun tarix bo'yicha qabul qilingan − sotilgan" tarixi cheklangan do'konda
+    ishlamaydi (byDurii — 2026-07-14 dan): langar — boshlang'ich holat kuni (F41) yoki birinchi snapshot qoldig'i, balans
+    shundan keyin; (b) "qaytish yo'lida" soni API'da yo'q (08 §4), bekor esa buyurtmalarning ≈ 30% i (09 §11.2) — signal
+    faqat farq qaytish oynasidan uzoq vaqt (sozlanadi, standart 14 kun) o'zgarmay tursa; (c) Uzumning `quantityMissing`
+    maydoni > 0 bo'lsa — to'g'ridan-to'g'ri signal. O'lchovda shovqin katta chiqsa F31 ko'rsatilmaydi, faqat (c).
+  - **F32 tasdiqlanadi:** Uzum kompensatsiyani sotuv narxidan to'laydimi yoki postavkada e'lon qilingan tannarxdan
+    (`Себестоимость`, 08 §4) — real qatorlar bilan; tasdiqlanmaguncha summa ko'rsatilmaydi.
+  - Yo'qolgan tovar **TM7 kamomad ro'yxatiga** tushadi (manba: "qabul farqi" / "omborda yo'qoldi"; holatlar va F52 bir
+    xil) — ikkinchi ro'yxat qilinmaydi.
+  - **F30 tuzatiladi:** hozir hech sotilmagan tovar birinchi kundan "nelikvid" (kecha kelgan yangi tovar ham) — shart:
+    Uzumda birinchi ko'ringanidan ≥ 30 kun (sozlanadi); yonida muzlagan summa va shu SKU'ning pullik saqlash xarajati (F43).
+  - **F34:** "faol SKU" ta'rifi — tugashdan oldin F23 > 0 va tovar to'xtatilmagan (yo'lda / omborimda bor yoki 90 kun
+    ichida qaytgan); bitta tugab qolish uchun ko'pi bilan 90 kun; SKU sahifasida va Omborda.
+  - Bosh sahifa "Yo'qotishlar va imkoniyat" (ADR-043 (5), AI'siz): qaytarish xarajati, jarimalar, brak zarari (F51), qabul
+    yo'qotishi (F52), nelikvid saqlash haqi, tugab qolishdan yo'qotilgan foyda (F34); "imkoniyat" — nelikviddagi pul.
+    "Diqqat" va "Zarar 5 SKU" dagi raqamlar takrorlanmaydi; bekor summasi yo'qotish emas.
+  - Hodisalar: "Yo'qolgan tovar", "Qaytish keskin oshdi".
+- [ ] B5.5 **Reklama va assortiment tahlili.** Open API'da kampaniya, ko'rish va klik yo'q — faqat yechilgan summa
+  (`Y000119` / `Y000120` / `Y000050`); ROMI, CTR va'da qilinmaydi. Doira: reklama turlari bo'yicha summa va DRR trendi,
+  SKU ACOS (bog'langan reklama, F19), "reklama foydasini yeb qo'ygan SKU" ro'yxati; ABC × XYZ (hisob bor —
+  `/inventory`; Mahsulotlarda ustun va filtr); hodisa "SKU komissiyasi o'zgardi" (`sku_daily.commission_pct` dan).
+- [ ] B5.6 **Solishtirish va "Nega o'zgardi".** "Barcha hisobotlarda" o'rniga aniq doira: (1) "o'tgan yil shu davri"
+  rejimi — Asosiy va Foyda (M4; oldingi davr bor); o'tgan yil ma'lumoti yo'q bo'lsa rejim o'chiq, izoh bilan; (2)
+  Mahsulotlar va Buyurtmalar tahlilida oldingi davrga farq ustuni; (3) **"Nega o'zgardi"** (08 §3 da B5 ga yozilgan,
+  vazifasi yo'q edi): sof foyda farqi omillarga — sotuv hajmi, narx, komissiya, logistika, tannarx, reklama, boshqa
+  Uzum xarajatlari, o'z xarajatlar, soliq; omillar yig'indisi = farq (test), F-raqam bilan `upcore.pnl` da.
+- [ ] B5.7 **Uzum to'lov prognozi va to'lov kalendari** (M11; D6). Hisoblar daftari bu yerda **emas** (pastda "Keyinga").
+  - `realcheck payout` (avval): `withdrawnProfit` maydoni nimani bildiradi (qator bo'yicha yechilgan summa — avtomatik
+    "tushdi"); buyurtma → Yakunlangan oralig'i taqsimoti (`completed_seen_at`, 2026-11-12 dan); prognoz ↔ Temurning
+    oxirgi 2–3 real to'lovi; to'lov jadvali do'konnikimi yoki akkauntnikimi (pul yechish haqi `shopId: 0` bilan keladi,
+    ADR-062; `payout_schedules` hozir do'kon bo'yicha).
+  - **F38 to'ldiriladi:** hozir faqat allaqachon Yakunlangan summa — ufq keyingi to'lov sanasigacha. Qo'shiladi:
+    Jarayondagi sotuvlar × yakunlanish ulushi (F16 R) kutilgan yakunlanish kuniga (o'rganilgan oraliq), "taxminiy"
+    belgisi bilan. Pul yechish haqi ikki marta ayrilmaydi (prognozdagi foiz ↔ keyin kelgan `C000010` / `C000011`).
+  - **F39:** hisoblarsiz — bitta "bugungi qo'ldagi pul" raqami (ixtiyoriy); chiqimlar: takroriy o'z xarajatlari, qat'iy
+    soliq, buyurtma rejasi byudjeti (B5.2). Ufq — ma'lum kirimlar tugaydigan kungacha aniq, undan keyin sotuv sur'ati
+    bo'yicha alohida "taxminiy" qatlam (aks holda 30-kundan keyin doim soxta "kassa uzilishi").
+  - Dam olish kunlari — ma'lumotnoma jadvalida (tamoyil 2). Menyuda "Pul oqimi" qaytadi (ADR-057 Q12).
+  - Hodisa "Uzum to'lovi kutilmoqda / tushmadi"; "Diqqat" qatori.
+- [ ] B5.8 **Reja-fakt** (M12) — oxirida, sodda: oylik maqsad (tushum, sof foyda, dona) tashkilot va do'kon bo'yicha,
+  bajarilish %, oy oxiri prognozi (bosh sahifadagi run-rate bilan bitta hisob). Tovar bo'yicha maqsad — "Keyinga".
+- [ ] B5.9 **Kalkulyator** (M13): alohida sahifa (SKU sahifasidagi unit kalkulyator va `/unit-calc` bor), F37 logistika
+  (o'lcham kiritilsa), soliq % — soliq profilidan, kargo / dona — o'xshash xaridlar o'rtachasidan taklif (ADR-061: tarif
+  kiritilmaydi), ssenariyni saqlash, tez xarid oynasiga aylantirish. Ochiq (ro'yxatsiz) versiya — **B8.7** da (landing
+  alohida Astro sayt, ADR-023): ochiq, IP bo'yicha cheklangan API endpoint — formula TS'da takrorlanmaydi (tamoyil 4).
+- [→] B5.10 (**ko'chdi → B9.5**, ADR-063) FBS (va DBS). Sabab: Temurning ikkala do'koni faqat FBO (08 §4) — FBS javoblari
+  namunasi ham, real tekshiruv ham yo'q; chiqish mezoni bajarilmasdi. Birinchi FBS sotuvchi bilan (beta). ADR-034
+  3-qadam shu bilan birga.
 
-**Chiqish:** har funksiya Temurning real ma'lumotida tekshirilgan, yordam maqolasi yozilgan.
+**Keyinga — B5 chiqishiga kirmaydi; mijoz suhbatlarida (06 §9) so'ralsa rejaga qaytadi:**
+- Hisoblar va tranzaksiyalar daftari (M11: karta, naqd, bank, o'tkazmalar; `cash_accounts`, `transactions` jadvallari
+  bor). Sabab: sotuvchidan doimiy qo'lda yuritishni talab qiladi (ADR-061 saboqi: kiritish ko'p bo'lsa ishlatilmaydi);
+  to'lov prognozi va kalendar usiz ishlaydi.
+- Hafta kuni × soat issiqlik xaritasi (grafik komponenti bor) — sotuvchi bu bo'yicha qila oladigan amal yo'q (reklama
+  jadvalini boshqarmaymiz, 01 §6).
+- Reja-fakt tovar bo'yicha.
+- Postavkani "qisman chiqarish" chekkasi (ADR-055 §3; TM6 da ochiq qolgan).
+
+- T: har partiyada **bitta** `realcheck` buyrug'i natijasini chatga tashlash; tayyor funksiyani staging'da bir ko'rib
+  "ha" yoki skrinshot bilan bir qator. (Yetkazib beruvchi va kargo ma'lumotlarini kiritish — shart emas, ADR-061.)
+
+**Chiqish:** B5.0b, B5.0d, B5.0f, B5.1, B5.2, B5.4–B5.9 ning har biri Temurning real ma'lumotida tekshirilgan
+(`realcheck` toza yoki raqam ochiq "ishonchsiz" deb yashirilgan) va yordam maqolasi yozilgan. Ko'chgan (B5.0e, B5.10) va
+"Keyinga" bandlari chiqishga kirmaydi.
 
 ## B6. Bildirishnomalar va Telegram — 5–7 kun
 
@@ -1073,10 +1167,14 @@ Tartib (ADR-057 Q9): B6.1–B6.2 — B4 dan keyin, B5 dan **oldin**; B6.3 — B5
 - [ ] B8.5 Monitoring: GlitchTip, Uptime Kuma, admin Telegram ogohlantirishlari, status sahifa, runbook'lar.
 - [ ] B8.6 Huquqiy (06 §6): oferta, maxfiylik siyosati, rozilik oqimi, shaxsiy ma'lumotlar bazasini ro'yxatdan
   o'tkazish, Uzum API shartlarini tekshirish, MXIK kodi.
-- [ ] B8.7 Landing (uz/ru): taklif, narxlar, ochiq kalkulyator, yordam markazi, "Yangiliklar".
+- [ ] B8.7 Landing (uz/ru): taklif, narxlar, ochiq kalkulyator (B5.9 hisobi; ochiq, IP bo'yicha cheklangan API endpoint —
+  formula TS'da takrorlanmaydi, ADR-063), yordam markazi, "Yangiliklar".
 - [ ] B8.8 Production server, domen (Q7), pochta, Telegram kanal va yordam chati.
 - [ ] B8.9 (ADR-057 Q13, 09 R3 e) Foydalanish hodisalari (`events`): B9.4 o'lchovlari uchun — aktivatsiya, haftalik faollik,
   birinchi foyda vaqti.
+- [ ] B8.10 (avval B5.0e / B4.81; ADR-057 Q5, ADR-063) Soliq, 2-bosqich: QQS va foyda solig'i oylik hisobi, shablon "MChJ
+  umumbelgilangan" (ADR-058) — birinchi QQS to'lovchi mijoz bilan; avval MChJ stavkalari va Uzum ushlashi tasdiqlanadi
+  (08 §6), kirim QQS manbasi aniqlanadi.
 - T: Q4 yuridik shaxs (buxgalter maslahati), Q5 to'lov provayderi bilan shartnoma, Q6 narxlarni tasdiqlash,
   Q7 domen, production VPS to'lovi, shaxsiy ma'lumotlar bazasi arizasi.
 
@@ -1089,6 +1187,9 @@ ishlata oladi (sinov bilan tekshirilgan).
 - [ ] B9.2 Har biriga onboarding qo'ng'irog'i (T yoki men tayyorlagan video), haftalik fikr so'rovi.
 - [ ] B9.3 Xatolar SLA: kritik — 24 soat, oddiy — 1 hafta.
 - [ ] B9.4 O'lchov: aktivatsiya (48 soatda kalit + TOP-20 tannarx), haftalik faollik, birinchi foyda vaqti.
+- [ ] B9.5 (avval B5.10; ADR-063) FBS — beta'da FBS sotuvchi bo'lsa: faol buyurtmalar va muddatlar (`acceptUntil` /
+  `deliverUntil`), hodisa "FBS: muddat yaqin"; FBS qoldig'i — o'z omborim manbasi, ikki marta sanash yo'q (ADR-034,
+  3-qadam); keyin DBS. Avval shu sotuvchining real javoblari yozib olinadi (kasseta).
 
 **Chiqish:** aktivatsiya ≥ 60%; kritik xato 0; kamida 3 sotuvchi pullik tarifga o'tishga tayyor.
 
@@ -1105,6 +1206,8 @@ ishlata oladi (sinov bilan tekshirilgan).
 
 - [ ] T: B8 gacha 10 ta sotuvchi bilan 20 daqiqalik suhbat (savollar 06-operatsiyalar.md §9).
 - [ ] Natijalar `docs/plan/suhbatlar.md` ga yoziladi; B5 ustuvorliklari va B8 narxlari shunga qarab tasdiqlanadi.
+  (2026-11-16: hali birorta suhbat yo'q, fayl ham yo'q — B5 tartibi hozircha Temurning o'z tajribasi va raqobatchilar
+  tahliliga tayanadi; B5 dagi "Keyinga" ro'yxati aynan shu suhbatlar bilan hal bo'ladi, ADR-063.)
 
 ## Umumiy hajm
 
