@@ -630,6 +630,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   "Jarayonda" belgisi. Bekor/qaytish ulushi va R — faqat yakuniy holatlardan. Sotuv tezligi (F23) ham Jarayondagilarni
   oladi. Oldingi davrda sotuv bo'lmasa o'zgarish foizi ko'rsatilmaydi (masalan, "▲47 228%" o'rniga). Migratsiya 0012:
   `daily_sku_metrics` ga Jarayondagi qism ustunlari va to'liq qayta qurish so'rovi.
+- B5 tanqidiy tahlili (ADR-063, faqat hujjat): `09-audit.md` §12 — 21 topilma (B1–B21); `05` da B5 qayta tuzildi — tartib
+  qiymat bo'yicha, B5.1 birinchi navbatda (F25 kodda hali eski 5 bosqich — yangi xaridlar muddatni o'rgatmaydi), B5.0e (QQS)
+  → B8.10, B5.10 (FBS) → B9.5, B5.0a → B5.4, B5.3 qoldig'i → B5.2 (yangi F54 — Uzumga yuborish miqdori), "Nega o'zgardi" →
+  B5.6, hisoblar daftari / issiqlik xaritasi / tovar bo'yicha reja-fakt — "Keyinga"; F30–F32, F34, F38–F39 shu vazifalarda
+  qayta yoziladi; chiqish mezoni aniq ro'yxat bilan. 02, 03, 08 dagi bosqich belgilari moslandi.
 
 ### Olib tashlandi
 

@@ -133,7 +133,7 @@ logistika, `sellerProfit`, `amountReturns`, `returnCause`, `purchasePrice` — f
 `skuTitle` — `mp_skus.sku_code` = `skuFullTitle` bilan bog'lanadi), `mp_expenses`
 (tashqi id unikal; asl va normallashtirilgan kod, toifa, status, summa, tur, sanalar, bog'langan buyurtma/sotuv),
 `expense_codes` (global lug'at: kod → toifa, nomlar uz/ru, P&L'ga kiradimi), `fbo_invoices` + `fbo_invoice_items`,
-`mp_returns` + `mp_return_items`, `fbs_orders` [B5] (xaridor shaxsiy ma'lumoti SAQLANMAYDI).
+`mp_returns` + `mp_return_items`, `fbs_orders` [B9.5] (xaridor shaxsiy ma'lumoti SAQLANMAYDI).
 
 **Xarid va ombor (sotuvchi kiritadi):** `suppliers`, `carriers`, `shipments` (kargo: nomi, kompaniya, Xitoy omborida /
 yo'lda / keldi sanalari; ADR-046), `purchases` (holat va bosqich sanalari, `shipment_id`, `legacy_batch_id`), `purchase_lines` (tovar yoki vaqtinchalik nom/havola/rasm, variant, buyurtma va qabul donasi,

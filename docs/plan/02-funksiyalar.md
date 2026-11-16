@@ -67,7 +67,7 @@ boshlanadi va qolgan joydan davom etadi; tannarxsiz ham bosh sahifa ishlaydi (ta
 | Postavkalar | `GET /v1/shop/{id}/invoice` | soatiga 1 | ro'yxat |
 | Postavka tarkibi | `GET /v1/shop/{id}/invoice/products?invoiceId=` | yangi yoki holati o'zgarganda | bir marta |
 | Qaytarishlar | `GET /v1/return`, `/v1/shop/{id}/return` | soatiga 1 | `dateFrom` bilan |
-| FBS buyurtmalar | `GET /v2/fbs/orders` (size≤50) | faqat do'konda FBS bo'lsa | holat bo'yicha [B5] |
+| FBS buyurtmalar | `GET /v2/fbs/orders` (size≤50) | faqat do'konda FBS bo'lsa | holat bo'yicha [B9.5] |
 | CBU kurslari | cbu.uz JSON | kuniga 2 | arxiv sana bo'yicha; cbu.uz ochilmasa — zaxira bozor kursi (ADR-045) |
 
 - **Birinchi ulanish:** butun tarix (2020-01-01 dan, Uzum qancha bersa). Legacy'dagi mantiq saqlanadi:
@@ -120,7 +120,7 @@ Bloklar (joylashuvi 04-dizayn.md §7.2 desktop, §7.3 mobil):
    ulushda — punkt; rang = yo'nalish × yaxshimi), trend nuqtalari (davr ≤ 62 kun — kunlik, ≤ 366 — haftalik, undan uzun —
    oylik), formula ("?"). Bekor va qaytarish ulushi sozlamadagi chegaradan oshsa — ogohlantirish (M16).
 7. **Tovardagi pul:** muzlagan pul, yo'ldagi tovar qiymati (bugungi holat, davrga bog'liq emas).
-8. **Yo'qotishlar va imkoniyat** [B4.27]: formula bilan (AI'siz, ADR-021) — qaytarish xarajati, zarardagi SKU, tannarxsiz
+8. **Yo'qotishlar va imkoniyat** [B5.4, ADR-063]: formula bilan (AI'siz, ADR-021) — qaytarish xarajati, zarardagi SKU, tannarxsiz
    sotuvlar; bekor summasi yo'qotish sifatida sanalmaydi (tovar qaytadi).
 
 Qabul mezonlari: 1 yillik, 50 000 sotuv qatori bilan javob p95 < 700 ms; davr va do'kon tanlovi URL'da
@@ -173,13 +173,13 @@ oylar yig'indisi = butun davr; har qatorda yakunlangan + kutilayotgan = jami; ha
 
 Qabul mezonlari: 2 000 SKU'li jadval sahifalab (100 tadan, ADR-054) silliq; har raqam yonidagi "?" formulani ochadi.
 
-## M7. Buyurtmalar, bekor va qaytishlar [B4; FBS B5]
+## M7. Buyurtmalar, bekor va qaytishlar [B4; FBS B9.5]
 
 - Sotuv qatorlari ro'yxati: sana, holat, SKU, dona, narx, komissiya, logistika, Uzum to'lovi, tannarx, foyda.
 - Bekor tahlili (ADR-043 — mijozga topshirilmagan): ulush (F17), dona va summa, sabab, SKU bo'yicha, trend.
 - Qaytarish tahlili (mijoz olgan yoki punktda ko'rib rad etgan va qaytargan): ulush (F18), dona va summa, sabab
   (`returnCause`), SKU bo'yicha, qaytarish xarajati (qaytim saqlash C000004).
-- FBS (do'konda bo'lsa): faol buyurtmalar, `acceptUntil` / `deliverUntil` muddatlari, kechikish xavfi [B5].
+- FBS (do'konda bo'lsa): faol buyurtmalar, `acceptUntil` / `deliverUntil` muddatlari, kechikish xavfi [B9.5].
   FBS buyurtmani tasdiqlash / yorliq chop etish [Keyin].
 
 ## M8. Xarajatlar [B4]
@@ -251,7 +251,7 @@ tezlik hisobida qoldiq 0 bo'lgan kunlar chiqarib tashlanadi; yo'qolgan tovar ish
 jo'natishda bir dona ikki Excel'ga tushmaydi; har SKU uchun Omborimda + Jo'natilmoqda + Uzumga bog'langan + o'tkazilgan +
 hisobdan chiqarilgan = sanalgan sog' dona.
 
-## M11. Pul oqimi [B5]
+## M11. Pul oqimi [B5.7; hisoblar daftari — keyinga, ADR-063]
 
 - **Hisoblar:** karta (so'm), USD karta, naqd, bank, Uzum balansi (virtual).
 - **Kirim/chiqim:** xarid to'lovlari va o'z xarajatlari avtomatik, Uzum to'lovlari (prognozdan tasdiqlanadi),
@@ -260,7 +260,7 @@ hisobdan chiqarilgan = sanalgan sog' dona.
 - **90 kunlik to'lov kalendari** (F39): rejalashtirilgan kargo to'lovlari, takroriy xarajatlar, kutilayotgan Uzum
   to'lovlari → kunlik qoldiq prognozi; manfiy bo'lsa "kassa uzilishi" ogohlantirishi.
 
-## M12. Reja-fakt [B5]
+## M12. Reja-fakt [B5.8: tashkilot va do'kon; tovar bo'yicha — keyinga, ADR-063]
 
 Oylik maqsadlar (tushum, sof foyda, dona) tashkilot / do'kon / tovar bo'yicha; bajarilish %; oy oxiri prognozi
 (run-rate); og'ish 15% dan katta bo'lsa ogohlantirish.
@@ -271,7 +271,7 @@ Kiritish: 1688 narxi (CNY) + Xitoy ichki yetkazish, dona, dona vazni (kg) va o'l
 $/m³), qo'shimcha xarajat/dona, Uzum toifasi komissiyasi (%), mo'ljallangan narx.
 Natija: tannarx/dona, Uzum logistika (F37), komissiya, soliq, foyda/dona, marja, ROI, zararsizlik narxi (F35),
 maqsadli marja narxi (F36). Ssenariyni saqlash, xaridga aylantirish.
-**Ochiq versiya** (ro'yxatdan o'tmasdan) landing sahifada — mijoz jalb qilish uchun [B8].
+**Ochiq versiya** (ro'yxatdan o'tmasdan) landing sahifada — mijoz jalb qilish uchun [B8.7].
 
 ## M14. Hisobotlar va eksport [B7]
 
