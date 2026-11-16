@@ -95,6 +95,7 @@ export function skusData(over: Partial<Skus> = {}): Skus {
     pages: 1,
     unlinked: pnlStatement({ units: 1, lines: 1, revenue: "50000.00", net_profit: "0.00" }),
     unallocated: pnlStatement({ units: 0, lines: 0, revenue: "0.00", net_profit: "-12000.00" }),
+    common: pnlStatement({ units: 0, lines: 0, revenue: "0.00", net_profit: "-62000.00" }),
     ...over,
   };
 }

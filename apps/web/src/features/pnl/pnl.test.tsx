@@ -233,6 +233,7 @@ describe("kesimlar", () => {
     expect(call!.searchParams.get("view")).toBe("month");
     expect(call!.searchParams.get("start")).toBe("2026-09-01");
     expect(call!.searchParams.getAll("shop")).toEqual([SHOP_A]);
+    expect(screen.getByText(/umumiy xarajatlar .* bu hisobga kirmaydi/)).toBeTruthy(); // ADR-062
     const table = screen.getByRole("table", { name: "Oylar" });
     expect(within(table).getAllByRole("columnheader").map((h) => h.textContent)).toEqual(["Qator", f.month("2026-09-01"), f.month("2026-10-01"), "Jami"]);
     const revenue = within(table).getByRole("row", { name: /Tushum/ });
@@ -245,11 +246,12 @@ describe("kesimlar", () => {
     expect(within(table).getByRole("row", { name: /shundan yakunlangan/ })).toBeTruthy();
   });
 
-  it("do'konlar: URL'da view=shop, do'kon nomlari, to'g'ridan-to'g'ri / taqsimlangan qatorlar, taqsimlanmagan ustun", async () => {
+  it("do'konlar: URL'da view=shop, do'kon nomlari, to'g'ridan-to'g'ri / taqsimlangan qatorlar, taqsimlanmagan va umumiy ustun", async () => {
     const columns = [
       { key: SHOP_A, statement: pnlStatement(), title: null, shop_id: null },
       { key: SHOP_B, statement: pnlStatement(), title: null, shop_id: null },
       { key: null, statement: pnlStatement({ revenue: "0.00" }), title: null, shop_id: null },
+      { key: "common", statement: pnlStatement({ revenue: "0.00" }), title: null, shop_id: null },
     ];
     const { api, history } = await renderPnl(PATH, {
       [PNL_ROUTE]: (r) => json(200, pnlData(new URL(r.url).searchParams.get("view") === "shop" ? { columns } : {})),
@@ -258,7 +260,7 @@ describe("kesimlar", () => {
     const table = await screen.findByRole("table", { name: "Doʻkonlar" });
     expect(history.location.search).toContain("view=shop");
     expect(pnlUrls(api).at(-1)!.searchParams.get("view")).toBe("shop");
-    await waitFor(() => expect(within(table).getAllByRole("columnheader").map((h) => h.textContent)).toEqual(["Qator", "Durii", "EL-ONE", "Taqsimlanmagan", "Jami"]));
+    await waitFor(() => expect(within(table).getAllByRole("columnheader").map((h) => h.textContent)).toEqual(["Qator", "Durii", "EL-ONE", "Taqsimlanmagan", "Umumiy xarajatlar", "Jami"]));
     const direct = within(table).getByRole("row", { name: /Uzum xarajatlari — toʻgʻridan-toʻgʻri/ });
     expect(direct.className).toContain("is-part");
     expect(norm(within(direct).getAllByRole("cell")[0]!.textContent!)).toBe(n("-250000.00"));
@@ -271,11 +273,11 @@ describe("kesimlar", () => {
     await renderPnl(`${PATH}&view=sku`, { [PNL_ROUTE]: () => json(200, pnlData({ columns: skuColumns() })) });
     const table = await screen.findByRole("table", { name: "SKU" });
     const names = within(table).getAllByRole("rowheader").map((h) => h.textContent);
-    expect(names).toEqual(["Sumka qora M", "Kamar L", "SKU bogʻlanmagan sotuvlar", "Taqsimlanmagan", "Jami"]);
+    expect(names).toEqual(["Sumka qora M", "Kamar L", "SKU bogʻlanmagan sotuvlar", "Taqsimlanmagan", "Umumiy xarajatlar", "Jami"]);
     const loss = within(table).getByRole("row", { name: /Kamar L/ });
     expect(within(loss).getByText(n("-90000.00")).className).toContain("ui-text--negative");
     expect(within(table).getByRole("columnheader", { name: "shundan kutilayotgan" })).toBeTruthy();
-    expect(screen.getByText("4 / 4 ta SKU (sof foyda boʻyicha)")).toBeTruthy();
+    expect(screen.getByText("5 / 5 ta SKU (sof foyda boʻyicha)")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Yana koʻrsatish" })).toBeNull();
   });
 

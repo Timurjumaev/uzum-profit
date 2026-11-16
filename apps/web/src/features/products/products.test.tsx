@@ -235,6 +235,8 @@ describe("jadval", () => {
     expect(norm(within(block).getByText(/Sotuvsiz kunlar xarajati/).textContent!)).toContain(norm(f.money("-12000.00")));
     // B4.54: "sotuvsiz kunlar xarajati" nimaligi izohda tushuntiriladi.
     expect(within(block).getByText(/hech bir SKUʼga boʻlinmaydi, lekin jami sof foydadan ayriladi/)).toBeTruthy();
+    // ADR-062: umumiy xarajatlar (akkaunt, qatʼiy soliq, doʻkonsiz) — alohida qator.
+    expect(norm(within(block).getByText(/Umumiy xarajatlar \(sof foyda\)/).textContent!)).toContain(norm(f.money("-62000.00")));
   });
 
   it("xato — qizil banner va 'Qayta urinish'; yuklanish — skelet", async () => {

@@ -440,10 +440,10 @@ def test_pnl_columns_sum_to_total(world: World, view: str) -> None:
         assert sum(money(c["statement"][key]) for c in cols) == money(total[key]), key
     if view == "sku":
         keys = {c["key"] for c in cols}
-        assert {str(world.ids["xa"]), str(world.ids["ya"]), "unlinked", None} <= keys
+        assert {str(world.ids["xa"]), str(world.ids["ya"]), "unlinked", None, "common"} <= keys
     if view == "shop":
-        # null — tashkilot xarajatining hech qaysi do'konda sotuv bo'lmagan kunlari (1-oktabr ijarasi).
-        assert {c["key"] for c in cols} == {str(world.a.shop_id), str(world.b.shop_id), None}
+        # ADR-062: tashkilot xarajati (ijara) — do'konlarga taqsimlanmaydi, "common" ustunida.
+        assert {c["key"] for c in cols} == {str(world.a.shop_id), str(world.b.shop_id), "common"}
     if view == "month":
         assert [c["key"] for c in cols] == ["2026-10-01"]
 
@@ -505,8 +505,9 @@ def test_cell_sales_columns_match_fields() -> None:
 
 def test_pnl_expected_profit(world: World) -> None:
     """ADR-037: kutilayotgan sof foyda (F16) — 15-oktabr Jarayondagi sotuv: 200 000 − 40 000 − 5 000 − tannarx 100 000 −
-    o'sha kungi ijara (10 000, kunning yagona sotuvi — hammasi shu katakka) − soliq 4% (8 000) = 37 000; yakunlangan = jami −
-    kutilayotgan; har qator ikki qismda. R — 50 donadan kam (noma'lum)."""
+    o'sha kungi ijara (10 000; ADR-062: umumiy xarajatlar katagida, kunning yagona sotuvi Jarayonda — hammasi Jarayondagi
+    qismga) − soliq 4% (8 000) = 37 000; do'kon kesimida ijarasiz — 47 000; yakunlangan = jami − kutilayotgan; har qator
+    ikki qismda. R — 50 donadan kam (noma'lum)."""
     body = world.get("pnl", **OCT)
     e = body["expected"]
     assert (e["units"], e["lines"], money(e["revenue"])) == (1, 1, D(200_000))
@@ -519,7 +520,7 @@ def test_pnl_expected_profit(world: World) -> None:
     assert e["rate"] is None and e["uncovered_lines"] == 0
     assert money(e["logistics_estimated"]) == 0 and e["logistics_missing_lines"] == 0
     assert [x["shop_id"] for x in body["expected_shops"]] == [str(world.a.shop_id)]
-    assert money(body["expected_shops"][0]["net_profit"]) == D(37_000)
+    assert money(body["expected_shops"][0]["net_profit"]) == D(47_000)
     s = body["statement"]
     assert money(s["net_profit_processing"]) == D(37_000)
     assert money(s["net_profit_done"]) + D(37_000) == money(s["net_profit"])
@@ -828,7 +829,10 @@ def test_dashboard_equals_pnl_and_skus(world: World) -> None:
     assert money(dash["statement"]["net_profit"]) == net
     rows_net = sum(money(r["net_profit"]) for r in skus["items"])
     assert (
-        rows_net + money(skus["unlinked"]["net_profit"]) + money(skus["unallocated"]["net_profit"])
+        rows_net
+        + money(skus["unlinked"]["net_profit"])
+        + money(skus["unallocated"]["net_profit"])
+        + money(skus["common"]["net_profit"])
         == net
     )
     assert sum(money(x["revenue"]) for x in dash["daily"]) == D(2_000_000)
@@ -1110,6 +1114,18 @@ def test_expenses_match_pnl(world: World) -> None:
     assert money(ijara["in_period"]) == D(200_000) and money(ijara["amount"]) == D(310_000)
 
 
+def test_expenses_shop_filter_matches_pnl(world: World) -> None:
+    """ADR-062: do'kon filtrida umumiy xarajatlar (do'konsiz ijara) na P&L'da, na Xarajatlarda."""
+    shop = str(world.a.shop_id)
+    pnl = world.get("pnl", shop=shop, **OCT)["statement"]
+    body = world.get("expenses", shop=shop, **OCT)
+    own = {c["category"]: money(c["amount"]) for c in body["own"]}
+    assert "ijara" not in own
+    assert own == {k: money(v) for k, v in pnl["own_expenses"].items()}
+    uzum = {c["category"]: money(c["amount"]) for c in body["uzum"]}
+    assert uzum == {k: money(v) for k, v in pnl["uzum_expenses"].items()}
+
+
 def test_expenses_excluded_category_and_cursor(world: World) -> None:
     body = world.get("expenses", include_excluded=True, **OCT)
     rows = {i["id"]: i for i in body["items"]}
@@ -1132,9 +1148,9 @@ def test_expenses_excluded_category_and_cursor(world: World) -> None:
     assert sorted(seen) == sorted(rows) and len(seen) == len(set(seen))
     b_only = world.get("expenses", shop=str(world.b.shop_id), **OCT)
     assert money(b_only["uzum_total"]) == D(8_000)
-    assert {o["category"] for o in b_only["own_items"]} == {"ijara", "internet"}
+    assert {o["category"] for o in b_only["own_items"]} == {"internet"}  # ijara — umumiy (ADR-062)
     a_only = world.get("expenses", shop=str(world.a.shop_id), **OCT)
-    assert {o["category"] for o in a_only["own_items"]} == {"ijara", "qadoq"}
+    assert {o["category"] for o in a_only["own_items"]} == {"qadoq"}
 
 
 # --- Ombor ----------------------------------------------------------------------------------------

@@ -177,20 +177,36 @@ def test_expense_allocation_rules() -> None:
     assert whole.allocated_total == uzs(36_000) and whole.direct_total == uzs(16_000)
 
 
-def test_account_level_uzum_expense_spread_across_shops() -> None:
-    """Akkaunt xarajati (``shop=None``, Uzum ``shopId: 0`` — shoshilinch pul yechish) bir marta, hamma do'konlarga tushum
-    ulushida; sotuvsiz kunda — tashkilot darajasidagi taqsimlanmagan katakda (Temur topdi, 2026-11-16)."""
+def test_account_level_uzum_expense_is_common() -> None:
+    """ADR-062: akkaunt xarajati (``shop=None``, Uzum ``shopId: 0`` — shoshilinch pul yechish) bir marta, do'konlarga
+    taqsimlanmaydi — "Umumiy xarajatlar" katagida; do'kon kesimlari o'z foydasini ko'rsatadi, jami = do'konlar + umumiy."""
     lines = [sale(1, "A", "S1", price=300_000), sale(1, "B", "S2", price=100_000)]
     fee = [
         ExpenseItem(d(1), None, C.WITHDRAWAL_FEE, uzs(62_000)),
         ExpenseItem(d(5), None, C.WITHDRAWAL_FEE, uzs(10_000)),  # sotuvsiz kun
     ]
     cells = build_cells(OCT, lines, fee)
-    assert cells.statement().uzum_total == uzs(72_000)  # bir marta
-    assert cells.items[CellKey(d(1), "S1", "A")].uzum_expenses == {C.WITHDRAWAL_FEE: uzs(46_500)}
-    assert cells.items[CellKey(d(1), "S2", "B")].uzum_expenses == {C.WITHDRAWAL_FEE: uzs(15_500)}
-    assert cells.items[CellKey(d(1), "S2", "B")].uzum_allocated == {C.WITHDRAWAL_FEE: uzs(15_500)}
-    assert cells.items[CellKey(d(5), "", None)].uzum_expenses == {C.WITHDRAWAL_FEE: uzs(10_000)}
+    whole = cells.statement()
+    assert whole.uzum_total == uzs(72_000)  # bir marta
+    assert cells.items[CellKey(d(1), "S1", "A")].uzum_expenses == {}
+    assert cells.items[CellKey(d(1), "", None)].uzum_expenses == {C.WITHDRAWAL_FEE: uzs(62_000)}
+    assert cells.common().uzum_total == uzs(72_000)
+    shops = cells.by_shop()
+    assert shops["S1"].uzum_total == uzs(0) and shops["S2"].uzum_total == uzs(0)
+    total_profit = shops["S1"].net_profit + shops["S2"].net_profit + shops[""].net_profit
+    assert total_profit == whole.net_profit
+
+
+def test_common_cell_split_by_org_processing_share() -> None:
+    """ADR-062 + ADR-040: umumiy katak xarajati qismlarga — shu kungi butun tashkilot tushumining Jarayondagi ulushida."""
+    lines = [
+        sale(1, "A", "S1", price=300_000),
+        sale(1, "B", "S2", price=100_000, status="PROCESSING", issued=True),
+    ]
+    rent = OwnExpense(ManualExpense(uzs(40_000), d(1), d(1)), "ijara")
+    cell = build_cells(OCT, lines, own_expenses=[rent]).items[CellKey(d(1), "", None)]
+    assert cell.own_expenses == {"ijara": uzs(40_000)}
+    assert cell.processing is not None and cell.processing.own_expenses == {"ijara": uzs(10_000)}
 
 
 def test_own_expenses_amortized_and_scoped() -> None:
@@ -201,18 +217,14 @@ def test_own_expenses_amortized_and_scoped() -> None:
     cells = build_cells(OCT, lines, own_expenses=[rent, pack, label])
     day1 = cells.by_day()[d(1)]
     assert day1.own_expenses == {"ijara": uzs(100_000), "qadoq": uzs(500)}
-    assert cells.items[CellKey(d(1), "S1", "A")].own_expenses == {"ijara": uzs(25_000)}
-    assert cells.items[CellKey(d(1), "S2", "B")].own_expenses == {
-        "ijara": uzs(75_000),
-        "qadoq": uzs(500),
-    }
+    # ADR-062: do'konsiz ijara — umumiy katakda (taqsimlanmaydi); do'konniki — o'z SKU'lariga.
+    assert cells.items[CellKey(d(1), "S1", "A")].own_expenses == {}
+    assert cells.items[CellKey(d(1), "S2", "B")].own_expenses == {"qadoq": uzs(500)}
+    assert cells.items[CellKey(d(1), "", None)].own_expenses == {"ijara": uzs(100_000)}
     assert cells.items[CellKey(d(2), "", None)].own_expenses == {"ijara": uzs(100_000)}
     assert cells.items[CellKey(d(2), "S1", "A")].own_expenses == {"yorliq": uzs(70)}
     assert cells.items[CellKey(d(2), "S1", "A")].own_allocated == {}
-    assert cells.items[CellKey(d(1), "S2", "B")].own_allocated == {
-        "ijara": uzs(75_000),
-        "qadoq": uzs(500),
-    }
+    assert cells.items[CellKey(d(1), "S2", "B")].own_allocated == {"qadoq": uzs(500)}
     assert cells.items[CellKey(d(2), "", None)].own_allocated == {}
     assert cells.statement().own_expenses == {
         "ijara": uzs(3_100_000),
@@ -351,7 +363,7 @@ def test_processing_part_and_cash_split() -> None:
         ),  # A katagida: 3/4 yakunlangan, 1/4 kutilayotgan
         ExpenseItem(d(5), "S1", C.STORAGE, uzs(9_000)),  # sotuvsiz kun — yakunlangan
     ]
-    own = [OwnExpense(ManualExpense(uzs(8_000), d(1), d(1)), "qadoq")]
+    own = [OwnExpense(ManualExpense(uzs(8_000), d(1), d(1)), "qadoq", shop="S1")]
     cells = build_cells(OCT, lines, exp, own, TaxRule(D(1)))
     cell = cells.items[CellKey(d(1), "S1", "A")]
     part = cell.processing
@@ -612,7 +624,7 @@ def test_direct_then_allocated_in_same_cell() -> None:
     ]
     own = [
         OwnExpense(ManualExpense(uzs(3_000), d(1), d(1)), "qadoq", "S1", "A"),
-        OwnExpense(ManualExpense(uzs(2_000), d(1), d(1)), "qadoq"),
+        OwnExpense(ManualExpense(uzs(2_000), d(1), d(1)), "qadoq", "S1"),
     ]
     s = build_cells(OCT, lines, exp, own).items[CellKey(d(1), "S1", "A")]
     assert s.uzum_expenses == {C.FINE: uzs(12_000)} and s.uzum_allocated == {C.FINE: uzs(7_000)}

@@ -84,6 +84,7 @@ export function Pnl() {
           <PageHelp page="pnl" />
         </div>
         {previous && <p className="caption">{t("pnl.previousNote", { period: f.period(previous.start, previous.end) })}</p>}
+        {filters.shops.length > 0 && <p className="caption">{t("pnl.commonNote")}</p>}
       </header>
       {filters.compare === "lastYear" && <Banner tone="info" title={t("home.lastYearSoon")} />}
       {s.lines === 0 && (

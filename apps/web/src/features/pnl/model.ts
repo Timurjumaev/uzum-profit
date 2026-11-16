@@ -183,9 +183,12 @@ export function breakdownLines(t: (key: string) => string, split: boolean): Brea
 /** Ustunlar tartibi: oylar va do'konlar — API tartibida; taqsimlanmagan (`null`) — oxirida (API shunday beradi). */
 export type Column = Pnl["columns"][number];
 
-/** SKU ko'rinishi: sof foyda bo'yicha kamayish (teng bo'lsa — nom), bog'lanmagan va taqsimlanmagan — oxirida. */
+/** Umumiy xarajatlar ustuni kaliti (ADR-062): tashkilot xarajatlari, do'konlarga bo'linmaydi. */
+export const COMMON = "common";
+
+/** SKU ko'rinishi: sof foyda bo'yicha kamayish (teng bo'lsa — nom), bog'lanmagan, taqsimlanmagan va umumiy — oxirida. */
 export function skuOrder(columns: Column[]): Column[] {
-  const rank = (c: Column) => (c.key === null ? 2 : c.key === "unlinked" ? 1 : 0);
+  const rank = (c: Column) => (c.key === COMMON ? 3 : c.key === null ? 2 : c.key === "unlinked" ? 1 : 0);
   return [...columns].sort(
     (a, b) =>
       rank(a) - rank(b) ||

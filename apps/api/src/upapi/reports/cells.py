@@ -17,8 +17,9 @@
 - Kutilayotgan logistika (F5, ADR-037) — Uzum hali yozmagan Jarayondagi donalar × F40 tarifi (``reports.products``),
   hisobot kunidagi tarif bilan; yakunlangan va kutilayotgan sof foyda (F16) — ``upcore.pnl`` kataklarida.
 
-Kataklar butun tashkilot uchun quriladi, do'kon filtri keyin qo'llanadi: tashkilot xarajati tanlangan do'konlarga
-emas, hamma do'konlarga tushum ulushida taqsimlanadi (filtr bo'yicha natija = do'konlar kesimidagi qatorlar).
+Kataklar butun tashkilot uchun quriladi, do'kon filtri keyin qo'llanadi (filtr bo'yicha natija = do'konlar kesimidagi
+qatorlar). Tashkilot xarajati (akkaunt Uzum xarajati, qat'iy soliq, do'konsiz o'z xarajatlari) — "Umumiy xarajatlar"
+katagida, do'konlarga taqsimlanmaydi va do'kon filtrida kirmaydi (ADR-062).
 """
 
 from __future__ import annotations
@@ -51,6 +52,7 @@ from upcore.metrics import (
 )
 from upcore.money import Currency, Money
 from upcore.pnl import (
+    COMMON,
     DEFECT_LOSS,
     RECEIVING_LOSS,
     CellKey,
@@ -87,6 +89,19 @@ from upapi.reports.products import load_fees
 
 UZS = Currency.UZS
 UNLINKED = "unlinked"  # SKU'ga bog'lanmagan sotuvlar katagi (``sku_id`` NULL)
+# ADR-062: tashkilot katagi ("Umumiy xarajatlar") kaliti — do'kon va SKU kesimlarida alohida; ``None`` (do'kon ichidagi
+# sotuvsiz kun xarajati, "Taqsimlanmagan") bilan aralashmaydi.
+COMMON_KEY = "common"
+
+
+def shop_column(key: CellKey) -> str:
+    return COMMON_KEY if key.shop == COMMON else key.shop
+
+
+def sku_column(key: CellKey) -> str | None:
+    return COMMON_KEY if key.shop == COMMON else key.sku
+
+
 REALIZATION_DAYS = 90  # F16: R — do'konning oxirgi 90 kuni
 AD_RATE_DAYS = 30  # F42: buyurtmaga bog'liq reklama ulushi — oxirgi 30 kunda topshirilgan sotuvlar
 SNAPSHOT_LOOKBACK = (

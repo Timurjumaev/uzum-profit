@@ -2,10 +2,10 @@
 
 Har SKU (tanlangan do'konlar katalogi, sotuvsizlari ham): davr kesimi (``Cells.by_sku`` — P&L bilan bitta hisob),
 unit-iqtisod (``upcore.pnl.unit_economics``), holat belgisi (M6), qaytish/bekor ulushi (F17, F18), qoldiq, zaxira
-kunlari (F24), ABC (F28, bizniki) va Uzum ``rank``. SKU'ga bog'lanmagan sotuvlar va taqsimlanmagan xarajatlar
-alohida (``unlinked``, ``unallocated``): qatorlar + ikkalasi = P&L jami (M5 qabul mezoni).
+kunlari (F24), ABC (F28, bizniki) va Uzum ``rank``. SKU'ga bog'lanmagan sotuvlar, taqsimlanmagan va umumiy
+xarajatlar (ADR-062) alohida (``unlinked``, ``unallocated``, ``common``): qatorlar + ular = P&L jami (M5 qabul mezoni).
 
-Xarajatlar ikki ustunda: ``expenses_direct`` (SKU'ga bog'langan) va ``expenses_allocated`` (do'kon / tashkilot
+Xarajatlar ikki ustunda: ``expenses_direct`` (SKU'ga bog'langan) va ``expenses_allocated`` (do'kon
 xarajatining tushum ulushi, ADR-026); sotuvsiz kun xarajati — ``unallocated`` alohida. Uzum xarajatlari
 API bergandek olinadi (ADR-035).
 
@@ -178,7 +178,8 @@ class SkusOut(BaseModel):
     page: int  # haqiqiy sahifa (so'ralgani oxirgidan katta bo'lsa — oxirgisi)
     pages: int  # jami sahifa (kamida 1)
     unlinked: StatementOut  # SKU'ga bog'lanmagan sotuvlar
-    unallocated: StatementOut  # sotuvsiz kun xarajatlari (taqsimlanmagan)
+    unallocated: StatementOut  # do'kon ichidagi sotuvsiz kun xarajatlari (taqsimlanmagan)
+    common: StatementOut  # umumiy xarajatlar (ADR-062): akkaunt, qat'iy soliq, do'konsiz o'z xarajatlari
 
 
 def _shown_title(row: SkuRowOut) -> str | None:
@@ -266,7 +267,7 @@ async def ranked(
         raise AppError("bad_sort", 422, detail=sort) from None
     book = await rc.load_book(ctx.conn, f.period, f.today)
     cells = book.scoped(f)
-    by_sku = cells.by_sku()
+    by_sku = cells.by(rc.sku_column)  # ADR-062: umumiy xarajatlar — ``common`` kalitida
     sums = await rc.sale_sums(ctx.conn, f, by_sku=True)
     catalog = await sku_catalog(ctx.conn, f.shops)
     stock = await load_stock(ctx.conn, sorted(f.shops, key=str) if f.shops else None, f.today)
@@ -329,6 +330,7 @@ async def skus(
         pages=pages,
         unlinked=StatementOut.of(by_sku.get(rc.UNLINKED, empty)),
         unallocated=StatementOut.of(by_sku.get(None, empty)),
+        common=StatementOut.of(by_sku.get(rc.COMMON_KEY, empty)),
     )
 
 

@@ -120,6 +120,6 @@ describe("breakdownLines", () => {
 
 describe("skuOrder", () => {
   it("sof foyda bo'yicha kamayish; bog'lanmagan va taqsimlanmagan — oxirida", () => {
-    expect(skuOrder(skuColumns()).map((c) => c.key)).toEqual(["s-top", "s-loss", "unlinked", null]);
+    expect(skuOrder(skuColumns()).map((c) => c.key)).toEqual(["s-top", "s-loss", "unlinked", null, "common"]);
   });
 });

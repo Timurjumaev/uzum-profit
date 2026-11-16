@@ -18712,6 +18712,9 @@
           },
           "unallocated": {
             "$ref": "#/components/schemas/StatementOut"
+          },
+          "common": {
+            "$ref": "#/components/schemas/StatementOut"
           }
         },
         "type": "object",
@@ -18722,7 +18725,8 @@
           "page",
           "pages",
           "unlinked",
-          "unallocated"
+          "unallocated",
+          "common"
         ],
         "title": "SkusOut"
       },
