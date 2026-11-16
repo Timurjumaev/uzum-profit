@@ -345,10 +345,22 @@ xabarlari ko'rilmadi (Temurning chatidagi xabarlar — o'zi tasdiqlaydi, pastda)
 | A16 | P | **Moliyaviy raqamlar Telegram serverlariga ketadi** — tamoyil 6 ("ma'lumot O'zbekistonda") bilan chegaradosh. Foydalanuvchi o'zi ulaydi, lekin ulash oynasida va maxfiylik siyosatida aytilishi kerak | `messages.summary` | B8.6 ga eslatma (B6.6 matnida bir jumla) |
 | A17 | P | Yuborish tranzaksiya ichida (qatorlar qulflangan holda 50 tagacha tarmoq so'rovi); jarayon o'rtada uzilsa yuborilgan xabar `pending` qoladi va qayta ketadi. Ommaviy yuborishda Telegram cheklovi (soniyada ≈ 30) hisobga olinmagan — hamma uchun 08:00 va 09:00 to'lqini | `service._deliver_org` | B8.4 yuklama testiga |
 
+**Real chat (Temur, 2026-11-16 — bot chatining 15–16-noyabr skrinshotlari).** Ikki kunda faqat xulosalar kelgan: A2–A4
+dagi takror va tungi xabarlar **kuzatilmadi** (bunday holat yuzaga kelmagan — kod bo'yicha topilma kuchda, lekin real
+hayotda hali tasdiqlanmagan). Skrinshotlardan yangi topilmalar:
+
+| ID | Xavf | Topilma | Dalil (skrinshot) | Nima qilindi (05) |
+|---|---|---|---|---|
+| A18 | Y | **Eskirgan xulosa "Kecha" deb keladi.** 16.11 soat 08:00 da "Kecha, 14.11.2026" keldi (aslida o'tgan kun), 09:00 da — "Kecha, 15.11.2026": bir ertalab ikkita kunlik xulosa. Sabab: xulosa qatori kechqurun tinch soatda yaratilsa, `due_at` ertasi 08:00 ga suriladi; "Kecha" so'zi sana emas, hodisa turidan olinadi | 16.11: 08:00 "Kecha, 14.11.2026", 09:00 "Kecha, 15.11.2026" | B6.4: xulosa o'z kunida yuboriladi, kuni o'tsa — bekor; sarlavha sanadan |
+| A19 | Y | **Bir kunning sof foydasi ikki xabarda ikki xil** — A1 ning real tasdig'i. 15.11 uchun: `/bugun` (23:40 holatiga) 276 709 so'm, ertasi 09:00 dagi xulosa 334 914 so'm; buyurtma (65) va tushum (1 625 880) bir xil. Rejali xulosada "holatiga" vaqti yo'q (buyruqlarda bor). Farq sababi aniqlanmagan | 15.11 23:48 `/bugun` ↔ 16.11 09:00 "Kecha, 15.11" | B6.4: sabab staging'da topiladi (faqat o'qish), xulosada vaqt va uch qism |
+| A20 | O' | **`/hafta` dushanba kuni foydasiz:** 16.11 00:50 da "Hafta: 16.11 – 16.11, buyurtmalar 1, sof foyda −10 503". `/oy` oyning 1-kuni ham shunday. Manfiy foyda — kunlik teng taqsimlanadigan xarajatlar (qat'iy soliq, takroriy o'z xarajatlari) to'liq kun uchun, sotuv esa 43 daqiqalik (K5 ning o'xshashi) | 16.11 00:50 `/hafta` | B6.4: `/hafta`, `/oy` — tugallanmagan davr yonida oldingi to'liq davr; tugamagan kun uchun izoh |
+| A21 | P | Rejali xabarlar oxirida "— ddn" (tashkilot nomi) bitta tashkilotda ham chiqadi, buyruq javoblarida — yo'q. Dushanba 09:00 da haftalik va kunlik xulosa ketma-ket ikki xabar | 16.11 09:00 | B6.4: imzo faqat bir necha tashkilotda; dushanba — bitta xabar |
+
+`/qoldiq` → "Kritik qoldiq yo'q" (kuniga 50–65 buyurtmali ikki do'konda): §12 B1 bilan mos keladi (muddat noma'lum bo'lsa
+holat hisoblanmaydi), lekin isbot emas — B5.1 `realcheck` da tekshiriladi.
+
 **Yaxshi chiqqan joylar (o'zgartirilmaydi):** xulosa Dashboard bilan bitta hisobdan; sinxron yetib kelmaganda xulosa
 yuborilmaydi; bog'lash tokeni bir martalik va xeshlangan; rol bo'yicha auditoriya; tinch soatlar; `UNIQUE` bilan takrorsizlik.
 
-**Temurdan kerak (bitta javob):** Telegram'ga hozir kuniga nechta xabar kelyapti va qaysilari har kuni takrorlanyapti —
-oxirgi 2–3 kunlik bot chatining skrinshoti (A2–A4 real hayotda qanday ko'rinishini tasdiqlash uchun; summalar ko'rinsa
-ham mayli, kalit yoki parol yo'q).
+**Temurdan kerak:** ~~bot chati skrinshoti~~ ✓ 2026-11-16 (yuqorida).
 

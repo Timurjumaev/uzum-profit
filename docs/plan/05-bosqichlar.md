@@ -1145,11 +1145,17 @@ boshlanadi) → B5 → B6.5 (B5.1–B5.2 dan keyin) → B6.3 → B6.6.
   kelgan `pending`, oxirgi 24 soat, "Batafsil" — ilova sahifasi (HTTPS); bloklangan chat — kanal o'chadi, vaqtinchalik
   xato — 5 urinish. Matnlar uz/ru. Web: Sozlamalar → Bildirishnomalar → «Telegramʼni ulash» / «Uzish». Yo'riqnoma —
   `docs/staging.md`. **T:** bot tokenini staging'ga kiritish va 7 kun kunlik xulosani olish (B6 chiqish mezoni).
-- [ ] B6.4 **Xabar sifati — tuzatishlar** (09 §13 A1–A10; har biri test bilan; 02 M15 shu vazifada yangilanadi):
+- [ ] B6.4 **Xabar sifati — tuzatishlar** (09 §13 A1–A10, A18–A21; har biri test bilan; 02 M15 shu vazifada yangilanadi):
   - **Xulosadagi sof foyda uch qismda** (A1): hozir bitta "Sof foyda" — kechagi kun uchun u deyarli to'liq
     *kutilayotgan* (Jarayondagi sotuvlar, 09 §11.2: ≈ 39% i keyin chiqib ketadi), belgisiz (tamoyil 9, ADR-037/038).
     Xabar: "Sof foyda: X · shundan kutilayotgan Y" + R fakti ("bunday sotuvlarning N% i yakunlanadi", F16) + "HH:MM
     holatiga" (ilovada raqam keyin o'zgaradi — chiqish mezoni shu vaqtga nisbatan). `/bugun` `/kecha` `/hafta` `/oy` ham.
+  - **Xulosa o'z kunida, sanasi bilan** (A18–A21, Temurning chatidan): kechqurun tinch soatda yaratilgan xulosa ertasi
+    08:00 ga surilib, o'tgan kunni "Kecha" deb yuboryapti (bir ertalab ikkita xulosa) — xulosa faqat o'z kunida
+    yuboriladi, kuni o'tsa bekor; sarlavha — sana. 15.11 foydasi ikki xabarda ikki xil (276 709 ↔ 334 914, tushum bir
+    xil) — sababi staging'da faqat o'qish so'rovi bilan topiladi (avval), keyin tuzatiladi. `/hafta` va `/oy` davr
+    boshida — yonida oldingi to'liq davr; tugamagan kun — izoh bilan. "— tashkilot" imzosi faqat bir necha tashkilotda;
+    dushanba kuni haftalik va kunlik xulosa — bitta xabar.
   - **Takror emas, o'zgarish** (A2): "Qoldiq kritik" va "Zarar bilan sotuv" hozir holat o'zgarmasa ham **har kuni** qayta
     keladi (`dedupe_key` — sana). Kalit — SKU va holatga kirgan kun: xabar faqat ro'yxatga **yangi** SKU qo'shilganda; davom
     etayotgan holat kunlik xulosa ostida bitta qator ("Diqqat: kritik qoldiq 4 ta, zararda 2 ta"). `/qoldiq` — to'liq ro'yxat.
