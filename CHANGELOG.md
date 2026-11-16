@@ -452,6 +452,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   (betaga tayyor: Uzum API shartlari, production O'zbekistonda, ma'lumotni ko'chirish, taklif kodi, onboarding, o'chirish, hodisalar)
   → B9 → B8-B (tariflar, to'lov ikki bosqichda, landing, to'liq admin va yuklama testi); kalendar ishlari — "T — hozir". ADR-065
   tasdiqlandi.
+- B9 va B10 tanqidiy tahlili (ADR-067, faqat hujjat): `09-audit.md` §16 — 16 topilma (E1–E16); beta 6–8 hafta, ishtirokchilar
+  mezon bilan, mijoz suhbatlari beta kirish suhbatiga birlashdi, B9.6 (begona ma'lumotda sifat hisoboti, "Keyinga" ro'yxatlarini
+  yopish), B9.7 (to'lashga tayyorlik); B10 — chiqish va barqarorlik + shartli nomzodlar jadvali. ADR-066 tasdiqlandi; B7.4 —
+  "Keyinga".
 
 ### O'zgartirildi
 

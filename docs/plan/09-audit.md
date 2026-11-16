@@ -412,3 +412,27 @@ Qaror — ADR-066. B8 boshlanmagan — topilmalar reja bo'yicha.
 | D15 | P | Ixtiyoriy 2FA / TOTP "[B8]" (M1) — vazifasi yo'q, kirish allaqachon bir martalik kod bilan; jamoa ekrani betaga shart emas (P1 — yakka sotuvchi) | 02 M1; 01 §2 | 2FA — "Keyinga"; jamoa — B8.0b |
 | D16 | P | Foydalanish hodisalari (B8.9) ro'yxat oxirida — betadan oldin bo'lishi shart (o'lchovlar keyin tiklanmaydi) | 05 B8.9, B9.4 | B8-A da |
 
+## 16. B9 va B10 bandlarining tanqidiy tahlili (2026-11-16)
+
+Temur topshirig'i: B9 va B10 ni ham tanqidiy tahlil qilish. O'qildi: 05 B9, B10, "Parallel yo'l"; 01 §2, §6–§8; 02
+(M2, M19–M21); 06 §5, §8–§10; 07 (ADR-009, 019, 021, 034); 08 §4, §9. Qaror — ADR-067. Kod topilmasi yo'q — faqat reja.
+
+| ID | Xavf | Topilma | Dalil | Nima qilindi (05) |
+|---|---|---|---|---|
+| E1 | Y | **Beta asosiy ustunlikni sinamaydi.** 3–4 hafta; xarid → kargo → sanash → Uzum zanjirining bitta aylanishi 3–6 hafta. Beta faqat "foydani ko'rish"ni sinaydi, partiya tannarxi va buyurtma rejasi (D1, D4) — yo'q | 05 B9; 01 §5 | 6–8 hafta; chiqishda "kamida 2 tasi zanjirni o'tgan" |
+| E2 | Y | **Chiqish mezoni o'lchanmaydi.** "Kamida 3 sotuvchi pullik tarifga o'tishga tayyor" — qanday aniqlanadi, yozilmagan; bepul davr 3 oy, beta 3–4 hafta — hech kim qaror qilmaydi. "Aktivatsiya ≥ 60%" 5 kishida — 3 kishi | 05 B9 chiqish | B9.7; chiqish aniq sonlar bilan |
+| E3 | O' | **Aktivatsiya ikki xil ta'riflangan:** 01 §8 — "tushumning ≥ 60% ida tannarx", B9.4 — "TOP-20 tannarx" | 01 §8 ↔ 05 B9.4 | 01 §8 ta'rifi |
+| E4 | Y | **Ishtirokchilar tanlovi mezonsiz** ("Temurning tanishlari"). Rejadagi tekshirilmagan farazlar (FBS, MChJ solig'i, ruscha xarajat matni, 1 000+ SKU, xodimlar, mahalliy xarid) faqat mos sotuvchi bo'lsagina sinaladi | 07 Q9; 09 K15; ADR-063 (B9.5) | B9.1 mezonlar |
+| E5 | Y | **Hamma hisob ikkita do'konda sinalgan**, begona ma'lumotda nima chiqishini tekshirish rejada yo'q; 02 F2 da ayrim qoidalar ochiq "taxmin" deb yozilgan (`PARTIALLY_CANCELLED`) | 02 F2; 08 §4 | B9.6 sifat hisoboti (summalarsiz) |
+| E6 | O' | **10 ta mijoz suhbati — birortasi o'tkazilmagan**, B5 ustuvorliklari va B8 narxlari shunga tayanishi kerak edi. Alohida yo'l bo'lib qolsa yana qolib ketadi | 05 "Parallel yo'l"; `suhbatlar.md` yo'q | B9.2 ga birlashdi |
+| E7 | O' | **"Keyinga" ro'yxatlari (B5–B8) qayerda hal bo'lishi yo'q edi** | ADR-063–066 | B9.6 |
+| E8 | O' | **Bepul davr va to'lov muddati bog'lanmagan:** 3 oy bepul tugaganda to'lov (B8-B) tayyor bo'lmasa, ishtirokchilar yo bepul qoladi, yo uziladi | 05 B9.1; ADR-066 | B9.7 muddat sharti |
+| E9 | P | "Men tayyorlagan video" — bajarib bo'lmaydi; yordam kanali va xatolar ro'yxati qayerda yuritilishi aytilmagan | 05 B9.2–B9.3 | Yozma yo'riqnoma; `beta.md` |
+| E10 | Y | **B10 — oltita katta ish, tartibsiz va shartsiz** ("davomiy"): AI, uchta marketplace, narx boshqaruvi, Mini App, mobil ilova. Hech birining boshlanish sharti, dalili yoki o'lchovi yo'q; chiqishning o'zi (B10.1) ham o'lchovsiz | 05 B10 | Nomzodlar jadvali, shartlar bilan; B10.1 o'lchovi |
+| E11 | Y | **Narx boshqaruvi va FBS amallari (B10.4) ishonch va'dasiga zid:** onboarding va landingda "kalit faqat o'qish uchun ishlatiladi" (M2, D9); `sendPriceData` — yozish amali, xato narx sotuvchiga zarar keltiradi | 02 M2, M21; 01 D9 | Nomzod 5: alohida rozilik va ADR sharti |
+| E12 | Y | **Ilova ichidagi AI yordamchi tamoyil 6 ga zid:** sotuvchining moliyaviy ma'lumoti chet eldagi AI xizmatiga yuboriladi ("ma'lumot O'zbekistonda"); narxi tarifga sig'ishi hisoblanmagan. MCP (sotuvchi o'z AI'sini o'zi ulaydi) bu muammodan xoli va arzon | 02 M19; README tamoyil 6; §7 xulosa 4 | MCP — nomzod 1, AI — nomzod 4 (huquqiy shart bilan) |
+| E13 | O' | **Uchta mobil yo'l bir-birini takrorlaydi:** PWA (B6.3), Mini App (B10.5), mobil ilova (B10.6) — qaysi biri qachon, o'lchovsiz | 05 B6.3, B10.5–B10.6 | Ketma-ket, har biri oldingisi yetmasa |
+| E14 | O' | **Boshqa marketplace'lar dalilsiz:** nechta mijoz ikkinchi maydonchada sotishi noma'lum; API'lari tekshirilmagan (08 §9) | 02 M20; 08 §9 | Nomzod 3: ≥ 20% sharti |
+| E15 | O' | **Narx jadvalida qurilmagan funksiya:** Pro tarifda "API/MCP" (01 §7) — B10 gacha yo'q | 01 §7 | B10.1: faqat ishlayotgan funksiyalar |
+| E16 | O' | **Chiqishdan keyingi ish rejada yo'q:** yordam navbati, ketgan mijozlar, haftalik o'lchov ko'rigi — B10 darhol yangi funksiyalarga o'tadi | 05 B10; 06 §5, §10 | B10.0 |
+

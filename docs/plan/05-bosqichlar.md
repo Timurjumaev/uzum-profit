@@ -1209,7 +1209,7 @@ bilan bir xil (avtomatik test + Temur ko'zi); (2) holat o'zgarmagan kuni xulosad
 
 ## B7. Import va hisobotlar — 4–6 kun
 
-Qayta tuzildi (ADR-065, 2026-11-16 — tanqidiy tahlil: 09 §14). Tartib: B7.1 → B7.2 → B7.3 → B7.4 → B7.5.
+Qayta tuzildi (ADR-065, 2026-11-16 — tanqidiy tahlil: 09 §14). Tartib: B7.1 → B7.2 → B7.3 → B7.5.
 
 - [ ] B7.1 **Tannarxni Excel orqali kiritish** (M2 5-qadam (b); B9.4 aktivatsiya — "48 soatda tushumning ≥ 60% ida
   tannarx" — yuzlab SKU'li sotuvchida shusiz bajarilmaydi). Yagona import — shu:
@@ -1237,10 +1237,9 @@ Qayta tuzildi (ADR-065, 2026-11-16 — tanqidiy tahlil: 09 §14). Tartib: B7.1 �
     hali jarayonda — ko'rsatiladi); hammasi yakuniy holatga yetganda — "yakuniy".
   - **Yuborish:** yangi hodisa "Oylik hisobot" (B6 katalogi): oyning 1-sanasida "dastlabki" havola, oy yopilganda
     "yakuniy" havola. Fayl Telegram'ga yuborilmaydi — havola (09 §13 A16).
-- [ ] B7.4 **Buxgalter paketi** — tanlangan oy uchun bitta fayl (varaqlar: sotuvlar reyestri, Uzum xarajatlari, o'z
-  xarajatlari, xaridlar, hisob varag'i) — B7.2 eksportlaridan yig'iladi, yangi hisob yo'q. Birinchi varaqda asos ochiq
-  yoziladi: "sana — buyurtma sanasi (F1); Uzumning rasmiy hisob-fakturasi va vositachi hisoboti boshqa sanada tuziladi
-  (08 §5) — summalar oy chegarasida farq qilishi mumkin". **Avval T:** buxgalterga aynan nima kerakligi (pastda).
+- [→] B7.4 (**ko'chdi → "Keyinga"**, Temur javobi 2026-11-16) Buxgalter paketi. Temur (YaTT): hisobot topshirmaydi,
+  buxgalteri yo'q — ijtimoiy soliq va aylanmadan 1% ni o'zi to'laydi; unga kerak raqam (oylik tushum va hisoblangan
+  soliq) Foyda sahifasida bor (F11). Ehtiyoj faqat buxgalterli sotuvchida (P4) — betada so'raladi (B9.6).
 - [ ] B7.5 **To'liq eksport** (ZIP: CSV + JSON; "ma'lumot sizniki", 01 D9; B8.6 dagi o'chirish tartibidan oldin kerak):
   faqat egasi; fon ishi (navbat), tayyor bo'lganda bildirishnoma; kuniga bir marta; havola 24 soat, bir martalik token;
   audit. Kiradi: sotuvchi kiritgan hamma narsa (xaridlar, chiqimlar, tannarx, o'z xarajatlar, sozlamalar, ombor
@@ -1258,9 +1257,10 @@ Qayta tuzildi (ADR-065, 2026-11-16 — tanqidiy tahlil: 09 §14). Tartib: B7.1 �
 - Chek rasmi (M8) — fayl saqlash infratuzilmasi (O'zbekistonda obyekt ombori) kerak; hozir ilovada umuman yo'q.
 - Server tomonda PDF (WeasyPrint) va faylni jadval bo'yicha yuborish.
 - Hisobotdagi "keyingi oy rejasi" — manbasi yo'q edi (reja-fakt B5.8 bo'lsa — o'sha yerdan).
+- Buxgalter paketi (avval B7.4): oy bo'yicha bitta fayl, B7.2 eksportlaridan; sana asosi ochiq yoziladi (buyurtma
+  sanasi, F1 — Uzum rasmiy hujjatlari boshqa sanada, 08 §5).
 
-- T: (1) buxgalteringga (yoki soliq uchun o'zingga) har oy dasturdan nima kerak — bir-ikki jumla yoki hozir
-  berayotgan faylingdan namuna; (2) B7.1 ni staging'da o'z SKU'laring bilan sinash.
+- T: B7.1 ni staging'da o'z SKU'laring bilan sinash.
 
 **Chiqish:** (1) Temur staging'da jadvalni yuklab olib, kamida 20 SKU narxini Excel'da o'zgartirib qayta yuklaydi:
 ko'rib chiqish aynan shu o'zgarishlarni ko'rsatadi, saqlangach tannarx qamrovi (F15) mos; (2) oktabr oylik hisoboti
@@ -1355,35 +1355,78 @@ migratsiya bilan — 09 K14); landing uchun Umami; referral dasturi (B10.1 da); 
   tasdiqlatish (Uztelecom Cloud'da tasdiq kutilgan — ADR-029); (5) shaxsiy ma'lumotlar bazasi arizasi (15 kungacha).
 - T — B8-B da: Q5 to'lov provayderi shartnomasi, Q6 narxlar, production VPS to'lovi.
 
-## B9. Yopiq beta — 3–4 hafta (kalendar)
+## B9. Yopiq beta — 6–8 hafta (kalendar)
 
-B8-A dan keyin, B8-B dan oldin (ADR-066): ishtirokchilar taklif kodi bilan kiradi (B8.11), pul to'lamaydi.
+Qayta tuzildi (ADR-067, 2026-11-16 — tanqidiy tahlil: 09 §16). B8-A dan keyin, B8-B dan oldin (ADR-066):
+ishtirokchilar taklif kodi bilan kiradi (B8.11), pul to'lamaydi. Muddat 3–4 haftadan uzaydi: asosiy ustunligimiz —
+xarid → kargo → sanash → Uzum zanjiri — bitta aylanishi 3–6 hafta, qisqa betada u umuman sinalmaydi.
 
-- [ ] B9.1 5–10 sotuvchi (T: topadi; 3 oy bepul, haftalik fikr evaziga).
-- [ ] B9.2 Har biriga onboarding qo'ng'irog'i (T yoki men tayyorlagan video), haftalik fikr so'rovi.
-- [ ] B9.3 Xatolar SLA: kritik — 24 soat, oddiy — 1 hafta.
-- [ ] B9.4 O'lchov: aktivatsiya (48 soatda kalit + TOP-20 tannarx), haftalik faollik, birinchi foyda vaqti.
+- [ ] B9.1 **5–10 sotuvchi — tanlov mezoni bilan** (T topadi; 3 oy bepul, haftalik fikr evaziga). Faqat tanishlar emas —
+  tarkib rejadagi tekshirilmagan farazlarni qamrashi kerak: kamida 3 ta Xitoydan olib keluvchi (P1); 1 ta mahalliy
+  xaridli (P3); 1 ta FBS'li (B9.5); 1 ta xodimli yoki 3+ do'konli (P2); 1 ta 1 000+ SKU'li; 1 ta MChJ (soliq — B8.10);
+  kamida 1 ta ilovani ruscha ishlatadigan. Bitta sotuvchi bir nechta mezonni yopishi mumkin.
+- [ ] B9.2 **Kirish suhbati = mijoz suhbati** (rejadagi "10 ta suhbat" hali boshlanmagan — shu bilan birlashadi): har
+  ishtirokchi bilan ulanishdan oldin 20 daqiqa (06 §9 savollari), keyin u **o'zi, yordamsiz** ulanadi — qayerda
+  to'xtagani yoziladi (B8-A chiqishi: "yo'riqnomasiz 10 daqiqa"). Natijalar `docs/plan/suhbatlar.md` ga (ismsiz).
+  Haftalik fikr — Telegram'da 3 savol. Video emas — yozma yo'riqnoma (`docs/help`).
+- [ ] B9.3 **Yordam tartibi:** bitta Telegram guruhi (yoki yordam chati); kritik xato (raqam noto'g'ri, kirib
+  bo'lmaydi, sinxron to'xtagan) — 24 soat, oddiy — 1 hafta. Xatolar ro'yxati repozitoriyda (`docs/plan/beta.md`):
+  kim, nima, holati.
+- [ ] B9.4 **O'lchov** (hodisalar — B8.9; 5–10 kishida foiz emas, har bir sotuvchi bo'yicha jadval): kalit ulandi;
+  birinchi foyda ko'rilgan vaqt; 48 soatda tushumning ≥ 60% ida tannarx (01 §8 ta'rifi — avvalgi "TOP-20 tannarx"
+  o'rniga, ikkalasi ikki xil edi); Telegram ulandi; 2-, 4-, 6-haftada haftasiga ≥ 2 kun kirgan; kamida bitta xarid
+  kiritgan; kamida bitta sanash yoki jo'natma qilgan.
 - [ ] B9.5 (avval B5.10; ADR-063) FBS — beta'da FBS sotuvchi bo'lsa: faol buyurtmalar va muddatlar (`acceptUntil` /
   `deliverUntil`), hodisa "FBS: muddat yaqin"; FBS qoldig'i — o'z omborim manbasi, ikki marta sanash yo'q (ADR-034,
   3-qadam); keyin DBS. Avval shu sotuvchining real javoblari yozib olinadi (kasseta).
+- [ ] B9.6 **Farazlarni begona ma'lumotda tekshirish** (yangi). Hozirgacha hamma narsa ikkita do'konda sinalgan. Har
+  beta tashkiloti uchun avtomatik "sifat hisoboti" — **summalarsiz, faqat sanoqlar** (sotuvchi ma'lumotiga qo'lda
+  qaralmaydi): noma'lum xarajat kodlari va "boshqa"ga tushganlar; ruscha xarajat matni (09 K15) va reklama summasi
+  ajratilmagan qatorlar; `sellerProfit` ↔ F6 farqi bor qatorlar; noma'lum holatlar, `PARTIALLY_CANCELLED`,
+  `amountReturns` > 0 (F2 — "taxmin" deb yozilgan); qoldiq maydonlari (08 §4); tarix chuqurligi; sinxron xatolari ulushi.
+  Har chiqqan farq — test bilan tuzatiladi. Shu bosqichda B5–B8 dagi **"Keyinga" ro'yxatlari** ko'rib chiqiladi: betada
+  kamida 2 sotuvchi so'ragan band rejaga qaytadi, qolgani yopiladi.
+- [ ] B9.7 **To'lashga tayyorlik** (yangi; avval o'lchovsiz edi): 4-haftadan keyin har ishtirokchiga narx jadvali (01 §7)
+  ko'rsatiladi va bitta savol — "bepul davr tugagach qaysi tarifga to'laysiz yoki nega to'lamaysiz". Javoblar Q6 ni
+  yopadi. **Muddat:** birinchi ishtirokchining 3 oylik bepul davri tugaguncha B8-B (tarif va to'lov) tayyor bo'lishi shart.
 
-**Chiqish:** aktivatsiya ≥ 60%; kritik xato 0; kamida 3 sotuvchi pullik tarifga o'tishga tayyor.
+**Chiqish:** (1) kritik xato ochiq emas, B9.6 dagi farqlar yopilgan; (2) kamida 5 ishtirokchining 4 tasi 6-haftada
+ham haftasiga ≥ 2 kun kiradi; (3) kamida 3 tasi tushumining ≥ 60% iga tannarx kiritgan va kamida 2 tasi xarid
+zanjirini (xarid → sanash) bir marta o'tgan; (4) kamida 3 tasi aniq tarifni aytib "to'layman" degan (B9.7);
+(5) `suhbatlar.md` yozilgan, "Keyinga" ro'yxatlari yopilgan.
 
-## B10. Ommaviy chiqish va o'sish — davomiy
+## B10. Ommaviy chiqish va o'sish
 
-- [ ] B10.1 Chiqish: landing, Telegram kanal, sotuvchilar guruhlari, YouTube videolar (T), referral dasturi.
-- [ ] B10.2 AI yordamchi (M19) + MCP server (Pro).
-- [ ] B10.3 Yandex Market (O'zbekiston), keyin Wildberries/Ozon (M20).
-- [ ] B10.4 Narx boshqaruvi va FBS operatsiyalari (M21).
-- [ ] B10.5 Telegram Mini App (bosh sahifa Telegram ichida).
-- [ ] B10.6 Mobil ilova (PWA yetarli bo'lmasa).
+Qayta tuzildi (ADR-067). Avval oltita katta ish tartibsiz va mezonsiz ro'yxat edi. Endi: ikkita aniq vazifa va
+**nomzodlar ro'yxati** — har biri faqat o'z sharti bajarilganda boshlanadi (bir vaqtda bittasi).
 
-## Parallel yo'l: mijoz suhbatlari (B1 dan B8 gacha)
+- [ ] B10.1 **Chiqish** (B8-B dan keyin): landing e'lon qilinadi, ochiq ro'yxat yoqiladi, Telegram kanal, sotuvchilar
+  guruhlari, 3 ta video (T), referral (06 §7–§8). **O'lchov** (01 §8): chiqishdan 3 oy keyin 50 to'lovchi tashkilot,
+  sinovdan to'lovga ≥ 25%, aktivatsiya ≥ 60%; har hafta voronka ko'riladi (ro'yxat → kalit → tannarx → to'lov).
+  Ommaviy narx jadvalida faqat **ishlayotgan** funksiyalar yoziladi (01 §7 dagi "API/MCP" — qurilmaguncha yo'q).
+- [ ] B10.0 **Birinchi 3 oy — barqarorlik** (yangi; chiqish bilan birga): yordam navbati va javob vaqti (06 §5), haftalik
+  o'lchov ko'rigi, ketgan mijozdan sabab so'rash, oylik tiklash mashqi, "Yangiliklar". Yangi katta funksiya — faqat
+  shu ishlar yurib turganda.
 
-- [ ] T: B8 gacha 10 ta sotuvchi bilan 20 daqiqalik suhbat (savollar 06-operatsiyalar.md §9).
-- [ ] Natijalar `docs/plan/suhbatlar.md` ga yoziladi; B5 ustuvorliklari va B8 narxlari shunga qarab tasdiqlanadi.
-  (2026-11-16: hali birorta suhbat yo'q, fayl ham yo'q — B5 tartibi hozircha Temurning o'z tajribasi va raqobatchilar
-  tahliliga tayanadi; B5 dagi "Keyinga" ro'yxati aynan shu suhbatlar bilan hal bo'ladi, ADR-063.)
+**Nomzodlar** (tartib raqami — taklif; har biri boshlanishidan oldin alohida ADR):
+
+| # | Nomzod | Qachon boshlanadi (shart) | Avval hal qilinadi |
+|---|---|---|---|
+| 1 | **MCP server** (M19 ning bir qismi): sotuvchi o'z AI yordamchisini ulaydi, faqat o'qish, **hisoblangan** foyda va tannarx | Pro tarifga ≥ 5 so'rov yoki betada ≥ 2 kishi so'rasa | kalit va ruxsatlar (faqat ko'rish), amal jurnali; ma'lumot sotuvchining o'z AI xizmatiga uning ixtiyori bilan ketadi — ofertada |
+| 2 | **Telegram Mini App** (bosh sahifa Telegram ichida) | Telegram'dan "Batafsil" bosganlarning ko'pi telefonda kirishda to'xtab qolsa (hodisalar) | Telegram orqali kirish (`initData`) — alohida xavfsizlik ko'rigi |
+| 3 | **Boshqa marketplace** (M20): avval bittasi | to'lovchilarning ≥ 20% i ikkinchi maydonchada ham sotsa (suhbatlar, B9.2) | o'sha maydoncha API'si va shartlari tekshiriladi (08 §9); bitta tovar — bir necha maydoncha tannarxi (ADR-034) |
+| 4 | **AI yordamchi ilova ichida** (M19) | MCP ishlatilsa va so'rov davom etsa | **tamoyil 6:** sotuvchining moliyaviy ma'lumoti chet eldagi AI xizmatiga yuboriladi — huquqiy xulosa va aniq rozilik; har so'rov narxi tarifga sig'ishi |
+| 5 | **Narx boshqaruvi va FBS amallari** (M21) | sotuvchilar aniq so'rasa | **ishonch va'dasi:** hozir hamma joyda "kalit faqat o'qish uchun ishlatiladi" (M2, 01 D9) — yozish amali shu va'dani o'zgartiradi: alohida rozilik, alohida ruxsat, har amal jurnali, xato narx uchun javobgarlik ofertada |
+| 6 | **Mobil ilova** | PWA (B6.3) va Mini App yetmasligi o'lchov bilan ko'rinsa | — |
+
+Bu ro'yxatga B5–B8 "Keyinga" bandlaridan betada so'ralganlari ham qo'shiladi (B9.6).
+
+## Parallel yo'l: mijoz suhbatlari — B9.2 ga birlashdi (ADR-067)
+
+Rejada "B8 gacha 10 ta suhbat" turgan edi; 2026-11-16 gacha birortasi o'tkazilmagan (`suhbatlar.md` yo'q), B5–B8
+ustuvorliklari shusiz belgilandi (ADR-063–066: bahsli bandlar "Keyinga" ro'yxatlarida). Suhbatlar endi beta
+ishtirokchilarining kirish suhbati sifatida o'tkaziladi (B9.2); beta boshlanishidan oldin Temur xohlasa 2–3 tasini
+oldindan o'tkazishi mumkin — B8-B narxlari va "Keyinga" ro'yxatlari uchun foydali, lekin hech narsani to'smaydi.
 
 ## Umumiy hajm
 
