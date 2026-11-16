@@ -909,7 +909,8 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
 
 ## B5. Ustunlik funksiyalari — 12–18 kun
 
-Tartib: ta'minot TM1–TM8 ✓ (ADR-061) → B6.1–B6.2 ✓ → **qolgan B5** (ADR-063 tartibida, pastda) → B6.3.
+Tartib: ta'minot TM1–TM8 ✓ (ADR-061) → B6.1–B6.2 ✓ → **B6.4** (xabar tuzatishlari, ADR-064) → **qolgan B5**
+(ADR-063 tartibida, pastda; B6.5 — B5.2 dan keyin) → B6.3 → B6.6.
 
 ### Ta'minot qayta loyihasi (ADR-061) — birinchi navbatda
 
@@ -996,7 +997,7 @@ Har vazifa — alohida branch va PR; tafsilot 07 "ADR-061 tafsiloti", 02 M9–M1
 ### Qolgan B5 (ADR-063, 2026-11-16 — tanqidiy tahlil: 09 §12)
 
 **Tartib** (qiymat va bog'liqlik bo'yicha; raqamlar o'zgarmadi — kod va hujjatlardagi havolalar buzilmasin):
-B5.0b → B5.0d → **B5.1** → **B5.2** → **B5.4** (+ B5.0a) → **B5.7** → B5.6 (+ B5.0f) → B5.5 → B5.9 → B5.8.
+B5.0b → B5.0d → *(B6.4, ADR-064)* → **B5.1** → **B5.2** → *(B6.5)* → **B5.4** (+ B5.0a) → **B5.7** → B5.6 (+ B5.0f) → B5.5 → B5.9 → B5.8.
 
 Har vazifaga umumiy qoidalar (alohida yozilmaydi):
 - **O'lchov avval.** Real ma'lumotga tayanadigan formula (F25, F31, F32, F34, F38) uchun avval `realcheck` bo'limi
@@ -1122,7 +1123,9 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
 
 ## B6. Bildirishnomalar va Telegram — 5–7 kun
 
-Tartib (ADR-057 Q9): B6.1–B6.2 — B4 dan keyin, B5 dan **oldin**; B6.3 — B5 dan keyin.
+Tartib (ADR-064, 2026-11-16 — tanqidiy tahlil: 09 §13): B6.1–B6.2 ✓ → **B6.4** (yuborilayotgan xabarlardagi xatolar —
+B5.1 dan **oldin**: Temur bu xabarlarni har kuni olyapti, chiqish mezonining 7 kunlik sinovi shu tuzatishlardan keyin
+boshlanadi) → B5 → B6.5 (B5.1–B5.2 dan keyin) → B6.3 → B6.6.
 
 - [x] B6.1 Hodisalar katalogi (M15), qoidalar, chegaralar, tinch soatlar, dublikatsiz yuborish. ✓ 2026-11-15: yadro
   `upcore.notify` (14 hodisali katalog — rol auditoriyasi, kritiklik, chegaralar, hali ishlamaydiganlari bosqich bilan;
@@ -1142,11 +1145,61 @@ Tartib (ADR-057 Q9): B6.1–B6.2 — B4 dan keyin, B5 dan **oldin**; B6.3 — B5
   kelgan `pending`, oxirgi 24 soat, "Batafsil" — ilova sahifasi (HTTPS); bloklangan chat — kanal o'chadi, vaqtinchalik
   xato — 5 urinish. Matnlar uz/ru. Web: Sozlamalar → Bildirishnomalar → «Telegramʼni ulash» / «Uzish». Yo'riqnoma —
   `docs/staging.md`. **T:** bot tokenini staging'ga kiritish va 7 kun kunlik xulosani olish (B6 chiqish mezoni).
-- [ ] B6.3 Ilova ichidagi bildirishnomalar markazi; web push (PWA). PWA (ADR-057 Q13, 09 R3 a): `manifest`, ikonkalar, favicon,
-  `theme-color` — o'rnatiladigan ilova.
-- T: botni Telegram'da sinash, kunlik xulosa vaqtini tanlash (bot B2 da yaratilgan).
+- [ ] B6.4 **Xabar sifati — tuzatishlar** (09 §13 A1–A10; har biri test bilan; 02 M15 shu vazifada yangilanadi):
+  - **Xulosadagi sof foyda uch qismda** (A1): hozir bitta "Sof foyda" — kechagi kun uchun u deyarli to'liq
+    *kutilayotgan* (Jarayondagi sotuvlar, 09 §11.2: ≈ 39% i keyin chiqib ketadi), belgisiz (tamoyil 9, ADR-037/038).
+    Xabar: "Sof foyda: X · shundan kutilayotgan Y" + R fakti ("bunday sotuvlarning N% i yakunlanadi", F16) + "HH:MM
+    holatiga" (ilovada raqam keyin o'zgaradi — chiqish mezoni shu vaqtga nisbatan). `/bugun` `/kecha` `/hafta` `/oy` ham.
+  - **Takror emas, o'zgarish** (A2): "Qoldiq kritik" va "Zarar bilan sotuv" hozir holat o'zgarmasa ham **har kuni** qayta
+    keladi (`dedupe_key` — sana). Kalit — SKU va holatga kirgan kun: xabar faqat ro'yxatga **yangi** SKU qo'shilganda; davom
+    etayotgan holat kunlik xulosa ostida bitta qator ("Diqqat: kritik qoldiq 4 ta, zararda 2 ta"). `/qoldiq` — to'liq ro'yxat.
+  - **"Tannarxsiz sotuvlar" alohida xabar emas** (A3): kunlik xulosada shu qator allaqachon bor — ikki marta keladi.
+    Alohida hodisa faqat tannarxsiz **yangi SKU** birinchi marta sotilganda; xulosa o'chirilgan bo'lsa ham.
+  - **"Sinxron to'xtadi" ikkiga bo'linadi** (A4): (a) *kalit yaroqsiz* — sotuvchi tuzatadi: kritik, bir marta, tuzalmasa
+    3 kunda bir eslatma (yarim tunda emas); (b) *yangilanmayapti* — Uzum uzilishi, WAF yoki bizning ishchi: sotuvchi hech
+    narsa qila olmaydi → tunda yuborilmaydi (kritik emas), Uzum uzilishi belgilangan (`provider_health`) paytda umuman
+    yuborilmaydi (M3: "uzilishda ogohlantirish yo'q"), adminga — B8.5. Hozir ikkalasi ham kritik va kalit har kuni
+    yangilangani uchun har kecha 00:00–00:05 da qayta keladi. Tiklanganda — bitta "tiklandi" xabari.
+  - **Telegram xatosi kanalni uzmasin** (A5): hozir har `TelegramBadRequest` (masalan, bizning xabarimiz uzun yoki tugma
+    havolasi noto'g'ri) "doimiy" sanalib, foydalanuvchining Telegram'i **o'chirib qo'yiladi**. Doimiy — faqat bot
+    bloklangan / chat yo'q; qolgani — shu xabar `failed`. `retry_after` hurmat qilinadi (hozir 30 soniyada qayta urinib,
+    5 urinishni yoqib yuboradi). Kanal uzilsa — ilovada "Diqqat" qatori ("Telegram uzildi — qayta ulang").
+  - **Haftalik xulosa yo'qolmasin** (A6): hozir faqat dushanba kuni yuboriladi — dushanba kuni sinxron yetib kelmasa o'sha
+    hafta xulosasi umuman kelmaydi. Shu hafta ichida birinchi imkoniyatda (kalit — hafta, o'zgarmaydi).
+  - **Mayda:** "Batafsil" tugmasi ruscha foydalanuvchiga ham o'zbekcha (A7); Sozlamalarda "Tez orada (B5.4)" — ichki
+    bosqich kodi sotuvchiga ko'rinadi (A8) → "Tez orada"; katalogdagi `stage` qiymatlari ADR-063 ga moslanadi (FBS —
+    B9.5); 02 M15 dan "kvota tugayapti" olib tashlanadi (sotuvchi hech narsa qila olmaydi — admin hodisasi, 06 §4, B8.5).
+  - **Navbat tartibi** (A9, A10): `notifications` da saqlash muddati yo'q (cheksiz o'sadi) — 90 kundan eski qatorlar
+    tozalanadi; og'ir hisob (`load_stock`, kitob) har 5 daqiqada har tashkilotga qayta bajariladi — bugungi kalit bor
+    bo'lsa hisoblanmaydi (B8.4 yuklama testidan oldin).
+- [ ] B6.5 **Yetishmayotgan hodisa: "Uzumga yuborish kerak"** (A11; F26 (2), F54 — B5.1 va B5.2 dan keyin): Uzumdagi zaxira
+  topshirish muddatiga yetmaydi, omborimda esa tovar bor — eng tez bajariladigan signal, hozir faqat Ombor sahifasida.
+  Yangi SKU kirganda bir marta; "Batafsil" — jo'natish qoralamasi. ("Qoldiq kritik" F25 ga bog'liq — B5.1 gacha yangi
+  xaridli tovarlarda chiqmasligi mumkin, 09 §12 B1.)
+- [ ] B6.3 **Ilova ichidagi bildirishnomalar markazi + o'rnatiladigan ilova** (qayta yozildi, ADR-064):
+  - Markaz: karkasda qo'ng'iroq, o'qilmaganlar soni, ro'yxat (navbat va `GET /notifications` bor), "Batafsil" — o'sha
+    sahifa. `notifications.read_at` (migratsiya), "hammasini o'qilgan qilish". Yetkazish holati (`pending` / `sent` /
+    `failed`) o'qilganlikdan alohida: Telegram ulanmagan a'zoning qatorlari hozir abadiy `pending` — markaz uchun manba
+    shu. 04-dizayn.md ga markaz maketi qo'shiladi (hozir dizaynda umuman yo'q, A12).
+  - PWA (ADR-057 Q13, 09 R3 a): `manifest`, PNG ikonkalar (favicon va `theme-color` — ✓ B4 da) — o'rnatiladigan ilova.
+  - **Qilinmaydi (→ "Keyinga"):** web push va oflayn kesh.
+- [ ] B6.6 **Telegram'ni ulashga chorlash** (A13; M2 6-qadam — rejada vazifasi yo'q edi): onboarding oxirida va bosh
+  sahifada (ulanmagan bo'lsa, yopib qo'yiladigan) bitta taklif — havola va QR. Telegram ulanmasa B6 ning hech biri
+  ishlamaydi; "Telegram ulandi" — B9.4 aktivatsiya o'lchovlaridan biri (06 §10).
 
-**Chiqish:** Temur 7 kun kunlik xulosa oladi, raqamlar ilova bilan bir xil, keraksiz xabar yo'q.
+**Keyinga — B6 chiqishiga kirmaydi; mijoz suhbatlarida (06 §9) so'ralsa rejaga qaytadi:**
+- Web push (service worker, VAPID, obuna boshqaruvi; iPhone'da faqat o'rnatilgan PWA'da ishlaydi). Sabab: auditoriya
+  Telegram'da (01 D8), ikkinchi push kanali o'sha xabarni takrorlaydi; Telegram'siz foydalanuvchiga markaz yetadi.
+- Oflayn kesh ("oxirgi bosh sahifa oflayn", 03 §9). Sabab: eskirgan moliyaviy raqamni ko'rsatish xavfi (tamoyil 8),
+  service worker yangilanish xatolari; foydasi kam.
+- Botda o'zbek kirill (ilovada bor, botda faqat lotin va ruscha — 01 D8).
+- Kunlik xulosada do'kon bo'yicha bo'lim va "kecha ↔ o'tgan haftaning shu kuni" farqi.
+
+- T: B6.4 dan keyin 7 kun kunlik xulosani olish; har keraksiz yoki tushunarsiz xabar — skrinshot bilan bir qator.
+
+**Chiqish:** B6.4 dan keyin Temur 7 kun xabar oladi: (1) xulosadagi raqamlar xabardagi "HH:MM holatiga" vaqtida ilova
+bilan bir xil (avtomatik test + Temur ko'zi); (2) holat o'zgarmagan kuni xulosadan boshqa xabar kelmaydi; (3) tunda
+(tinch soatda) faqat "kalit yaroqsiz" keladi. B6.3, B6.5, B6.6 — o'z testlari bilan; "Keyinga" bandlari kirmaydi.
 
 ## B7. Import va hisobotlar — 4–6 kun
 

@@ -440,6 +440,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 - B5.0b "Chegarada" marja chegarasi Sozlamalarda (F13; `orgs.settings.margin_borderline`, standart 5%): Mahsulotlar jadvali,
   filtr, SKU sahifasi va Excel bitta chegaradan; `PUT /settings/alerts` → `margin_borderline`. Kodda yashirin `0.05` yo'q —
   `upcore.metrics.profit_label` va `Statement.label` chegarani parametr sifatida oladi.
+- B6 tanqidiy tahlili (ADR-064, faqat hujjat): `09-audit.md` §13 — 17 topilma (A1–A17); `05` da B6 qayta tuzildi — yangi B6.4
+  (xabar sifati tuzatishlari: xulosada sof foyda uch qismda, kunlik takror o'rniga o'zgarishda xabar, "Sinxron to'xtadi" ikkiga,
+  Telegram xatosi kanalni uzmaydi), B6.5 ("Uzumga yuborish kerak"), B6.6 (Telegram'ni ulashga chorlash); B6.3 — markaz va PWA;
+  web push va oflayn kesh — "Keyinga"; chiqish mezoni o'lchanadigan.
 
 ### O'zgartirildi
 

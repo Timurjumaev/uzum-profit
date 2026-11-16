@@ -279,7 +279,7 @@ SECURITY DEFINER (egasi `up_sync`). Bot servisi (`apps/bot`, aiogram) navbatni y
 - Komponentlar: `components/ui` (o'zimizniki, `styles/tokens.css` tokenlari bilan; ADR-059), `components/charts` (ECharts o'ramlari),
   `features/<modul>` (sahifa logikasi).
 - Formatlash faqat `lib/format` orqali (04-dizayn.md §8): son, pul, foiz, sana; hech joyda `toLocaleString` to'g'ridan.
-- PWA: o'rnatiladigan, oxirgi bosh sahifa oflayn o'qish uchun keshda; web push [B6].
+- PWA: o'rnatiladigan [B6.3]; oflayn kesh va web push — keyinga (ADR-064).
 - Tezlik byudjeti: boshlang'ich JS ≤ 250 KB gzip, har marshrut alohida bo'lak, uzun ro'yxatlar sahifalanadi (ADR-054; bir sahifada ≤ 100 qator).
 
 ## 10. Xavfsizlik

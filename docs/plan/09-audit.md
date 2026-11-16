@@ -316,3 +316,39 @@ Xavf: **Y** — yuqori, **O'** — o'rta, **P** — past.
 B5.4 `lost`, B5.7 `payout`) — buyruq matni o'sha vazifa kelganda yuboriladi; bitta savol — Uzum pul yechish jadvali
 kabinetda do'kon bo'yicha tanlanadimi yoki butun akkauntga bittami (B13). **Javob (Temur, 2026-11-16): butun akkauntga
 bitta** — B5.7 da `payout_schedules` akkaunt (`mp_accounts`) darajasiga ko'chadi.
+
+## 13. B6 bandining tanqidiy tahlili (2026-11-16)
+
+Temur topshirig'i: B6 ni ham B5 kabi tanqidiy tahlil qilish. B6.1 va B6.2 bajarilgan — shuning uchun reja bilan birga
+**yuborilayotgan kod** ham o'qildi: `upcore/notify.py`, `upapi/notify.py`, `upapi/routes/notifications.py`,
+`sync/jobs.py` (`notify.tick`), `apps/bot` (`service.py`, `main.py`, `messages.py`), jadvallar, 02 M2 / M15, 03 §5, §9,
+04. Qaror — ADR-064; 05 B6 shunga ko'ra qayta tuzildi. **Kod o'zgarmadi** — tuzatishlar B6.4 vazifasida. Real Telegram
+xabarlari ko'rilmadi (Temurning chatidagi xabarlar — o'zi tasdiqlaydi, pastda).
+
+| ID | Xavf | Topilma | Dalil | Nima qilindi (05) |
+|---|---|---|---|---|
+| A1 | Y | **Kunlik xulosadagi "Sof foyda" belgisiz taxmin.** Kechagi buyurtmalar deyarli hammasi Jarayonda — raqam amalda *kutilayotgan* foyda; yetilgan davrda ≈ 39% i chiqib ketadi (§11.2). Ilovada uch raqam va R fakti bor (ADR-037/038), xabarda — bitta raqam. Vaqt belgisi ham yo'q: ilova ochilganda raqam boshqa bo'ladi, chiqish mezoni ("ilova bilan bir xil") o'lchab bo'lmaydi | `upapi.notify.summary` (`net_profit` — jami), `upbot/messages.py` `summary` (`fresh` faqat `partial` da) | B6.4 |
+| A2 | Y | **"Qoldiq kritik" va "Zarar bilan sotuv" har kuni takrorlanadi.** `dedupe_key` — sana: holat o'zgarmasa ham har kecha yangi qator, ertalab 08:00 da (tinch soat tugashi) birdan keladi. Chiqish mezoni "keraksiz xabar yo'q" ga zid; foydalanuvchi bildirishnomani o'chiradi | `stock_critical:{today}`, `loss_sales:{today}`; `due_at` | B6.4: kalit — SKU va holatga kirgan kun |
+| A3 | O' | **"Tannarxsiz sotuvlar" ikki marta.** Kunlik xulosada shu qator bor, alohida xabar ham har kuni keladi (yangi foydalanuvchida — har kuni, tannarx kiritilmaguncha) | `summary` → `uncosted_lines`; `uncosted:{yesterday}` | B6.4 |
+| A4 | Y | **"Sinxron to'xtadi" tunda va har kecha.** Ikki sabab bitta kritik hodisada: kalit yaroqsiz (sotuvchi tuzatadi) va yangilanmayapti (Uzum uzilishi, WAF, bizning ishchi — sotuvchi hech narsa qila olmaydi). Kritik — tinch soatda ham ketadi; kalit kunlik — har kecha 00:00–00:05 da qayta. `provider_health` (Uzum uzilishi) tekshirilmaydi — M3 dagi "uzilishda ogohlantirish yuborilmaydi" faqat xulosa uchun bajarilgan | `sync_stopped` (`f"sync_stopped:{id}:{day}"`), `CATALOG` (`critical=True`) | B6.4: ikkiga bo'lish |
+| A5 | Y | **Har qanday `TelegramBadRequest` foydalanuvchining Telegram'ini uzadi.** U "doimiy" xato sanalib kanal `active = false` bo'ladi — sabab bizning xabar (uzun matn, noto'g'ri tugma havolasi) bo'lsa ham. Foydalanuvchiga hech qayerda aytilmaydi. `TelegramRetryAfter` da kutish vaqti hisobga olinmaydi | `upbot/main.py` `AiogramSender.send`; `service._deliver_org` | B6.4 |
+| A6 | O' | **Haftalik xulosa yo'qolishi mumkin.** Faqat dushanba kuni tekshiriladi; shu kuni buyurtmalar sinxroni hafta oxirigacha yetmagan bo'lsa (Uzum uzilishi) — seshanbada qayta urinilmaydi | `upcore.notify.summary_due` (`weekday() == 0`) | B6.4 |
+| A7 | P | "Batafsil" tugmasi doim o'zbekcha (yuborishda til `"uz"` qilib qotirilgan) | `AiogramSender.send` → `keyboard(url, "uz")` | B6.4 |
+| A8 | P | Sozlamalarda sotuvchiga ichki bosqich kodi ko'rinadi: "Tez orada (B5.4)"; katalogdagi kodlar ADR-063 dan keyin eskirgan (FBS — B5.10) | `settings.notifications.soon`; `CATALOG` `stage=` | B6.4 |
+| A9 | O' | **Navbat cheksiz o'sadi va "o'qilgan" tushunchasi yo'q.** Telegram ulanmagan a'zoning qatorlari abadiy `pending`; tozalash yo'q. B6.3 markazi shu jadvalga quriladi, lekin `read_at` yo'q | `db/models.py` `notifications` | B6.4 (saqlash muddati), B6.3 (`read_at`) |
+| A10 | O' | **Har 5 daqiqada og'ir hisob.** Har tashkilot uchun ombor hisobi (60 kunlik oyna), foyda kitobi va 30 kunlik sotuvlar qayta yuklanadi — bugungi xabar allaqachon navbatda bo'lsa ham. 2 do'konda sezilmaydi, 200 tashkilotda — doimiy yuklama (X4 ga o'xshash) | `upapi.notify.evaluate`; `NOTIFY_CRON = "*/5 * * * *"` | B6.4 |
+| A11 | O' | **Eng foydali signal yo'q:** "Uzumga yuborish kerak" (F26 (2)) — Uzumda tugayapti, omborimda bor. Faqat Ombor sahifasida. "Qoldiq kritik" esa F25 ga bog'liq (§12 B1) — B5.1 gacha yangi xaridli tovarlarda chiqmasligi mumkin | `stock_critical` (`status is CRITICAL`); `ShipSignal` ishlatilmaydi | B6.5 |
+| A12 | O' | **B6.3 uchta turli narsani bitta bandga tiqqan** (markaz, web push, PWA), o'lchovsiz. Web push — ikkinchi push kanali (auditoriya Telegram'da), service worker va iPhone cheklovlari bilan; 03 §9 dagi "oflayn kesh" rejada vazifasiz. Markazning dizayni 04 da umuman yo'q | 05 B6.3; 03 §9; 04 | B6.3 qayta yozildi; push va oflayn — "Keyinga" |
+| A13 | O' | **Telegram'ni ulashga hech narsa chorlamaydi.** M2 6-qadam (onboarding) va "Sozlash: 4/6" ro'yxati rejada vazifasiz qolgan (§5 R3 d); ulash faqat Sozlamalar ichida. Ulanmasa B6 ning hammasi behuda | `features/onboarding`; 02 M2 | B6.6 |
+| A14 | P | 02 M15 jadvalidagi "kvota tugayapti" katalogda yo'q — va kerak ham emas (sotuvchi hech narsa qila olmaydi). "Qoldiq kritik — chegara: holat" sozlamasi ham yo'q | 02 M15 ↔ `CATALOG` | M15 dan olinadi (B6.4) |
+| A15 | P | Bot faqat lotin va ruscha; ilovada o'zbek kirill bor (01 D8 "lotin + kirill") | `messages.lang_of` | "Keyinga" |
+| A16 | P | **Moliyaviy raqamlar Telegram serverlariga ketadi** — tamoyil 6 ("ma'lumot O'zbekistonda") bilan chegaradosh. Foydalanuvchi o'zi ulaydi, lekin ulash oynasida va maxfiylik siyosatida aytilishi kerak | `messages.summary` | B8.6 ga eslatma (B6.6 matnida bir jumla) |
+| A17 | P | Yuborish tranzaksiya ichida (qatorlar qulflangan holda 50 tagacha tarmoq so'rovi); jarayon o'rtada uzilsa yuborilgan xabar `pending` qoladi va qayta ketadi. Ommaviy yuborishda Telegram cheklovi (soniyada ≈ 30) hisobga olinmagan — hamma uchun 08:00 va 09:00 to'lqini | `service._deliver_org` | B8.4 yuklama testiga |
+
+**Yaxshi chiqqan joylar (o'zgartirilmaydi):** xulosa Dashboard bilan bitta hisobdan; sinxron yetib kelmaganda xulosa
+yuborilmaydi; bog'lash tokeni bir martalik va xeshlangan; rol bo'yicha auditoriya; tinch soatlar; `UNIQUE` bilan takrorsizlik.
+
+**Temurdan kerak (bitta javob):** Telegram'ga hozir kuniga nechta xabar kelyapti va qaysilari har kuni takrorlanyapti —
+oxirgi 2–3 kunlik bot chatining skrinshoti (A2–A4 real hayotda qanday ko'rinishini tasdiqlash uchun; summalar ko'rinsa
+ham mayli, kalit yoki parol yo'q).
+
