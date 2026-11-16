@@ -2,7 +2,9 @@
 
 ## 1. Infratuzilma
 
-- **Joylashuv:** faqat O'zbekiston (shaxsiy ma'lumot qonuni; Uzum WAF chet el IP'larini HTML 403 bilan to'sadi).
+- **Joylashuv:** faqat O'zbekiston — sabab: shaxsiy ma'lumot qonuni (ADR-010). (Uzum WAF hamma chet el IP'sini to'smaydi:
+  staging AWS Stokgolmdan ishlayapti — ADR-029; WAF ayrim tarmoqlarni to'sadi, shuning uchun provayder sinovida Uzum API
+  tekshiriladi. 09 §15 D2.)
 - **Provayder (Q2):** nomzodlar — Servercore.uz (tez ishga tushadi, obyekt saqlash, zaxira, DBaaS, Terraform;
   mustaqil benchmark'da tezroq) va UzCloud (5 ta Tier III markaz, 99,95% SLA, S3, DBaaS). Ikkalasida 7 kunlik sinov:
   Uzum API'ga ping, disk, deploy tezligi, yordam javobi → tanlanadi. Zaxira nusxa boshqa provayderda.
@@ -105,7 +107,7 @@ Natijalar `docs/plan/suhbatlar.md` ga (ismsiz, faqat xulosa).
 - Oylik ichki hisobot: aktivatsiya voronkasi, haftalik faollik, MRR, churn, eng ko'p ishlatiladigan sahifalar.
 - Landing uchun self-hosted Umami (cookie'siz).
 
-## 11. Production chiqish ro'yxati (B8 chiqish mezoni)
+## 11. Production chiqish ro'yxati (B8-B chiqish mezoni; betagacha — 05 B8-A chiqishi, ADR-066)
 
 - [ ] Hamma B0–B7 vazifalari bajarilgan, CI yashil, ochiq P0/P1 xato yo'q.
 - [ ] Yuklama testi: 200 tashkilot, API p95 maqsadlarda.

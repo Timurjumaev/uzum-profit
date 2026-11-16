@@ -387,3 +387,28 @@ B7 hali boshlanmagan — kod topilmasi yo'q, faqat reja.
 | C13 | P | "Chek rasmi [B7]" — B7 ro'yxatida yo'q, fayl saqlash infratuzilmasi ham yo'q | 02 M8 | "Keyinga" |
 | C14 | P | "Hisobotlar" menyusi yashirilgan (ADR-057 Q12) — qachon qaytishi B7 da aytilmagan; moliyaviy faylni Telegram orqali yuborish (§13 A16) | `nav.ts`; 02 M14 | B7.3: menyu qaytadi; faqat havola |
 
+## 15. B8 bandining tanqidiy tahlili (2026-11-16)
+
+Temur topshirig'i: B8 ni ham tanqidiy tahlil qilish. O'qildi: 05 B8–B10, 06 (to'liq), 03 §10–§15, 01 §7–§8, 02 (M1, M2,
+M16–M18), 07 (ADR-010, 027–030, Q1–Q9), kod (jadvallar, `routes/orgs.py`, `routes/auth.py`, `settings.py`, `infra/`).
+Qaror — ADR-066. B8 boshlanmagan — topilmalar reja bo'yicha.
+
+| ID | Xavf | Topilma | Dalil | Nima qilindi (05) |
+|---|---|---|---|---|
+| D1 | Y | **To'lov va tariflar betani to'sib turibdi, betada esa hech kim to'lamaydi.** Tartib B8 → B9; B8 chiqishi "begona odam … to'lab, ishlata oladi", 06 §11 "real karta bilan sinalgan". B9.1 — "3 oy bepul". To'lov esa yuridik shaxs (Q4) va provayder shartnomasini (Q5) kutadi — eng uzun kalendar ishi; narxlarni tasdiqlaydigan dalil (B9: "3 sotuvchi to'lashga tayyor") betadan **keyin** paydo bo'ladi | 05 B8, B9.1, B9 chiqish; 06 §7, §11; 07 Q4–Q6 | B8-A → B9 → B8-B |
+| D2 | O' | **"Uzum WAF chet el IP'larini to'sadi" — fakt bilan zid.** Staging AWS Stokgolmda, real sinxron ishlayapti ("WAF to'smaydi" — ADR-029). Production'ning O'zbekistonda bo'lishi uchun asos — qonun, WAF emas | 06 §1, 08 §4 ↔ ADR-029 | 06 §1 tuzatildi |
+| D3 | Y | **Mavjudlik xavfi hali ochiq va B8 ning oxirida:** Uzum API'ni uchinchi tomon ishlatishi shartlari (09 X5, Q13) — "Temurdan kutilmoqda" da turibdi, 05 da esa B8.6 ichida, landing va to'lovdan keyin | README; 05 B8.6 | B8.6a — B8 dagi birinchi ish, darvoza |
+| D4 | Y | **Ro'yxatdan o'tish ochiq:** telefon raqami bor har kim tashkilot ocha oladi — "yopiq" beta uchun cheklov yo'q (taklif kodi, ruxsat ro'yxati) | `routes/auth.py`, `settings.py` (cheklov sozlamasi yo'q) | B8.11 |
+| D5 | Y | **Temurning ma'lumoti staging'da qoladi.** U kiritgan xaridlar, tannarx va sozlamalar — AWS'dagi staging bazasida; production'ga ko'chirish rejada umuman yo'q | 05 B8.8; ADR-029 | B8.15 |
+| D6 | O' | **Rejada vazifasiz qolganlar:** onboarding 4–6-qadamlar va "Sozlash: N/6" (R3 d) — B8 chiqish sharti aynan shunga tayanadi; tashkilotni o'chirish (M1, M16, 06 §6); `deploy-prod.yml`; funksiya bayroqlari (03 §14); yordam markazi "B8 to'liq" (M18) | 02 M2, M16, M18; 03 §13–§14 | B8.12, B8.13, B8.8, B8.3b |
+| D7 | O' | **Kirish — yagona nuqta:** kod faqat Telegram Gateway orqali; raqam Telegram'da bo'lmasa yoki Gateway ishlamasa (oldindan to'lanadigan balans) kirib bo'lmaydi. "SMS — keyinroq" (ADR-027) vazifasiz | ADR-027, ADR-028; 08 §10 | B8.14 |
+| D8 | O' | **Kuzatuv ortiqcha og'ir:** GlitchTip (o'z bazasi va navbati bilan), Uptime Kuma, status sahifa, Umami — bitta odam yuritadigan bitta serverga. "Ishlayaptimi" tekshiruvi o'sha serverning o'zida bo'lsa, server o'chganda jim qoladi — qayerda turishi aytilmagan | 05 B8.5; 03 §15; 06 §4, §10 | B8.5a (bot orqali, boshqa hostdan); qolgani B8-B / "Keyinga" |
+| D9 | O' | **Admin panel (M17) beta uchun ortiqcha katta:** nomidan kirish, lug'atlar, tariflar, bayroqlar, e'lonlar. 5–10 sotuvchiga faqat o'qiladigan ro'yxat yetadi | 02 M17 | B8.3a minimal, B8.3b, "Keyinga" |
+| D10 | O' | **Yuklama testi (200 tashkilot) va to'liq ASVS L2 — 10 sotuvchili betadan oldin.** Betaga kerak bo'lgani — ajratish testlari 100% va tiklash mashqi | 05 B8.4; 06 §11 | B8.4a / B8.4b |
+| D11 | O' | **Zaxira rejasi va amaldagi skript farq qiladi:** reja — WAL arxivi (pgBackRest), RPO ≤ 15 daqiqa, boshqa provayderga; `infra/backup` — to'liq nusxa skriptlari. B8 vazifalarida aytilmagan | 06 §3; `infra/backup/` | B8.8 |
+| D12 | O' | **Tarif chegarasi aniqlanmagan:** tushum chegarasi oshsa "majburlamasdan taklif" — ya'ni chegara ishlamaydi; "faqat o'qish"da sinxron to'xtaydimi — yozilmagan (to'xtasa, to'lagandan keyin tarixda bo'shliq qoladi) | 01 §7; 06 §7 | B8.1 da aniqlanadi |
+| D13 | O' | **To'lovning eng murakkab varianti birinchi:** karta tokeni bilan takroriy to'lov + fiskal chek + 3 urinish — birinchi 3–10 to'lovchi uchun. Bir martalik to'lov havolasi yetadi | 05 B8.2; 06 §7 | B8.2 (a) / (b) |
+| D14 | P | "10–15 kun" bahosi: B8 muddatini kod emas, kalendar ishlari belgilaydi (yuridik shaxs, shartnoma, reyestr — 15 kungacha, provayder akkaunti); ular 05 da B8 ning "T" qatorida, ya'ni B8 boshlanganda | 05 B8 T; 06 §6 | "T — hozir" ro'yxati |
+| D15 | P | Ixtiyoriy 2FA / TOTP "[B8]" (M1) — vazifasi yo'q, kirish allaqachon bir martalik kod bilan; jamoa ekrani betaga shart emas (P1 — yakka sotuvchi) | 02 M1; 01 §2 | 2FA — "Keyinga"; jamoa — B8.0b |
+| D16 | P | Foydalanish hodisalari (B8.9) ro'yxat oxirida — betadan oldin bo'lishi shart (o'lchovlar keyin tiklanmaydi) | 05 B8.9, B9.4 | B8-A da |
+
