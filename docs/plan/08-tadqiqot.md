@@ -177,7 +177,20 @@ keyin Chromium'da o'zbekcha matn skrinshoti. Natija: Inter.
 
 ## 9. Tekshirilmagan / keyin tekshiriladigan
 
-- Uzum Seller API'ni uchinchi tomon servisi ishlatishi bo'yicha rasmiy shartlar (B8.6).
+- Uzum Seller API'ni uchinchi tomon servisi ishlatishi bo'yicha rasmiy shartlar (B8.6a) — **qisman o'qildi (2026-11-16):**
+  Temur "Vositachilik shartnomasi (taklif)" ning 09.11.2026 nashrini yubordi (seller.uzum.uz/seller/agreement; matn
+  brauzer tarjimasida — asl ruscha / o'zbekcha matn bilan tekshirilishi kerak). API haqida alohida band **yo'q**.
+  Tegishli bandlar: **2.11** — "Shaxsiy hisobdan foydalanganda" Uzum yaratmagan dasturdan Uzum roziligisiz foydalanish
+  taqiqlanadi; buzilsa — shartnomani bekor qilish yoki kabinetni bloklash (xavf **sotuvchida**, bizda emas). Open API va
+  kabinetda berilgan kalit shu bandga kiradimi — matndan aniq emas ("Shaxsiy hisob" ta'rifi — login va parol bilan
+  kiriladigan interfeys). **2.5, 8.8** — login va parol maxfiy, ular bilan qilingan hamma amal uchun sotuvchi javobgar
+  (biz parol so'ramaymiz — ADR-009). **8.18, 8.19, 9.4** — xaridor shaxsiy ma'lumotini uchinchi shaxsga berish —
+  jiddiy buzilish (biz saqlamaymiz — 03 §5; FBS buyurtmalarida ehtiyot bo'lish, B9.5). **9.2.9** — sotuvchi Uzum
+  obro'siga zarar yetkazadigan ma'lumotni ommaviy tarqatmaydi (Temur — sotuvchi: "kabinet foydani 3,5 barobar ko'p
+  ko'rsatadi" kabi reklama matni uning do'konlariga xavf). **9.2.10** — xizmat axborot xavfsizligini buzadigan harakat
+  yo'q. **11.5** — Uzumning o'z Telegram boti savdo tahlili yuboradi (rasmiy raqobat). **13.9** — kabinetdagi vositalar
+  tartibi "Ko'rsatmalar" (seller.uzum.uz/manual) da — API shartlari o'sha yerda yoki kalit yaratish sahifasida
+  bo'lishi mumkin: **hali o'qilmagan**.
 - Payme/Click takroriy to'lov va fiskal maydonlarining aniq talablari — rasmiy hujjatdan (B8.2).
 - Telegram Gateway: O'zbekiston raqamlariga yetkazish va xato kodlari — staging'da (B2.11, §10).
 - Uzum seller kabinetidagi "Analitika" bo'limi imkoniyatlari (bepul rasmiy raqobat).

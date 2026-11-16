@@ -1278,7 +1278,12 @@ ishlari** belgilaydi (yuridik shaxs, shartnoma, reyestr) — ular hozirdan boshl
 
 - [ ] B8.6a **Darvoza: Uzum API shartlari** (09 X5, Q13 — hali javobsiz). Uchinchi tomon servisi sotuvchi kalitini
   ishlatishi mumkinligi — kabinetdagi shartlar matni yoki Uzumning yozma javobi. Javob "mumkin emas" bo'lsa B8 ning
-  qolgani to'xtaydi va reja qayta ko'riladi; shuning uchun B8 dagi birinchi ish.
+  qolgani to'xtaydi va reja qayta ko'riladi; shuning uchun B8 dagi birinchi ish. **Holat (2026-11-16):** asosiy shartnoma
+  o'qildi (08 §9) — API haqida alohida band yo'q, 2.11-band (Uzum yaratmagan dastur — roziliksiz taqiq, jazo —
+  sotuvchi kabinetini bloklash) Open API'ga taalluqliligi noaniq. Qoladi: (1) kalit yaratish sahifasidagi matn va
+  "Ko'rsatmalar"ning API bo'limi; (2) Uzum yordam xizmatidan yozma javob; (3) 2.11 ning asl matni. Ofertamizda bu xavf
+  sotuvchiga ochiq aytiladi (B8.6b). Reklama matnlarida Uzum haqida salbiy da'vo yo'q (9.2.9-band; 06 §8, B5.0f —
+  "Uzum kabineti ko'rsatadigan" qator betaraf nom bilan).
 - [ ] B8.8 **Production server — O'zbekistonda** (ADR-010; staging hozir AWS Stokgolmda, ADR-029 — vaqtincha): provayder
   tanlovi (Q2), `deploy-prod.yml` (`v*` teg), domen `sellermax.uz` (Q7), HTTPS, sirlar (`gen-env`), alohida DB rollari.
   Zaxira: WAL arxivi (pgBackRest, RPO ≤ 15 daqiqa) boshqa provayderdagi obyekt omboriga, shifrlangan (06 §3) — hozir
