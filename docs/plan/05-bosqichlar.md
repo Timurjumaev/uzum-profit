@@ -1282,7 +1282,8 @@ ishlari** belgilaydi (yuridik shaxs, shartnoma, reyestr) — ular hozirdan boshl
   o'qildi (08 §9) — API haqida alohida band yo'q, 2.11-band (Uzum yaratmagan dastur — roziliksiz taqiq, jazo —
   sotuvchi kabinetini bloklash) Open API'ga taalluqliligi noaniq. Qoladi: (1) kalit yaratish sahifasidagi matn va
   "Ko'rsatmalar"ning API bo'limi; (2) Uzum yordam xizmatidan yozma javob; (3) 2.11 ning asl matni. Ofertamizda bu xavf
-  sotuvchiga ochiq aytiladi (B8.6b). Reklama matnlarida Uzum haqida salbiy da'vo yo'q (9.2.9-band; 06 §8, B5.0f —
+  sotuvchiga ochiq aytiladi (B8.6b). Kalitlar sahifasida "Kalitlarni boshqalarga bermang" yozuvi bor (08 §9 b) — bu
+  xavfni oshiradi; yozma javob olinmaguncha begona sotuvchilar ulanmaydi. Reklama matnlarida Uzum haqida salbiy da'vo yo'q (9.2.9-band; 06 §8, B5.0f —
   "Uzum kabineti ko'rsatadigan" qator betaraf nom bilan).
 - [ ] B8.8 **Production server — O'zbekistonda** (ADR-010; staging hozir AWS Stokgolmda, ADR-029 — vaqtincha): provayder
   tanlovi (Q2), `deploy-prod.yml` (`v*` teg), domen `sellermax.uz` (Q7), HTTPS, sirlar (`gen-env`), alohida DB rollari.
@@ -1317,6 +1318,15 @@ ishlari** belgilaydi (yuridik shaxs, shartnoma, reyestr) — ular hozirdan boshl
 - [ ] B8.14 **Kirish kodi — yagona nuqta xavfi** (yangi): kod faqat Telegram Gateway orqali (ADR-028); raqam Telegram'da
   bo'lmasa yoki Gateway ishlamasa — kirib bo'lmaydi. Beta uchun: balans va xatolar kuzatuvi (B8.5a), tushunarli xato
   matni va yordam havolasi. SMS zaxira kanali (ADR-027) — B8-B da, betada necha kishi kira olmaganiga qarab.
+- [ ] B8.16 **Uzum kaliti muddatli** (yangi; 08 §9 c — Temurning kabineti, 2026-11-16): kalit yaratishda "Amal qilish
+  muddati" tanlanadi (standart 1 oy), tugagach kalit "Faolsiz" — sinxron to'xtaydi. Rejada bu yo'q edi. Qilinadi:
+  (1) ulashda kalit muddati so'raladi (API bermasa — sotuvchi kiritadi), akkauntda saqlanadi; (2) hodisa "Uzum kaliti
+  muddati tugayapti" — 5 va 1 kun oldin (kritik emas), tugaganda — mavjud "kalit yaroqsiz"; bosh sahifa "Diqqat"
+  qatori; (3) kalitni almashtirish — bitta oyna, tarix va sozlamalar saqlanadi, uzilgan davr chuqur sinxron bilan
+  to'ldiriladi; (4) ulash yo'riqnomasi (M2 1-qadam): eng uzun muddat va — bo'lsa — **faqat o'qish** ruxsati
+  tanlansin ("kalit faqat o'qish uchun ishlatiladi" va'damiz kalitning o'zi bilan mustahkamlanadi); (5) kalit do'kon
+  bo'yicha berilsa — bir akkauntda bir nechta kalit (hozir `mp_accounts` da bitta). **Avval T:** ruxsat va muddat
+  ro'yxatidagi variantlar, do'kon tanlovi bitta yoki bir nechta ekani. **Temurning joriy kaliti — 22-noyabrgacha.**
 - [ ] B8.0a "Qurilmalarim" va "Hamma qurilmadan chiqish" (M1; API bor — `/sessions`, UI yo'q).
 - [ ] Yordam: Telegram yordam chati havolasi ilovada; mavjud yordam maqolalari (`docs/help`) ilova ichidan ochiladi.
 

@@ -191,6 +191,21 @@ keyin Chromium'da o'zbekcha matn skrinshoti. Natija: Inter.
   yo'q. **11.5** — Uzumning o'z Telegram boti savdo tahlili yuboradi (rasmiy raqobat). **13.9** — kabinetdagi vositalar
   tartibi "Ko'rsatmalar" (seller.uzum.uz/manual) da — API shartlari o'sha yerda yoki kalit yaratish sahifasida
   bo'lishi mumkin: **hali o'qilmagan**.
+  **Qo'shimcha (Temur, 2026-11-16 — kabinet skrinshotlari va 2.11 ning asl o'zbekcha matni):**
+  (a) 2.11 asl matni: "Shaxsiy kabinet 2-taraf tomonidan foydalanganda, muallifi va (yoki) ishlab chiqaruvchisi 1-tomon
+  bo'lmagan har qanday dasturiy ta'minotdan 1-tomon bilan kelishmasdan foydalanishga yo'l qo'yilmaydi" — gap shaxsiy
+  kabinetdan foydalanish haqida; Open API alohida tilga olinmagan (noaniqlik qoladi).
+  (b) Kabinet → "API kalitlari" sahifasi matni: "Do'kon egasi sifatida siz barcha API kalitlarini ko'rishingiz va
+  boshqarishingiz mumkin. **Kalitlarni boshqalarga bermang.** Akkauntingizni himoya qilish uchun "Uzum Market" har qanday
+  API kalitini, agar u ochiq manbalarga tushib qolsa, avtomatik o'chirishi mumkin." — shartnoma bandi emas, lekin
+  uchinchi tomon servisiga kalit berishga qarshi ochiq ko'rsatma. Sahifada "Hujjatlarni ochish" tugmasi bor (API
+  hujjatlari — shartlar bo'lsa o'sha yerda; o'qilmagan).
+  (c) **Kalit yaratish oynasi:** Nomi, **Do'kon** (majburiy), **Ruxsatlar** (standart "Tahrir qilish"), **Amal qilish
+  muddati** (standart "1 oy"). Ro'yxatda: 10-oktabrda yaratilgan kalit — 10-noyabr, "Faolsiz"; 22-oktabrda yaratilgani —
+  22-noyabr, "Faol". Demak **kalit muddatli** — rejada bu umuman hisobga olinmagan (M2, M3, M15). Ruxsat va muddat
+  ro'yxatidagi boshqa variantlar, kalit bir nechta do'konga beriladimi — hali noma'lum.
+  (d) "Ko'rsatmalar" (seller.uzum.uz/manual) bo'limlari 1–15: API yoki integratsiya bo'limi ko'rinmaydi (12 — Analitika,
+  13 — Xodimlar va lavozimlar).
 - Payme/Click takroriy to'lov va fiskal maydonlarining aniq talablari — rasmiy hujjatdan (B8.2).
 - Telegram Gateway: O'zbekiston raqamlariga yetkazish va xato kodlari — staging'da (B2.11, §10).
 - Uzum seller kabinetidagi "Analitika" bo'limi imkoniyatlari (bepul rasmiy raqobat).

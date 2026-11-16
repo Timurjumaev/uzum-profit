@@ -436,3 +436,12 @@ Temur topshirig'i: B9 va B10 ni ham tanqidiy tahlil qilish. O'qildi: 05 B9, B10,
 | E15 | O' | **Narx jadvalida qurilmagan funksiya:** Pro tarifda "API/MCP" (01 §7) — B10 gacha yo'q | 01 §7 | B10.1: faqat ishlayotgan funksiyalar |
 | E16 | O' | **Chiqishdan keyingi ish rejada yo'q:** yordam navbati, ketgan mijozlar, haftalik o'lchov ko'rigi — B10 darhol yangi funksiyalarga o'tadi | 05 B10; 06 §5, §10 | B10.0 |
 
+**Qo'shimcha (Temur, 2026-11-16 — Uzum shartnomasi va kabinet skrinshotlari; tafsilot 08 §9):**
+
+| ID | Xavf | Topilma | Dalil | Nima qilindi (05) |
+|---|---|---|---|---|
+| D17 | Y | **Uzum kaliti muddatli (standart 1 oy), rejada hisobga olinmagan.** Har sotuvchi kalitni davriy almashtirishi kerak; muddat tugasa sinxron to'xtaydi. Eslatma, muddatni saqlash, almashtirish oqimi yo'q. Temurning joriy kaliti 22-noyabrda tugaydi | kabinet "API kalitlari": 10.10 → 10.11 "Faolsiz", 22.10 → 22.11 "Faol"; yaratish oynasida "Amal qilish muddati" | B8.16 |
+| D18 | Y | **D3 bo'yicha holat yomonlashdi:** kalitlar sahifasida "Kalitlarni boshqalarga bermang" degan ochiq ko'rsatma; shartnomaning 2.11-bandi (roziliksiz begona dastur — kabinet bloklanadi) Open API'ga tegishliligi noaniq. Ruxsat ham, taqiq ham aniq yozilmagan; xavf — sotuvchida | 08 §9 (a), (b) | B8.6a: Uzumdan yozma javob — begona sotuvchi ulanishidan oldin shart |
+| D19 | O' | **Kalit ruxsati standart bo'yicha "Tahrir qilish"**, biz esa "kalit faqat o'qish uchun ishlatiladi" deymiz — yo'riqnomada faqat o'qish ruxsatini tanlash aytilmagan (bunday variant borligi tekshiriladi) | yaratish oynasi: "Ruxsatlar — Tahrir qilish" | B8.16 (4) |
+| D20 | O' | **Kalit do'kon bo'yicha yaratiladi** ("Do'kon" — majburiy maydon); modelda akkauntga bitta kalit. Bir kalit bir nechta do'konni qamraydimi — noma'lum (Temurda ikki do'kon bitta kalit bilan ishlayapti) | yaratish oynasi; `mp_accounts` | B8.16 (5), T |
+
