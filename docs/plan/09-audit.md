@@ -387,3 +387,67 @@ B7 hali boshlanmagan — kod topilmasi yo'q, faqat reja.
 | C13 | P | "Chek rasmi [B7]" — B7 ro'yxatida yo'q, fayl saqlash infratuzilmasi ham yo'q | 02 M8 | "Keyinga" |
 | C14 | P | "Hisobotlar" menyusi yashirilgan (ADR-057 Q12) — qachon qaytishi B7 da aytilmagan; moliyaviy faylni Telegram orqali yuborish (§13 A16) | `nav.ts`; 02 M14 | B7.3: menyu qaytadi; faqat havola |
 
+## 15. B8 bandining tanqidiy tahlili (2026-11-16)
+
+Temur topshirig'i: B8 ni ham tanqidiy tahlil qilish. O'qildi: 05 B8–B10, 06 (to'liq), 03 §10–§15, 01 §7–§8, 02 (M1, M2,
+M16–M18), 07 (ADR-010, 027–030, Q1–Q9), kod (jadvallar, `routes/orgs.py`, `routes/auth.py`, `settings.py`, `infra/`).
+Qaror — ADR-066. B8 boshlanmagan — topilmalar reja bo'yicha.
+
+| ID | Xavf | Topilma | Dalil | Nima qilindi (05) |
+|---|---|---|---|---|
+| D1 | Y | **To'lov va tariflar betani to'sib turibdi, betada esa hech kim to'lamaydi.** Tartib B8 → B9; B8 chiqishi "begona odam … to'lab, ishlata oladi", 06 §11 "real karta bilan sinalgan". B9.1 — "3 oy bepul". To'lov esa yuridik shaxs (Q4) va provayder shartnomasini (Q5) kutadi — eng uzun kalendar ishi; narxlarni tasdiqlaydigan dalil (B9: "3 sotuvchi to'lashga tayyor") betadan **keyin** paydo bo'ladi | 05 B8, B9.1, B9 chiqish; 06 §7, §11; 07 Q4–Q6 | B8-A → B9 → B8-B |
+| D2 | O' | **"Uzum WAF chet el IP'larini to'sadi" — fakt bilan zid.** Staging AWS Stokgolmda, real sinxron ishlayapti ("WAF to'smaydi" — ADR-029). Production'ning O'zbekistonda bo'lishi uchun asos — qonun, WAF emas | 06 §1, 08 §4 ↔ ADR-029 | 06 §1 tuzatildi |
+| D3 | Y | **Mavjudlik xavfi hali ochiq va B8 ning oxirida:** Uzum API'ni uchinchi tomon ishlatishi shartlari (09 X5, Q13) — "Temurdan kutilmoqda" da turibdi, 05 da esa B8.6 ichida, landing va to'lovdan keyin | README; 05 B8.6 | B8.6a — B8 dagi birinchi ish, darvoza |
+| D4 | Y | **Ro'yxatdan o'tish ochiq:** telefon raqami bor har kim tashkilot ocha oladi — "yopiq" beta uchun cheklov yo'q (taklif kodi, ruxsat ro'yxati) | `routes/auth.py`, `settings.py` (cheklov sozlamasi yo'q) | B8.11 |
+| D5 | Y | **Temurning ma'lumoti staging'da qoladi.** U kiritgan xaridlar, tannarx va sozlamalar — AWS'dagi staging bazasida; production'ga ko'chirish rejada umuman yo'q | 05 B8.8; ADR-029 | B8.15 |
+| D6 | O' | **Rejada vazifasiz qolganlar:** onboarding 4–6-qadamlar va "Sozlash: N/6" (R3 d) — B8 chiqish sharti aynan shunga tayanadi; tashkilotni o'chirish (M1, M16, 06 §6); `deploy-prod.yml`; funksiya bayroqlari (03 §14); yordam markazi "B8 to'liq" (M18) | 02 M2, M16, M18; 03 §13–§14 | B8.12, B8.13, B8.8, B8.3b |
+| D7 | O' | **Kirish — yagona nuqta:** kod faqat Telegram Gateway orqali; raqam Telegram'da bo'lmasa yoki Gateway ishlamasa (oldindan to'lanadigan balans) kirib bo'lmaydi. "SMS — keyinroq" (ADR-027) vazifasiz | ADR-027, ADR-028; 08 §10 | B8.14 |
+| D8 | O' | **Kuzatuv ortiqcha og'ir:** GlitchTip (o'z bazasi va navbati bilan), Uptime Kuma, status sahifa, Umami — bitta odam yuritadigan bitta serverga. "Ishlayaptimi" tekshiruvi o'sha serverning o'zida bo'lsa, server o'chganda jim qoladi — qayerda turishi aytilmagan | 05 B8.5; 03 §15; 06 §4, §10 | B8.5a (bot orqali, boshqa hostdan); qolgani B8-B / "Keyinga" |
+| D9 | O' | **Admin panel (M17) beta uchun ortiqcha katta:** nomidan kirish, lug'atlar, tariflar, bayroqlar, e'lonlar. 5–10 sotuvchiga faqat o'qiladigan ro'yxat yetadi | 02 M17 | B8.3a minimal, B8.3b, "Keyinga" |
+| D10 | O' | **Yuklama testi (200 tashkilot) va to'liq ASVS L2 — 10 sotuvchili betadan oldin.** Betaga kerak bo'lgani — ajratish testlari 100% va tiklash mashqi | 05 B8.4; 06 §11 | B8.4a / B8.4b |
+| D11 | O' | **Zaxira rejasi va amaldagi skript farq qiladi:** reja — WAL arxivi (pgBackRest), RPO ≤ 15 daqiqa, boshqa provayderga; `infra/backup` — to'liq nusxa skriptlari. B8 vazifalarida aytilmagan | 06 §3; `infra/backup/` | B8.8 |
+| D12 | O' | **Tarif chegarasi aniqlanmagan:** tushum chegarasi oshsa "majburlamasdan taklif" — ya'ni chegara ishlamaydi; "faqat o'qish"da sinxron to'xtaydimi — yozilmagan (to'xtasa, to'lagandan keyin tarixda bo'shliq qoladi) | 01 §7; 06 §7 | B8.1 da aniqlanadi |
+| D13 | O' | **To'lovning eng murakkab varianti birinchi:** karta tokeni bilan takroriy to'lov + fiskal chek + 3 urinish — birinchi 3–10 to'lovchi uchun. Bir martalik to'lov havolasi yetadi | 05 B8.2; 06 §7 | B8.2 (a) / (b) |
+| D14 | P | "10–15 kun" bahosi: B8 muddatini kod emas, kalendar ishlari belgilaydi (yuridik shaxs, shartnoma, reyestr — 15 kungacha, provayder akkaunti); ular 05 da B8 ning "T" qatorida, ya'ni B8 boshlanganda | 05 B8 T; 06 §6 | "T — hozir" ro'yxati |
+| D15 | P | Ixtiyoriy 2FA / TOTP "[B8]" (M1) — vazifasi yo'q, kirish allaqachon bir martalik kod bilan; jamoa ekrani betaga shart emas (P1 — yakka sotuvchi) | 02 M1; 01 §2 | 2FA — "Keyinga"; jamoa — B8.0b |
+| D16 | P | Foydalanish hodisalari (B8.9) ro'yxat oxirida — betadan oldin bo'lishi shart (o'lchovlar keyin tiklanmaydi) | 05 B8.9, B9.4 | B8-A da |
+
+## 16. B9 va B10 bandlarining tanqidiy tahlili (2026-11-16)
+
+Temur topshirig'i: B9 va B10 ni ham tanqidiy tahlil qilish. O'qildi: 05 B9, B10, "Parallel yo'l"; 01 §2, §6–§8; 02
+(M2, M19–M21); 06 §5, §8–§10; 07 (ADR-009, 019, 021, 034); 08 §4, §9. Qaror — ADR-067. Kod topilmasi yo'q — faqat reja.
+
+| ID | Xavf | Topilma | Dalil | Nima qilindi (05) |
+|---|---|---|---|---|
+| E1 | Y | **Beta asosiy ustunlikni sinamaydi.** 3–4 hafta; xarid → kargo → sanash → Uzum zanjirining bitta aylanishi 3–6 hafta. Beta faqat "foydani ko'rish"ni sinaydi, partiya tannarxi va buyurtma rejasi (D1, D4) — yo'q | 05 B9; 01 §5 | 6–8 hafta; chiqishda "kamida 2 tasi zanjirni o'tgan" |
+| E2 | Y | **Chiqish mezoni o'lchanmaydi.** "Kamida 3 sotuvchi pullik tarifga o'tishga tayyor" — qanday aniqlanadi, yozilmagan; bepul davr 3 oy, beta 3–4 hafta — hech kim qaror qilmaydi. "Aktivatsiya ≥ 60%" 5 kishida — 3 kishi | 05 B9 chiqish | B9.7; chiqish aniq sonlar bilan |
+| E3 | O' | **Aktivatsiya ikki xil ta'riflangan:** 01 §8 — "tushumning ≥ 60% ida tannarx", B9.4 — "TOP-20 tannarx" | 01 §8 ↔ 05 B9.4 | 01 §8 ta'rifi |
+| E4 | Y | **Ishtirokchilar tanlovi mezonsiz** ("Temurning tanishlari"). Rejadagi tekshirilmagan farazlar (FBS, MChJ solig'i, ruscha xarajat matni, 1 000+ SKU, xodimlar, mahalliy xarid) faqat mos sotuvchi bo'lsagina sinaladi | 07 Q9; 09 K15; ADR-063 (B9.5) | B9.1 mezonlar |
+| E5 | Y | **Hamma hisob ikkita do'konda sinalgan**, begona ma'lumotda nima chiqishini tekshirish rejada yo'q; 02 F2 da ayrim qoidalar ochiq "taxmin" deb yozilgan (`PARTIALLY_CANCELLED`) | 02 F2; 08 §4 | B9.6 sifat hisoboti (summalarsiz) |
+| E6 | O' | **10 ta mijoz suhbati — birortasi o'tkazilmagan**, B5 ustuvorliklari va B8 narxlari shunga tayanishi kerak edi. Alohida yo'l bo'lib qolsa yana qolib ketadi | 05 "Parallel yo'l"; `suhbatlar.md` yo'q | B9.2 ga birlashdi |
+| E7 | O' | **"Keyinga" ro'yxatlari (B5–B8) qayerda hal bo'lishi yo'q edi** | ADR-063–066 | B9.6 |
+| E8 | O' | **Bepul davr va to'lov muddati bog'lanmagan:** 3 oy bepul tugaganda to'lov (B8-B) tayyor bo'lmasa, ishtirokchilar yo bepul qoladi, yo uziladi | 05 B9.1; ADR-066 | B9.7 muddat sharti |
+| E9 | P | "Men tayyorlagan video" — bajarib bo'lmaydi; yordam kanali va xatolar ro'yxati qayerda yuritilishi aytilmagan | 05 B9.2–B9.3 | Yozma yo'riqnoma; `beta.md` |
+| E10 | Y | **B10 — oltita katta ish, tartibsiz va shartsiz** ("davomiy"): AI, uchta marketplace, narx boshqaruvi, Mini App, mobil ilova. Hech birining boshlanish sharti, dalili yoki o'lchovi yo'q; chiqishning o'zi (B10.1) ham o'lchovsiz | 05 B10 | Nomzodlar jadvali, shartlar bilan; B10.1 o'lchovi |
+| E11 | Y | **Narx boshqaruvi va FBS amallari (B10.4) ishonch va'dasiga zid:** onboarding va landingda "kalit faqat o'qish uchun ishlatiladi" (M2, D9); `sendPriceData` — yozish amali, xato narx sotuvchiga zarar keltiradi | 02 M2, M21; 01 D9 | Nomzod 5: alohida rozilik va ADR sharti |
+| E12 | Y | **Ilova ichidagi AI yordamchi tamoyil 6 ga zid:** sotuvchining moliyaviy ma'lumoti chet eldagi AI xizmatiga yuboriladi ("ma'lumot O'zbekistonda"); narxi tarifga sig'ishi hisoblanmagan. MCP (sotuvchi o'z AI'sini o'zi ulaydi) bu muammodan xoli va arzon | 02 M19; README tamoyil 6; §7 xulosa 4 | MCP — nomzod 1, AI — nomzod 4 (huquqiy shart bilan) |
+| E13 | O' | **Uchta mobil yo'l bir-birini takrorlaydi:** PWA (B6.3), Mini App (B10.5), mobil ilova (B10.6) — qaysi biri qachon, o'lchovsiz | 05 B6.3, B10.5–B10.6 | Ketma-ket, har biri oldingisi yetmasa |
+| E14 | O' | **Boshqa marketplace'lar dalilsiz:** nechta mijoz ikkinchi maydonchada sotishi noma'lum; API'lari tekshirilmagan (08 §9) | 02 M20; 08 §9 | Nomzod 3: ≥ 20% sharti |
+| E15 | O' | **Narx jadvalida qurilmagan funksiya:** Pro tarifda "API/MCP" (01 §7) — B10 gacha yo'q | 01 §7 | B10.1: faqat ishlayotgan funksiyalar |
+| E16 | O' | **Chiqishdan keyingi ish rejada yo'q:** yordam navbati, ketgan mijozlar, haftalik o'lchov ko'rigi — B10 darhol yangi funksiyalarga o'tadi | 05 B10; 06 §5, §10 | B10.0 |
+
+**Qo'shimcha (Temur, 2026-11-16 — Uzum shartnomasi va kabinet skrinshotlari; tafsilot 08 §9):**
+
+| ID | Xavf | Topilma | Dalil | Nima qilindi (05) |
+|---|---|---|---|---|
+| D17 | Y | **Uzum kaliti muddatli (standart 1 oy), rejada hisobga olinmagan.** Har sotuvchi kalitni davriy almashtirishi kerak; muddat tugasa sinxron to'xtaydi. Eslatma, muddatni saqlash, almashtirish oqimi yo'q. Temurning joriy kaliti 22-noyabrda tugaydi | kabinet "API kalitlari": 10.10 → 10.11 "Faolsiz", 22.10 → 22.11 "Faol"; yaratish oynasida "Amal qilish muddati" | B8.16 |
+| D18 | Y | **D3 bo'yicha holat yomonlashdi:** kalitlar sahifasida "Kalitlarni boshqalarga bermang" degan ochiq ko'rsatma; shartnomaning 2.11-bandi (roziliksiz begona dastur — kabinet bloklanadi) Open API'ga tegishliligi noaniq. Ruxsat ham, taqiq ham aniq yozilmagan; xavf — sotuvchida | 08 §9 (a), (b) | B8.6a: Uzumdan yozma javob — begona sotuvchi ulanishidan oldin shart |
+| D19 | O' | **Kalit ruxsati standart bo'yicha "Tahrir qilish"**, biz esa "kalit faqat o'qish uchun ishlatiladi" deymiz — yo'riqnomada faqat o'qish ruxsatini tanlash aytilmagan (bunday variant borligi tekshiriladi) | yaratish oynasi: "Ruxsatlar — Tahrir qilish" | B8.16 (4) |
+| D20 | O' | **Kalit do'kon bo'yicha yaratiladi** ("Do'kon" — majburiy maydon); modelda akkauntga bitta kalit. Bir kalit bir nechta do'konni qamraydimi — noma'lum (Temurda ikki do'kon bitta kalit bilan ishlayapti) | yaratish oynasi; `mp_accounts` | B8.16 (5), T |
+
+**D17–D20 yangilanishi (kalit oynasi variantlari va rasmiy Swagger, 08 §9 e–f):** D17 — xavf pasaydi (O'): muddatda
+"Cheklanmagan" va 1–2 yil bor, 1 oy — faqat standart; eslatma va almashtirish oqimi baribir kerak. D19 — "Faqat o'qish"
+ruxsati **bor**: yo'riqnomaga kiradi va ishonch va'dasini texnik kafolatga aylantiradi. D20 — yopildi: bitta kalit
+bir nechta yoki hamma do'konga beriladi. D18 — o'zgarmadi: rasmiy API hujjatida uchinchi tomon servislari haqida hech
+narsa yo'q; Uzumdan yozma javob sharti kuchda.
+

@@ -177,7 +177,44 @@ keyin Chromium'da o'zbekcha matn skrinshoti. Natija: Inter.
 
 ## 9. Tekshirilmagan / keyin tekshiriladigan
 
-- Uzum Seller API'ni uchinchi tomon servisi ishlatishi bo'yicha rasmiy shartlar (B8.6).
+- Uzum Seller API'ni uchinchi tomon servisi ishlatishi bo'yicha rasmiy shartlar (B8.6a) — **qisman o'qildi (2026-11-16):**
+  Temur "Vositachilik shartnomasi (taklif)" ning 09.11.2026 nashrini yubordi (seller.uzum.uz/seller/agreement; matn
+  brauzer tarjimasida — asl ruscha / o'zbekcha matn bilan tekshirilishi kerak). API haqida alohida band **yo'q**.
+  Tegishli bandlar: **2.11** — "Shaxsiy hisobdan foydalanganda" Uzum yaratmagan dasturdan Uzum roziligisiz foydalanish
+  taqiqlanadi; buzilsa — shartnomani bekor qilish yoki kabinetni bloklash (xavf **sotuvchida**, bizda emas). Open API va
+  kabinetda berilgan kalit shu bandga kiradimi — matndan aniq emas ("Shaxsiy hisob" ta'rifi — login va parol bilan
+  kiriladigan interfeys). **2.5, 8.8** — login va parol maxfiy, ular bilan qilingan hamma amal uchun sotuvchi javobgar
+  (biz parol so'ramaymiz — ADR-009). **8.18, 8.19, 9.4** — xaridor shaxsiy ma'lumotini uchinchi shaxsga berish —
+  jiddiy buzilish (biz saqlamaymiz — 03 §5; FBS buyurtmalarida ehtiyot bo'lish, B9.5). **9.2.9** — sotuvchi Uzum
+  obro'siga zarar yetkazadigan ma'lumotni ommaviy tarqatmaydi (Temur — sotuvchi: "kabinet foydani 3,5 barobar ko'p
+  ko'rsatadi" kabi reklama matni uning do'konlariga xavf). **9.2.10** — xizmat axborot xavfsizligini buzadigan harakat
+  yo'q. **11.5** — Uzumning o'z Telegram boti savdo tahlili yuboradi (rasmiy raqobat). **13.9** — kabinetdagi vositalar
+  tartibi "Ko'rsatmalar" (seller.uzum.uz/manual) da — API shartlari o'sha yerda yoki kalit yaratish sahifasida
+  bo'lishi mumkin: **hali o'qilmagan**.
+  **Qo'shimcha (Temur, 2026-11-16 — kabinet skrinshotlari va 2.11 ning asl o'zbekcha matni):**
+  (a) 2.11 asl matni: "Shaxsiy kabinet 2-taraf tomonidan foydalanganda, muallifi va (yoki) ishlab chiqaruvchisi 1-tomon
+  bo'lmagan har qanday dasturiy ta'minotdan 1-tomon bilan kelishmasdan foydalanishga yo'l qo'yilmaydi" — gap shaxsiy
+  kabinetdan foydalanish haqida; Open API alohida tilga olinmagan (noaniqlik qoladi).
+  (b) Kabinet → "API kalitlari" sahifasi matni: "Do'kon egasi sifatida siz barcha API kalitlarini ko'rishingiz va
+  boshqarishingiz mumkin. **Kalitlarni boshqalarga bermang.** Akkauntingizni himoya qilish uchun "Uzum Market" har qanday
+  API kalitini, agar u ochiq manbalarga tushib qolsa, avtomatik o'chirishi mumkin." — shartnoma bandi emas, lekin
+  uchinchi tomon servisiga kalit berishga qarshi ochiq ko'rsatma. Sahifada "Hujjatlarni ochish" tugmasi bor (API
+  hujjatlari — shartlar bo'lsa o'sha yerda; o'qilmagan).
+  (c) **Kalit yaratish oynasi:** Nomi, **Do'kon** (majburiy), **Ruxsatlar** (standart "Tahrir qilish"), **Amal qilish
+  muddati** (standart "1 oy"). Ro'yxatda: 10-oktabrda yaratilgan kalit — 10-noyabr, "Faolsiz"; 22-oktabrda yaratilgani —
+  22-noyabr, "Faol". Demak **kalit muddatli** — rejada bu umuman hisobga olinmagan (M2, M3, M15). Ruxsat va muddat
+  ro'yxatidagi boshqa variantlar, kalit bir nechta do'konga beriladimi — hali noma'lum.
+  (d) "Ko'rsatmalar" (seller.uzum.uz/manual) bo'limlari 1–15: API yoki integratsiya bo'limi ko'rinmaydi (12 — Analitika,
+  13 — Xodimlar va lavozimlar).
+  (e) **Kalit yaratish variantlari (skrinshotlar, 2026-11-16):** Ruxsatlar — **"Faqat o'qish"** yoki "Tahrir qilish"
+  (standart); Amal qilish muddati — **Cheklanmagan**, 2 yil, 1 yil, 6 oy, 3 oy, 1 oy (standart); Do'kon — bir nechta
+  belgilanadi, "Barcha do'konlarni tanlash" bor (bitta kalit — hamma do'kon; modelimizga mos).
+  (f) "Hujjatlarni ochish" → rasmiy Swagger ("Uzum market seller openapi 1.0.0", «OpenAPI для продавцов UZUM MARKET»):
+  kalit `Authorization` sarlavhasida `Bearer`siz; `shopIds` FBS/DBS buyurtmalari, moliyaviy buyurtmalar va xarajatlar
+  uchun majburiy (bir nechta do'kon — vergul bilan), "kalit ko'rsatilgan hamma do'konga ruxsat berishi kerak"; 403 —
+  kalit, do'konga ruxsat yoki `shopIds`; **ma'lumotni o'zgartirish uchun kalitda tahrirlash ruxsati kerak** (ya'ni
+  "Faqat o'qish" kaliti yozish amallarini bajara olmaydi). Yordamga murojaatda kalit yuborilmaydi. Uchinchi tomon
+  servislari haqida — ruxsat ham, taqiq ham — **hech narsa yo'q**.
 - Payme/Click takroriy to'lov va fiskal maydonlarining aniq talablari — rasmiy hujjatdan (B8.2).
 - Telegram Gateway: O'zbekiston raqamlariga yetkazish va xato kodlari — staging'da (B2.11, §10).
 - Uzum seller kabinetidagi "Analitika" bo'limi imkoniyatlari (bepul rasmiy raqobat).
