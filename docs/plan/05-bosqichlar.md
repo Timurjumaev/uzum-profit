@@ -1318,15 +1318,20 @@ ishlari** belgilaydi (yuridik shaxs, shartnoma, reyestr) — ular hozirdan boshl
 - [ ] B8.14 **Kirish kodi — yagona nuqta xavfi** (yangi): kod faqat Telegram Gateway orqali (ADR-028); raqam Telegram'da
   bo'lmasa yoki Gateway ishlamasa — kirib bo'lmaydi. Beta uchun: balans va xatolar kuzatuvi (B8.5a), tushunarli xato
   matni va yordam havolasi. SMS zaxira kanali (ADR-027) — B8-B da, betada necha kishi kira olmaganiga qarab.
-- [ ] B8.16 **Uzum kaliti muddatli** (yangi; 08 §9 c — Temurning kabineti, 2026-11-16): kalit yaratishda "Amal qilish
-  muddati" tanlanadi (standart 1 oy), tugagach kalit "Faolsiz" — sinxron to'xtaydi. Rejada bu yo'q edi. Qilinadi:
-  (1) ulashda kalit muddati so'raladi (API bermasa — sotuvchi kiritadi), akkauntda saqlanadi; (2) hodisa "Uzum kaliti
-  muddati tugayapti" — 5 va 1 kun oldin (kritik emas), tugaganda — mavjud "kalit yaroqsiz"; bosh sahifa "Diqqat"
-  qatori; (3) kalitni almashtirish — bitta oyna, tarix va sozlamalar saqlanadi, uzilgan davr chuqur sinxron bilan
-  to'ldiriladi; (4) ulash yo'riqnomasi (M2 1-qadam): eng uzun muddat va — bo'lsa — **faqat o'qish** ruxsati
-  tanlansin ("kalit faqat o'qish uchun ishlatiladi" va'damiz kalitning o'zi bilan mustahkamlanadi); (5) kalit do'kon
-  bo'yicha berilsa — bir akkauntda bir nechta kalit (hozir `mp_accounts` da bitta). **Avval T:** ruxsat va muddat
-  ro'yxatidagi variantlar, do'kon tanlovi bitta yoki bir nechta ekani. **Temurning joriy kaliti — 22-noyabrgacha.**
+- [ ] B8.16 **Uzum kaliti: ruxsat va muddat** (yangi; 08 §9 c, e, f — Temurning kabineti, 2026-11-16). Kalit yaratishda
+  ruxsat ("Faqat o'qish" / "Tahrir qilish" — standart) va muddat (Cheklanmagan … 1 oy — standart) tanlanadi; muddati
+  tugagan kalit "Faolsiz" — sinxron to'xtaydi. Rejada bu yo'q edi. Qilinadi:
+  (1) **ulash yo'riqnomasi (M2 1-qadam), rasmlar bilan:** ruxsat — **"Faqat o'qish"** (bizning hamma so'rovimiz o'qish;
+  "kalit faqat o'qish uchun ishlatiladi" va'damiz endi kalitning o'zi bilan kafolatlanadi — Uzum bunday kalitga yozishga
+  ruxsat bermaydi), do'kon — "Barcha do'konlar", muddat — 1 yil yoki cheklanmagan (sotuvchi tanlaydi);
+  (2) ulashda muddat so'raladi (API bermaydi), akkauntda saqlanadi; hodisa "Uzum kaliti muddati tugayapti" — 5 va 1 kun
+  oldin, tugaganda — mavjud "kalit yaroqsiz"; bosh sahifa "Diqqat" qatori;
+  (3) kalitni almashtirish — bitta oyna, tarix va sozlamalar saqlanadi, uzilgan davr chuqur sinxron bilan to'ldiriladi;
+  (4) "Tahrir qilish" ruxsatli kalit ulansa — ogohlantirish va "Faqat o'qish"ga almashtirish taklifi (kalit turini
+  API'dan bilib bo'lmasa — yo'riqnomada).
+  **T (birinchi real tekshiruv):** Temur 22-noyabrgacha yangi kalitni "Faqat o'qish" + "Barcha do'konlar" bilan yaratadi —
+  staging'da sinxronning hamma turi (sotuvlar, xarajatlar, mahsulotlar, postavkalar, qaytarishlar) shu kalit bilan
+  ishlashi tasdiqlanadi ("Ma'lumotlar holati" yashil).
 - [ ] B8.0a "Qurilmalarim" va "Hamma qurilmadan chiqish" (M1; API bor — `/sessions`, UI yo'q).
 - [ ] Yordam: Telegram yordam chati havolasi ilovada; mavjud yordam maqolalari (`docs/help`) ilova ichidan ochiladi.
 

@@ -206,6 +206,15 @@ keyin Chromium'da o'zbekcha matn skrinshoti. Natija: Inter.
   ro'yxatidagi boshqa variantlar, kalit bir nechta do'konga beriladimi — hali noma'lum.
   (d) "Ko'rsatmalar" (seller.uzum.uz/manual) bo'limlari 1–15: API yoki integratsiya bo'limi ko'rinmaydi (12 — Analitika,
   13 — Xodimlar va lavozimlar).
+  (e) **Kalit yaratish variantlari (skrinshotlar, 2026-11-16):** Ruxsatlar — **"Faqat o'qish"** yoki "Tahrir qilish"
+  (standart); Amal qilish muddati — **Cheklanmagan**, 2 yil, 1 yil, 6 oy, 3 oy, 1 oy (standart); Do'kon — bir nechta
+  belgilanadi, "Barcha do'konlarni tanlash" bor (bitta kalit — hamma do'kon; modelimizga mos).
+  (f) "Hujjatlarni ochish" → rasmiy Swagger ("Uzum market seller openapi 1.0.0", «OpenAPI для продавцов UZUM MARKET»):
+  kalit `Authorization` sarlavhasida `Bearer`siz; `shopIds` FBS/DBS buyurtmalari, moliyaviy buyurtmalar va xarajatlar
+  uchun majburiy (bir nechta do'kon — vergul bilan), "kalit ko'rsatilgan hamma do'konga ruxsat berishi kerak"; 403 —
+  kalit, do'konga ruxsat yoki `shopIds`; **ma'lumotni o'zgartirish uchun kalitda tahrirlash ruxsati kerak** (ya'ni
+  "Faqat o'qish" kaliti yozish amallarini bajara olmaydi). Yordamga murojaatda kalit yuborilmaydi. Uchinchi tomon
+  servislari haqida — ruxsat ham, taqiq ham — **hech narsa yo'q**.
 - Payme/Click takroriy to'lov va fiskal maydonlarining aniq talablari — rasmiy hujjatdan (B8.2).
 - Telegram Gateway: O'zbekiston raqamlariga yetkazish va xato kodlari — staging'da (B2.11, §10).
 - Uzum seller kabinetidagi "Analitika" bo'limi imkoniyatlari (bepul rasmiy raqobat).

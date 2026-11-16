@@ -445,3 +445,9 @@ Temur topshirig'i: B9 va B10 ni ham tanqidiy tahlil qilish. O'qildi: 05 B9, B10,
 | D19 | O' | **Kalit ruxsati standart bo'yicha "Tahrir qilish"**, biz esa "kalit faqat o'qish uchun ishlatiladi" deymiz — yo'riqnomada faqat o'qish ruxsatini tanlash aytilmagan (bunday variant borligi tekshiriladi) | yaratish oynasi: "Ruxsatlar — Tahrir qilish" | B8.16 (4) |
 | D20 | O' | **Kalit do'kon bo'yicha yaratiladi** ("Do'kon" — majburiy maydon); modelda akkauntga bitta kalit. Bir kalit bir nechta do'konni qamraydimi — noma'lum (Temurda ikki do'kon bitta kalit bilan ishlayapti) | yaratish oynasi; `mp_accounts` | B8.16 (5), T |
 
+**D17–D20 yangilanishi (kalit oynasi variantlari va rasmiy Swagger, 08 §9 e–f):** D17 — xavf pasaydi (O'): muddatda
+"Cheklanmagan" va 1–2 yil bor, 1 oy — faqat standart; eslatma va almashtirish oqimi baribir kerak. D19 — "Faqat o'qish"
+ruxsati **bor**: yo'riqnomaga kiradi va ishonch va'dasini texnik kafolatga aylantiradi. D20 — yopildi: bitta kalit
+bir nechta yoki hamma do'konga beriladi. D18 — o'zgarmadi: rasmiy API hujjatida uchinchi tomon servislari haqida hech
+narsa yo'q; Uzumdan yozma javob sharti kuchda.
+
