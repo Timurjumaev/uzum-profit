@@ -893,6 +893,12 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
   - [→] B4.81 (**ko'chdi → B5.0e**, ADR-059) 2-bosqich: QQS va foyda solig'i oylik hisobi (kirim QQS, `profit_before_tax` bazasi), shablon "MChJ umumbelgilangan".
   - [→] B4.76 (**ko'chdi → B5.0f**, ADR-059) Kabinet bilan solishtirish (taklif): Foyda sahifasida "Uzum kabineti ko'rsatadigan" qator (09 §11.3) — Temur
     ko'rgach.
+  - [x] B4.82 (sinov topilmasi, ADR-062) Umumiy xarajatlar: akkaunt Uzum xarajati (`shopId: 0`) bir marta (migratsiya 0030) va
+    qat'iy soliq, do'konsiz o'z xarajatlari bilan birga do'konlarga taqsimlanmaydi. ✓ 2026-11-16: `upcore.pnl` tashkilot katagi
+    (`COMMON`, `Cells.common`), `/pnl` do'kon va SKU kesimida `common` ustuni, `/skus` — `common`; Foyda va Mahsulotlarda
+    "Umumiy xarajatlar", do'kon filtrida izoh.
+    **T:** staging'da Foyda → "Do'konlar" kesimi: 15-noyabr — "Umumiy xarajatlar" ustunida 62 000 pul yechish bir marta,
+    do'kon ustunlarida yo'q; jami sof foyda o'zgarmagan.
 - T: boshlang'ich holatni kiritish (`/opening`: sana, har tovarga tannarx, o'z omboridagi qoldiq) va yo'ldagi partiyalarni
   Xaridlarga kiritish (ADR-033; 2 ta legacy partiyani kiritish shart emas); 14 kun faqat yangi dasturda ishlash; topilgan
   har noqulaylikni yozib yuborish.

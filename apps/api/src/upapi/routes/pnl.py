@@ -20,7 +20,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from upcore.pnl import CellKey, Cells, Statement, compare
+from upcore.pnl import COMMON, CellKey, Cells, Statement, compare
 from upcore.tax import TaxRegime, uncalculated_regimes
 
 from upapi.auth.deps import OrgContext, require
@@ -82,14 +82,14 @@ def columns(cells: Cells, view: View) -> tuple[list[ColumnOut], Statement]:
     views: dict[View, Callable[[CellKey], Any]] = {
         View.MONTH: lambda k: k.day.replace(day=1),
         View.DAY: lambda k: k.day,
-        View.SHOP: lambda k: k.shop,
-        View.SKU: lambda k: k.sku,
+        View.SHOP: rc.shop_column,
+        View.SKU: rc.sku_column,
     }
     if view is View.TOTAL:
         return [], cells.statement()
     groups, whole = cells.by_and_total(views[view])
     out = [
-        ColumnOut(key=None if k is None or k == "" else str(k), statement=StatementOut.of(s))
+        ColumnOut(key=None if k is None else str(k), statement=StatementOut.of(s))
         for k, s in groups.items()
     ]
     return out, whole
@@ -105,7 +105,7 @@ async def pnl(ctx: Finance, f: Filter, _: Heavy, view: View = View.TOTAL) -> Pnl
         await _titles(ctx, cols)
     p = before.statement()
     rates = await rc.realization(ctx.conn, f)  # F16 R: "▲ %" da kutilayotgan qism × R (ADR-057 Q4)
-    shops = {k: v for k, v in cur.by_shop().items() if v.processing is not None}
+    shops = {k: v for k, v in cur.by_shop().items() if k != COMMON and v.processing is not None}
     now = await db_now(ctx.conn)
     return PnlOut(
         meta=await meta(ctx.conn, f, KINDS, previous),
@@ -132,10 +132,10 @@ async def pnl(ctx: Finance, f: Filter, _: Heavy, view: View = View.TOTAL) -> Pnl
 async def _titles(ctx: OrgContext, cols: list[ColumnOut]) -> None:
     ids = []
     for c in cols:
-        if c.key is not None and c.key != rc.UNLINKED:
+        if c.key not in (None, rc.UNLINKED, rc.COMMON_KEY):
             ids.append(UUID(c.key))
     catalog = await sku_catalog(ctx.conn, ids=ids) if ids else {}
     for c in cols:
-        info = catalog.get(UUID(c.key)) if c.key is not None and c.key != rc.UNLINKED else None
+        info = catalog.get(UUID(c.key)) if c.key not in (None, rc.UNLINKED, rc.COMMON_KEY) else None
         if info is not None:
             c.title, c.shop_id = info.title, info.shop_id

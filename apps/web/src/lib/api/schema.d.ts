@@ -4826,6 +4826,7 @@ export interface components {
             pages: number;
             unlinked: components["schemas"]["StatementOut"];
             unallocated: components["schemas"]["StatementOut"];
+            common: components["schemas"]["StatementOut"];
         };
         /**
          * SourceOut

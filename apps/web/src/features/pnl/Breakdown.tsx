@@ -1,6 +1,7 @@
 // Kesimlar (M5): oylar va do'konlar — qator = P&L qatori, ustun = oy / do'kon + jami (04 §7.4: "ustun = oy");
 // SKU — qator = SKU (ko'p bo'ladi), ustun = asosiy qatorlar. Sof foyda ostida yakunlangan va kutilayotgan qismlari (ADR-037). Do'kon va SKU kesimida Uzum va o'z xarajatlari
-// to'g'ridan-to'g'ri va taqsimlangan qismlarga bo'linadi, sotuvsiz kun xarajati — "Taqsimlanmagan" (ADR-026).
+// to'g'ridan-to'g'ri va taqsimlangan qismlarga bo'linadi, sotuvsiz kun xarajati — "Taqsimlanmagan" (ADR-026); tashkilot
+// xarajatlari — "Umumiy xarajatlar" ustuni (`common`, ADR-062), do'konlarga bo'linmaydi.
 // Ustunlar yig'indisi = jami — API kafolati (kataklar yig'indisi); bu yerda hech narsa qo'shilmaydi.
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -13,7 +14,7 @@ import { cx } from "../../components/ui/cx";
 import type { Pnl, Statement } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { negate } from "../home/model";
-import { breakdownLines, skuOrder, VIEWS, type Column, type View } from "./model";
+import { breakdownLines, COMMON, skuOrder, VIEWS, type Column, type View } from "./model";
 
 const PAGE = 50;
 
@@ -74,6 +75,7 @@ function LinesTable({ orgId, data, view }: { orgId: string; data: Pnl; view: "mo
   const lines = useMemo(() => breakdownLines(t, view === "shop"), [t, view]);
   const header = (c: Column) => {
     if (c.key === null) return t("pnl.views.unallocated");
+    if (c.key === COMMON) return t("pnl.views.common");
     if (view === "month") return f.month(c.key);
     const shop = shops.data?.find((s) => s.id === c.key);
     return shop ? (shop.alias ?? shop.name) : c.key.slice(0, 8);
@@ -142,7 +144,7 @@ function SkuTable({ data }: { data: Pnl }) {
     { key: "net_processing", header: t("pnl.views.processing"), value: (s) => s.net_profit_processing },
     { key: "margin", header: t("pnl.views.margin"), value: (s) => s.margin, ratio: true },
   ];
-  const name = (c: Column) => (c.key === null ? t("pnl.views.unallocated") : c.key === "unlinked" ? t("pnl.views.unlinked") : (c.title ?? t("home.sku.unnamed")));
+  const name = (c: Column) => (c.key === null ? t("pnl.views.unallocated") : c.key === COMMON ? t("pnl.views.common") : c.key === "unlinked" ? t("pnl.views.unlinked") : (c.title ?? t("home.sku.unnamed")));
   const caption = t("pnl.views.sku");
   return (
     <>

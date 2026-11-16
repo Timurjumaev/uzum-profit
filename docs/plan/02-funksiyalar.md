@@ -136,7 +136,10 @@ Qabul mezonlari: 1 yillik, 50 000 sotuv qatori bilan javob p95 < 700 ms; davr va
   pul ustuni (almashtirgich, standart — jami). Ko'rinishlar: oylar bo'yicha (ustun = oy), do'konlar bo'yicha, SKU /
   toifa bo'yicha — har birida sof foyda ostida "shundan yakunlangan / kutilayotgan".
 - Do'kon va SKU kesimlarida F9/F10 xarajatlari ikki qismda: **to'g'ridan-to'g'ri** (SKU'ga bog'langan) va
-  **taqsimlangan** (do'kon / tashkilot xarajatining tushum ulushi); sotuvsiz kun xarajati — "Taqsimlanmagan" (ADR-026).
+  **taqsimlangan** (do'kon xarajatining tushum ulushi); sotuvsiz kun xarajati — "Taqsimlanmagan" (ADR-026).
+- **Umumiy xarajatlar** (ADR-062): akkauntga tegishli Uzum xarajatlari (`shopId: 0`), qat'iy soliq qatorlari va do'konsiz o'z
+  xarajatlari do'konlarga bo'linmaydi — do'kon va SKU kesimida alohida ustun; jami = do'konlar + umumiy. Do'kon filtrida
+  kirmaydi (sahifada izoh).
 - Grafik: sharshara (waterfall) — tushumdan sof foydagacha.
 - Sotuvlar Yakunlangan + Jarayonda (ADR-036). **Kutilayotgan sof foyda** bloki (F16, ADR-037): summa, dona, tushum,
   fakt — oxirgi 90 kunda bunday sotuvlarning necha foizi yakunlangan, taxminiy logistika, tannarxsiz qism, do'konlar
@@ -390,14 +393,15 @@ SKU'si va qismi (hali topshirilmagan Jarayondagi sotuvga — F42 taxmini); saqla
 og'irligida; qolgani — `dateCreated` (Uzum yechgan kun), do'kon darajasida, kun sotuvlariga tushum ulushida.
 
 **F10. O'z xarajatlari** = qo'lda kiritilgan xarajatlar, amortizatsiya bilan davrga to'g'ri keladigan qismi
-(kunlik teng taqsimot).
+(kunlik teng taqsimot). Do'kon tanlangan — o'sha kuni do'kon SKU'lariga tushum ulushida (ADR-026); do'konsiz — "Umumiy
+xarajatlar" (tashkilot darajasida, taqsimlanmaydi, ADR-062).
 
 **F11. Soliq** = amaldagi soliq profilining (sanadan, ADR-058) hamma qatorlari yig'indisi. Profil — soliq qatorlari
 ro'yxati; har qator o'z nomi bilan hisob varag'ida alohida ko'rinadi (`tax:<qator>`), "Soliq" — jami:
 (1) **foizli** (`percent`): stavka × baza; baza: Tushum F3 (standart; Uzum komissiyasi chegirilmaydi), Uzum to'lovi F6,
 (2-bosqich) soliqdan oldingi foyda; kunlik katakda, har qismning (yakunlangan / kutilayotgan) o'z bazasidan;
 (2) **qat'iy** (`fixed`): summa (so'm) yoki n × BHM (BHM — `ref_amounts` da sana bo'yicha), davri oy / chorak / yil;
-davr kunlariga teng taqsimlanadi (F10 mexanizmi: tashkilot darajasida, do'kon va SKU'ga tushum ulushida), sotuv
+davr kunlariga teng taqsimlanadi (F10 mexanizmi; tashkilot darajasida — "Umumiy xarajatlar", do'konlarga bo'linmaydi, ADR-062), sotuv
 bo'lmagan davrda ham hisoblanadi; BHM o'zgargan kundan yangi qiymat bilan;
 (3) 2-bosqich: QQS va foyda solig'i — oylik taxmin (kirim QQS kerak);
 (4) Uzum soliq agenti: axborot qatori — summa Uzum xarajatlarida keladi, qayta hisoblanmaydi;

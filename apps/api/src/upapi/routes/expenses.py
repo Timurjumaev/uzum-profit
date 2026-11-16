@@ -7,8 +7,9 @@ buxgalter — 03 §10 "xarajat ... ko'rish").
   ``order_date``). F42 taxmini (kutilayotgan reklama) bu yerda yo'q — u Uzum yechgan summa emas. Ro'yxat — hamma
   qatorlar (``include_excluded`` bilan chiqarilganlari ham, sababi bilan), kursor bilan.
 - **O'z xarajatlari** (F10): davrga to'g'ri keladigan qismi (kunlik amortizatsiya, ``own_expense_in_period``),
-  toifalar bo'yicha. Do'kon filtri bo'lsa — shu do'konlar va tashkilot darajasidagilari (``scope``) to'liq summasi;
-  P&L'da esa tashkilot xarajati do'konlarga tushum ulushida taqsimlanadi (ADR-026).
+  toifalar bo'yicha. Do'kon filtri bo'lsa — faqat shu do'konlar va ularning tovarlari xarajatlari.
+- Umumiy xarajatlar (ADR-062): akkauntga tegishli Uzum xarajati (``shopId: 0``) va do'konsiz o'z xarajatlari do'kon
+  filtrida kirmaydi — P&L kabi (ular faqat hamma do'konlar jamida).
 """
 
 from __future__ import annotations
@@ -159,7 +160,8 @@ async def expenses(
     source = e.outerjoin(s, s.c.id == e.c.sale_item_id)
     sale_day = case((by_sale(e), s.c.ordered_at)).label("sale_ordered_at")
     if f.shops:
-        where.append(e.c.shop_id.in_(f.shops))
+        # ADR-062: akkaunt xarajati (``shopId: 0``) — umumiy, do'kon filtrida P&L'ga kirmaydi.
+        where += [e.c.shop_id.in_(f.shops), e.c.raw["shopId"].astext.is_distinct_from("0")]
 
     # F9 yig'indilari va trend — P&L bilan bir xil qatorlar.
     totals: dict[str, Money] = {}
@@ -227,7 +229,7 @@ async def expenses(
         scope = "item" if r.item_id is not None else "shop" if r.shop_id is not None else "org"
         if f.shops is not None:
             shops = {r.shop_id} if r.shop_id is not None else item_shops.get(r.item_id, set())
-            if scope != "org" and not shops & f.shops:
+            if scope == "org" or not shops & f.shops:  # do'konsiz — umumiy (ADR-062)
                 continue
         part = own_expense_in_period(
             ManualExpense(Money(r.amount, UZS), r.start_on, r.end_on), f.period

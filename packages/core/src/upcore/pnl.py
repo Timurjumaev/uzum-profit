@@ -9,7 +9,10 @@ Xarajatlarni kataklarga bo'lish (F19 dagi reklama qoidasi bilan bir xil):
 - SKU'ga bog'langan xarajat — o'sha kun va SKU katagiga;
 - do'kon xarajati — o'sha kuni do'kon SKU'lariga yakunlangan tushum ulushida; tushum bo'lmagan kunda
   do'konning "taqsimlanmagan" katagiga (``sku=None``);
-- tashkilot xarajati (o'z xarajatlari, F10) — o'sha kuni hamma do'kon SKU'lariga tushum ulushida.
+- tashkilot xarajati — **taqsimlanmaydi** (ADR-062): o'sha kunning tashkilot katagida (``shop=""``, ``sku=None``) —
+  "Umumiy xarajatlar". Bular: do'konsiz o'z xarajatlari (F10), qat'iy soliq qatorlari (F11, masalan 1 BHM) va Uzum akkaunt
+  xarajati (``shopId: 0``, masalan shoshilinch pul yechish). Do'kon va SKU kesimlari — o'z (hissa) foydasi; tashkilot jami
+  = do'konlar + umumiy xarajatlar.
 O'z xarajatlari kunlarga amortizatsiya qilinadi (F10), kunlar yig'indisi xarajatga aniq teng.
 
 Katakda F15: ayriladigan xarajat = katak xarajati × katak qamrovi (tannarxi ma'lum tushum / tushum;
@@ -61,6 +64,7 @@ type LogisticsFee = Callable[[str, str], Money | None]
 UZS = Currency.UZS
 ZERO = Money.zero(UZS)
 _D0 = Decimal(0)
+COMMON = ""  # tashkilot katagi (do'kon kaliti): "Umumiy xarajatlar", ADR-062
 
 
 # --- Kirish ---------------------------------------------------------------------------------
@@ -298,7 +302,7 @@ class Statement:
     units: int
     lines: int
     uncovered_lines: int
-    # ADR-026: shundan tushum ulushida taqsimlangan qism (do'kon / tashkilot xarajatidan SKU'larga).
+    # ADR-026: shundan tushum ulushida taqsimlangan qism (do'kon xarajatidan SKU'larga; tashkiloti — ADR-062, taqsimlanmaydi).
     uzum_allocated: Mapping[ExpenseCategory, Money] = field(default_factory=dict)
     own_allocated: Mapping[str, Money] = field(default_factory=dict)
     # F11 (ADR-058): ``tax`` ning qatorlar bo'yicha tarkibi (foizli va qat'iy); yig'indisi ``tax`` ga teng.
@@ -385,7 +389,7 @@ class Statement:
 
     @property
     def allocated_total(self) -> Money:
-        """Taqsimlangan xarajatlar (F9 + F10): do'kon / tashkilot xarajatining tushum ulushidagi qismi."""
+        """Taqsimlangan xarajatlar (F9 + F10): do'kon xarajatining tushum ulushidagi qismi."""
         return total([*self.uzum_allocated.values(), *self.own_allocated.values()], UZS)
 
     @property
@@ -601,6 +605,12 @@ class Cells:
 
     def by_sku(self) -> dict[str | None, Statement]:
         return self.by(lambda k: k.sku)
+
+    def common(self) -> Statement:
+        """Umumiy xarajatlar (ADR-062): tashkilot katagi (``shop=""``) — do'konlarga taqsimlanmagan xarajatlar."""
+        return Cells(
+            self.period, {k: c for k, c in self.cells.items() if k.shop == COMMON}
+        ).statement()
 
 
 def _roll(cells: Iterable[Cell]) -> Cell:
@@ -954,10 +964,10 @@ def build_cells(
         return weights_of[day, shop]
 
     def spread(day: date, shop: str | None, own: bool, category: str, amount: Money) -> None:
-        """Summani kun bo'yicha SKU kataklariga tushum ulushida ("taqsimlangan"); tushum yo'q —
-        do'kon / tashkilot darajasidagi taqsimlanmagan katakka (o'z darajasida, taqsimlanmagan).
-        ``own`` — o'z xarajati (F10), aks holda Uzum xarajati (F9; ``category`` — ``ExpenseCategory``)."""
-        found = targets(day, shop)
+        """Do'kon xarajati — kun bo'yicha do'kon SKU kataklariga tushum ulushida ("taqsimlangan"); tushum yo'q —
+        do'konning taqsimlanmagan katagiga. Tashkilot xarajati (``shop=None``) taqsimlanmaydi — "Umumiy xarajatlar"
+        katagiga (ADR-062). ``own`` — o'z xarajati (F10), aks holda Uzum xarajati (F9; ``category`` — ``ExpenseCategory``)."""
+        found = None if shop is None else targets(day, shop)
         if found is None:
             _put(acc[CellKey(day, shop or "", None)], own, category, amount.amount)
             return
@@ -1027,11 +1037,14 @@ def build_cells(
 
     rule_of = _rules(tax)  # F11 profili sana bo'yicha (upcore.tax), kun bo'yicha keshda
     # ADR-040: kun × do'kon tushumining Jarayondagi ulushi — sotuvsiz kataklar xarajatini qismlarga bo'lish uchun.
+    # Umumiy xarajatlar katagi (``shop=""``) — shu kuni butun tashkilot tushumining Jarayondagi ulushida (ADR-062).
     day_rev: dict[tuple[date, str], list[Decimal]] = defaultdict(lambda: [_D0, _D0])
     for key, a in acc.items():
-        day_total = day_rev[key.day, key.shop]
-        day_total[0] += a.processing.revenue if a.processing is not None else _D0
-        day_total[1] += a.revenue
+        pending_rev = a.processing.revenue if a.processing is not None else _D0
+        for shop_key in {key.shop, ""}:
+            day_total = day_rev[key.day, shop_key]
+            day_total[0] += pending_rev
+            day_total[1] += a.revenue
     for key, a in acc.items():
         pending, whole = day_rev[key.day, key.shop]
         _finish(a, rule_of(key[0]), pending / whole if whole > 0 and pending > 0 else None)

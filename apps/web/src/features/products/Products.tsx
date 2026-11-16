@@ -339,12 +339,13 @@ function ProductCell({ row, list }: { row: SkuRow; list: ProductsSearch }) {
 
 // --- Jadvaldan tashqari -----------------------------------------------------------------------------------------
 
-/** ADR-026: SKUga bog'lanmagan sotuvlar va sotuvsiz kun xarajati jadval qatori emas — qatorlar + ular = P&L jami. */
+/** ADR-026, ADR-062: SKUga bog'lanmagan sotuvlar, sotuvsiz kun xarajati va umumiy xarajatlar jadval qatori emas —
+ * qatorlar + ular = P&L jami. */
 function Outside({ data, filtered }: { data: Skus; filtered: boolean }) {
   const { t } = useTranslation();
   const f = useFormat();
-  const { unlinked, unallocated } = data;
-  if (unlinked.lines === 0 && Number(unallocated.net_profit) === 0 && Number(unlinked.net_profit) === 0) return null;
+  const { unlinked, unallocated, common } = data;
+  if (unlinked.lines === 0 && Number(unallocated.net_profit) === 0 && Number(unlinked.net_profit) === 0 && Number(common.net_profit) === 0) return null;
   return (
     <section className="products-outside" aria-label={t("products.outside.title")}>
       <h2 className="h3">{t("products.outside.title")}</h2>
@@ -362,6 +363,13 @@ function Outside({ data, filtered }: { data: Skus; filtered: boolean }) {
           <dd>{t("products.outside.unallocated", { profit: f.money(unallocated.net_profit) })}</dd>
           <dd className="caption">{t("products.outside.unallocatedHint")}</dd>
         </div>
+        {Number(common.net_profit) !== 0 && (
+          <div>
+            <dt>{t("pnl.views.common")}</dt>
+            <dd>{t("products.outside.common", { profit: f.money(common.net_profit) })}</dd>
+            <dd className="caption">{t("products.outside.commonHint")}</dd>
+          </div>
+        )}
       </dl>
     </section>
   );

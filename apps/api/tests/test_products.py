@@ -71,8 +71,9 @@ def test_table_columns(world: World) -> None:
     ]
     assert money(xa["expenses_direct"]) == money(col["statement"]["direct_total"])
     assert money(xa["expenses_allocated"]) == money(col["statement"]["allocated_total"])
-    assert money(xa["expenses_direct"]) > 0 and money(xa["expenses_allocated"]) > 0
-    # Qatorlar + bog'lanmagan + taqsimlanmagan = jami (M5 qabul mezoni), xarajat ustunlari ham.
+    # ADR-062: tashkilot ijarasi endi umumiy xarajatlarda — taqsimlangan qism faqat do'kon xarajatlaridan.
+    assert money(xa["expenses_direct"]) > 0 and money(xa["expenses_allocated"]) != 0
+    # Qatorlar + bog'lanmagan + taqsimlanmagan + umumiy = jami (M5 qabul mezoni), xarajat ustunlari ham.
     total = world.get("pnl", **OCT)["statement"]
     split = sum(
         money(r["expenses_direct"]) + money(r["expenses_allocated"])
@@ -80,7 +81,7 @@ def test_table_columns(world: World) -> None:
     )
     rest = sum(
         money(body[k]["direct_total"]) + money(body[k]["allocated_total"])
-        for k in ("unlinked", "unallocated")
+        for k in ("unlinked", "unallocated", "common")
     )
     assert split + rest == money(total["uzum_total"]) + money(total["own_total"])
 

@@ -440,6 +440,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- ADR-062 **Umumiy xarajatlar**: akkauntga tegishli Uzum xarajatlari (`shopId: 0`, masalan shoshilinch pul yechish), qat'iy
+  soliq (ijtimoiy soliq 1 × BHM) va do'konsiz o'z xarajatlari endi do'konlar va SKU'larga tushum ulushida bo'linmaydi —
+  Foyda sahifasida (do'konlar va SKU kesimi) "Umumiy xarajatlar" ustuni, Mahsulotlarda "Jadvaldan tashqari" qatori;
+  do'kon va SKU foydasi faqat o'z xarajatlari bilan, jami o'zgarmaydi. Do'kon filtrida umumiy xarajatlar kirmaydi (izoh).
+  API: `/pnl` ustun kaliti `common`, `/skus` — `common`.
 - B6.2 Telegram bot (`apps/bot`, aiogram 3): Sozlamalarda «Telegramʼni ulash» (bir martalik havola), bildirishnomalar
   botga keladi ("Batafsil" — ilova sahifasi), buyruqlar `/bugun`, `/kecha`, `/hafta`, `/oy`, `/qoldiq`, `/sozlamalar`
   (rol bo'yicha, uz/ru). Bot staging'da token kiritilgach ishga tushadi (`docs/staging.md`).
@@ -639,8 +644,7 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 - Akkaunt darajasidagi Uzum xarajati (`shopId: 0`, masalan shoshilinch pul yechish C000011) har do'konga alohida yozilib,
   sof foydadan ikki marta ayrilardi (Temur topdi, 2026-11-16: 15-noyabrda 62 000 o'rniga 124 000). Endi bir marta saqlanadi va
-  foyda hisobida **tashkilot darajasida** turadi — do'konlarga o'sha kungi tushum ulushida bo'linadi (do'konsiz o'z xarajatlari
-  kabi); mavjud takror migratsiya 0030 bilan o'chirildi.
+  foyda hisobida **tashkilot darajasida** turadi (ADR-062 — "Umumiy xarajatlar"); mavjud takror migratsiya 0030 bilan o'chirildi.
 - B4.75b (CI): `E2E va vizual` job'ida brauzer apt'siz o'rnatiladi (`playwright install chromium`), tizim paketlari
   (`install-deps`) — 2 urinish, bo'lmasa ogohlantirish bilan davom (ular faqat qo'shimcha shriftlar; ularsiz e2e va skrinshotlar
   bir xil o'tishi tekshirildi). Runner'dan Ubuntu arxivi ochilmaganda testlar ishga tushmay qizarardi (2026-11-11).

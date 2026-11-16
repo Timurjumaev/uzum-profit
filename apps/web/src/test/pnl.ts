@@ -134,9 +134,10 @@ export function pnlData(over: Partial<Pnl> = {}): Pnl {
   };
 }
 
-/** SKU ko'rinishi ustunlari: zararli, foydali, bog'lanmagan va taqsimlanmagan (tartib aralash — UI saralaydi). */
+/** SKU ko'rinishi ustunlari: zararli, foydali, bog'lanmagan, taqsimlanmagan va umumiy (tartib aralash — UI saralaydi). */
 export function skuColumns(): Pnl["columns"] {
   return [
+    { key: "common", statement: pnlStatement({ revenue: "0.00", net_profit: "-62000.00" }), title: null, shop_id: null },
     { key: null, statement: pnlStatement({ revenue: "0.00", net_profit: "-150000.00" }), title: null, shop_id: null },
     { key: "s-loss", statement: pnlStatement({ net_profit: "-90000.00", margin: "-0.050000" }), title: "Kamar L", shop_id: SHOP_B },
     { key: "unlinked", statement: pnlStatement({ net_profit: "0.00" }), title: null, shop_id: null },
