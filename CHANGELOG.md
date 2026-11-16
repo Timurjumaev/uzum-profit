@@ -437,6 +437,17 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   test qamrovi, reja (B4 yopilmayapti, rejada yo'q PWA / jamoa ekrani / hodisalar), dizayn o'lchovlari (360 / 1000 /
   1440 px: bosish maydoni, jadval kengligi, bosh sahifa ierarxiyasi), raqobatchilar jadvali (2026-11-11 holati) va
   Temurning qarori kerak bo'lgan 14 ta savol (Q1–Q14).
+- B5.0b "Chegarada" marja chegarasi Sozlamalarda (F13; `orgs.settings.margin_borderline`, standart 5%): Mahsulotlar jadvali,
+  filtr, SKU sahifasi va Excel bitta chegaradan; `PUT /settings/alerts` → `margin_borderline`. Kodda yashirin `0.05` yo'q —
+  `upcore.metrics.profit_label` va `Statement.label` chegarani parametr sifatida oladi.
+- B6 tanqidiy tahlili (ADR-064, faqat hujjat): `09-audit.md` §13 — 17 topilma (A1–A17); `05` da B6 qayta tuzildi — yangi B6.4
+  (xabar sifati tuzatishlari: xulosada sof foyda uch qismda, kunlik takror o'rniga o'zgarishda xabar, "Sinxron to'xtadi" ikkiga,
+  Telegram xatosi kanalni uzmaydi), B6.5 ("Uzumga yuborish kerak"), B6.6 (Telegram'ni ulashga chorlash); B6.3 — markaz va PWA;
+  web push va oflayn kesh — "Keyinga"; chiqish mezoni o'lchanadigan.
+- B7 tanqidiy tahlili (ADR-065, faqat hujjat): `09-audit.md` §14 — 14 topilma (C1–C14); `05` da B7 qayta tuzildi — yagona import
+  tannarx (Excel aylanmasi, ko'rib chiqish bilan), Excel eksport to'liqligi (Foyda, drill-down), oylik hisobot — ilova sahifasi
+  ("dastlabki" / "yakuniy"), buxgalter paketi, to'liq eksport; eski Uzum hisobotlari, xaridlar va o'z xarajatlari importi, server
+  PDF — "Keyinga". B6: ADR-064 tasdiqlandi, bot chati skrinshotlaridan A18–A21 (B6.4).
 
 ### O'zgartirildi
 

@@ -8313,7 +8313,7 @@
           "settings"
         ],
         "summary": "Set Alerts",
-        "description": "Bosh sahifadagi bekor va qaytarish ulushi kartochkasi shu chegaradan oshsa belgilanadi. Kodda standart yo'q.",
+        "description": "Bosh sahifadagi bekor va qaytarish ulushi kartochkasi shu chegaradan oshsa belgilanadi (kodda standart yo'q).\n``margin_borderline`` — Mahsulotlardagi \"Chegarada\" belgisi chegarasi (F13); berilmasa standart.",
         "operationId": "set_alerts_api_v1_orgs__org_id__settings_alerts_put",
         "parameters": [
           {
@@ -8886,11 +8886,27 @@
               }
             ],
             "title": "Return Share"
+          },
+          "margin_borderline": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Margin Borderline"
           }
         },
         "type": "object",
         "title": "AlertsIn",
-        "description": "Bekor (F17) va qaytarish (F18) ulushi chegarasi; ``null`` — o'chirish."
+        "description": "Bekor (F17) va qaytarish (F18) ulushi chegarasi; ``null`` — o'chirish. ``margin_borderline`` — \"Chegarada\"\nmarja chegarasi (B5.0b, F13); ``null`` — standartga qaytarish."
       },
       "AlertsOut": {
         "properties": {
@@ -8915,12 +8931,29 @@
               }
             ],
             "title": "Return Share"
+          },
+          "margin_borderline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Margin Borderline"
+          },
+          "margin_borderline_default": {
+            "type": "string",
+            "title": "Margin Borderline Default"
           }
         },
         "type": "object",
         "required": [
           "cancel_share",
-          "return_share"
+          "return_share",
+          "margin_borderline",
+          "margin_borderline_default"
         ],
         "title": "AlertsOut",
         "description": "ADR-043: ogohlantirish chegaralari (ulush, 0..1); ``null`` — sozlanmagan (ogohlantirish yo'q)."

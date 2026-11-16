@@ -43,7 +43,7 @@ Qadamlar (wizard, istalgan qadamdan keyin to'xtab, keyin davom etish mumkin):
 4. **Asosiy sozlamalar:** soliq rejimi (F11), Uzum pul yechish jadvali (F38), odatiy yetkazish muddati, tannarx usuli
    (FIFO / o'rtacha, standart FIFO — ADR-008).
 5. **Tannarx:** uchta yo'l: (a) tushum bo'yicha TOP-20 SKU uchun tezkor jadval (dona narxi so'mda yoki CNY + kurs);
-   (b) Excel shablon yuklash [B7]; (c) birinchi xaridni (partiyani) to'liq kiritish. Ekranda: "Tushumning X% ida tannarx bor".
+   (b) Excel orqali — jadvalni yuklab olib, to'ldirib, qayta yuklash [B7.1]; (c) birinchi xaridni (partiyani) to'liq kiritish. Ekranda: "Tushumning X% ida tannarx bor".
    (a) — **Boshlang'ich holat** sahifasi (`/opening`, B4.12, F41, ADR-033): boshlash sanasi, har tovarga bitta tannarx,
    qoldiq (Uzumdan taklif + o'z omborim); eski partiyalar shart emas.
 6. **Telegram'ni ulash** (QR kod / havola) — kunlik xulosa uchun.
@@ -160,7 +160,7 @@ oylar yig'indisi = butun davr; har qatorda yakunlangan + kutilayotgan = jami; ha
 - Jadval: rasm, SKU, nom, do'kon, sotilgan dona, tushum, o'rtacha narx, komissiya %, logistika/dona,
   tannarx/dona (lot ma'lumoti bilan), reklama/dona, foyda/dona,
   marja, ROI, qaytish %, qoldiq, zaxira kunlari,
-  ABC (bizniki + Uzum `rankInfo`), holat belgisi (Zarar / Chegarada < 5% / Foydali / Ma'lumot yo'q — sotuv bor, hammasi tannarxsiz / Sotuv yo'q —
+  ABC (bizniki + Uzum `rankInfo`), holat belgisi (Zarar / Chegarada — marja Sozlamalardagi chegaradan past, standart 5% / Foydali / Ma'lumot yo'q — sotuv bor, hammasi tannarxsiz / Sotuv yo'q —
   davrda sotilmagan, xarajati bo'lsa ham, bo'lmasa ham; B4.44).
 - Qidiruv (lotin/kirill, apostrof turidan qat'i nazar), filtrlar, ustunlarni tanlash, saqlangan ko'rinishlar,
   Excel eksport.
@@ -188,8 +188,8 @@ Qabul mezonlari: 2 000 SKU'li jadval sahifalab (100 tadan, ADR-054) silliq; har 
   pul yechish xizmati, kompensatsiya, boshqa), trend, eng katta jarimalar ro'yxati.
 - **O'z xarajatlarim:** toifalar (ish haqi, ijara, qadoq, internet, bank, transport, boshqa — tahrirlanadi),
   bir martalik / takroriy (har oy N-sanada), amortizatsiya (masalan, printer 12 oyga), taqsimot (tashkilot / do'kon /
-  tovar / tushum ulushi bo'yicha), chek rasmi [B7].
-- Excel'dan import [B7].
+  tovar / tushum ulushi bo'yicha), chek rasmi [keyinga, ADR-065].
+- Excel'dan import [keyinga, ADR-065].
 
 ## M9. Ta'minot: xaridlar, kargo, sanash va tannarx — asosiy ustunligimiz [B4 asos, TM1–TM8 qayta loyiha (ADR-061)]
 
@@ -219,7 +219,7 @@ almashtirgan joylaridan tashqari.)
   avtomatik qayta hisoblanadi, P&L'da "qayta hisoblandi" belgisi.
 - **Yetkazib beruvchilar va kargo kompaniyalari** — ixtiyoriy ma'lumotnoma (nom, platforma, aloqa); muddat buyurtma →
   sanash oralig'idan o'rganiladi (F25).
-- "Qayta buyurtma" — eski xaridni nusxalash; zaxira rejasidan xarid yaratish [B5.2]. Excel import [B7].
+- "Qayta buyurtma" — eski xaridni nusxalash; zaxira rejasidan xarid yaratish [B5.2]. Excel import [keyinga, ADR-065].
 - Eski partiyalar shart emas: boshlash sanasidan oldingisi — boshlang'ich holat (F41, ADR-033).
 
 Qabul mezonlari: (1) trekli xarid — tovar, dona, summa, trek — bitta oynada, sahifa almashmasdan saqlanadi; (2) 10 ta
@@ -273,7 +273,7 @@ Natija: tannarx/dona, Uzum logistika (F37), komissiya, soliq, foyda/dona, marja,
 maqsadli marja narxi (F36). Ssenariyni saqlash, xaridga aylantirish.
 **Ochiq versiya** (ro'yxatdan o'tmasdan) landing sahifada — mijoz jalb qilish uchun [B8.7].
 
-## M14. Hisobotlar va eksport [B7]
+## M14. Hisobotlar va eksport [B7; doirasi ADR-065 bo'yicha — 05 B7]
 
 - Har jadval → Excel (formatlangan, so'm formatida).
 - Oylik PDF hisobot: P&L, TOP SKU, ombor holati, keyingi oy rejasi.
@@ -314,7 +314,7 @@ xabari yuborilmaydi; bitta hodisa takror yuborilmaydi (idempotent).
 
 Tashkilot, do'konlar (nom, rang, hisobga olish/olmaslik), soliq profili (F11), tannarx usuli (FIFO / o'rtacha),
 valyutalar va kurs manbasi, Uzum to'lov jadvali (F38), standart yetkazish muddatlari, ABC qamrov kunlari,
-ogohlantirish chegaralari, Telegram, til, tarif va to'lovlar [B8], API kalitlar (Pro) [B10], to'liq eksport,
+ogohlantirish chegaralari, "Chegarada" marja chegarasi, Telegram, til, tarif va to'lovlar [B8], API kalitlar (Pro) [B10], to'liq eksport,
 tashkilotni o'chirish (30 kunlik kutish bilan).
 
 ## M17. Admin panel (ichki) [B8]

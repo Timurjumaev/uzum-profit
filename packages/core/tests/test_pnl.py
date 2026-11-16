@@ -834,20 +834,24 @@ def test_conservation_every_cost_once(
 def test_label_uncosted_sku_not_loss() -> None:
     """Hamma sotuvi tannarxsiz SKU: sotuvsiz kundagi saqlash F15 da to'liq ayriladi (tushum esa hisobga kirmaydi) —
     manfiy F12 tannarx yo'qligidan, "Zarar" emas. Tannarxi ma'lum sotuvda xarajat ortiq bo'lsa — haqiqiy zarar."""
-    from upcore.metrics import ProfitLabel
+    from upcore.metrics import DEFAULT_BORDERLINE, ProfitLabel
 
     storage = [ExpenseItem(d(5), "S1", C.STORAGE, uzs(30_000), sku="A")]  # d(5) da A sotilmagan
     blind = build_cells(OCT, [sale(1, cost=None), sale(2, cost=None)], storage).by_sku()["A"]
     assert blind.net_profit.amount < 0  # xarajat ayrildi, tushum yo'q
-    assert blind.all_uncosted and blind.label is ProfitLabel.NO_DATA and not blind.sold_at_loss
+    assert (
+        blind.all_uncosted
+        and blind.label(DEFAULT_BORDERLINE) is ProfitLabel.NO_DATA
+        and not blind.sold_at_loss
+    )
 
     costed = build_cells(OCT, [sale(1), sale(2)], storage).by_sku()["A"]
     assert costed.net_profit.amount > 0  # sotuvdan foyda ortiq
-    assert costed.label is ProfitLabel.PROFITABLE and not costed.sold_at_loss
+    assert costed.label(DEFAULT_BORDERLINE) is ProfitLabel.PROFITABLE and not costed.sold_at_loss
 
     heavy = [ExpenseItem(d(5), "S1", C.STORAGE, uzs(900_000), sku="A")]
     loss = build_cells(OCT, [sale(1), sale(2)], heavy).by_sku()["A"]
-    assert loss.label is ProfitLabel.LOSS and loss.sold_at_loss
+    assert loss.label(DEFAULT_BORDERLINE) is ProfitLabel.LOSS and loss.sold_at_loss
 
     mixed = build_cells(OCT, [sale(1), sale(2, cost=None)], heavy).by_sku()["A"]
     assert not mixed.all_uncosted and mixed.sold_at_loss  # qisman tannarx ma'lum
@@ -855,29 +859,51 @@ def test_label_uncosted_sku_not_loss() -> None:
 
 def test_sold_at_loss_requires_sales() -> None:
     """ "Zarar bilan sotilayotgan" SKU'ga faqat saqlash yoki reklamasi bor, davrda sotilmagan SKU kirmaydi."""
-    from upcore.metrics import ProfitLabel
+    from upcore.metrics import DEFAULT_BORDERLINE, ProfitLabel
 
     ads_only = build_cells(
         OCT, [sale(1, sku="B")], [ExpenseItem(d(3), "S1", C.ADVERTISING, uzs(10_000), sku="A")]
     ).by_sku()["A"]
     assert ads_only.net_profit.amount < 0 and ads_only.lines == 0
-    assert ads_only.label is ProfitLabel.IDLE and not ads_only.sold_at_loss  # "Zarar" emas
+    assert (
+        ads_only.label(DEFAULT_BORDERLINE) is ProfitLabel.IDLE and not ads_only.sold_at_loss
+    )  # "Zarar" emas
 
 
 def test_unsold_sku_is_always_idle() -> None:
     """B4.44: davrda sotilmagan SKU doim "Sotuv yo'q" — xarajati yo'q, xarajati bor yoki kompensatsiya tushgan bo'lsa
     ham (avval xarajatsizi va kompensatsiyalisi "Ma'lumot yo'q" chiqardi)."""
-    from upcore.metrics import ProfitLabel
+    from upcore.metrics import DEFAULT_BORDERLINE, ProfitLabel
 
     nothing = Cells(OCT, {}).statement()  # katalogda bor, davrda hech narsasi yo'q
-    assert nothing.lines == 0 and nothing.label is ProfitLabel.IDLE
+    assert nothing.lines == 0 and nothing.label(DEFAULT_BORDERLINE) is ProfitLabel.IDLE
 
     for amount in (uzs(1_000), uzs(-500)):  # saqlash xarajati / kompensatsiya
         s = build_cells(OCT, [], [ExpenseItem(d(5), "S1", C.STORAGE, amount, sku="A")]).by_sku()[
             "A"
         ]
-        assert s.lines == 0 and s.label is ProfitLabel.IDLE and not s.sold_at_loss
+        assert (
+            s.lines == 0 and s.label(DEFAULT_BORDERLINE) is ProfitLabel.IDLE and not s.sold_at_loss
+        )
 
     # Sotilgan, lekin hammasi tannarxsiz — "Ma'lumot yo'q" qoladi.
     blind = build_cells(OCT, [sale(1, cost=None)]).by_sku()["A"]
-    assert blind.label is ProfitLabel.NO_DATA
+    assert blind.label(DEFAULT_BORDERLINE) is ProfitLabel.NO_DATA
+
+
+def test_label_borderline_is_a_setting() -> None:
+    """B5.0b: "Chegarada" chegarasi kodda qotirilmagan — bir xil SKU chegaraga qarab Chegarada yoki Foydali."""
+    from upcore.metrics import ProfitLabel
+
+    s = build_cells(OCT, [sale(1), sale(2)]).by_sku()["A"]
+    assert s.margin is not None and s.margin > 0
+    assert (
+        s.label(s.margin) is ProfitLabel.PROFITABLE
+    )  # marja chegaraga teng — hali foydali (qat'iy "<")
+    assert s.label(s.margin + Decimal("0.000001")) is ProfitLabel.BORDERLINE
+    assert s.label(0) is ProfitLabel.PROFITABLE  # chegara 0 — "Chegarada" umuman chiqmaydi
+    heavy = [ExpenseItem(d(5), "S1", C.STORAGE, uzs(900_000), sku="A")]
+    loss = build_cells(OCT, [sale(1), sale(2)], heavy).by_sku()["A"]
+    assert (
+        loss.label(0) is ProfitLabel.LOSS and loss.label(1) is ProfitLabel.LOSS
+    )  # zarar chegaraga bog'liq emas

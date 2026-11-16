@@ -656,17 +656,22 @@ class ProfitLabel(StrEnum):
     """M6 SKU holat belgisi."""
 
     LOSS = "loss"  # Zarar: F12 < 0
-    BORDERLINE = "borderline"  # Chegarada: F13 < 5%
+    BORDERLINE = (
+        "borderline"  # Chegarada: F13 < chegara (Sozlamalar; standart ``DEFAULT_BORDERLINE``)
+    )
     PROFITABLE = "profitable"  # Foydali
     NO_DATA = "no_data"  # Ma'lumot yo'q: sotuv bor, lekin hammasi tannarxsiz (F13 hisoblanmaydi)
     IDLE = "idle"  # Sotuv yo'q: davrda sotilmagan (xarajati bo'lsa ham, bo'lmasa ham) — zarar emas (B4.44)
 
 
-def profit_label(
-    net_profit: Money, margin: Decimal | None, borderline: DecimalLike = Decimal("0.05")
-) -> ProfitLabel:
+# "Chegarada" chegarasining standarti (F13, kasr): tashkilot Sozlamalarda o'zgartiradi (B5.0b), kiritilmagan bo'lsa shu.
+DEFAULT_BORDERLINE = Decimal("0.05")
+
+
+def profit_label(net_profit: Money, margin: Decimal | None, borderline: DecimalLike) -> ProfitLabel:
     """M6 holat belgisi F12 va F13 dan: Zarar (F12 < 0, masalan sotuvsiz reklama ham) / Chegarada
-    (F13 < ``borderline``) / Foydali; marja yo'q (tannarxi ma'lum tushum 0) — Ma'lumot yo'q."""
+    (F13 < ``borderline`` — tashkilot sozlamasi, kasr) / Foydali; marja yo'q (tannarxi ma'lum tushum 0) —
+    Ma'lumot yo'q."""
     if net_profit.amount < 0:
         return ProfitLabel.LOSS
     if margin is None:

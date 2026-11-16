@@ -909,7 +909,8 @@ xato 0 (B3.4 dan CI'da; B3.8 dan haqiqiy brauzerda, kontrast bilan, hamma asosiy
 
 ## B5. Ustunlik funksiyalari — 12–18 kun
 
-Tartib: ta'minot TM1–TM8 ✓ (ADR-061) → B6.1–B6.2 ✓ → **qolgan B5** (ADR-063 tartibida, pastda) → B6.3.
+Tartib: ta'minot TM1–TM8 ✓ (ADR-061) → B6.1–B6.2 ✓ → **B6.4** (xabar tuzatishlari, ADR-064) → **qolgan B5**
+(ADR-063 tartibida, pastda; B6.5 — B5.2 dan keyin) → B6.3 → B6.6.
 
 ### Ta'minot qayta loyihasi (ADR-061) — birinchi navbatda
 
@@ -996,7 +997,7 @@ Har vazifa — alohida branch va PR; tafsilot 07 "ADR-061 tafsiloti", 02 M9–M1
 ### Qolgan B5 (ADR-063, 2026-11-16 — tanqidiy tahlil: 09 §12)
 
 **Tartib** (qiymat va bog'liqlik bo'yicha; raqamlar o'zgarmadi — kod va hujjatlardagi havolalar buzilmasin):
-B5.0b → B5.0d → **B5.1** → **B5.2** → **B5.4** (+ B5.0a) → **B5.7** → B5.6 (+ B5.0f) → B5.5 → B5.9 → B5.8.
+B5.0b → B5.0d → *(B6.4, ADR-064)* → **B5.1** → **B5.2** → *(B6.5)* → **B5.4** (+ B5.0a) → **B5.7** → B5.6 (+ B5.0f) → B5.5 → B5.9 → B5.8.
 
 Har vazifaga umumiy qoidalar (alohida yozilmaydi):
 - **O'lchov avval.** Real ma'lumotga tayanadigan formula (F25, F31, F32, F34, F38) uchun avval `realcheck` bo'limi
@@ -1011,8 +1012,11 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
   - [→] B5.0a (**qo'shildi → B5.4**, ADR-063; avval B4.27) "Yo'qotishlar va imkoniyat" bloki. Sabab: B5.4 dan oldin blokka
     faqat "Diqqat" va "Zarar 5 SKU" da bor raqamlar tushardi (tannarxsiz sotuvlar, zarardagi SKU) — takror; haqiqiy
     yo'qotishlar (F34, F51, F52, nelikvid saqlash) B5.4 da paydo bo'ladi.
-  - [ ] B5.0b (avval B4.55) "Chegarada" chegarasi Sozlamalarda (standart 5%, F13; hozir `upcore.metrics.profit_label` da
-    `0.05` qotirilgan — tamoyil 2).
+  - [x] B5.0b (avval B4.55) "Chegarada" chegarasi Sozlamalarda (standart 5%, F13). ✓ 2026-11-16: `orgs.settings.margin_borderline`
+    (kasr, 0..1; bo'sh — standart `upcore.metrics.DEFAULT_BORDERLINE`); `profit_label` va `Statement.label` chegarani
+    majburiy parametr sifatida oladi (kodda yashirin `0.05` yo'q); `PUT /settings/alerts` (`margin_borderline`), `GET
+    /settings` → `alerts.margin_borderline` va `_default`; Mahsulotlar jadvali, filtr, SKU sahifasi va Excel bitta chegaradan.
+    Web: Sozlamalar → "Ogohlantirish chegaralari" → "Mahsulot holati". Testlar: yadro, API, web, vizual (Sozlamalar).
   - [→] B5.0c (**ko'chdi → TM6**, ADR-061; avval B4.61) Ombor: postavka tarkibi va qisman chiqarish (ADR-055 §3).
   - [ ] B5.0d (avval B4.56–B4.60 qoldig'i) Sahifalash: Foyda tafsiloti (drill-down) (ADR-054). Kargolar — ✓ TM3 da.
   - [→] B5.0e (**ko'chdi → B8.10**, ADR-063; avval B4.81) Soliq, 2-bosqich (QQS va foyda solig'i). Sabab: ADR-057 Q5 —
@@ -1081,8 +1085,8 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
 - [ ] B5.7 **Uzum to'lov prognozi va to'lov kalendari** (M11; D6). Hisoblar daftari bu yerda **emas** (pastda "Keyinga").
   - `realcheck payout` (avval): `withdrawnProfit` maydoni nimani bildiradi (qator bo'yicha yechilgan summa — avtomatik
     "tushdi"); buyurtma → Yakunlangan oralig'i taqsimoti (`completed_seen_at`, 2026-11-12 dan); prognoz ↔ Temurning
-    oxirgi 2–3 real to'lovi; to'lov jadvali do'konnikimi yoki akkauntnikimi (pul yechish haqi `shopId: 0` bilan keladi,
-    ADR-062; `payout_schedules` hozir do'kon bo'yicha).
+    oxirgi 2–3 real to'lovi; to'lov jadvali — **butun akkauntga bitta** (Temur, 2026-11-16; pul yechish haqi ham `shopId: 0` bilan keladi,
+    ADR-062): `payout_schedules` do'kondan akkaunt (`mp_accounts`) darajasiga ko'chadi (migratsiya), Sozlamalar ham.
   - **F38 to'ldiriladi:** hozir faqat allaqachon Yakunlangan summa — ufq keyingi to'lov sanasigacha. Qo'shiladi:
     Jarayondagi sotuvlar × yakunlanish ulushi (F16 R) kutilgan yakunlanish kuniga (o'rganilgan oraliq), "taxminiy"
     belgisi bilan. Pul yechish haqi ikki marta ayrilmaydi (prognozdagi foiz ↔ keyin kelgan `C000010` / `C000011`).
@@ -1119,7 +1123,9 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
 
 ## B6. Bildirishnomalar va Telegram — 5–7 kun
 
-Tartib (ADR-057 Q9): B6.1–B6.2 — B4 dan keyin, B5 dan **oldin**; B6.3 — B5 dan keyin.
+Tartib (ADR-064, 2026-11-16 — tanqidiy tahlil: 09 §13): B6.1–B6.2 ✓ → **B6.4** (yuborilayotgan xabarlardagi xatolar —
+B5.1 dan **oldin**: Temur bu xabarlarni har kuni olyapti, chiqish mezonining 7 kunlik sinovi shu tuzatishlardan keyin
+boshlanadi) → B5 → B6.5 (B5.1–B5.2 dan keyin) → B6.3 → B6.6.
 
 - [x] B6.1 Hodisalar katalogi (M15), qoidalar, chegaralar, tinch soatlar, dublikatsiz yuborish. ✓ 2026-11-15: yadro
   `upcore.notify` (14 hodisali katalog — rol auditoriyasi, kritiklik, chegaralar, hali ishlamaydiganlari bosqich bilan;
@@ -1139,20 +1145,127 @@ Tartib (ADR-057 Q9): B6.1–B6.2 — B4 dan keyin, B5 dan **oldin**; B6.3 — B5
   kelgan `pending`, oxirgi 24 soat, "Batafsil" — ilova sahifasi (HTTPS); bloklangan chat — kanal o'chadi, vaqtinchalik
   xato — 5 urinish. Matnlar uz/ru. Web: Sozlamalar → Bildirishnomalar → «Telegramʼni ulash» / «Uzish». Yo'riqnoma —
   `docs/staging.md`. **T:** bot tokenini staging'ga kiritish va 7 kun kunlik xulosani olish (B6 chiqish mezoni).
-- [ ] B6.3 Ilova ichidagi bildirishnomalar markazi; web push (PWA). PWA (ADR-057 Q13, 09 R3 a): `manifest`, ikonkalar, favicon,
-  `theme-color` — o'rnatiladigan ilova.
-- T: botni Telegram'da sinash, kunlik xulosa vaqtini tanlash (bot B2 da yaratilgan).
+- [ ] B6.4 **Xabar sifati — tuzatishlar** (09 §13 A1–A10, A18–A21; har biri test bilan; 02 M15 shu vazifada yangilanadi):
+  - **Xulosadagi sof foyda uch qismda** (A1): hozir bitta "Sof foyda" — kechagi kun uchun u deyarli to'liq
+    *kutilayotgan* (Jarayondagi sotuvlar, 09 §11.2: ≈ 39% i keyin chiqib ketadi), belgisiz (tamoyil 9, ADR-037/038).
+    Xabar: "Sof foyda: X · shundan kutilayotgan Y" + R fakti ("bunday sotuvlarning N% i yakunlanadi", F16) + "HH:MM
+    holatiga" (ilovada raqam keyin o'zgaradi — chiqish mezoni shu vaqtga nisbatan). `/bugun` `/kecha` `/hafta` `/oy` ham.
+  - **Xulosa o'z kunida, sanasi bilan** (A18–A21, Temurning chatidan): kechqurun tinch soatda yaratilgan xulosa ertasi
+    08:00 ga surilib, o'tgan kunni "Kecha" deb yuboryapti (bir ertalab ikkita xulosa) — xulosa faqat o'z kunida
+    yuboriladi, kuni o'tsa bekor; sarlavha — sana. 15.11 foydasi ikki xabarda ikki xil (276 709 ↔ 334 914, tushum bir
+    xil) — sababi staging'da faqat o'qish so'rovi bilan topiladi (avval), keyin tuzatiladi. `/hafta` va `/oy` davr
+    boshida — yonida oldingi to'liq davr; tugamagan kun — izoh bilan. "— tashkilot" imzosi faqat bir necha tashkilotda;
+    dushanba kuni haftalik va kunlik xulosa — bitta xabar.
+  - **Takror emas, o'zgarish** (A2): "Qoldiq kritik" va "Zarar bilan sotuv" hozir holat o'zgarmasa ham **har kuni** qayta
+    keladi (`dedupe_key` — sana). Kalit — SKU va holatga kirgan kun: xabar faqat ro'yxatga **yangi** SKU qo'shilganda; davom
+    etayotgan holat kunlik xulosa ostida bitta qator ("Diqqat: kritik qoldiq 4 ta, zararda 2 ta"). `/qoldiq` — to'liq ro'yxat.
+  - **"Tannarxsiz sotuvlar" alohida xabar emas** (A3): kunlik xulosada shu qator allaqachon bor — ikki marta keladi.
+    Alohida hodisa faqat tannarxsiz **yangi SKU** birinchi marta sotilganda; xulosa o'chirilgan bo'lsa ham.
+  - **"Sinxron to'xtadi" ikkiga bo'linadi** (A4): (a) *kalit yaroqsiz* — sotuvchi tuzatadi: kritik, bir marta, tuzalmasa
+    3 kunda bir eslatma (yarim tunda emas); (b) *yangilanmayapti* — Uzum uzilishi, WAF yoki bizning ishchi: sotuvchi hech
+    narsa qila olmaydi → tunda yuborilmaydi (kritik emas), Uzum uzilishi belgilangan (`provider_health`) paytda umuman
+    yuborilmaydi (M3: "uzilishda ogohlantirish yo'q"), adminga — B8.5. Hozir ikkalasi ham kritik va kalit har kuni
+    yangilangani uchun har kecha 00:00–00:05 da qayta keladi. Tiklanganda — bitta "tiklandi" xabari.
+  - **Telegram xatosi kanalni uzmasin** (A5): hozir har `TelegramBadRequest` (masalan, bizning xabarimiz uzun yoki tugma
+    havolasi noto'g'ri) "doimiy" sanalib, foydalanuvchining Telegram'i **o'chirib qo'yiladi**. Doimiy — faqat bot
+    bloklangan / chat yo'q; qolgani — shu xabar `failed`. `retry_after` hurmat qilinadi (hozir 30 soniyada qayta urinib,
+    5 urinishni yoqib yuboradi). Kanal uzilsa — ilovada "Diqqat" qatori ("Telegram uzildi — qayta ulang").
+  - **Haftalik xulosa yo'qolmasin** (A6): hozir faqat dushanba kuni yuboriladi — dushanba kuni sinxron yetib kelmasa o'sha
+    hafta xulosasi umuman kelmaydi. Shu hafta ichida birinchi imkoniyatda (kalit — hafta, o'zgarmaydi).
+  - **Mayda:** "Batafsil" tugmasi ruscha foydalanuvchiga ham o'zbekcha (A7); Sozlamalarda "Tez orada (B5.4)" — ichki
+    bosqich kodi sotuvchiga ko'rinadi (A8) → "Tez orada"; katalogdagi `stage` qiymatlari ADR-063 ga moslanadi (FBS —
+    B9.5); 02 M15 dan "kvota tugayapti" olib tashlanadi (sotuvchi hech narsa qila olmaydi — admin hodisasi, 06 §4, B8.5).
+  - **Navbat tartibi** (A9, A10): `notifications` da saqlash muddati yo'q (cheksiz o'sadi) — 90 kundan eski qatorlar
+    tozalanadi; og'ir hisob (`load_stock`, kitob) har 5 daqiqada har tashkilotga qayta bajariladi — bugungi kalit bor
+    bo'lsa hisoblanmaydi (B8.4 yuklama testidan oldin).
+- [ ] B6.5 **Yetishmayotgan hodisa: "Uzumga yuborish kerak"** (A11; F26 (2), F54 — B5.1 va B5.2 dan keyin): Uzumdagi zaxira
+  topshirish muddatiga yetmaydi, omborimda esa tovar bor — eng tez bajariladigan signal, hozir faqat Ombor sahifasida.
+  Yangi SKU kirganda bir marta; "Batafsil" — jo'natish qoralamasi. ("Qoldiq kritik" F25 ga bog'liq — B5.1 gacha yangi
+  xaridli tovarlarda chiqmasligi mumkin, 09 §12 B1.)
+- [ ] B6.3 **Ilova ichidagi bildirishnomalar markazi + o'rnatiladigan ilova** (qayta yozildi, ADR-064):
+  - Markaz: karkasda qo'ng'iroq, o'qilmaganlar soni, ro'yxat (navbat va `GET /notifications` bor), "Batafsil" — o'sha
+    sahifa. `notifications.read_at` (migratsiya), "hammasini o'qilgan qilish". Yetkazish holati (`pending` / `sent` /
+    `failed`) o'qilganlikdan alohida: Telegram ulanmagan a'zoning qatorlari hozir abadiy `pending` — markaz uchun manba
+    shu. 04-dizayn.md ga markaz maketi qo'shiladi (hozir dizaynda umuman yo'q, A12).
+  - PWA (ADR-057 Q13, 09 R3 a): `manifest`, PNG ikonkalar (favicon va `theme-color` — ✓ B4 da) — o'rnatiladigan ilova.
+  - **Qilinmaydi (→ "Keyinga"):** web push va oflayn kesh.
+- [ ] B6.6 **Telegram'ni ulashga chorlash** (A13; M2 6-qadam — rejada vazifasi yo'q edi): onboarding oxirida va bosh
+  sahifada (ulanmagan bo'lsa, yopib qo'yiladigan) bitta taklif — havola va QR. Telegram ulanmasa B6 ning hech biri
+  ishlamaydi; "Telegram ulandi" — B9.4 aktivatsiya o'lchovlaridan biri (06 §10).
 
-**Chiqish:** Temur 7 kun kunlik xulosa oladi, raqamlar ilova bilan bir xil, keraksiz xabar yo'q.
+**Keyinga — B6 chiqishiga kirmaydi; mijoz suhbatlarida (06 §9) so'ralsa rejaga qaytadi:**
+- Web push (service worker, VAPID, obuna boshqaruvi; iPhone'da faqat o'rnatilgan PWA'da ishlaydi). Sabab: auditoriya
+  Telegram'da (01 D8), ikkinchi push kanali o'sha xabarni takrorlaydi; Telegram'siz foydalanuvchiga markaz yetadi.
+- Oflayn kesh ("oxirgi bosh sahifa oflayn", 03 §9). Sabab: eskirgan moliyaviy raqamni ko'rsatish xavfi (tamoyil 8),
+  service worker yangilanish xatolari; foydasi kam.
+- Botda o'zbek kirill (ilovada bor, botda faqat lotin va ruscha — 01 D8).
+- Kunlik xulosada do'kon bo'yicha bo'lim va "kecha ↔ o'tgan haftaning shu kuni" farqi.
+
+- T: B6.4 dan keyin 7 kun kunlik xulosani olish; har keraksiz yoki tushunarsiz xabar — skrinshot bilan bir qator.
+
+**Chiqish:** B6.4 dan keyin Temur 7 kun xabar oladi: (1) xulosadagi raqamlar xabardagi "HH:MM holatiga" vaqtida ilova
+bilan bir xil (avtomatik test + Temur ko'zi); (2) holat o'zgarmagan kuni xulosadan boshqa xabar kelmaydi; (3) tunda
+(tinch soatda) faqat "kalit yaroqsiz" keladi. B6.3, B6.5, B6.6 — o'z testlari bilan; "Keyinga" bandlari kirmaydi.
 
 ## B7. Import va hisobotlar — 4–6 kun
 
-- [ ] B7.1 Excel import: tannarx, xaridlar, o'z xarajatlari, eski Uzum hisobotlari (API bermagan davr uchun).
-- [ ] B7.2 Oylik PDF hisobot, buxgalter paketi, rejalashtirilgan yuborish.
-- [ ] B7.3 To'liq eksport (ZIP).
-- T: mart–aprel (API bermagan davr) uchun Uzum kabinetidan hisobot faylini yuborish.
+Qayta tuzildi (ADR-065, 2026-11-16 — tanqidiy tahlil: 09 §14). Tartib: B7.1 → B7.2 → B7.3 → B7.4 → B7.5.
 
-**Chiqish:** Temurning eski hisoboti import qilinib, "Hammasi" davri do'kon ochilgan oydan boshlanadi.
+- [ ] B7.1 **Tannarxni Excel orqali kiritish** (M2 5-qadam (b); B9.4 aktivatsiya — "48 soatda tushumning ≥ 60% ida
+  tannarx" — yuzlab SKU'li sotuvchida shusiz bajarilmaydi). Yagona import — shu:
+  - **Aylanma:** Boshlang'ich holat (`/opening`) jadvali Excel'ga yuklab olinadi (do'kon, SKU, shtrix-kod, nom, qoldiq,
+    hozirgi narx) → sotuvchi faqat "Tannarx, so'm" ustunini to'ldiradi → qayta yuklaydi. Qator kaliti — fayldagi yashirin
+    ichki id, zaxira — do'kon + shtrix-kod; kalit topilmagan qator — xato ro'yxatida, taxmin bilan bog'lanmaydi.
+  - **Avval ko'rib chiqish:** nechta yangi, nechta o'zgaradi (eski → yangi), nechta xato (qator raqami va sababi);
+    saqlash — faqat tasdiqdan keyin, bitta tranzaksiyada. Bo'sh katak — tegilmaydi; mavjud narx ustidan yozish
+    ko'rib chiqishda alohida ko'rsatiladi (tamoyil 7); o'sha faylni qayta yuklash hech narsani o'zgartirmaydi.
+  - Sonlar: "12 500", "12500,50", "12 500.5" — bir xil o'qiladi; manfiy, matn, formula xatosi — xato qatori.
+  - **Xavfsizlik** (ilovadagi birinchi fayl yuklash): faqat `.xlsx`, ≤ 5 MB, ≤ 20 000 qator, `read_only` o'qish,
+    formulalar hisoblanmaydi (faqat saqlangan qiymat), ochilgandagi hajm chegarasi (zip-bomba), fayl diskka yozilmaydi,
+    daqiqasiga cheklov, audit jurnali; ruxsat — `manage_settings`.
+  - Onboarding 5-qadamga ulash; yordam maqolasi.
+- [ ] B7.2 **Excel eksport to'liqligi** (M5, M14: "har jadval → Excel"). Bor: sotuvlar, mahsulotlar, Uzum xarajatlari,
+  xaridlar, ombor, jo'natma. Yo'q — qo'shiladi: **Foyda (hisob varag'i va oy / do'kon / SKU kesimlari)**, har qator
+  tafsiloti (drill-down), Buyurtmalar tahlili, Omborim, Kargolar, Qabul farqi va kamomad. Qoida o'zgarmaydi: eksport
+  ro'yxat endpointining o'zidan (filtr, rol, hisob bir xil); test — Excel yig'indisi sahifadagi jami bilan teng.
+- [ ] B7.3 **Oylik hisobot** — ilova sahifasi (`/reports`, menyuga qaytadi — ADR-057 Q12), brauzerdan chop etiladi va
+  PDF qilib saqlanadi (chop etish uslubi; server tomonda PDF yasalmaydi):
+  - Tarkib: hisob varag'i (F3 → F12), "Buyurtmadan sof foydagacha" (F49), eng foydali va zarardagi SKU'lar, Uzum va o'z
+    xarajatlari toifalar bo'yicha, tovardagi pul (F29), oldingi oy bilan farq. Hamma raqam — mavjud hisobdan
+    (`upcore.pnl`), yangi formula yo'q; test — Foyda sahifasi bilan tiyinigacha teng.
+  - **Oyning yopilishi:** oyda Jarayondagi buyurtma qolgan bo'lsa hisobot "dastlabki" (nechta buyurtma va qancha summa
+    hali jarayonda — ko'rsatiladi); hammasi yakuniy holatga yetganda — "yakuniy".
+  - **Yuborish:** yangi hodisa "Oylik hisobot" (B6 katalogi): oyning 1-sanasida "dastlabki" havola, oy yopilganda
+    "yakuniy" havola. Fayl Telegram'ga yuborilmaydi — havola (09 §13 A16).
+- [ ] B7.4 **Buxgalter paketi** — tanlangan oy uchun bitta fayl (varaqlar: sotuvlar reyestri, Uzum xarajatlari, o'z
+  xarajatlari, xaridlar, hisob varag'i) — B7.2 eksportlaridan yig'iladi, yangi hisob yo'q. Birinchi varaqda asos ochiq
+  yoziladi: "sana — buyurtma sanasi (F1); Uzumning rasmiy hisob-fakturasi va vositachi hisoboti boshqa sanada tuziladi
+  (08 §5) — summalar oy chegarasida farq qilishi mumkin". **Avval T:** buxgalterga aynan nima kerakligi (pastda).
+- [ ] B7.5 **To'liq eksport** (ZIP: CSV + JSON; "ma'lumot sizniki", 01 D9; B8.6 dagi o'chirish tartibidan oldin kerak):
+  faqat egasi; fon ishi (navbat), tayyor bo'lganda bildirishnoma; kuniga bir marta; havola 24 soat, bir martalik token;
+  audit. Kiradi: sotuvchi kiritgan hamma narsa (xaridlar, chiqimlar, tannarx, o'z xarajatlar, sozlamalar, ombor
+  harakatlari) va Uzumdan olingan faktlar (sotuvlar, xarajatlar, mahsulotlar, postavkalar, qaytarishlar). Kirmaydi:
+  Uzum kaliti, sessiyalar, Telegram chat id, boshqa a'zolarning telefoni. Test: har jadval bo'yicha fayldagi qatorlar
+  soni = bazadagi; fayl boshqa tashkilot qatorini o'z ichiga olmaydi (RLS).
+
+**Keyinga — B7 chiqishiga kirmaydi; mijoz suhbatlarida (06 §9) so'ralsa rejaga qaytadi:**
+- **Eski Uzum hisobotlarini import qilish** (API bermagan davr). Sabab: bitta sotuvchi uchun bir martalik ish (ADR-032
+  dagi mantiq); kabinet fayli formati hujjatlashmagan va namuna yo'q; byDurii'da API bermagan davr — boshqa yuridik
+  davr (YaTT almashgan, 08 §4); o'sha davr uchun partiyalar ham yo'q — tannarx baribir taxmin bo'lardi (ADR-033).
+- **Xaridlarni Excel'dan import.** Sabab: boshlash uchun eski partiyalar shart emas (ADR-033); yangi xarid — bitta oyna
+  (ADR-061); import — tovar, valyuta, kurs, chiqimlarni moslash bilan eng murakkab va xatoga moyil qism.
+- **O'z xarajatlarini Excel'dan import.** Sabab: yozuvlar kam, takroriy xarajat bor (M8).
+- Chek rasmi (M8) — fayl saqlash infratuzilmasi (O'zbekistonda obyekt ombori) kerak; hozir ilovada umuman yo'q.
+- Server tomonda PDF (WeasyPrint) va faylni jadval bo'yicha yuborish.
+- Hisobotdagi "keyingi oy rejasi" — manbasi yo'q edi (reja-fakt B5.8 bo'lsa — o'sha yerdan).
+
+- T: (1) buxgalteringga (yoki soliq uchun o'zingga) har oy dasturdan nima kerak — bir-ikki jumla yoki hozir
+  berayotgan faylingdan namuna; (2) B7.1 ni staging'da o'z SKU'laring bilan sinash.
+
+**Chiqish:** (1) Temur staging'da jadvalni yuklab olib, kamida 20 SKU narxini Excel'da o'zgartirib qayta yuklaydi:
+ko'rib chiqish aynan shu o'zgarishlarni ko'rsatadi, saqlangach tannarx qamrovi (F15) mos; (2) oktabr oylik hisoboti
+raqamlari Foyda sahifasi bilan tiyinigacha teng (avtomatik test), telefonda va chop etishda o'qiladi; (3) to'liq
+eksportda qatorlar soni bazadagi bilan teng. "Keyinga" bandlari kirmaydi.
 
 ## B8. SaaS tayyorgarlik — 10–15 kun
 

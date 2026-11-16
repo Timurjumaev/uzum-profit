@@ -465,14 +465,20 @@ def test_run_rate() -> None:
 
 
 def test_profit_label() -> None:
+    from upcore.metrics import DEFAULT_BORDERLINE as B
     from upcore.metrics import ProfitLabel, profit_label
 
     m = Money.of
-    assert profit_label(m(-1, "UZS"), Decimal("-0.1")) is ProfitLabel.LOSS
-    assert profit_label(m(-1, "UZS"), None) is ProfitLabel.LOSS  # sotuvsiz reklama
-    assert profit_label(m(0, "UZS"), None) is ProfitLabel.NO_DATA
-    assert profit_label(m(10, "UZS"), Decimal("0.049")) is ProfitLabel.BORDERLINE
-    assert profit_label(m(10, "UZS"), Decimal("0.05")) is ProfitLabel.PROFITABLE
+    assert Decimal("0.05") == B  # standart 5% (F13); tashkilot Sozlamalarda o'zgartiradi (B5.0b)
+    assert profit_label(m(-1, "UZS"), Decimal("-0.1"), B) is ProfitLabel.LOSS
+    assert profit_label(m(-1, "UZS"), None, B) is ProfitLabel.LOSS  # sotuvsiz reklama
+    assert profit_label(m(0, "UZS"), None, B) is ProfitLabel.NO_DATA
+    assert profit_label(m(10, "UZS"), Decimal("0.049"), B) is ProfitLabel.BORDERLINE
+    assert profit_label(m(10, "UZS"), Decimal("0.05"), B) is ProfitLabel.PROFITABLE
+    assert (
+        profit_label(m(10, "UZS"), Decimal("0.09"), "0.1") is ProfitLabel.BORDERLINE
+    )  # o'z chegarasi 10%
+    assert profit_label(m(10, "UZS"), Decimal("0.049"), 0) is ProfitLabel.PROFITABLE
 
 
 def test_line_gross_profit() -> None:

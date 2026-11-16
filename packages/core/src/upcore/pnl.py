@@ -56,7 +56,7 @@ from upcore.metrics import (
     profit_label,
     ratio,
 )
-from upcore.money import Currency, Money, quantize, split, to_decimal, total
+from upcore.money import Currency, DecimalLike, Money, quantize, split, to_decimal, total
 
 type LogisticsFee = Callable[[str, str], Money | None]
 """F40 standart logistika/dona (do'kon, SKU kaliti) — kutilayotgan logistika taxmini uchun (ADR-037)."""
@@ -432,9 +432,8 @@ class Statement:
         """Sotuv bor, lekin hammasi tannarxsiz (F15 qamrovi 0): foyda hisoblanmaydi."""
         return self.lines > 0 and self.uncovered_lines == self.lines
 
-    @property
-    def label(self) -> ProfitLabel:
-        """M6 holat belgisi (F12, F13). Davrda sotilmagan SKU — doim "Sotuv yo'q" (``IDLE``; B4.44): xarajati bormi
+    def label(self, borderline: DecimalLike) -> ProfitLabel:
+        """M6 holat belgisi (F12, F13); ``borderline`` — "Chegarada" chegarasi (tashkilot sozlamasi, kasr). Davrda sotilmagan SKU — doim "Sotuv yo'q" (``IDLE``; B4.44): xarajati bormi
         (saqlash, reklama), yo'qmi yoki kompensatsiya tushganmi — farqi yo'q. "Zarar" faqat davrda sotilgan SKU uchun.
         Hamma sotuvi tannarxsiz SKU "Ma'lumot yo'q": sotuvsiz kunlardagi xarajat F15 da to'liq ayriladi, tushumi esa
         hisobga kirmaydi — manfiy son tannarx yo'qligidan chiqadi."""
@@ -442,13 +441,13 @@ class Statement:
             return ProfitLabel.IDLE
         if self.all_uncosted:
             return ProfitLabel.NO_DATA
-        return profit_label(self.net_profit, self.margin)
+        return profit_label(self.net_profit, self.margin, borderline)
 
     @property
     def sold_at_loss(self) -> bool:
         """Davrda sotilgan (tannarxi ma'lum sotuvi bor) va F12 < 0: "zarar bilan sotilayotgan" SKU. Sotuvsiz SKU
         (faqat saqlash yoki reklama xarajati) bunga kirmaydi."""
-        return self.label is ProfitLabel.LOSS
+        return self.lines > 0 and not self.all_uncosted and self.net_profit.amount < 0
 
     @property
     def uncovered_revenue(self) -> Money:
