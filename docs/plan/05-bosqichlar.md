@@ -1209,12 +1209,63 @@ bilan bir xil (avtomatik test + Temur ko'zi); (2) holat o'zgarmagan kuni xulosad
 
 ## B7. Import va hisobotlar — 4–6 kun
 
-- [ ] B7.1 Excel import: tannarx, xaridlar, o'z xarajatlari, eski Uzum hisobotlari (API bermagan davr uchun).
-- [ ] B7.2 Oylik PDF hisobot, buxgalter paketi, rejalashtirilgan yuborish.
-- [ ] B7.3 To'liq eksport (ZIP).
-- T: mart–aprel (API bermagan davr) uchun Uzum kabinetidan hisobot faylini yuborish.
+Qayta tuzildi (ADR-065, 2026-11-16 — tanqidiy tahlil: 09 §14). Tartib: B7.1 → B7.2 → B7.3 → B7.4 → B7.5.
 
-**Chiqish:** Temurning eski hisoboti import qilinib, "Hammasi" davri do'kon ochilgan oydan boshlanadi.
+- [ ] B7.1 **Tannarxni Excel orqali kiritish** (M2 5-qadam (b); B9.4 aktivatsiya — "48 soatda tushumning ≥ 60% ida
+  tannarx" — yuzlab SKU'li sotuvchida shusiz bajarilmaydi). Yagona import — shu:
+  - **Aylanma:** Boshlang'ich holat (`/opening`) jadvali Excel'ga yuklab olinadi (do'kon, SKU, shtrix-kod, nom, qoldiq,
+    hozirgi narx) → sotuvchi faqat "Tannarx, so'm" ustunini to'ldiradi → qayta yuklaydi. Qator kaliti — fayldagi yashirin
+    ichki id, zaxira — do'kon + shtrix-kod; kalit topilmagan qator — xato ro'yxatida, taxmin bilan bog'lanmaydi.
+  - **Avval ko'rib chiqish:** nechta yangi, nechta o'zgaradi (eski → yangi), nechta xato (qator raqami va sababi);
+    saqlash — faqat tasdiqdan keyin, bitta tranzaksiyada. Bo'sh katak — tegilmaydi; mavjud narx ustidan yozish
+    ko'rib chiqishda alohida ko'rsatiladi (tamoyil 7); o'sha faylni qayta yuklash hech narsani o'zgartirmaydi.
+  - Sonlar: "12 500", "12500,50", "12 500.5" — bir xil o'qiladi; manfiy, matn, formula xatosi — xato qatori.
+  - **Xavfsizlik** (ilovadagi birinchi fayl yuklash): faqat `.xlsx`, ≤ 5 MB, ≤ 20 000 qator, `read_only` o'qish,
+    formulalar hisoblanmaydi (faqat saqlangan qiymat), ochilgandagi hajm chegarasi (zip-bomba), fayl diskka yozilmaydi,
+    daqiqasiga cheklov, audit jurnali; ruxsat — `manage_settings`.
+  - Onboarding 5-qadamga ulash; yordam maqolasi.
+- [ ] B7.2 **Excel eksport to'liqligi** (M5, M14: "har jadval → Excel"). Bor: sotuvlar, mahsulotlar, Uzum xarajatlari,
+  xaridlar, ombor, jo'natma. Yo'q — qo'shiladi: **Foyda (hisob varag'i va oy / do'kon / SKU kesimlari)**, har qator
+  tafsiloti (drill-down), Buyurtmalar tahlili, Omborim, Kargolar, Qabul farqi va kamomad. Qoida o'zgarmaydi: eksport
+  ro'yxat endpointining o'zidan (filtr, rol, hisob bir xil); test — Excel yig'indisi sahifadagi jami bilan teng.
+- [ ] B7.3 **Oylik hisobot** — ilova sahifasi (`/reports`, menyuga qaytadi — ADR-057 Q12), brauzerdan chop etiladi va
+  PDF qilib saqlanadi (chop etish uslubi; server tomonda PDF yasalmaydi):
+  - Tarkib: hisob varag'i (F3 → F12), "Buyurtmadan sof foydagacha" (F49), eng foydali va zarardagi SKU'lar, Uzum va o'z
+    xarajatlari toifalar bo'yicha, tovardagi pul (F29), oldingi oy bilan farq. Hamma raqam — mavjud hisobdan
+    (`upcore.pnl`), yangi formula yo'q; test — Foyda sahifasi bilan tiyinigacha teng.
+  - **Oyning yopilishi:** oyda Jarayondagi buyurtma qolgan bo'lsa hisobot "dastlabki" (nechta buyurtma va qancha summa
+    hali jarayonda — ko'rsatiladi); hammasi yakuniy holatga yetganda — "yakuniy".
+  - **Yuborish:** yangi hodisa "Oylik hisobot" (B6 katalogi): oyning 1-sanasida "dastlabki" havola, oy yopilganda
+    "yakuniy" havola. Fayl Telegram'ga yuborilmaydi — havola (09 §13 A16).
+- [ ] B7.4 **Buxgalter paketi** — tanlangan oy uchun bitta fayl (varaqlar: sotuvlar reyestri, Uzum xarajatlari, o'z
+  xarajatlari, xaridlar, hisob varag'i) — B7.2 eksportlaridan yig'iladi, yangi hisob yo'q. Birinchi varaqda asos ochiq
+  yoziladi: "sana — buyurtma sanasi (F1); Uzumning rasmiy hisob-fakturasi va vositachi hisoboti boshqa sanada tuziladi
+  (08 §5) — summalar oy chegarasida farq qilishi mumkin". **Avval T:** buxgalterga aynan nima kerakligi (pastda).
+- [ ] B7.5 **To'liq eksport** (ZIP: CSV + JSON; "ma'lumot sizniki", 01 D9; B8.6 dagi o'chirish tartibidan oldin kerak):
+  faqat egasi; fon ishi (navbat), tayyor bo'lganda bildirishnoma; kuniga bir marta; havola 24 soat, bir martalik token;
+  audit. Kiradi: sotuvchi kiritgan hamma narsa (xaridlar, chiqimlar, tannarx, o'z xarajatlar, sozlamalar, ombor
+  harakatlari) va Uzumdan olingan faktlar (sotuvlar, xarajatlar, mahsulotlar, postavkalar, qaytarishlar). Kirmaydi:
+  Uzum kaliti, sessiyalar, Telegram chat id, boshqa a'zolarning telefoni. Test: har jadval bo'yicha fayldagi qatorlar
+  soni = bazadagi; fayl boshqa tashkilot qatorini o'z ichiga olmaydi (RLS).
+
+**Keyinga — B7 chiqishiga kirmaydi; mijoz suhbatlarida (06 §9) so'ralsa rejaga qaytadi:**
+- **Eski Uzum hisobotlarini import qilish** (API bermagan davr). Sabab: bitta sotuvchi uchun bir martalik ish (ADR-032
+  dagi mantiq); kabinet fayli formati hujjatlashmagan va namuna yo'q; byDurii'da API bermagan davr — boshqa yuridik
+  davr (YaTT almashgan, 08 §4); o'sha davr uchun partiyalar ham yo'q — tannarx baribir taxmin bo'lardi (ADR-033).
+- **Xaridlarni Excel'dan import.** Sabab: boshlash uchun eski partiyalar shart emas (ADR-033); yangi xarid — bitta oyna
+  (ADR-061); import — tovar, valyuta, kurs, chiqimlarni moslash bilan eng murakkab va xatoga moyil qism.
+- **O'z xarajatlarini Excel'dan import.** Sabab: yozuvlar kam, takroriy xarajat bor (M8).
+- Chek rasmi (M8) — fayl saqlash infratuzilmasi (O'zbekistonda obyekt ombori) kerak; hozir ilovada umuman yo'q.
+- Server tomonda PDF (WeasyPrint) va faylni jadval bo'yicha yuborish.
+- Hisobotdagi "keyingi oy rejasi" — manbasi yo'q edi (reja-fakt B5.8 bo'lsa — o'sha yerdan).
+
+- T: (1) buxgalteringga (yoki soliq uchun o'zingga) har oy dasturdan nima kerak — bir-ikki jumla yoki hozir
+  berayotgan faylingdan namuna; (2) B7.1 ni staging'da o'z SKU'laring bilan sinash.
+
+**Chiqish:** (1) Temur staging'da jadvalni yuklab olib, kamida 20 SKU narxini Excel'da o'zgartirib qayta yuklaydi:
+ko'rib chiqish aynan shu o'zgarishlarni ko'rsatadi, saqlangach tannarx qamrovi (F15) mos; (2) oktabr oylik hisoboti
+raqamlari Foyda sahifasi bilan tiyinigacha teng (avtomatik test), telefonda va chop etishda o'qiladi; (3) to'liq
+eksportda qatorlar soni bazadagi bilan teng. "Keyinga" bandlari kirmaydi.
 
 ## B8. SaaS tayyorgarlik — 10–15 kun
 

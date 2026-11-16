@@ -364,3 +364,26 @@ yuborilmaydi; bog'lash tokeni bir martalik va xeshlangan; rol bo'yicha auditoriy
 
 **Temurdan kerak:** ~~bot chati skrinshoti~~ ✓ 2026-11-16 (yuqorida).
 
+## 14. B7 bandining tanqidiy tahlili (2026-11-16)
+
+Temur topshirig'i: B7 ni ham tanqidiy tahlil qilish. O'qildi: 05 B7, 02 (M2, M5, M8, M9, M14), 03 §2, 07 (ADR-016, 032,
+033, 061), 08 §4–§5, kod (`routes/exports.py`, `reports/xlsx.py`, `routes/opening.py`, bog'liqliklar). Qaror — ADR-065.
+B7 hali boshlanmagan — kod topilmasi yo'q, faqat reja.
+
+| ID | Xavf | Topilma | Dalil | Nima qilindi (05) |
+|---|---|---|---|---|
+| C1 | Y | **Chiqish mezoni bitta sotuvchining bir martalik ishiga bog'langan.** "Temurning eski hisoboti import qilinib…" — kabinet fayli formati hujjatlashmagan, namuna yo'q; byDurii'da API bermagan davr YaTT almashgani sababli (boshqa yuridik davr); o'sha davrga partiyalar yo'q — foyda baribir taxmin. Aynan shu mantiq bilan legacy import rad etilgan | 05 B7 chiqish; 08 §4; ADR-032, ADR-033 | Import "Keyinga"; chiqish mezoni yangi |
+| C2 | Y | **B7 uch qatorda, o'lchovsiz:** 4 xil import, PDF, paket, jadval bo'yicha yuborish, ZIP — hech birida kalit, xato holati, ruxsat, test mezoni yo'q; "4–6 kun" bahosi shu hajmga to'g'ri kelmaydi | 05 B7.1–B7.3 | 5 ta aniq vazifa |
+| C3 | Y | **Yagona muhim import — tannarx — tavsifsiz**, vaholanki aktivatsiya o'lchovi (48 soatda tushumning ≥ 60% ida tannarx) shunga bog'liq: qator qaysi kalit bilan topiladi, mavjud narx ustidan yoziladimi (tamoyil 7), takror yuklash, xato qatorlar. Raqobatchilarda bor (MARGN — Excel) | 01 §8; 02 M2 5-qadam; §7 | B7.1: aylanma + ko'rib chiqish |
+| C4 | Y | **Ilovada fayl yuklash umuman yo'q** — B7.1 birinchi yuklash endpointi bo'ladi; hajm, qator soni, zip-bomba, formula, saqlash haqida rejada hech narsa yo'q | `apps/api/src` (yuklash endpointi yo'q) | B7.1 xavfsizlik bandi |
+| C5 | O' | **Xaridlar importi ortiqcha:** boshlash uchun eski partiyalar shart emas (ADR-033), yangi xarid — bitta oyna (ADR-061); import — eng murakkab moslash | ADR-033, ADR-061 | "Keyinga" |
+| C6 | O' | **O'z xarajatlari importi ortiqcha:** yozuvlar kam, takroriy xarajat bor | 02 M8 | "Keyinga" |
+| C7 | O' | **Foyda (P&L) eksporti rejadan tushib qolgan.** M5 "Excel va PDF eksport", "drill-down (eksport bilan)" deydi; B4 qoldiqlari "M14 / B7" ga ishora qiladi, B7 ro'yxatida esa yo'q. Hozir 5 ta jadval + jo'natma eksport bo'ladi | 05 B4.3, B4.10 qoldiqlari; `routes/exports.py` | B7.2 |
+| C8 | O' | **Server tomonda PDF qimmat:** WeasyPrint bog'liqliklarda yo'q (tizim kutubxonalari bilan birga keladi), grafiklar serverda ikkinchi marta chizilishi kerak (hozir faqat brauzerda), shriftda ʻ / ʼ tekshiruvi | `apps/api/pyproject.toml`; 03 §2 | B7.3: sahifa + brauzerdan chop etish |
+| C9 | O' | **Oyning 1-sanasidagi hisobot yetilmagan raqam beradi:** o'tgan oyning oxirgi haftalari buyurtmalari hali jarayonda (yetilganda ≈ 39% i chiqadi, §11.2). "Oy yopildi" tushunchasi rejada yo'q | 02 M14; §11.2 | B7.3: "dastlabki" / "yakuniy" |
+| C10 | O' | **Buxgalter paketi — tasdiqlanmagan ehtiyoj:** buxgalter bilan suhbat yo'q; bizning reyestr buyurtma sanasi bo'yicha, Uzum rasmiy hujjatlari boshqa sanada (08 §5) — oy chegarasida farq chiqadi va buxgalterni chalg'itadi | 02 M14; 08 §5; `suhbatlar.md` yo'q | B7.4: mavjud eksportlardan, asos ochiq yoziladi; avval Temurdan savol |
+| C11 | O' | **To'liq eksport tavsifsiz:** kim yuklaydi, sirlar kiradimi, katta hajmda qanday (so'rov ichida emas), havola muddati. B8.6 dagi "ma'lumotni o'chirish tartibi" unga tayanadi | 02 M14; 06 §6 | B7.5 |
+| C12 | P | "Keyingi oy rejasi" (oylik PDF tarkibi) — manbasi yo'q | 02 M14 | Olib tashlandi |
+| C13 | P | "Chek rasmi [B7]" — B7 ro'yxatida yo'q, fayl saqlash infratuzilmasi ham yo'q | 02 M8 | "Keyinga" |
+| C14 | P | "Hisobotlar" menyusi yashirilgan (ADR-057 Q12) — qachon qaytishi B7 da aytilmagan; moliyaviy faylni Telegram orqali yuborish (§13 A16) | `nav.ts`; 02 M14 | B7.3: menyu qaytadi; faqat havola |
+

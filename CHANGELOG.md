@@ -444,6 +444,10 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   (xabar sifati tuzatishlari: xulosada sof foyda uch qismda, kunlik takror o'rniga o'zgarishda xabar, "Sinxron to'xtadi" ikkiga,
   Telegram xatosi kanalni uzmaydi), B6.5 ("Uzumga yuborish kerak"), B6.6 (Telegram'ni ulashga chorlash); B6.3 — markaz va PWA;
   web push va oflayn kesh — "Keyinga"; chiqish mezoni o'lchanadigan.
+- B7 tanqidiy tahlili (ADR-065, faqat hujjat): `09-audit.md` §14 — 14 topilma (C1–C14); `05` da B7 qayta tuzildi — yagona import
+  tannarx (Excel aylanmasi, ko'rib chiqish bilan), Excel eksport to'liqligi (Foyda, drill-down), oylik hisobot — ilova sahifasi
+  ("dastlabki" / "yakuniy"), buxgalter paketi, to'liq eksport; eski Uzum hisobotlari, xaridlar va o'z xarajatlari importi, server
+  PDF — "Keyinga". B6: ADR-064 tasdiqlandi, bot chati skrinshotlaridan A18–A21 (B6.4).
 
 ### O'zgartirildi
 
