@@ -1011,8 +1011,11 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
   - [→] B5.0a (**qo'shildi → B5.4**, ADR-063; avval B4.27) "Yo'qotishlar va imkoniyat" bloki. Sabab: B5.4 dan oldin blokka
     faqat "Diqqat" va "Zarar 5 SKU" da bor raqamlar tushardi (tannarxsiz sotuvlar, zarardagi SKU) — takror; haqiqiy
     yo'qotishlar (F34, F51, F52, nelikvid saqlash) B5.4 da paydo bo'ladi.
-  - [ ] B5.0b (avval B4.55) "Chegarada" chegarasi Sozlamalarda (standart 5%, F13; hozir `upcore.metrics.profit_label` da
-    `0.05` qotirilgan — tamoyil 2).
+  - [x] B5.0b (avval B4.55) "Chegarada" chegarasi Sozlamalarda (standart 5%, F13). ✓ 2026-11-16: `orgs.settings.margin_borderline`
+    (kasr, 0..1; bo'sh — standart `upcore.metrics.DEFAULT_BORDERLINE`); `profit_label` va `Statement.label` chegarani
+    majburiy parametr sifatida oladi (kodda yashirin `0.05` yo'q); `PUT /settings/alerts` (`margin_borderline`), `GET
+    /settings` → `alerts.margin_borderline` va `_default`; Mahsulotlar jadvali, filtr, SKU sahifasi va Excel bitta chegaradan.
+    Web: Sozlamalar → "Ogohlantirish chegaralari" → "Mahsulot holati". Testlar: yadro, API, web, vizual (Sozlamalar).
   - [→] B5.0c (**ko'chdi → TM6**, ADR-061; avval B4.61) Ombor: postavka tarkibi va qisman chiqarish (ADR-055 §3).
   - [ ] B5.0d (avval B4.56–B4.60 qoldig'i) Sahifalash: Foyda tafsiloti (drill-down) (ADR-054). Kargolar — ✓ TM3 da.
   - [→] B5.0e (**ko'chdi → B8.10**, ADR-063; avval B4.81) Soliq, 2-bosqich (QQS va foyda solig'i). Sabab: ADR-057 Q5 —
@@ -1081,8 +1084,8 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
 - [ ] B5.7 **Uzum to'lov prognozi va to'lov kalendari** (M11; D6). Hisoblar daftari bu yerda **emas** (pastda "Keyinga").
   - `realcheck payout` (avval): `withdrawnProfit` maydoni nimani bildiradi (qator bo'yicha yechilgan summa — avtomatik
     "tushdi"); buyurtma → Yakunlangan oralig'i taqsimoti (`completed_seen_at`, 2026-11-12 dan); prognoz ↔ Temurning
-    oxirgi 2–3 real to'lovi; to'lov jadvali do'konnikimi yoki akkauntnikimi (pul yechish haqi `shopId: 0` bilan keladi,
-    ADR-062; `payout_schedules` hozir do'kon bo'yicha).
+    oxirgi 2–3 real to'lovi; to'lov jadvali — **butun akkauntga bitta** (Temur, 2026-11-16; pul yechish haqi ham `shopId: 0` bilan keladi,
+    ADR-062): `payout_schedules` do'kondan akkaunt (`mp_accounts`) darajasiga ko'chadi (migratsiya), Sozlamalar ham.
   - **F38 to'ldiriladi:** hozir faqat allaqachon Yakunlangan summa — ufq keyingi to'lov sanasigacha. Qo'shiladi:
     Jarayondagi sotuvlar × yakunlanish ulushi (F16 R) kutilgan yakunlanish kuniga (o'rganilgan oraliq), "taxminiy"
     belgisi bilan. Pul yechish haqi ikki marta ayrilmaydi (prognozdagi foiz ↔ keyin kelgan `C000010` / `C000011`).

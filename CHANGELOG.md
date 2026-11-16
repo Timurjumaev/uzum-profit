@@ -437,6 +437,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   test qamrovi, reja (B4 yopilmayapti, rejada yo'q PWA / jamoa ekrani / hodisalar), dizayn o'lchovlari (360 / 1000 /
   1440 px: bosish maydoni, jadval kengligi, bosh sahifa ierarxiyasi), raqobatchilar jadvali (2026-11-11 holati) va
   Temurning qarori kerak bo'lgan 14 ta savol (Q1–Q14).
+- B5.0b "Chegarada" marja chegarasi Sozlamalarda (F13; `orgs.settings.margin_borderline`, standart 5%): Mahsulotlar jadvali,
+  filtr, SKU sahifasi va Excel bitta chegaradan; `PUT /settings/alerts` → `margin_borderline`. Kodda yashirin `0.05` yo'q —
+  `upcore.metrics.profit_label` va `Statement.label` chegarani parametr sifatida oladi.
 
 ### O'zgartirildi
 

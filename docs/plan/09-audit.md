@@ -314,4 +314,5 @@ Xavf: **Y** — yuqori, **O'** — o'rta, **P** — past.
 
 **Temurdan kerak (B5 davomida, har biri bitta buyruq yoki bitta javob):** `realcheck` natijalari (B5.1 muddatlar,
 B5.4 `lost`, B5.7 `payout`) — buyruq matni o'sha vazifa kelganda yuboriladi; bitta savol — Uzum pul yechish jadvali
-kabinetda do'kon bo'yicha tanlanadimi yoki butun akkauntga bittami (B13).
+kabinetda do'kon bo'yicha tanlanadimi yoki butun akkauntga bittami (B13). **Javob (Temur, 2026-11-16): butun akkauntga
+bitta** — B5.7 da `payout_schedules` akkaunt (`mp_accounts`) darajasiga ko'chadi.

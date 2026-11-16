@@ -378,13 +378,17 @@ def test_alerts_settings_and_dashboard_warning(world: World) -> None:
         body = ok(send(w, "GET", f"dashboard?{window}"))
         return next(c for g in body["summary"]["groups"] for c in g["cards"] if c["key"] == key)
 
-    assert ok(send(w, "GET", "settings"))["alerts"] == {"cancel_share": None, "return_share": None}
+    assert ok(send(w, "GET", "settings"))["alerts"] == {
+        "cancel_share": None,
+        "return_share": None,
+        "margin_borderline": None,
+        "margin_borderline_default": "0.05",
+    }
     assert card("cancel_share")["warn"] is False
     body = ok(send(w, "PUT", "settings/alerts", cancel_share="0.1", return_share="0.5"))
-    assert {k: D(v) for k, v in body["alerts"].items()} == {
-        "cancel_share": D("0.1"),
-        "return_share": D("0.5"),
-    }
+    assert D(body["alerts"]["cancel_share"]) == D("0.1")
+    assert D(body["alerts"]["return_share"]) == D("0.5")
+    assert body["alerts"]["margin_borderline"] is None  # berilmadi — standart
     cancel = card("cancel_share")
     assert D(cancel["value"]) > D("0.1") and cancel["warn"] is True  # bekor ulushi > 10%
     assert card("return_share")["warn"] is False
@@ -395,7 +399,7 @@ def test_alerts_settings_and_dashboard_warning(world: World) -> None:
     assert send(w, "PUT", "settings/alerts", cancel_share="0").status_code == 422
     assert send(w, "PUT", "settings/alerts", role="accountant").status_code == 403
     body = ok(send(w, "PUT", "settings/alerts"))  # hammasi null — o'chirish
-    assert body["alerts"] == {"cancel_share": None, "return_share": None}
+    assert body["alerts"]["cancel_share"] is None and body["alerts"]["return_share"] is None
     assert card("cancel_share")["warn"] is False
     assert "settings.alerts" in audited(w)
 
@@ -566,3 +570,31 @@ def test_create_profile_with_taxpayer(world: World) -> None:
     row = next(p for p in body["tax_profiles"] if p["valid_from"] == "2032-01-01")
     assert row["taxpayer"] == "llc"
     ok(send(w, "DELETE", f"tax-profiles/{row['id']}"))
+
+
+def test_margin_borderline_setting(world: World) -> None:
+    """B5.0b: "Chegarada" marja chegarasi — tashkilot sozlamasi (0..1]; bo'sh — standart 5%; boshqa sozlamalar
+    saqlansa o'chmaydi; faqat boshqaruvchi o'zgartiradi."""
+    from upapi import orgsettings
+    from upcore.metrics import DEFAULT_BORDERLINE
+
+    assert orgsettings.OrgSettings().margin_borderline == DEFAULT_BORDERLINE == D("0.05")
+    got = orgsettings.parse({"margin_borderline": "0.12"})
+    assert got.borderline == D("0.12") and got.margin_borderline == D("0.12")
+    assert orgsettings.dump(got) == {"margin_borderline": "0.12"}
+    assert orgsettings.parse(orgsettings.dump(got)) == got
+    for bad in (0, "-0.1", "1.5", "abc", True, None, []):  # noto'g'risi tashlanadi — standart
+        assert orgsettings.parse({"margin_borderline": bad}).borderline is None
+
+    w = world
+    body = ok(send(w, "PUT", "settings/alerts", cancel_share="0.2", margin_borderline="0.1"))
+    assert D(body["alerts"]["margin_borderline"]) == D("0.1")
+    assert D(body["alerts"]["margin_borderline_default"]) == D("0.05")
+    ok(send(w, "PUT", "settings/inventory", cover_days={"A": 60, "B": 30, "C": 14}))
+    alerts = ok(send(w, "GET", "settings"))["alerts"]
+    assert D(alerts["margin_borderline"]) == D("0.1") and D(alerts["cancel_share"]) == D("0.2")
+    for bad in ("0", "1.01", "-0.05"):
+        assert send(w, "PUT", "settings/alerts", margin_borderline=bad).status_code == 422
+    # ``null`` — standartga qaytadi; bekor ulushi chegarasi ham shu so'rovda berilmagani uchun o'chadi (PUT — to'liq).
+    cleared = ok(send(w, "PUT", "settings/alerts"))["alerts"]
+    assert cleared["margin_borderline"] is None and cleared["cancel_share"] is None

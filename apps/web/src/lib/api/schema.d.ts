@@ -1713,7 +1713,8 @@ export interface paths {
         get?: never;
         /**
          * Set Alerts
-         * @description Bosh sahifadagi bekor va qaytarish ulushi kartochkasi shu chegaradan oshsa belgilanadi. Kodda standart yo'q.
+         * @description Bosh sahifadagi bekor va qaytarish ulushi kartochkasi shu chegaradan oshsa belgilanadi (kodda standart yo'q).
+         *     ``margin_borderline`` — Mahsulotlardagi "Chegarada" belgisi chegarasi (F13); berilmasa standart.
          */
         put: operations["set_alerts_api_v1_orgs__org_id__settings_alerts_put"];
         post?: never;
@@ -1846,13 +1847,16 @@ export interface components {
         };
         /**
          * AlertsIn
-         * @description Bekor (F17) va qaytarish (F18) ulushi chegarasi; ``null`` — o'chirish.
+         * @description Bekor (F17) va qaytarish (F18) ulushi chegarasi; ``null`` — o'chirish. ``margin_borderline`` — "Chegarada"
+         *     marja chegarasi (B5.0b, F13); ``null`` — standartga qaytarish.
          */
         AlertsIn: {
             /** Cancel Share */
             cancel_share?: number | string | null;
             /** Return Share */
             return_share?: number | string | null;
+            /** Margin Borderline */
+            margin_borderline?: number | string | null;
         };
         /**
          * AlertsOut
@@ -1863,6 +1867,10 @@ export interface components {
             cancel_share: string | null;
             /** Return Share */
             return_share: string | null;
+            /** Margin Borderline */
+            margin_borderline: string | null;
+            /** Margin Borderline Default */
+            margin_borderline_default: string;
         };
         /**
          * AllocationBase

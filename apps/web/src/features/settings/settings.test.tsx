@@ -388,7 +388,7 @@ describe("muddatlar va qamrov", () => {
 
 describe("ogohlantirish chegaralari (ADR-043)", () => {
   it("foizda kiritiladi, ulush bo'lib yuboriladi; bo'sh — o'chirish; 100% dan katta — saqlab bo'lmaydi", async () => {
-    const saved = settingsData({ alerts: { cancel_share: "0.300000", return_share: null } });
+    const saved = settingsData({ alerts: { cancel_share: "0.300000", return_share: null, margin_borderline: null, margin_borderline_default: "0.05" } });
     const { api } = await renderSettings({ [ALERT_SETTINGS_ROUTE]: () => json(200, saved) });
     await ready();
     const box = section("Ogohlantirish chegaralari");
@@ -403,16 +403,35 @@ describe("ogohlantirish chegaralari (ADR-043)", () => {
     expect(save.disabled).toBe(false);
     fireEvent.click(save);
     await waitFor(() => expect(bodiesOf(api, ALERT_SETTINGS_ROUTE)).toHaveLength(1));
-    expect(bodiesOf(api, ALERT_SETTINGS_ROUTE)[0]).toEqual({ cancel_share: "0.3", return_share: "0.075" });
+    expect(bodiesOf(api, ALERT_SETTINGS_ROUTE)[0]).toEqual({ cancel_share: "0.3", return_share: "0.075", margin_borderline: null });
   });
 
   it("saqlangan chegara foizda ko'rinadi; buxgalter faqat ko'radi", async () => {
-    await renderSettings({ [SETTINGS_ROUTE]: () => json(200, settingsData({ alerts: { cancel_share: "0.250000", return_share: "0.050000" } })) }, "accountant");
+    await renderSettings({ [SETTINGS_ROUTE]: () => json(200, settingsData({ alerts: { cancel_share: "0.250000", return_share: "0.050000", margin_borderline: "0.080000", margin_borderline_default: "0.05" } })) }, "accountant");
     await ready();
     const box = section("Ogohlantirish chegaralari");
     expect((within(box).getByLabelText(/^Bekor boʻlish ulushi/) as HTMLInputElement).value).toBe("25");
     expect((within(box).getByLabelText(/^Qaytarilish ulushi/) as HTMLInputElement).value).toBe("5");
+    expect((within(box).getByLabelText(/Chegarada.*marja chegarasi/) as HTMLInputElement).value).toBe("8");
     expect(within(box).queryByRole("button", { name: "Saqlash" })).toBeNull();
+  });
+
+  it("“Chegarada” marja chegarasi (B5.0b): bo'sh — standart ko'rsatiladi; foizda kiritiladi, ulush bo'lib ketadi", async () => {
+    const saved = settingsData({ alerts: { cancel_share: null, return_share: null, margin_borderline: "0.100000", margin_borderline_default: "0.05" } });
+    const { api } = await renderSettings({ [ALERT_SETTINGS_ROUTE]: () => json(200, saved) });
+    await ready();
+    const box = section("Ogohlantirish chegaralari");
+    const field = within(box).getByLabelText(/Chegarada.*marja chegarasi/) as HTMLInputElement;
+    const save = within(box).getByRole("button", { name: "Saqlash" }) as HTMLButtonElement;
+    expect(field.value).toBe("");
+    expect(within(box).getByText(/Boʻsh maydon — standart 5%\./)).toBeTruthy();
+    fireEvent.change(field, { target: { value: "0" } });
+    expect(save.disabled).toBe(true);
+    fireEvent.change(field, { target: { value: "10" } });
+    expect(save.disabled).toBe(false);
+    fireEvent.click(save);
+    await waitFor(() => expect(bodiesOf(api, ALERT_SETTINGS_ROUTE)).toHaveLength(1));
+    expect(bodiesOf(api, ALERT_SETTINGS_ROUTE)[0]).toEqual({ cancel_share: null, return_share: null, margin_borderline: "0.1" });
   });
 });
 

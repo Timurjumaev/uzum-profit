@@ -1,5 +1,6 @@
 """Tashkilot sozlamalari (``orgs.settings``, B4.8): standart yetkazish muddatlari (F25), ABC qamrov kunlari (F27) va
-ogohlantirish chegaralari (ADR-043: bekor va qaytarish ulushi — bosh sahifa kartochkasi chegaradan oshsa belgilanadi).
+ogohlantirish chegaralari (ADR-043: bekor va qaytarish ulushi — bosh sahifa kartochkasi chegaradan oshsa belgilanadi),
+"Chegarada" marja chegarasi (B5.0b, F13 — Mahsulotlar holat belgisi).
 
 Biznes doimiylari bazada (tamoyil 2). Bo'sh sozlama — standart: muddat faqat xaridlar tarixidan o'rganiladi (tarix
 yo'q bo'lsa noma'lum — raqam o'ylab topilmaydi), qamrov — ``upcore.inventory`` standarti (A 60, B 30, C 14). Bu yerda
@@ -15,6 +16,7 @@ from typing import Any, Literal
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.inventory import DEFAULT, AbcClass, InventorySettings
+from upcore.metrics import DEFAULT_BORDERLINE
 from upcore.purchasing import LEAD_STAGES
 
 from upapi.db import models as m
@@ -42,6 +44,13 @@ class OrgSettings:
     cover_days: dict[AbcClass, int] = field(default_factory=dict)  # bo'sh — standart
     # ADR-043: ogohlantirish chegaralari (ulush, 0..1); bo'sh — ogohlantirish yo'q (kodda standart chegara yo'q).
     alerts: dict[str, Decimal] = field(default_factory=dict)
+    # B5.0b: "Chegarada" chegarasi (F13 marja, kasr 0..1); ``None`` — standart (``upcore.metrics.DEFAULT_BORDERLINE``).
+    borderline: Decimal | None = None
+
+    @property
+    def margin_borderline(self) -> Decimal:
+        """M6 holat belgisi uchun amaldagi chegara: sozlangan yoki standart."""
+        return DEFAULT_BORDERLINE if self.borderline is None else self.borderline
 
     def over(self, key: Alert, value: Decimal | None) -> bool:
         """Ulush sozlangan chegaradan oshdimi (chegara yo'q yoki qiymat yo'q — ``False``)."""
@@ -80,7 +89,7 @@ def parse(raw: Any) -> OrgSettings:
         if isinstance(alerts_raw, dict)
         else {}
     )
-    return OrgSettings(lead_days, cover_days, alerts)
+    return OrgSettings(lead_days, cover_days, alerts, _share(data.get("margin_borderline")))
 
 
 def dump(settings: OrgSettings) -> dict[str, Any]:
@@ -91,6 +100,8 @@ def dump(settings: OrgSettings) -> dict[str, Any]:
         out["cover_days"] = {k.value: v for k, v in settings.cover_days.items()}
     if settings.alerts:
         out["alerts"] = {k: str(v) for k, v in settings.alerts.items()}
+    if settings.borderline is not None:
+        out["margin_borderline"] = str(settings.borderline)
     return out
 
 

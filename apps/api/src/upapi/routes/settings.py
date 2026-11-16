@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import delete, func, insert, select, update
 from upcore.cash import SEED_SCHEDULES, ScheduleKind
 from upcore.inventory import DEFAULT, AbcClass
+from upcore.metrics import DEFAULT_BORDERLINE
 from upcore.pnl import TaxBase
 from upcore.tax import (
     SEED_AMOUNTS,
@@ -130,6 +131,9 @@ class AlertsOut(BaseModel):
 
     cancel_share: Decimal | None
     return_share: Decimal | None
+    # B5.0b: "Chegarada" marja chegarasi (F13, kasr); ``null`` — sozlanmagan, standart amal qiladi.
+    margin_borderline: Decimal | None
+    margin_borderline_default: Decimal
 
 
 class SettingsOut(BaseModel):
@@ -193,10 +197,12 @@ Share = Annotated[Decimal, Field(gt=0, le=1, max_digits=7, decimal_places=6)]
 
 
 class AlertsIn(BaseModel):
-    """Bekor (F17) va qaytarish (F18) ulushi chegarasi; ``null`` — o'chirish."""
+    """Bekor (F17) va qaytarish (F18) ulushi chegarasi; ``null`` — o'chirish. ``margin_borderline`` — "Chegarada"
+    marja chegarasi (B5.0b, F13); ``null`` — standartga qaytarish."""
 
     cancel_share: Share | None = None
     return_share: Share | None = None
+    margin_borderline: Share | None = None
 
 
 def _plain(values: dict[str, Any]) -> dict[str, Any]:
@@ -320,6 +326,8 @@ async def _read(ctx: OrgContext) -> SettingsOut:
         alerts=AlertsOut(
             cancel_share=cfg.alerts.get("cancel_share"),
             return_share=cfg.alerts.get("return_share"),
+            margin_borderline=cfg.borderline,
+            margin_borderline_default=DEFAULT_BORDERLINE,
         ),
         revenue_limit=None if limit is None else RevenueLimitOut.of(limit),
     )
@@ -531,11 +539,16 @@ async def set_inventory(body: InventorySettingsIn, ctx: Manager) -> SettingsOut:
 
 @router.put("/orgs/{org_id}/settings/alerts", response_model=SettingsOut)
 async def set_alerts(body: AlertsIn, ctx: Manager) -> SettingsOut:
-    """Bosh sahifadagi bekor va qaytarish ulushi kartochkasi shu chegaradan oshsa belgilanadi. Kodda standart yo'q."""
+    """Bosh sahifadagi bekor va qaytarish ulushi kartochkasi shu chegaradan oshsa belgilanadi (kodda standart yo'q).
+    ``margin_borderline`` — Mahsulotlardagi "Chegarada" belgisi chegarasi (F13); berilmasa standart."""
     o = m.orgs
     before = orgsettings.parse(await ctx.conn.scalar(select(o.c.settings)))
     values = {"cancel_share": body.cancel_share, "return_share": body.return_share}
-    after = replace(before, alerts={k: v for k, v in values.items() if v is not None})
+    after = replace(
+        before,
+        alerts={k: v for k, v in values.items() if v is not None},
+        borderline=body.margin_borderline,
+    )
     if after != before:
         await ctx.conn.execute(
             update(o).values(settings=orgsettings.dump(after), updated_at=func.now())

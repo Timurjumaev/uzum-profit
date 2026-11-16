@@ -537,3 +537,32 @@ def test_link_errors_and_permissions(world: World) -> None:
     assert send(world, "put", path, role="accountant", mode="none").status_code == 403
     assert send(world, "put", path, role="warehouse", mode="none").status_code == 200
     assert send(world, "put", path, role="manager", mode="none").status_code == 200
+
+
+def test_borderline_follows_org_setting(world: World) -> None:
+    """B5.0b: "Chegarada" chegarasi Sozlamalardan — jadval, filtr, SKU sahifasi va Excel bir xil chegarani ishlatadi."""
+    before = rows(world, **OCT)
+    sid, row = next((s, r) for s, r in before.items() if r["label"] == "profitable")
+    margin = D(row["margin"])
+    assert margin >= D("0.05")  # standart chegara 5% — foydali
+    above = min(margin + D("0.01"), D(1))
+    assert send(world, "put", "settings/alerts", margin_borderline=str(above)).status_code == 200
+    after = rows(world, **OCT)
+    assert after[sid]["label"] == "borderline"
+    assert sid in {r["sku_id"] for r in world.get("skus", label="borderline", **OCT)["items"]}
+    assert sid not in {r["sku_id"] for r in world.get("skus", label="profitable", **OCT)["items"]}
+    assert world.get(f"skus/{sid}", **OCT)["sku"]["label"] == "borderline"
+    # Zarar, ma'lumot yo'q va sotuv yo'q belgilari chegaraga bog'liq emas.
+    for s, r in before.items():
+        if r["label"] in ("loss", "no_data", "idle"):
+            assert after[s]["label"] == r["label"]
+    # Chegara marjadan past — yana foydali; bo'shatilsa standart (5%).
+    assert send(world, "put", "settings/alerts", margin_borderline="0.000001").status_code == 200
+    assert rows(world, **OCT)[sid]["label"] == "profitable"
+    assert all(
+        r["label"] != "borderline" for r in rows(world, **OCT).values() if D(r["margin"] or 1) > 0
+    )
+    assert send(world, "put", "settings/alerts").status_code == 200
+    assert {s: r["label"] for s, r in rows(world, **OCT).items()} == {
+        s: r["label"] for s, r in before.items()
+    }

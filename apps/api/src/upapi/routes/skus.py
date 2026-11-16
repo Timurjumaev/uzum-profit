@@ -39,6 +39,7 @@ from upcore.pnl import Cells, Statement, unit_economics
 from upcore.tax import effective_rate
 from upcore.unit import unit_calc
 
+from upapi import orgsettings
 from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission
 from upapi.calc.costs import openings, start_of
@@ -207,8 +208,10 @@ def _row(
     s: Statement,
     n: rc.SaleSums,
     st: SkuStock | None,
+    borderline: Decimal,
     lot: LastLot | None = None,
 ) -> SkuRowOut:
+    """``borderline`` — "Chegarada" marja chegarasi (tashkilot sozlamasi, B5.0b)."""
     u = unit_economics(s)
     sold = amount(u.cogs_per_unit)
     return SkuRowOut(
@@ -242,7 +245,7 @@ def _row(
         roi=s.roi,
         return_share=n.return_share,
         cancel_share=n.cancel_share,
-        label=s.label,
+        label=s.label(borderline),
         stock=st.stock if st else 0,
         days_of_stock=st.days_of_stock if st else None,
         abc=st.abc.value if st else "C",
@@ -279,6 +282,7 @@ async def ranked(
     )
     empty = Cells(f.period, {}).statement()
     needle = fold(q).strip() if q else ""
+    borderline = (await orgsettings.load(ctx.conn)).margin_borderline
 
     rows = []
     for info in catalog.values():
@@ -289,6 +293,7 @@ async def ranked(
             by_sku.get(str(info.id), empty),
             sums.get(str(info.id), rc.SaleSums()),
             stock.skus.get(info.id),
+            borderline,
             lots.get(info.item_id) if info.item_id else None,
         )
         if (label is None or row.label is label) and (abc is None or row.abc == abc):
@@ -514,7 +519,8 @@ async def sku_detail(
         await start_of(conn, ctx.org_id),
         f.today,
     )
-    row = _row(info, s, n, st, last.get(info.item_id) if info.item_id else None)
+    borderline = (await orgsettings.load(conn)).margin_borderline
+    row = _row(info, s, n, st, borderline, last.get(info.item_id) if info.item_id else None)
 
     d = m.sku_daily
     snaps = {
