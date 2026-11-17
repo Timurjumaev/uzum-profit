@@ -27,6 +27,7 @@ from upcore.purchasing import PurchaseError, split_units
 from upapi.calc import lots as calc_lots
 from upapi.db import models as m
 from upapi.errors import AppError
+from upapi.reports import integrity
 from upapi.reports import purchases as rp
 from upapi.reports.common import today
 from upapi.routes.purchases import (
@@ -129,13 +130,19 @@ async def count_purchase(
     for x in body.lines:
         if x.defect_qty > x.received_qty:
             raise AppError("bad_line", 422, detail="brak kelgan donadan ko'p")
-        line = lines[x.line_id]
-        if line.source_line_id is not None:
+        if lines[x.line_id].source_line_id is not None:
             raise AppError("transfer_line", 409, detail="o'tkazilgan qator sanalmaydi")
         if x.received_qty - x.defect_qty < moved_out.get(x.line_id, 0):
             raise AppError(
                 "bad_line", 422, detail="sog' dona boshqa SKU'ga o'tkazilgandan kam bo'lmaydi"
             )
+    # TM9.3: sog' dona jo'natilgan / o'tkazilgan / hisobdan chiqarilgandan kamga tushmaydi.
+    integrity.check_lines(
+        await integrity.ledger(ctx.conn),
+        {x.line_id: x.received_qty - x.defect_qty for x in body.lines},
+    )
+    for x in body.lines:
+        line = lines[x.line_id]
         values: dict[str, Any] = {"received_qty": x.received_qty, "defect_qty": x.defect_qty}
         pack = x.pack_unit_cost
         if pack is None and line.pack_unit_cost is None and line.item_id is not None:

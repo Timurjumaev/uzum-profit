@@ -249,7 +249,10 @@ tiyinigacha teng (qoldiq eng katta ulushga, F20); (4) sanashda son o'zgarsa birl
 Qabul mezonlari: Uzum FBO qoldig'i `quantityActive` + `quantityFbs` dan olinadi (faqat `/fbs/sku/stocks` emas);
 tezlik hisobida qoldiq 0 bo'lgan kunlar chiqarib tashlanadi; yo'qolgan tovar ishonchsiz holatda ko'rsatilmaydi;
 jo'natishda bir dona ikki Excel'ga tushmaydi; har SKU uchun Omborimda + Jo'natilmoqda + Uzumga bog'langan + o'tkazilgan +
-hisobdan chiqarilgan = sanalgan sog' dona.
+hisobdan chiqarilgan = sanalgan sog' dona. **Butunlik (TM9.3):** ishlatilgan (jo'natilgan, o'tkazilgan,
+hisobdan chiqarilgan) donasi bor xarid va qator o'chirilmaydi, SKU'si almashtirilmaydi, sog' donasi ishlatilganidan kamga
+tushmaydi; qabul qilingan postavka jo'natmasi bekor qilinmaydi; Omborimda manfiy qoldiq 0 ga qisilmaydi — xato sifatida
+ko'rsatiladi (`realcheck supply`).
 
 ## M11. Pul oqimi [B5.7; hisoblar daftari — keyinga, ADR-063]
 

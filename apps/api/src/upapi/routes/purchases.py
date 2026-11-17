@@ -33,6 +33,7 @@ from upcore.purchasing import (
     SupplyState,
     current_stage,
     default_base,
+    supply_state,
 )
 
 from upapi import calc
@@ -42,6 +43,7 @@ from upapi.calc.lots import targets_of
 from upapi.db import models as m
 from upapi.errors import AppError
 from upapi.logs import get_logger
+from upapi.reports import integrity
 from upapi.reports import purchases as rp
 from upapi.reports.common import today
 from upapi.routes.items import item_of_sku
@@ -336,6 +338,15 @@ async def _purchase(ctx: OrgContext, purchase_id: UUID) -> Any:
     if row is None:
         raise AppError("purchase_not_found", 404)
     return row
+
+
+async def _guard_purchase(ctx: OrgContext, purchase_id: UUID) -> None:
+    """TM9.3: xarid Omborimdan butunlay chiqadi (o'chirish, sanash sanasini o'chirish) — jo'natilgan, o'tkazilgan yoki
+    hisobdan chiqarilgan donasi bo'lsa rad (``units_*``, 409)."""
+    book = await integrity.ledger(ctx.conn)
+    integrity.check_lines(
+        book, {lid: None for lid, x in book.lines.items() if x.line.purchase_id == purchase_id}
+    )
 
 
 async def _line(ctx: OrgContext, purchase_id: UUID, line_id: UUID) -> Any:
@@ -684,6 +695,12 @@ async def update_purchase(
     values |= columns
     if not values:
         return await _detail(ctx, purchase_id)
+    after_dates = {**rp.stage_dates(row)} | {
+        Stage(k.removesuffix("_on")): v for k, v in columns.items()
+    }
+    if supply_state(after_dates) is not SupplyState.IN_STOCK:
+        # TM9.3: sanash sanasi o'chirilsa xarid Omborimdan chiqadi — ishlatilgan donasi bo'lsa rad.
+        await _guard_purchase(ctx, purchase_id)
     before = {k: getattr(row, k) for k in values}
     p = m.purchases
     await ctx.conn.execute(update(p).where(p.c.id == purchase_id).values(**values))
@@ -704,6 +721,7 @@ async def delete_purchase(
     purchase_id: UUID, ctx: Manager, request: Request, background: BackgroundTasks
 ) -> Response:
     row = await _purchase(ctx, purchase_id)
+    await _guard_purchase(ctx, purchase_id)
     pl = m.purchase_lines
     items = {
         r.item_id
@@ -908,6 +926,15 @@ async def update_line(
     await _exists(ctx, m.items, values.get("item_id"), "item_not_found")
     if not values:
         return await _detail(ctx, purchase_id)
+    # TM9.3: sog' dona ishlatilganidan kamga tushmaydi, ishlatilgan qatorning SKU'si almashtirilmaydi.
+    rekeyed = integrity.key_of(merged.get("sku_id"), merged.get("item_id")) != integrity.key_of(
+        row.sku_id, row.item_id
+    )
+    integrity.check_lines(
+        await integrity.ledger(ctx.conn),
+        {line_id: arrived - int(merged["defect_qty"])},
+        {line_id} if rekeyed else set(),
+    )
     before = {k: getattr(row, k) for k in values}
     pl = m.purchase_lines
     await ctx.conn.execute(
@@ -945,6 +972,7 @@ async def delete_line(
             409,
             detail="qatordan boshqa SKU'ga o'tkazma bor — avval uni bekor qiling",
         )
+    integrity.check_lines(await integrity.ledger(ctx.conn), {line_id: None})
     cc = m.cost_components
     for comp in await ctx.conn.execute(select(cc).where(cc.c.purchase_id == purchase_id)):
         lines, shares = targets_of(comp.targets)

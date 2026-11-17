@@ -296,6 +296,7 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
         barcode: `478000000000${n}`,
         qty,
         reserved: 0,
+        broken: false,
         unit_cost: "18500.00",
         value: String(qty * 18500) + ".00",
         sources: transfers ? [] : [{ line_id: `f000000${n}-0000-4000-8000-000000000000`, purchase_id: PURCHASE_1, purchase_title: "Oktabr partiyasi", counted_on: "2026-10-20", qty, unit_cost: "18500.00" }],

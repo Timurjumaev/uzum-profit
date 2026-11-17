@@ -5583,6 +5583,11 @@ export interface components {
             /** Reserved */
             reserved: number;
             /**
+             * Broken
+             * @default false
+             */
+            broken: boolean;
+            /**
              * Dispatched
              * @default 0
              */

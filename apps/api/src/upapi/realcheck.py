@@ -978,6 +978,30 @@ async def sync_check(conn: AsyncConnection, shop: UUID, since: datetime) -> dict
     return {"state": state, "runs_24h": dict(runs), "errors_24h": errors, "problems": problems}
 
 
+async def supply_check(conn: AsyncConnection) -> dict[str, Any]:
+    """TM9.3 (02 M10 qabul mezoni): har SKU uchun Omborimda + Jo'natilmoqda + Uzumda + o'tkazilgan + hisobdan chiqarilgan
+    = sanalgan sog' dona. Omborimda manfiy yoki jo'natilgan dona partiyalardan ko'p — xato (0 ga qisilmaydi)."""
+    from upapi.reports import integrity
+
+    book = await integrity.ledger(conn)
+    return {
+        "skus": len(book.balances),
+        "problems": [
+            {
+                "key": b.key,
+                "good": b.good,
+                "transferred": b.transferred,
+                "dispatched": b.dispatched,
+                "attributed": b.attributed,
+                "written_off": b.written_off,
+                "adjusted": b.adjusted,
+                "on_hand": b.on_hand,
+            }
+            for b in book.problems()
+        ],
+    }
+
+
 # --- Yig'ish -------------------------------------------------------------------------------------
 
 
@@ -1040,6 +1064,7 @@ async def build(
                     "id": org,
                     "name": name,
                     "shops": [await shop_report(conn, s, since, now) for s in shops.all()],
+                    "supply": await supply_check(conn),
                 }
             )
     return out
@@ -1068,6 +1093,18 @@ def summary(report: dict[str, Any]) -> list[str]:
     """Odam o'qiydigan qisqa xulosa (stderr): har do'kon bo'yicha asosiy raqamlar."""
     out = []
     for org in report["orgs"]:
+        supply = org.get("supply")
+        if supply is not None:
+            bad = supply["problems"]
+            out.append(
+                f"Ta'minot (M10): {supply['skus']} SKU, "
+                + (
+                    "xato yo'q"
+                    if not bad
+                    else f"XATO {len(bad)} SKU'da: "
+                    + ", ".join(f"{x['key']} Omborimda {x['on_hand']}" for x in bad[:5])
+                )
+            )
         for shop in org["shops"]:
             sales, checks, sync = shop["sales"], shop["checks"], shop["sync"]
             inv, ret, lg = checks["invoices"], checks["returns"], checks["logistics"]

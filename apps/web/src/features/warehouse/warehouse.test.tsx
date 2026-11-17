@@ -31,6 +31,7 @@ const row = (over: Partial<WarehouseRow> = {}): WarehouseRow => ({
   barcode: "4780000000001",
   qty: 70,
   reserved: 0,
+  broken: false,
   dispatched: 0,
   unit_cost: "10000.00",
   value: "700000.00",
@@ -124,6 +125,15 @@ describe("Omborim", () => {
     cleanup();
     await renderAt({ [WAREHOUSE_ROUTE]: () => json(200, { items: [], amounts: true, total_qty: 0, total_value: "0.00" }) });
     expect(await screen.findByText("Omborimda tovar yoʻq")).toBeTruthy();
+  });
+
+  it("butunlik buzilgan SKU (TM9.3): manfiy son 0 ga qisilmaydi, \"xato\" belgisi, brak tugmasi o'chiq", async () => {
+    await renderAt({ [WAREHOUSE_ROUTE]: () => json(200, { ...WAREHOUSE, items: [row({ qty: -4, broken: true, value: null, sources: [] })] }) });
+    const table = await screen.findByRole("table", { name: "Omborim" });
+    const cells = within(table).getAllByRole("row")[1]!.textContent ?? "";
+    expect(cells).toMatch(/[−-]4/);
+    expect(within(table).getAllByText("xato").length).toBeGreaterThan(0);
+    expect((screen.getAllByRole("button", { name: "Brak: Mashina-Qizil" })[0] as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("a11y: jiddiy buzilish yo'q", async () => {

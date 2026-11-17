@@ -250,6 +250,23 @@ async def list_dispatches(ctx: Viewer) -> DispatchesOut:
     return DispatchesOut(items=await _dispatches(ctx))
 
 
+async def _check_not_accepted(ctx: OrgContext, row: Any) -> None:
+    """TM9.3 (G14): qabul qilingan postavkaga bog'langan jo'natma bekor qilinmaydi va bog'lanishi olib tashlanmaydi —
+    donalar Uzumda; farq bo'lsa "Qabul farqi"da hal qilinadi."""
+    from upapi.calc.costs import arrival_day
+
+    if row.status != "linked" or row.invoice_id is None:
+        return
+    v = m.fbo_invoices
+    inv = (await ctx.conn.execute(select(v).where(v.c.id == row.invoice_id))).first()
+    if inv is not None and arrival_day(inv.status, inv.created_on, inv.raw) is not None:
+        raise AppError(
+            "dispatch_accepted",
+            409,
+            detail="postavka qabul qilingan — farq bo'lsa Qabul farqi sahifasida hal qiling",
+        )
+
+
 async def _row(ctx: OrgContext, dispatch_id: UUID) -> Any:
     d = m.fbo_dispatches
     row = (await ctx.conn.execute(select(d).where(d.c.id == dispatch_id))).first()
@@ -304,6 +321,7 @@ async def cancel_dispatch(dispatch_id: UUID, ctx: Manager) -> DispatchOut:
     row = await _row(ctx, dispatch_id)
     if row.status == "canceled":
         return (await _dispatches(ctx, dispatch_id))[0]
+    await _check_not_accepted(ctx, row)
     d = m.fbo_dispatches
     await ctx.conn.execute(
         update(d)
@@ -323,6 +341,8 @@ async def link_dispatch(dispatch_id: UUID, body: LinkIn, ctx: Manager) -> Dispat
         raise AppError("bad_dispatch", 409, detail="bekor qilingan jo'natma")
     d, v = m.fbo_dispatches, m.fbo_invoices
     values: dict[str, Any]
+    if body.invoice_id != row.invoice_id:
+        await _check_not_accepted(ctx, row)
     if body.invoice_id is None:
         values = {"status": "sending", "invoice_id": None, "linked_at": None}
     else:

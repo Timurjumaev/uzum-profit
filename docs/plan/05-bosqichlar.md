@@ -1011,10 +1011,16 @@ Omborim soniga tayanadi). Har biri — alohida PR, testlar bilan; 02 (M10, F33, 
   (shartnoma 4.6) yoki qabul soni e'longa yetganda chiqadi — undan oldin "qabul davom etmoqda: 719 / 744". "Uzum
   yo'qotdi" qatorida da'vo muddati (30 kun, shartnoma 4.13). "Men sanashda adashganman" tanlovida oqibat oldindan
   ko'rsatiladi ("xarid soni N ga kamayadi, tannarx X dan Y ga o'zgaradi").
-- [ ] TM9.3 **Butunlik himoyasi** (G5, G14): jo'natilgan, o'tkazilgan, hisobdan chiqarilgan yoki farqi hal qilingan donasi bor
+- [x] TM9.3 **Butunlik himoyasi** (G5, G14): jo'natilgan, o'tkazilgan, hisobdan chiqarilgan yoki farqi hal qilingan donasi bor
   xarid va qator — o'chirilmaydi; sanalgan son shulardan kamga tushmaydi; SKU almashtirilmaydi (sababi aytiladi, yo'l
   ko'rsatiladi). Qabul qilingan postavkaga bog'langan jo'natma bekor qilinmaydi. M10 mezoni — har SKU uchun avtomatik
-  test va `realcheck supply` bo'limi (manfiy qoldiq 0 ga qisilmaydi — xato sifatida ko'rsatiladi).
+  test va `realcheck supply` bo'limi (manfiy qoldiq 0 ga qisilmaydi — xato sifatida ko'rsatiladi). ✓ 2026-11-17: `upapi.reports.integrity` —
+  Omborim daftari (qator: jo'natilgan FIFO, o'tkazilgan, shu qatorga yozilgan hisobdan chiqarish; SKU: M10 tenglamasi);
+  `check_lines` — xarid / qator o'chirish, sanash, qator tahriri (son, SKU), sanash sanasini o'chirish, o'tkazmani bekor
+  qilishda (409 `units_dispatched` / `units_transferred` / `units_written_off`); o'tkazishda jo'natilgan dona hisobga olinadi;
+  `dispatch_accepted` — qabul qilingan postavka jo'natmasini bekor qilish / bog'lanishni olib tashlash. "Farqi hal qilingan"
+  dona — bog'langan jo'natma orqali himoyada. Omborimda manfiy qoldiq — `broken` ("xato" belgisi), `realcheck` → `supply`.
+  Testlar: API (`test_integrity.py`, M10 tenglamasi har SKU uchun), web.
 - [ ] TM9.4 **F52 va lot daftari** (G6; avval kod bilan tasdiqlanadi): "Zarar deb yopildi" / "Kompensatsiya qilindi" da
   yo'qolgan dona partiyadan chiqadi (F51 dagi kabi), "Topildi" da qaytadi — zarar ham, tannarx ham bir marta.
 - [ ] TM9.5 **Jim xatolar** (G7, G8): trekli kargo puli — xaridda "Kargo" bor bo'lsa rad (`cargo_twice`), qayta yuborish
