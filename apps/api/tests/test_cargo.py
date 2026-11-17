@@ -327,3 +327,59 @@ def test_shipments_pagination(world: World) -> None:
     assert last["page"] == first["pages"] and last["total"] == total
     seen = {x["id"] for x in first["items"]} | {x["id"] for x in last["items"]}
     assert len(seen) == len(first["items"]) + len(last["items"])
+
+
+def test_tracked_resend_does_not_write_twice(world: World) -> None:
+    """TM9.5 (G7): trekli kargo puli qayta yuborilsa (ikki bosish, tarmoq qayta urinishi) — ikkinchi "Kargo" yozilmaydi."""
+    w = world
+    pid = quick(w, "Takror", 4)
+    body: dict[str, Any] = {"currency": "UZS", "rows": [{"purchase_id": pid, "amount": "40000"}]}
+    ok(send(w, "POST", "cargo-pool/tracked", **body), 201)
+    r = send(w, "POST", "cargo-pool/tracked", **body)
+    assert r.status_code == 409 and r.json()["code"] == "cargo_twice"
+    det = ok(send(w, "GET", f"purchases/{pid}"))
+    assert len([c for c in det["components"] if c["kind"] == "cargo"]) == 1
+
+
+def test_goods_missing_flag_and_attention(world: World) -> None:
+    """TM9.5 (G8): tovar summasi kiritilmagan xarid — "tovar summasi kiritilmagan" (taxminiy) qatorda va "Diqqat"da."""
+    w = world
+    det = ok(
+        send(
+            w,
+            "POST",
+            "purchases/quick",
+            "warehouse",  # omborchi summasiz yaratadi
+            title="Summasiz",
+            lines=[{"item_id": str(w.ids["item"]), "qty": 3}],
+            ordered_on="2026-10-01",
+        ),
+        201,
+    )
+    pid = det["purchase"]["id"]
+    det = ok(send(w, "GET", f"purchases/{pid}"))
+    assert (
+        "goods_missing" in det["lines"][0]["flags"] and "goods_missing" in det["purchase"]["flags"]
+    )
+    from datetime import UTC, datetime
+
+    w.a.recalc(datetime.now(UTC))
+    dash = ok(send(w, "GET", "dashboard?start=2026-10-01&end=2026-10-31"))
+    assert dash["attention"]["goods_missing"] >= 1
+    before = dash["attention"]["goods_missing"]
+    ok(
+        send(
+            w,
+            "POST",
+            f"purchases/{pid}/components",
+            kind="goods",
+            amount="30000",
+            currency="UZS",
+        ),
+        201,
+    )
+    det = ok(send(w, "GET", f"purchases/{pid}"))
+    assert "goods_missing" not in det["lines"][0]["flags"]
+    w.a.recalc(datetime.now(UTC))
+    dash = ok(send(w, "GET", "dashboard?start=2026-10-01&end=2026-10-31"))
+    assert dash["attention"]["goods_missing"] == before - 1

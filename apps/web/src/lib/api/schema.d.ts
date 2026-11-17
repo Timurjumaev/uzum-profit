@@ -1465,7 +1465,8 @@ export interface paths {
         /**
          * Save Tracked
          * @description Trekli kargo puli: har qatorga xaridning o'z "Kargo" xarajati (xarid ichida dona bo'yicha). Hammasi yoki hech
-         *     biri (bitta tranzaksiya).
+         *     biri (bitta tranzaksiya). Xaridda "Kargo" xarajati allaqachon bo'lsa — rad (``cargo_twice``, TM9.5): qayta yuborish
+         *     (ikki bosish, tarmoq qayta urinishi) ikkinchi xarajat yozmaydi.
          */
         post: operations["save_tracked_api_v1_orgs__org_id__cargo_pool_tracked_post"];
         delete?: never;
@@ -1902,6 +1903,11 @@ export interface components {
              * @default 0
              */
             receiving: number;
+            /**
+             * Goods Missing
+             * @default 0
+             */
+            goods_missing: number;
         };
         /** AuditOut */
         AuditOut: {

@@ -18,6 +18,7 @@ const ORDER = [
   "return_unmatched",
   "historical",
   "not_received",
+  "goods_missing",
   "cargo_missing",
   "base_fallback",
   "market_rate",

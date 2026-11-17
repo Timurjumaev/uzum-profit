@@ -671,6 +671,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- TM9.5 (ADR-068 (5)) Jim xatolar: trekli kargo puli qayta yuborilsa (ikki bosish, tarmoq qayta urinishi) ikkinchi "Kargo"
+  xarajati yozilmaydi — `cargo_twice` (409), xaridlar qulflanadi; tovar summasi kiritilmagan xarid — yangi F22 belgisi
+  "tovar summasi kiritilmagan" (`goods_missing`, taxminiy), xarid sahifasida va bosh sahifa "Diqqat" blokida.
 - TM9.3 (ADR-068 (3)) Ta'minot butunligi: Uzumga jo'natilgan, boshqa SKU'ga o'tkazilgan yoki hisobdan chiqarilgan donasi bor
   xarid va qator o'chirilmaydi, SKU'si almashtirilmaydi, sanalgan soni shulardan kamga tushmaydi, sanash sanasi o'chirilmaydi
   (`units_dispatched` / `units_transferred` / `units_written_off`, 409 — sababi va yo'li bilan); jo'natilgan dona boshqa SKU'ga

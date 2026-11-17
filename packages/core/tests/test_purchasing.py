@@ -860,3 +860,17 @@ def test_receiving_loss() -> None:
     assert receiving_loss(3, uzs("10000"), uzs("50000")) == uzs("0")
     with pytest.raises(PurchaseError):
         receiving_loss(-1, uzs("1"))
+
+
+def test_goods_missing_flag_when_no_goods_share() -> None:
+    """TM9.5 (F22): tovar summasi kiritilmagan xarid (yoki tovar xarajati boshqa qatorga) — "tovar summasi kiritilmagan",
+    taxminiy; tannarx raqami o'zgarmaydi (faqat belgi)."""
+    lines = (PurchaseLine("a", 10, received_qty=10), PurchaseLine("b", 5, received_qty=5))
+    cargo = CostComponent(K.CARGO, uzs(15_000), None, B.UNITS)
+    a, b = compute_lots(Purchase("p", lines, (cargo,)))
+    assert Flag.GOODS_MISSING in a.flags and Flag.GOODS_MISSING in b.flags
+    assert a.estimated and a.total == uzs(10_000)
+    goods_a = CostComponent(K.GOODS, uzs(50_000), None, B.UNITS, line_ids=("a",))
+    a, b = compute_lots(Purchase("p", lines, (goods_a, cargo)))
+    assert Flag.GOODS_MISSING not in a.flags and Flag.GOODS_MISSING in b.flags
+    assert Flag.GOODS_MISSING not in INFO_FLAGS
