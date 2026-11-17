@@ -451,3 +451,44 @@ ruxsati **bor**: yo'riqnomaga kiradi va ishonch va'dasini texnik kafolatga aylan
 bir nechta yoki hamma do'konga beriladi. D18 — o'zgarmadi: rasmiy API hujjatida uchinchi tomon servislari haqida hech
 narsa yo'q; Uzumdan yozma javob sharti kuchda.
 
+## 17. Ta'minot qayta loyihasining (ADR-061, TM1–TM8) tanqidiy tahlili (2026-11-17)
+
+Temur savoli: "hammasi biz xohlagandek bo'lganmi?" ADR-061 (§0–§12) va 02 (M9, M10, F20, F21, F51, F52) bajarilgan kod
+bilan solishtirildi: `upcore/purchasing.py`, `calc/lots.py`, `routes/` (`purchases`, `counting`, `cargo`, `warehouse`,
+`dispatches`, `receiving`), `reports/` (`dispatch`, `receiving`, `stock`, `purchases`). Qaror — ADR-068; tuzatishlar — 05
+TM9. **Kod o'zgarmadi. Ilova ishga tushirib ko'rilmadi, real ma'lumot ko'rilmadi** — topilmalar kodni o'qishdan; real
+hayotda qanchalik uchrashi Temurning javoblariga bog'liq (pastda).
+
+**Qisqa javob:** kiritish qismi (tez xarid, kargo puli jadvali, sanash, uch holat, F20 taqsimoti) ADR-061 dagidek
+qurilgan. Muammolar **Omborimdan keyin** boshlanadi: Uzumga jo'natish va qabul farqi faqat "ideal yo'l"da to'g'ri ishlaydi
+(postavka aynan dasturdagi Excel bilan, o'zgarishsiz yaratiladi va Uzum bir yo'la qabul qiladi).
+
+| ID | Xavf | Topilma | Dalil | Nima qilindi (05) |
+|---|---|---|---|---|
+| G1 | Y | **Dastursiz yaratilgan postavka Omborimni buzadi.** Dona Omborimdan faqat jo'natma (Excel) orqali chiqadi. Postavka kabinetda to'g'ridan-to'g'ri yaratilsa — yo'lda paytida Omborimdan vaqtincha ayiriladi (ADR-034), Uzum **qabul qilgach esa qaytib qo'shiladi**: tovar ham Uzumda, ham Omborimda. Keyin bog'lab ham bo'lmaydi (nomzod — faqat Exceldan keyin yaratilgan postavka). "Uzumga yuborish" signali va "hamma joydagi tovar" (F26) noto'g'ri — buyurtma signali kechikadi | `reports/stock.py` `CLOSED_INVOICES` (ichida `ACCEPTED`), `inbound_by_sku`; `reports/dispatch.py` `candidates` | TM9.1 |
+| G2 | Y | **Avtomatik bog'lanish mo'rt:** jo'natma va postavkaning SKU to'plami **aynan teng** bo'lishi shart. Kabinetda bitta SKU olib tashlansa, Uzum shtrix-kodni qabul qilmasa (08 §4), postavka ikkiga bo'linsa yoki ikki Excel bitta postavkaga birlashsa — nomzod yo'q, jo'natma "Jo'natilmoqda"da qoladi; qo'lda tanlash ham faqat nomzodlar ichidan | `dispatch.candidates` (`inv_skus == want`) | TM9.1 |
+| G3 | Y | **Qabul farqi Excel soni bilan solishtiriladi, postavkada e'lon qilingan son (`quantityToStock`) bilan emas.** Sotuvchi kabinetda sonni kamaytirsa (100 o'rniga 80 yuborsa) — farq "−20" chiqadi va faqat ikki tanlov: "Uzum yo'qotdi" yoki "Men sanashda adashganman". Ikkalasi ham noto'g'ri: 20 dona omborda turibdi. "Adashganman" tanlansa xarid soni kamayadi va tannarx **oshadi**. F33 ning o'zi "e'lon − qabul" deydi | `reports/receiving.py` (`shipped` — `fbo_dispatch_items`), `routes/receiving.py` `resolve` | TM9.2 |
+| G4 | Y | **Qabul bosqichma-bosqich, farq esa darhol chiqadi.** Uzum postavkani bir necha kunda qabul qiladi (ADR-055: 719 dona, ertasiga yana 25; shartnoma 4.6: 24 soatdan 7 kungacha). Postavka `ACCEPTED` bo'lishi bilan farq, "Diqqat" va Telegram xabari chiqadi — sotuvchi Uzum hali tugatmagan qabul bo'yicha qaror qiladi; keyin son o'zgarsa teskari farq paydo bo'ladi | `receiving.diffs` (`arrival_day` bo'lishi bilan); `upapi.notify.receiving_shortages`; ADR-055; 08 §9 | TM9.2 |
+| G5 | Y | **Himoya yo'q:** jo'natilgan yoki farqi hal qilingan xaridni o'chirish, qatorni o'chirish, sanalgan sonni jo'natilgandan kamga tushirish, qator SKU'sini almashtirish mumkin. M10 qabul mezoni (Omborimda + Jo'natilmoqda + Uzumda + o'tkazilgan + hisobdan chiqarilgan = sog' dona) buziladi, manfiy qoldiq esa 0 qilib ko'rsatiladi — xato ko'rinmaydi | `routes/purchases.py` `delete_purchase`, `update_line`, `delete_line`; `routes/counting.py` (faqat o'tkazma tekshiriladi); `max(0, …)` | TM9.3 |
+| G6 | O' | **"Uzum yo'qotdi" zarari yoziladi, lot donasi esa kamaymaydi.** Kamomad "Zarar" deb yopilganda F52 foyda hisobiga tushadi, lekin partiya daftaridan dona chiqmaydi (keyin topilgan brakda — F51 — chiqadi). Natija: keyingi sotuvlar tannarxi bir partiyaga siljiydi, oxirgi partiyada "sotilmaydigan" dona va ortiqcha ombor qiymati qoladi | `routes/receiving.py` (faqat `receiving_diffs`), `calc/costs.py` (faqat `stock_moves`) — **tasdiqlash kerak** | TM9.4 |
+| G7 | O' | **Trekli kargo puli ikki marta yozilishi mumkin:** "ikki marta emas" tekshiruvi faqat kodli quti uchun; trekli saqlash qayta yuborilsa (ikki bosish, tarmoq qayta urinishi) — ikkinchi "Kargo" xarajati | `routes/cargo.py` `save_tracked` | TM9.5 |
+| G8 | O' | **Tovar summasi kiritilmagan xarid belgisiz:** summa ixtiyoriy (omborchi summasiz yaratadi). Lot tannarxi 0 yoki faqat kargo bo'lib qoladi, "taxminiy" belgisi yo'q — foyda oshib ko'rinadi (tamoyil 9) | `routes/purchases.py` (`paid_amount` — ixtiyoriy); F22 belgilari ro'yxati | TM9.5 |
+| G9 | O' | **Umuman kelmagan tovar puli boshqa tovarga yuklanadi.** Bitta xaridda ikki xil tovar, biri butunlay kelmasa (yoki hammasi brak) — uning summasi shu xariddagi boshqa tovar tannarxiga qo'shiladi. ADR-061 §6 "kam kelsa tannarx oshadi" — bitta tovar ichida mantiqli, tovarlar orasida — buzadi | `upcore.purchasing._compute_lots` (`qty > 0` qatorlar) | TM9.6 (qaror) |
+| G10 | O' | **Qaytarilgan summa hamma tovarga yoyiladi.** Sotuvchi bitta tovar uchun pul qaytarsa ham, summa xariddagi hamma qatorga mutanosib ayriladi — kelmagan tovar tannarxi baland qoladi, boshqasiniki asossiz tushadi | `upcore.purchasing._apply_refund` | TM9.6 (qaror) |
+| G11 | O' | **Excel'dagi tannarx tahrirlanmaydi, noma'lum bo'lsa 0.** ADR-050: "sotuvchi o'zgartira oladi" — bajarilmagan. Kargo puli hali kiritilmagan partiyada tannarx past ketadi; Uzum yo'qotilgan tovarni shu raqamdan qoplashi mumkin (§12 B6 — tasdiqlanmagan) | `routes/dispatches.py` (`DispatchIn` — faqat SKU va son; `else 0`) | TM9.7 |
+| G12 | O' | **"Ikkiga bo'lish" faqat sanashdan oldin.** Sotuvchi kelgan qismni sanab saqlagan bo'lsa (tabiiy tartib) — bo'lish rad etiladi; sanashni bekor qilish yo'li ilovada topilmadi | `routes/counting.py` (`split_counted`) | TM9.7 |
+| G13 | P | **"Tovar qo'limda":** tovardagi qadoq qo'shimchasi qatorga nusxalanmaydi (sanashda nusxalanadi); brak kiritish qadami yo'q — kelgan son avtomatik buyurtma soniga teng | `routes/purchases.py` `quick` | TM9.7 |
+| G14 | P | Qabul qilingan postavkaga bog'langan jo'natmani bekor qilsa bo'ladi — donalar Omborimga "qaytadi" | `routes/dispatches.py` `cancel_dispatch` | TM9.3 |
+| G15 | P | Kamomad ro'yxatida da'vo muddati yo'q: shartnoma 4.13 — nomuvofiqlik dalolatnomasiga 30 kun ichida e'tiroz bildiriladi | 08 §9; `routes/receiving.py` | TM9.2 |
+| G16 | O' | F25 ning ikkinchi bo'lagi (jo'natma → savdoga chiqqan kun) o'rganilmaydi — §12 B1 da yozilgan | §12 B1 | B5.1 |
+
+**Yaxshi chiqqan joylar (o'zgartirilmaydi):** F20 taqsimoti tiyinigacha aniq (qoldiq eng katta qatorga); holatlar hosila —
+qo'lda bosilmaydi; kodli quti ulushlari sanashda o'zi qayta bo'linadi, qo'lda yozilgani saqlanadi; "Boshqa SKU'ga
+o'tkazish" tannarxi bilan; kargo puli jadvalida to'lov sanasi standarti — bugun (kurs to'g'ri kundan); eski xaridlar
+hisobiga tegilmagan.
+
+**Temurdan kerak (uch javob — topilmalarning real og'irligini shular belgilaydi):**
+1. Postavkani **har doim** dasturdagi "Jo'natish" Excel'i orqali yaratasanmi, yoki ba'zan to'g'ridan-to'g'ri kabinetda? Excel yuklangach kabinetda sonni yoki tovarlarni o'zgartirasanmi? (G1–G3)
+2. "Omborim" sahifasidagi 3–5 ta SKU soni qo'lingdagi haqiqiy tovar bilan mosmi? (G1, G5)
+3. Yangi oynalarda kiritish — xarid, kargo puli, sanash — tezligi seni qoniqtiradimi; qaysi qadam hali ham ortiqcha? (ADR-061 ning asosiy maqsadi — buni koddan bilib bo'lmaydi)
+

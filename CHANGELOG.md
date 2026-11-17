@@ -456,6 +456,9 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
   mezon bilan, mijoz suhbatlari beta kirish suhbatiga birlashdi, B9.6 (begona ma'lumotda sifat hisoboti, "Keyinga" ro'yxatlarini
   yopish), B9.7 (to'lashga tayyorlik); B10 — chiqish va barqarorlik + shartli nomzodlar jadvali. ADR-066 tasdiqlandi; B7.4 —
   "Keyinga".
+- Ta'minot (ADR-061, TM1–TM8) tanqidiy tahlili (ADR-068, faqat hujjat): `09-audit.md` §17 — 16 topilma (G1–G16); `05` da yangi
+  TM9 (postavka ↔ jo'natma har qanday yo'lda, qabul farqi e'lon qilingan songa va qabul tugagach, butunlik himoyasi, F52 va lot
+  daftari, jim xatolar); tartib — B6.4 → TM9 → B5.1.
 
 ### O'zgartirildi
 

@@ -994,10 +994,49 @@ Har vazifa — alohida branch va PR; tafsilot 07 "ADR-061 tafsiloti", 02 M9–M1
   (buyurtma sanasi va eski yozuvlar uchun) saqlanadi. **T:** Temur real xaridlarida butun oqimni staging'da sinaydi.
 - T: har TM dan keyin staging'da real xarid bilan sinash; noqulay joy — skrinshot bilan bir qator.
 
+### TM9. Ta'minot tuzatishlari (ADR-068, 2026-11-17 — tanqidiy tahlil: 09 §17)
+
+Kiritish qismi (xarid, kargo puli, sanash) ADR-061 dagidek; tuzatishlar **Omborimdan keyingi** qismga — jo'natish va
+qabul farqi faqat "ideal yo'l"da to'g'ri edi. Tartib: B6.4 dan keyin, **B5.1–B5.2 dan oldin** (buyurtma va yuborish rejasi
+Omborim soniga tayanadi). Har biri — alohida PR, testlar bilan; 02 (M10, F33, F52) shu vazifalarda yangilanadi.
+
+- [ ] TM9.1 **Postavka ↔ jo'natma: har qanday yo'l** (G1, G2). (a) Jo'natmasiz postavka paydo bo'lsa — "Diqqat" qatori va
+  bir bosishda "Bu postavka omborimdan ketgan" (postavka tarkibidan jo'natma yaratiladi, donalar Omborimdan chiqadi);
+  qabul qilingan postavka uchun ham. (b) Bog'lash sharti yumshaydi: SKU to'plami aynan teng bo'lmasa ham nomzod
+  ko'rsatiladi (umumiy SKU'lar ulushi bilan), sotuvchi tasdiqlaydi; qo'lda tanlash — do'konning bog'lanmagan hamma
+  postavkasidan. (c) Bog'langanda jo'natma tarkibi postavkadagi **e'lon qilingan** songa tenglashadi: kam e'lon qilingan
+  dona Omborimga qaytadi, jo'natmada yo'q SKU qo'shiladi (Omborimda bo'lsa) — sotuvchiga ko'rsatiladi.
+- [ ] TM9.2 **Qabul farqi — e'lon qilingan songa va qabul tugagach** (G3, G4, G15). Farq = e'lon qilingan
+  (`quantityToStock`) − qabul qilingan (F33 dagidek). Farq va xabar postavka `ACCEPTED` bo'lgandan keyin **7 kun**
+  (shartnoma 4.6) yoki qabul soni e'longa yetganda chiqadi — undan oldin "qabul davom etmoqda: 719 / 744". "Uzum
+  yo'qotdi" qatorida da'vo muddati (30 kun, shartnoma 4.13). "Men sanashda adashganman" tanlovida oqibat oldindan
+  ko'rsatiladi ("xarid soni N ga kamayadi, tannarx X dan Y ga o'zgaradi").
+- [ ] TM9.3 **Butunlik himoyasi** (G5, G14): jo'natilgan, o'tkazilgan, hisobdan chiqarilgan yoki farqi hal qilingan donasi bor
+  xarid va qator — o'chirilmaydi; sanalgan son shulardan kamga tushmaydi; SKU almashtirilmaydi (sababi aytiladi, yo'l
+  ko'rsatiladi). Qabul qilingan postavkaga bog'langan jo'natma bekor qilinmaydi. M10 mezoni — har SKU uchun avtomatik
+  test va `realcheck supply` bo'limi (manfiy qoldiq 0 ga qisilmaydi — xato sifatida ko'rsatiladi).
+- [ ] TM9.4 **F52 va lot daftari** (G6; avval kod bilan tasdiqlanadi): "Zarar deb yopildi" / "Kompensatsiya qilindi" da
+  yo'qolgan dona partiyadan chiqadi (F51 dagi kabi), "Topildi" da qaytadi — zarar ham, tannarx ham bir marta.
+- [ ] TM9.5 **Jim xatolar** (G7, G8): trekli kargo puli — xaridda "Kargo" bor bo'lsa rad (`cargo_twice`), qayta yuborish
+  takror yozmaydi; tovar summasi kiritilmagan xarid — yangi F22 belgisi "tovar summasi kiritilmagan" (taxminiy),
+  xarid sahifasida va "Diqqat"da.
+- [ ] TM9.6 **Qaror kerak — Temur** (G9, G10; F20 o'zgaradi): (a) umuman kelmagan (yoki to'liq brak) tovar puli — boshqa
+  tovarlarga yuklansinmi (hozirgidek) yoki alohida "Kelmagan tovar zarari" qatori bo'lsinmi (qaytarilgan summa undan
+  ayriladi); (b) qaytarilgan summa — hamma tovarga mutanosibmi (hozirgidek) yoki sanashda qaysi qator uchunligi
+  ko'rsatilsinmi (standart: kam kelgan qatorlarga). Tavsiya: ikkalasida ikkinchi variant.
+- [ ] TM9.7 **Mayda** (G11–G13): jo'natma qoralamasida tannarx tahrirlanadi, noma'lum yoki taxminiy bo'lsa belgi (0 emas);
+  "Ikkiga bo'lish" sanalgandan keyin ham (sanalmagan qoldiq yangi xaridga); "Tovar qo'limda" — qadoq qo'shimchasi
+  tovardan, saqlashdan oldin brak kiritish imkoni.
+- T: 09 §17 dagi uch savol; TM9.1–TM9.2 dan keyin birinchi real postavkada staging'da tekshirish.
+
+**TM9 chiqish:** Temurning bitta real postavkasi uch yo'lning har birida to'g'ri hisoblanadi — Excel bilan; Excel bilan,
+kabinetda son o'zgartirilgan; dastursiz. Har holatda "Omborim" soni qo'ldagi tovar bilan mos, qabul farqi faqat qabul
+tugagach chiqadi; M10 mezoni testi yashil.
+
 ### Qolgan B5 (ADR-063, 2026-11-16 — tanqidiy tahlil: 09 §12)
 
 **Tartib** (qiymat va bog'liqlik bo'yicha; raqamlar o'zgarmadi — kod va hujjatlardagi havolalar buzilmasin):
-B5.0b → B5.0d → *(B6.4, ADR-064)* → **B5.1** → **B5.2** → *(B6.5)* → **B5.4** (+ B5.0a) → **B5.7** → B5.6 (+ B5.0f) → B5.5 → B5.9 → B5.8.
+B5.0b → B5.0d → *(B6.4, ADR-064)* → *(TM9, ADR-068)* → **B5.1** → **B5.2** → *(B6.5)* → **B5.4** (+ B5.0a) → **B5.7** → B5.6 (+ B5.0f) → B5.5 → B5.9 → B5.8.
 
 Har vazifaga umumiy qoidalar (alohida yozilmaydi):
 - **O'lchov avval.** Real ma'lumotga tayanadigan formula (F25, F31, F32, F34, F38) uchun avval `realcheck` bo'limi
