@@ -906,6 +906,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/purchases/arrived": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark Arrived
+         * @description "Keldi" — sanashdan oldin (TM9.8): xarid "Omborimda · sanalmagan" (dona = buyurtma soni, taxminiy); lot tayyor
+         *     sanasi (F21) — keldi sanasi. Faqat sanalmagan va Uzumga yuborilmagan xaridlar (aks holda 409 ``bad_arrival``).
+         */
+        post: operations["mark_arrived_api_v1_orgs__org_id__purchases_arrived_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/purchases/{purchase_id}/copy": {
         parameters: {
             query?: never;
@@ -1880,6 +1901,22 @@ export interface components {
          */
         AllocationBase: "units" | "weight" | "volume" | "value" | "line_sum" | "manual";
         /**
+         * ArrivedIn
+         * @description TM9.8 (ADR-069): ro'yxatda bir nechta xaridni belgilab "Keldi" (sana — bugun, o'zgartiriladi); ``arrived_on``
+         *     ``null`` — "Keldi"ni bekor qilish (xarid yana "Yo'lda"; faqat sanalmagan xaridda).
+         */
+        ArrivedIn: {
+            /** Purchase Ids */
+            purchase_ids: string[];
+            /** Arrived On */
+            arrived_on?: string | null;
+        };
+        /** ArrivedOut */
+        ArrivedOut: {
+            /** Updated */
+            updated: number;
+        };
+        /**
          * AttentionOut
          * @description M4 "Diqqat talab qiladi" — sanoqlar; ro'yxatlar tegishli sahifalarda.
          */
@@ -1908,6 +1945,11 @@ export interface components {
              * @default 0
              */
             goods_missing: number;
+            /**
+             * Uncounted
+             * @default 0
+             */
+            uncounted: number;
         };
         /** AuditOut */
         AuditOut: {
@@ -1943,6 +1985,10 @@ export interface components {
          * @description Kodli quti: bitta summa bir nechta xaridga. ``title`` — shaxsiy kod yoki quti nomi.
          */
         BoxIn: {
+            /** Arrived */
+            arrived: boolean;
+            /** Arrived On */
+            arrived_on?: string | null;
             /** @default USD */
             currency: components["schemas"]["Currency"];
             /**
@@ -2431,6 +2477,11 @@ export interface components {
             rows: components["schemas"]["DraftRow"][];
             /** No Barcode */
             no_barcode: components["schemas"]["DraftRow"][];
+            /**
+             * Uncounted
+             * @default 0
+             */
+            uncounted: number;
         };
         /** DraftRow */
         DraftRow: {
@@ -2454,7 +2505,7 @@ export interface components {
          * Event
          * @enum {string}
          */
-        Event: "daily_summary" | "weekly_summary" | "stock_critical" | "loss_sales" | "uncosted_sales" | "new_fine" | "returns_spike" | "receiving_shortage" | "lost_goods" | "sync_stopped" | "payout_late" | "cargo_late" | "commission_changed" | "fbs_deadline";
+        Event: "daily_summary" | "weekly_summary" | "stock_critical" | "loss_sales" | "uncosted_sales" | "new_fine" | "returns_spike" | "receiving_shortage" | "lost_goods" | "sync_stopped" | "payout_late" | "cargo_late" | "commission_changed" | "fbs_deadline" | "uncounted_purchase";
         /**
          * ExpectedOut
          * @description F16 (ADR-037): kutilayotgan sof foyda — Jarayondagi sotuvlar qismi (mijoz hali olmagan yoki qaytarish muddati
@@ -3676,6 +3727,11 @@ export interface components {
             expected: string | null;
             /** Delayed */
             delayed: boolean;
+            /**
+             * Uncounted
+             * @default false
+             */
+            uncounted: boolean;
         };
         /** PayoutScheduleIn */
         PayoutScheduleIn: {
@@ -3945,6 +4001,13 @@ export interface components {
             state: components["schemas"]["SupplyState"];
             /** Path */
             path: components["schemas"]["PathOut"][];
+            /** Arrived On */
+            arrived_on?: string | null;
+            /**
+             * Counted
+             * @default false
+             */
+            counted: boolean;
             /** Track No */
             track_no: string | null;
             /** On Hand */
@@ -4397,6 +4460,11 @@ export interface components {
             handover_days: string;
             /** Own */
             own: number;
+            /**
+             * Uncounted
+             * @default 0
+             */
+            uncounted: number;
         };
         /** ShipmentDetailOut */
         ShipmentDetailOut: {
@@ -5404,6 +5472,10 @@ export interface components {
         };
         /** TrackedIn */
         TrackedIn: {
+            /** Arrived */
+            arrived: boolean;
+            /** Arrived On */
+            arrived_on?: string | null;
             /** @default USD */
             currency: components["schemas"]["Currency"];
             /**
@@ -5473,6 +5545,43 @@ export interface components {
             from_sku_id: string | null;
             /** From Name */
             from_name: string | null;
+        };
+        /** UncountedLine */
+        UncountedLine: {
+            /** Sku Id */
+            sku_id: string | null;
+            /** Item Id */
+            item_id: string | null;
+            /** Title */
+            title: string | null;
+            /** Shop */
+            shop: string | null;
+            /** Qty */
+            qty: number;
+        };
+        /**
+         * UncountedOut
+         * @description TM9.8 (ADR-069): "Omborimda · sanalmagan" — "Keldi" belgilangan, sanalmagan xarid (dona — buyurtma soni, ``~``).
+         */
+        UncountedOut: {
+            /**
+             * Purchase Id
+             * Format: uuid
+             */
+            purchase_id: string;
+            /** Title */
+            title: string | null;
+            /**
+             * Arrived On
+             * Format: date
+             */
+            arrived_on: string;
+            /** Days */
+            days: number;
+            /** Qty */
+            qty: number;
+            /** Lines */
+            lines: components["schemas"]["UncountedLine"][];
         };
         /**
          * UncoveredOut
@@ -5565,6 +5674,16 @@ export interface components {
             total_qty: number;
             /** Total Value */
             total_value: string | null;
+            /**
+             * Uncounted
+             * @default []
+             */
+            uncounted: components["schemas"]["UncountedOut"][];
+            /**
+             * Uncounted Qty
+             * @default 0
+             */
+            uncounted_qty: number;
         };
         /** WarehouseRow */
         WarehouseRow: {
@@ -8292,6 +8411,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PurchaseDetailOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    mark_arrived_api_v1_orgs__org_id__purchases_arrived_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArrivedIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArrivedOut"];
                 };
             };
             /** @description Validatsiya xatosi */

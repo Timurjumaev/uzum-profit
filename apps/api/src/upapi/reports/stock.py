@@ -71,7 +71,7 @@ from upapi import orgsettings
 from upapi.calc.costs import openings
 from upapi.db import models as m
 from upapi.reports import dispatch
-from upapi.reports.purchases import stage_dates
+from upapi.reports.purchases import arrival, stage_dates
 
 UZS = Currency.UZS
 WINDOW_DAYS = (
@@ -114,6 +114,7 @@ class SkuStock:
     reorder: Reorder | None
     order_by: OrderBy | None  # F27: hamma joydagi tovar bo'yicha (ADR-057 Q2)
     ship: ShipSignal | None = None  # F26 "Uzumga yuborish" (ADR-057 Q2)
+    own_uncounted: int = 0  # TM9.8: o'z omborimdagining sanalmagan qismi ("avval sanang")
     days_of_stock_all: Decimal | None = None  # hamma joydagi tovar necha kunga yetadi
 
     @property
@@ -211,6 +212,7 @@ class _Places:
     china: int = 0
     road: int = 0
     received: int = 0  # qabul qilingan, Uzumga yuborilmagan (tuzatishsiz)
+    uncounted: int = 0  # TM9.8: shundan "Keldi", sanalmagan (buyurtma soni)
     reserved: int = (
         0  # ADR-034: qabul qilinmagan postavkalarga ajratilgan (o'z omborimdan ayiriladi)
     )
@@ -282,7 +284,8 @@ async def _places(conn: AsyncConnection, items: Iterable[UUID]) -> dict[UUID, _P
         ):
             moved_out[t.source_line_id] = int(t.qty or 0)
     for r in rows:
-        state = supply_state(stage_dates(r))
+        # TM9.8: "Keldi" (sanalmagan) dona ham Omborimda — buyurtma soni bilan (taxminiy), F26.
+        state = supply_state(stage_dates(r), arrival(r))
         x = out.setdefault(r.item_id, _Places())
         cost = r.unit_cost
         if state is SupplyState.IN_TRANSIT:
@@ -293,6 +296,8 @@ async def _places(conn: AsyncConnection, items: Iterable[UUID]) -> dict[UUID, _P
             arrived = r.received_qty if r.received_qty is not None else r.ordered_qty
             qty = arrived - r.defect_qty - moved_out.get(r.line_id, 0)
             x.received += qty
+            if r.received_on is None:
+                x.uncounted += qty
             if cost is not None and qty > 0:
                 x.own_lots.append((qty, cost))
     for mv in await conn.execute(
@@ -503,6 +508,7 @@ async def load_stock(
             reorder=plan,
             order_by=order_by(as_of, cover_all, lead.total) if lead is not None else None,
             ship=ship,
+            own_uncounted=min(own, place.uncounted) if place else 0,
             days_of_stock_all=cover_all,
         )
     units = {"china": 0, "road": 0, "own": 0}

@@ -199,7 +199,11 @@ songa bo'lish va tovar qayerda ekanini ko'rsatish. Kiritish qisqa: standartlar t
 almashtirgan joylaridan tashqari.)
 
 - **Holatlar (ADR-061 §1):** **Yo'lda → Omborimda → Uzumda** — hosila, qo'lda bosilmaydi, dona darajasida ("60 Uzumda ·
-  40 Omborimda"); oraliq **Jo'natilmoqda**. Sanalar: buyurtma va sanash.
+  40 Omborimda"); oraliq **Jo'natilmoqda**. Sanalar: buyurtma, **keldi** va sanash (TM9.8, ADR-069). "Omborimda" ikki
+  qismli: **sanalmagan** ("Keldi" belgilangan; dona = buyurtma soni, `~`) va **sanalgan**. "Keldi": kargo puli
+  saqlanganda **majburiy, standartsiz** tanlov "Tovar qo'limga keldimi? Ha / Hali yo'q" ("Ha" — sana kargo to'lov sanasi,
+  o'zgartiriladi; kodli qutida qutiga yoziladi); Xaridlar ro'yxatida bir nechtasini belgilab "Keldi"; yoki sanash o'zi
+  qo'yadi. 3 kun sanalmay tursa — bir marta eslatma (bosh sahifa "Diqqat" va bildirishnoma).
 - **Xarid oynasi (§2):** bitta xarid = bitta do'kondan bitta buyurtma. Tovarlar (SKU, dona — tanlov ADR-044 bo'yicha hamma
   SKU'dan yoki "yangi tovar"), **jami to'landi** + valyuta (CNY / USD / UZS), kurs (o'sha kungi Markaziy bank kursi yoki
   sotuvchi o'zi kiritadi), trek raqami / yetkazib beruvchi / izoh — ixtiyoriy. Har xil tovar bitta buyurtmada bo'lsa —
@@ -207,7 +211,8 @@ almashtirgan joylaridan tashqari.)
   "Yo'lda". **"Tovar qo'limda"** (mahalliy xarid) — darhol sanash, kargo kutilmaydi.
 - **Kargo puli jadvali (§3):** hamma "Yo'lda" xaridlar bitta jadvalda. **Trekli** — xarid qatoriga o'z summasi (kg, trek
   ixtiyoriy). **Kodli quti** — bir nechta xarid belgilanadi, bitta summa; ulushlar **dona bo'yicha** inputlarda tayyor,
-  tahrirlanadi. Xaridda yo o'z kargo puli, yo quti. Tariflar kiritilmaydi — faqat yakuniy summa (odatda USD).
+  tahrirlanadi. Xaridda yo o'z kargo puli, yo quti (trekli summa takror yozilmaydi — `cargo_twice`). Tariflar kiritilmaydi —
+  faqat yakuniy summa (odatda USD). Saqlashda "Tovar qo'limga keldimi?" — javobsiz saqlanmaydi (TM9.8).
 - **Qo'shimcha chiqimlar (§4):** xaridga yoki kargoga istalgancha; turlar lug'ati tashkilotniki (tayyor ro'yxat + o'z
   turlari). Har birida summa, valyuta, kurs, sana.
 - **Qadoq (§5):** umumiy qadoq chiqimi — O'z xarajatlarim (M8), sanasi bo'yicha, SKU'ga bog'lanmaydi; tovarga ixtiyoriy
@@ -218,7 +223,7 @@ almashtirgan joylaridan tashqari.)
 - **Kech kiritilgan chiqim** (kargo narxi keyin chiqdi, sotuvchi pul qaytardi, son tuzatildi) — o'tgan sotuvlar tannarxi
   avtomatik qayta hisoblanadi, P&L'da "qayta hisoblandi" belgisi.
 - **Yetkazib beruvchilar va kargo kompaniyalari** — ixtiyoriy ma'lumotnoma (nom, platforma, aloqa); muddat buyurtma →
-  sanash oralig'idan o'rganiladi (F25).
+  keldi oralig'idan o'rganiladi (F25; "Keldi"si yo'q eski yozuvlarda — sanash).
 - "Qayta buyurtma" — eski xaridni nusxalash; zaxira rejasidan xarid yaratish [B5.2]. Excel import [keyinga, ADR-065].
 - Eski partiyalar shart emas: boshlash sanasidan oldingisi — boshlang'ich holat (F41, ADR-033).
 
@@ -249,7 +254,9 @@ tiyinigacha teng (qoldiq eng katta ulushga, F20); (4) sanashda son o'zgarsa birl
 Qabul mezonlari: Uzum FBO qoldig'i `quantityActive` + `quantityFbs` dan olinadi (faqat `/fbs/sku/stocks` emas);
 tezlik hisobida qoldiq 0 bo'lgan kunlar chiqarib tashlanadi; yo'qolgan tovar ishonchsiz holatda ko'rsatilmaydi;
 jo'natishda bir dona ikki Excel'ga tushmaydi; har SKU uchun Omborimda + Jo'natilmoqda + Uzumga bog'langan + o'tkazilgan +
-hisobdan chiqarilgan = sanalgan sog' dona. **Butunlik (TM9.3):** ishlatilgan (jo'natilgan, o'tkazilgan,
+hisobdan chiqarilgan = sanalgan sog' dona (TM9.8: "Omborimda · sanalmagan" qism — "Keldi" belgilangan, sanalmagan, dona
+buyurtma soni bo'yicha, taxminiy — alohida ko'rsatiladi va bu tenglamaga kirmaydi; F26 "o'z omborim"iga kiradi, Uzumga
+jo'natishga — yo'q). **Butunlik (TM9.3):** ishlatilgan (jo'natilgan, o'tkazilgan,
 hisobdan chiqarilgan) donasi bor xarid va qator o'chirilmaydi, SKU'si almashtirilmaydi, sog' donasi ishlatilganidan kamga
 tushmaydi; qabul qilingan postavka jo'natmasi bekor qilinmaydi; Omborimda manfiy qoldiq 0 ga qisilmaydi — xato sifatida
 ko'rsatiladi (`realcheck supply`).
@@ -471,9 +478,11 @@ summadan effektiv kurs. CBU serverdan ochilmasa — zaxira bozor kursi (ADR-045)
 lot narxida), brak / yo'qotish (−).
 - **FIFO** (standart): sotuv eng eski ochiq lotdan.
 - **O'rtacha** (harakatlanuvchi): yangi o'rtacha = (qoldiq qiymati + kirim qiymati) / (qoldiq + kirim).
-- Lot sotuvga tayyor sanasi = **sanash sanasi** (ADR-061; eski xaridlarda — qabul sanasi); yo'q bo'lsa kargo to'langan sana (Temurning jarayonida kargo tovar
-  qo'lga olinganda to'lanadi); ikkalasi ham yo'q bo'lsa — qabuldan keyingi bosqich sanasi ("Uzumga yuborildi" yoki
-  "Yopildi" — eng ertasi; tovar qo'lda bo'lgan; ADR-057 Q6, B4.69). Hech biri yo'q lot — "yo'lda".
+- Lot sotuvga tayyor sanasi (TM9.8, ADR-069) = **"Keldi" sanasi**; yo'q bo'lsa **sanash sanasi**; yo'q bo'lsa qabuldan
+  keyingi bosqich sanasi ("Uzumga yuborildi" yoki "Yopildi" — eng ertasi; ADR-057 Q6, B4.69). **Kargo to'lov sanasi tayyor
+  sana emas** (kargo puli tovar kelmasdan to'lanishi mumkin). **Eski yozuvlar** (TM9.8 gacha; `arrival_marked` bo'sh) —
+  avvalgidek, tiyinigacha: sanash (qabul) sanasi → kargo to'langan sana → qabuldan keyingi bosqich. Hech biri yo'q lot —
+  "yo'lda".
 - Yo'ldagi lot sotuvga faqat tayyor lotlar tugaganda ishlatiladi ("qabul belgilanmagan" belgisi: sotuv bor — demak
   tovar kelgan). Shu bilan legacy qoidasi saqlanadi: yo'ldagi partiya eski tovar sotuvlarini buzmaydi.
 - Sotuv birinchi lotdan oldin bo'lsa — birinchi lot narxi, "erta sotuv" belgisi.
@@ -498,8 +507,9 @@ hisobga olingan kunlarga (avval har SKU'da 7 ga bo'linardi — tovar qaytgan kun
 
 **F24. Zaxira kunlari** = (FBO `quantityActive` + FBS `quantityFbs`) / F23.
 
-**F25. To'liq muddat** = (buyurtma → sanash) + (sanash → Uzum savdoga chiqargan kun) — ADR-061: ikki bo'lak, xarid va
-postavka sanalaridan. (Avval: tayyorlash + Xitoy ichki + kargo yo'li + qabul/yorliq + Uzumga topshirish.) Har biri
+**F25. To'liq muddat** = (buyurtma → **keldi**) + (keldi → Uzum savdoga chiqargan kun) — ADR-061, TM9.8 (ADR-069): ikki
+bo'lak, xarid va postavka sanalaridan; "yo'l" bo'lagi keldi sanasigacha (sanashgacha kutish uni uzaytirmaydi; "Keldi"si
+yo'q eski yozuvlarda — sanash sanasigacha). (Avval: tayyorlash + Xitoy ichki + kargo yo'li + qabul/yorliq + Uzumga topshirish.) Har biri
 yetkazib beruvchi va kargo tarixidan o'rganiladi (oxirgi 5 xarid medianasi), yo'q bo'lsa sozlamadagi standart.
 
 **F26. Holat — ikki signal** (ADR-057 Q2, B4.67; ikki xil qaror — ikki xil signal):

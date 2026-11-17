@@ -46,9 +46,10 @@ export function visibleFlags(flags: readonly string[]): string[] {
 }
 
 /** Uch nuqtali Partiya yo'li (ADR-061 §1, 04 §6.2) → `Timeline`. */
-export function pathStages(marks: PathMark[], label: (state: SupplyState) => string): Stage[] {
+export function pathStages(marks: PathMark[], label: (state: SupplyState) => string, uncounted?: string): Stage[] {
   return marks.map((m) => ({
-    label: label(m.state),
+    // TM9.8: "Keldi", sanalmagan — "Omborimda · sanalmagan".
+    label: m.uncounted && uncounted ? uncounted : label(m.state),
     state: m.mark === "done" ? "done" : m.mark === "current" ? "current" : "upcoming",
     date: m.on ?? undefined,
     days: m.mark === "current" ? (m.days ?? undefined) : undefined,

@@ -7,7 +7,8 @@ Xaridning uch holati bor va ular qo'lda bosilmaydi — qilingan ishdan o'zi aniq
 
 | Holat | Qachon |
 |---|---|
-| **Yo'lda** | xarid saqlangan, tovar hali sanalmagan |
+| **Yo'lda** | xarid saqlangan, tovar hali kelmagan |
+| **Omborimda · sanalmagan** | tovar keldi ("Keldi" belgilangan), hali sanalmagan — dona buyurtma soni bo'yicha (`~`) |
 | **Omborimda** | tovar sanalgan, qo'lingizda |
 | **Uzumda** | Uzumga jo'natilgan va postavka bilan bog'langan |
 
@@ -30,6 +31,11 @@ Saqlangan zahoti xarid **Yo'lda** holatida va "1 dona ≈ … so'm" taxminiy tan
 - **Bitta quti — bir nechta xarid** bo'lsa — xaridlarni belgilang va **"Bitta qutiga birlashtirish"**: umumiy summa dona
   bo'yicha bo'linadi, istalgan ulushni qo'lda o'zgartirish mumkin (qolgani yana dona bo'yicha).
 
+Saqlashdan oldin **"Tovar qoʻlimga keldimi?"** — **Ha** yoki **Hali yoʻq** (standart yo'q, tanlamasangiz saqlanmaydi:
+kargo pulini ba'zan tovar kelmasdan to'laysiz). **Ha** — xarid **Omborimda · sanalmagan** bo'ladi (sana — kargo to'lov
+sanasi, o'zgartirsa bo'ladi); **Hali yoʻq** — xarid **Yo'lda** qoladi, tovar kelganda Xaridlar ro'yxatida belgilab
+**"Keldi"** tugmasini bosasiz.
+
 Kargo kiritilgach "Taxminiy" belgisi yo'qoladi va tannarx yangilanadi.
 
 ## 3. Sanash
@@ -40,7 +46,8 @@ taqsimlanadi.
 
 Bir qismi keyinroq keladigan bo'lsa — **"Xaridni ikkiga bo'lish"**: keladigan qism alohida xarid bo'lib qoladi.
 
-Sanalgach xarid **Omborimda** holatiga o'tadi.
+Sanalgach xarid **Omborimda** holatiga o'tadi ("Keldi" belgilanmagan bo'lsa, sanash kuni o'zi qo'yiladi). Tovar kelib,
+3 kun sanalmay tursa — bosh sahifada va Telegram'da bir marta eslatma keladi. Uzumga faqat sanalgan tovar jo'natiladi.
 
 ## 4. Omborim
 
@@ -80,4 +87,5 @@ Qabul kamomadi bo'yicha Uzum jarimasi (C000007) bo'lsa, u farq kartochkasida ko'
 
 Avvalgi bosqichli xaridlar (to'landi, Xitoy omborida, yo'lda, keldi…) o'chmaydi: holati sanalaridan aniqlanadi — qabul
 qilingan bo'lsa **Omborimda**, Uzumga yuborilgan yoki yopilgan bo'lsa **Uzumda**, qolgani **Yo'lda**. Ularning sanalari
-"Yo'lda" muddatini (kutilgan sanash sanasi) hisoblashda ishlatiladi.
+"Yo'lda" muddatini (kutilgan kelish sanasi) hisoblashda ishlatiladi. Eski "Toshkentga keldi" sanasi xaridni o'zi
+"Omborimda · sanalmagan"ga o'tkazmaydi va tannarxni o'zgartirmaydi.

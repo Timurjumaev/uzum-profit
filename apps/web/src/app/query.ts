@@ -387,6 +387,10 @@ export const cargoPoolQuery = (orgId: string, counted: boolean) =>
     queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/cargo-pool", { params: { path: { org_id: orgId }, query: { counted } } })),
   });
 
+/** TM9.8: ro'yxatda "Keldi" (bir nechta xarid; ``arrived_on`` ``null`` — bekor qilish). */
+export const markArrived = (orgId: string, body: { purchase_ids: string[]; arrived_on?: string | null }) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/purchases/arrived", { params: { path: { org_id: orgId } }, body }));
+
 export const saveTrackedCargo = (orgId: string, body: TrackedIn) =>
   unwrap(api.POST("/api/v1/orgs/{org_id}/cargo-pool/tracked", { params: { path: { org_id: orgId } }, body }));
 

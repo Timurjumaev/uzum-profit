@@ -92,6 +92,9 @@ class ShipOut(BaseModel):
     cover_days: Decimal  # Uzum + postavka zaxirasi necha kunga yetadi
     handover_days: Decimal  # F25 "Uzumga topshirish" bosqichi
     own: int  # o'z omborimdagi dona
+    uncounted: int = (
+        0  # TM9.8: shundan sanalmagan — "avval sanang" (jo'natishga faqat sanalgan dona)
+    )
 
 
 class OrderByOut(BaseModel):
@@ -223,7 +226,10 @@ def rows_for(
                 else None,
                 status=s.status,
                 ship=ShipOut(
-                    cover_days=s.ship.cover_days, handover_days=s.ship.handover_days, own=s.ship.own
+                    cover_days=s.ship.cover_days,
+                    handover_days=s.ship.handover_days,
+                    own=s.ship.own,
+                    uncounted=s.own_uncounted,
                 )
                 if s.ship
                 else None,

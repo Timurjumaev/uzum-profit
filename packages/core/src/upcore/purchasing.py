@@ -197,13 +197,26 @@ class Purchase:
     refund_rate: FxRate | None = None
     # ADR-061 §2: "Tovar qo'limda" (mahalliy xarid) — kargo kutilmaydi, "kargo kiritilmagan" belgisi chiqmaydi.
     on_hand: bool = False
+    # TM9.8 (ADR-069): "Keldi". ``arrival`` — ``None`` eski yozuv (TM9.8 gacha, eski qoida), ``False`` yangi qoida va
+    # hali kelmagan, ``True`` keldi (``arrived_date``).
+    arrival: bool | None = None
+    arrived_date: date | None = None
 
     @property
     def ready_date(self) -> date | None:
-        """F21: lot sotuvga tayyor sanasi = qabul sanasi; yo'q bo'lsa kargo to'langan sana; ikkalasi ham yo'q bo'lsa
-        qabuldan keyingi bosqich sanasi (Uzumga yuborildi / yopildi — tovar qo'lda bo'lgan; ADR-057 Q6, audit K8);
-        hech biri yo'q — ``None`` ("yo'lda")."""
-        return self.received_date or self.cargo_paid_date or self.later_date
+        """F21: lot sotuvga tayyor sanasi.
+
+        - **Yangi qoida** (TM9.8, ADR-069): "Keldi" sanasi; yo'q bo'lsa sanash sanasi; yo'q bo'lsa qabuldan keyingi
+          bosqich. Kargo to'lov sanasi tayyor sana emas — kargo puli tovar kelmasdan to'lanishi mumkin.
+        - **Eski yozuv** (``arrival is None``): qabul sanasi; yo'q bo'lsa kargo to'langan sana; ikkalasi ham yo'q bo'lsa
+          qabuldan keyingi bosqich sanasi (Uzumga yuborildi / yopildi — tovar qo'lda bo'lgan; ADR-057 Q6, audit K8) —
+          tannarx avvalgidek, tiyinigacha.
+
+        Hech biri yo'q — ``None`` ("yo'lda")."""
+        if self.arrival is None:
+            return self.received_date or self.cargo_paid_date or self.later_date
+        arrived = self.arrived_date if self.arrival else None
+        return arrived or self.received_date or self.later_date
 
 
 @dataclass(frozen=True, slots=True)
@@ -786,12 +799,16 @@ _BEFORE_COUNT: tuple[Stage, ...] = (
 )
 
 
-def supply_state(dates: Mapping[Stage, date | None]) -> SupplyState:
-    """ADR-061 §1, §11: sanalar → holat. Uzumga yuborilgan yoki yopilgan — Uzumda; sanalgan (qabul sanasi bor) —
-    Omborimda; qolgan hammasi (qoralama, buyurtma, to'landi, Xitoy omborida, yo'lda, Toshkentga keldi) — Yo'lda."""
+def supply_state(dates: Mapping[Stage, date | None], arrived: date | None = None) -> SupplyState:
+    """ADR-061 §1, §11: sanalar → holat. Uzumga yuborilgan yoki yopilgan — Uzumda; sanalgan (qabul sanasi bor) yoki
+    "Keldi" belgilangan (``arrived``, TM9.8 — "Omborimda · sanalmagan") — Omborimda; qolgan hammasi (qoralama, buyurtma,
+    to'landi, Xitoy omborida, yo'lda, eski "Toshkentga keldi" bosqichi) — Yo'lda.
+
+    ``arrived`` — faqat yangi qoida bo'yicha belgilangan "Keldi" (eski bosqich sanasi emas). Sanalgan donaga tayanadigan
+    hisoblar (Omborim, jo'natish, M10) ``arrived`` siz chaqiradi — ular uchun Omborimda = sanalgan."""
     if dates.get(Stage.SENT_TO_UZUM) is not None or dates.get(Stage.CLOSED) is not None:
         return SupplyState.AT_UZUM
-    if dates.get(Stage.RECEIVED) is not None:
+    if dates.get(Stage.RECEIVED) is not None or arrived is not None:
         return SupplyState.IN_STOCK
     return SupplyState.IN_TRANSIT
 
@@ -802,12 +819,13 @@ def transit_start(dates: Mapping[Stage, date | None]) -> date | None:
     return dates.get(Stage.ORDERED) or (min(known) if known else None)
 
 
-def transit_days(dates: Mapping[Stage, date | None]) -> int | None:
-    """F25 o'rganish (ADR-061): buyurtma → sanash kunlari (ikkala sana bor va tartib to'g'ri bo'lsa)."""
-    start, counted = transit_start(dates), dates.get(Stage.RECEIVED)
-    if start is None or counted is None or counted < start:
+def transit_days(dates: Mapping[Stage, date | None], arrived: date | None = None) -> int | None:
+    """F25 o'rganish (ADR-061, TM9.8): buyurtma → **keldi** kunlari (``arrived``; yo'q bo'lsa sanash — eski yozuvlar),
+    ikkala sana bor va tartib to'g'ri bo'lsa. Sanashgacha kutish yo'l muddatini uzaytirmaydi."""
+    start, end = transit_start(dates), arrived or dates.get(Stage.RECEIVED)
+    if start is None or end is None or end < start:
         return None
-    return (counted - start).days
+    return (end - start).days
 
 
 @dataclass(frozen=True, slots=True)
@@ -821,6 +839,7 @@ class PathMark:
     days: int | None = None
     expected: date | None = None
     delayed: bool = False
+    uncounted: bool = False  # TM9.8: "Omborimda · sanalmagan" (keldi, hali sanalmagan)
 
 
 def supply_path(
@@ -828,11 +847,13 @@ def supply_path(
     today: date,
     transit_lead: Decimal | None = None,
     started: date | None = None,
+    arrived: date | None = None,
 ) -> list[PathMark]:
-    """Partiya yo'li (ADR-061 §1): Yo'lda → Omborimda → Uzumda. ``transit_lead`` — buyurtma → sanash muddati (F25:
+    """Partiya yo'li (ADR-061 §1): Yo'lda → Omborimda → Uzumda. ``transit_lead`` — buyurtma → keldi muddati (F25:
     tashkilot tarixidan median yoki standart; noma'lum bo'lsa kutilgan sana yo'q — raqam o'ylab topilmaydi).
-    ``started`` — buyurtma sanasi yo'q xaridda "Yo'lda" boshlanishi (yaratilgan kun)."""
-    state = supply_state(dates)
+    ``started`` — buyurtma sanasi yo'q xaridda "Yo'lda" boshlanishi (yaratilgan kun). ``arrived`` — "Keldi" (TM9.8):
+    sanalmagan bo'lsa "Omborimda" nuqtasi ``uncounted``."""
+    state = supply_state(dates, arrived)
     start = transit_start(dates) or started
     counted = dates.get(Stage.RECEIVED)
     sent = dates.get(Stage.SENT_TO_UZUM) or dates.get(Stage.CLOSED)
@@ -856,6 +877,11 @@ def supply_path(
     at_uzum = state is SupplyState.AT_UZUM
     return [
         PathMark(SupplyState.IN_TRANSIT, "done", start),
-        PathMark(SupplyState.IN_STOCK, "done" if at_uzum else "current", counted),
+        PathMark(
+            SupplyState.IN_STOCK,
+            "done" if at_uzum else "current",
+            arrived or counted,
+            uncounted=counted is None and not at_uzum,
+        ),
         PathMark(SupplyState.AT_UZUM, "current" if at_uzum else "upcoming", sent),
     ]

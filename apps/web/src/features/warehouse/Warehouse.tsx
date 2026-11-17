@@ -139,12 +139,35 @@ export function Warehouse() {
         <Banner tone="negative" title={errorText(query.error, t)} action={<Button onClick={() => void query.refetch()}>{t("common.retry")}</Button>} />
       ) : !query.data ? (
         <Skeleton label={t("common.loading")} lines={6} />
-      ) : query.data.items.length === 0 ? (
+      ) : query.data.items.length === 0 && query.data.uncounted.length === 0 ? (
         <EmptyState title={t("warehouse.empty")} text={t("warehouse.emptyText")} />
       ) : (
-        <div className="purchases__panel">
-          <DataTable caption={t("warehouse.title")} mobileList columns={columns} rows={query.data.items} rowKey={(r) => r.key} />
-        </div>
+        <>
+          {query.data.uncounted.length > 0 && (
+            <section className="warehouse__uncounted" aria-label={t("warehouse.uncounted.title", { count: query.data.uncounted_qty })}>
+              <h2 className="h3">{t("warehouse.uncounted.title", { count: query.data.uncounted_qty })}</h2>
+              <p className="caption">{t("warehouse.uncounted.lead")}</p>
+              <ul className="warehouse__uncounted-list">
+                {query.data.uncounted.map((p) => (
+                  <li key={p.purchase_id}>
+                    <Link to="/purchases/$purchaseId" params={{ purchaseId: p.purchase_id }}>
+                      {p.title ?? t("purchases.untitled")}
+                    </Link>{" "}
+                    <span className="caption">
+                      {[`~${t("cargo.units", { count: p.qty })}`, t("warehouse.uncounted.since", { date: f.date(p.arrived_on), count: p.days }), p.lines.map((x) => x.title ?? untitled).join(", ")].join(" · ")}
+                    </span>{" "}
+                    {p.days >= 3 && <Badge tone="warning">{t("warehouse.uncounted.late")}</Badge>}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+          {query.data.items.length > 0 && (
+            <div className="purchases__panel">
+              <DataTable caption={t("warehouse.title")} mobileList columns={columns} rows={query.data.items} rowKey={(r) => r.key} />
+            </div>
+          )}
+        </>
       )}
       {editing?.kind === "transfer" && <TransferDialog orgId={org.id} row={editing.row} onClose={() => setEditing(null)} onSaved={() => void refresh(t("warehouse.transfer.saved"))} />}
       {editing?.kind === "defect" && <DefectDialog orgId={org.id} row={editing.row} onClose={() => setEditing(null)} onSaved={() => void refresh(t("warehouse.defect.saved"))} />}

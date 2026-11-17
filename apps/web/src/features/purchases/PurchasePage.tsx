@@ -20,7 +20,7 @@ import { LineForm } from "./LineForm";
 import { SplitForm } from "./SplitForm";
 import { isEstimated, isInfoFlag, pathStages, visibleFlags } from "./model";
 import { PurchaseForm } from "./PurchaseForm";
-import { MANAGE_ROLES } from "./Purchases";
+import { MANAGE_ROLES, stateLabel } from "./Purchases";
 
 type Editing = { kind: "header" } | { kind: "count" } | { kind: "split" } | { kind: "delete" } | { kind: "line"; line: PurchaseLine | null } | { kind: "component"; component: CostComponent | null };
 
@@ -193,7 +193,7 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
         <div>
           <h1 className="h2">{p.title ?? t("purchases.untitled")}</h1>
           <p className="caption">
-            <Badge tone={p.state === "at_uzum" ? "positive" : p.state === "in_stock" ? "info" : "neutral"}>{t(`purchases.state.${p.state}`)}</Badge>
+            <Badge tone={p.state === "at_uzum" ? "positive" : p.state === "in_stock" ? "info" : "neutral"}>{stateLabel(t, p.state, p.counted)}</Badge>
             {p.units_at_uzum > 0 && ` · ${t("purchases.atUzum", { count: p.units_at_uzum })}`}
             {p.units_sending > 0 && ` · ${t("purchases.sending", { count: p.units_sending })}`}
             {p.track_no && ` · ${t("purchases.trackShort", { track: p.track_no })}`}
@@ -263,7 +263,7 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
           )}
         </div>
         <div className="purchase__timeline">
-          <Timeline label={t("purchases.path")} stages={pathStages(p.path, (s) => t(`purchases.state.${s}`))} />
+          <Timeline label={t("purchases.path")} stages={pathStages(p.path, (s) => t(`purchases.state.${s}`), t("purchases.uncounted"))} />
         </div>
         <p className="caption">{t("purchases.pathNote")}</p>
         {p.history.some((h) => h.stage !== "ordered" && h.stage !== "received") && (

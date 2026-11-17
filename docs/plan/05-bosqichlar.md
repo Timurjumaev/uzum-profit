@@ -1043,7 +1043,7 @@ Omborim soniga tayanadi). Har biri — alohida PR, testlar bilan; 02 (M10, F33, 
 - [ ] TM9.7 **Mayda** (G11–G13): jo'natma qoralamasida tannarx tahrirlanadi, noma'lum yoki taxminiy bo'lsa belgi (0 emas);
   "Ikkiga bo'lish" sanalgandan keyin ham (sanalmagan qoldiq yangi xaridga); "Tovar qo'limda" — qadoq qo'shimchasi
   tovardan, saqlashdan oldin brak kiritish imkoni.
-- [ ] TM9.8 **"Keldi" — sanashdan oldin** (Temur, 2026-11-17: "avval omborga keladi, keyin sanaladi"; ADR-069 — tasdiqlandi,
+- [x] TM9.8 **"Keldi" — sanashdan oldin** (Temur, 2026-11-17: "avval omborga keladi, keyin sanaladi"; ADR-069 — tasdiqlandi,
   kargo puli bo'yicha tuzatish bilan). Hozir "Omborimda"ga faqat sanash bilan o'tiladi — tovar kelgan, lekin sanalmagan kunlarda u dasturda
   "Yo'lda" turadi: buyurtma signali (F26) va "hamma joydagi tovar" baribir to'g'ri, lekin muddat (F25) sanash kunigacha
   cho'ziladi, sotuvchi esa qayerda nima borligini ko'rmaydi. Yechim — holatlar soni o'zgarmaydi (uchta), "Omborimda"
@@ -1067,6 +1067,17 @@ Omborim soniga tayanadi). Har biri — alohida PR, testlar bilan; 02 (M10, F33, 
     staging'da faqat o'qish so'rovi: bunday xaridlar bormi; bor bo'lsa — ular "Omborimda · sanalmagan"ga o'tadi, lot va
     sotuv tannarxlari oldin-keyin solishtiriladi (tiyinigacha bir xil bo'lishi shart — F21 tayyor sanasi kargo to'lov
     sanasidan olinayotgan bo'lsa o'zgarmaydi).
+  - ✓ 2026-11-17: migratsiya 0031 — `purchases.arrival_marked` (NULL — eski yozuv: holat va F21 avvalgidek, tiyinigacha;
+    `false` — hali kelmagan; `true` — keldi, sana `arrived_on`). Yadro: `supply_state(..., arrived)`, `transit_days`
+    (buyurtma → keldi), `supply_path` (`uncounted`), `Purchase.ready_date` (keldi → sanash → keyingi bosqich; kargo
+    to'lovi faqat eski yozuvda). API: kargo puli `arrived` majburiy (+ `arrived_on`; kodli qutida `shipments.arrived_on`),
+    `POST /purchases/arrived` (bir nechta; `null` — bekor), sanash o'zi qo'yadi; xarid `arrived_on`, `counted`; Omborim
+    `uncounted` bo'limi (sanalgan qoldiq va M10 o'zgarmaydi); jo'natma qoralamasida `uncounted`; F26 joylari va
+    "Uzumga yuborish" `uncounted` ("avval sanang"); "Diqqat" `uncounted`; bildirishnoma `uncounted_purchase` (3 kun, bir
+    marta). Eski "Toshkentga keldi" sanali sanalmagan xaridlar — avtomatik o'tkazilmaydi: `realcheck` → `supply.legacy_arrived`
+    (faqat o'qish) — Temur staging'da tekshiradi, bor bo'lsa alohida qaror. Web: kargo puli oynasida "Ha / Hali yo'q",
+    Xaridlar ro'yxatida "Keldi", "Omborimda · sanalmagan", Omborimda bo'lim, qoralamada eslatma. Testlar: yadro, API
+    (`test_arrival.py`), web, e2e (360 px), vizual.
 - T: TM9.1–TM9.2 dan keyin birinchi real postavkada staging'da tekshirish (uch yo'l: Excel bilan; Excel, keyin kabinetda son
   o'zgartirilgan; to'g'ridan-to'g'ri kabinetda). TM9.8 dan keyin — bitta real kargoda "Keldi → sanash" tartibi.
 

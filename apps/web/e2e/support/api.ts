@@ -302,11 +302,11 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
         sources: transfers ? [] : [{ line_id: `f000000${n}-0000-4000-8000-000000000000`, purchase_id: PURCHASE_1, purchase_title: "Oktabr partiyasi", counted_on: "2026-10-20", qty, unit_cost: "18500.00" }],
         transfers_in: transfers ? [{ line_id: `f900000${n}-0000-4000-8000-000000000000`, purchase_id: PURCHASE_1, qty, from_sku_id: "a0000001-0000-4000-8000-000000000000", from_name: "AIRGILOF-RANG-1" }] : [],
       });
-      return json(route, 200, { items: [row(1, "byDurii", "AIRGILOF-RANG-1", 70), row(2, "EL-ONE", "AIRGILOF-RANG-2", 30, true)], amounts: true, total_qty: 100, total_value: "1850000.00" });
+      return json(route, 200, { items: [row(1, "byDurii", "AIRGILOF-RANG-1", 70), row(2, "EL-ONE", "AIRGILOF-RANG-2", 30, true)], amounts: true, total_qty: 100, total_value: "1850000.00", uncounted: [], uncounted_qty: 0 });
     }
     if (key === `GET /orgs/${ORG_ID}/dispatches/draft`) {
       const row = (n: number, qty: number, barcode: string | null) => ({ sku_id: `a000000${n}-0000-4000-8000-000000000000`, title: `AIRGILOF-RANG-${n}`, product_title: "Uzun nomli mahsulot: AirPods himoya gʻilofi silikon", barcode, qty, unit_cost: "18500.00" });
-      return json(route, 200, { shop_id: url.searchParams.get("shop_id"), rows: [row(1, 70, "4780000000001"), row(2, 30, "4780000000002")], no_barcode: [row(3, 4, null)] });
+      return json(route, 200, { shop_id: url.searchParams.get("shop_id"), rows: [row(1, 70, "4780000000001"), row(2, 30, "4780000000002")], no_barcode: [row(3, 4, null)], uncounted: 0 });
     }
     if (key === `GET /orgs/${ORG_ID}/dispatches`) {
       const item = { sku_id: "a0000001-0000-4000-8000-000000000000", title: "AIRGILOF-RANG-1", barcode: "4780000000001", qty: 40, unit_cost: "18500.00" };

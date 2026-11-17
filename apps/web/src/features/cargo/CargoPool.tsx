@@ -46,6 +46,9 @@ export function CargoPool() {
   const [rateMode, setRateMode] = useState<RateMode>("cbu");
   const [rate, setRate] = useState<string | null>(null);
   const [paidOn, setPaidOn] = useState(todayTashkent());
+  // TM9.8 (ADR-069): "Tovar qo'limga keldimi?" — majburiy, standartsiz (kargo puli ba'zan tovar kelmasdan to'lanadi).
+  const [arrived, setArrived] = useState<"" | "yes" | "no">("");
+  const [arrivedOn, setArrivedOn] = useState<string | null>(null);
   const [rows, setRows] = useState<Record<string, Row>>({});
   const [picked, setPicked] = useState<string[]>([]);
   const [box, setBox] = useState<{ title: string; amount: string | null; kg: string | null }>({ title: "", amount: null, kg: null });
@@ -70,7 +73,19 @@ export function CargoPool() {
     box.amount,
     picked.map((id) => shareOf(id)),
   );
-  const money = { currency, rate_mode: currency === "UZS" ? "cbu" : rateMode, ...(needsRate ? { rate } : {}), paid_on: paidOn || null };
+  const arrivalOk = arrived !== "";
+  const money = {
+    currency,
+    rate_mode: currency === "UZS" ? "cbu" : rateMode,
+    ...(needsRate ? { rate } : {}),
+    paid_on: paidOn || null,
+    arrived: arrived === "yes",
+    ...(arrived === "yes" ? { arrived_on: arrivedOn || paidOn || null } : {}),
+  };
+  const resetArrival = () => {
+    setArrived("");
+    setArrivedOn(null);
+  };
   const done = async (message: string) => {
     await Promise.all([["purchases"], ["shipments"], ["inventory"], ["pnl"], ["dashboard"]].map((k) => client.invalidateQueries({ queryKey: ["orgs", org.id, ...k] })));
     toast.show(message, "positive");
@@ -83,6 +98,7 @@ export function CargoPool() {
       }),
     onSuccess: async (out) => {
       setRows({});
+      resetArrival();
       await done(t("cargo.trackedSaved", { count: out.created }));
     },
   });
@@ -100,11 +116,12 @@ export function CargoPool() {
       setPicked([]);
       setFixed({});
       setBox({ title: "", amount: null, kg: null });
+      resetArrival();
       await done(t("cargo.boxSaved"));
       void navigate({ to: "/shipments/$shipmentId", params: { shipmentId: out.shipment_id } });
     },
   });
-  const boxValid = boxing && box.title.trim() !== "" && positive(box.amount) && rateOk && !preview.isError && rest === 0;
+  const boxValid = boxing && box.title.trim() !== "" && positive(box.amount) && rateOk && arrivalOk && !preview.isError && rest === 0;
   const toggle = (id: string, on: boolean) => {
     setPicked((p) => (on ? [...p, id] : p.filter((x) => x !== id)));
     if (!on) setFixed((x) => Object.fromEntries(Object.entries(x).filter(([k]) => k !== id)));
@@ -144,6 +161,22 @@ export function CargoPool() {
           )}
           {needsRate && <NumberInput label={t("purchases.quick.rateValue", { currency })} value={rate} onValueChange={setRate} />}
           <TextInput label={t("cargo.paidOn")} type="date" value={paidOn} onValueChange={setPaidOn} />
+          <div className="cargo-pool__arrival">
+            <span className="ui-field__label" id="cargo-arrival-label">
+              {t("cargo.arrival.question")}
+            </span>
+            <Segmented
+              label={t("cargo.arrival.question")}
+              value={arrived}
+              onChange={setArrived}
+              options={[
+                { value: "yes", label: t("cargo.arrival.yes") },
+                { value: "no", label: t("cargo.arrival.no") },
+              ]}
+            />
+            <span className="caption">{arrived === "" ? t("cargo.arrival.required") : arrived === "yes" ? t("cargo.arrival.yesHint") : t("cargo.arrival.noHint")}</span>
+          </div>
+          {arrived === "yes" && <TextInput label={t("cargo.arrival.on")} type="date" value={arrivedOn ?? paidOn} onValueChange={setArrivedOn} />}
         </div>
       )}
       <label className="quick-purchase__check cargo-pool__counted">
@@ -232,7 +265,7 @@ export function CargoPool() {
         <div className="cargo-pool__footer">
           {saveTracked.isError && <Banner tone="negative" title={errorText(saveTracked.error, t)} />}
           <p className="caption">{t("cargo.trackedHint")}</p>
-          <Button variant="primary" disabled={tracked.length === 0 || !rateOk} loading={saveTracked.isPending} onClick={() => saveTracked.mutate()}>
+          <Button variant="primary" disabled={tracked.length === 0 || !rateOk || !arrivalOk} loading={saveTracked.isPending} onClick={() => saveTracked.mutate()}>
             {t("cargo.trackedSave", { count: tracked.length })}
           </Button>
         </div>
