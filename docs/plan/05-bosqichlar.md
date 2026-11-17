@@ -1033,20 +1033,22 @@ Omborim soniga tayanadi). Har biri — alohida PR, testlar bilan; 02 (M10, F33, 
 - [ ] TM9.7 **Mayda** (G11–G13): jo'natma qoralamasida tannarx tahrirlanadi, noma'lum yoki taxminiy bo'lsa belgi (0 emas);
   "Ikkiga bo'lish" sanalgandan keyin ham (sanalmagan qoldiq yangi xaridga); "Tovar qo'limda" — qadoq qo'shimchasi
   tovardan, saqlashdan oldin brak kiritish imkoni.
-- [ ] TM9.8 **"Keldi" — sanashdan oldin** (Temur, 2026-11-17: "avval omborga keladi, keyin sanaladi"; ADR-069 — tasdiq
-  kutilmoqda). Hozir "Omborimda"ga faqat sanash bilan o'tiladi — tovar kelgan, lekin sanalmagan kunlarda u dasturda
+- [ ] TM9.8 **"Keldi" — sanashdan oldin** (Temur, 2026-11-17: "avval omborga keladi, keyin sanaladi"; ADR-069 — tasdiqlandi,
+  kargo puli bo'yicha tuzatish bilan). Hozir "Omborimda"ga faqat sanash bilan o'tiladi — tovar kelgan, lekin sanalmagan kunlarda u dasturda
   "Yo'lda" turadi: buyurtma signali (F26) va "hamma joydagi tovar" baribir to'g'ri, lekin muddat (F25) sanash kunigacha
   cho'ziladi, sotuvchi esa qayerda nima borligini ko'rmaydi. Yechim — holatlar soni o'zgarmaydi (uchta), "Omborimda"
   ikki qismli bo'ladi:
   - **Omborimda · sanalmagan** — "Keldi" belgilangan, sanalmagan: dona = buyurtma soni (taxminiy, `~` bilan); **Omborimda**
     — sanalgan (avvalgidek). Xaridlar ro'yxati, Omborim sahifasi, xarid sahifasidagi uch nuqtali yo'lda "sanalmagan" belgisi.
-  - **"Keldi" qanday belgilanadi — qo'shimcha qadamsiz:** (1) kargo puli saqlanganda (trekli yoki kodli quti) — "Tovar
-    qo'limga keldi" belgisi **standart yoqilgan**, sana — kargo to'lov sanasi (Temurning jarayonida kargo tovar qo'lga
-    olinganda to'lanadi, F21 ham shunga tayanadi); (2) Xaridlar ro'yxatida bir nechtasini belgilab "Keldi" (sana —
+  - **"Keldi" qanday belgilanadi:** (1) kargo puli saqlanganda (trekli yoki kodli quti) — **majburiy tanlov, standartsiz:**
+    "Tovar qo'limga keldimi? **Ha / Hali yo'q**" (bir bosish; Temur kargoni odatda tovarni olganda, ba'zan oldinroq
+    to'laydi — noto'g'ri standart jim xato beradi). "Ha" — sana kargo to'lov sanasi (o'zgartiriladi); "Hali yo'q" — xarid
+    "Yo'lda" qoladi, kargo puli kiritilgan, "Keldi" keyin belgilanadi; (2) Xaridlar ro'yxatida bir nechtasini belgilab "Keldi" (sana —
     bugun, o'zgartiriladi); (3) sanash — "Keldi" bo'lmasa o'zi qo'yadi (sana — sanash kuni). Kodli qutida sana qutiga
     yoziladi (`shipments.arrived_on`), xaridlar undan oladi; alohida xaridda — `purchases.arrived_on` (ustunlar bor).
   - **Ta'siri:** F25 "yo'l" bo'lagi = buyurtma → **keldi** (sanashgacha kutish muddatni uzaytirmaydi; B5.1); F21 lot tayyor
-    sanasi = keldi (yo'q bo'lsa sanash); F26 — sanalmagan dona "Omborimda"ga kiradi; "Uzumga yuborish" signalida —
+    sanasi = keldi (yo'q bo'lsa sanash); **kargo to'lov sanasi tayyor sana sifatida endi ishlatilmaydi** (to'lov kelishdan
+    oldin bo'lishi mumkin) — faqat "Keldi"si yo'q eski yozuvlarda, avvalgidek (tannarx o'zgarmasin); F26 — sanalmagan dona "Omborimda"ga kiradi; "Uzumga yuborish" signalida —
     "avval sanang" izohi bilan; **jo'natish** — faqat sanalgan dona (Excel'ga sanalmagan tovar tushmaydi, qoralamada
     "N dona sanalmagan — sanash" havolasi). M10 mezoni: sanalmagan qism alohida, sanalgan sog' dona tenglamasi o'zgarmaydi.
   - **Eslatma:** bosh sahifa "Diqqat" qatori ("N ta xarid keldi, sanalmagan") va B6 hodisasi — xarid 3 kun sanalmay tursa,
