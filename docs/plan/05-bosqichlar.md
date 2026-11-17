@@ -1023,9 +1023,13 @@ Omborim soniga tayanadi). Har biri — alohida PR, testlar bilan; 02 (M10, F33, 
   Testlar: API (`test_integrity.py`, M10 tenglamasi har SKU uchun), web.
 - [ ] TM9.4 **F52 va lot daftari** (G6; avval kod bilan tasdiqlanadi): "Zarar deb yopildi" / "Kompensatsiya qilindi" da
   yo'qolgan dona partiyadan chiqadi (F51 dagi kabi), "Topildi" da qaytadi — zarar ham, tannarx ham bir marta.
-- [ ] TM9.5 **Jim xatolar** (G7, G8): trekli kargo puli — xaridda "Kargo" bor bo'lsa rad (`cargo_twice`), qayta yuborish
+- [x] TM9.5 **Jim xatolar** (G7, G8): trekli kargo puli — xaridda "Kargo" bor bo'lsa rad (`cargo_twice`), qayta yuborish
   takror yozmaydi; tovar summasi kiritilmagan xarid — yangi F22 belgisi "tovar summasi kiritilmagan" (taxminiy),
-  xarid sahifasida va "Diqqat"da.
+  xarid sahifasida va "Diqqat"da. ✓ 2026-11-17: `POST /cargo-pool/tracked` — xaridda "Kargo"
+  bo'lsa 409 `cargo_twice`, xaridlar qatorlari qulflanadi (bir vaqtdagi ikki so'rov — ikkinchisi rad; kodli quti ham);
+  `upcore.purchasing.Flag.GOODS_MISSING` (`goods_missing`) — qatorga tovar summasi tushmagan, taxminiy (tannarx raqami
+  o'zgarmaydi); xarid sahifasida belgi, bosh sahifa "Diqqat" — `attention.goods_missing` (lot belgilaridan). Testlar: yadro,
+  API, web.
 - [ ] TM9.6 **Kelmagan tovar va qaytarilgan pul — o'z tovariga** (G9, G10; Temur qarori 2026-11-17 — ikkalasida ikkinchi
   variant; F20 o'zgaradi, yangi **F55**). (a) Sanashda qatorning sog' donasi 0 (umuman kelmagan yoki hammasi brak) — shu
   qatorga tushgan tovar summasi va xarid ichidagi qo'shimcha chiqim ulushi boshqa tovarlarga **yuklanmaydi**: **F55

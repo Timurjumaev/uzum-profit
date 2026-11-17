@@ -444,6 +444,7 @@ export const uzLatn = {
       stockHigh: "Buyurtma berish vaqti yaqin: {{value}} ta SKU",
       stockShip: "Uzumga yuborish kerak (omborimda bor): {{value}} ta SKU",
       receiving: "Uzum qabulida farq yoki ochiq kamomad: {{value}} ta",
+      goodsMissing: "Tovar summasi kiritilmagan xaridlar: {{value}} ta (tannarx taxminiy)",
       lossSkus: "Zarar bilan sotilayotgan SKU: {{value}} ta",
       sync: "Sinxronda muammo: {{value}} ta doʻkon",
       recalculated: "Tannarxi qayta hisoblangan sotuvlar: {{value}} ta",
@@ -751,6 +752,7 @@ export const uzLatn = {
       flags: "Belgilar",
       flag: {
         cargo_missing: "kargo kiritilmagan",
+        goods_missing: "tovar summasi kiritilmagan",
         not_received: "qabul qilinmagan",
         cbu_rate: "Markaziy bank kursi",
         market_rate: "Bozor kursi (Markaziy bank emas)",
@@ -846,6 +848,7 @@ export const uzLatn = {
       historical: "boshlangʻich holatdan oldingi sotuv — tarixiy tannarx",
       not_received: "partiya qabul qilinmagan — buyurtma donasi bilan hisoblangan",
       cargo_missing: "kargo xarajati kiritilmagan",
+      goods_missing: "tovar summasi kiritilmagan — tannarx past koʻrinadi",
       base_fallback: "vazn/hajm yoʻq — xarajat dona boʻyicha boʻlingan",
       market_rate: "kurs bozor boʻyicha (Markaziy bank emas)",
       cbu_rate: "kurs Markaziy bank boʻyicha (haqiqiy toʻlangan emas)",
@@ -1727,6 +1730,7 @@ export const uzLatn = {
       note: "Eslatma",
       flag: {
         cargo_missing: "kargo kiritilmagan",
+        goods_missing: "tovar summasi kiritilmagan",
         not_received: "qabul qilinmagan — buyurtma donasi bilan",
         base_fallback: "vazn/hajm yoʻq — dona boʻyicha boʻlindi",
         no_line_sums: "qator summalari kiritilmagan — tovar summasi dona boʻyicha boʻlindi",

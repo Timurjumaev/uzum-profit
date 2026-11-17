@@ -481,7 +481,7 @@ lot narxida), brak / yo'qotish (−).
 - Har o'zgarishda tovarning eng erta o'zgargan sanasidan qayta hisoblanadi.
 - Boshlang'ich holat (F41) bo'lsa — boshlash sanasigacha bo'lgan hodisalar lotlarga tegmaydi.
 
-**F22. Taxminiy belgilar:** "kargo kiritilmagan", "erta sotuv" (sotuv lotdan oldin), "lot yetmadi", "postavka bor,
+**F22. Taxminiy belgilar:** "tovar summasi kiritilmagan" (qatorga "Tovar" xarajati tushmagan — tannarx past, TM9.5; bosh sahifa "Diqqat"da), "kargo kiritilmagan", "erta sotuv" (sotuv lotdan oldin), "lot yetmadi", "postavka bor,
 partiya kiritilmagan" (F41, ADR-051), "qabul qilinmagan", "vazn/hajm yo'q", "bozor kursi". UI'da `~` va izoh. **Aniq
 (taxmin emas, ADR-057 Q6, B4.69):** "kurs: Markaziy bank" (standart rejim — izoh) va "tarixiy" (boshlash sanasidan oldingi
 sotuv, sotuvchi kiritgan narx — F41); ular taxminiy qismga (F22, `cogs_estimated`) qo'shilmaydi (`upcore.costing.is_estimated`).

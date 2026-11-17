@@ -115,7 +115,11 @@ def test_stepwise_purchase_live_cost_and_late_cargo(world: World) -> None:
         201,
     )
     assert lines_by(det)["Mashina"]["shortage"] == 2  # kamomad
-    assert lines_by(det)["Yangi o'yinchoq"]["flags"] == ["cargo_missing", "not_received"]
+    assert lines_by(det)["Yangi o'yinchoq"]["flags"] == [
+        "cargo_missing",
+        "goods_missing",
+        "not_received",
+    ]
     # Tovar: 1 000 CNY, qo'lda kurs; standart taqsimot — qiymat (narx yo'q → dona, "base_fallback").
     det = ok(
         send(

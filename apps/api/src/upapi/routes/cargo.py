@@ -166,12 +166,16 @@ def _units(lines: list[Any]) -> int:
     return sum(x.ordered_qty if x.received_qty is None else x.received_qty for x in lines)
 
 
-async def _members(ctx: OrgContext, ids: list[UUID]) -> dict[UUID, Any]:
-    """Tanlangan xaridlar (hammasi shu tashkilotda bo'lishi shart)."""
+async def _members(ctx: OrgContext, ids: list[UUID], lock: bool = False) -> dict[UUID, Any]:
+    """Tanlangan xaridlar (hammasi shu tashkilotda bo'lishi shart). ``lock`` — yozishdan oldin qatorlar qulflanadi
+    (bir vaqtdagi ikki so'rov — ikki bosish, tarmoq qayta urinishi — ikkinchisi birinchisini kutadi, TM9.5)."""
     if len(set(ids)) != len(ids):
         raise AppError("bad_request", 422, detail="xarid takrorlangan")
     p = m.purchases
-    rows = {r.id: r for r in await ctx.conn.execute(select(p).where(p.c.id.in_(ids)))}
+    query = select(p).where(p.c.id.in_(ids)).order_by(p.c.id)
+    if lock:
+        query = query.with_for_update()
+    rows = {r.id: r for r in await ctx.conn.execute(query)}
     if len(rows) != len(ids):
         raise AppError("purchase_not_found", 404)
     return rows
@@ -294,13 +298,20 @@ async def save_tracked(
     body: TrackedIn, ctx: Manager, request: Request, background: BackgroundTasks
 ) -> TrackedOut:
     """Trekli kargo puli: har qatorga xaridning o'z "Kargo" xarajati (xarid ichida dona bo'yicha). Hammasi yoki hech
-    biri (bitta tranzaksiya)."""
+    biri (bitta tranzaksiya). Xaridda "Kargo" xarajati allaqachon bo'lsa — rad (``cargo_twice``, TM9.5): qayta yuborish
+    (ikki bosish, tarmoq qayta urinishi) ikkinchi xarajat yozmaydi."""
     _require_amounts(ctx)
     ids = [x.purchase_id for x in body.rows]
-    members = await _members(ctx, ids)
+    members = await _members(ctx, ids, lock=True)
     if any(x.shipment_id is not None for x in members.values()):
         raise AppError(
             "cargo_twice", 409, detail="xarid kodli qutida — kargo puli quti orqali bo'linadi"
+        )
+    if await _own_cargo(ctx, ids):
+        raise AppError(
+            "cargo_twice",
+            409,
+            detail="xaridning kargo puli allaqachon kiritilgan — takror yozilmaydi",
         )
     cc, p = m.cost_components, m.purchases
     for row in body.rows:
@@ -345,7 +356,7 @@ async def save_box(
     """Kodli quti: Kargo yaratiladi, xaridlar biriktiriladi, bitta "Kargo" xarajati (ulushlar dona bo'yicha, qo'lda
     o'zgartirilganlari — ``targets.purchase_shares``)."""
     _require_amounts(ctx)
-    members = await _members(ctx, body.purchase_ids)
+    members = await _members(ctx, body.purchase_ids, lock=True)
     if any(x.shipment_id is not None for x in members.values()):
         raise AppError("purchase_in_shipment", 409, detail="xarid boshqa kargoda")
     if await _own_cargo(ctx, body.purchase_ids):

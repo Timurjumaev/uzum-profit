@@ -19,13 +19,14 @@ from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel
-from sqlalchemy import Row, or_, select
+from sqlalchemy import Row, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.fx import to_uzs
 from upcore.inventory import lead_time
 from upcore.money import Money, to_decimal
 from upcore.purchasing import (
     DATED_STAGES,
+    Flag,
     LotCost,
     Stage,
     SupplyState,
@@ -557,3 +558,14 @@ async def recalc_pending(conn: AsyncConnection, purchase_id: UUID) -> bool:
 def matches(out: PurchaseOut, states: Sequence[SupplyState] | None) -> bool:
     """Ro'yxat filtri: holat (``state``, ADR-061 §1)."""
     return not states or out.state in states
+
+
+async def goods_missing(conn: AsyncConnection) -> int:
+    """TM9.5 "Diqqat": tovar summasi kiritilmagan (F22 ``goods_missing``) xaridlar soni — lot belgilaridan."""
+    lots, pl = m.lots, m.purchase_lines
+    found = await conn.scalar(
+        select(func.count(func.distinct(pl.c.purchase_id)))
+        .select_from(lots.join(pl, pl.c.id == lots.c.purchase_line_id))
+        .where(lots.c.flags.contains([Flag.GOODS_MISSING.value]))
+    )
+    return int(found or 0)

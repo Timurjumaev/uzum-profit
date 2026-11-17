@@ -100,6 +100,7 @@ class Flag(StrEnum):
     NO_LINE_SUMS = (
         "no_line_sums"  # bir necha qator, qator summasi yo'q — dona bo'yicha (eslatma, ADR-061 §2)
     )
+    GOODS_MISSING = "goods_missing"  # tovar summasi kiritilmagan — tannarx past (taxminiy, TM9.5)
 
 
 # ADR-057 Q6 (B4.69): ma'lumot uchun belgilar — raqam noaniq emas, "Taxminiy" qo'yilmaydi. Markaziy bank kursi —
@@ -367,6 +368,10 @@ def _compute_lots(purchase: Purchase) -> list[LotCost]:
             ):
                 flags[line.id].add(Flag.NO_LINE_SUMS)
 
+    # TM9.5 (F22): qatorga tovar summasi tushmagan (xaridda "Tovar" xarajati yo'q yoki boshqa qatorlarga) — taxminiy.
+    for lid, line in lines.items():
+        if line.qty > 0 and parts[lid].get(ComponentKind.GOODS, Money.zero(UZS)).is_zero():
+            flags[lid].add(Flag.GOODS_MISSING)
     _apply_refund(purchase, lines, parts)
     has_cargo = purchase.on_hand or any(c.kind is ComponentKind.CARGO for c in purchase.components)
     result = []
@@ -632,7 +637,9 @@ def compute_shipment_lots(
             for kind, amount in extra.breakdown.items():
                 breakdown[kind] = breakdown.get(kind, Money.zero(UZS)) + amount
             line_total = total(list(breakdown.values()), UZS)
-            flags = set(lot.flags) | (set(extra.flags) - {Flag.CARGO_MISSING, Flag.NOT_RECEIVED})
+            flags = set(lot.flags) | (
+                set(extra.flags) - {Flag.CARGO_MISSING, Flag.NOT_RECEIVED, Flag.GOODS_MISSING}
+            )
             if has_cargo:
                 flags.discard(Flag.CARGO_MISSING)
             lots.append(

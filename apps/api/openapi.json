@@ -7357,7 +7357,7 @@
           "purchases"
         ],
         "summary": "Save Tracked",
-        "description": "Trekli kargo puli: har qatorga xaridning o'z \"Kargo\" xarajati (xarid ichida dona bo'yicha). Hammasi yoki hech\nbiri (bitta tranzaksiya).",
+        "description": "Trekli kargo puli: har qatorga xaridning o'z \"Kargo\" xarajati (xarid ichida dona bo'yicha). Hammasi yoki hech\nbiri (bitta tranzaksiya). Xaridda \"Kargo\" xarajati allaqachon bo'lsa — rad (``cargo_twice``, TM9.5): qayta yuborish\n(ikki bosish, tarmoq qayta urinishi) ikkinchi xarajat yozmaydi.",
         "operationId": "save_tracked_api_v1_orgs__org_id__cargo_pool_tracked_post",
         "parameters": [
           {
@@ -9004,6 +9004,11 @@
           "receiving": {
             "type": "integer",
             "title": "Receiving",
+            "default": 0
+          },
+          "goods_missing": {
+            "type": "integer",
+            "title": "Goods Missing",
             "default": 0
           }
         },

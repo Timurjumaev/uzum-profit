@@ -25,8 +25,8 @@ export const NEW_ALLOCATIONS: AllocationBase[] = ["units", "manual"];
 export const CURRENCIES = ["CNY", "USD", "UZS", "EUR", "RUB"] as const;
 export type CurrencyCode = (typeof CURRENCIES)[number];
 
-/** Taxminiy (F22): kargo kiritilmagan, qabul qilinmagan (buyurtma donasi bilan), vazn/hajm yo'q — dona bo'yicha, kurs bozor kursi (CBU emas, ADR-045). */
-export const ESTIMATE_FLAGS = ["cargo_missing", "not_received", "base_fallback", "market_rate"] as const;
+/** Taxminiy (F22): tovar summasi kiritilmagan (TM9.5), kargo kiritilmagan, qabul qilinmagan (buyurtma donasi bilan), vazn/hajm yo'q — dona bo'yicha, kurs bozor kursi (CBU emas, ADR-045). */
+export const ESTIMATE_FLAGS = ["goods_missing", "cargo_missing", "not_received", "base_fallback", "market_rate"] as const;
 
 export function isEstimated(flags: readonly string[]): boolean {
   return flags.some((f) => (ESTIMATE_FLAGS as readonly string[]).includes(f));
