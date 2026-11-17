@@ -1353,6 +1353,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/dispatches/orphans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Orphan Invoices
+         * @description Dasturdan tashqari (jo'natmasiz) postavkalar — Omborimdagi SKU'lari bor, hech bir jo'natmaga bog'lanmagan (TM9.1).
+         */
+        get: operations["orphan_invoices_api_v1_orgs__org_id__dispatches_orphans_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/dispatches/orphans/{invoice_id}/sent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Orphan Sent
+         * @description "Bu postavka Omborimdan ketgan" (TM9.1 (a)): postavka tarkibidan jo'natma yaratiladi va bog'lanadi — donalar
+         *     Omborimdan chiqadi (qabul qilingan postavka uchun ham; farq — "Qabul farqi").
+         */
+        post: operations["orphan_sent_api_v1_orgs__org_id__dispatches_orphans__invoice_id__sent_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/dispatches/orphans/{invoice_id}/not-mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Orphan Not Mine
+         * @description "Bu postavka Omborimdan emas" (masalan, boshlang'ich qoldiqdan) — "Diqqat"da chiqmaydi, Omborimni band qilmaydi.
+         */
+        post: operations["orphan_not_mine_api_v1_orgs__org_id__dispatches_orphans__invoice_id__not_mine_post"];
+        /**
+         * Orphan Not Mine Undo
+         * @description "Omborimdan emas" qarorini bekor qilish.
+         */
+        delete: operations["orphan_not_mine_undo_api_v1_orgs__org_id__dispatches_orphans__invoice_id__not_mine_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/dispatches/{dispatch_id}/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dispatch Invoices
+         * @description Qo'lda tanlash (TM9.1 (b)): do'konning hech bir jo'natmaga bog'lanmagan, bekor qilinmagan hamma postavkasi (yangisi
+         *     birinchi, 100 tagacha).
+         */
+        get: operations["dispatch_invoices_api_v1_orgs__org_id__dispatches__dispatch_id__invoices_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/warehouse": {
         parameters: {
             query?: never;
@@ -1868,6 +1954,25 @@ export interface components {
             checked_at: string | null;
         };
         /**
+         * AdjustmentOut
+         * @description TM9.1 (c): bog'langanda jo'natma soni postavkada e'lon qilingan songa tenglashtirildi.
+         */
+        AdjustmentOut: {
+            /**
+             * Sku Id
+             * Format: uuid
+             */
+            sku_id: string;
+            /** Title */
+            title: string | null;
+            /** Before */
+            before: number;
+            /** After */
+            after: number;
+            /** Declared */
+            declared: number;
+        };
+        /**
          * AlertsIn
          * @description Bekor (F17) va qaytarish (F18) ulushi chegarasi; ``null`` — o'chirish. ``margin_borderline`` — "Chegarada"
          *     marja chegarasi (B5.0b, F13); ``null`` — standartga qaytarish.
@@ -1950,6 +2055,11 @@ export interface components {
              * @default 0
              */
             uncounted: number;
+            /**
+             * Orphan Invoices
+             * @default 0
+             */
+            orphan_invoices: number;
         };
         /** AuditOut */
         AuditOut: {
@@ -2460,6 +2570,16 @@ export interface components {
             invoice: components["schemas"]["InvoiceOut"] | null;
             /** Candidates */
             candidates: components["schemas"]["InvoiceOut"][];
+            /**
+             * Origin
+             * @default excel
+             */
+            origin: string;
+            /**
+             * Adjustments
+             * @default []
+             */
+            adjustments: components["schemas"]["AdjustmentOut"][];
         };
         /** DispatchesOut */
         DispatchesOut: {
@@ -2837,6 +2957,10 @@ export interface components {
             created_on: string | null;
             /** Accepted */
             accepted: number | null;
+            /** Common */
+            common?: number | null;
+            /** Union */
+            union?: number | null;
         };
         /**
          * ItemLinkIn
@@ -3266,6 +3390,11 @@ export interface components {
                 [key: string]: string;
             };
         };
+        /** NotMineIn */
+        NotMineIn: {
+            /** Note */
+            note?: string | null;
+        };
         /** NotificationEventOut */
         NotificationEventOut: {
             event: components["schemas"]["Event"];
@@ -3575,6 +3704,35 @@ export interface components {
             language?: string | null;
             /** Timezone */
             timezone?: string | null;
+        };
+        /** OrphanItemOut */
+        OrphanItemOut: {
+            /**
+             * Sku Id
+             * Format: uuid
+             */
+            sku_id: string;
+            /** Title */
+            title: string | null;
+            /** Declared */
+            declared: number;
+            /** Available */
+            available: number;
+        };
+        /** OrphanOut */
+        OrphanOut: {
+            invoice: components["schemas"]["InvoiceOut"];
+            /** Shop */
+            shop: string | null;
+            /** Accepted On */
+            accepted_on: string | null;
+            /** Items */
+            items: components["schemas"]["OrphanItemOut"][];
+        };
+        /** OrphansOut */
+        OrphansOut: {
+            /** Items */
+            items: components["schemas"]["OrphanOut"][];
         };
         /** OtpRequest */
         OtpRequest: {
@@ -9739,6 +9897,210 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DispatchOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    orphan_invoices_api_v1_orgs__org_id__dispatches_orphans_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrphansOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    orphan_sent_api_v1_orgs__org_id__dispatches_orphans__invoice_id__sent_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DispatchOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    orphan_not_mine_api_v1_orgs__org_id__dispatches_orphans__invoice_id__not_mine_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotMineIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    orphan_not_mine_undo_api_v1_orgs__org_id__dispatches_orphans__invoice_id__not_mine_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    dispatch_invoices_api_v1_orgs__org_id__dispatches__dispatch_id__invoices_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dispatch_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceOut"][];
                 };
             };
             /** @description Validatsiya xatosi */

@@ -18,6 +18,7 @@ const D2 = "d2222222-2222-4222-8222-222222222222";
 const DRAFT_ROUTE = `GET /api/v1/orgs/${ORG}/dispatches/draft`;
 const LIST_ROUTE = `GET /api/v1/orgs/${ORG}/dispatches`;
 const CREATE_ROUTE = `POST /api/v1/orgs/${ORG}/dispatches`;
+const ORPHANS_ROUTE = `GET /api/v1/orgs/${ORG}/dispatches/orphans`;
 
 const draftRow = (over: Partial<DispatchDraftRow>): DispatchDraftRow => ({ sku_id: SKU_A, title: "Mashina-Qizil", product_title: "Mashina", barcode: "4780000000001", qty: 70, unit_cost: "10000.00", ...over });
 const dispatch = (over: Partial<Dispatch>): Dispatch => ({
@@ -33,6 +34,8 @@ const dispatch = (over: Partial<Dispatch>): Dispatch => ({
   items: [{ sku_id: SKU_A, title: "Mashina-Qizil", barcode: "4780000000001", qty: 20, unit_cost: "10000.00" }],
   invoice: null,
   candidates: [],
+  origin: "excel",
+  adjustments: [],
   ...over,
 });
 const inv = (id: string, number: number) => ({ id, number, status: "CREATED", created_on: "2026-11-11T08:00:00Z", accepted: null });
@@ -53,6 +56,7 @@ async function renderAt(routes: Routes = {}, role = "owner") {
           dispatch({ id: "d3", status: "canceled", canceled_at: "2026-11-09T09:00:00Z" }),
         ],
       }),
+    [ORPHANS_ROUTE]: () => json(200, { items: [] }),
     [ME_ROUTE]: () => json(200, { ...ME, orgs: [{ ...ME.orgs[0]!, role }] }),
     ...routes,
   });
@@ -103,6 +107,47 @@ describe("Uzumga jo'natish", () => {
     fireEvent.click(within(list).getByRole("button", { name: /^Bekor qilish/ }));
     await waitFor(() => expect(api.count(cancel)).toBe(1));
     expect(await screen.findByText(/Joʻnatma bekor qilindi/)).toBeTruthy();
+  });
+
+  it("TM9.1: qisman mos nomzod (SKU ulushi), boshqa postavka — hammasidan, tenglashtirish izohi", async () => {
+    const link1 = `POST /api/v1/orgs/${ORG}/dispatches/${D1}/link`;
+    const all = `GET /api/v1/orgs/${ORG}/dispatches/${D1}/invoices`;
+    const api = await renderAt({
+      [LIST_ROUTE]: () =>
+        json(200, {
+          items: [
+            dispatch({ id: D1, candidates: [{ ...inv("i1", 101), common: 1, union: 2 }] }),
+            dispatch({ id: D2, status: "linked", invoice: inv("i9", 109), adjustments: [{ sku_id: SKU_A, title: "Mashina-Qizil", before: 20, after: 18, declared: 18 }] }),
+          ],
+        }),
+      [all]: () => json(200, [inv("i7", 107)]),
+      [link1]: () => json(200, dispatch({})),
+    });
+    const list = await screen.findByRole("list", { name: "Joʻnatmalar" });
+    expect(within(list).getByRole("option", { name: /№ 101 · .* · 1\/2 SKU mos/ })).toBeTruthy();
+    expect(list.textContent).toContain("Postavkada eʼlon qilingan songa tenglashtirildi: Mashina-Qizil 20 → 18 (eʼlon 18)");
+    fireEvent.click(within(list).getByRole("button", { name: "Boshqa postavka tanlash" }));
+    await within(list).findByRole("option", { name: /№ 107/ });
+    fireEvent.change(within(list).getByLabelText("Boshqa postavka tanlash"), { target: { value: "i7" } });
+    await waitFor(() => expect(bodiesOf(api, link1)).toEqual([{ invoice_id: "i7" }]));
+  });
+
+  it("TM9.1: dasturdan tashqari postavka — «Omborimdan ketgan» / «Omborimdan emas»", async () => {
+    const sent = `POST /api/v1/orgs/${ORG}/dispatches/orphans/i5/sent`;
+    const notMine = `POST /api/v1/orgs/${ORG}/dispatches/orphans/i6/not-mine`;
+    const orphan = (id: string, number: number, accepted: string | null) => ({ invoice: inv(id, number), shop: "byDurii", accepted_on: accepted, items: [{ sku_id: SKU_A, title: "Mashina-Qizil", declared: 5, available: 8 }] });
+    const api = await renderAt({
+      [ORPHANS_ROUTE]: () => json(200, { items: [orphan("i5", 105, "2026-11-12"), orphan("i6", 106, null)] }),
+      [sent]: () => json(201, dispatch({ status: "linked", origin: "invoice" })),
+      [notMine]: () => new Response(null, { status: 204 }),
+    });
+    const section = await screen.findByRole("list", { name: "Dasturdan tashqari postavkalar: 2 ta" });
+    expect(section.textContent).toContain("Mashina-Qizil: postavkada 5, Omborimda 8");
+    expect(within(section).getByText(/Qabul qilingan/)).toBeTruthy();
+    fireEvent.click(within(section).getByRole("button", { name: "Omborimdan ketgan: № 105" }));
+    await waitFor(() => expect(api.count(sent)).toBe(1));
+    fireEvent.click(within(section).getByRole("button", { name: "Omborimdan emas: № 106" }));
+    await waitFor(() => expect(api.count(notMine)).toBe(1));
   });
 
   it("buxgalter: faqat ro'yxat (amallarsiz); bo'sh holatlar", async () => {

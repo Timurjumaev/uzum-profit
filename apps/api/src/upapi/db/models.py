@@ -478,6 +478,11 @@ fbo_dispatches = tenant(
     Column("canceled_at", TS),
     Column("note", Text),
     check_in("status", ("sending", "linked", "canceled")),
+    # TM9.1 (ADR-068 (1)): ``invoice`` — dasturdan tashqari postavka tarkibidan ("Omborimdan ketgan"); ``adjustments`` —
+    # bog'langanda e'lon qilingan songa tenglashtirish (SKU, oldin, keyin, e'lon).
+    Column("origin", Text, nullable=False, server_default="excel"),
+    Column("adjustments", JSONB),
+    check_in("origin", ("excel", "invoice")),
     refs={"shop_id": ("shops", False), "invoice_id": ("fbo_invoices", True)},
 )
 fbo_dispatch_items = tenant(
@@ -487,6 +492,15 @@ fbo_dispatch_items = tenant(
     Column("barcode", Text),
     CheckConstraint("qty > 0", name="qty"),
     refs={"dispatch_id": ("fbo_dispatches", False), "sku_id": ("mp_skus", False)},
+)
+# TM9.1 (ADR-068 (1)): dasturdan tashqari postavka bo'yicha qaror — ``not_mine`` ("Omborimdan emas").
+fbo_invoice_marks = tenant(
+    "fbo_invoice_marks",
+    Column("decision", Text, nullable=False),
+    Column("note", Text),
+    check_in("decision", ("not_mine",)),
+    UniqueConstraint("org_id", "invoice_id"),
+    refs={"invoice_id": ("fbo_invoices", False)},
 )
 # TM7 (ADR-061 §8): Uzum qabulidagi farq — jo'natma × SKU bo'yicha sotuvchi qarori. ``resolution``: ``lost`` (Uzum
 # yo'qotdi — kamomad ro'yxati, holat bilan), ``miscount`` (sanashda adashganman — son tuzatildi), ``found`` (ortiqcha

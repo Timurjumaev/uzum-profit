@@ -37,6 +37,7 @@ from upapi import orgsettings
 from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission
 from upapi.reports import cells as rc
+from upapi.reports import linking
 from upapi.reports.common import (
     Filters,
     Heavy,
@@ -170,6 +171,7 @@ class AttentionOut(BaseModel):
     receiving: int = 0  # TM7: Uzum qabulidagi qarorsiz farqlar + ochiq kamomadlar
     goods_missing: int = 0  # TM9.5: tovar summasi kiritilmagan xaridlar (F22, taxminiy)
     uncounted: int = 0  # TM9.8: xarid keldi, sanalmagan
+    orphan_invoices: int = 0  # TM9.1: dasturdan tashqari (jo'natmasiz) postavkalar
 
 
 class DashboardOut(BaseModel):
@@ -539,6 +541,7 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
             receiving=await receiving_attention(conn),
             goods_missing=await goods_missing(conn),
             uncounted=await uncounted_purchases(conn),
+            orphan_invoices=len(await linking.orphans(conn)),
         ),
         revenue_limit=None if limit is None else RevenueLimitOut.of(limit),
     )

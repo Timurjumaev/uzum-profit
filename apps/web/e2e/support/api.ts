@@ -308,9 +308,10 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
       const row = (n: number, qty: number, barcode: string | null) => ({ sku_id: `a000000${n}-0000-4000-8000-000000000000`, title: `AIRGILOF-RANG-${n}`, product_title: "Uzun nomli mahsulot: AirPods himoya gʻilofi silikon", barcode, qty, unit_cost: "18500.00" });
       return json(route, 200, { shop_id: url.searchParams.get("shop_id"), rows: [row(1, 70, "4780000000001"), row(2, 30, "4780000000002")], no_barcode: [row(3, 4, null)], uncounted: 0 });
     }
+    if (key === `GET /orgs/${ORG_ID}/dispatches/orphans`) return json(route, 200, { items: [] });
     if (key === `GET /orgs/${ORG_ID}/dispatches`) {
       const item = { sku_id: "a0000001-0000-4000-8000-000000000000", title: "AIRGILOF-RANG-1", barcode: "4780000000001", qty: 40, unit_cost: "18500.00" };
-      const base = { shop_id: SHOP_A, shop: "byDurii", exported_at: "2026-11-10T10:00:00Z", linked_at: null, canceled_at: null, note: null, units: 40, items: [item], invoice: null, candidates: [] };
+      const base = { shop_id: SHOP_A, shop: "byDurii", exported_at: "2026-11-10T10:00:00Z", linked_at: null, canceled_at: null, note: null, units: 40, items: [item], invoice: null, candidates: [], origin: "excel", adjustments: [] };
       return json(route, 200, {
         items: [
           { ...base, id: "d0000001-0000-4000-8000-000000000000", status: "sending" },
@@ -369,7 +370,7 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
     if (key === `POST /orgs/${ORG_ID}/cargo-pool/tracked`) return json(route, 201, { created: 1 });
     if (key === `POST /orgs/${ORG_ID}/purchases/${PURCHASE_1}/count`) return json(route, 200, purchaseDetail());
     if (key === `POST /orgs/${ORG_ID}/dispatches`) {
-      return json(route, 201, { id: "d0000009-0000-4000-8000-000000000000", shop_id: SHOP_A, shop: "byDurii", status: "sending", exported_at: ago(0), linked_at: null, canceled_at: null, note: null, units: 100, items: [], invoice: null, candidates: [] });
+      return json(route, 201, { id: "d0000009-0000-4000-8000-000000000000", shop_id: SHOP_A, shop: "byDurii", status: "sending", exported_at: ago(0), linked_at: null, canceled_at: null, note: null, units: 100, items: [], invoice: null, candidates: [], origin: "excel", adjustments: [] });
     }
     if (method === "GET" && /^\/orgs\/[^/]+\/dispatches\/[^/]+\/excel$/.test(path)) {
       return route.fulfill({ status: 200, contentType: "application/octet-stream", headers: { "Content-Disposition": 'attachment; filename="uzum-jonatma.xlsx"' }, body: "x" });

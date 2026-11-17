@@ -525,6 +525,25 @@ export const linkDispatch = (orgId: string, id: string, invoiceId: string | null
 
 export const dispatchExcelUrl = (orgId: string, id: string) => `/api/v1/orgs/${orgId}/dispatches/${id}/excel`;
 
+/** TM9.1: jo'natmasiz postavkalar, qo'lda tanlash uchun hamma bog'lanmagan postavkalar. */
+export const orphanInvoicesQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "inventory", "dispatch-orphans"],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/dispatches/orphans", { params: { path: { org_id: orgId } } })),
+  });
+
+export const dispatchInvoicesQuery = (orgId: string, id: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "inventory", "dispatch-invoices", id],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/dispatches/{dispatch_id}/invoices", { params: { path: { org_id: orgId, dispatch_id: id } } })),
+  });
+
+export const orphanSent = (orgId: string, invoiceId: string) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/dispatches/orphans/{invoice_id}/sent", { params: { path: { org_id: orgId, invoice_id: invoiceId } } }));
+
+export const orphanNotMine = (orgId: string, invoiceId: string) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/dispatches/orphans/{invoice_id}/not-mine", { params: { path: { org_id: orgId, invoice_id: invoiceId } }, body: {} }));
+
 /** Uzum qabulidagi farq (TM7, ADR-061 §8): farqlar va kamomad ro'yxati. */
 export const receivingQuery = (orgId: string) =>
   queryOptions({
