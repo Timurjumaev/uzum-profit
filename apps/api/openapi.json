@@ -21026,6 +21026,11 @@
             "type": "integer",
             "title": "Reserved"
           },
+          "broken": {
+            "type": "boolean",
+            "title": "Broken",
+            "default": false
+          },
           "dispatched": {
             "type": "integer",
             "title": "Dispatched",

@@ -671,6 +671,13 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- TM9.3 (ADR-068 (3)) Ta'minot butunligi: Uzumga jo'natilgan, boshqa SKU'ga o'tkazilgan yoki hisobdan chiqarilgan donasi bor
+  xarid va qator o'chirilmaydi, SKU'si almashtirilmaydi, sanalgan soni shulardan kamga tushmaydi, sanash sanasi o'chirilmaydi
+  (`units_dispatched` / `units_transferred` / `units_written_off`, 409 — sababi va yo'li bilan); jo'natilgan dona boshqa SKU'ga
+  o'tkazilmaydi; o'tkazilib kelib jo'natilgan dona o'tkazmasi bekor qilinmaydi; qabul qilingan postavkaga bog'langan jo'natma
+  bekor qilinmaydi va bog'lanishi olib tashlanmaydi (`dispatch_accepted`). Omborim daftari `upapi.reports.integrity` (02 M10
+  tenglamasi har SKU uchun); Omborimda manfiy qoldiq 0 ga qisilmaydi — "xato" belgisi (`broken`); `realcheck` da `supply`
+  bo'limi (M10 buzilgan SKU'lar).
 - Akkaunt darajasidagi Uzum xarajati (`shopId: 0`, masalan shoshilinch pul yechish C000011) har do'konga alohida yozilib,
   sof foydadan ikki marta ayrilardi (Temur topdi, 2026-11-16: 15-noyabrda 62 000 o'rniga 124 000). Endi bir marta saqlanadi va
   foyda hisobida **tashkilot darajasida** turadi (ADR-062 — "Umumiy xarajatlar"); mavjud takror migratsiya 0030 bilan o'chirildi.

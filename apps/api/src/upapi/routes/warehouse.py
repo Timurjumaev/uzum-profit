@@ -27,7 +27,7 @@ from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission
 from upapi.db import models as m
 from upapi.errors import AppError
-from upapi.reports import dispatch
+from upapi.reports import dispatch, integrity
 from upapi.reports import purchases as rp
 from upapi.reports.common import sku_catalog
 from upapi.reports.stock import inbound_by_sku
@@ -71,6 +71,9 @@ class WarehouseRow(BaseModel):
     barcode: str | None
     qty: int
     reserved: int  # qabul qilinmagan postavkalarga ajratilgan (ADR-034)
+    # TM9.3 (M10): Omborimda manfiy — butunlik buzilgan (jo'natilgan / hisobdan chiqarilgan dona sanalgandan ko'p);
+    # son 0 ga qisilmaydi, xato sifatida ko'rsatiladi.
+    broken: bool = False
     dispatched: int = 0  # Uzumga jo'natmalarda (Jo'natilmoqda + Uzumda, TM6) — qoldiqdan ayirilgan
     unit_cost: Decimal | None
     value: Decimal | None
@@ -193,6 +196,7 @@ async def stock(ctx: OrgContext, amounts: bool) -> WarehouseOut:
         delta = int(mv.qty) if mv.kind == "adjust" else -abs(int(mv.qty))
         rows[key]["qty"] += delta
     reserved = await inbound_by_sku(ctx.conn, await dispatch.linked_invoices(ctx.conn))
+    held = await dispatch.held(ctx.conn)
     sku_ids = [r["sku_id"] for r in rows.values() if r["sku_id"] is not None]
     item_ids = [r["item_id"] for r in rows.values() if r["item_id"] is not None]
     line_sku = {x.id: x.sku_id for x in book["lines"]}
@@ -209,15 +213,18 @@ async def stock(ctx: OrgContext, amounts: bool) -> WarehouseOut:
     for r in rows.values():
         sku = skus.get(r["sku_id"]) if r["sku_id"] is not None else None
         res = reserved.get(r["sku_id"], 0) if r["sku_id"] is not None else 0
-        qty = max(0, r["qty"] - res)
-        if qty <= 0 and not r["transfers_in"]:
+        # Partiyalarga bog'lanmagan (sanalgandan ko'p) jo'natilgan dona ham ayiriladi — manfiy bo'lsa xato.
+        raw = r["qty"] - (held.get(r["sku_id"], 0) - r.get("dispatched", 0) if r["sku_id"] else 0)
+        broken = raw < 0
+        qty = raw if broken else max(0, raw - res)
+        if qty == 0 and not r["transfers_in"]:
             continue
         lot_qty = sum(q for q, _ in r["lots"])
         unit = sum((q * c for q, c in r["lots"]), Decimal(0)) / lot_qty if lot_qty else None
-        value = None if unit is None else (unit * qty).quantize(Decimal("0.01"))
-        total_qty += qty
+        value = None if unit is None or broken else (unit * qty).quantize(Decimal("0.01"))
+        total_qty += max(qty, 0)
         if value is None:
-            known = known and qty == 0
+            known = known and qty <= 0
         else:
             total_value += value
         out.append(
@@ -232,6 +239,7 @@ async def stock(ctx: OrgContext, amounts: bool) -> WarehouseOut:
                 barcode=sku.barcode if sku else None,
                 qty=qty,
                 reserved=res,
+                broken=broken,
                 dispatched=r.get("dispatched", 0),
                 unit_cost=unit.quantize(Decimal("0.01")) if amounts and unit is not None else None,
                 value=value if amounts else None,
@@ -277,7 +285,9 @@ async def transfer(
         raise AppError(
             "bad_transfer", 422, detail="o'tkazilgan qatordan qayta o'tkazilmaydi — manbadan"
         )
-    available = _good(source) - book["moved_out"].get(source.id, 0)
+    # TM9.3: jo'natilgan va hisobdan chiqarilgan dona o'tkazilmaydi (qatorning omborimdagi donasi).
+    use = (await integrity.ledger(ctx.conn)).lines.get(source.id)
+    available = _good(source) - (book["moved_out"].get(source.id, 0) if use is None else use.used)
     if body.qty > available:
         raise AppError("bad_transfer", 422, detail=f"qatorda {available} dona bor")
     item_id = await item_of_sku(ctx, body.to_sku_id)
@@ -314,6 +324,8 @@ async def cancel_transfer(
     ).first()
     if row is None:
         raise AppError("line_not_found", 404)
+    # TM9.3: o'tkazilgan donalar jo'natilgan yoki hisobdan chiqarilgan bo'lsa bekor qilinmaydi.
+    integrity.check_lines(await integrity.ledger(ctx.conn), {line_id: None})
     source_item = await ctx.conn.scalar(select(pl.c.item_id).where(pl.c.id == row.source_line_id))
     await ctx.conn.execute(delete(pl).where(pl.c.id == line_id))
     await ctx.audit(

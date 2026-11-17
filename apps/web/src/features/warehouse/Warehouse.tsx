@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
 import { cancelTransfer, createStockMove, currentOrg, meQuery, skuPickerQuery, transferToSku, warehouseQuery } from "../../app/query";
-import { Banner, Button, Combobox, DataTable, Dialog, EmptyState, NumberInput, Select, Skeleton, TextInput, useToast, type Column } from "../../components/ui";
+import { Badge, Banner, Button, Combobox, DataTable, Dialog, EmptyState, NumberInput, Select, Skeleton, TextInput, useToast, type Column } from "../../components/ui";
 import type { WarehouseRow } from "../../lib/api/types";
 import { todayTashkent } from "../../lib/dates";
 import { useFormat } from "../../lib/i18n";
@@ -46,7 +46,7 @@ export function Warehouse() {
       <Button variant="ghost" disabled={r.sources.length === 0} onClick={() => setEditing({ kind: "transfer", row: r })} aria-label={`${t("warehouse.transfer.open")}: ${rowName(r, untitled)}`}>
         {t("warehouse.transfer.open")}
       </Button>
-      <Button variant="ghost" disabled={r.qty === 0 || r.item_id === null} onClick={() => setEditing({ kind: "defect", row: r })} aria-label={`${t("warehouse.defect.open")}: ${rowName(r, untitled)}`}>
+      <Button variant="ghost" disabled={r.qty <= 0 || r.item_id === null} onClick={() => setEditing({ kind: "defect", row: r })} aria-label={`${t("warehouse.defect.open")}: ${rowName(r, untitled)}`}>
         {t("warehouse.defect.open")}
       </Button>
     </>
@@ -81,6 +81,14 @@ export function Warehouse() {
       render: (r) => (
         <>
           {f.number(r.qty)}
+          {r.broken && (
+            <>
+              {" "}
+              <Badge tone="negative" title={t("warehouse.brokenHint")}>
+                {t("warehouse.broken")}
+              </Badge>
+            </>
+          )}
           {r.reserved > 0 && <span className="caption"> {t("warehouse.reserved", { count: r.reserved })}</span>}
           {(r.dispatched ?? 0) > 0 && <span className="caption"> {t("warehouse.dispatched", { count: r.dispatched })}</span>}
         </>
