@@ -459,6 +459,8 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 - Ta'minot (ADR-061, TM1–TM8) tanqidiy tahlili (ADR-068, faqat hujjat): `09-audit.md` §17 — 16 topilma (G1–G16); `05` da yangi
   TM9 (postavka ↔ jo'natma har qanday yo'lda, qabul farqi e'lon qilingan songa va qabul tugagach, butunlik himoyasi, F52 va lot
   daftari, jim xatolar); tartib — B6.4 → TM9 → B5.1.
+  ADR-068 tasdiqlandi (kelmagan tovar — alohida zarar qatori F55, qaytarilgan summa — o'z qatoriga, TM9.6); "Keldi" — sanashdan
+  oldin (ADR-069, TM9.8; G17).
 
 ### O'zgartirildi
 

@@ -1020,18 +1020,48 @@ Omborim soniga tayanadi). Har biri — alohida PR, testlar bilan; 02 (M10, F33, 
 - [ ] TM9.5 **Jim xatolar** (G7, G8): trekli kargo puli — xaridda "Kargo" bor bo'lsa rad (`cargo_twice`), qayta yuborish
   takror yozmaydi; tovar summasi kiritilmagan xarid — yangi F22 belgisi "tovar summasi kiritilmagan" (taxminiy),
   xarid sahifasida va "Diqqat"da.
-- [ ] TM9.6 **Qaror kerak — Temur** (G9, G10; F20 o'zgaradi): (a) umuman kelmagan (yoki to'liq brak) tovar puli — boshqa
-  tovarlarga yuklansinmi (hozirgidek) yoki alohida "Kelmagan tovar zarari" qatori bo'lsinmi (qaytarilgan summa undan
-  ayriladi); (b) qaytarilgan summa — hamma tovarga mutanosibmi (hozirgidek) yoki sanashda qaysi qator uchunligi
-  ko'rsatilsinmi (standart: kam kelgan qatorlarga). Tavsiya: ikkalasida ikkinchi variant.
+- [ ] TM9.6 **Kelmagan tovar va qaytarilgan pul — o'z tovariga** (G9, G10; Temur qarori 2026-11-17 — ikkalasida ikkinchi
+  variant; F20 o'zgaradi, yangi **F55**). (a) Sanashda qatorning sog' donasi 0 (umuman kelmagan yoki hammasi brak) — shu
+  qatorga tushgan tovar summasi va xarid ichidagi qo'shimcha chiqim ulushi boshqa tovarlarga **yuklanmaydi**: **F55
+  "Kelmagan tovar zarari"** = shu ulush − shu qatorga yozilgan qaytarilgan summa (manfiy bo'lmaydi), sanash kuniga, foyda
+  hisobida alohida qator (F51, F52 kabi). Qisman kelgan qator o'zgarmaydi — ADR-061 §6: kam kelsa o'sha tovar tannarxi
+  oshadi. Kargo dona bo'yicha — kelmagan qatorga allaqachon tushmaydi. (b) Sotuvchi qaytargan summa **qatorga** yoziladi:
+  standart — kam kelgan qatorlarga, kam kelgan dona × qatorning dona narxi (qator summasi / buyurtma soni) nisbatida;
+  sotuvchi o'zgartiradi. Qatorning tovar summasidan oshgan qismi — rad (raqam o'ylab topilmaydi). Eski yozuvlardagi
+  qatorsiz qaytarilgan summa — avvalgidek hamma qatorga (hisobi o'zgarmaydi). UI: sanash oynasida "Kelmadi" (bir bosish —
+  kelgan 0) va kam kelgan qatorlar yonida qaytarilgan summa maydoni; xarid sahifasida "1 tovar kelmadi — zarar X so'm".
 - [ ] TM9.7 **Mayda** (G11–G13): jo'natma qoralamasida tannarx tahrirlanadi, noma'lum yoki taxminiy bo'lsa belgi (0 emas);
   "Ikkiga bo'lish" sanalgandan keyin ham (sanalmagan qoldiq yangi xaridga); "Tovar qo'limda" — qadoq qo'shimchasi
   tovardan, saqlashdan oldin brak kiritish imkoni.
-- T: 09 §17 dagi uch savol; TM9.1–TM9.2 dan keyin birinchi real postavkada staging'da tekshirish.
+- [ ] TM9.8 **"Keldi" — sanashdan oldin** (Temur, 2026-11-17: "avval omborga keladi, keyin sanaladi"; ADR-069 — tasdiq
+  kutilmoqda). Hozir "Omborimda"ga faqat sanash bilan o'tiladi — tovar kelgan, lekin sanalmagan kunlarda u dasturda
+  "Yo'lda" turadi: buyurtma signali (F26) va "hamma joydagi tovar" baribir to'g'ri, lekin muddat (F25) sanash kunigacha
+  cho'ziladi, sotuvchi esa qayerda nima borligini ko'rmaydi. Yechim — holatlar soni o'zgarmaydi (uchta), "Omborimda"
+  ikki qismli bo'ladi:
+  - **Omborimda · sanalmagan** — "Keldi" belgilangan, sanalmagan: dona = buyurtma soni (taxminiy, `~` bilan); **Omborimda**
+    — sanalgan (avvalgidek). Xaridlar ro'yxati, Omborim sahifasi, xarid sahifasidagi uch nuqtali yo'lda "sanalmagan" belgisi.
+  - **"Keldi" qanday belgilanadi — qo'shimcha qadamsiz:** (1) kargo puli saqlanganda (trekli yoki kodli quti) — "Tovar
+    qo'limga keldi" belgisi **standart yoqilgan**, sana — kargo to'lov sanasi (Temurning jarayonida kargo tovar qo'lga
+    olinganda to'lanadi, F21 ham shunga tayanadi); (2) Xaridlar ro'yxatida bir nechtasini belgilab "Keldi" (sana —
+    bugun, o'zgartiriladi); (3) sanash — "Keldi" bo'lmasa o'zi qo'yadi (sana — sanash kuni). Kodli qutida sana qutiga
+    yoziladi (`shipments.arrived_on`), xaridlar undan oladi; alohida xaridda — `purchases.arrived_on` (ustunlar bor).
+  - **Ta'siri:** F25 "yo'l" bo'lagi = buyurtma → **keldi** (sanashgacha kutish muddatni uzaytirmaydi; B5.1); F21 lot tayyor
+    sanasi = keldi (yo'q bo'lsa sanash); F26 — sanalmagan dona "Omborimda"ga kiradi; "Uzumga yuborish" signalida —
+    "avval sanang" izohi bilan; **jo'natish** — faqat sanalgan dona (Excel'ga sanalmagan tovar tushmaydi, qoralamada
+    "N dona sanalmagan — sanash" havolasi). M10 mezoni: sanalmagan qism alohida, sanalgan sog' dona tenglamasi o'zgarmaydi.
+  - **Eslatma:** bosh sahifa "Diqqat" qatori ("N ta xarid keldi, sanalmagan") va B6 hodisasi — xarid 3 kun sanalmay tursa,
+    shu xarid uchun bir marta (kritik emas, har kuni takrorlanmaydi — ADR-064).
+  - **Eski yozuvlar:** ADR-061 §11 da eski "Toshkentga keldi" sanali, sanalmagan xaridlar "Yo'lda" deb olingan. Avval
+    staging'da faqat o'qish so'rovi: bunday xaridlar bormi; bor bo'lsa — ular "Omborimda · sanalmagan"ga o'tadi, lot va
+    sotuv tannarxlari oldin-keyin solishtiriladi (tiyinigacha bir xil bo'lishi shart — F21 tayyor sanasi kargo to'lov
+    sanasidan olinayotgan bo'lsa o'zgarmaydi).
+- T: TM9.1–TM9.2 dan keyin birinchi real postavkada staging'da tekshirish (uch yo'l: Excel bilan; Excel, keyin kabinetda son
+  o'zgartirilgan; to'g'ridan-to'g'ri kabinetda). TM9.8 dan keyin — bitta real kargoda "Keldi → sanash" tartibi.
 
 **TM9 chiqish:** Temurning bitta real postavkasi uch yo'lning har birida to'g'ri hisoblanadi — Excel bilan; Excel bilan,
 kabinetda son o'zgartirilgan; dastursiz. Har holatda "Omborim" soni qo'ldagi tovar bilan mos, qabul farqi faqat qabul
-tugagach chiqadi; M10 mezoni testi yashil.
+tugagach chiqadi; M10 mezoni testi yashil. Bitta real kargo "Keldi" bilan kargo puli kiritilgan kuni "Omborimda · sanalmagan"ga
+o'tadi, sanashdan keyin "Omborimda"; F25 da yo'l muddati keldi sanasigacha.
 
 ### Qolgan B5 (ADR-063, 2026-11-16 — tanqidiy tahlil: 09 §12)
 

@@ -487,8 +487,13 @@ qo'lda bosilmaydi; kodli quti ulushlari sanashda o'zi qayta bo'linadi, qo'lda yo
 o'tkazish" tannarxi bilan; kargo puli jadvalida to'lov sanasi standarti — bugun (kurs to'g'ri kundan); eski xaridlar
 hisobiga tegilmagan.
 
-**Temurdan kerak (uch javob — topilmalarning real og'irligini shular belgilaydi):**
-1. Postavkani **har doim** dasturdagi "Jo'natish" Excel'i orqali yaratasanmi, yoki ba'zan to'g'ridan-to'g'ri kabinetda? Excel yuklangach kabinetda sonni yoki tovarlarni o'zgartirasanmi? (G1–G3)
-2. "Omborim" sahifasidagi 3–5 ta SKU soni qo'lingdagi haqiqiy tovar bilan mosmi? (G1, G5)
-3. Yangi oynalarda kiritish — xarid, kargo puli, sanash — tezligi seni qoniqtiradimi; qaysi qadam hali ham ortiqcha? (ADR-061 ning asosiy maqsadi — buni koddan bilib bo'lmaydi)
+**Temur javoblari (2026-11-17):** ADR-068 — "ha". (1) Postavkani dasturdagi Excel bilan ham, **to'g'ridan-to'g'ri kabinetda ham**
+yaratadi; Excel'dan keyin kabinetda son yoki tovarlarni **o'zgartirishi mumkin** — G1–G3 real hayotda uchraydi (xavf
+o'zgarmaydi, Y). (2) "Omborim" sonlari qo'ldagi tovar bilan **mos** — hozirgi ma'lumotda G1/G5 izi yo'q. (3) Kiritish bo'yicha
+yangi topilma — G17. (4), (5) TM9.6 — ikkalasida ikkinchi variant (kelmagan tovar — alohida zarar qatori F55; qaytarilgan
+summa — o'z qatoriga).
+
+| ID | Xavf | Topilma | Dalil | Nima qilindi (05) |
+|---|---|---|---|---|
+| G17 | O' | **"Keldi" bosqichi yo'q.** Real tartib: tovar avval omborga keladi, keyin (bir necha kundan keyin ham) sanaladi. Dasturda "Omborimda"ga faqat sanash bilan o'tiladi — kelgan, sanalmagan tovar "Yo'lda" turadi, F25 muddati sanash kunigacha cho'ziladi. ADR-061 §1 "Toshkentga keldi" bosqichini olib tashlagan edi — u kerakli ma'noda (qo'lda bosiladigan alohida bosqich emas, kargo bilan birga) qaytishi kerak | Temur, 2026-11-17; ADR-061 §1; `upcore.purchasing.supply_state` | TM9.8, ADR-069 |
 
