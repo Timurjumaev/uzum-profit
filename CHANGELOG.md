@@ -464,6 +464,15 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- TM9.8 (ADR-069) **"Keldi" — sanashdan oldin.** Kargo puli oynasida majburiy, standartsiz tanlov "Tovar qoʻlimga keldimi?
+  Ha / Hali yoʻq" (javobsiz saqlanmaydi; "Ha" — sana kargo toʻlov sanasi, oʻzgartiriladi; kodli qutida qutiga yoziladi);
+  Xaridlar roʻyxatida bir nechtasini belgilab "Keldi"; sanash "Keldi"ni oʻzi qoʻyadi. "Omborimda · sanalmagan" — roʻyxat,
+  xarid yoʻli, Omborimda alohida boʻlim (dona — buyurtma soni, `~`), Uzumga joʻnatishga kirmaydi (qoralamada eslatma);
+  F26 "oʻz omborim"iga kiradi ("Uzumga yuborish" — "avval sanang" izohi). F21 lot tayyor sanasi — keldi sanasi (kargo
+  toʻlov sanasi endi tayyor sana emas; eski yozuvlarda avvalgidek, tiyinigacha); F25 "yoʻl" — buyurtma → keldi. Bosh sahifa
+  "Diqqat" — "Xarid keldi, sanalmagan"; bildirishnoma — 3 kun sanalmagan xarid (bir marta). Migratsiya 0031
+  (`purchases.arrival_marked`, faqat qoʻshish). `realcheck` → `supply.legacy_arrived`: eski "Toshkentga keldi" sanali
+  sanalmagan xaridlar roʻyxati (faqat oʻqish).
 - ADR-062 **Umumiy xarajatlar**: akkauntga tegishli Uzum xarajatlari (`shopId: 0`, masalan shoshilinch pul yechish), qat'iy
   soliq (ijtimoiy soliq 1 × BHM) va do'konsiz o'z xarajatlari endi do'konlar va SKU'larga tushum ulushida bo'linmaydi —
   Foyda sahifasida (do'konlar va SKU kesimi) "Umumiy xarajatlar" ustuni, Mahsulotlarda "Jadvaldan tashqari" qatori;

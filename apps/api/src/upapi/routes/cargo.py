@@ -44,6 +44,7 @@ from upapi.calc import lots as calc_lots
 from upapi.db import models as m
 from upapi.errors import AppError
 from upapi.reports import purchases as rp
+from upapi.reports.common import today
 from upapi.routes.purchases import (
     _amounts,
     _kick,
@@ -107,7 +108,16 @@ class TrackedRow(BaseModel):
     )
 
 
-class TrackedIn(Money4):
+class Arrival(BaseModel):
+    """TM9.8 (ADR-069): "Tovar qo'limga keldimi?" — **majburiy, standartsiz** (kargo puli ba'zan tovar kelmasdan
+    to'lanadi; noto'g'ri standart jim xato beradi). ``True`` — "Keldi" (sana ``arrived_on``, bo'lmasa kargo to'lov
+    sanasi, u ham bo'lmasa bugun); ``False`` — "Hali yo'q": xarid "Yo'lda" qoladi, "Keldi" keyin belgilanadi."""
+
+    arrived: bool
+    arrived_on: date | None = None
+
+
+class TrackedIn(Money4, Arrival):
     rows: Annotated[list[TrackedRow], Field(min_length=1, max_length=MAX_ROWS)]
 
 
@@ -129,7 +139,7 @@ class SharesOut(BaseModel):
     units: dict[UUID, int]
 
 
-class BoxIn(Money4):
+class BoxIn(Money4, Arrival):
     """Kodli quti: bitta summa bir nechta xaridga. ``title`` — shaxsiy kod yoki quti nomi."""
 
     title: Annotated[str, Field(min_length=1, max_length=300)]
@@ -235,6 +245,29 @@ def _component(money: Money4, amount: Decimal, weight: Decimal | None) -> dict[s
     }
 
 
+async def mark_arrival(
+    ctx: OrgContext, members: dict[UUID, Any], body: Arrival, paid_on: date | None
+) -> date | None:
+    """TM9.8: kargo puli bilan "Keldi" javobi. Sanalgan xaridlarga tegilmaydi (ular allaqachon Omborimda). "Ha" — sanalmagan
+    xaridlar "Keldi" (``arrived_on``, ``arrival_marked``); "Hali yo'q" — yangi qoida (kargo to'lov sanasi lot tayyor
+    sanasi emas, F21). Qaytaradi: "Keldi" sanasi (kodli quti uchun) yoki ``None``."""
+    day = (body.arrived_on or paid_on or today()) if body.arrived else None
+    if day is not None and day > today():
+        raise AppError("bad_day", 422, detail="kelajak sanasi bo'lmaydi")
+    ids = [pid for pid, row in members.items() if row.received_on is None]
+    if ids:
+        p = m.purchases
+        values: dict[str, Any] = (
+            {"arrived_on": day, "arrival_marked": True}
+            if day is not None
+            else {"arrival_marked": False}
+        )
+        await ctx.conn.execute(
+            update(p).where(p.c.id.in_(ids)).values(**values, updated_at=func.now())
+        )
+    return day
+
+
 # --- Kargo puli jadvali ---------------------------------------------------------------------------
 
 
@@ -313,6 +346,7 @@ async def save_tracked(
             409,
             detail="xaridning kargo puli allaqachon kiritilgan — takror yozilmaydi",
         )
+    await mark_arrival(ctx, members, body, body.paid_on)
     cc, p = m.cost_components, m.purchases
     for row in body.rows:
         values = _component(body, row.amount, row.weight_kg)
@@ -373,9 +407,17 @@ async def save_box(
     units = {pid: _units(lines[pid]) for pid in body.purchase_ids}
     _shares(body.amount, body.currency, units, dict(body.fixed))  # tekshiruv
     sh, p, cc = m.shipments, m.purchases, m.cost_components
+    arrived = await mark_arrival(ctx, members, body, body.paid_on)
     shipment_id = await ctx.conn.scalar(
         insert(sh)
-        .values(org_id=ctx.org_id, title=body.title.strip(), carrier_id=body.carrier_id)
+        .values(
+            org_id=ctx.org_id,
+            title=body.title.strip(),
+            carrier_id=body.carrier_id,
+            # Kodli qutida "Keldi" sanasi qutiga yoziladi (TM9.8) — xaridlar undan oladi; qutida sanalgan xarid bo'lsa
+            # faqat sanalmaganlariga (sanalgan xaridning lot tayyor sanasi o'zgarmasin).
+            arrived_on=arrived if all(x.received_on is None for x in members.values()) else None,
+        )
         .returning(sh.c.id)
     )
     assert shipment_id is not None

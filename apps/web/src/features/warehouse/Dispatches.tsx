@@ -100,6 +100,11 @@ function DraftForm({ orgId, shopId }: { orgId: string; shopId: string }) {
   if (!draft.data) return <Skeleton label={t("common.loading")} lines={3} />;
   return (
     <div className="dispatch-draft">
+      {draft.data.uncounted > 0 && (
+        <Banner tone="info" title={t("dispatch.uncounted", { count: draft.data.uncounted })}>
+          <Link to="/warehouse">{t("dispatch.uncountedLink")}</Link>
+        </Banner>
+      )}
       {draft.data.no_barcode.length > 0 && (
         <Banner tone="warning" title={t("dispatch.noBarcode", { count: draft.data.no_barcode.length })}>
           {draft.data.no_barcode.map((r) => r.title ?? r.product_title).join(", ")}

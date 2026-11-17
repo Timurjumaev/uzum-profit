@@ -292,6 +292,9 @@ def build_purchase(
         refund=refund,
         refund_rate=refund_rate,
         on_hand=bool(getattr(purchase, "on_hand", False)),
+        # TM9.8 (ADR-069): "Keldi" — eski yozuv (NULL) uchun F21 avvalgidek.
+        arrival=getattr(purchase, "arrival_marked", None),
+        arrived_date=purchase.arrived_on if getattr(purchase, "arrival_marked", None) else None,
         goods_rate=goods_rate,
         order_date=purchase.ordered_on,
         # Kargo bir necha marta to'lansa — oxirgisi (tovar to'liq qo'lga olingan kun).

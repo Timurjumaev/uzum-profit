@@ -21,6 +21,7 @@ export function path(state: S["SupplyState"], on: Partial<Record<S["SupplyState"
     days: i === index && s === "in_transit" ? 11 : null,
     expected: null,
     delayed: false,
+    uncounted: false,
     ...(i === index ? extra : {}),
   }));
 }
@@ -32,6 +33,8 @@ export function purchaseRow(over: Partial<S["PurchaseOut"]> = {}): S["PurchaseOu
     title: "Oktabr partiyasi",
     state: "in_transit",
     path: path("in_transit", { in_transit: dates.ordered }, { expected: "2026-10-28" }),
+    arrived_on: null,
+    counted: false,
     track_no: null,
     on_hand: false,
     refund_amount: null,

@@ -136,8 +136,8 @@ export function homeRows(rows: PnlRow[], label: (code: string) => string): HomeR
   return out;
 }
 
-export type AttentionKind = "uncosted" | "stockCritical" | "stockHigh" | "stockShip" | "receiving" | "goodsMissing" | "lossSkus" | "recalculated" | "sync";
-export type AttentionItem = { kind: AttentionKind; tone: "negative" | "warning" | "info"; count: number; to: "/products" | "/inventory" | "/orders" | "/status" | "/receiving" | "/purchases"; amount?: string };
+export type AttentionKind = "uncosted" | "stockCritical" | "stockHigh" | "stockShip" | "receiving" | "uncounted" | "goodsMissing" | "lossSkus" | "recalculated" | "sync";
+export type AttentionItem = { kind: AttentionKind; tone: "negative" | "warning" | "info"; count: number; to: "/products" | "/inventory" | "/orders" | "/status" | "/receiving" | "/purchases" | "/warehouse"; amount?: string };
 
 /** "Diqqat talab qiladi" (M4), ustuvorlik bo'yicha: tannarxsiz sotuvlar → tugayotgan tovar → zarar qilayotgan SKU →
  * sinxron xatosi → tannarxi qayta hisoblangan sotuvlar. Yangi jarimalar, kechikayotgan kargo, Uzum to'lovi — B5. */
@@ -149,6 +149,8 @@ export function attentionItems(a: Dashboard["attention"], syncIssues: number): A
   if (a.stock_ship > 0) items.push({ kind: "stockShip", tone: "warning", count: a.stock_ship, to: "/inventory" });
   // TM7 (ADR-061 §8): Uzum qabulidagi qarorsiz farqlar va ochiq kamomadlar.
   if ((a.receiving ?? 0) > 0) items.push({ kind: "receiving", tone: "negative", count: a.receiving ?? 0, to: "/receiving" });
+  // TM9.8: xarid keldi, sanalmagan — Omborimdagi "sanalmagan" bo'limi.
+  if ((a.uncounted ?? 0) > 0) items.push({ kind: "uncounted", tone: "warning", count: a.uncounted ?? 0, to: "/warehouse" });
   // TM9.5: tovar summasi kiritilmagan xaridlar — tannarx past, foyda oshib ko'rinadi (taxminiy).
   if ((a.goods_missing ?? 0) > 0) items.push({ kind: "goodsMissing", tone: "warning", count: a.goods_missing ?? 0, to: "/purchases" });
   if (a.loss_skus > 0) items.push({ kind: "lossSkus", tone: "negative", count: a.loss_skus, to: "/products" });

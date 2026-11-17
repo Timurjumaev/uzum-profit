@@ -52,6 +52,12 @@ def stage_dates(row: Any) -> dict[Stage, date | None]:
     return {s: getattr(row, f"{s.value}_on") for s in DATED_STAGES}
 
 
+def arrival(row: Any) -> date | None:
+    """TM9.8 (ADR-069): "Keldi" sanasi — faqat yangi qoida bo'yicha belgilangan bo'lsa (``arrival_marked``); eski
+    "Toshkentga keldi" bosqich sanasi holatga ta'sir qilmaydi."""
+    return row.arrived_on if getattr(row, "arrival_marked", None) else None
+
+
 class HistoryOut(BaseModel):
     """Eski bosqich sanasi (ADR-061 §11): xarid sahifasidagi "Tarix" — faqat o'qish."""
 
@@ -69,6 +75,7 @@ class PathOut(BaseModel):
     days: int | None
     expected: date | None
     delayed: bool
+    uncounted: bool = False  # TM9.8: "Omborimda · sanalmagan"
 
 
 class LineCostOut(BaseModel):
@@ -143,6 +150,9 @@ class PurchaseOut(BaseModel):
     title: str | None
     state: SupplyState  # ADR-061 §1: Yo'lda / Omborimda / Uzumda (hosila)
     path: list[PathOut]  # uch nuqtali Partiya yo'li
+    # TM9.8 (ADR-069): "Keldi" sanasi (yangi qoida) va sanalganmi — Omborimda, ``counted`` yo'q: "Omborimda · sanalmagan".
+    arrived_on: date | None = None
+    counted: bool = False
     track_no: str | None
     on_hand: bool  # "Tovar qo'limda" — kargo kutilmaydi
     refund_amount: Decimal | None  # sotuvchi qaytargan summa (summalar ruxsati bilan)
@@ -205,7 +215,7 @@ async def org_lead(conn: AsyncConnection) -> dict[str, Decimal]:
         row = calc_lots.effective_purchase(row, shipments.get(row.shipment_id))
         for stage, days in stage_days(stage_dates(row)).items():
             history.setdefault(stage, []).append(days)
-        transit = transit_days(stage_dates(row))
+        transit = transit_days(stage_dates(row), arrival(row))
         if transit is not None:
             history.setdefault(TRANSIT, []).append(transit)
     stages = dict(lead_time(history, (await orgsettings.load(conn)).lead_days).stages)
@@ -221,13 +231,23 @@ TRANSIT_PARTS = ("prep", "china", "cargo", "receive")
 
 
 def _path(
-    dates: dict[Stage, date | None], today: date, lead: dict[str, Decimal], created: datetime
+    dates: dict[Stage, date | None],
+    today: date,
+    lead: dict[str, Decimal],
+    created: datetime,
+    arrived: date | None = None,
 ) -> list[PathOut]:
     return [
         PathOut(
-            state=x.state, mark=x.mark, on=x.on, days=x.days, expected=x.expected, delayed=x.delayed
+            state=x.state,
+            mark=x.mark,
+            on=x.on,
+            days=x.days,
+            expected=x.expected,
+            delayed=x.delayed,
+            uncounted=x.uncounted,
         )
-        for x in supply_path(dates, today, lead.get(TRANSIT), created.date())
+        for x in supply_path(dates, today, lead.get(TRANSIT), created.date(), arrived)
     ]
 
 
@@ -410,8 +430,10 @@ class Book:
         return PurchaseOut(
             id=purchase.id,
             title=purchase.title,
-            state=supply_state(dates),
-            path=_path(dates, self.today, self.lead, purchase.created_at),
+            state=supply_state(dates, arrival(eff)),
+            path=_path(dates, self.today, self.lead, purchase.created_at, arrival(eff)),
+            arrived_on=arrival(eff),
+            counted=eff.received_on is not None,
             units_sending=sending,
             units_at_uzum=linked,
             track_no=purchase.track_no,
@@ -567,5 +589,21 @@ async def goods_missing(conn: AsyncConnection) -> int:
         select(func.count(func.distinct(pl.c.purchase_id)))
         .select_from(lots.join(pl, pl.c.id == lots.c.purchase_line_id))
         .where(lots.c.flags.contains([Flag.GOODS_MISSING.value]))
+    )
+    return int(found or 0)
+
+
+async def uncounted(conn: AsyncConnection) -> int:
+    """TM9.8 "Diqqat": "Keldi" belgilangan, hali sanalmagan xaridlar soni."""
+    p = m.purchases
+    found = await conn.scalar(
+        select(func.count())
+        .select_from(p)
+        .where(
+            p.c.arrival_marked.is_(True),
+            p.c.received_on.is_(None),
+            p.c.sent_to_uzum_on.is_(None),
+            p.c.closed_on.is_(None),
+        )
     )
     return int(found or 0)

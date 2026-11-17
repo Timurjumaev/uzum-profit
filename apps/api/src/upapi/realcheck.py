@@ -999,7 +999,35 @@ async def supply_check(conn: AsyncConnection) -> dict[str, Any]:
             }
             for b in book.problems()
         ],
+        "legacy_arrived": await legacy_arrived(conn),
     }
+
+
+async def legacy_arrived(conn: AsyncConnection) -> list[dict[str, Any]]:
+    """TM9.8 (ADR-069), faqat o'qish: eski yozuvlar (``arrival_marked`` NULL) ichida "Toshkentga keldi" sanasi bor (xaridda
+    yoki kargosida), lekin sanalmagan va Uzumga yuborilmagan xaridlar — "Omborimda · sanalmagan"ga o'tkazish kerakmi,
+    shu ro'yxat bo'yicha qaror qilinadi (tannarx tiyinigacha o'zgarmasligi sharti bilan)."""
+    rows = await conn.execute(
+        text(
+            "SELECT p.id, p.title, p.ordered_on, coalesce(s.arrived_on, p.arrived_on) AS arrived_on, "
+            "EXISTS (SELECT 1 FROM cost_components c WHERE c.kind = 'cargo' AND "
+            "(c.purchase_id = p.id OR c.shipment_id = p.shipment_id)) AS cargo "
+            "FROM purchases p LEFT JOIN shipments s ON s.id = p.shipment_id "
+            "WHERE p.arrival_marked IS NULL AND p.received_on IS NULL AND p.sent_to_uzum_on IS NULL "
+            "AND p.closed_on IS NULL AND coalesce(s.arrived_on, p.arrived_on) IS NOT NULL "
+            "ORDER BY 4, p.created_at"
+        )
+    )
+    return [
+        {
+            "id": r.id,
+            "title": r.title,
+            "ordered_on": r.ordered_on,
+            "arrived_on": r.arrived_on,
+            "cargo": r.cargo,
+        }
+        for r in rows
+    ]
 
 
 # --- Yig'ish -------------------------------------------------------------------------------------
@@ -1103,6 +1131,20 @@ def summary(report: dict[str, Any]) -> list[str]:
                     if not bad
                     else f"XATO {len(bad)} SKU'da: "
                     + ", ".join(f"{x['key']} Omborimda {x['on_hand']}" for x in bad[:5])
+                )
+            )
+            legacy = supply.get("legacy_arrived") or []
+            out.append(
+                f"Eski 'Toshkentga keldi', sanalmagan xaridlar (TM9.8): {len(legacy)} ta"
+                + (
+                    ": "
+                    + "; ".join(
+                        f"{x['title'] or 'nomsiz'} — keldi {x['arrived_on']}, "
+                        f"kargo puli {'bor' if x['cargo'] else 'yoʻq'}"
+                        for x in legacy[:10]
+                    )
+                    if legacy
+                    else ""
                 )
             )
         for shop in org["shops"]:

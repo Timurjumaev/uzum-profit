@@ -48,6 +48,7 @@ from upapi.reports.common import (
     sku_catalog,
 )
 from upapi.reports.purchases import goods_missing
+from upapi.reports.purchases import uncounted as uncounted_purchases
 from upapi.reports.receiving import attention as receiving_attention
 from upapi.reports.schemas import ExpectedOut, RevenueLimitOut, RowOut, StatementOut
 from upapi.reports.stock import load_stock
@@ -168,6 +169,7 @@ class AttentionOut(BaseModel):
     recalculated: int
     receiving: int = 0  # TM7: Uzum qabulidagi qarorsiz farqlar + ochiq kamomadlar
     goods_missing: int = 0  # TM9.5: tovar summasi kiritilmagan xaridlar (F22, taxminiy)
+    uncounted: int = 0  # TM9.8: xarid keldi, sanalmagan
 
 
 class DashboardOut(BaseModel):
@@ -536,6 +538,7 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
             recalculated=await rc.recalculated(conn, f, now),
             receiving=await receiving_attention(conn),
             goods_missing=await goods_missing(conn),
+            uncounted=await uncounted_purchases(conn),
         ),
         revenue_limit=None if limit is None else RevenueLimitOut.of(limit),
     )

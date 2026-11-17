@@ -318,6 +318,7 @@ function StatusCell({ row }: { row: StockRow }) {
   const ship = row.ship && (
     <span title={t("inventory.ship.hint", { cover: f.number(row.ship.cover_days, { digits: 1 }), handover: f.number(row.ship.handover_days, { digits: 0 }) })}>
       <Badge tone="warning">{t("inventory.ship.badge", { count: f.number(row.ship.own) })}</Badge>
+      {row.ship.uncounted > 0 && <span className="caption"> {t("inventory.ship.countFirst", { count: f.number(row.ship.uncounted) })}</span>}
     </span>
   );
   if (!row.status) {

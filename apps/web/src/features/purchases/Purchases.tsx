@@ -1,30 +1,36 @@
 // Xaridlar ro'yxati (M9, B4.6; 04 §7.4): bosqich guruhi (URL'da), har xaridda ixcham Partiya yo'li, dona (buyurtma /
 // qabul), jami va o'rtacha tannarx/dona (F20 — jonli, API'dan; taxminiy bo'lsa "~"). "Yangi xarid" — egasi, menejer,
 // omborchi (`manage_purchases`); omborchi summalarni ko'rmaydi.
-import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { TriangleAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
-import { currentOrg, meQuery, purchasesPageQuery } from "../../app/query";
+import { currentOrg, markArrived, meQuery, purchasesPageQuery } from "../../app/query";
 import { PURCHASE_GROUPS, purchasesSearch, type PurchaseGroup } from "../../app/search";
-import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, Pagination, Skeleton, usePageSize, type Column, PageHelp } from "../../components/ui";
+import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, Pagination, Skeleton, TextInput, usePageSize, useToast, type Column, PageHelp } from "../../components/ui";
 import { cx } from "../../components/ui/cx";
 import type { PathMark, PurchaseRow } from "../../lib/api/types";
+import { todayTashkent } from "../../lib/dates";
 import { useFormat } from "../../lib/i18n";
 import { GROUP_STATES, isEstimated } from "./model";
 import { QuickPurchaseForm } from "./QuickPurchaseForm";
 
 export const MANAGE_ROLES = ["owner", "manager", "warehouse"];
 
+/** Holat nomi; TM9.8 — "Keldi", sanalmagan: "Omborimda · sanalmagan". */
+export function stateLabel(t: (key: string) => string, state: string, counted: boolean): string {
+  return state === "in_stock" && !counted ? t("purchases.uncounted") : t(`purchases.state.${state}`);
+}
+
 /** Ixcham Partiya yo'li (ADR-061 §1): uch nuqta (Yo'lda → Omborimda → Uzumda) + joriy holat, kunlari va kutilgan sana. */
 export function CompactPath({ marks }: { marks: PathMark[] }) {
   const { t } = useTranslation();
   const f = useFormat();
   const current = marks.find((m) => m.mark === "current");
-  const label = t(`purchases.state.${current?.state ?? "in_transit"}`);
+  const label = current?.uncounted ? t("purchases.uncounted") : t(`purchases.state.${current?.state ?? "in_transit"}`);
   return (
     <span className="purchase-path">
       <span className="purchase-path__dots" aria-hidden>
@@ -65,11 +71,29 @@ export function Purchases() {
     }
   }, [shownPage, query.isPlaceholderData, search.page, navigate, group]);
   const [adding, setAdding] = useState(false);
+  // TM9.8: "Keldi" — bir nechta "Yo'lda" xaridni belgilab (sana — bugun, o'zgartiriladi).
+  const [picked, setPicked] = useState<string[]>([]);
+  const [arrivedOn, setArrivedOn] = useState(todayTashkent());
+  const client = useQueryClient();
+  const toast = useToast();
+  const arrive = useMutation({
+    mutationFn: () => markArrived(org.id, { purchase_ids: picked, arrived_on: arrivedOn }),
+    onSuccess: async (out) => {
+      setPicked([]);
+      await Promise.all([["purchases"], ["inventory"], ["dashboard"]].map((k) => client.invalidateQueries({ queryKey: ["orgs", org.id, ...k] })));
+      toast.show(t("purchases.arrived.saved", { count: out.updated }), "positive");
+    },
+  });
   const canManage = MANAGE_ROLES.includes(org.role);
   const amounts = query.data?.amounts ?? true;
   const setGroup = (next: PurchaseGroup | undefined) => void navigate({ to: "/purchases", search: (prev) => ({ ...prev, group: next, page: undefined }), replace: true });
   const units = (r: PurchaseRow) =>
-    r.units_received === null ? t("purchases.unitsOrdered", { ordered: f.number(r.units_ordered) }) : t("purchases.unitsReceived", { received: f.number(r.units_received), ordered: f.number(r.units_ordered) });
+    r.units_received === null
+      ? r.state === "in_stock" && !r.counted
+        ? `~${t("purchases.unitsOrdered", { ordered: f.number(r.units_ordered) })}`
+        : t("purchases.unitsOrdered", { ordered: f.number(r.units_ordered) })
+      : t("purchases.unitsReceived", { received: f.number(r.units_received), ordered: f.number(r.units_ordered) });
+  const pickable = (r: PurchaseRow) => canManage && r.state === "in_transit";
   const columns: Column<PurchaseRow>[] = [
     {
       key: "purchase",
@@ -86,9 +110,20 @@ export function Purchases() {
             </span>
           )}
           <span className="caption purchase-cell__meta">
-            {t(`purchases.state.${r.state}`)} · {units(r)}
+            {stateLabel(t, r.state, r.counted)} · {units(r)}
             {r.track_no && ` · ${t("purchases.trackShort", { track: r.track_no })}`}
           </span>
+          {pickable(r) && (
+            <label className="purchase-cell__pick">
+              <input
+                type="checkbox"
+                checked={picked.includes(r.id)}
+                onChange={(e) => setPicked((p) => (e.target.checked ? [...p, r.id] : p.filter((x) => x !== r.id)))}
+                aria-label={t("purchases.arrived.pick", { name: r.title ?? t("purchases.untitled") })}
+              />
+              <span className="caption">{t("purchases.arrived.pickHeader")}</span>
+            </label>
+          )}
         </span>
       ),
     },
@@ -156,6 +191,18 @@ export function Purchases() {
       </div>
       <div id="purchases-panel" role="tabpanel" aria-label={t("purchases.list")} className="purchases__panel purchases__panel--collapse">
         {!amounts && <Banner tone="info" title={t("purchases.noAmounts")}>{t("purchases.noAmountsText")}</Banner>}
+        {picked.length > 0 && (
+          <div className="purchases__arrive" role="group" aria-label={t("purchases.arrived.title")}>
+            <TextInput label={t("purchases.arrived.on")} type="date" value={arrivedOn} onValueChange={setArrivedOn} max={todayTashkent()} />
+            <Button variant="primary" loading={arrive.isPending} disabled={!arrivedOn} onClick={() => arrive.mutate()}>
+              {t("purchases.arrived.save", { count: picked.length })}
+            </Button>
+            <Button variant="ghost" onClick={() => setPicked([])}>
+              {t("purchases.arrived.cancel")}
+            </Button>
+            {arrive.isError && <Banner tone="negative" title={errorText(arrive.error, t)} />}
+          </div>
+        )}
         {query.isError ? (
           <Banner tone="negative" title={errorText(query.error, t)} action={<Button onClick={() => void query.refetch()}>{t("common.retry")}</Button>} />
         ) : !query.data ? (

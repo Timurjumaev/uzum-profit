@@ -83,6 +83,26 @@ describe("xaridlar ro'yxati", () => {
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Xaridlar");
   });
 
+  it("\"Keldi\" (TM9.8): Yo'ldagi xaridlarni belgilab bitta so'rov, sana — bugun; sanalmagan — \"Omborimda · sanalmagan\"", async () => {
+    const arrivedRoute = `POST /api/v1/orgs/${ME.orgs[0]!.id}/purchases/arrived`;
+    const uncounted = purchaseRow({ id: PURCHASE_2, title: "Keldi partiya", state: "in_stock", counted: false, arrived_on: "2026-11-12", path: supplyPath("in_stock", { in_stock: "2026-11-12" }, { uncounted: true }) });
+    const { api } = await renderAt("/purchases", {
+      [PURCHASES_ROUTE]: () => json(200, { items: [purchaseRow(), uncounted], amounts: true, total: 2, page: 1, pages: 1 }),
+      [arrivedRoute]: () => json(200, { updated: 1 }),
+    });
+    const table = await screen.findByRole("table", { name: "Xaridlar roʻyxati" });
+    const rows = within(table).getAllByRole("row");
+    expect(norm(rows[2]!.textContent!)).toContain("Omborimda · sanalmagan");
+    expect(norm(rows[2]!.textContent!)).toContain("~150 buyurtma");
+    // Faqat "Yo'lda" xaridni belgilash mumkin.
+    expect(screen.queryByRole("checkbox", { name: "Keldi deb belgilash: Keldi partiya" })).toBeNull();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Keldi deb belgilash: Oktabr partiyasi" }));
+    fireEvent.click(screen.getByRole("button", { name: "Keldi (1)" }));
+    await waitFor(() => expect(bodiesOf(api, arrivedRoute)).toHaveLength(1));
+    expect(bodiesOf(api, arrivedRoute)[0]).toEqual({ purchase_ids: [PURCHASE_1], arrived_on: todayTashkent() });
+    expect(await screen.findByText("1 ta xarid — Omborimda · sanalmagan")).toBeTruthy();
+  });
+
   it("holat guruhi URL'da va API'ga `state` bo'lib boradi", async () => {
     const { api, history } = await renderAt("/purchases");
     await screen.findByRole("table", { name: "Xaridlar roʻyxati" });

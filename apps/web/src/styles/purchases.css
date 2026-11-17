@@ -422,6 +422,55 @@ a.purchase-cell__title:hover {
   align-items: end;
 }
 
+/* TM9.8: "Tovar qo'limga keldimi?" — majburiy tanlov; ro'yxatda "Keldi" paneli; Omborimdagi sanalmagan qism. */
+.cargo-pool__arrival {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.cargo-pool__arrival .ui-segmented__item {
+  min-inline-size: 64px;
+  justify-content: center;
+  text-align: center;
+}
+
+.purchases__arrive {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: end;
+  margin-block-end: var(--space-3);
+}
+
+.purchase-cell__pick {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-block-size: 44px;
+  min-inline-size: 44px;
+  cursor: pointer;
+}
+
+.purchase-cell__pick input {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  margin: 0;
+}
+
+.warehouse__uncounted {
+  display: grid;
+  gap: var(--space-2);
+  margin-block-end: var(--space-4);
+}
+
+.warehouse__uncounted-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .cargo-pool__list {
   display: grid;
   gap: var(--space-3);

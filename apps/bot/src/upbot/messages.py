@@ -63,6 +63,7 @@ T: dict[str, dict[str, str]] = {
         "uncosted_sales": "Tannarxsiz sotuvlar: {n} ta qator ({day}). Xaridni kiriting — sof foyda toʻliq boʻladi.",
         "new_fine": "Yangi jarima: {v}",
         "receiving": "Postavka № {number}: {title} — joʻnatildi {shipped}, qabul qilindi {accepted} ({missing} dona kam)",
+        "uncounted": "Xarid keldi, {days} kundan beri sanalmagan: {title}. Sanang — Omborimda soni aniq boʻladi.",
         "sync_stale": "❗ Sinxron toʻxtadi: {shop}. Oxirgi yangilanish: {since}",
         "sync_invalid": "❗ Uzum kaliti yaroqsiz: {shop}. Sozlamalarda yangi kalit kiriting.",
         "more": "Batafsil",
@@ -95,6 +96,7 @@ T: dict[str, dict[str, str]] = {
         "uncosted_sales": "Продажи без себестоимости: {n} строк ({day}). Внесите закупку — чистая прибыль станет полной.",
         "new_fine": "Новый штраф: {v}",
         "receiving": "Поставка № {number}: {title} — отправлено {shipped}, принято {accepted} (меньше на {missing} шт.)",
+        "uncounted": "Закупка пришла и не пересчитана {days} дн.: {title}. Пересчитайте — остаток на складе станет точным.",
         "sync_stale": "❗ Синхронизация остановилась: {shop}. Последнее обновление: {since}",
         "sync_invalid": "❗ Ключ Uzum недействителен: {shop}. Введите новый ключ в настройках.",
         "more": "Подробнее",
@@ -173,6 +175,11 @@ def notification(event: str, payload: dict[str, Any], lang: str, org: str | None
             missing=p["missing"],
         )
         msg = Message(text, "/receiving")
+    elif event == "uncounted_purchase":
+        msg = Message(
+            t(lang, "uncounted", days=p["days"], title=p.get("title") or "—"),
+            f"/purchases/{p['purchase_id']}",
+        )
     elif event == "sync_stopped":
         if p["reason"] == "key_invalid":
             msg = Message(t(lang, "sync_invalid", shop=p["shop"]), "/settings")

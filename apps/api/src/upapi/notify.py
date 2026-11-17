@@ -17,6 +17,7 @@ Hodisalar (ishlaydiganlari; qolganlari katalogda ``stage`` bilan):
 - **Tannarxsiz sotuvlar** — kecha tannarxi noma'lum sotuv qatorlari bo'lsa, kuniga bir marta.
 - **Yangi jarima** — oxirgi 3 kunda paydo bo'lgan jarima xarajati (har biri bir marta).
 - **Postavka kamomadi** — Uzum kam qabul qilgan va qaror yozilmagan farq (TM7).
+- **Xarid sanalmagan** (TM9.8) — "Keldi" belgilangan xarid N kun (standart 3) sanalmay tursa, har xarid uchun bir marta.
 - **Sinxron to'xtadi** (kritik) — faol do'kon buyurtmalari N soatdan beri yangilanmagan yoki kalit yaroqsiz.
 """
 
@@ -255,6 +256,34 @@ async def receiving_shortages(conn: AsyncConnection) -> list[Found]:
     ]
 
 
+async def uncounted_purchases(conn: AsyncConnection, today: date, days: int) -> list[Found]:
+    """TM9.8: "Keldi", lekin ``days`` kundan beri sanalmagan xaridlar — har biri bir marta (``dedupe_key`` — xarid)."""
+    p = m.purchases
+    rows = await conn.execute(
+        select(p.c.id, p.c.title, p.c.arrived_on).where(
+            p.c.arrival_marked.is_(True),
+            p.c.arrived_on.is_not(None),
+            p.c.arrived_on <= today - timedelta(days=days),
+            p.c.received_on.is_(None),
+            p.c.sent_to_uzum_on.is_(None),
+            p.c.closed_on.is_(None),
+        )
+    )
+    return [
+        Found(
+            Event.UNCOUNTED_PURCHASE,
+            f"uncounted:{r.id}",
+            {
+                "purchase_id": str(r.id),
+                "title": r.title,
+                "arrived_on": r.arrived_on.isoformat(),
+                "days": (today - r.arrived_on).days,
+            },
+        )
+        for r in rows
+    ]
+
+
 async def sync_stopped(conn: AsyncConnection, now: datetime, hours: int) -> list[Found]:
     """Faol do'kon: kalit yaroqsiz yoki buyurtmalar ``hours`` soatdan beri yangilanmagan (birinchi sinxron hali
     tugamagan do'kon — hisobga olinmaydi)."""
@@ -353,6 +382,21 @@ async def evaluate(conn: AsyncConnection, org_id: UUID, now: datetime) -> int:
                     for p in people
                     if p.wants(Event.SYNC_STOPPED)
                     and int(p.params(Event.SYNC_STOPPED)["hours"]) == hours
+                ]
+    if Event.UNCOUNTED_PURCHASE in wanted:
+        for days in sorted(
+            {
+                int(p.params(Event.UNCOUNTED_PURCHASE)["days"])
+                for p in people
+                if p.wants(Event.UNCOUNTED_PURCHASE)
+            }
+        ):
+            for found in await uncounted_purchases(conn, today, days):
+                personal += [
+                    (p, found)
+                    for p in people
+                    if p.wants(Event.UNCOUNTED_PURCHASE)
+                    and int(p.params(Event.UNCOUNTED_PURCHASE)["days"]) == days
                 ]
     if Event.STOCK_CRITICAL in wanted and (found := await stock_critical(conn, today)) is not None:
         common.append(found)

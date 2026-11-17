@@ -115,7 +115,7 @@ describe("ombor jadvali", () => {
   });
 
   it("\"Uzumga yuborish\" (ADR-057 Q2): tab soni, belgi qatorda, URL va API'ga `ship`", async () => {
-    const ship = { cover_days: "4.0", handover_days: "7", own: 15 };
+    const ship = { cover_days: "4.0", handover_days: "7", own: 15, uncounted: 0 };
     const data = inventoryData({ items: [stockRow({ ship }), deadRow()], totals: { ...inventoryData().totals, ship: 1 } });
     const { api, history } = await renderAt("/inventory", { [INVENTORY_ROUTE]: () => json(200, data) });
     const table = await screen.findByRole("table", { name: "Qoldiq jadvali" });

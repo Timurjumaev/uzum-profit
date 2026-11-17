@@ -67,11 +67,18 @@ describe("kargo puli jadvali", () => {
     fireEvent.change(screen.getByLabelText("Kargo puli: Trekli A"), { target: { value: "45,5" } });
     fireEvent.change(screen.getByLabelText("Vazn, kg: Trekli A"), { target: { value: "3" } });
     fireEvent.change(screen.getByLabelText("Kargo puli: Quti C"), { target: { value: "12" } });
+    // TM9.8: "Tovar qo'limga keldimi?" — standartsiz, javobsiz saqlanmaydi.
+    expect((screen.getByRole("button", { name: "Kargo pulini saqlash (2)" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText(/Tanlang — kargo puli baʼzan tovar kelmasdan/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("radio", { name: "Ha" }));
+    fireEvent.change(screen.getByLabelText("Keldi sanasi"), { target: { value: "2026-10-20" } });
     fireEvent.click(screen.getByRole("button", { name: "Kargo pulini saqlash (2)" }));
     await waitFor(() => expect(bodiesOf(api, CARGO_TRACKED_ROUTE)).toHaveLength(1));
     expect(bodiesOf(api, CARGO_TRACKED_ROUTE)[0]).toMatchObject({
       currency: "USD",
       rate_mode: "cbu",
+      arrived: true,
+      arrived_on: "2026-10-20",
       rows: [
         { purchase_id: PURCHASE_1, amount: "45.5", weight_kg: "3" },
         { purchase_id: PURCHASE_3, amount: "12" },
@@ -85,6 +92,7 @@ describe("kargo puli jadvali", () => {
     await screen.findByRole("list", { name: "Kargo puli kutilayotgan xaridlar" });
     fireEvent.click(screen.getByRole("radio", { name: "Oʻzim kiritaman" }));
     fireEvent.change(screen.getByLabelText("Kargo puli: Trekli A"), { target: { value: "10" } });
+    fireEvent.click(screen.getByRole("radio", { name: "Hali yoʻq" }));
     expect((screen.getByRole("button", { name: "Kargo pulini saqlash (1)" }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.change(screen.getByLabelText(/^1 USD/), { target: { value: "12700" } });
     expect((screen.getByRole("button", { name: "Kargo pulini saqlash (1)" }) as HTMLButtonElement).disabled).toBe(false);
@@ -109,13 +117,15 @@ describe("kargo puli jadvali", () => {
     fireEvent.change(within(panel).getByLabelText(/^Kod yoki quti nomi/), { target: { value: "KOD-77" } });
     fireEvent.change(within(panel).getByLabelText(/^Umumiy summa/), { target: { value: "100" } });
     await waitFor(() => expect((screen.getByLabelText("Qutidagi ulush: Quti B") as HTMLInputElement).value).toBe("85,71"));
+    expect(save.disabled).toBe(true); // "Keldimi?" javobi yo'q
+    fireEvent.click(screen.getByRole("radio", { name: "Hali yoʻq" }));
     expect(save.disabled).toBe(false);
     // Qo'lda ulush: server qolganini qayta bo'ladi.
     fireEvent.change(screen.getByLabelText("Qutidagi ulush: Quti B"), { target: { value: "70" } });
     await waitFor(() => expect((screen.getByLabelText("Qutidagi ulush: Quti C") as HTMLInputElement).value).toBe("30,00"));
     fireEvent.click(save);
     await waitFor(() => expect(bodiesOf(api, CARGO_BOX_ROUTE)).toHaveLength(1));
-    expect(bodiesOf(api, CARGO_BOX_ROUTE)[0]).toMatchObject({ title: "KOD-77", amount: "100", currency: "USD", purchase_ids: [PURCHASE_2, PURCHASE_3], fixed: { [PURCHASE_2]: "70" } });
+    expect(bodiesOf(api, CARGO_BOX_ROUTE)[0]).toMatchObject({ title: "KOD-77", amount: "100", currency: "USD", purchase_ids: [PURCHASE_2, PURCHASE_3], fixed: { [PURCHASE_2]: "70" }, arrived: false });
     await waitFor(() => expect(history.location.pathname).toBe(`/shipments/${SHIPMENT_1}`));
   });
 
@@ -134,6 +144,7 @@ describe("kargo puli jadvali", () => {
     fireEvent.change(within(panel).getByLabelText(/^Kod yoki quti nomi/), { target: { value: "K" } });
     fireEvent.change(within(panel).getByLabelText(/^Umumiy summa/), { target: { value: "100" } });
     await waitFor(() => expect((screen.getByLabelText("Qutidagi ulush: Quti B") as HTMLInputElement).value).toBe("50,00"));
+    fireEvent.click(screen.getByRole("radio", { name: "Ha" }));
     fireEvent.change(screen.getByLabelText("Qutidagi ulush: Quti B"), { target: { value: "40" } });
     fireEvent.change(screen.getByLabelText("Qutidagi ulush: Quti C"), { target: { value: "50" } });
     expect(await screen.findByText(/Ulushlar yigʻindisi umumiy summaga teng emas/)).toBeTruthy();

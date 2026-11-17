@@ -11,8 +11,8 @@ describe("xarid modeli", () => {
   it("uch nuqtali yo'l → Timeline: kunlar faqat joriy nuqtada", () => {
     const stages = pathStages(
       [
-        { state: "in_transit", mark: "current", on: "2026-10-02", days: 11, expected: "2026-10-28", delayed: false },
-        { state: "in_stock", mark: "upcoming", on: null, days: null, expected: null, delayed: false },
+        { state: "in_transit", mark: "current", on: "2026-10-02", days: 11, expected: "2026-10-28", delayed: false, uncounted: false },
+        { state: "in_stock", mark: "upcoming", on: null, days: null, expected: null, delayed: false, uncounted: false },
       ],
       (s) => s,
     );
@@ -20,6 +20,9 @@ describe("xarid modeli", () => {
       { label: "in_transit", state: "current", date: "2026-10-02", days: 11, expected: "2026-10-28", delayed: false },
       { label: "in_stock", state: "upcoming", date: undefined, days: undefined, expected: undefined, delayed: false },
     ]);
+    // TM9.8: keldi, sanalmagan — "Omborimda · sanalmagan" nomi.
+    const arrived = pathStages([{ state: "in_stock", mark: "current", on: "2026-11-12", days: null, expected: null, delayed: false, uncounted: true }], (s) => s, "sanalmagan");
+    expect(arrived[0]).toMatchObject({ label: "sanalmagan", state: "current", date: "2026-11-12" });
   });
 
   it("ma'lumot belgilari: qator summalari yo'q — taxminiy emas", () => {

@@ -101,6 +101,8 @@ test("kargo puli (TM3): kartochkalar, kodli quti paneli — 360 px da gorizontal
   const list = page.getByRole("list", { name: "Kargo puli kutilayotgan xaridlar" });
   await expect(list.getByRole("listitem")).toHaveCount(3);
   await page.getByLabel("Kargo puli: Oktabr partiyasi").fill("45");
+  await expect(page.getByRole("button", { name: "Kargo pulini saqlash (1)" })).toBeDisabled(); // "Keldimi?" javobsiz
+  await page.getByText("Hali yoʻq", { exact: true }).click();
   await expect(page.getByRole("button", { name: "Kargo pulini saqlash (1)" })).toBeEnabled();
   await page.getByRole("checkbox", { name: "Qutiga qoʻshish: Kabel va gʻiloflar" }).check();
   await page.getByRole("checkbox", { name: "Qutiga qoʻshish: Kichik buyurtma" }).check();

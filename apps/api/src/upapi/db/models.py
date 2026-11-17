@@ -577,6 +577,9 @@ purchases = tenant(
     # Ta'minot qayta loyihasi (ADR-061): trek, "Tovar qo'limda", sotuvchi qaytargan summa.
     Column("track_no", Text),
     Column("on_hand", Boolean, nullable=False, server_default="false"),
+    # TM9.8 (ADR-069): "Keldi" — ``NULL`` eski yozuv (F21 avvalgidek), ``false`` hali kelmagan, ``true`` keldi
+    # (sana — ``arrived_on``). Migratsiya 0031.
+    Column("arrival_marked", Boolean, server_default="false"),
     Column("refund_amount", FX),
     Column("refund_currency", Text),
     Column("refund_on", Date),

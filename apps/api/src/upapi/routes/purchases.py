@@ -618,6 +618,9 @@ async def create_quick_purchase(
             on_hand=body.on_hand,
             ordered_on=day,
             received_on=day if body.on_hand else None,
+            # TM9.8: "Tovar qo'limda" — keldi va sanaldi bir kunda.
+            arrived_on=day if body.on_hand else None,
+            arrival_marked=body.on_hand,
         )
         .returning(p.c.id)
     )
@@ -737,6 +740,62 @@ async def delete_purchase(
     )
     await _changed(ctx, request, background, purchase_id, items)
     return Response(status_code=204)
+
+
+class ArrivedIn(BaseModel):
+    """TM9.8 (ADR-069): ro'yxatda bir nechta xaridni belgilab "Keldi" (sana — bugun, o'zgartiriladi); ``arrived_on``
+    ``null`` — "Keldi"ni bekor qilish (xarid yana "Yo'lda"; faqat sanalmagan xaridda)."""
+
+    purchase_ids: Annotated[list[UUID], Field(min_length=1, max_length=MAX_BULK)]
+    arrived_on: date | None = Field(default_factory=today)
+
+
+class ArrivedOut(BaseModel):
+    updated: int
+
+
+@router.post("/orgs/{org_id}/purchases/arrived", response_model=ArrivedOut)
+async def mark_arrived(
+    body: ArrivedIn, ctx: Manager, request: Request, background: BackgroundTasks
+) -> ArrivedOut:
+    """ "Keldi" — sanashdan oldin (TM9.8): xarid "Omborimda · sanalmagan" (dona = buyurtma soni, taxminiy); lot tayyor
+    sanasi (F21) — keldi sanasi. Faqat sanalmagan va Uzumga yuborilmagan xaridlar (aks holda 409 ``bad_arrival``)."""
+    if body.arrived_on is not None and body.arrived_on > today():
+        raise AppError("bad_day", 422, detail="kelajak sanasi bo'lmaydi")
+    if len(set(body.purchase_ids)) != len(body.purchase_ids):
+        raise AppError("bad_request", 422, detail="xarid takrorlangan")
+    p = m.purchases
+    rows = list(
+        await ctx.conn.execute(
+            select(p).where(p.c.id.in_(body.purchase_ids)).order_by(p.c.id).with_for_update()
+        )
+    )
+    if len(rows) != len(body.purchase_ids):
+        raise AppError("purchase_not_found", 404)
+    for row in rows:
+        if row.received_on is not None or row.sent_to_uzum_on is not None or row.closed_on:
+            raise AppError("bad_arrival", 409, detail="xarid sanalgan — Keldi o'zgarmaydi")
+        if body.arrived_on is not None and row.ordered_on and body.arrived_on < row.ordered_on:
+            raise AppError("bad_arrival", 422, detail="keldi sanasi buyurtmadan oldin bo'lmaydi")
+    values = (
+        {"arrived_on": body.arrived_on, "arrival_marked": True}
+        if body.arrived_on is not None
+        else {"arrived_on": None, "arrival_marked": False}
+    )
+    await ctx.conn.execute(
+        update(p).where(p.c.id.in_(body.purchase_ids)).values(**values, updated_at=func.now())
+    )
+    for row in rows:
+        await ctx.audit(
+            "purchase.arrived",
+            "purchase",
+            row.id,
+            before=_plain({"arrived_on": row.arrived_on, "arrival_marked": row.arrival_marked}),
+            after=_plain(values),
+        )
+        await _changed(ctx, request, background, row.id)
+        await request_shipment_members(ctx, row.shipment_id, skip=row.id)
+    return ArrivedOut(updated=len(rows))
 
 
 @router.post(

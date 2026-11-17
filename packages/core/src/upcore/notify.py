@@ -30,6 +30,7 @@ class Event(StrEnum):
     CARGO_LATE = "cargo_late"
     COMMISSION_CHANGED = "commission_changed"
     FBS_DEADLINE = "fbs_deadline"
+    UNCOUNTED_PURCHASE = "uncounted_purchase"  # TM9.8: xarid keldi, N kun sanalmagan
 
 
 class Audience(StrEnum):
@@ -77,6 +78,8 @@ CATALOG: dict[Event, EventSpec] = {
         EventSpec(Event.CARGO_LATE, Audience.STOCK, params={"days": 5}, stage="B5.1"),
         EventSpec(Event.COMMISSION_CHANGED, Audience.FINANCE, stage="B5.5"),
         EventSpec(Event.FBS_DEADLINE, Audience.STOCK, critical=True, stage="B5.10"),
+        # TM9.8 (ADR-069, ADR-064): kritik emas, har xarid uchun bir marta.
+        EventSpec(Event.UNCOUNTED_PURCHASE, Audience.STOCK, params={"days": 3}),
     )
 }
 

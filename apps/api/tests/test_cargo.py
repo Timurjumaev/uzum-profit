@@ -53,6 +53,7 @@ def test_pool_and_tracked_cargo(world: World) -> None:
             w,
             "POST",
             "cargo-pool/tracked",
+            arrived=False,
             currency="UZS",
             rows=[
                 {"purchase_id": a, "amount": "50000", "weight_kg": "2.5", "track_no": " YT-9 "},
@@ -87,7 +88,7 @@ def test_tracked_validation(world: World) -> None:
         r = send(w, "POST", "cargo-pool/tracked", **body)
         assert r.status_code in (404, 422), (body, r.text)
     assert a in pool(w)  # hech narsa yozilmadi
-    body = {"rows": [{"purchase_id": a, "amount": "5"}], "currency": "UZS"}
+    body = {"rows": [{"purchase_id": a, "amount": "5"}], "currency": "UZS", "arrived": False}
     assert send(w, "POST", "cargo-pool/tracked", "warehouse", **body).status_code == 403
     assert send(w, "POST", "cargo-pool/tracked", "accountant", **body).status_code == 403
     assert a in pool(w, "warehouse")  # omborchi ro'yxatni ko'radi
@@ -124,6 +125,7 @@ def test_box_shares_and_recount(world: World) -> None:
             w,
             "POST",
             "cargo-pool/box",
+            arrived=False,
             title="KOD-77",
             amount="1000000",
             currency="UZS",
@@ -187,6 +189,7 @@ def test_box_and_tracked_are_exclusive(world: World) -> None:
             w,
             "POST",
             "cargo-pool/tracked",
+            arrived=False,
             currency="UZS",
             rows=[{"purchase_id": own, "amount": "1000"}],
         ),
@@ -196,6 +199,7 @@ def test_box_and_tracked_are_exclusive(world: World) -> None:
         w,
         "POST",
         "cargo-pool/box",
+        arrived=False,
         title="X",
         amount="10",
         currency="UZS",
@@ -204,7 +208,14 @@ def test_box_and_tracked_are_exclusive(world: World) -> None:
     assert r.status_code == 409 and r.json()["code"] == "cargo_twice"
     box = ok(
         send(
-            w, "POST", "cargo-pool/box", title="Y", amount="10", currency="UZS", purchase_ids=[free]
+            w,
+            "POST",
+            "cargo-pool/box",
+            title="Y",
+            amount="10",
+            currency="UZS",
+            purchase_ids=[free],
+            arrived=False,
         ),
         201,
     )
@@ -212,12 +223,20 @@ def test_box_and_tracked_are_exclusive(world: World) -> None:
         w,
         "POST",
         "cargo-pool/tracked",
+        arrived=False,
         currency="UZS",
         rows=[{"purchase_id": free, "amount": "1000"}],
     )
     assert r.status_code == 409 and r.json()["code"] == "cargo_twice"
     r = send(
-        w, "POST", "cargo-pool/box", title="Z", amount="10", currency="UZS", purchase_ids=[free]
+        w,
+        "POST",
+        "cargo-pool/box",
+        title="Z",
+        amount="10",
+        currency="UZS",
+        purchase_ids=[free],
+        arrived=False,
     )
     assert r.status_code == 409 and r.json()["code"] == "purchase_in_shipment"
     assert box["shipment_id"]
@@ -225,6 +244,7 @@ def test_box_and_tracked_are_exclusive(world: World) -> None:
         w,
         "POST",
         "cargo-pool/box",
+        arrived=False,
         title="Z",
         amount="10",
         currency="UZS",
@@ -292,6 +312,7 @@ def test_cost_types_dictionary(world: World) -> None:
             w,
             "POST",
             "cargo-pool/box",
+            arrived=False,
             title="Turli",
             amount="10",
             currency="UZS",
@@ -333,7 +354,11 @@ def test_tracked_resend_does_not_write_twice(world: World) -> None:
     """TM9.5 (G7): trekli kargo puli qayta yuborilsa (ikki bosish, tarmoq qayta urinishi) — ikkinchi "Kargo" yozilmaydi."""
     w = world
     pid = quick(w, "Takror", 4)
-    body: dict[str, Any] = {"currency": "UZS", "rows": [{"purchase_id": pid, "amount": "40000"}]}
+    body: dict[str, Any] = {
+        "currency": "UZS",
+        "rows": [{"purchase_id": pid, "amount": "40000"}],
+        "arrived": False,
+    }
     ok(send(w, "POST", "cargo-pool/tracked", **body), 201)
     r = send(w, "POST", "cargo-pool/tracked", **body)
     assert r.status_code == 409 and r.json()["code"] == "cargo_twice"

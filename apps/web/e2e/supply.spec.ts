@@ -26,8 +26,12 @@ test("ta'minot oqimi: xarid → kargo puli → sanash → jo'natish → qabul fa
   // 2. Kargo puli.
   await open(page, "/cargo-pool");
   await page.getByLabel("Kargo puli: Oktabr partiyasi").fill("45");
+  // TM9.8: "Tovar qo'limga keldimi?" — majburiy, standartsiz.
+  await expect(page.getByRole("button", { name: "Kargo pulini saqlash (1)" })).toBeDisabled();
+  await page.getByText("Ha", { exact: true }).click();
   await page.getByRole("button", { name: "Kargo pulini saqlash (1)" }).click();
   await expect.poll(() => posted("cargo-pool/tracked").length).toBe(1);
+  expect(posted("cargo-pool/tracked")[0]).toMatchObject({ arrived: true });
 
   // 3. Sanash.
   await open(page, `/purchases/${PURCHASE_1}`);

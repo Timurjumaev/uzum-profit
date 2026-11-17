@@ -874,3 +874,34 @@ def test_goods_missing_flag_when_no_goods_share() -> None:
     a, b = compute_lots(Purchase("p", lines, (goods_a, cargo)))
     assert Flag.GOODS_MISSING not in a.flags and Flag.GOODS_MISSING in b.flags
     assert Flag.GOODS_MISSING not in INFO_FLAGS
+
+
+def test_arrival_ready_date_and_state() -> None:
+    """TM9.8 (ADR-069): F21 tayyor sanasi — "Keldi" (yo'q bo'lsa sanash); kargo to'lov sanasi faqat eski yozuvlarda.
+    Holat: "Keldi" belgilangan, sanalmagan — Omborimda (sanalmagan); F25 yo'l — buyurtma → keldi."""
+    line = (PurchaseLine("a", 10),)
+    paid, came, counted = date(2026, 10, 3), date(2026, 10, 6), date(2026, 10, 9)
+    legacy = Purchase("p", line, cargo_paid_date=paid)
+    assert legacy.ready_date == paid  # eski qoida: kargo to'lovi
+    assert Purchase("p", line, cargo_paid_date=paid, received_date=counted).ready_date == counted
+    waiting = Purchase("p", line, cargo_paid_date=paid, arrival=False)
+    assert waiting.ready_date is None  # kargo to'langan, tovar hali kelmagan
+    arrived = Purchase("p", line, cargo_paid_date=paid, arrival=True, arrived_date=came)
+    assert arrived.ready_date == came
+    both = Purchase("p", line, arrival=True, arrived_date=came, received_date=counted)
+    assert both.ready_date == came
+    assert Purchase("p", line, arrival=False, received_date=counted).ready_date == counted
+
+    dates = {Stage.ORDERED: date(2026, 9, 26)}
+    assert supply_state(dates) is SupplyState.IN_TRANSIT
+    assert supply_state(dates, came) is SupplyState.IN_STOCK
+    assert transit_days(dates, came) == 10
+    assert (
+        transit_days({**dates, Stage.RECEIVED: counted}, came) == 10
+    )  # sanashgacha kutish qo'shilmaydi
+    assert transit_days({**dates, Stage.RECEIVED: counted}) == 13
+    path = supply_path(dates, date(2026, 10, 8), arrived=came)
+    assert [x.mark for x in path] == ["done", "current", "upcoming"]
+    assert path[1].on == came and path[1].uncounted
+    path = supply_path({**dates, Stage.RECEIVED: counted}, date(2026, 10, 10), arrived=came)
+    assert path[1].on == came and not path[1].uncounted

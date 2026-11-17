@@ -4954,6 +4954,70 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/purchases/arrived": {
+      "post": {
+        "tags": [
+          "purchases"
+        ],
+        "summary": "Mark Arrived",
+        "description": "\"Keldi\" — sanashdan oldin (TM9.8): xarid \"Omborimda · sanalmagan\" (dona = buyurtma soni, taxminiy); lot tayyor\nsanasi (F21) — keldi sanasi. Faqat sanalmagan va Uzumga yuborilmagan xaridlar (aks holda 409 ``bad_arrival``).",
+        "operationId": "mark_arrived_api_v1_orgs__org_id__purchases_arrived_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArrivedIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArrivedOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/purchases/{purchase_id}/copy": {
       "post": {
         "tags": [
@@ -8971,6 +9035,51 @@
         "title": "AllocationBase",
         "description": "Taqsimot asosi (M9). Kargo uchun standart — vazn."
       },
+      "ArrivedIn": {
+        "properties": {
+          "purchase_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Purchase Ids"
+          },
+          "arrived_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arrived On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "purchase_ids"
+        ],
+        "title": "ArrivedIn",
+        "description": "TM9.8 (ADR-069): ro'yxatda bir nechta xaridni belgilab \"Keldi\" (sana — bugun, o'zgartiriladi); ``arrived_on``\n``null`` — \"Keldi\"ni bekor qilish (xarid yana \"Yo'lda\"; faqat sanalmagan xaridda)."
+      },
+      "ArrivedOut": {
+        "properties": {
+          "updated": {
+            "type": "integer",
+            "title": "Updated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "updated"
+        ],
+        "title": "ArrivedOut"
+      },
       "AttentionOut": {
         "properties": {
           "uncosted_lines": {
@@ -9009,6 +9118,11 @@
           "goods_missing": {
             "type": "integer",
             "title": "Goods Missing",
+            "default": 0
+          },
+          "uncounted": {
+            "type": "integer",
+            "title": "Uncounted",
             "default": 0
           }
         },
@@ -9109,6 +9223,22 @@
       },
       "BoxIn": {
         "properties": {
+          "arrived": {
+            "type": "boolean",
+            "title": "Arrived"
+          },
+          "arrived_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arrived On"
+          },
           "currency": {
             "$ref": "#/components/schemas/Currency",
             "default": "USD"
@@ -9222,6 +9352,7 @@
         },
         "type": "object",
         "required": [
+          "arrived",
           "title",
           "amount",
           "purchase_ids"
@@ -10808,6 +10939,11 @@
             },
             "type": "array",
             "title": "No Barcode"
+          },
+          "uncounted": {
+            "type": "integer",
+            "title": "Uncounted",
+            "default": 0
           }
         },
         "type": "object",
@@ -10901,7 +11037,8 @@
           "payout_late",
           "cargo_late",
           "commission_changed",
-          "fbs_deadline"
+          "fbs_deadline",
+          "uncounted_purchase"
         ],
         "title": "Event"
       },
@@ -13438,7 +13575,7 @@
               "$ref": "#/components/schemas/NotificationRuleIn"
             },
             "type": "array",
-            "maxItems": 14,
+            "maxItems": 15,
             "title": "Rules"
           },
           "quiet_from": {
@@ -14784,6 +14921,11 @@
           "delayed": {
             "type": "boolean",
             "title": "Delayed"
+          },
+          "uncounted": {
+            "type": "boolean",
+            "title": "Uncounted",
+            "default": false
           }
         },
         "type": "object",
@@ -15645,6 +15787,23 @@
             },
             "type": "array",
             "title": "Path"
+          },
+          "arrived_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arrived On"
+          },
+          "counted": {
+            "type": "boolean",
+            "title": "Counted",
+            "default": false
           },
           "track_no": {
             "anyOf": [
@@ -17109,6 +17268,11 @@
           "own": {
             "type": "integer",
             "title": "Own"
+          },
+          "uncounted": {
+            "type": "integer",
+            "title": "Uncounted",
+            "default": 0
           }
         },
         "type": "object",
@@ -20471,6 +20635,22 @@
       },
       "TrackedIn": {
         "properties": {
+          "arrived": {
+            "type": "boolean",
+            "title": "Arrived"
+          },
+          "arrived_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arrived On"
+          },
           "currency": {
             "$ref": "#/components/schemas/Currency",
             "default": "USD"
@@ -20520,6 +20700,7 @@
         },
         "type": "object",
         "required": [
+          "arrived",
           "rows"
         ],
         "title": "TrackedIn"
@@ -20668,6 +20849,120 @@
         ],
         "title": "TransferOut",
         "description": "Shu SKU'ga o'tkazilgan qator (bekor qilish uchun)."
+      },
+      "UncountedLine": {
+        "properties": {
+          "sku_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku Id"
+          },
+          "item_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "shop": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shop"
+          },
+          "qty": {
+            "type": "integer",
+            "title": "Qty"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku_id",
+          "item_id",
+          "title",
+          "shop",
+          "qty"
+        ],
+        "title": "UncountedLine"
+      },
+      "UncountedOut": {
+        "properties": {
+          "purchase_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Purchase Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "arrived_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Arrived On"
+          },
+          "days": {
+            "type": "integer",
+            "title": "Days"
+          },
+          "qty": {
+            "type": "integer",
+            "title": "Qty"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/UncountedLine"
+            },
+            "type": "array",
+            "title": "Lines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "purchase_id",
+          "title",
+          "arrived_on",
+          "days",
+          "qty",
+          "lines"
+        ],
+        "title": "UncountedOut",
+        "description": "TM9.8 (ADR-069): \"Omborimda · sanalmagan\" — \"Keldi\" belgilangan, sanalmagan xarid (dona — buyurtma soni, ``~``)."
       },
       "UncoveredOut": {
         "properties": {
@@ -20926,6 +21221,19 @@
               }
             ],
             "title": "Total Value"
+          },
+          "uncounted": {
+            "items": {
+              "$ref": "#/components/schemas/UncountedOut"
+            },
+            "type": "array",
+            "title": "Uncounted",
+            "default": []
+          },
+          "uncounted_qty": {
+            "type": "integer",
+            "title": "Uncounted Qty",
+            "default": 0
           }
         },
         "type": "object",

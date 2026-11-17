@@ -6,7 +6,7 @@ import axe from "axe-core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App, createAppState } from "../../App";
-import type { PickerRow, WarehouseRow } from "../../lib/api/types";
+import type { PickerRow, Warehouse, WarehouseRow } from "../../lib/api/types";
 import { todayTashkent } from "../../lib/dates";
 import { json, ME, ME_ROUTE, mockApi, SKU_PICKER_ROUTE, type Routes } from "../../test/api";
 
@@ -44,6 +44,8 @@ const WAREHOUSE = {
   amounts: true,
   total_qty: 100,
   total_value: "1000000.00",
+  uncounted: [] as Warehouse["uncounted"],
+  uncounted_qty: 0,
 };
 const picker = (over: Partial<PickerRow>): PickerRow => ({ sku_id: null, item_id: null, item_name: null, shop_id: "b1", shop: "byDurii", product_title: null, title: null, article: null, image_url: null, stock: null, sold: null, status: null, ...over });
 
@@ -123,7 +125,7 @@ describe("Omborim", () => {
     await screen.findByRole("table", { name: "Omborim" });
     expect(screen.queryByRole("button", { name: /^Brak/ })).toBeNull();
     cleanup();
-    await renderAt({ [WAREHOUSE_ROUTE]: () => json(200, { items: [], amounts: true, total_qty: 0, total_value: "0.00" }) });
+    await renderAt({ [WAREHOUSE_ROUTE]: () => json(200, { items: [], amounts: true, total_qty: 0, total_value: "0.00", uncounted: [], uncounted_qty: 0 }) });
     expect(await screen.findByText("Omborimda tovar yoʻq")).toBeTruthy();
   });
 
@@ -134,6 +136,17 @@ describe("Omborim", () => {
     expect(cells).toMatch(/[−-]4/);
     expect(within(table).getAllByText("xato").length).toBeGreaterThan(0);
     expect((screen.getAllByRole("button", { name: "Brak: Mashina-Qizil" })[0] as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("keldi, sanalmagan (TM9.8): alohida bo'lim, ~dona, kun va \"sanang\" belgisi; sanalgan jadval o'zgarmaydi", async () => {
+    const uncounted = [{ purchase_id: "p9", title: "Noyabr kargo", arrived_on: "2026-11-12", days: 5, qty: 40, lines: [{ sku_id: SKU_A, item_id: ITEM, title: "Mashina-Qizil", shop: "byDurii", qty: 40 }] }];
+    await renderAt({ [WAREHOUSE_ROUTE]: () => json(200, { ...WAREHOUSE, uncounted, uncounted_qty: 40 }) });
+    const section = await screen.findByRole("region", { name: /Keldi, sanalmagan/ });
+    expect(section.textContent).toContain("Keldi, sanalmagan: ~40 dona");
+    expect(section.textContent).toContain("Noyabr kargo");
+    expect(section.textContent).toContain("5 kun");
+    expect(within(section).getByText("sanang")).toBeTruthy();
+    expect(screen.getByRole("table", { name: "Omborim" })).toBeTruthy();
   });
 
   it("a11y: jiddiy buzilish yo'q", async () => {

@@ -57,6 +57,8 @@ class DraftOut(BaseModel):
     shop_id: UUID
     rows: list[DraftRow]  # shtrix-kodi bor
     no_barcode: list[DraftRow]  # Excel'ga kirmaydi
+    # TM9.8: shu do'kon SKU'laridagi sanalmagan ("Keldi", sanash kutilmoqda) dona — Excel'ga tushmaydi, avval sanash.
+    uncounted: int = 0
 
 
 class DispatchItemIn(BaseModel):
@@ -190,7 +192,14 @@ async def _draft(ctx: OrgContext, shop_id: UUID, amounts: bool) -> DraftOut:
             unit_cost=r.unit_cost,
         )
         (rows if r.barcode else missing).append(row)
-    return DraftOut(shop_id=shop_id, rows=rows, no_barcode=missing)
+    from upapi.reports.common import sku_catalog
+
+    pending = [x for p in current.uncounted for x in p.lines if x.sku_id is not None]
+    shop_of = await sku_catalog(ctx.conn, ids=list({x.sku_id for x in pending if x.sku_id}))
+    waiting = sum(
+        x.qty for x in pending if x.sku_id in shop_of and shop_of[x.sku_id].shop_id == shop_id
+    )
+    return DraftOut(shop_id=shop_id, rows=rows, no_barcode=missing, uncounted=waiting)
 
 
 @router.get("/orgs/{org_id}/dispatches/draft", response_model=DraftOut)

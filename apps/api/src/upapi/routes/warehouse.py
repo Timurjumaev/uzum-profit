@@ -29,7 +29,7 @@ from upapi.db import models as m
 from upapi.errors import AppError
 from upapi.reports import dispatch, integrity
 from upapi.reports import purchases as rp
-from upapi.reports.common import sku_catalog
+from upapi.reports.common import sku_catalog, today
 from upapi.reports.stock import inbound_by_sku
 from upapi.routes.items import item_of_sku
 from upapi.routes.purchases import _amounts, _changed, _plain
@@ -81,11 +81,33 @@ class WarehouseRow(BaseModel):
     transfers_in: list[TransferOut]
 
 
+class UncountedLine(BaseModel):
+    sku_id: UUID | None
+    item_id: UUID | None
+    title: str | None
+    shop: str | None
+    qty: int  # buyurtma soni (taxminiy — hali sanalmagan)
+
+
+class UncountedOut(BaseModel):
+    """TM9.8 (ADR-069): "Omborimda · sanalmagan" — "Keldi" belgilangan, sanalmagan xarid (dona — buyurtma soni, ``~``)."""
+
+    purchase_id: UUID
+    title: str | None
+    arrived_on: date
+    days: int  # kelganidan beri kun
+    qty: int
+    lines: list[UncountedLine]
+
+
 class WarehouseOut(BaseModel):
     items: list[WarehouseRow]
     amounts: bool
     total_qty: int
     total_value: Decimal | None
+    # TM9.8: sanalmagan qism alohida — sanalgan qoldiq (``items``, M10) tenglamasi o'zgarmaydi.
+    uncounted: list[UncountedOut] = []
+    uncounted_qty: int = 0
 
 
 class TransferIn(BaseModel):
@@ -261,12 +283,78 @@ async def stock(ctx: OrgContext, amounts: bool) -> WarehouseOut:
             )
         )
     out.sort(key=lambda x: (x.shop or "", x.title or "", x.key))
+    pending = await uncounted(ctx)
     return WarehouseOut(
         items=out,
         amounts=amounts,
         total_qty=total_qty,
         total_value=(total_value.quantize(Decimal("0.01")) if known else None) if amounts else None,
+        uncounted=pending,
+        uncounted_qty=sum(x.qty for x in pending),
     )
+
+
+async def uncounted(ctx: OrgContext) -> list[UncountedOut]:
+    """ "Keldi" belgilangan, hali sanalmagan xaridlar (eskisi birinchi) — dona buyurtma soni bilan."""
+    p, pl, it, sh = m.purchases, m.purchase_lines, m.items, m.shops
+    rows = [
+        r
+        for r in await ctx.conn.execute(
+            select(p)
+            .where(
+                p.c.arrival_marked.is_(True),
+                p.c.arrived_on.is_not(None),
+                p.c.received_on.is_(None),
+                p.c.sent_to_uzum_on.is_(None),
+                p.c.closed_on.is_(None),
+            )
+            .order_by(p.c.arrived_on, p.c.created_at, p.c.id)
+        )
+    ]
+    if not rows:
+        return []
+    lines = list(
+        await ctx.conn.execute(
+            select(pl)
+            .where(pl.c.purchase_id.in_([r.id for r in rows]), pl.c.source_line_id.is_(None))
+            .order_by(pl.c.created_at, pl.c.id)
+        )
+    )
+    skus = await sku_catalog(ctx.conn, ids=list({x.sku_id for x in lines if x.sku_id}))
+    names = {
+        r.id: r.name
+        for r in await ctx.conn.execute(
+            select(it.c.id, it.c.name).where(it.c.id.in_({x.item_id for x in lines if x.item_id}))
+        )
+    }
+    shops = {r.id: r.name for r in await ctx.conn.execute(select(sh.c.id, sh.c.name))}
+    day = today()
+    out = []
+    for r in rows:
+        mine = [x for x in lines if x.purchase_id == r.id]
+        items = []
+        for x in mine:
+            sku = skus.get(x.sku_id) if x.sku_id else None
+            items.append(
+                UncountedLine(
+                    sku_id=x.sku_id,
+                    item_id=x.item_id,
+                    title=(sku.title if sku else None) or names.get(x.item_id) or x.temp_name,
+                    shop=shops.get(sku.shop_id) if sku else None,
+                    qty=x.ordered_qty,
+                )
+            )
+        out.append(
+            UncountedOut(
+                purchase_id=r.id,
+                title=r.title,
+                arrived_on=r.arrived_on,
+                days=max((day - r.arrived_on).days, 0),
+                qty=sum(x.qty for x in items),
+                lines=items,
+            )
+        )
+    return out
 
 
 @router.post("/orgs/{org_id}/warehouse/transfer", response_model=WarehouseOut, status_code=201)

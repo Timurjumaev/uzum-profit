@@ -163,6 +163,10 @@ async def count_purchase(
     values = {}
     if all(r.received_qty is not None for r in after.values()) and row.received_on is None:
         values["received_on"] = body.counted_on or today()
+        # TM9.8 (ADR-069): "Keldi" belgilanmagan bo'lsa sanash o'zi qo'yadi (sana — sanash kuni). Eski yozuvdagi
+        # "Toshkentga keldi" bosqich sanasi (belgisiz) saqlanadi — lot tayyor sanasi avvalgidek sanash kuni.
+        if not row.arrival_marked and not (row.arrival_marked is None and row.arrived_on):
+            values |= {"arrived_on": values["received_on"], "arrival_marked": True}
     if body.refund_amount is not None:
         values |= {
             "refund_amount": body.refund_amount if body.refund_amount > 0 else None,
