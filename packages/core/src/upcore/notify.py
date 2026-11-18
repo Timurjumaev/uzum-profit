@@ -77,7 +77,7 @@ CATALOG: dict[Event, EventSpec] = {
         EventSpec(Event.PAYOUT_LATE, Audience.FINANCE, stage="B5.7"),
         EventSpec(Event.CARGO_LATE, Audience.STOCK, params={"days": 5}, stage="B5.1"),
         EventSpec(Event.COMMISSION_CHANGED, Audience.FINANCE, stage="B5.5"),
-        EventSpec(Event.FBS_DEADLINE, Audience.STOCK, critical=True, stage="B5.10"),
+        EventSpec(Event.FBS_DEADLINE, Audience.STOCK, critical=True, stage="B9.5"),
         # TM9.8 (ADR-069, ADR-064): kritik emas, har xarid uchun bir marta.
         EventSpec(Event.UNCOUNTED_PURCHASE, Audience.STOCK, params={"days": 3}),
     )

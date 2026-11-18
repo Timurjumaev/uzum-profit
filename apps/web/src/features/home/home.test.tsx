@@ -202,7 +202,7 @@ describe("davr chizig'i va grafik", () => {
 
 describe("diqqat talab qiladi", () => {
   it("ustuvorlik tartibida, har biri tegishli sahifaga (filtrlar saqlanadi)", async () => {
-    const data = dashboardData({ attention: { uncosted_lines: 12, uncosted_revenue: "1240000.00", loss_skus: 1, stock_critical: 2, stock_high: 3, stock_ship: 0, recalculated: 4, receiving: 2, goods_missing: 3, uncounted: 0, orphan_invoices: 0 } });
+    const data = dashboardData({ attention: { uncosted_lines: 12, uncosted_revenue: "1240000.00", loss_skus: 1, stock_critical: 2, stock_high: 3, stock_ship: 0, recalculated: 4, receiving: 2, goods_missing: 3, uncounted: 0, orphan_invoices: 0, telegram_lost: 0 } });
     await renderHome(`/?from=2026-10-01&to=2026-10-20`, { [DASHBOARD_ROUTE]: () => json(200, data) });
     const section = screen.getByRole("region", { name: "Diqqat talab qiladi" });
     const items = within(section).getAllByRole("listitem");
@@ -220,11 +220,20 @@ describe("diqqat talab qiladi", () => {
     expect(href).toContain("from=2026-10-01");
   });
 
+  it("Telegram uzildi (B6.4, A5): oxirgi, Sozlamalarga havola; ulangan bo'lsa chiqmaydi", async () => {
+    const lost = { uncosted_lines: 0, uncosted_revenue: "0.00", loss_skus: 0, stock_critical: 0, stock_high: 0, stock_ship: 0, recalculated: 0, receiving: 0, goods_missing: 0, uncounted: 0, orphan_invoices: 0, telegram_lost: 1 };
+    await renderHome(`/`, { [DASHBOARD_ROUTE]: () => json(200, dashboardData({ attention: lost })) });
+    const section = screen.getByRole("region", { name: "Diqqat talab qiladi" });
+    const [item] = within(section).getAllByRole("listitem");
+    expect(norm(item!.textContent ?? "")).toContain("Telegram uzildi — bildirishnomalar kelmayapti. Qayta ulang");
+    expect(within(item!).getByRole("link", { name: "Koʻrish" }).getAttribute("href")!.startsWith("/settings")).toBe(true);
+  });
+
   it("sinxron xatosi (do'kon sog'lom emas) ro'yxatga chiqadi; hammasi joyida — bo'sh holat matni", async () => {
     const base = syncStatus();
     const sick = syncStatus({ healthy: false, shops: [{ ...base.shops[0]!, healthy: false, errors_24h: 3 }, base.shops[1]!] });
     await renderHome("/", {
-      [DASHBOARD_ROUTE]: () => json(200, dashboardData({ attention: { uncosted_lines: 0, uncosted_revenue: "0.00", loss_skus: 0, stock_critical: 0, stock_high: 0, stock_ship: 0, recalculated: 0, receiving: 0, goods_missing: 0, uncounted: 0, orphan_invoices: 0 } })),
+      [DASHBOARD_ROUTE]: () => json(200, dashboardData({ attention: { uncosted_lines: 0, uncosted_revenue: "0.00", loss_skus: 0, stock_critical: 0, stock_high: 0, stock_ship: 0, recalculated: 0, receiving: 0, goods_missing: 0, uncounted: 0, orphan_invoices: 0, telegram_lost: 0 } })),
       [SYNC_ROUTE]: () => json(200, sick),
     });
     const section = screen.getByRole("region", { name: "Diqqat talab qiladi" });
@@ -232,7 +241,7 @@ describe("diqqat talab qiladi", () => {
     expect(within(section).getByRole("link", { name: "Koʻrish" }).getAttribute("href")).toContain("/status");
     cleanup();
     await renderHome("/", {
-      [DASHBOARD_ROUTE]: () => json(200, dashboardData({ attention: { uncosted_lines: 0, uncosted_revenue: "0.00", loss_skus: 0, stock_critical: 0, stock_high: 0, stock_ship: 0, recalculated: 0, receiving: 0, goods_missing: 0, uncounted: 0, orphan_invoices: 0 } })),
+      [DASHBOARD_ROUTE]: () => json(200, dashboardData({ attention: { uncosted_lines: 0, uncosted_revenue: "0.00", loss_skus: 0, stock_critical: 0, stock_high: 0, stock_ship: 0, recalculated: 0, receiving: 0, goods_missing: 0, uncounted: 0, orphan_invoices: 0, telegram_lost: 0 } })),
     });
     expect(screen.getByText("Hozir diqqat talab qiladigan narsa yoʻq.")).toBeTruthy();
     expect(screen.queryByRole("link", { name: "Koʻrish" })).toBeNull();

@@ -9570,6 +9570,11 @@
             "type": "integer",
             "title": "Orphan Invoices",
             "default": 0
+          },
+          "telegram_lost": {
+            "type": "integer",
+            "title": "Telegram Lost",
+            "default": 0
           }
         },
         "type": "object",

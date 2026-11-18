@@ -2081,6 +2081,11 @@ export interface components {
              * @default 0
              */
             orphan_invoices: number;
+            /**
+             * Telegram Lost
+             * @default 0
+             */
+            telegram_lost: number;
         };
         /** AuditOut */
         AuditOut: {

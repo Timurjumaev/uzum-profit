@@ -20,6 +20,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.expenses import ExpenseCategory
 from upcore.inventory import StockStatus
 from upcore.metrics import (
@@ -36,6 +38,7 @@ from upcore.pnl import CellKey, Cells, Statement, compare, expected_value, order
 from upapi import orgsettings
 from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission
+from upapi.db import models as m
 from upapi.reports import cells as rc
 from upapi.reports import linking
 from upapi.reports.common import (
@@ -172,6 +175,9 @@ class AttentionOut(BaseModel):
     goods_missing: int = 0  # TM9.5: tovar summasi kiritilmagan xaridlar (F22, taxminiy)
     uncounted: int = 0  # TM9.8: xarid keldi, sanalmagan
     orphan_invoices: int = 0  # TM9.1: dasturdan tashqari (jo'natmasiz) postavkalar
+    telegram_lost: int = (
+        0  # B6.4 (A5): Telegram kanali uzilgan (bot bloklangan / chat yo'q) — 1, qayta ulash kerak
+    )
 
 
 class DashboardOut(BaseModel):
@@ -374,6 +380,17 @@ def _summary(
     return KpiSummaryOut(bucket=bucket, points=points, groups=groups, flow=flow)
 
 
+async def telegram_lost(conn: AsyncConnection, user_id: UUID) -> int:
+    """1 — foydalanuvchining Telegram kanali uzilgan (doimiy yetkazish xatosi, B6.4 A5) va faol kanal yo'q: ilovada
+    "Telegram uzildi — qayta ulang". Hech qachon ulanmagan yoki o'zi uzgan (qator o'chadi) — 0."""
+    nc = m.notification_channels
+    rows = await conn.execute(
+        select(nc.c.active).where(nc.c.user_id == user_id, nc.c.kind == "telegram")
+    )
+    flags = [r.active for r in rows]
+    return 1 if flags and not any(flags) else 0
+
+
 @router.get("/orgs/{org_id}/dashboard", response_model=DashboardOut)
 async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
     conn, today = ctx.conn, f.today
@@ -542,6 +559,7 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
             goods_missing=await goods_missing(conn),
             uncounted=await uncounted_purchases(conn),
             orphan_invoices=len(await linking.orphans(conn)),
+            telegram_lost=await telegram_lost(conn, ctx.user.user_id),
         ),
         revenue_limit=None if limit is None else RevenueLimitOut.of(limit),
     )

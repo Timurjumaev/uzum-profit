@@ -1257,7 +1257,7 @@ boshlanadi) → B5 → B6.5 (B5.1–B5.2 dan keyin) → B6.3 → B6.6.
   kelgan `pending`, oxirgi 24 soat, "Batafsil" — ilova sahifasi (HTTPS); bloklangan chat — kanal o'chadi, vaqtinchalik
   xato — 5 urinish. Matnlar uz/ru. Web: Sozlamalar → Bildirishnomalar → «Telegramʼni ulash» / «Uzish». Yo'riqnoma —
   `docs/staging.md`. **T:** bot tokenini staging'ga kiritish va 7 kun kunlik xulosani olish (B6 chiqish mezoni).
-- [→] B6.4 **Xabar sifati — tuzatishlar** (09 §13 A1–A10, A18–A21; har biri test bilan; 02 M15 shu vazifada yangilanadi):
+- [→] B6.4 **Xabar sifati — tuzatishlar** (kod tugadi 2026-11-18; yopilishi: A21 — Temurning staging so'rovi, so'ng 7 kunlik sinov) (09 §13 A1–A10, A18–A21; har biri test bilan; 02 M15 shu vazifada yangilanadi):
   - **Xulosadagi sof foyda uch qismda** (A1): hozir bitta "Sof foyda" — kechagi kun uchun u deyarli to'liq
     *kutilayotgan* (Jarayondagi sotuvlar, 09 §11.2: ≈ 39% i keyin chiqib ketadi), belgisiz (tamoyil 9, ADR-037/038).
     Xabar: "Sof foyda: X · shundan kutilayotgan Y" + R fakti ("bunday sotuvlarning N% i yakunlanadi", F16) + "HH:MM
@@ -1287,11 +1287,11 @@ boshlanadi) → B5 → B6.5 (B5.1–B5.2 dan keyin) → B6.3 → B6.6.
     havolasi noto'g'ri) "doimiy" sanalib, foydalanuvchining Telegram'i **o'chirib qo'yiladi**. Doimiy — faqat bot
     bloklangan / chat yo'q; qolgani — shu xabar `failed`. `retry_after` hurmat qilinadi (hozir 30 soniyada qayta urinib,
     5 urinishni yoqib yuboradi). Kanal uzilsa — ilovada "Diqqat" qatori ("Telegram uzildi — qayta ulang").
-    ✓ 1-qadam 2026-11-18 (`apps/bot`): `TelegramBadRequest` — faqat shu xabar `failed`, kanal faol (`SendError.final`); doimiy — faqat bot bloklangan / chat yo'q; `retry_after` hurmat qilinadi (urinish sanalmaydi, xabar `due_at` ga surilib shu aylanishda boshqa xabar yuborilmaydi). Qoldi: kanal uzilsa ilovada "Diqqat" qatori ("Telegram uzildi — qayta ulang").
+    ✓ 1-qadam 2026-11-18 (`apps/bot`): `TelegramBadRequest` — faqat shu xabar `failed`, kanal faol (`SendError.final`); doimiy — faqat bot bloklangan / chat yo'q; `retry_after` hurmat qilinadi (urinish sanalmaydi, xabar `due_at` ga surilib shu aylanishda boshqa xabar yuborilmaydi). Kanal uzilsa ilovada "Diqqat" qatori ✓ 2026-11-18: `AttentionOut.telegram_lost` (faol kanal yo'q, lekin uzilgan qator bor) → "Telegram uzildi — bildirishnomalar kelmayapti. Qayta ulang" (Sozlamalarga havola); o'zi uzgan yoki hech qachon ulanmagan — chiqmaydi.
   - **Haftalik xulosa yo'qolmasin** (A6): hozir faqat dushanba kuni yuboriladi — dushanba kuni sinxron yetib kelmasa o'sha
     hafta xulosasi umuman kelmaydi. Shu hafta ichida birinchi imkoniyatda (kalit — hafta, o'zgarmaydi).
     ✓ 2026-11-18: haftalik xulosa vaqti kelgan har kuni (kalit — hafta, takror yo'q); `summary_due` dan `weekly` olib tashlandi.
-  - **Mayda** ✓ 2026-11-18 (A7, A8: "Batafsil" foydalanuvchi tilida, "Tez orada" — bosqich kodisiz; `stage` qiymatlari va "kvota" — qoldi): "Batafsil" tugmasi ruscha foydalanuvchiga ham o'zbekcha (A7); Sozlamalarda "Tez orada (B5.4)" — ichki
+  - **Mayda** ✓ 2026-11-18 (A7, A8: "Batafsil" foydalanuvchi tilida, "Tez orada" — bosqich kodisiz; `stage` qiymatlari ADR-063 ga moslandi — FBS: B9.5; 02 M15 dan "kvota tugayapti" olib tashlandi): "Batafsil" tugmasi ruscha foydalanuvchiga ham o'zbekcha (A7); Sozlamalarda "Tez orada (B5.4)" — ichki
     bosqich kodi sotuvchiga ko'rinadi (A8) → "Tez orada"; katalogdagi `stage` qiymatlari ADR-063 ga moslanadi (FBS —
     B9.5); 02 M15 dan "kvota tugayapti" olib tashlanadi (sotuvchi hech narsa qila olmaydi — admin hodisasi, 06 §4, B8.5).
   - **Navbat tartibi** (A9, A10): `notifications` da saqlash muddati yo'q (cheksiz o'sadi) — 90 kundan eski qatorlar
