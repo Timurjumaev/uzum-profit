@@ -4,13 +4,14 @@ bir partiyaga siljimaydi; "Topildi" yoki qayta ochilsa — qaytadi. Zarar foyda 
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import test_purchases as tp
 from test_purchases import ok, send
 from test_reports import World
 from upapi import calc
+from upapi.reports.common import today
 
 db = tp.db
 world = tp.world
@@ -76,7 +77,8 @@ def test_lost_units_leave_lots_once(world: World) -> None:
     shortage = next(x for x in res["shortages"] if x["dispatch_id"] == out["id"])
     # Kamomad ochiq — sotuv (10 dona) eski partiyadan to'liq: 10 × 10 000.
     # Sotuv kamomad yopilgan kundan keyin (bir kunda hodisalar tartibi — sotuv avval).
-    sale = a.sale(sku_id, date.today() + timedelta(days=1), amount=10)
+    # Toshkent sanasi: endpoint `today()` bilan bir xil (UTC 19:00 dan keyin `date.today()` bir kun orqada qoladi).
+    sale = a.sale(sku_id, today() + timedelta(days=1), amount=10)
     a.request(calc.Scope.ITEM, item)  # sotuv to'g'ridan-to'g'ri bazaga yozildi (sinxron o'rniga)
     a.recalc(datetime.now(UTC))
     assert cogs(w, sale) == Decimal("100000.00")
