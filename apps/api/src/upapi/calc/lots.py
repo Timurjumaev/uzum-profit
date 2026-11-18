@@ -99,8 +99,8 @@ def currency_of(value: str | None) -> Currency:
     return Currency(value.strip().upper())
 
 
-def line_model(row: Row[Any]) -> PurchaseLine:
-    """Baza qatori → yadro ``PurchaseLine`` (F20)."""
+def line_model(row: Row[Any], refund_currency: str | None = None) -> PurchaseLine:
+    """Baza qatori → yadro ``PurchaseLine`` (F20). ``refund_currency`` — xaridning qaytarilgan summa valyutasi (TM9.6)."""
     price = None
     if row.unit_price is not None:
         price = Money(to_decimal(row.unit_price), currency_of(row.currency))
@@ -119,7 +119,16 @@ def line_model(row: Row[Any]) -> PurchaseLine:
             else Money(to_decimal(row.pack_unit_cost), Currency.UZS)
         ),
         source_id=None if row.source_line_id is None else str(row.source_line_id),
+        refund=line_refund(row, refund_currency),
     )
+
+
+def line_refund(row: Row[Any], currency: str | None) -> Money | None:
+    """TM9.6: qatorga yozilgan qaytarilgan summa — xarid ``refund_currency`` valyutasida."""
+    amount = getattr(row, "refund_amount", None)
+    if amount is None:
+        return None
+    return Money(to_decimal(amount), currency_of(currency or "UZS"))
 
 
 def component_rate(row: Row[Any], purchase: Row[Any], rates: Rates) -> FxRate | None:
@@ -287,7 +296,7 @@ def build_purchase(
     refund, refund_rate = refund_of(purchase, parsed, rates)
     return Purchase(
         id=str(purchase.id),
-        lines=tuple(line_model(x) for x in lines),
+        lines=tuple(line_model(x, getattr(purchase, "refund_currency", None)) for x in lines),
         components=tuple(parsed),
         refund=refund,
         refund_rate=refund_rate,
@@ -442,6 +451,13 @@ async def rebuild_lots(
         comps_by.setdefault(row.purchase_id, []).append(row)
 
     # Eski lotlar: ularning tovarlari ham qayta hisoblanadi (lot yo'qolsa yoki boshqa tovarga o'tsa).
+    await conn.execute(
+        delete(m.missing_losses).where(
+            m.missing_losses.c.purchase_line_id.in_(
+                select(pl.c.id).where(pl.c.purchase_id.in_(ids))
+            )
+        )
+    )
     old = delete(lots).where(
         lots.c.purchase_line_id.in_(select(pl.c.id).where(pl.c.purchase_id.in_(ids)))
     )
@@ -478,6 +494,7 @@ async def rebuild_lots(
         ).purchases
 
     new_rows: list[dict[str, Any]] = []
+    missing_rows: list[dict[str, Any]] = []
     for purchase in purchases:
         lines = lines_by.get(purchase.id, [])
         ev = evaluations[purchase.id]
@@ -489,7 +506,19 @@ async def rebuild_lots(
             continue
         model = ev.model
         item_of = {str(x.id): x.item_id for x in lines}
+        sku_of = {str(x.id): x.sku_id for x in lines}
         for cost in ev.lots:
+            if cost.missing is not None and cost.missing.amount > 0:
+                missing_rows.append(
+                    {
+                        "org_id": org_id,
+                        "purchase_line_id": UUID(cost.line_id),
+                        "item_id": item_of[cost.line_id],
+                        "sku_id": sku_of[cost.line_id],
+                        "day": purchase.received_on,
+                        "amount": cost.missing.amount.quantize(Decimal("0.01")),
+                    }
+                )
             if cost.qty == 0:
                 continue
             new_rows.append(
@@ -507,6 +536,8 @@ async def rebuild_lots(
             )
     if new_rows:
         await conn.execute(insert(lots), new_rows)
+    if missing_rows:
+        await conn.execute(insert(m.missing_losses), missing_rows)
     result.items |= {r["item_id"] for r in new_rows if r["item_id"] is not None}
     result.written = len(new_rows)
     return result

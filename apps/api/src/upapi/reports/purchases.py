@@ -112,6 +112,9 @@ class LineOut(BaseModel):
     # Sanashdagi brak tannarxga qancha qo'shdi (F20, so'm; summalar ruxsati bilan).
     defect_cost: Decimal | None = None
     source_line_id: UUID | None = None  # boshqa SKU'ga o'tkazilgan qator: manba qator (ADR-061 §7)
+    # TM9.6: qatorga yozilgan qaytarilgan summa (xarid ``refund_currency`` da) va F55 — kelmagan qator zarari (so'm).
+    refund_amount: Decimal | None = None
+    missing_loss: Decimal | None = None
 
 
 class ComponentOut(BaseModel):
@@ -153,6 +156,9 @@ class PurchaseOut(BaseModel):
     # TM9.8 (ADR-069): "Keldi" sanasi (yangi qoida) va sanalganmi — Omborimda, ``counted`` yo'q: "Omborimda · sanalmagan".
     arrived_on: date | None = None
     counted: bool = False
+    # TM9.6 F55: kelmagan (sog' donasi 0) tovarlar soni va zarari (so'm; summalar ruxsati bilan).
+    missing_lines: int = 0
+    missing_loss: Decimal | None = None
     track_no: str | None
     on_hand: bool  # "Tovar qo'limda" — kargo kutilmaydi
     refund_amount: Decimal | None  # sotuvchi qaytargan summa (summalar ruxsati bilan)
@@ -434,6 +440,14 @@ class Book:
             path=_path(dates, self.today, self.lead, purchase.created_at, arrival(eff)),
             arrived_on=arrival(eff),
             counted=eff.received_on is not None,
+            missing_lines=sum(1 for lot in ev.lots if lot.missing is not None),
+            missing_loss=(
+                sum(
+                    (lot.missing.amount for lot in ev.lots if lot.missing is not None), Decimal(0)
+                ).quantize(Decimal("0.01"))
+                if amounts and any(lot.missing is not None for lot in ev.lots)
+                else None
+            ),
             units_sending=sending,
             units_at_uzum=linked,
             track_no=purchase.track_no,
@@ -500,6 +514,12 @@ class Book:
             source_line_id=row.source_line_id,
             flags=sorted(f.value for f in lot.flags) if lot is not None else [],
             cost=cost,
+            refund_amount=row.refund_amount if amounts else None,
+            missing_loss=(
+                lot.missing.amount.quantize(Decimal("0.01"))
+                if amounts and lot is not None and lot.missing is not None
+                else None
+            ),
         )
 
     def _component(self, purchase: Row[Any], row: Row[Any]) -> ComponentOut:

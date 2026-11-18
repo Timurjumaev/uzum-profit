@@ -2418,6 +2418,8 @@ export interface components {
             defect_qty: number;
             /** Pack Unit Cost */
             pack_unit_cost?: number | string | null;
+            /** Refund Amount */
+            refund_amount?: number | string | null;
         };
         /**
          * Currency
@@ -3230,6 +3232,10 @@ export interface components {
             defect_cost?: string | null;
             /** Source Line Id */
             source_line_id?: string | null;
+            /** Refund Amount */
+            refund_amount?: string | null;
+            /** Missing Loss */
+            missing_loss?: string | null;
         };
         /** LinePatch */
         LinePatch: {
@@ -4250,6 +4256,13 @@ export interface components {
              * @default false
              */
             counted: boolean;
+            /**
+             * Missing Lines
+             * @default 0
+             */
+            missing_lines: number;
+            /** Missing Loss */
+            missing_loss?: string | null;
             /** Track No */
             track_no: string | null;
             /** On Hand */

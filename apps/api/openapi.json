@@ -10798,6 +10798,21 @@
               }
             ],
             "title": "Pack Unit Cost"
+          },
+          "refund_amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refund Amount"
           }
         },
         "type": "object",
@@ -13335,6 +13350,28 @@
               }
             ],
             "title": "Source Line Id"
+          },
+          "refund_amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refund Amount"
+          },
+          "missing_loss": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Missing Loss"
           }
         },
         "type": "object",
@@ -16538,6 +16575,22 @@
             "type": "boolean",
             "title": "Counted",
             "default": false
+          },
+          "missing_lines": {
+            "type": "integer",
+            "title": "Missing Lines",
+            "default": 0
+          },
+          "missing_loss": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Missing Loss"
           },
           "track_no": {
             "anyOf": [
