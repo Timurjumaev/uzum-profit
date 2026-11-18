@@ -7,7 +7,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App, createAppState } from "../../App";
 import type { Dispatch, DispatchDraftRow } from "../../lib/api/types";
+import { formatterFor } from "../../lib/format";
 import { json, ME, ME_ROUTE, mockApi, SHOPS, type Routes } from "../../test/api";
+
+const f = formatterFor("uz-Latn");
+const norm = (text: string) => text.replace(/[\u00A0\u202F]/g, " ");
 
 const ORG = ME.orgs[0]!.id;
 const SHOP = "b1111111-1111-4111-8111-111111111111";
@@ -20,7 +24,7 @@ const LIST_ROUTE = `GET /api/v1/orgs/${ORG}/dispatches`;
 const CREATE_ROUTE = `POST /api/v1/orgs/${ORG}/dispatches`;
 const ORPHANS_ROUTE = `GET /api/v1/orgs/${ORG}/dispatches/orphans`;
 
-const draftRow = (over: Partial<DispatchDraftRow>): DispatchDraftRow => ({ sku_id: SKU_A, title: "Mashina-Qizil", product_title: "Mashina", barcode: "4780000000001", qty: 70, unit_cost: "10000.00", ...over });
+const draftRow = (over: Partial<DispatchDraftRow>): DispatchDraftRow => ({ sku_id: SKU_A, title: "Mashina-Qizil", product_title: "Mashina", barcode: "4780000000001", qty: 70, unit_cost: "10000.00", estimated: false, unknown: false, ...over });
 const dispatch = (over: Partial<Dispatch>): Dispatch => ({
   id: D1,
   shop_id: SHOP,
@@ -89,6 +93,36 @@ describe("Uzumga jo'natish", () => {
     expect(bodiesOf(api, CREATE_ROUTE)[0]).toEqual({ shop_id: SHOPS[0]!.id, items: [{ sku_id: SKU_A, qty: 20 }] });
     await waitFor(() => expect(api.count(excel)).toBe(1));
     expect(await screen.findByText(/Joʻnatma saqlandi/)).toBeTruthy();
+  });
+
+  it("TM9.7: tannarx — taxminiy belgi, noma'lum bo'lsa kiritmasdan saqlanmaydi, kiritilgani yuboriladi", async () => {
+    const api = await renderAt({
+      [DRAFT_ROUTE]: () =>
+        json(200, {
+          shop_id: SHOP,
+          rows: [draftRow({ estimated: true }), draftRow({ sku_id: SKU_B, title: "Koʻylak-Oq", barcode: "4780000000002", qty: 5, unit_cost: "0.00", unknown: true })],
+          no_barcode: [],
+        }),
+      [CREATE_ROUTE]: () => json(201, dispatch({})),
+    });
+    const list = await screen.findByRole("list", { name: "Joʻnatiladigan SKUʼlar" });
+    expect(within(list).getByText("taxminiy tannarx")).toBeTruthy();
+    expect(within(list).getByText("tannarx nomaʼlum")).toBeTruthy();
+    expect(norm(within(list).getAllByRole("listitem")[0]!.textContent!)).toContain(`~${norm(f.money("10000.00"))}`);
+    const save = screen.getByRole("button", { name: /^Excel yuklab olish/ }) as HTMLButtonElement;
+    expect(save.disabled).toBe(true);
+    fireEvent.change(screen.getByLabelText("Tannarx: Koʻylak-Oq"), { target: { value: "12000" } });
+    fireEvent.change(screen.getByLabelText("Tannarx: Mashina-Qizil"), { target: { value: "11000" } });
+    expect(save.disabled).toBe(false);
+    fireEvent.click(save);
+    await waitFor(() => expect(bodiesOf(api, CREATE_ROUTE)).toHaveLength(1));
+    expect(bodiesOf(api, CREATE_ROUTE)[0]).toEqual({
+      shop_id: SHOPS[0]!.id,
+      items: [
+        { sku_id: SKU_A, qty: 70, unit_cost: "11000" },
+        { sku_id: SKU_B, qty: 5, unit_cost: "12000" },
+      ],
+    });
   });
 
   it("ro'yxat: holatlar, nomzod postavkani tanlash, bog'lanishni olib tashlash, bekor qilish", async () => {

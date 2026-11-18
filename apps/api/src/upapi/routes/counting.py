@@ -6,7 +6,9 @@
   — ``PATCH /purchases/{id}``) tovar summasidan ayriladi. Sanash sanasi — qabul sanasi (holat "Omborimda").
 - ``POST /purchases/{id}/split`` — kam uchraydigan holat: xarid qismlab keladi. Ko'rsatilgan donalar yangi xaridga
   ko'chadi (u "Yo'lda" qoladi), xaridning chiqimlari dona bo'yicha bo'linadi (``upcore.purchasing.split_units``; keyin
-  tahrirlanadi). Faqat sanalmagan xaridda; qo'lda ulushli chiqim bo'lsa — rad (``split_manual_shares``).
+  tahrirlanadi). Qo'lda ulushli chiqim bo'lsa — rad (``split_manual_shares``). **Sanalgandan keyin ham** (TM9.7, G12):
+  faqat sanalmagan qoldiq (buyurtma − kelgan) ko'chadi; kargo chiqimi kelgan qismda qoladi (dona bo'yicha bo'linmaydi),
+  qaytarilgan summa bor xarid bo'linmaydi (``split_refund`` — kam kelgan uchun pul olingan bo'lsa, qoldiq kelmaydi).
 
 Omborchi sonlarni kiritadi, summalarni (qadoq, qaytarilgan summa) — faqat ``view_purchase_amounts`` bilan.
 """
@@ -22,7 +24,7 @@ from fastapi import APIRouter, BackgroundTasks, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import func, insert, select, update
 from upcore.money import Currency, Money, to_decimal
-from upcore.purchasing import PurchaseError, split_units
+from upcore.purchasing import ComponentKind, PurchaseError, split_units
 
 from upapi.calc import lots as calc_lots
 from upapi.db import models as m
@@ -271,11 +273,22 @@ async def split_purchase(
     moves = {x.line_id: x.qty for x in body.lines}
     if len(moves) != len(body.lines) or set(moves) - set(lines):
         raise AppError("line_not_found", 404, detail="qator shu xaridda emas")
-    if row.received_on is not None or any(r.received_qty is not None for r in lines.values()):
-        raise AppError("split_counted", 409, detail="sanalgan xarid bo'linmaydi")
+    counted = row.received_on is not None or any(r.received_qty is not None for r in lines.values())
+    if counted and (row.refund_amount or any(r.refund_amount for r in lines.values())):
+        raise AppError(
+            "split_refund",
+            409,
+            detail="sotuvchi qaytargan summa bor — avval uni olib tashlang (qoldiq keladimi?)",
+        )
     for lid, qty in moves.items():
         if qty > lines[lid].ordered_qty:
             raise AppError("bad_line", 422, detail="ko'chadigan dona buyurtmadan ko'p")
+        # TM9.7 (G12): sanalgan qatordan faqat sanalmagan qoldiq ko'chadi.
+        rest = lines[lid].ordered_qty - (lines[lid].received_qty or 0)
+        if counted and qty > rest:
+            raise AppError(
+                "bad_line", 422, detail=f"ko'chadigan dona sanalmagan qoldiqdan ko'p ({rest})"
+            )
     kept_total = sum(r.ordered_qty for r in lines.values()) - sum(moves.values())
     if kept_total <= 0:
         raise AppError("bad_split", 422, detail="eski xaridda kamida bitta dona qolishi kerak")
@@ -320,9 +333,19 @@ async def split_purchase(
     for lid, qty in moves.items():
         line = lines[lid]
         kept = line.ordered_qty - qty
-        if kept == 0:  # butun qator ko'chadi — qator o'zi o'tadi (id saqlanadi)
+        if (
+            kept == 0
+        ):  # butun qator ko'chadi — qator o'zi o'tadi (id saqlanadi; sanalgan bo'lsa — kelgani 0 edi)
             await ctx.conn.execute(
-                update(pl).where(pl.c.id == lid).values(purchase_id=new_id, updated_at=func.now())
+                update(pl)
+                .where(pl.c.id == lid)
+                .values(
+                    purchase_id=new_id,
+                    received_qty=None,
+                    defect_qty=0,
+                    refund_amount=None,
+                    updated_at=func.now(),
+                )
             )
             mapping[lid] = lid
             continue
@@ -348,6 +371,8 @@ async def split_purchase(
         )
     units = {lid: r.ordered_qty for lid, r in lines.items()}
     for comp in comps:
+        if counted and comp.kind == ComponentKind.CARGO.value:
+            continue  # kargo — kelgan qism uchun to'langan; qoldiq o'z kargosi bilan keladi
         targets, _ = calc_lots.targets_of(comp.targets)
         scope = [UUID(x) for x in targets] if targets is not None else list(lines)
         moved = sum(moves.get(lid, 0) for lid in scope if lid in units)

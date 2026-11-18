@@ -208,7 +208,7 @@ def test_split_purchase(world: World) -> None:
     assert not [c for c in old["components"] if c["kind"] == "agent_fee"]
     assert D(old["purchase"]["total"]) + D(new["purchase"]["total"]) == D(1_010_000)
 
-    # Xatolar: hammasi ko'chmaydi, ortiqcha dona, sanalgan xarid.
+    # Xatolar: hammasi ko'chmaydi, ortiqcha dona, sanalgan xaridda — sanalmagan qoldiqdan ko'p.
     r = send(w, "POST", f"purchases/{pid}/split", lines=[{"line_id": l1, "qty": 40}])
     assert r.status_code == 422 and r.json()["code"] == "bad_split"
     r = send(w, "POST", f"purchases/{pid}/split", lines=[{"line_id": l1, "qty": 41}])
@@ -216,8 +216,9 @@ def test_split_purchase(world: World) -> None:
     r = send(w, "POST", f"purchases/{pid}/split", lines=[{"line_id": l2, "qty": 1}])
     assert r.status_code == 404
     ok(send(w, "POST", f"purchases/{pid}/count", lines=[{"line_id": l1, "received_qty": 40}]))
+    # TM9.7 (G12): sanalgandan keyin ham bo'linadi — lekin faqat sanalmagan qoldiq (bu yerda 0).
     r = send(w, "POST", f"purchases/{pid}/split", lines=[{"line_id": l1, "qty": 1}])
-    assert r.status_code == 409 and r.json()["code"] == "split_counted"
+    assert r.status_code == 422 and r.json()["code"] == "bad_line"
 
 
 def test_split_rejects_manual_shares(world: World) -> None:

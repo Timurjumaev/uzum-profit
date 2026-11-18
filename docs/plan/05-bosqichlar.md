@@ -1058,7 +1058,7 @@ Omborim soniga tayanadi). Har biri — alohida PR, testlar bilan; 02 (M10, F33, 
   sotuvchi o'zgartiradi. Qatorning tovar summasidan oshgan qismi — rad (raqam o'ylab topilmaydi). Eski yozuvlardagi
   qatorsiz qaytarilgan summa — avvalgidek hamma qatorga (hisobi o'zgarmaydi). UI: sanash oynasida "Kelmadi" (bir bosish —
   kelgan 0) va kam kelgan qatorlar yonida qaytarilgan summa maydoni; xarid sahifasida "1 tovar kelmadi — zarar X so'm".
-- [ ] TM9.7 **Mayda** (G11–G13): jo'natma qoralamasida tannarx tahrirlanadi, noma'lum yoki taxminiy bo'lsa belgi (0 emas);
+- [x] TM9.7 **Mayda** (G11–G13): jo'natma qoralamasida tannarx tahrirlanadi, noma'lum yoki taxminiy bo'lsa belgi (0 emas);
   "Ikkiga bo'lish" sanalgandan keyin ham (sanalmagan qoldiq yangi xaridga); "Tovar qo'limda" — qadoq qo'shimchasi
   tovardan, saqlashdan oldin brak kiritish imkoni.
 - [x] TM9.8 **"Keldi" — sanashdan oldin** (Temur, 2026-11-17: "avval omborga keladi, keyin sanaladi"; ADR-069 — tasdiqlandi,

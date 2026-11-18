@@ -208,7 +208,8 @@ almashtirgan joylaridan tashqari.)
   SKU'dan yoki "yangi tovar"), **jami to'landi** + valyuta (CNY / USD / UZS), kurs (o'sha kungi Markaziy bank kursi yoki
   sotuvchi o'zi kiritadi), trek raqami / yetkazib beruvchi / izoh — ixtiyoriy. Har xil tovar bitta buyurtmada bo'lsa —
   har qatorga **qator summasi**; jami bilan farq (ichki yetkazish, komissiya) qator summasiga mutanosib bo'linadi. Saqlanganda
-  "Yo'lda". **"Tovar qo'limda"** (mahalliy xarid) — darhol sanash, kargo kutilmaydi.
+  "Yo'lda". **"Tovar qo'limda"** (mahalliy xarid) — darhol sanash, kargo kutilmaydi; brak saqlashdan oldin kiritiladi,
+  qadoq qo'shimchasi tovardan (sanashdagi kabi, TM9.7).
 - **Kargo puli jadvali (§3):** hamma "Yo'lda" xaridlar bitta jadvalda. **Trekli** — xarid qatoriga o'z summasi (kg, trek
   ixtiyoriy). **Kodli quti** — bir nechta xarid belgilanadi, bitta summa; ulushlar **dona bo'yicha** inputlarda tayyor,
   tahrirlanadi. Xaridda yo o'z kargo puli, yo quti (trekli summa takror yozilmaydi — `cargo_twice`). Tariflar kiritilmaydi —
@@ -219,7 +220,9 @@ almashtirgan joylaridan tashqari.)
   **qadoq qo'shimchasi, so'm/dona** — har sog' dona tannarxiga.
 - **Sanash (§6):** kelgan son (standart = buyurtma soni) va brak; "Hammasi keldi". Hamma chiqim **sog' donaga** bo'linadi
   (F20). "Kelmadi" — bir bosishda kelgan 0 (puli F55 ga). "Sotuvchi qaytargan summa" — ixtiyoriy, keyin ham; kam kelgan
-  qator yonida — shu tovarga (TM9.6). Kam uchraydigan holat — "Xaridni ikkiga bo'lish".
+  qator yonida — shu tovarga (TM9.6). Kam uchraydigan holat — "Xaridni ikkiga bo'lish": sanashdan oldin — istalgan dona;
+  sanalgandan keyin — sanalmagan qoldiq (buyurtma − kelgan) yangi xaridga ("Yo'lda"), tovar summasi va qo'shimcha chiqimlar
+  dona bo'yicha, kargo kelgan qismda qoladi; sotuvchi qaytargan summa bor xarid bo'linmaydi (TM9.7).
 - **Birlik tannarx** (F20) jonli hisoblanadi, tarkibi ko'rinadi; kargo puli hali kiritilmagan bo'lsa "taxminiy" belgisi.
 - **Kech kiritilgan chiqim** (kargo narxi keyin chiqdi, sotuvchi pul qaytardi, son tuzatildi) — o'tgan sotuvlar tannarxi
   avtomatik qayta hisoblanadi, P&L'da "qayta hisoblandi" belgisi.
@@ -241,7 +244,8 @@ tiyinigacha teng (qoldiq eng katta ulushga, F20); (4) sanashda son o'zgarsa birl
   orasida va bir do'kon ichida, tannarx bilan); hisobdan chiqarish (keyin topilgan brak → F51); inventarizatsiya (tuzatish
   yozuvi bilan).
 - **Uzumga jo'natish (ADR-061 §7):** do'kon tanlanadi → omborimdagi shu do'kon SKU'lari to'liq soni bilan (o'zgartiriladi)
-  → Excel Uzum kabineti shablonida (shtrix-kod, tannarx, dona; ADR-050) → donalar "Jo'natilmoqda" → postavka API'da
+  → Excel Uzum kabineti shablonida (shtrix-kod, tannarx, dona; ADR-050; tannarx — F21 lot narxi, sotuvchi o'zgartiradi;
+  taxminiy bo'lsa belgi, noma'lum bo'lsa kiritmasdan saqlanmaydi — 0 yozilmaydi, TM9.7) → donalar "Jo'natilmoqda" → postavka API'da
   ko'ringanda o'zi bog'lanadi (SKU to'plami aynan teng yagona nomzod) yoki sotuvchi tasdiqlaydi (qisman mos nomzod yoki
   do'konning istalgan bog'lanmagan postavkasi, TM9.1) → "Uzumda". Bog'langach jo'natma postavkada **e'lon qilingan** songa
   tenglashadi (qabul qilingunga qadar). Dasturdan tashqari postavka — "Diqqat"da, "Omborimdan ketgan" (postavka tarkibidan

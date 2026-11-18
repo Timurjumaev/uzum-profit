@@ -11187,6 +11187,21 @@
             "maximum": 10000000.0,
             "minimum": 1.0,
             "title": "Qty"
+          },
+          "unit_cost": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Cost"
           }
         },
         "type": "object",
@@ -11239,6 +11254,17 @@
               }
             ],
             "title": "Unit Cost"
+          },
+          "cost_mark": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Mark"
           }
         },
         "type": "object",
@@ -11482,6 +11508,16 @@
               }
             ],
             "title": "Unit Cost"
+          },
+          "estimated": {
+            "type": "boolean",
+            "title": "Estimated",
+            "default": false
+          },
+          "unknown": {
+            "type": "boolean",
+            "title": "Unknown",
+            "default": false
           }
         },
         "type": "object",
@@ -17104,6 +17140,13 @@
               }
             ],
             "title": "Line Sum"
+          },
+          "defect": {
+            "type": "integer",
+            "maximum": 10000000.0,
+            "minimum": 0.0,
+            "title": "Defect",
+            "default": 0
           }
         },
         "type": "object",
@@ -22166,6 +22209,11 @@
               }
             ],
             "title": "Unit Cost"
+          },
+          "estimated": {
+            "type": "boolean",
+            "title": "Estimated",
+            "default": false
           },
           "value": {
             "anyOf": [

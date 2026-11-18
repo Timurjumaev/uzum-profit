@@ -20,7 +20,7 @@ from uuid import UUID
 from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, func, insert, select
-from upcore.purchasing import SupplyState, supply_state
+from upcore.purchasing import INFO_FLAGS, SupplyState, supply_state
 
 from upapi import calc
 from upapi.auth.deps import OrgContext, require
@@ -76,6 +76,8 @@ class WarehouseRow(BaseModel):
     broken: bool = False
     dispatched: int = 0  # Uzumga jo'natmalarda (Jo'natilmoqda + Uzumda, TM6) — qoldiqdan ayirilgan
     unit_cost: Decimal | None
+    # TM9.7 (G11): tannarx taxminiy (F22 — kargo kiritilmagan, sanalmagan ...); noma'lum — ``unit_cost`` yo'q.
+    estimated: bool = False
     value: Decimal | None
     sources: list[SourceOut]
     transfers_in: list[TransferOut]
@@ -141,15 +143,30 @@ async def _book(ctx: OrgContext) -> dict[str, Any]:
     for r in lines:
         if r.source_line_id is not None:
             moved_out[r.source_line_id] = moved_out.get(r.source_line_id, 0) + _good(r)
-    unit = {
-        r.purchase_line_id: r.unit_cost
-        for r in await ctx.conn.execute(
-            select(lots.c.purchase_line_id, lots.c.unit_cost).where(
-                lots.c.purchase_line_id.in_([r.id for r in lines])
-            )
+    unit: dict[UUID, Decimal] = {}
+    rough: set[UUID] = set()  # TM9.7 (G11): taxminiy lot (F22) — jo'natma qoralamasida belgi
+    info = {f.value for f in INFO_FLAGS}
+    for r in await ctx.conn.execute(
+        select(lots.c.purchase_line_id, lots.c.unit_cost, lots.c.flags).where(
+            lots.c.purchase_line_id.in_([r.id for r in lines])
         )
+    ):
+        unit[r.purchase_line_id] = r.unit_cost
+        if set(r.flags or ()) - info:
+            rough.add(r.purchase_line_id)
+    # O'tkazilgan qator manba narxi bilan o'tadi (ADR-061 §7) — qayta hisob hali yetmagan bo'lsa ham noma'lum emas.
+    for r in lines:
+        if r.source_line_id is not None and r.id not in unit and r.source_line_id in unit:
+            unit[r.id] = unit[r.source_line_id]
+            if r.source_line_id in rough:
+                rough.add(r.id)
+    return {
+        "purchases": purchases,
+        "lines": lines,
+        "moved_out": moved_out,
+        "unit": unit,
+        "rough": rough,
     }
-    return {"purchases": purchases, "lines": lines, "moved_out": moved_out, "unit": unit}
 
 
 @router.get("/orgs/{org_id}/warehouse", response_model=WarehouseOut)
@@ -177,6 +194,7 @@ async def stock(ctx: OrgContext, amounts: bool) -> WarehouseOut:
                 "lots": [],
                 "sources": [],
                 "transfers_in": [],
+                "rough": False,
             },
         )
 
@@ -192,6 +210,7 @@ async def stock(ctx: OrgContext, amounts: bool) -> WarehouseOut:
         cost = book["unit"].get(line.id)
         if qty > 0 and cost is not None:
             r["lots"].append((qty, cost))
+            r["rough"] = r["rough"] or line.id in book["rough"]
         purchase = book["purchases"][line.purchase_id]
         if qty > 0:
             r["sources"].append(
@@ -264,6 +283,7 @@ async def stock(ctx: OrgContext, amounts: bool) -> WarehouseOut:
                 broken=broken,
                 dispatched=r.get("dispatched", 0),
                 unit_cost=unit.quantize(Decimal("0.01")) if amounts and unit is not None else None,
+                estimated=r["rough"],
                 value=value if amounts else None,
                 sources=r["sources"],
                 transfers_in=[

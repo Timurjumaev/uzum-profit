@@ -384,8 +384,19 @@ a.purchase-cell__title:hover {
   grid-template-columns: minmax(0, 1fr) 6rem 9rem auto;
 }
 
+/* TM9.7 (G13): "Tovar qo'limda" — qatorda brak ham. */
+.purchase-form__picked li.has-defect {
+  grid-template-columns: minmax(0, 1fr) 6rem 6rem auto;
+}
+
+.purchase-form__picked li.has-sum.has-defect {
+  grid-template-columns: minmax(0, 1fr) 5rem 5rem 8rem auto;
+}
+
 @media (max-width: 30rem) {
-  .purchase-form__picked li.has-sum {
+  .purchase-form__picked li.has-sum,
+  .purchase-form__picked li.has-defect,
+  .purchase-form__picked li.has-sum.has-defect {
     grid-template-columns: 1fr 1fr;
   }
 }
@@ -653,6 +664,11 @@ a.purchase-cell__title:hover {
   border-block-end: 1px solid var(--border-hairline);
 }
 
+/* TM9.7 (G11): qatorda tannarx maydoni ham. */
+.dispatch-draft__list li.has-cost {
+  grid-template-columns: minmax(0, 1fr) 7rem 9rem auto;
+}
+
 .dispatch-list__actions {
   display: flex;
   flex-wrap: wrap;
@@ -664,6 +680,10 @@ a.purchase-cell__title:hover {
 @media (max-width: 39.9375rem) {
   .dispatch-draft__list li {
     grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .dispatch-draft__list li.has-cost {
+    grid-template-columns: 1fr 1fr;
   }
 
   .dispatch-draft__list .purchase-cell {

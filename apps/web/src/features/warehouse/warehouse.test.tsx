@@ -34,6 +34,7 @@ const row = (over: Partial<WarehouseRow> = {}): WarehouseRow => ({
   broken: false,
   dispatched: 0,
   unit_cost: "10000.00",
+  estimated: false,
   value: "700000.00",
   sources: [{ line_id: LINE, purchase_id: "p1", purchase_title: "Oktabr partiyasi", counted_on: "2026-10-20", qty: 70, unit_cost: "10000.00" }],
   transfers_in: [],

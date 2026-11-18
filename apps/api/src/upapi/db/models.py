@@ -490,7 +490,10 @@ fbo_dispatch_items = tenant(
     Column("qty", Integer, nullable=False),
     Column("unit_cost", UZS),  # Excel'dagi tannarx (F21 lot narxi, o'sha paytdagi)
     Column("barcode", Text),
+    # TM9.7 (G11): ``estimated`` — lot narxi taxminiy, ``manual`` — sotuvchi kiritdi; bo'sh — aniq lot narxi.
+    Column("cost_mark", Text),
     CheckConstraint("qty > 0", name="qty"),
+    check_in("cost_mark", ("estimated", "manual")),
     refs={"dispatch_id": ("fbo_dispatches", False), "sku_id": ("mp_skus", False)},
 )
 # TM9.1 (ADR-068 (1)): dasturdan tashqari postavka bo'yicha qaror — ``not_mine`` ("Omborimdan emas").

@@ -166,8 +166,8 @@ describe("xaridlar ro'yxati", () => {
     await waitFor(() => expect(bodiesOf(api, PURCHASE_QUICK_ROUTE)).toHaveLength(1));
     expect(bodiesOf(api, PURCHASE_QUICK_ROUTE)[0]).toEqual({
       lines: [
-        { sku_id: SKU_ACTIVE, qty: 100, line_sum: "700" },
-        { temp_name: "Qoʻgʻirchoq", qty: 50, line_sum: "250" },
+        { sku_id: SKU_ACTIVE, qty: 100, line_sum: "700", defect: 0 },
+        { temp_name: "Qoʻgʻirchoq", qty: 50, line_sum: "250", defect: 0 },
       ],
       currency: "CNY",
       rate_mode: "manual",
@@ -319,6 +319,47 @@ describe("xarid sahifasi", () => {
     const wh = await screen.findByRole("dialog", { name: "Sanash" });
     expect(within(wh).queryByLabelText(/^Qadoq/)).toBeNull();
     expect(within(wh).queryByRole("checkbox", { name: /eslab qolish/ })).toBeNull();
+  });
+
+  it("xaridni ikkiga bo'lish (TM9.7): sanalgandan keyin — sanalmagan qoldiq standart, ortig'i bo'lmaydi", async () => {
+    const split = purchaseSubRoute("POST", PURCHASE_1, "split");
+    const counted = purchaseDetail({
+      purchase: purchaseRow({ state: "in_stock", path: supplyPath("in_stock", { in_transit: "2026-10-02", in_stock: "2026-10-20" }) }),
+      lines: [line({ received_qty: 98, shortage: 2 }), line({ id: LINE_2, item_id: null, item_name: null, temp_name: "Yangi oʻyinchoq", ordered_qty: 50, received_qty: 50, shortage: 0 })],
+    });
+    const { api } = await renderAt(DETAIL, {
+      [purchaseRoute("GET", PURCHASE_1)]: () => json(200, counted),
+      [split]: () => json(201, { purchase: counted, new_purchase_id: PURCHASE_2 }),
+    });
+    fireEvent.click(await screen.findByRole("button", { name: "Xaridni ikkiga boʻlish" }));
+    const dialog = await screen.findByRole("dialog", { name: "Xaridni ikkiga boʻlish" });
+    const inputs = within(dialog).getAllByLabelText(/sanalmagan/);
+    expect(inputs).toHaveLength(1); // to'liq kelgan qator ko'rsatilmaydi
+    expect((inputs[0] as HTMLInputElement).value).toBe("2");
+    const save = within(dialog).getByRole("button", { name: "Ikkiga boʻlish" }) as HTMLButtonElement;
+    fireEvent.change(inputs[0]!, { target: { value: "3" } });
+    expect(save.disabled).toBe(true);
+    fireEvent.change(inputs[0]!, { target: { value: "2" } });
+    fireEvent.click(save);
+    await waitFor(() => expect(bodiesOf(api, split)).toEqual([{ lines: [{ line_id: LINE_1, qty: 2 }] }]));
+  });
+
+  it("tez xarid (TM9.7): «Tovar qoʻlimda» — brak saqlashdan oldin", async () => {
+    const { api } = await renderAt("/purchases", { [PURCHASE_QUICK_ROUTE]: () => json(201, purchaseDetail()) });
+    fireEvent.click((await screen.findAllByRole("button", { name: "Yangi xarid" }))[0]!);
+    const dialog = await screen.findByRole("dialog", { name: "Yangi xarid (partiya)" });
+    fireEvent.change(within(dialog).getByLabelText(/^Yangi tovar/), { target: { value: "Paket" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Qoʻshish" }));
+    fireEvent.change(within(dialog).getByLabelText("Dona"), { target: { value: "20" } });
+    expect(within(dialog).queryByLabelText("Brak: Paket")).toBeNull();
+    fireEvent.click(within(dialog).getByRole("checkbox", { name: /Tovar qoʻlimda/ }));
+    fireEvent.change(within(dialog).getByLabelText("Brak: Paket"), { target: { value: "21" } });
+    const save = within(dialog).getByRole("button", { name: "Xaridni saqlash" }) as HTMLButtonElement;
+    expect(save.disabled).toBe(true);
+    fireEvent.change(within(dialog).getByLabelText("Brak: Paket"), { target: { value: "2" } });
+    fireEvent.click(save);
+    await waitFor(() => expect(bodiesOf(api, PURCHASE_QUICK_ROUTE)).toHaveLength(1));
+    expect(bodiesOf(api, PURCHASE_QUICK_ROUTE)[0]).toMatchObject({ lines: [{ temp_name: "Paket", qty: 20, defect: 2 }], on_hand: true });
   });
 
   it("xaridni ikkiga bo'lish: keyin keladigan dona → POST split; yangi xarid havolasi", async () => {

@@ -2,7 +2,8 @@
 // hisobdan real yechilgan summa), kurs (o'sha kungi Markaziy bank kursi yoki sotuvchi o'zi kiritadi), trek raqami
 // (ixtiyoriy). Bir buyurtmada har xil tovar bo'lsa — har qatorga qator summasi (1688'dagi qator jami, dona narxi emas);
 // jami bilan farq (ichki yetkazish, komissiya) qator summasiga mutanosib bo'linadi — hisob serverda (F20). Saqlanganda
-// darhol "Yo'lda"; "Tovar qo'limda" (mahalliy xarid) — darhol "Omborimda". Omborchi summalarni kiritmaydi.
+// darhol "Yo'lda"; "Tovar qo'limda" (mahalliy xarid) — darhol "Omborimda", brak shu yerda (TM9.7; qadoq qo'shimchasi
+// tovardan — serverda). Omborchi summalarni kiritmaydi.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
@@ -14,7 +15,7 @@ import type { PickerRow, PurchaseDetail, QuickPurchaseIn } from "../../lib/api/t
 import { todayTashkent } from "../../lib/dates";
 import { PAID_CURRENCIES, pickerKey, pickerLabel, pickerOptions, type PaidCurrency } from "./model";
 
-type Picked = { key: string; label: string; qty: string | null; sum: string | null };
+type Picked = { key: string; label: string; qty: string | null; sum: string | null; defect?: string | null };
 type RateMode = "cbu" | "manual";
 type Draft = {
   picked: Picked[];
@@ -32,6 +33,11 @@ type Draft = {
 const NEW_PREFIX = "new:";
 const whole = (v: string | null) => v !== null && v !== "" && Number.isInteger(Number(v)) && Number(v) >= 1;
 const positive = (v: string | null) => v !== null && v !== "" && Number(v) > 0;
+const defectOf = (p: { defect?: string | null }) => (p.defect === undefined || p.defect === null || p.defect === "" ? 0 : Number(p.defect));
+const defectOk = (p: { qty: string | null; defect?: string | null }) => {
+  const d = defectOf(p);
+  return Number.isInteger(d) && d >= 0 && d <= Number(p.qty ?? 0);
+};
 
 /** Qator summalari yig'indisi jamidan oshmasligi kerak (API ham tekshiradi) — shaklda oldindan aytish uchun. */
 export function sumsExceed(paid: string | null, sums: ReadonlyArray<string | null>): boolean {
@@ -79,6 +85,7 @@ export function QuickPurchaseForm({ orgId, amounts, onClose, onSaved }: { orgId:
   const valid =
     draft.picked.length > 0 &&
     draft.picked.every((p) => whole(p.qty)) &&
+    (!draft.onHand || draft.picked.every((p) => defectOk(p))) &&
     (!amounts || draft.paid === null || draft.paid === "" || positive(draft.paid)) &&
     (!needsRate || draft.paid === null || draft.paid === "" || positive(draft.rate)) &&
     !exceed;
@@ -89,6 +96,7 @@ export function QuickPurchaseForm({ orgId, amounts, onClose, onSaved }: { orgId:
         lines: draft.picked.map((p) => ({
           ...(p.key.startsWith("sku:") ? { sku_id: p.key.slice(4) } : p.key.startsWith("item:") ? { item_id: p.key.slice(5) } : { temp_name: p.label }),
           qty: Number(p.qty),
+          defect: draft.onHand ? defectOf(p) : 0,
           ...(amounts && several && positive(p.sum) ? { line_sum: p.sum } : {}),
         })),
         currency: draft.currency,
@@ -151,9 +159,10 @@ export function QuickPurchaseForm({ orgId, amounts, onClose, onSaved }: { orgId:
         ) : (
           <ul className="purchase-form__picked" aria-label={t("purchases.lines.picked")}>
             {draft.picked.map((p) => (
-              <li key={p.key} className={amounts && several ? "has-sum" : undefined}>
+              <li key={p.key} className={[amounts && several ? "has-sum" : "", draft.onHand ? "has-defect" : ""].filter(Boolean).join(" ") || undefined}>
                 <span className="purchase-form__picked-name">{p.label}</span>
                 <NumberInput label={t("purchases.lines.qty")} value={p.qty} onValueChange={(qty) => setLine(p.key, { qty })} digits={0} />
+                {draft.onHand && <NumberInput label={t("purchases.count.defect")} aria-label={t("purchases.quick.defectOf", { name: p.label })} optional value={p.defect ?? null} onValueChange={(defect) => setLine(p.key, { defect })} digits={0} />}
                 {amounts && several && <MoneyInput label={t("purchases.quick.lineSum")} optional currency={draft.currency} value={p.sum} onValueChange={(sum) => setLine(p.key, { sum })} />}
                 <Button variant="ghost" onClick={() => patch({ picked: draft.picked.filter((x) => x.key !== p.key) })} aria-label={`${t("purchases.lines.remove")}: ${p.label}`}>
                   {t("purchases.lines.remove")}

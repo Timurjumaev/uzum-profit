@@ -2542,6 +2542,8 @@ export interface components {
             sku_id: string;
             /** Qty */
             qty: number;
+            /** Unit Cost */
+            unit_cost?: number | string | null;
         };
         /** DispatchItemOut */
         DispatchItemOut: {
@@ -2558,6 +2560,8 @@ export interface components {
             qty: number;
             /** Unit Cost */
             unit_cost: string | null;
+            /** Cost Mark */
+            cost_mark?: string | null;
         };
         /** DispatchOut */
         DispatchOut: {
@@ -2643,6 +2647,16 @@ export interface components {
             qty: number;
             /** Unit Cost */
             unit_cost: string | null;
+            /**
+             * Estimated
+             * @default false
+             */
+            estimated: boolean;
+            /**
+             * Unknown
+             * @default false
+             */
+            unknown: boolean;
         };
         /**
          * Event
@@ -4389,6 +4403,11 @@ export interface components {
             qty: number;
             /** Line Sum */
             line_sum?: number | string | null;
+            /**
+             * Defect
+             * @default 0
+             */
+            defect: number;
         };
         /**
          * QuickPurchaseIn
@@ -5981,6 +6000,11 @@ export interface components {
             dispatched: number;
             /** Unit Cost */
             unit_cost: string | null;
+            /**
+             * Estimated
+             * @default false
+             */
+            estimated: boolean;
             /** Value */
             value: string | null;
             /** Sources */
