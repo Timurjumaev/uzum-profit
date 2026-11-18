@@ -260,3 +260,29 @@ body {
   padding: var(--space-5);
   background: linear-gradient(160deg, rgb(42 120 214 / 0.07), transparent 45%), var(--bg-surface);
 }
+
+/* KPI ikonkalari: rangli yumaloq belgi (rang — guruhniki) */
+.home-card__icon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: 9px;
+  color: var(--grp, var(--accent));
+  background: var(--grp-soft, rgb(42 120 214 / 0.10));
+}
+
+.home-card--key .home-card__icon {
+  color: #fff;
+  background: linear-gradient(135deg, var(--grp), color-mix(in srgb, var(--grp) 55%, #fff));
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--grp) 35%, transparent);
+}
+
+.home-kpi__group-icon {
+  color: var(--grp);
+}
+
+.home-card__label {
+  gap: var(--space-2);
+}

@@ -14,6 +14,7 @@ import { cx } from "../../components/ui/cx";
 import type { Dashboard } from "../../lib/api/types";
 import type { Formatter } from "../../lib/format";
 import { useFormat } from "../../lib/i18n";
+import { CARD_ICONS, GROUP_ICONS } from "./icons";
 
 type Summary = Dashboard["summary"];
 type Card = Summary["groups"][number]["cards"][number];
@@ -37,12 +38,18 @@ function SummaryCard({ card, note }: { card: Card; note?: ReactNode }) {
   const tone = card.change != null && card.good ? changeTone(card.change, card.good) : "neutral";
   const change = card.change == null ? null : card.unit === "ratio" ? f.points(card.change) : f.change(card.change);
   const points = card.series.filter((x): x is string => x !== null).map(Number);
+  const Icon = CARD_ICONS[card.key];
   return (
     <li
       className={cx("home-card", `home-card--${card.unit}`, KEY_CARDS.has(card.key) && "home-card--key", WIDE_CARDS.has(card.key) && "home-card--wide", card.warn && "home-card--warn")}
       data-testid={`kpi-${card.key}`}
     >
       <div className="home-card__label label">
+        {Icon && (
+          <span className="home-card__icon" aria-hidden>
+            <Icon size={16} />
+          </span>
+        )}
         {label}
         <FormulaPopover
           metric={label}
@@ -167,6 +174,10 @@ export function KpiSummary({ data }: { data: Dashboard }) {
           {s.groups.map((g) => (
             <section key={g.key} aria-labelledby={`home-kpi-${g.key}`} className={cx("home-kpi__group", `home-kpi__group--${g.key}`)}>
               <h3 id={`home-kpi-${g.key}`} className="home-kpi__group-title label">
+                {(() => {
+                  const GroupIcon = GROUP_ICONS[g.key];
+                  return GroupIcon ? <GroupIcon size={18} aria-hidden className="home-kpi__group-icon" /> : null;
+                })()}
                 {t(`home.kpi.groups.${g.key}`)}
               </h3>
               <ul className="home-kpi__cards">

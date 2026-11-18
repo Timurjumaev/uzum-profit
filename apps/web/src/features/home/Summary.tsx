@@ -11,6 +11,7 @@ import { cx } from "../../components/ui/cx";
 import type { Dashboard } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { term } from "../../lib/i18n/glossary";
+import { useCountUp } from "../../components/ui/CountUp";
 import { Change } from "./Change";
 
 const tone = (value: string) => (Number(value) < 0 ? "negative" : "positive");
@@ -28,6 +29,7 @@ type CardProps = {
 
 function Card({ kind, op, label, help, amount, testId, children }: CardProps) {
   const f = useFormat();
+  const shown = useCountUp(amount);
   return (
     <li className={cx("home-sum", `home-sum--${kind}`)}>
       {op && (
@@ -40,7 +42,7 @@ function Card({ kind, op, label, help, amount, testId, children }: CardProps) {
         {help}
       </h2>
       <p className={cx("kpi", "num", "home-sum__amount", `ui-text--${tone(amount)}`)} data-testid={testId}>
-        {f.money(amount)}
+        {f.money(shown)}
       </p>
       {children}
     </li>
