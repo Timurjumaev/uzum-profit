@@ -9,8 +9,8 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
-import { createQuickPurchase, skuPickerQuery } from "../../app/query";
-import { Banner, Button, Combobox, Dialog, MoneyInput, NumberInput, Segmented, TextInput, useToast } from "../../components/ui";
+import { createQuickPurchase, createSupplier, skuPickerQuery, suppliersQuery } from "../../app/query";
+import { Banner, Button, Combobox, Dialog, MoneyInput, NumberInput, Segmented, Select, TextInput, useToast } from "../../components/ui";
 import type { PickerRow, PurchaseDetail, QuickPurchaseIn } from "../../lib/api/types";
 import { todayTashkent } from "../../lib/dates";
 import { PAID_CURRENCIES, pickerKey, pickerLabel, pickerOptions, type PaidCurrency } from "./model";
@@ -26,11 +26,15 @@ type Draft = {
   rate: string | null;
   orderedOn: string;
   trackNo: string;
+  supplier: string;
+  newSupplier: string;
   onHand: boolean;
   note: string;
 };
 
 const NEW_PREFIX = "new:";
+const NO_SUPPLIER = "";
+const NEW_SUPPLIER = "__new";
 const whole = (v: string | null) => v !== null && v !== "" && Number.isInteger(Number(v)) && Number(v) >= 1;
 const positive = (v: string | null) => v !== null && v !== "" && Number(v) > 0;
 const defectOf = (p: { defect?: string | null }) => (p.defect === undefined || p.defect === null || p.defect === "" ? 0 : Number(p.defect));
@@ -51,6 +55,7 @@ export function QuickPurchaseForm({ orgId, amounts, onClose, onSaved }: { orgId:
   const toast = useToast();
   const client = useQueryClient();
   const picker = useQuery(skuPickerQuery(orgId));
+  const suppliers = useQuery(suppliersQuery(orgId));
   const [draft, setDraft] = useState<Draft>({
     picked: [],
     newName: "",
@@ -60,6 +65,8 @@ export function QuickPurchaseForm({ orgId, amounts, onClose, onSaved }: { orgId:
     rate: null,
     orderedOn: todayTashkent(),
     trackNo: "",
+    supplier: NO_SUPPLIER,
+    newSupplier: "",
     onHand: false,
     note: "",
   });
@@ -88,10 +95,14 @@ export function QuickPurchaseForm({ orgId, amounts, onClose, onSaved }: { orgId:
     (!draft.onHand || draft.picked.every((p) => defectOk(p))) &&
     (!amounts || draft.paid === null || draft.paid === "" || positive(draft.paid)) &&
     (!needsRate || draft.paid === null || draft.paid === "" || positive(draft.rate)) &&
+    (draft.supplier !== NEW_SUPPLIER || draft.newSupplier.trim() !== "") &&
     !exceed;
   const save = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const paid = amounts && positive(draft.paid) ? draft.paid : null;
+      // Yetkazib beruvchi — ixtiyoriy (B5.1): F25 muddatini shu yetkazib beruvchining xaridlaridan o'rganish uchun.
+      let supplier_id: string | null = draft.supplier === NO_SUPPLIER ? null : draft.supplier;
+      if (draft.supplier === NEW_SUPPLIER) supplier_id = (await createSupplier(orgId, draft.newSupplier.trim())).id;
       const body: QuickPurchaseIn = {
         lines: draft.picked.map((p) => ({
           ...(p.key.startsWith("sku:") ? { sku_id: p.key.slice(4) } : p.key.startsWith("item:") ? { item_id: p.key.slice(5) } : { temp_name: p.label }),
@@ -104,13 +115,14 @@ export function QuickPurchaseForm({ orgId, amounts, onClose, onSaved }: { orgId:
         ...(paid !== null ? { paid_amount: paid, ...(needsRate ? { rate: draft.rate } : {}) } : {}),
         ordered_on: draft.orderedOn || null,
         track_no: draft.trackNo.trim() || null,
+        ...(supplier_id !== null ? { supplier_id } : {}),
         note: draft.note.trim() || null,
         on_hand: draft.onHand,
       };
       return createQuickPurchase(orgId, body);
     },
     onSuccess: async (saved) => {
-      await Promise.all([["purchases"], ["inventory"], ["pnl"], ["dashboard"]].map((k) => client.invalidateQueries({ queryKey: ["orgs", orgId, ...k] })));
+      await Promise.all([["purchases"], ["inventory"], ["pnl"], ["dashboard"], ["suppliers"]].map((k) => client.invalidateQueries({ queryKey: ["orgs", orgId, ...k] })));
       toast.show(t("purchases.created"), "positive");
       onSaved(saved);
     },
@@ -198,6 +210,19 @@ export function QuickPurchaseForm({ orgId, amounts, onClose, onSaved }: { orgId:
         <div className="purchase-form__row">
           <TextInput label={t("purchases.fields.orderedOn")} type="date" value={draft.orderedOn} onValueChange={(orderedOn) => patch({ orderedOn })} />
           <TextInput label={t("purchases.quick.track")} optional value={draft.trackNo} onValueChange={(trackNo) => patch({ trackNo })} maxLength={100} />
+        </div>
+        <div className="purchase-form__row">
+          <Select
+            label={t("purchases.fields.supplier")}
+            value={draft.supplier}
+            onValueChange={(supplier) => patch({ supplier })}
+            options={[
+              { value: NO_SUPPLIER, label: t("purchases.fields.none") },
+              ...(suppliers.data ?? []).map((x) => ({ value: x.id, label: x.name })),
+              { value: NEW_SUPPLIER, label: t("purchases.fields.newSupplier") },
+            ]}
+          />
+          {draft.supplier === NEW_SUPPLIER && <TextInput label={t("purchases.fields.newSupplierName")} value={draft.newSupplier} onValueChange={(newSupplier) => patch({ newSupplier })} maxLength={200} />}
         </div>
         <label className="quick-purchase__check">
           <input type="checkbox" checked={draft.onHand} onChange={(e) => patch({ onHand: e.target.checked })} /> <span>{t("purchases.quick.onHand")}</span>

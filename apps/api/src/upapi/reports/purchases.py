@@ -12,9 +12,10 @@ tannarx) faqat ``view_purchase_amounts`` bilan (omborchi — summasiz, 03 §10).
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 from uuid import UUID
@@ -41,6 +42,7 @@ from upcore.purchasing import (
     supply_path,
     supply_state,
     transit_days,
+    transit_start,
 )
 
 from upapi import orgsettings
@@ -301,6 +303,41 @@ async def org_lead(conn: AsyncConnection) -> dict[str, Decimal]:
     Sozlamalardagi standart (partiya yo'li va kutilgan sana uchun)."""
     history = await lead_history(conn)
     return dict(learn_lead({}, {}, history.org, (await orgsettings.load(conn)).lead_days).stages)
+
+
+@dataclass(frozen=True)
+class LatePurchase:
+    """Kechikayotgan kargo (B5.1): "Yo'lda" xarid, kutilgan keldi sanasi (F25 "yo'l") + muddat o'tgan."""
+
+    id: UUID
+    title: str | None
+    expected: date
+    days_late: int  # kutilgan sanadan necha kun o'tdi
+
+
+async def late_cargo(conn: AsyncConnection, today: date, grace_days: int) -> list[LatePurchase]:
+    """B5.1: "Yo'lda" (keldi belgilanmagan, sanalmagan) xaridlar, buyurtmadan boshlab F25 "yo'l" muddati + ``grace_days``
+    kundan oshgan. Muddat noma'lum (tarix ham, standart ham yo'q) — hech narsa o'ylab topilmaydi, kechikish yo'q."""
+    lead = (await org_lead(conn)).get(TRANSIT)
+    if lead is None:
+        return []
+    p = m.purchases
+    shipments = {r.id: r for r in await conn.execute(select(m.shipments))}
+    out: list[LatePurchase] = []
+    for r in await conn.execute(
+        select(p)
+        .where(p.c.received_on.is_(None), p.c.sent_to_uzum_on.is_(None), p.c.closed_on.is_(None))
+        .order_by(p.c.created_at, p.c.id)
+    ):
+        eff = calc_lots.effective_purchase(r, shipments.get(r.shipment_id))
+        dates = stage_dates(eff)
+        if supply_state(dates, arrival(eff)) is not SupplyState.IN_TRANSIT:
+            continue  # "Keldi" belgilangan — kargo kechikmagan
+        start = transit_start(dates) or r.created_at.date()
+        expected = start + timedelta(days=math.ceil(lead))
+        if today > expected + timedelta(days=grace_days):
+            out.append(LatePurchase(r.id, r.title, expected, (today - expected).days))
+    return out
 
 
 def _path(

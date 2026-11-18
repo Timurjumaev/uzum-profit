@@ -9571,6 +9571,11 @@
             "title": "Orphan Invoices",
             "default": 0
           },
+          "cargo_late": {
+            "type": "integer",
+            "title": "Cargo Late",
+            "default": 0
+          },
           "telegram_lost": {
             "type": "integer",
             "title": "Telegram Lost",

@@ -350,13 +350,34 @@ function Places({ row }: { row: StockRow }) {
   );
 }
 
+/** F25 (B5.1): muddat qaysi manbadan — "yo'l 31 kun (5 xaridingizdan) · topshirish 2 kun (standart)". Manba yo'q — hech narsa. */
+function LeadNote({ row }: { row: StockRow }) {
+  const { t } = useTranslation();
+  const f = useFormat();
+  const lead = row.lead_time;
+  if (!lead) return null;
+  const parts = (["transit", "handover"] as const).flatMap((part) => {
+    const days = lead.stages[part];
+    const source = lead.sources[part];
+    if (days === undefined || source === undefined) return [];
+    const from = t(`inventory.leadSource.${source}`, { n: lead.samples[part] ?? 0, defaultValue: source });
+    return [t("inventory.leadPart", { part: t(`inventory.leadParts.${part}`), days: f.number(days, { digits: 0 }), from })];
+  });
+  return parts.length === 0 ? null : <span className="caption inventory-lead">{parts.join(" · ")}</span>;
+}
+
 function OrderBy({ row }: { row: StockRow }) {
   const { t } = useTranslation();
   const f = useFormat();
   const kind = orderByKind(row);
   if (kind === "none") return <span className="muted" title={t("inventory.noOrderHint")}>—</span>;
-  if (kind === "now") return <StatusPill tone="negative">{t("inventory.orderNow")}</StatusPill>;
-  return <>{f.date(row.order_by!.day)}</>;
+  const head = kind === "now" ? <StatusPill tone="negative">{t("inventory.orderNow")}</StatusPill> : <>{f.date(row.order_by!.day)}</>;
+  return (
+    <span className="inventory-cell inventory-cell--num">
+      {head}
+      <LeadNote row={row} />
+    </span>
+  );
 }
 
 function Reorder({ row }: { row: StockRow }) {

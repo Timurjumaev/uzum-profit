@@ -191,3 +191,22 @@ def test_expired_summaries() -> None:
     assert not msg.expired("weekly_summary", weekly, date(2026, 11, 22))
     assert msg.expired("weekly_summary", weekly, date(2026, 11, 23))
     assert not msg.expired("stock_critical", daily, date(2030, 1, 1))
+
+
+def test_cargo_late_message() -> None:
+    """B5.1: "Kargo kechikmoqda" — xarid nomi, kutilgan sana, necha kun o'tdi; xarid sahifasiga havola."""
+    p = {
+        "purchase_id": "abc",
+        "title": "Presslangan oʻram",
+        "expected": "2026-09-21",
+        "days_late": 56,
+    }
+    uz = msg.notification("cargo_late", p, "uz")
+    assert (
+        "Kargo kechikmoqda: Presslangan oʻram. Kutilgan sana 21.09.2026 (56 kun oʻtdi)" in uz.text
+    )
+    assert uz.path == "/purchases/abc"
+    assert (
+        "Карго задерживается: Presslangan oʻram. Ожидали 21.09.2026 (прошло 56 дн.)"
+        in msg.notification("cargo_late", p, "ru").text
+    )

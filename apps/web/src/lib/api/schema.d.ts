@@ -2082,6 +2082,11 @@ export interface components {
              */
             orphan_invoices: number;
             /**
+             * Cargo Late
+             * @default 0
+             */
+            cargo_late: number;
+            /**
              * Telegram Lost
              * @default 0
              */

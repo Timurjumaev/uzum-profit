@@ -68,6 +68,8 @@ describe("ombor jadvali", () => {
     expect(c).toContain("Brak: 1");
     expect(c).toContain("2,00"); // tezlik F23
     expect(c).toContain("Hozir"); // buyurtma kechikkan (F27)
+    // F25 (B5.1): muddat manbasi — "yo'l 30 kun (5 xaridingizdan) · topshirish 2 kun (barcha xaridlaringizdan)".
+    expect(c).toContain("yoʻl 30 kun (5 xaridingizdan) · topshirish 2 kun (barcha xaridlaringizdan)");
     expect(c).toContain("90"); // tavsiya miqdor
     expect(c).toContain(norm(f.currency("90000.00", "CNY"))); // byudjet CNY
     expect(c).toContain(norm(f.money("1000000.00", { unit: false })));

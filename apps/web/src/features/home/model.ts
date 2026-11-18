@@ -136,7 +136,7 @@ export function homeRows(rows: PnlRow[], label: (code: string) => string): HomeR
   return out;
 }
 
-export type AttentionKind = "uncosted" | "stockCritical" | "stockHigh" | "stockShip" | "receiving" | "orphanInvoices" | "uncounted" | "goodsMissing" | "lossSkus" | "recalculated" | "sync" | "telegramLost";
+export type AttentionKind = "uncosted" | "stockCritical" | "stockHigh" | "stockShip" | "receiving" | "orphanInvoices" | "uncounted" | "goodsMissing" | "lossSkus" | "recalculated" | "sync" | "cargoLate" | "telegramLost";
 export type AttentionItem = { kind: AttentionKind; tone: "negative" | "warning" | "info"; count: number; to: "/products" | "/inventory" | "/orders" | "/status" | "/receiving" | "/purchases" | "/warehouse" | "/dispatches" | "/settings"; amount?: string };
 
 /** "Diqqat talab qiladi" (M4), ustuvorlik bo'yicha: tannarxsiz sotuvlar → tugayotgan tovar → zarar qilayotgan SKU →
@@ -155,6 +155,8 @@ export function attentionItems(a: Dashboard["attention"], syncIssues: number): A
   if ((a.uncounted ?? 0) > 0) items.push({ kind: "uncounted", tone: "warning", count: a.uncounted ?? 0, to: "/warehouse" });
   // TM9.5: tovar summasi kiritilmagan xaridlar — tannarx past, foyda oshib ko'rinadi (taxminiy).
   if ((a.goods_missing ?? 0) > 0) items.push({ kind: "goodsMissing", tone: "warning", count: a.goods_missing ?? 0, to: "/purchases" });
+  // B5.1: kargo kechikmoqda — kutilgan keldi sanasidan (F25 "yo'l") 5 kundan ko'p o'tgan "Yo'lda" xaridlar.
+  if ((a.cargo_late ?? 0) > 0) items.push({ kind: "cargoLate", tone: "warning", count: a.cargo_late ?? 0, to: "/purchases" });
   if (a.loss_skus > 0) items.push({ kind: "lossSkus", tone: "negative", count: a.loss_skus, to: "/products" });
   if (syncIssues > 0) items.push({ kind: "sync", tone: "warning", count: syncIssues, to: "/status" });
   if (a.recalculated > 0) items.push({ kind: "recalculated", tone: "info", count: a.recalculated, to: "/orders" });
