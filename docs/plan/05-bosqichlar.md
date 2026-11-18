@@ -1262,12 +1262,14 @@ boshlanadi) → B5 → B6.5 (B5.1–B5.2 dan keyin) → B6.3 → B6.6.
     *kutilayotgan* (Jarayondagi sotuvlar, 09 §11.2: ≈ 39% i keyin chiqib ketadi), belgisiz (tamoyil 9, ADR-037/038).
     Xabar: "Sof foyda: X · shundan kutilayotgan Y" + R fakti ("bunday sotuvlarning N% i yakunlanadi", F16) + "HH:MM
     holatiga" (ilovada raqam keyin o'zgaradi — chiqish mezoni shu vaqtga nisbatan). `/bugun` `/kecha` `/hafta` `/oy` ham.
+    ✓ 2026-11-18: xulosa `net_profit_expected` (Jarayondagi sotuvlar) va `rate` (F16 R) bilan; xabar: "Sof foyda: X / shundan kutilayotgan: Y / bunday sotuvlarning N% i yakunlanadi / Maʼlumot: HH:MM holatiga"; `/bugun /kecha /hafta /oy` ham.
   - **Xulosa o'z kunida, sanasi bilan** (A18–A21, Temurning chatidan): kechqurun tinch soatda yaratilgan xulosa ertasi
     08:00 ga surilib, o'tgan kunni "Kecha" deb yuboryapti (bir ertalab ikkita xulosa) — xulosa faqat o'z kunida
     yuboriladi, kuni o'tsa bekor; sarlavha — sana. 15.11 foydasi ikki xabarda ikki xil (276 709 ↔ 334 914, tushum bir
     xil) — sababi staging'da faqat o'qish so'rovi bilan topiladi (avval), keyin tuzatiladi. `/hafta` va `/oy` davr
     boshida — yonida oldingi to'liq davr; tugamagan kun — izoh bilan. "— tashkilot" imzosi faqat bir necha tashkilotda;
     dushanba kuni haftalik va kunlik xulosa — bitta xabar.
+    ✓ 2026-11-18 (A18–A20): sarlavha — sana ("Kunlik xulosa, 15.11.2026"); kunlik xulosa o'z kunidan o'tsa yuborilmaydi (`skipped`, `expired`); dushanba kuni haftalik va kunlik — bitta xabar; "— tashkilot" imzosi faqat bir necha tashkilotda; `/hafta`, `/oy` davr boshida — yonida oldingi to'liq davr; tugamagan davr — izoh. **A21 (15.11 foydasi ikki xil) — staging o'qish so'rovi kerak, Temurga yoziladi.**
   - **Takror emas, o'zgarish** (A2): "Qoldiq kritik" va "Zarar bilan sotuv" hozir holat o'zgarmasa ham **har kuni** qayta
     keladi (`dedupe_key` — sana). Kalit — SKU va holatga kirgan kun: xabar faqat ro'yxatga **yangi** SKU qo'shilganda; davom
     etayotgan holat kunlik xulosa ostida bitta qator ("Diqqat: kritik qoldiq 4 ta, zararda 2 ta"). `/qoldiq` — to'liq ro'yxat.
@@ -1289,7 +1291,7 @@ boshlanadi) → B5 → B6.5 (B5.1–B5.2 dan keyin) → B6.3 → B6.6.
   - **Haftalik xulosa yo'qolmasin** (A6): hozir faqat dushanba kuni yuboriladi — dushanba kuni sinxron yetib kelmasa o'sha
     hafta xulosasi umuman kelmaydi. Shu hafta ichida birinchi imkoniyatda (kalit — hafta, o'zgarmaydi).
     ✓ 2026-11-18: haftalik xulosa vaqti kelgan har kuni (kalit — hafta, takror yo'q); `summary_due` dan `weekly` olib tashlandi.
-  - **Mayda:** "Batafsil" tugmasi ruscha foydalanuvchiga ham o'zbekcha (A7); Sozlamalarda "Tez orada (B5.4)" — ichki
+  - **Mayda** ✓ 2026-11-18 (A7, A8: "Batafsil" foydalanuvchi tilida, "Tez orada" — bosqich kodisiz; `stage` qiymatlari va "kvota" — qoldi): "Batafsil" tugmasi ruscha foydalanuvchiga ham o'zbekcha (A7); Sozlamalarda "Tez orada (B5.4)" — ichki
     bosqich kodi sotuvchiga ko'rinadi (A8) → "Tez orada"; katalogdagi `stage` qiymatlari ADR-063 ga moslanadi (FBS —
     B9.5); 02 M15 dan "kvota tugayapti" olib tashlanadi (sotuvchi hech narsa qila olmaydi — admin hodisasi, 06 §4, B8.5).
   - **Navbat tartibi** (A9, A10): `notifications` da saqlash muddati yo'q (cheksiz o'sadi) — 90 kundan eski qatorlar

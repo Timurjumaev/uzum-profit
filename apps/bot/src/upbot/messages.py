@@ -8,7 +8,7 @@ Tillar: ``uz-Latn`` (oʻ/gʻ — U+02BB, tutuq — U+02BC) va ``ru``; boshqasi �
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -45,6 +45,7 @@ def moment(value: str) -> str:
 T: dict[str, dict[str, str]] = {
     "uz": {
         "yesterday": "📊 Kecha, {day}",
+        "daily": "📊 Kunlik xulosa, {day}",
         "today": "📊 Bugun, {day}",
         "week": "📊 Hafta: {start} – {end}",
         "month": "📊 Oy: {start} – {end}",
@@ -52,6 +53,10 @@ T: dict[str, dict[str, str]] = {
         "orders": "Buyurtmalar: {n}",
         "revenue": "Tushum: {v}",
         "profit": "Sof foyda: {v}",
+        "profit_expected": "  shundan kutilayotgan: {v} (Jarayondagi sotuvlar)",
+        "profit_rate": "  bunday sotuvlarning {n}% i yakunlanadi",
+        "unfinished": "Davr hali tugamagan — raqamlar oʻzgaradi.",
+        "previous": "Oldingi toʻliq davr:",
         "canceled": "Bekorlar: {n} dona",
         "uncosted": "Tannarxsiz qatorlar: {n} — sof foydaga kirmagan",
         "fresh": "Maʼlumot: {at} holatiga",
@@ -82,6 +87,7 @@ T: dict[str, dict[str, str]] = {
     },
     "ru": {
         "yesterday": "📊 Вчера, {day}",
+        "daily": "📊 Итоги дня, {day}",
         "today": "📊 Сегодня, {day}",
         "week": "📊 Неделя: {start} – {end}",
         "month": "📊 Месяц: {start} – {end}",
@@ -89,6 +95,10 @@ T: dict[str, dict[str, str]] = {
         "orders": "Заказы: {n}",
         "revenue": "Выручка: {v}",
         "profit": "Чистая прибыль: {v}",
+        "profit_expected": "  из них ожидаемая: {v} (продажи в обработке)",
+        "profit_rate": "  такие продажи завершаются в {n}% случаев",
+        "unfinished": "Период ещё не закончился — цифры изменятся.",
+        "previous": "Предыдущий полный период:",
         "canceled": "Отмены: {n} шт.",
         "uncosted": "Строк без себестоимости: {n} — не вошли в чистую прибыль",
         "fresh": "Данные на {at}",
@@ -124,7 +134,21 @@ def t(lang: str, key: str, **kw: Any) -> str:
     return T[lang][key].format(**kw)
 
 
-def summary(data: dict[str, Any], lang: str, title: str, *, partial: bool = False) -> str:
+def _percent(rate: str) -> int:
+    return int((Decimal(rate) * 100).quantize(Decimal(1)))
+
+
+def summary(
+    data: dict[str, Any],
+    lang: str,
+    title: str,
+    *,
+    partial: bool = False,
+    unfinished: bool = False,
+) -> str:
+    """Davr xulosasi. Sof foyda uch qismda (B6.4, A1): jami; shundan kutilayotgan (Jarayondagi sotuvlar, belgisiz
+    taxmin emas) va R (F16 fakti); "HH:MM holatiga" — ilovada raqam keyin o'zgarishi mumkin.
+    ``partial`` — buyruq: yangilik yo'q bo'lsa ogohlantirish; ``unfinished`` — davr hali tugamagan (izoh)."""
     start, end = data["start"], data["end"]
     head = t(lang, title, day=day(start), start=day(start), end=day(end))
     lines = [
@@ -132,14 +156,34 @@ def summary(data: dict[str, Any], lang: str, title: str, *, partial: bool = Fals
         t(lang, "orders", n=data["orders"]),
         t(lang, "revenue", v=money(data["revenue"], lang)),
         t(lang, "profit", v=money(data["net_profit"], lang)),
-        t(lang, "canceled", n=data["canceled"]),
     ]
+    expected = data.get("net_profit_expected")
+    if expected is not None and Decimal(expected) != 0:
+        lines.append(t(lang, "profit_expected", v=money(expected, lang)))
+        if data.get("rate") is not None:
+            lines.append(t(lang, "profit_rate", n=_percent(data["rate"])))
+    lines.append(t(lang, "canceled", n=data["canceled"]))
     if data.get("uncosted_lines"):
         lines.append(t(lang, "uncosted", n=data["uncosted_lines"]))
-    if partial:
-        fresh = data.get("fresh_at")
-        lines.append(t(lang, "fresh", at=moment(fresh)) if fresh else t(lang, "stale"))
+    if unfinished:
+        lines.append(t(lang, "unfinished"))
+    fresh = data.get("fresh_at")
+    if fresh:
+        lines.append(t(lang, "fresh", at=moment(fresh)))
+    elif partial:
+        lines.append(t(lang, "stale"))
     return "\n".join(lines)
+
+
+def expired(event: str, payload: dict[str, Any], today: date) -> bool:
+    """Xulosa o'z kunidan o'tib ketdimi (B6.4, A18–A21): kunlik — yaratilgan kuni (hisobot kunidan keyingi kun) tugagach
+    yuborilmaydi (tinch soatda ertasi kunga surilgan xulosa o'tgan kunni "kecha" deb yubormasin); haftalik — keyingi
+    haftaning oxirigacha."""
+    if event == "daily_summary":
+        return today > date.fromisoformat(payload["end"]) + timedelta(days=1)
+    if event == "weekly_summary":
+        return today > date.fromisoformat(payload["end"]) + timedelta(days=7)
+    return False
 
 
 def _skus(skus: list[dict[str, Any]], lang: str) -> list[str]:
@@ -154,7 +198,7 @@ def notification(event: str, payload: dict[str, Any], lang: str, org: str | None
     """Navbatdagi bildirishnoma → xabar. Noma'lum hodisa — ``ValueError`` (yuborilmaydi, ``failed``)."""
     p = payload
     if event == "daily_summary":
-        msg = Message(summary(p, lang, "yesterday"), "/")
+        msg = Message(summary(p, lang, "daily"), "/")
     elif event == "weekly_summary":
         msg = Message(summary(p, lang, "week"), f"/pnl?from={p['start']}&to={p['end']}")
     elif event == "stock_critical":

@@ -1152,7 +1152,7 @@ export const uzLatn = {
       },
       param: { at: "Vaqti", streak: "Ketma-ket sotuvlar", hours: "Necha soatdan keyin", days: "Necha kun" },
       critical: "Kritik",
-      soon: "Tez orada ({{stage}})",
+      soon: "Tez orada",
       quiet: "Tinch soatlar",
       quietOn: "Tinch soatlarda xabar yubormaslik",
       quietFrom: "Boshlanishi",

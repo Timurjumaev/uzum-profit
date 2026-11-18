@@ -142,6 +142,9 @@ async def summary(
     s = book.scoped(f, period).statement()
     counts = await rc.order_counts(conn, f, period)
     flow = (await rc.sale_sums(conn, f, period=period)).get(None)
+    rate = (
+        await rc.realization(conn, f)
+    ).total  # F16 R: bunday sotuvlarning qancha ulushi yakunlanadi
     return {
         "start": period.start.isoformat(),
         "end": period.end.isoformat(),
@@ -149,6 +152,9 @@ async def summary(
         "units": s.units,
         "revenue": _num(s.revenue.amount),
         "net_profit": _num(s.net_profit.amount),
+        # B6.4 (A1): sof foyda uch qismda — jami, shundan kutilayotgan (Jarayondagi sotuvlar, F16) va R (fakt).
+        "net_profit_expected": _num(s.net_profit_processing.amount),
+        "rate": None if rate is None else str(rate),
         "canceled": flow.canceled if flow else 0,
         "uncosted_lines": s.uncovered_lines,
         "fresh_at": None if fresh is None else fresh.isoformat(),

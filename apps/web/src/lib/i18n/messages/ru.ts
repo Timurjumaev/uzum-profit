@@ -1150,7 +1150,7 @@ export const ru: Messages = {
       },
       param: { at: "Время", streak: "Продаж подряд", hours: "Через сколько часов", days: "Сколько дней" },
       critical: "Критично",
-      soon: "Скоро ({{stage}})",
+      soon: "Скоро",
       quiet: "Тихие часы",
       quietOn: "Не присылать сообщения в тихие часы",
       quietFrom: "Начало",

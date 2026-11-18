@@ -179,7 +179,7 @@ function EventRow({ e, rule, onToggle, onParam }: { e: NotificationEvent; rule: 
       <label className="notify-check">
         <input type="checkbox" checked={e.available && rule.enabled} disabled={!e.available} onChange={(ev) => onToggle(ev.target.checked)} /> <span>{name}</span>
         {e.critical && <Badge tone="warning">{t("settings.notifications.critical")}</Badge>}
-        {e.stage && <Badge tone="neutral">{t("settings.notifications.soon", { stage: e.stage })}</Badge>}
+        {e.stage && <Badge tone="neutral">{t("settings.notifications.soon")}</Badge>}
       </label>
       {e.available && rule.enabled && Object.keys(rule.params).length > 0 && (
         <div className="notify-row__params">
