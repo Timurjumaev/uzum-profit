@@ -80,8 +80,10 @@ def test_due_at_is_never_inside_quiet_hours(now: datetime) -> None:
 def test_summary_due() -> None:
     assert summary_due(datetime(2026, 11, 15, 9, 0), time(9, 0))
     assert not summary_due(datetime(2026, 11, 15, 8, 59), time(9, 0))
-    assert not summary_due(datetime(2026, 11, 15, 10, 0), time(9, 0), weekly=True)  # yakshanba
-    assert summary_due(datetime(2026, 11, 16, 10, 0), time(9, 0), weekly=True)  # dushanba
+    # B6.4 (A6): haftalik xulosa ham faqat dushanba emas — vaqti kelgan har kuni (hafta kaliti takrorni to'sadi).
+    assert summary_due(datetime(2026, 11, 15, 10, 0), time(9, 0))  # yakshanba
+    assert summary_due(datetime(2026, 11, 17, 9, 0), time(9, 0))  # seshanba
+    assert not summary_due(datetime(2026, 11, 17, 8, 0), time(9, 0))
     assert week_start(date(2026, 11, 15)) == date(2026, 11, 9)
 
 

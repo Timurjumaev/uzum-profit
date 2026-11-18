@@ -57,10 +57,13 @@ T: dict[str, dict[str, str]] = {
         "fresh": "Maʼlumot: {at} holatiga",
         "stale": "Buyurtmalar hali yangilanmagan — raqamlar toʻliq emas",
         "stock_critical": "⚠️ Qoldiq kritik: {n} ta SKU — buyurtma berish kerak",
+        "stock_critical_new": "⚠️ Qoldiq kritik: yangi {n} ta SKU (jami {total}) — buyurtma berish kerak",
         "days": "{n} kunga",
         "no_stock_critical": "Kritik qoldiq yoʻq.",
         "loss_sales": "🔻 Zarar bilan sotuv: {n} ta SKU (oxirgi {streak} ta sotuv zararda)",
+        "loss_sales_new": "🔻 Zarar bilan sotuv: yangi {n} ta SKU (jami {total}; oxirgi {streak} ta sotuv zararda)",
         "uncosted_sales": "Tannarxsiz sotuvlar: {n} ta qator ({day}). Xaridni kiriting — sof foyda toʻliq boʻladi.",
+        "uncosted_new": "Tannarxsiz yangi tovar sotildi ({day}): {n} ta SKU, {lines} ta qator. Xaridni kiriting — sof foyda toʻliq boʻladi.",
         "new_fine": "Yangi jarima: {v}",
         "receiving": "Postavka № {number}: {title} — joʻnatildi {shipped}, qabul qilindi {accepted} ({missing} dona kam)",
         "uncounted": "Xarid keldi, {days} kundan beri sanalmagan: {title}. Sanang — Omborimda soni aniq boʻladi.",
@@ -90,10 +93,13 @@ T: dict[str, dict[str, str]] = {
         "fresh": "Данные на {at}",
         "stale": "Заказы ещё не обновились — цифры неполные",
         "stock_critical": "⚠️ Критический остаток: {n} SKU — пора заказывать",
+        "stock_critical_new": "⚠️ Критический остаток: новых {n} SKU (всего {total}) — пора заказывать",
         "days": "на {n} дн.",
         "no_stock_critical": "Критических остатков нет.",
         "loss_sales": "🔻 Продажи в убыток: {n} SKU (последние {streak} продажи в убыток)",
+        "loss_sales_new": "🔻 Продажи в убыток: новых {n} SKU (всего {total}; последние {streak} продажи в убыток)",
         "uncosted_sales": "Продажи без себестоимости: {n} строк ({day}). Внесите закупку — чистая прибыль станет полной.",
+        "uncosted_new": "Продан новый товар без себестоимости ({day}): {n} SKU, {lines} строк. Внесите закупку — чистая прибыль станет полной.",
         "new_fine": "Новый штраф: {v}",
         "receiving": "Поставка № {number}: {title} — отправлено {shipped}, принято {accepted} (меньше на {missing} шт.)",
         "uncounted": "Закупка пришла и не пересчитана {days} дн.: {title}. Пересчитайте — остаток на складе станет точным.",
@@ -150,17 +156,22 @@ def notification(event: str, payload: dict[str, Any], lang: str, org: str | None
     elif event == "weekly_summary":
         msg = Message(summary(p, lang, "week"), f"/pnl?from={p['start']}&to={p['end']}")
     elif event == "stock_critical":
-        msg = Message(
-            "\n".join([t(lang, "stock_critical", n=p["count"]), *_skus(p["skus"], lang)]),
-            "/inventory",
+        head = (
+            t(lang, "stock_critical_new", n=p["count"], total=p["total"])
+            if p.get("new")
+            else t(lang, "stock_critical", n=p["count"])
         )
+        msg = Message("\n".join([head, *_skus(p["skus"], lang)]), "/inventory")
     elif event == "loss_sales":
-        text = "\n".join(
-            [t(lang, "loss_sales", n=p["count"], streak=p["streak"]), *_skus(p["skus"], lang)]
-        )
-        msg = Message(text, "/products")
+        key = "loss_sales_new" if p.get("new") else "loss_sales"
+        head = t(lang, key, n=p["count"], total=p.get("total", p["count"]), streak=p["streak"])
+        msg = Message("\n".join([head, *_skus(p["skus"], lang)]), "/products")
     elif event == "uncosted_sales":
-        msg = Message(t(lang, "uncosted_sales", n=p["lines"], day=day(p["day"])), "/orders")
+        if "skus" in p:  # B6.4 (A3): tannarxsiz yangi SKU
+            head = t(lang, "uncosted_new", n=p["count"], lines=p["lines"], day=day(p["day"]))
+            msg = Message("\n".join([head, *_skus(p["skus"], lang)]), "/orders")
+        else:
+            msg = Message(t(lang, "uncosted_sales", n=p["lines"], day=day(p["day"])), "/orders")
     elif event == "new_fine":
         detail = ", ".join(x for x in (p.get("name"), p.get("shop"), day(p["on"])) if x)
         msg = Message(f"{t(lang, 'new_fine', v=money(p['amount'], lang))}\n{detail}", "/expenses")

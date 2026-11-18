@@ -1271,8 +1271,10 @@ boshlanadi) → B5 → B6.5 (B5.1–B5.2 dan keyin) → B6.3 → B6.6.
   - **Takror emas, o'zgarish** (A2): "Qoldiq kritik" va "Zarar bilan sotuv" hozir holat o'zgarmasa ham **har kuni** qayta
     keladi (`dedupe_key` — sana). Kalit — SKU va holatga kirgan kun: xabar faqat ro'yxatga **yangi** SKU qo'shilganda; davom
     etayotgan holat kunlik xulosa ostida bitta qator ("Diqqat: kritik qoldiq 4 ta, zararda 2 ta"). `/qoldiq` — to'liq ro'yxat.
+    ✓ 2026-11-18: yangi SKU mantig'i — oluvchining oxirgi qatori bazaviy ro'yxat (`payload.ids`); xabar faqat yangi SKU'lar uchun ("yangi N ta, jami M"); ro'yxat qisqarsa `skipped` holat qatori bazani yangilaydi (SKU qaytsa — yana yangi); `/qoldiq` — to'liq ro'yxat. Qoldi: "diqqat" qatori kunlik xulosa ostida (B6.4-3).
   - **"Tannarxsiz sotuvlar" alohida xabar emas** (A3): kunlik xulosada shu qator allaqachon bor — ikki marta keladi.
     Alohida hodisa faqat tannarxsiz **yangi SKU** birinchi marta sotilganda; xulosa o'chirilgan bo'lsa ham.
+    ✓ 2026-11-18: alohida xabar faqat tannarxsiz YANGI SKU (hech qachon xabar qilinmagan) kecha sotilganda; qatorlar soni kunlik xulosada qoladi.
   - **"Sinxron to'xtadi" ikkiga bo'linadi** (A4): (a) *kalit yaroqsiz* — sotuvchi tuzatadi: kritik, bir marta, tuzalmasa
     3 kunda bir eslatma (yarim tunda emas); (b) *yangilanmayapti* — Uzum uzilishi, WAF yoki bizning ishchi: sotuvchi hech
     narsa qila olmaydi → tunda yuborilmaydi (kritik emas), Uzum uzilishi belgilangan (`provider_health`) paytda umuman
@@ -1285,13 +1287,14 @@ boshlanadi) → B5 → B6.5 (B5.1–B5.2 dan keyin) → B6.3 → B6.6.
     ✓ 1-qadam 2026-11-18 (`apps/bot`): `TelegramBadRequest` — faqat shu xabar `failed`, kanal faol (`SendError.final`); doimiy — faqat bot bloklangan / chat yo'q; `retry_after` hurmat qilinadi (urinish sanalmaydi, xabar `due_at` ga surilib shu aylanishda boshqa xabar yuborilmaydi). Qoldi: kanal uzilsa ilovada "Diqqat" qatori ("Telegram uzildi — qayta ulang").
   - **Haftalik xulosa yo'qolmasin** (A6): hozir faqat dushanba kuni yuboriladi — dushanba kuni sinxron yetib kelmasa o'sha
     hafta xulosasi umuman kelmaydi. Shu hafta ichida birinchi imkoniyatda (kalit — hafta, o'zgarmaydi).
+    ✓ 2026-11-18: haftalik xulosa vaqti kelgan har kuni (kalit — hafta, takror yo'q); `summary_due` dan `weekly` olib tashlandi.
   - **Mayda:** "Batafsil" tugmasi ruscha foydalanuvchiga ham o'zbekcha (A7); Sozlamalarda "Tez orada (B5.4)" — ichki
     bosqich kodi sotuvchiga ko'rinadi (A8) → "Tez orada"; katalogdagi `stage` qiymatlari ADR-063 ga moslanadi (FBS —
     B9.5); 02 M15 dan "kvota tugayapti" olib tashlanadi (sotuvchi hech narsa qila olmaydi — admin hodisasi, 06 §4, B8.5).
   - **Navbat tartibi** (A9, A10): `notifications` da saqlash muddati yo'q (cheksiz o'sadi) — 90 kundan eski qatorlar
     tozalanadi; og'ir hisob (`load_stock`, kitob) har 5 daqiqada har tashkilotga qayta bajariladi — bugungi kalit bor
     bo'lsa hisoblanmaydi (B8.4 yuklama testidan oldin).
-    ✓ A9 2026-11-18: `purge_old` — 90 kundan eski yuborilgan/muvaffaqiyatsiz qatorlar har yuborish aylanishida tozalanadi (`pending` tegilmaydi). Qoldi: A10 (og'ir hisob).
+    ✓ A9 2026-11-18: `purge_old` — 90 kundan eski yuborilgan/muvaffaqiyatsiz qatorlar har yuborish aylanishida tozalanadi (`pending` tegilmaydi). A10 ✓ 2026-11-18: kunlik/haftalik xulosa kaliti bor bo'lsa kitob qayta hisoblanmaydi; qoldiq, zarar va tannarxsiz tekshiruvlari soatda bir marta (har soatning dastlabki 5 daqiqasi).
 - [ ] B6.5 **Yetishmayotgan hodisa: "Uzumga yuborish kerak"** (A11; F26 (2), F54 — B5.1 va B5.2 dan keyin): Uzumdagi zaxira
   topshirish muddatiga yetmaydi, omborimda esa tovar bor — eng tez bajariladigan signal, hozir faqat Ombor sahifasida.
   Yangi SKU kirganda bir marta; "Batafsil" — jo'natish qoralamasi. ("Qoldiq kritik" F25 ga bog'liq — B5.1 gacha yangi
