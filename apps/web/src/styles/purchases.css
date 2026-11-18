@@ -724,3 +724,58 @@ a.purchase-cell__title:hover {
   margin: 0;
   padding-inline-start: var(--space-4);
 }
+
+/* Partiyadagi tovarlar (Uzum kabineti kabi): rasm + nom, ostida xiraroq SKU; qiymatlar bitta qatorda. */
+.purchase__lines .ui-table th,
+.purchase__lines .ui-table td {
+  white-space: nowrap;
+  padding-inline: var(--space-2);
+}
+
+.purchase__lines .ui-table td:first-child {
+  white-space: normal;
+  min-inline-size: 300px;
+  max-inline-size: 460px;
+}
+
+.line-cell {
+  min-inline-size: 190px; /* ustun toraymasin: SKU kodi va ID bir-ikki qatorda sig'sin */
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.line-cell__img {
+  flex: none;
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: var(--radius-control);
+  object-fit: cover;
+  background: var(--bg-raised);
+}
+
+.line-cell__text {
+  display: grid;
+  min-inline-size: 0;
+  gap: 2px;
+}
+
+.line-cell__title {
+  font: var(--type-body-strong);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.line-cell__sku {
+  font: var(--type-caption);
+  color: var(--text-secondary);
+  white-space: normal; /* SKU kodi va ID kesilmaydi — kerak bo'lsa keyingi qatorga o'tadi */
+  overflow-wrap: anywhere;
+}
+
+/* Amallar tugmalari ixcham — jadval 1440 px da gorizontal skrollsiz sig'sin. */
+.purchase__lines .expenses-actions .ui-btn {
+  padding-inline: var(--space-2);
+}

@@ -1716,6 +1716,7 @@ export const ru: Messages = {
       noStock: "нет остатка",
       stock: "остаток {{count}}",
       transferred: "Переведено на другой SKU — управление:",
+      skuId: "SKU ID {{id}}",
       noSkuHint: "Не привязан к SKU — себестоимость не видна на странице «Товары»",
       withoutSku: "товар без SKU",
       remove: "Убрать",
