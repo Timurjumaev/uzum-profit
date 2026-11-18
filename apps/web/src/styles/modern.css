@@ -6,7 +6,6 @@ body {
     radial-gradient(1200px 500px at 85% -10%, rgb(42 120 214 / 0.10), transparent 60%),
     radial-gradient(900px 400px at -5% 0%, rgb(98 80 214 / 0.07), transparent 55%),
     var(--bg-page);
-  background-attachment: fixed;
 }
 
 /* Kartochka va panellar: hairline o'rniga yengil soya */
@@ -149,4 +148,115 @@ body {
   .ui-kpi:hover {
     transform: none;
   }
+}
+
+/* --- KPI guruhlari: har guruh o'z rangi (ADR-070). Rang faqat bezak; ma'no matnda. --- */
+.home-kpi__group { --grp: #2A78D6; --grp-soft: rgb(42 120 214 / 0.10); }
+.home-kpi__group--uzum { --grp: #0E9F8E; --grp-soft: rgb(14 159 142 / 0.11); }
+.home-kpi__group--returns { --grp: #E0642F; --grp-soft: rgb(224 100 47 / 0.11); }
+.home-kpi__group--average { --grp: #D6458B; --grp-soft: rgb(214 69 139 / 0.10); }
+
+.home-kpi__group-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-block-end: 0;
+  padding-block-end: 0;
+  font: var(--type-h3);
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-primary);
+}
+
+.home-kpi__group-title::before {
+  content: "";
+  inline-size: 10px;
+  block-size: 22px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(180deg, var(--grp), color-mix(in srgb, var(--grp) 40%, #fff));
+}
+
+.home-kpi__group .home-card {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(160deg, var(--grp-soft), transparent 55%),
+    var(--bg-surface);
+}
+
+.home-kpi__group .home-card::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  block-size: 3px;
+  background: linear-gradient(90deg, var(--grp), transparent);
+}
+
+.home-card__value {
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+/* Bosh sahifa bo'limlarining sarlavhalari */
+.home h2.h3,
+.home-attention h2 {
+  font: var(--type-h2);
+  letter-spacing: -0.01em;
+}
+
+/* Segmented: tanlangan — gradient */
+.ui-segmented {
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+  border-color: transparent;
+  padding: 3px;
+}
+
+.ui-segmented__item {
+  border-radius: var(--radius-pill);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ui-segmented__item.is-checked {
+  background: var(--gradient-accent);
+  color: #fff;
+  box-shadow: 0 3px 10px rgb(42 120 214 / 0.30);
+}
+
+/* Bitta uyushgan kirish lahzasi: uch asosiy blok ketma-ket (boshqa joyda animatsiya yo'q) */
+@keyframes sum-rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.home-summary__cards > .home-sum {
+  animation: sum-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.home-summary__cards > .home-sum:nth-child(2) { animation-delay: 0.08s; }
+.home-summary__cards > .home-sum:nth-child(3) { animation-delay: 0.16s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .home-summary__cards > .home-sum { animation: none; }
+}
+
+/* Foyda hisob oqimi (waterfall qatorlari) — silliq to'ldirma */
+.home-flow__bar {
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.home-flow,
+.ledger,
+.ui-ledger {
+  border-color: transparent;
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-card);
+}
+
+.home-flow {
+  padding: var(--space-5);
+  background: linear-gradient(160deg, rgb(42 120 214 / 0.07), transparent 45%), var(--bg-surface);
 }

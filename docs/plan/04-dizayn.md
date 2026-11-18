@@ -5,29 +5,33 @@ dataviz validatori (`validate_palette.js`) va WCAG/APCA hisobi bilan tekshirilga
 
 ## 1. Yo'nalish
 
-**Mavzu.** Dastur sotuvchining qog'oz daftarini (hisob daftari) almashtiradi. Vizual til shu yerdan olinadi:
-toza qog'oz, ko'k-qora siyoh, buxgalteriya qoidalari (summa ustidan chiziq, yakuniy summa ostida ikki chiziq),
-shtrix-kod (sotuvchi har kuni yopishtiradi). Bezak yo'q — raqamlar asosiy.
+> **Egasining qat'iy talabi (Temur, 2026-11-18; ADR-070): dizayn bezakli, yorqin, zamonaviy va odamni o'ziga jalb
+> qiladigan bo'lsin.** Sokin, quruq "ichki hisobot" ko'rinishi **qabul qilinmaydi**. Avvalgi versiyadagi
+> "bezak yo'q, ataylab qilinmaydigan narsalar" qoidasi Temurning buyrug'i emas edi — u bekor qilindi. Bu bo'lim
+> boshqa joylarda yozilgan har qanday "sokin / bezaksiz / minimal" ko'rsatmadan **ustun**. Shubhada — bezakli va jonli
+> variant tanlanadi.
 
 **Kim uchun.** Band sotuvchi, ko'pincha telefonda, Telegram'da yashaydi; buxgalter emas. O'zbek (lotin/kirill) va
-rus tilida o'qiydi.
+rus tilida o'qiydi. Dastur unga ishlatgani yoqishi, "chiroyli ilova" taassuroti qoldirishi kerak.
 
 **Asosiy vazifa.** 5 soniyada "qancha sof foyda qildim va nimani buyurtma qilishim kerak" degan savolga javob.
+Bezak shu vazifaga xalaqit bermaydi: raqamlar o'qiladi, kontrast (WCAG AA) saqlanadi.
 
-**Bitta esda qoladigan element — "Hisob varag'i".** Bosh sahifa va P&L tushumdan sof foydagacha bo'lgan vertikal
-hisob bilan ochiladi: har qator ayiriladi, oraliq summa ustida bitta chiziq, **Sof foyda** ostida ikki chiziq.
-Bu ham chiroyli, ham vazifaviy: foyda qayerdan kelganini ko'rsatadi (raqobatchilarda yo'q shaffoflik).
-Qolgan hamma narsa sokin va intizomli.
+**Vizual til (majburiy):**
+- **Gradientlar** — asosiy blok (Jami sof foyda), asosiy tugma, tanlangan holatlar, grafik to'ldirmalari, bosh fon yorug'liklari.
+- **Chuqurlik** — yumshoq ko'p qatlamli soyalar, shishasimon (blur) sidebar/topbar, hover'da ko'tarilish.
+- **Yumaloq shakllar** — radius 16 px (panel), tugma 10 px, pillar/badge to'liq yumaloq; kartochkalar bir xil emas: asosiy raqam ajralib turadi.
+- **Rangli ikonkalar va aksentlar** — har KPI guruhi o'z rangi va ikonkasi bilan; musbat/manfiy holatlar rangli nishonlarda.
+- **Jonli harakat** — raqamlar sanab chiqadi, grafiklar chizilib chiqadi, kartochkalar ketma-ket paydo bo'ladi, bosish/hover javoblari silliq; `prefers-reduced-motion` hurmat qilinadi.
+- **Bo'sh holat va yuklanish** — rasm/ikonka va jonli skelet bilan, quruq matn bilan emas.
+- **Eslab qoladigan elementlar** — "Hisob varag'i" (§6.1) va "Partiya yo'li" (§6.2) saqlanadi, lekin rangli, jonli va gradientli ko'rinishda.
 
-**Ikkinchi xos element — "Partiya yo'li"**: xaridning uch holati — Yo'lda → Omborimda → Uzumda — vaqt chizig'ida (§6.2, ADR-061).
+**Sifat chegarasi (bezak bilan ham buzilmaydi):** kontrast ≥ 4,5:1 (matn), 360 px da to'liq ishlaydi, klaviatura fokusi
+ko'rinadi, animatsiya o'chirilishi mumkin, qorong'i mavzu bir xil boy ko'rinadi, Uzum'ning binafsha rangi va uzum motivlari
+ishlatilmaydi (brend aralashmasligi uchun).
 
-**Ataylab qilinmaydigan narsalar** (shablon belgilari): bir xil yumaloq kartochkalar to'ri va bir xil soya;
-gradient bezaklar; KATTA HARFLI yorliqlar (yagona istisno — KPI sarhisobidagi guruh sarlavhasi, §6.4); sarlavhalarni nuqta bilan ulangan meta satrlar; havola matniga "→"
-qo'shish; har bo'limga paydo bo'lish animatsiyasi; Uzum'ning binafsha rangi va uzum/uzum shingili motivlari.
-
-Tekshiruv (dizayn rejasini shablon bilan solishtirish): oddiy "SaaS dashboard" yo'li — 4 ta KPI kartochka qatori,
-gradient aksent, Inter + ko'k. Bizda: shrift xuddi shu sababli emas, glif tekshiruvi bilan tanlandi (§2); asosiy
-blok kartochkalar emas, hisob varag'i; rang mavzudan (siyoh); tuzilma chiziqlari buxgalteriya ma'nosiga ega.
+**Ish usuli.** Dizayn o'zgarishlarida `frontend-design` skill'i (anthropics/skills) va `emil-design-engineering` /
+`make-interfaces-feel-better` ishlatiladi; har qadamdan keyin skrinshot bilan ko'zdan kechiriladi.
 
 ## 2. Shrift
 
@@ -73,11 +77,10 @@ Matn satri ≤ 75 belgi (yordam matnlari, tavsiflar). Hamma matn chapga tekislan
 ## 3. Oraliq, shakl, chiziqlar
 
 - Oraliq qadami 4 px: 4, 8, 12, 16, 20, 24, 32, 40, 48, 64.
-- Radius: 6 px (tugma, input), 10 px (panel, kartochka, jadval, drawer, dialog; ADR-048, B4.36 — hamma sahifada bir xil); faqat hisob varag'ida (LedgerTable, Foyda sahifasidagi hisob varag'i qutisi) radius yo'q.
+- Radius: 10 px (tugma, input), 16 px (panel, kartochka, jadval, drawer, dialog; ADR-070); hisob varag‘i ham yumaloq (ADR-070).
 - Chiziqlar: `hairline` (1 px, ajratuvchi), `rule` (1 px, hisobdagi oraliq summa ustida — siyoh rangida),
   `rule-double` (3 px double, faqat yakuniy summa ostida).
-- Soya: faqat suzib chiqadigan qatlamlarda (menyu, popover, dialog): `0 8px 24px rgb(18 24 38 / 0.12)`.
-  Statik bloklarda soya yo'q — ajratish oq maydon va hairline bilan.
+- Soya: kartochkalarda `shadow-card`, hover'da `shadow-card-hover`, suzib chiqadigan qatlamlarda `shadow-float` (tokens.css).
 - Breakpointlar: 360 (eng kichik), 640, 768, 1024, 1280, 1440. Kontent maksimal kengligi 1440 px; chekka oraliq
   16 px (mobil) / 24 px (desktop).
 

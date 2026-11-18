@@ -37,6 +37,7 @@ Timurjumaev). Avval o'z do'konlari (byDurii 106121, EL-ONE 135204), keyin boshqa
 
 - `.env`, `*.db`, `uzum_history.json`, `uzum_samples*.json` — repozitoriyga kirmaydi.
 - Pul — `Decimal`; formulalar faqat `packages/core` da, docstring'da F-raqam (`docs/plan/02-funksiyalar.md`).
+- **Dizayn (Temurning qat'iy talabi, ADR-070):** bezakli, yorqin, zamonaviy, jozibali — gradient, soya, jonli harakat, rangli ikonkalar. Sokin/minimal qilmang; `docs/plan/04-dizayn.md` §1.
 - UI matnlarida oʻ/gʻ uchun U+02BB, tutuq uchun U+02BC; ranglar va shrift `docs/plan/04-dizayn.md` dan.
 - Sandbox Uzum API'ga chiqa olmaydi (WAF va tarmoq) — real ma'lumot faqat Temur yoki staging orqali.
 - Commit: Conventional Commits; har vazifadan keyin `docs/plan/README.md` holat jadvali va `05` belgisi yangilanadi.

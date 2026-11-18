@@ -53,4 +53,5 @@ yoki hozir qilish kerakligini kelishib olish. Joriy bosqich chiqish mezoni bajar
 9. **Taxmin yashirilmaydi** — tannarxsiz yoki taxminiy qism doim belgilanadi.
 10. **Mobil va Telegram birinchi** — 360 px da to'liq ishlaydi.
 11. **Testsiz kod yo'q**; CI yashil bo'lmasa merge yo'q.
-12. **Temurning vaqti qimmat** — undan faqat u qila oladigan narsa so'raladi (qaror, akkaunt, sinov).
+12. **Dizayn bezakli, yorqin va jozibali** (Temurning qat'iy talabi, ADR-070; 04 §1) — sokin/quruq ko'rinish qabul qilinmaydi.
+13. **Temurning vaqti qimmat** — undan faqat u qila oladigan narsa so'raladi (qaror, akkaunt, sinov).
