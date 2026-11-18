@@ -7,7 +7,7 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Qo'shildi
 
-- Xarid sahifasi "Partiyadagi tovarlar" jadvali Uzum kabineti uslubida: rasm + nom, tagida xiraroq SKU kodi va SKU ID, qiymatlar bitta qatorda (API `LineOut`: `sku_code`, `sku_external_id`). Tovar nomi ikki qatorgacha to'liq ko'rinadi, ustun qolgan joyni oladi.
+- Xarid sahifasi "Partiyadagi tovarlar" jadvali Uzum kabineti uslubida: rasm + nom, tagida xiraroq SKU kodi va SKU ID, qiymatlar bitta qatorda (API `LineOut`: `sku_code`, `sku_external_id`). Tovar nomi ikki qatorgacha to'liq ko'rinadi, ustun qolgan joyni oladi. SKU `sku_id` saqlanmagan eski qatorlarda tovarning yagona SKU'si bo'yicha topiladi (bir nechta bo'lsa — taxmin qilinmaydi).
 - B0.1 Production rejasi (`docs/plan`), `CLAUDE.md`.
 - B0.2 Monorepo skeleti: `packages/core` (upcore), `apps/api` (upapi, `/health`), `apps/bot` (upbot),
   `apps/web` (Vite + React + TS), `infra/`; uv va pnpm workspace'lari.
