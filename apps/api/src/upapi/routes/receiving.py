@@ -165,7 +165,8 @@ async def _view(ctx: OrgContext) -> ReceivingOut:
         if x.status not in ("compensated", "written_off") or x.unit_cost is None:
             return None
         comp = Money(x.compensation, Currency.UZS) if x.compensation is not None else None
-        return receiving_loss(abs(x.qty), Money(x.unit_cost, Currency.UZS), comp).amount
+        lot = Money(x.lot_cost, Currency.UZS) if x.lot_cost is not None else None
+        return receiving_loss(abs(x.qty), Money(x.unit_cost, Currency.UZS), comp, lot).amount
 
     def shop_of(sku_id: UUID) -> str | None:
         info = catalog.get(sku_id)
@@ -476,7 +477,13 @@ async def preview(
 
 
 @router.patch("/orgs/{org_id}/receiving/shortages/{shortage_id}", response_model=ReceivingOut)
-async def update_shortage(shortage_id: UUID, body: ShortagePatch, ctx: Manager) -> ReceivingOut:
+async def update_shortage(
+    shortage_id: UUID,
+    body: ShortagePatch,
+    ctx: Manager,
+    request: Request,
+    background: BackgroundTasks,
+) -> ReceivingOut:
     """Kamomad holati: Topildi / Kompensatsiya qilindi (summa) / Zarar deb yopildi — yopilgan kun bugun; Ochiq — qayta
     ochish. Zarar (F52) foyda hisobida yopilgan kunga."""
     rd = m.receiving_diffs
@@ -506,4 +513,9 @@ async def update_shortage(shortage_id: UUID, body: ShortagePatch, ctx: Manager) 
         before=_plain({"status": row.status}),
         after=_plain(values),
     )
+    # TM9.4: yopilgan / qayta ochilgan kamomad — tovarning lot daftari (F21) qayta hisoblanadi.
+    item = await ctx.conn.scalar(select(m.mp_skus.c.item_id).where(m.mp_skus.c.id == row.sku_id))
+    if item is not None:
+        await calc.request(ctx.conn, ctx.org_id, calc.Scope.ITEM, item)
+        background.add_task(_kick, request, ctx.org_id)
     return await _view(ctx)

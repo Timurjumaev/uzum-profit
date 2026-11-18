@@ -670,7 +670,8 @@ async def _own(conn: AsyncConnection, period: Period) -> list[OwnExpense]:
 
 async def _receiving_losses(conn: AsyncConnection, period: Period) -> list[OwnExpense]:
     """F52 (ADR-061 §8): "Uzum yo'qotdi" kamomadi yopilganda (zarar deb yoki kompensatsiya bilan) — dona × lot birlik
-    tannarxi − kompensatsiya, yopilgan kunga, SKU katagiga (``upcore.purchasing.receiving_loss``)."""
+    tannarxi − kompensatsiya, yopilgan kunga, SKU katagiga (``upcore.purchasing.receiving_loss``). TM9.4: partiyadan
+    chiqqan qiymat (``lot_cost``) bo'lsa — shundan (tannarx bilan bir marta)."""
     rd, k = m.receiving_diffs, m.mp_skus
     rows = list(
         await conn.execute(
@@ -679,6 +680,7 @@ async def _receiving_losses(conn: AsyncConnection, period: Period) -> list[OwnEx
                 rd.c.qty,
                 rd.c.unit_cost,
                 rd.c.compensation,
+                rd.c.lot_cost,
                 rd.c.closed_on,
                 k.c.shop_id,
             )
@@ -695,7 +697,8 @@ async def _receiving_losses(conn: AsyncConnection, period: Period) -> list[OwnEx
     out = []
     for r in rows:
         comp = None if r.compensation is None else _uzs(r.compensation)
-        loss = receiving_loss(abs(r.qty), _uzs(r.unit_cost), comp)
+        lot = None if r.lot_cost is None else _uzs(r.lot_cost)
+        loss = receiving_loss(abs(r.qty), _uzs(r.unit_cost), comp, lot)
         if loss.amount > 0:
             out.append(
                 OwnExpense(

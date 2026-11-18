@@ -571,12 +571,20 @@ def fifo_attribute(stock: Sequence[tuple[str, int]], demand: int) -> dict[str, i
     return out
 
 
-def receiving_loss(qty: int, unit_cost: Money, compensation: Money | None = None) -> Money:
+def receiving_loss(
+    qty: int,
+    unit_cost: Money,
+    compensation: Money | None = None,
+    lot_cost: Money | None = None,
+) -> Money:
     """F52 (ADR-061 §8). Uzum qabulida yo'qotish = dona × lot birlik tannarxi − kompensatsiya summasi, manfiy bo'lmaydi.
-    Faqat "Zarar deb yopildi" yoki "Kompensatsiya qilindi" kamomad yozuvlari uchun; yopilgan kunga yoziladi."""
+    Faqat "Zarar deb yopildi" yoki "Kompensatsiya qilindi" kamomad yozuvlari uchun; yopilgan kunga yoziladi.
+
+    TM9.4: ``lot_cost`` — yo'qolgan donalarning partiyadan chiqqan qiymati (tannarx dvigateli, FIFO / o'rtacha); berilsa
+    ``qty × unit_cost`` o'rniga — zarar ham, partiyadan chiqqan tannarx ham bir xil (bir marta)."""
     if qty < 0:
         raise PurchaseError("kamomad donasi manfiy bo'lmaydi")
-    loss = unit_cost * qty
+    loss = lot_cost if lot_cost is not None else unit_cost * qty
     if compensation is not None:
         loss = loss - compensation
     return loss if loss.amount > 0 else Money.zero(unit_cost.currency)

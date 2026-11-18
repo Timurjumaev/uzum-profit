@@ -692,6 +692,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- TM9.4 (ADR-068 (4)) "Uzum yo'qotdi" kamomadi "Zarar deb yopildi" / "Kompensatsiya qilindi" bo'lganda yo'qolgan dona
+  partiya daftaridan ham chiqadi (avval faqat zarar yozilardi — keyingi sotuvlar tannarxi bir partiyaga siljirdi, oxirgi
+  partiyada "sotilmaydigan" dona qolardi); "Topildi" yoki qayta ochilsa — qaytadi. F52 zarari — partiyadan chiqqan qiymatdan
+  (FIFO / o'rtacha), jo'natmadagi o'rtacha narxdan emas: zarar ham, tannarx ham bir marta. Kamomad holati o'zgarsa tovar
+  tannarxi qayta hisoblanadi. Migratsiya 0033 (`receiving_diffs.lot_cost`).
 - TM9.5 (ADR-068 (5)) Jim xatolar: trekli kargo puli qayta yuborilsa (ikki bosish, tarmoq qayta urinishi) ikkinchi "Kargo"
   xarajati yozilmaydi — `cargo_twice` (409), xaridlar qulflanadi; tovar summasi kiritilmagan xarid — yangi F22 belgisi
   "tovar summasi kiritilmagan" (`goods_missing`, taxminiy), xarid sahifasida va bosh sahifa "Diqqat" blokida.

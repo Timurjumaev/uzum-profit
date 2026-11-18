@@ -658,7 +658,9 @@ marta sanalmaydi).
 **F52. Uzum qabulida yo'qotish** (ADR-061 §8) = Σ ("Zarar deb yopildi" yoki "Kompensatsiya qilindi" kamomad yozuvlari bo'yicha)
 (dona × lot birlik tannarxi − kompensatsiya summasi), manfiy bo'lmaydi. Yopilgan kunga yoziladi; foyda hisobida alohida
 qator. Ochiq kamomad foydaga ta'sir qilmaydi (tovar hali "Uzumga jo'natilgan" qiymatida turadi), "Diqqat" blokida
-ko'rinadi. Asos — F33 (e'lon − qabul); "Men sanashda adashganman" tanlansa yozuv ochilmaydi, xarid soni tuzatiladi (F20).
+ko'rinadi. Asos — F33 (e'lon − qabul); "Men sanashda adashganman" tanlansa yozuv ochilmaydi, xarid soni tuzatiladi (F20). **Lot daftari (TM9.4):** yopilgan kamomad donasi partiyadan ham chiqadi (F21 hodisasi, yopilgan kun —
+F51 dagi kabi), "Topildi" yoki qayta ochilsa — qaytadi; zarar — partiyadan chiqqan qiymat (`lot_cost`, FIFO / o'rtacha) −
+kompensatsiya: zarar ham, tannarx ham bir marta.
 
 **F53. Zarar bilan sotuv signali** (M15, B6.1) — SKU'ning oxirgi N ta hisobga olinadigan (F2) sotuvining hammasida qator
 foydasi = Uzum to'lovi (F6 `sellerProfit`) − tannarx (F21) < 0; N — sozlanadi (standart 3, 2–10). Tannarxi noma'lum sotuv

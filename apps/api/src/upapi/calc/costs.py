@@ -6,7 +6,10 @@ Tovar (``items``) bo'yicha hodisalar:
 - **sotuv** — SKU'si shu tovarga bog'langan ``sale_items`` (Yakunlangan va Jarayonda, F2), kun — F1, dona —
   ``amount``. ``amount`` — qolgan (sof) dona: ``sellerProfit`` hamma real qatorda ``amount`` bilan F6 ga teng (B2.11);
   qaytgan yoki bekor dona (``amountReturns``) lotdan olinmaydi, shuning uchun alohida qaytish hodisasi yo'q;
-- **hisobdan chiqarish** — ``stock_moves``: ``writeoff`` va manfiy ``adjust`` (brak, yo'qotish, kamomad).
+- **hisobdan chiqarish** — ``stock_moves``: ``writeoff`` va manfiy ``adjust`` (brak, yo'qotish, kamomad); TM9.4 (F52):
+  Uzum qabulida yo'qolgan va "Zarar deb yopildi" / "Kompensatsiya qilindi" kamomad (``receiving_diffs``, yopilgan kun) —
+  dona partiyadan chiqadi (F51 dagi kabi), "Topildi" yoki qayta ochilsa — qaytadi. Zarar foyda hisobida F52 qatori
+  (bir marta); keyingi sotuvlar tannarxi siljimaydi.
 - **boshlang'ich holat** (F41, ADR-033) — ``orgs.cost_start_on`` qo'yilgan bo'lsa: undan oldingi sotuvlar
   ``item_costs`` (tarixiy narx) bilan, lotlarga tegmaydi; ``opening_stock`` (Uzumda + o'z omborimda) — birinchi lot;
   tayyor sanasi boshlashdan oldingi lotlar ishlatilmaydi (qoldiqqa kirgan).
@@ -327,6 +330,21 @@ async def recompute_items(
         )
     ):
         by_item.setdefault(w.item_id, []).append(WriteOff(f"w:{w.id}", w.day, abs(w.qty)))
+    rd = m.receiving_diffs
+    for lost in await conn.execute(
+        select(rd.c.id, rd.c.qty, rd.c.closed_on, k.c.item_id)
+        .join(k, k.c.id == rd.c.sku_id)
+        .where(
+            only(k.c.item_id),
+            rd.c.resolution == "lost",
+            rd.c.status.in_(LOT_LOSS_STATUSES),
+            rd.c.closed_on.is_not(None),
+            rd.c.qty != 0,
+        )
+    ):
+        by_item.setdefault(lost.item_id, []).append(
+            WriteOff(f"r:{lost.id}", lost.closed_on, abs(lost.qty))
+        )
     lots_by: dict[UUID, list[Lot]] = {}
     for lot in await conn.execute(
         select(lots, p.c.ordered_on)
@@ -340,18 +358,43 @@ async def recompute_items(
     opened = await openings(conn, start, items) if start is not None else {}
     desired: dict[UUID, dict[str, Any]] = {}
     writeoff_costs: dict[UUID, Decimal | None] = {}
+    loss_costs: dict[UUID, Decimal | None] = {}
     for item_id, events in by_item.items():
         opening = opened.get(item_id, Opening(start)) if start is not None else None
         result = compute_costs(lots_by.get(item_id, ()), events, method, opening)
         for sale_id, out in result.sales.items():
             desired[UUID(sale_id)] = _row(method, out)
         for wid, out in result.writeoffs.items():
-            writeoff_costs[UUID(wid.removeprefix("w:"))] = (
-                None if out.cost is None else out.cost.amount
-            )
+            cost = None if out.cost is None else out.cost.amount
+            if wid.startswith("r:"):
+                loss_costs[UUID(wid.removeprefix("r:"))] = (
+                    cost  # F52 — ``receiving_diffs.lot_cost``
+                )
+            else:
+                writeoff_costs[UUID(wid.removeprefix("w:"))] = cost
     await _write_writeoff_costs(conn, writeoff_costs)
+    await _write_loss_costs(conn, loss_costs)
     existing = await _existing(conn, only(k.c.item_id))
     return await _apply(conn, org_id, sales, desired, existing, now)
+
+
+# TM9.4: yopilgan "Uzum yo'qotdi" kamomadi lot daftaridan chiqadi ("Topildi" / "Ochiq" — yo'q).
+LOT_LOSS_STATUSES = ("written_off", "compensated")
+
+
+async def _write_loss_costs(conn: AsyncConnection, costs: dict[UUID, Decimal | None]) -> None:
+    """TM9.4 (F52): yopilgan kamomadning partiyadan chiqqan qiymati ``receiving_diffs.lot_cost`` ga (faqat farqlar)."""
+    if not costs:
+        return
+    rd = m.receiving_diffs
+    current = {
+        r.id: r.lot_cost
+        for r in await conn.execute(select(rd.c.id, rd.c.lot_cost).where(rd.c.id.in_(list(costs))))
+    }
+    for diff_id, cost in costs.items():
+        value = None if cost is None else quantize(cost, 2)
+        if diff_id in current and current[diff_id] != value:
+            await conn.execute(update(rd).where(rd.c.id == diff_id).values(lot_cost=value))
 
 
 async def _write_writeoff_costs(conn: AsyncConnection, costs: dict[UUID, Decimal | None]) -> None:
