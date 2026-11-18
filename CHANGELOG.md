@@ -7,6 +7,7 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Qo'shildi
 
+- Zamonaviy dizayn qatlami (ADR-070): soyali kartochkalar, radius 16 px, gradientli "Jami sof foyda" bloki va asosiy tugma, `styles/modern.css`; vizual skrinshotlar yangilandi.
 - B0.1 Production rejasi (`docs/plan`), `CLAUDE.md`.
 - B0.2 Monorepo skeleti: `packages/core` (upcore), `apps/api` (upapi, `/health`), `apps/bot` (upbot),
   `apps/web` (Vite + React + TS), `infra/`; uv va pnpm workspace'lari.

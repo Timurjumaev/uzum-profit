@@ -1,0 +1,152 @@
+/* Zamonaviy qatlam (ADR-070, 2026-11-18): yumshoq soyali kartochkalar, katta radius, gradientli asosiy blok, silliq o'tishlar.
+   Oxirida yuklanadi — faqat tashqi ko'rinish; tuzilma, matn va formulalar o'zgarmaydi. Statik panelda soya yo'q qoidasi (04 §3) bekor. */
+
+body {
+  background:
+    radial-gradient(1200px 500px at 85% -10%, rgb(42 120 214 / 0.10), transparent 60%),
+    radial-gradient(900px 400px at -5% 0%, rgb(98 80 214 / 0.07), transparent 55%),
+    var(--bg-page);
+  background-attachment: fixed;
+}
+
+/* Kartochka va panellar: hairline o'rniga yengil soya */
+.home-sum,
+.home-period,
+.home-card,
+.ui-kpi,
+.chart-frame,
+.ui-table-wrap,
+.ui-banner,
+.ui-empty,
+.auth__card,
+.onb__history > li,
+.home-attention ul {
+  border-color: transparent;
+  box-shadow: var(--shadow-card);
+}
+
+.home-sum,
+.home-period,
+.home-card,
+.ui-kpi {
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+@media (hover: hover) {
+  .home-period:hover,
+  .home-card:hover,
+  .ui-kpi:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+  }
+}
+
+/* Asosiy blok — Jami sof foyda: gradient, oq matn */
+.home-sum--total {
+  border: 0;
+  color: #fff;
+  background: var(--gradient-hero);
+  box-shadow: 0 12px 32px rgb(31 92 184 / 0.32);
+  overflow: hidden;
+}
+
+.home-sum--total::after {
+  content: "";
+  position: absolute;
+  inset-block-start: -40%;
+  inset-inline-end: -15%;
+  inline-size: 60%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(255 255 255 / 0.18), transparent 65%);
+  pointer-events: none;
+}
+
+.home-sum--total .home-sum__label,
+.home-sum--total .caption,
+.home-sum--total .home-sum__amount,
+.home-sum--total .home-change,
+.home-sum--total button,
+.home-sum--total svg {
+  color: #fff;
+}
+
+.home-sum--total .caption {
+  opacity: 0.88;
+}
+
+.home-sum--total .home-sum__amount {
+  font-size: 2rem;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* Kutilayotgan — shtrix chegara saqlanadi (rangdan tashqari belgi, 04 §11) */
+.home-sum--expected {
+  border: 1.5px dashed var(--border-input);
+  background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
+  box-shadow: none;
+}
+
+.home-sum__op {
+  display: grid;
+  place-items: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Tugma, input, yorliqlar — yumaloqroq */
+.ui-btn,
+.ui-input,
+.ui-select {
+  border-radius: 10px;
+}
+
+.ui-btn--primary {
+  background: var(--gradient-accent);
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgb(42 120 214 / 0.30);
+  transition: box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.ui-btn--primary:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 16px rgb(42 120 214 / 0.38);
+}
+
+.ui-badge {
+  border-radius: var(--radius-pill);
+}
+
+/* Sidebar va yuqori panel: shishasimon */
+.shell-sidebar,
+.sidebar {
+  background: color-mix(in srgb, var(--bg-surface) 82%, transparent);
+  backdrop-filter: blur(14px);
+  border-color: var(--border-hairline);
+}
+
+.topbar {
+  background: color-mix(in srgb, var(--bg-page) 78%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-sum,
+  .home-period,
+  .home-card,
+  .ui-kpi {
+    transition: none;
+  }
+
+  .home-period:hover,
+  .home-card:hover,
+  .ui-kpi:hover {
+    transform: none;
+  }
+}
