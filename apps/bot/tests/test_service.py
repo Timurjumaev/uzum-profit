@@ -348,3 +348,22 @@ def test_commands_unfinished_note_and_previous_period(world: World) -> None:
         "Davr hali tugamagan"
         not in run(w, lambda e: service.command(e, TG_OWNER, "kecha", NOW, ""))[0].text
     )
+
+
+def test_dashboard_attention_telegram_lost(world: World) -> None:
+    """B6.4 (A5): kanal uzilgan (doimiy yetkazish xatosi — ``active = false``) bo'lsa ilovada "Diqqat" sanog'i 1; faol yoki
+    o'zi uzgan (qator o'chadi) yoki hech qachon ulanmagan — 0."""
+    w = world
+    _owner_channel(w)
+    owner = user_of(w, "owner")
+
+    def lost() -> int:
+        dash = tp.ok(tp.send(w, "GET", "dashboard?start=2026-11-01&end=2026-11-16"))
+        return int(dash["attention"]["telegram_lost"])
+
+    assert lost() == 0  # faol kanal
+    w.a.sql("UPDATE notification_channels SET active = false WHERE user_id = %s", [owner])
+    assert lost() == 1  # uzilgan — "qayta ulang"
+    w.a.sql("UPDATE notifications SET channel_id = NULL WHERE user_id = %s", [owner])
+    w.a.sql("DELETE FROM notification_channels WHERE user_id = %s", [owner])
+    assert lost() == 0  # o'zi uzgan / ulanmagan — qator yo'q

@@ -449,6 +449,7 @@ export const uzLatn = {
       uncounted: "Xarid keldi, sanalmagan: {{value}} ta",
       orphanInvoices: "Dasturdan tashqari postavka: {{value}} ta — Omborimdan ketganmi?",
       goodsMissing: "Tovar summasi kiritilmagan xaridlar: {{value}} ta (tannarx taxminiy)",
+      telegramLost: "Telegram uzildi — bildirishnomalar kelmayapti. Qayta ulang",
       lossSkus: "Zarar bilan sotilayotgan SKU: {{value}} ta",
       sync: "Sinxronda muammo: {{value}} ta doʻkon",
       recalculated: "Tannarxi qayta hisoblangan sotuvlar: {{value}} ta",

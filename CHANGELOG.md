@@ -7,6 +7,7 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Qo'shildi
 
+- B6.4 (5-qadam, A5): Telegram kanali uzilsa (bot bloklangan / chat yo'q) Bosh sahifa "Diqqat" qatorida "Telegram uzildi — qayta ulang" (`attention.telegram_lost`); katalog `stage` qiymatlari ADR-063 ga moslandi (FBS — B9.5); 02 M15 dan "kvota tugayapti" olib tashlandi.
 - B6.4 (4-qadam, A1, A7, A8, A18–A20): xulosada sof foyda uch qismda (jami / shundan kutilayotgan / bunday sotuvlarning N% i yakunlanadi / HH:MM holatiga); sarlavha — sana; o'z kunidan o'tgan kunlik xulosa yuborilmaydi; dushanba kuni haftalik va kunlik — bitta xabar; "— tashkilot" imzosi faqat bir necha tashkilotda; `/hafta` va `/oy` davr boshida oldingi to'liq davr bilan, tugamagan davr izohli; "Batafsil" tugmasi foydalanuvchi tilida; Sozlamalarda "Tez orada" ichki bosqich kodisiz.
 - B6.4 (3-qadam, A4): "Sinxron to'xtadi" ikkiga bo'lindi — kalit yaroqsiz (kritik, bir marta, har 3 kunda eslatma) va yangilanmayapti (kritik emas, tunda va Uzum uzilishida yuborilmaydi, har to'xtash uchun bir marta); tiklanganda bitta "tiklandi" xabari.
 - B6.4 (2-qadam, A2, A3, A6, A10): "Qoldiq kritik" va "Zarar bilan sotuv" faqat ro'yxatga yangi SKU kirganda (bazaviy ro'yxat, qisqarsa yangilanadi); "Tannarxsiz sotuvlar" — faqat yangi SKU; haftalik xulosa hafta ichida birinchi imkoniyatda; xulosa kaliti bor bo'lsa qayta hisoblanmaydi, og'ir tekshiruvlar soatda bir marta.

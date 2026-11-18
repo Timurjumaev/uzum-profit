@@ -136,8 +136,8 @@ export function homeRows(rows: PnlRow[], label: (code: string) => string): HomeR
   return out;
 }
 
-export type AttentionKind = "uncosted" | "stockCritical" | "stockHigh" | "stockShip" | "receiving" | "orphanInvoices" | "uncounted" | "goodsMissing" | "lossSkus" | "recalculated" | "sync";
-export type AttentionItem = { kind: AttentionKind; tone: "negative" | "warning" | "info"; count: number; to: "/products" | "/inventory" | "/orders" | "/status" | "/receiving" | "/purchases" | "/warehouse" | "/dispatches"; amount?: string };
+export type AttentionKind = "uncosted" | "stockCritical" | "stockHigh" | "stockShip" | "receiving" | "orphanInvoices" | "uncounted" | "goodsMissing" | "lossSkus" | "recalculated" | "sync" | "telegramLost";
+export type AttentionItem = { kind: AttentionKind; tone: "negative" | "warning" | "info"; count: number; to: "/products" | "/inventory" | "/orders" | "/status" | "/receiving" | "/purchases" | "/warehouse" | "/dispatches" | "/settings"; amount?: string };
 
 /** "Diqqat talab qiladi" (M4), ustuvorlik bo'yicha: tannarxsiz sotuvlar → tugayotgan tovar → zarar qilayotgan SKU →
  * sinxron xatosi → tannarxi qayta hisoblangan sotuvlar. Yangi jarimalar, kechikayotgan kargo, Uzum to'lovi — B5. */
@@ -158,5 +158,7 @@ export function attentionItems(a: Dashboard["attention"], syncIssues: number): A
   if (a.loss_skus > 0) items.push({ kind: "lossSkus", tone: "negative", count: a.loss_skus, to: "/products" });
   if (syncIssues > 0) items.push({ kind: "sync", tone: "warning", count: syncIssues, to: "/status" });
   if (a.recalculated > 0) items.push({ kind: "recalculated", tone: "info", count: a.recalculated, to: "/orders" });
+  // B6.4 (A5): Telegram kanali uzilgan (bot bloklangan / chat yo'q) — bildirishnomalar kelmayapti; qayta ulash Sozlamalarda.
+  if ((a.telegram_lost ?? 0) > 0) items.push({ kind: "telegramLost", tone: "warning", count: a.telegram_lost ?? 0, to: "/settings" });
   return items;
 }
