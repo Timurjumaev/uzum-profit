@@ -138,3 +138,11 @@ def test_new_sku_notifications_uz_ru() -> None:
         "Qoldiq kritik: 2 ta SKU"
         in msg.notification("stock_critical", {"count": 2, "skus": skus}, "uz").text
     )
+
+
+def test_sync_restored_message() -> None:
+    """B6.4 (A4): "tiklandi" — bitta xabar, holat sahifasiga havola."""
+    p = {"shop": "byDurii", "shop_id": "x", "reason": "restored"}
+    uz = msg.notification("sync_stopped", p, "uz")
+    assert uz.text == "✅ Sinxron tiklandi: byDurii." and uz.path == "/status"
+    assert "восстановлена: byDurii" in msg.notification("sync_stopped", p, "ru").text

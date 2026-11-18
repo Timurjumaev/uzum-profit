@@ -7,6 +7,7 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Qo'shildi
 
+- B6.4 (3-qadam, A4): "Sinxron to'xtadi" ikkiga bo'lindi — kalit yaroqsiz (kritik, bir marta, har 3 kunda eslatma) va yangilanmayapti (kritik emas, tunda va Uzum uzilishida yuborilmaydi, har to'xtash uchun bir marta); tiklanganda bitta "tiklandi" xabari.
 - B6.4 (2-qadam, A2, A3, A6, A10): "Qoldiq kritik" va "Zarar bilan sotuv" faqat ro'yxatga yangi SKU kirganda (bazaviy ro'yxat, qisqarsa yangilanadi); "Tannarxsiz sotuvlar" — faqat yangi SKU; haftalik xulosa hafta ichida birinchi imkoniyatda; xulosa kaliti bor bo'lsa qayta hisoblanmaydi, og'ir tekshiruvlar soatda bir marta.
 - B6.4 (1-qadam, A5, A9): Telegram `BadRequest` foydalanuvchi kanalini uzmaydi (faqat shu xabar `failed`); `retry_after` hurmat qilinadi (urinish sanalmaydi); 90 kundan eski yuborilgan/muvaffaqiyatsiz bildirishnomalar tozalanadi.
 - B5.0d: Foyda tafsiloti (drill-down) — "Yana yuklash" o'rniga sahifa raqamlari (`Pagination`, 20/50/100) sotuv va Uzum xarajatlari qatorlarida (ADR-054).

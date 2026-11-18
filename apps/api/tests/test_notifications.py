@@ -216,8 +216,10 @@ def test_stale_sync_skips_summary_and_alerts_critical(world: World) -> None:
     assert (
         len({r["key"] for r in stopped}) == 1
     )  # bitta do'kon, kuniga bir marta (egasi ikkita — har biriga)
-    assert all(r["critical"] and r["payload"]["reason"] == "stale" for r in stopped)
-    assert all(r["due_at"] == tuesday for r in stopped)  # tinch soatda ham (09:00–12:00) darhol
+    # B6.4 (A4): "yangilanmayapti" — sotuvchi qila olmaydi, kritik emas (tunda yuborilmaydi); har to'xtash uchun bir marta.
+    assert all(not r["critical"] and r["payload"]["reason"] == "stale" for r in stopped)
+    assert all(r["key"].startswith("sync_stale:") for r in stopped)
+    assert all(r["due_at"] >= tuesday for r in stopped)  # kritik emas — tinch soatlarga bo'ysunadi
     assert not [
         r for r in queue(w) if r["event"] == "weekly_summary" and r["key"] != "weekly:2026-11-09"
     ]
@@ -259,7 +261,7 @@ def test_job_runs_every_org_and_reports_invalid_key(world: World) -> None:
         for r in queue(w)
         if r["event"] == "sync_stopped" and r["payload"]["reason"] == "key_invalid"
     ]
-    assert invalid and all(r["key"].endswith("2026-11-19") for r in invalid)
+    assert invalid and all(r["key"].startswith("sync_key:") and r["critical"] for r in invalid)
     w.a.sql("UPDATE mp_accounts SET status = 'active' WHERE org_id = %s", [w.org_id])
 
 
@@ -434,3 +436,61 @@ def test_weekly_summary_any_day_and_not_recomputed(world: World, monkeypatch: An
     monkeypatch.setattr(notify, "summary", spy)
     evaluate(w, wednesday + timedelta(minutes=5))
     assert calls == []
+
+
+def _set_outage(w: World, since: datetime | None) -> None:
+    w.a.sql(
+        "INSERT INTO provider_health (provider, outage_since) VALUES ('uzum', %s) "
+        "ON CONFLICT (provider) DO UPDATE SET outage_since = EXCLUDED.outage_since",
+        [since],
+    )
+
+
+def test_sync_key_invalid_reminds_every_three_days(world: World) -> None:
+    """B6.4 (A4): kalit yaroqsiz — kritik, bir marta; tuzalmasa to'xtagan kundan boshlab har 3 kunda eslatma."""
+    w = world
+    _clean(w)
+    _set_outage(w, None)
+    fresh(w, NOW - timedelta(hours=2))  # 16.11 08:00 da oxirgi muvaffaqiyat
+    w.a.sql("UPDATE mp_accounts SET status = 'invalid' WHERE org_id = %s", [w.org_id])
+    evaluate(w)
+    rows = _rows(w, "owner", "sync_stopped")
+    assert len(rows) == 1 and rows[0]["critical"] and rows[0]["payload"]["reason"] == "key_invalid"
+    assert rows[0]["key"].endswith(":2026-11-16:0")
+    evaluate(w, NOW + timedelta(minutes=5))  # takror emas
+    evaluate(w, NOW + timedelta(days=2))  # hali 0-davr
+    assert len(_rows(w, "owner", "sync_stopped")) == 1
+    evaluate(w, NOW + timedelta(days=3))  # 1-davr — eslatma
+    reminders = _rows(w, "owner", "sync_stopped")
+    assert len(reminders) == 2 and reminders[-1]["key"].endswith(":2026-11-16:1")
+    w.a.sql("UPDATE mp_accounts SET status = 'active' WHERE org_id = %s", [w.org_id])
+
+
+def test_sync_stale_once_not_during_outage_and_restored(world: World) -> None:
+    """B6.4 (A4): "yangilanmayapti" — kritik emas, har to'xtash uchun bir marta, Uzum uzilishi paytida yo'q; sinxron
+    tiklanganda bitta "tiklandi" xabari."""
+    w = world
+    _clean(w)
+    w.a.sql("UPDATE mp_accounts SET status = 'active' WHERE org_id = %s", [w.org_id])
+    # Uzum uzilishi belgilangan — "yangilanmayapti" yuborilmaydi.
+    _set_outage(w, NOW - timedelta(hours=1))
+    fresh(w, NOW - timedelta(hours=5))
+    evaluate(w)
+    assert _rows(w, "owner", "sync_stopped") == []
+    # Uzilish tugadi, sinxron hali yangilanmagan — bir marta.
+    _set_outage(w, None)
+    evaluate(w, NOW + timedelta(minutes=5))
+    evaluate(w, NOW + timedelta(minutes=10))
+    stale = _rows(w, "owner", "sync_stopped")
+    assert len(stale) == 1 and stale[0]["payload"]["reason"] == "stale" and not stale[0]["critical"]
+    assert stale[0]["payload"]["shop_id"] == str(w.a.shop_id)
+    # Tiklandi — bitta xabar, takror yo'q.
+    fresh(w, NOW + timedelta(hours=1))
+    evaluate(w, NOW + timedelta(hours=1))
+    evaluate(w, NOW + timedelta(hours=1, minutes=5))
+    rows = _rows(w, "owner", "sync_stopped")
+    assert [r["payload"]["reason"] for r in rows] == ["stale", "restored"]
+    assert rows[1]["key"] == f"sync_restored:{rows[0]['key']}" and not rows[1]["critical"]
+    # Sog'lom do'konda boshqa "to'xtadi" bo'lmasa — yangi xabar yo'q.
+    evaluate(w, NOW + timedelta(hours=2))
+    assert len(_rows(w, "owner", "sync_stopped")) == 2

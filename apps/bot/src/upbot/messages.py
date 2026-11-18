@@ -69,6 +69,7 @@ T: dict[str, dict[str, str]] = {
         "uncounted": "Xarid keldi, {days} kundan beri sanalmagan: {title}. Sanang — Omborimda soni aniq boʻladi.",
         "sync_stale": "❗ Sinxron toʻxtadi: {shop}. Oxirgi yangilanish: {since}",
         "sync_invalid": "❗ Uzum kaliti yaroqsiz: {shop}. Sozlamalarda yangi kalit kiriting.",
+        "sync_restored": "✅ Sinxron tiklandi: {shop}.",
         "more": "Batafsil",
         "not_linked": "Bu Telegram hali ulanmagan. Ilovada Sozlamalar → Bildirishnomalar → «Telegramʼni ulash» tugmasini bosing.",
         "linked": "✅ Telegram ulandi: {org}. Bildirishnomalar shu yerga keladi. Buyruqlar: /bugun /kecha /hafta /oy /qoldiq /sozlamalar",
@@ -105,6 +106,7 @@ T: dict[str, dict[str, str]] = {
         "uncounted": "Закупка пришла и не пересчитана {days} дн.: {title}. Пересчитайте — остаток на складе станет точным.",
         "sync_stale": "❗ Синхронизация остановилась: {shop}. Последнее обновление: {since}",
         "sync_invalid": "❗ Ключ Uzum недействителен: {shop}. Введите новый ключ в настройках.",
+        "sync_restored": "✅ Синхронизация восстановлена: {shop}.",
         "more": "Подробнее",
         "not_linked": "Этот Telegram ещё не подключён. В приложении: Настройки → Уведомления → «Подключить Telegram».",
         "linked": "✅ Telegram подключён: {org}. Уведомления будут приходить сюда. Команды: /bugun /kecha /hafta /oy /qoldiq /sozlamalar",
@@ -192,7 +194,9 @@ def notification(event: str, payload: dict[str, Any], lang: str, org: str | None
             f"/purchases/{p['purchase_id']}",
         )
     elif event == "sync_stopped":
-        if p["reason"] == "key_invalid":
+        if p["reason"] == "restored":  # B6.4 (A4): bitta "tiklandi" xabari
+            msg = Message(t(lang, "sync_restored", shop=p["shop"]), "/status")
+        elif p["reason"] == "key_invalid":
             msg = Message(t(lang, "sync_invalid", shop=p["shop"]), "/settings")
         else:
             since = moment(p["since"]) if p.get("since") else "—"
