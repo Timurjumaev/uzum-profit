@@ -140,6 +140,9 @@ const SALES = {
     previous_cogs: null,
   })),
   next_cursor: null,
+  total: 2,
+  page: 1,
+  pages: 1,
   summary: { units: 3, canceled: 0, returns: 0, cancel_share: null, return_share: null },
 };
 
@@ -239,8 +242,8 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
       const sku = url.searchParams.get("view") === "sku";
       return json(route, 200, pnlData(sku ? { columns: skuColumns() } : {}));
     }
-    // Buyurtmalar ro'yxati sahifalab so'raydi (`page`, ADR-054); P&L drill-down — kursor bilan (namuna `SALES`).
-    if (key === `GET /orgs/${ORG_ID}/sales`) return json(route, 200, url.searchParams.has("page") ? salesData() : SALES);
+    // Buyurtmalar ro'yxati (`group`) va P&L drill-down (`counted=true`) sahifalab so'raydi (`page`, ADR-054, B5.0d); drill-down — namuna `SALES`.
+    if (key === `GET /orgs/${ORG_ID}/sales`) return json(route, 200, url.searchParams.has("counted") || !url.searchParams.has("page") ? SALES : salesData());
     if (key === `GET /orgs/${ORG_ID}/orders/analysis`) return json(route, 200, analysisData());
     if (key === `GET /orgs/${ORG_ID}/expenses`) return json(route, 200, expensesData());
     if (key === `GET /orgs/${ORG_ID}/settings`) return json(route, 200, settingsData());

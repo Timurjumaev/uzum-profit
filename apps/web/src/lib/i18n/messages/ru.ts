@@ -527,7 +527,6 @@ export const ru: Messages = {
     },
     drill: {
       total: "Итого",
-      loadMore: "Загрузить ещё",
       loading: "Загрузка",
       empty: "Для этой строки записей не найдено.",
       day: "Дата",

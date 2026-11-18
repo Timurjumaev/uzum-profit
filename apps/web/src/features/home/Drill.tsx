@@ -1,12 +1,13 @@
 // Drill-down (M5: "har qator bosilsa — manba yozuvlar"): o'ngdan Drawer. Sotuv qatorlari (tushum, komissiya, logistika,
 // Uzum to'lovi, tannarx), Uzum toifasi xarajatlari yoki o'z xarajatlari; boshqa qatorlar boshqalardan hisoblanadi —
 // faqat formula. Yig'indi (jami) — API qatoridan, yozuvlardan UI qayta hisoblamaydi (tamoyil 4).
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
-import { expensesPage, salesPage, type ReportParams } from "../../app/query";
-import { Badge, Button, DataTable, Drawer, Skeleton, type Column } from "../../components/ui";
+import { drillExpensesQuery, drillSalesQuery, expensesPage, type ReportParams } from "../../app/query";
+import { Badge, DataTable, Drawer, Pagination, Skeleton, usePageSize, type Column } from "../../components/ui";
 import type { Expenses, Sale } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { CostCell } from "../orders/CostCell";
@@ -18,16 +19,6 @@ type Props = { orgId: string; params: ReportParams; row: HomeRow | null; onClose
 const SALE_FIELD = { revenue: "revenue", commission: "commission", logistics: "logistics", payout: "payout", cogs: "cogs" } as const;
 type SaleField = (typeof SALE_FIELD)[keyof typeof SALE_FIELD];
 
-function More({ hasMore, loading, onMore }: { hasMore: boolean; loading: boolean; onMore: () => void }) {
-  const { t } = useTranslation();
-  if (!hasMore) return null;
-  return (
-    <Button variant="secondary" loading={loading} onClick={onMore}>
-      {t("home.drill.loadMore")}
-    </Button>
-  );
-}
-
 function Failure({ error }: { error: unknown }) {
   const { t } = useTranslation();
   return <p role="alert">{errorText(error, t)}</p>;
@@ -36,15 +27,12 @@ function Failure({ error }: { error: unknown }) {
 function SalesBody({ orgId, params, field }: { orgId: string; params: ReportParams; field: SaleField }) {
   const { t } = useTranslation();
   const f = useFormat();
-  const query = useInfiniteQuery({
-    queryKey: ["orgs", orgId, "drill", "sales", params],
-    queryFn: ({ pageParam }) => salesPage(orgId, params, pageParam),
-    initialPageParam: null as string | null,
-    getNextPageParam: (last) => last.next_cursor,
-  });
+  const [page, setPage] = useState(1);
+  const [size, setSize] = usePageSize();
+  const query = useQuery({ ...drillSalesQuery(orgId, params, page, size), placeholderData: keepPreviousData });
   if (query.isError) return <Failure error={query.error} />;
   if (query.isPending) return <Skeleton label={t("home.drill.loading")} lines={5} />;
-  const items = query.data.pages.flatMap((p) => p.items);
+  const items = query.data.items;
   const columns: Column<Sale>[] = [
     { key: "day", header: t("home.drill.day"), render: (r) => f.date(r.day) },
     {
@@ -83,7 +71,17 @@ function SalesBody({ orgId, params, field }: { orgId: string; params: ReportPara
   return (
     <>
       <DataTable caption={t("home.drill.sales")} density="compact" columns={columns} rows={items} rowKey={(r) => r.id} empty={t("home.drill.empty")} />
-      <More hasMore={query.hasNextPage} loading={query.isFetchingNextPage} onMore={() => void query.fetchNextPage()} />
+      <Pagination
+        page={query.data.page}
+        pages={query.data.pages}
+        total={query.data.total}
+        size={size}
+        onPage={setPage}
+        onSize={(n) => {
+          setSize(n);
+          setPage(1);
+        }}
+      />
     </>
   );
 }
@@ -91,15 +89,12 @@ function SalesBody({ orgId, params, field }: { orgId: string; params: ReportPara
 function UzumBody({ orgId, params, category }: { orgId: string; params: ReportParams; category: string }) {
   const { t } = useTranslation();
   const f = useFormat();
-  const query = useInfiniteQuery({
-    queryKey: ["orgs", orgId, "drill", "uzum", category, params],
-    queryFn: ({ pageParam }) => expensesPage(orgId, params, category, pageParam),
-    initialPageParam: null as string | null,
-    getNextPageParam: (last) => last.next_cursor,
-  });
+  const [page, setPage] = useState(1);
+  const [size, setSize] = usePageSize();
+  const query = useQuery({ ...drillExpensesQuery(orgId, params, category, page, size), placeholderData: keepPreviousData });
   if (query.isError) return <Failure error={query.error} />;
   if (query.isPending) return <Skeleton label={t("home.drill.loading")} lines={5} />;
-  const items = query.data.pages.flatMap((p) => p.items);
+  const items = query.data.items;
   const columns: Column<Expenses["items"][number]>[] = [
     // ADR-039: buyurtmaga bog'liq reklama — Uzum yechgan kun va P&L'dagi (buyurtma) kun.
     { key: "day", header: t("home.drill.day"), render: (r) => (r.order_date ? `${f.date(r.day)} · ${t("home.drill.orderDate", { date: f.date(r.order_date) })}` : f.date(r.day)) },
@@ -110,7 +105,17 @@ function UzumBody({ orgId, params, category }: { orgId: string; params: ReportPa
   return (
     <>
       <DataTable caption={t(`home.expense.${category}`, { defaultValue: category })} density="compact" columns={columns} rows={items} rowKey={(r) => r.id} empty={t("home.drill.empty")} />
-      <More hasMore={query.hasNextPage} loading={query.isFetchingNextPage} onMore={() => void query.fetchNextPage()} />
+      <Pagination
+        page={query.data.page}
+        pages={query.data.pages}
+        total={query.data.total}
+        size={size}
+        onPage={setPage}
+        onSize={(n) => {
+          setSize(n);
+          setPage(1);
+        }}
+      />
     </>
   );
 }
@@ -120,7 +125,7 @@ function OwnBody({ orgId, params, category }: { orgId: string; params: ReportPar
   const f = useFormat();
   const query = useQuery({
     queryKey: ["orgs", orgId, "drill", "own", params],
-    queryFn: () => expensesPage(orgId, params, null, null),
+    queryFn: () => expensesPage(orgId, params, null),
   });
   if (query.isError) return <Failure error={query.error} />;
   if (query.isPending) return <Skeleton label={t("home.drill.loading")} lines={4} />;
@@ -155,9 +160,9 @@ export function Drill({ orgId, params, row, onClose }: Props) {
             {t(`home.formula.${row.formula}.code`)}: {t(`home.formula.${row.formula}.formula`)}. {t(`home.formula.${row.formula}.source`)}.
           </p>
         )}
-        {source.type === "sales" && <SalesBody orgId={orgId} params={params} field={SALE_FIELD[row.key as keyof typeof SALE_FIELD]} />}
+        {source.type === "sales" && <SalesBody key={row.key} orgId={orgId} params={params} field={SALE_FIELD[row.key as keyof typeof SALE_FIELD]} />}
         {source.type === "uzum" && row.estimate && <p className="caption">{t("home.drill.estimate", { amount: f.money(row.estimate) })}</p>}
-        {source.type === "uzum" && <UzumBody orgId={orgId} params={params} category={source.category!} />}
+        {source.type === "uzum" && <UzumBody key={row.key} orgId={orgId} params={params} category={source.category!} />}
         {source.type === "own" && <OwnBody orgId={orgId} params={params} category={source.category!} />}
         {source.type === "none" && <p>{t("home.drill.calculated")}</p>}
       </div>

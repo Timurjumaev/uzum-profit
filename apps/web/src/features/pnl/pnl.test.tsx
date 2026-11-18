@@ -324,20 +324,23 @@ describe("drill-down", () => {
     previous_cogs: null,
     ...over,
   });
-  const page = (items: unknown[], next: string | null) => ({
+  const page = (items: unknown[], at = 1, pages = 1, total = items.length) => ({
     meta: pnlData().meta,
     items,
-    next_cursor: next,
+    next_cursor: null,
+    total,
+    page: at,
+    pages,
     summary: { units: 2, canceled: 0, returns: 0, cancel_share: null, return_share: null },
   });
   const salesUrls = (api: ReturnType<typeof mockApi>) =>
     api.fetch.mock.calls.map(([r]) => new URL((r as Request).url)).filter((u) => u.pathname === SALES_ROUTE.split(" ")[1]);
 
-  it("Tushum: yakunlangan va jarayondagi sotuv qatorlari, jami API qatoridan, kursor bilan 'Yana yuklash'", async () => {
+  it("Tushum: yakunlangan va jarayondagi sotuv qatorlari, jami API qatoridan, sahifa raqamlari bilan (B5.0d)", async () => {
     const { api } = await renderPnl(PATH, {
       [SALES_ROUTE]: [
-        () => json(200, page([sale("s1", { status: "PROCESSING", group: "processing" }), sale("s2", { sku_id: null, sku_title: null, day: "2026-10-11" })], "c2")),
-        () => json(200, page([sale("s3", { day: "2026-10-10" })], null)),
+        () => json(200, page([sale("s1", { status: "PROCESSING", group: "processing" }), sale("s2", { sku_id: null, sku_title: null, day: "2026-10-11" })], 1, 2, 70)),
+        () => json(200, page([sale("s3", { day: "2026-10-10" })], 2, 2, 70)),
       ],
     });
     fireEvent.click(within(ledger()).getByRole("button", { name: "Tushum" }));
@@ -347,21 +350,26 @@ describe("drill-down", () => {
     expect(within(dlg).getByText("SKU bogʻlanmagan")).toBeTruthy();
     expect(within(dlg).getAllByText("Jarayonda")).toHaveLength(1); // Jarayondagi qator belgilanadi (ADR-036)
     expect(within(dlg).getAllByText(n("200000.00"), { selector: "td" })).toHaveLength(2);
+    expect(within(dlg).getByText(/1–50 \/ 70/)).toBeTruthy(); // "Yana yuklash" o'rniga sahifalash (ADR-054)
+    expect(within(dlg).queryByRole("button", { name: "Yana yuklash" })).toBeNull();
     const [first] = salesUrls(api);
     expect(first!.searchParams.get("counted")).toBe("true"); // Yakunlangan + Jarayonda (ADR-036)
     expect(first!.searchParams.get("group")).toBeNull();
     expect(first!.searchParams.get("start")).toBe("2026-09-01");
     expect(first!.searchParams.get("end")).toBe("2026-10-31");
-    fireEvent.click(within(dlg).getByRole("button", { name: "Yana yuklash" }));
-    await waitFor(() => expect(within(dlg).getAllByRole("row")).toHaveLength(4)); // sarlavha + 3
-    expect(salesUrls(api)[1]!.searchParams.get("cursor")).toBe("c2");
-    expect(within(dlg).queryByRole("button", { name: "Yana yuklash" })).toBeNull();
+    expect(first!.searchParams.get("page")).toBe("1");
+    expect(first!.searchParams.get("limit")).toBe("50");
+    expect(first!.searchParams.get("cursor")).toBeNull();
+    fireEvent.click(within(dlg).getByRole("button", { name: "Keyingi sahifa" }));
+    await waitFor(() => expect(within(dlg).getByText("Sumka qora M")).toBeTruthy());
+    await waitFor(() => expect(within(dlg).getAllByRole("row")).toHaveLength(2)); // sarlavha + 1 (2-sahifa)
+    expect(salesUrls(api)[1]!.searchParams.get("page")).toBe("2");
   });
 
   it("Tannarx: taxminiy belgi (F22); Logistika: Uzum hali yozmagan — taxminiy belgi (ADR-037)", async () => {
     await renderPnl(PATH, {
       [SALES_ROUTE]: () =>
-        json(200, page([sale("s1", { cost_flags: ["estimated"] }), sale("s2", { cogs: null, status: "PROCESSING", group: "processing", logistics_estimated: "10000.00" })], null)),
+        json(200, page([sale("s1", { cost_flags: ["estimated"] }), sale("s2", { cogs: null, status: "PROCESSING", group: "processing", logistics_estimated: "10000.00" })])),
     });
     fireEvent.click(within(ledger()).getByRole("button", { name: "Tannarx" }));
     const dlg = await screen.findByRole("dialog", { name: "Tannarx" });
@@ -384,7 +392,7 @@ describe("drill-down", () => {
       [EXPENSES_ROUTE]: () =>
         json(200, {
           meta: pnlData().meta, uzum: [], uzum_total: "0.00", by_month: [], fines: [], own: [], own_total: "0.00", own_items: [],
-          items: [expense("e1", "OUTCOME", "300000.00"), expense("e2", "INCOME", "50000.00")], next_cursor: null,
+          items: [expense("e1", "OUTCOME", "300000.00"), expense("e2", "INCOME", "50000.00")], next_cursor: null, total: 2, page: 1, pages: 1,
         }),
     });
     fireEvent.click(within(ledger()).getByRole("button", { name: "Reklama" }));
