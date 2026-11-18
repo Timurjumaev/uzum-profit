@@ -241,7 +241,10 @@ tiyinigacha teng (qoldiq eng katta ulushga, F20); (4) sanashda son o'zgarsa birl
   yozuvi bilan).
 - **Uzumga jo'natish (ADR-061 §7):** do'kon tanlanadi → omborimdagi shu do'kon SKU'lari to'liq soni bilan (o'zgartiriladi)
   → Excel Uzum kabineti shablonida (shtrix-kod, tannarx, dona; ADR-050) → donalar "Jo'natilmoqda" → postavka API'da
-  ko'ringanda o'zi bog'lanadi → "Uzumda". Bekor — donalar omborga qaytadi.
+  ko'ringanda o'zi bog'lanadi (SKU to'plami aynan teng yagona nomzod) yoki sotuvchi tasdiqlaydi (qisman mos nomzod yoki
+  do'konning istalgan bog'lanmagan postavkasi, TM9.1) → "Uzumda". Bog'langach jo'natma postavkada **e'lon qilingan** songa
+  tenglashadi (qabul qilingunga qadar). Dasturdan tashqari postavka — "Diqqat"da, "Omborimdan ketgan" (postavka tarkibidan
+  jo'natma) yoki "Omborimdan emas". Bekor — donalar omborga qaytadi.
 - **Qabul farqi (ADR-061 §8):** kam — "Uzum yo'qotdi" (kamomad ro'yxati: Ochiq → Topildi / Kompensatsiya qilindi / Zarar
   deb yopildi; F33, F52; "Diqqat" blokida) yoki "Men sanashda adashganman" (xarid soni tuzatiladi); ko'p — ochiq kamomad
   yopiladi yoki son tuzatish taklifi. Bog'liq C000007 jarimasi ko'rsatiladi.

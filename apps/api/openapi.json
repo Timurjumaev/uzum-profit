@@ -7026,6 +7026,314 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/dispatches/orphans": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Orphan Invoices",
+        "description": "Dasturdan tashqari (jo'natmasiz) postavkalar — Omborimdagi SKU'lari bor, hech bir jo'natmaga bog'lanmagan (TM9.1).",
+        "operationId": "orphan_invoices_api_v1_orgs__org_id__dispatches_orphans_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrphansOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/dispatches/orphans/{invoice_id}/sent": {
+      "post": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Orphan Sent",
+        "description": "\"Bu postavka Omborimdan ketgan\" (TM9.1 (a)): postavka tarkibidan jo'natma yaratiladi va bog'lanadi — donalar\nOmborimdan chiqadi (qabul qilingan postavka uchun ham; farq — \"Qabul farqi\").",
+        "operationId": "orphan_sent_api_v1_orgs__org_id__dispatches_orphans__invoice_id__sent_post",
+        "parameters": [
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Invoice Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DispatchOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/dispatches/orphans/{invoice_id}/not-mine": {
+      "post": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Orphan Not Mine",
+        "description": "\"Bu postavka Omborimdan emas\" (masalan, boshlang'ich qoldiqdan) — \"Diqqat\"da chiqmaydi, Omborimni band qilmaydi.",
+        "operationId": "orphan_not_mine_api_v1_orgs__org_id__dispatches_orphans__invoice_id__not_mine_post",
+        "parameters": [
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Invoice Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotMineIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Orphan Not Mine Undo",
+        "description": "\"Omborimdan emas\" qarorini bekor qilish.",
+        "operationId": "orphan_not_mine_undo_api_v1_orgs__org_id__dispatches_orphans__invoice_id__not_mine_delete",
+        "parameters": [
+          {
+            "name": "invoice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Invoice Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/dispatches/{dispatch_id}/invoices": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Dispatch Invoices",
+        "description": "Qo'lda tanlash (TM9.1 (b)): do'konning hech bir jo'natmaga bog'lanmagan, bekor qilinmagan hamma postavkasi (yangisi\nbirinchi, 100 tagacha).",
+        "operationId": "dispatch_invoices_api_v1_orgs__org_id__dispatches__dispatch_id__invoices_get",
+        "parameters": [
+          {
+            "name": "dispatch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Dispatch Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InvoiceOut"
+                  },
+                  "title": "Response Dispatch Invoices Api V1 Orgs  Org Id  Dispatches  Dispatch Id  Invoices Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/warehouse": {
       "get": {
         "tags": [
@@ -8917,6 +9225,48 @@
         ],
         "title": "AccountStatus"
       },
+      "AdjustmentOut": {
+        "properties": {
+          "sku_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sku Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "before": {
+            "type": "integer",
+            "title": "Before"
+          },
+          "after": {
+            "type": "integer",
+            "title": "After"
+          },
+          "declared": {
+            "type": "integer",
+            "title": "Declared"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku_id",
+          "title",
+          "before",
+          "after",
+          "declared"
+        ],
+        "title": "AdjustmentOut",
+        "description": "TM9.1 (c): bog'langanda jo'natma soni postavkada e'lon qilingan songa tenglashtirildi."
+      },
       "AlertsIn": {
         "properties": {
           "cancel_share": {
@@ -9123,6 +9473,11 @@
           "uncounted": {
             "type": "integer",
             "title": "Uncounted",
+            "default": 0
+          },
+          "orphan_invoices": {
+            "type": "integer",
+            "title": "Orphan Invoices",
             "default": 0
           }
         },
@@ -10884,6 +11239,19 @@
             },
             "type": "array",
             "title": "Candidates"
+          },
+          "origin": {
+            "type": "string",
+            "title": "Origin",
+            "default": "excel"
+          },
+          "adjustments": {
+            "items": {
+              "$ref": "#/components/schemas/AdjustmentOut"
+            },
+            "type": "array",
+            "title": "Adjustments",
+            "default": []
           }
         },
         "type": "object",
@@ -11912,6 +12280,28 @@
               }
             ],
             "title": "Accepted"
+          },
+          "common": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Common"
+          },
+          "union": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Union"
           }
         },
         "type": "object",
@@ -13441,6 +13831,24 @@
         ],
         "title": "MonthOut"
       },
+      "NotMineIn": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "title": "NotMineIn"
+      },
       "NotificationEventOut": {
         "properties": {
           "event": {
@@ -14407,6 +14815,103 @@
         },
         "type": "object",
         "title": "OrgUpdate"
+      },
+      "OrphanItemOut": {
+        "properties": {
+          "sku_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sku Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "declared": {
+            "type": "integer",
+            "title": "Declared"
+          },
+          "available": {
+            "type": "integer",
+            "title": "Available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku_id",
+          "title",
+          "declared",
+          "available"
+        ],
+        "title": "OrphanItemOut"
+      },
+      "OrphanOut": {
+        "properties": {
+          "invoice": {
+            "$ref": "#/components/schemas/InvoiceOut"
+          },
+          "shop": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shop"
+          },
+          "accepted_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted On"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrphanItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "invoice",
+          "shop",
+          "accepted_on",
+          "items"
+        ],
+        "title": "OrphanOut"
+      },
+      "OrphansOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrphanOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "OrphansOut"
       },
       "OtpRequest": {
         "properties": {

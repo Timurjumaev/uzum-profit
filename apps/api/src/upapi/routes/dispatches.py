@@ -12,7 +12,7 @@ tanlaydi (``POST /dispatches/{id}/link``). Bekor qilish — donalar Omborimga qa
 from __future__ import annotations
 
 import io
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Annotated, Any
 from uuid import UUID
@@ -27,7 +27,7 @@ from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission
 from upapi.db import models as m
 from upapi.errors import AppError
-from upapi.reports import dispatch
+from upapi.reports import dispatch, linking
 from upapi.reports.xlsx import XLSX_TYPE
 from upapi.routes.purchases import _amounts, _plain
 from upapi.routes.warehouse import stock
@@ -86,6 +86,19 @@ class InvoiceOut(BaseModel):
     status: str | None
     created_on: datetime | None
     accepted: int | None
+    # TM9.1: nomzodda — umumiy SKU'lar / ikkalasidagi hamma SKU'lar (aynan teng bo'lmasa ham ko'rsatiladi).
+    common: int | None = None
+    union: int | None = None
+
+
+class AdjustmentOut(BaseModel):
+    """TM9.1 (c): bog'langanda jo'natma soni postavkada e'lon qilingan songa tenglashtirildi."""
+
+    sku_id: UUID
+    title: str | None
+    before: int
+    after: int
+    declared: int
 
 
 class DispatchOut(BaseModel):
@@ -100,7 +113,11 @@ class DispatchOut(BaseModel):
     units: int
     items: list[DispatchItemOut]
     invoice: InvoiceOut | None
-    candidates: list[InvoiceOut]  # bir nechta mos postavka — sotuvchi tanlaydi
+    candidates: list[InvoiceOut]  # mos postavkalar (qisman mos ham — TM9.1) — sotuvchi tanlaydi
+    origin: str = (
+        "excel"  # ``invoice`` — dasturdan tashqari postavka tarkibidan ("Omborimdan ketgan", TM9.1)
+    )
+    adjustments: list[AdjustmentOut] = []
 
 
 class DispatchesOut(BaseModel):
@@ -134,7 +151,10 @@ async def _dispatches(ctx: OrgContext, only: UUID | None = None) -> list[Dispatc
         items.setdefault(r.dispatch_id, []).append(r)
     from upapi.reports.common import sku_catalog
 
-    catalog = await sku_catalog(ctx.conn, ids=list({x.sku_id for xs in items.values() for x in xs}))
+    adjusted = {UUID(str(a["sku_id"])) for r in rows for a in (r.adjustments or [])}
+    catalog = await sku_catalog(
+        ctx.conn, ids=list({x.sku_id for xs in items.values() for x in xs} | adjusted)
+    )
     shops = {r.id: r.name for r in await ctx.conn.execute(select(sh.c.id, sh.c.name))}
     invoices = {
         r.id: r
@@ -165,7 +185,25 @@ async def _dispatches(ctx: OrgContext, only: UUID | None = None) -> list[Dispatc
                 for x in items.get(r.id, [])
             ],
             invoice=_invoice(invoices[r.invoice_id]) if r.invoice_id in invoices else None,
-            candidates=[_invoice(x) for x in found.get(r.id, [])] if r.status == "sending" else [],
+            candidates=[
+                _invoice(c.invoice).model_copy(update={"common": c.common, "union": c.union})
+                for c in found.get(r.id, [])
+            ]
+            if r.status == "sending"
+            else [],
+            origin=r.origin,
+            adjustments=[
+                AdjustmentOut(
+                    sku_id=UUID(str(a["sku_id"])),
+                    title=catalog[UUID(str(a["sku_id"]))].title
+                    if UUID(str(a["sku_id"])) in catalog
+                    else None,
+                    before=int(a["before"]),
+                    after=int(a["after"]),
+                    declared=int(a["declared"]),
+                )
+                for a in (r.adjustments or [])
+            ],
         )
         for r in rows
     ]
@@ -255,7 +293,7 @@ async def create_dispatch(body: DispatchIn, ctx: Manager) -> DispatchOut:
 async def list_dispatches(ctx: Viewer) -> DispatchesOut:
     """Jo'natmalar (yangisi birinchi): holat, tarkib, bog'langan postavka va nomzodlar. O'qishdan oldin postavkalar bilan
     solishtiriladi (bog'lash, bekor qilingan postavka)."""
-    await dispatch.reconcile(ctx.conn, datetime.now(UTC))
+    await linking.sync(ctx.conn, datetime.now(UTC))
     return DispatchesOut(items=await _dispatches(ctx))
 
 
@@ -372,4 +410,125 @@ async def link_dispatch(dispatch_id: UUID, body: LinkIn, ctx: Manager) -> Dispat
     await ctx.audit(
         "dispatch.link", "dispatch", dispatch_id, after=_plain({"invoice_id": body.invoice_id})
     )
+    if body.invoice_id is not None:
+        await linking.equalize(ctx.conn)  # TM9.1 (c): e'lon qilingan songa tenglashtirish
     return (await _dispatches(ctx, dispatch_id))[0]
+
+
+# --- TM9.1: jo'natmasiz postavka va qo'lda tanlash -------------------------------------------------
+
+
+class OrphanItemOut(BaseModel):
+    sku_id: UUID
+    title: str | None
+    declared: int  # postavkada e'lon qilingan
+    available: int  # Omborimda (sanalgan) bor
+
+
+class OrphanOut(BaseModel):
+    invoice: InvoiceOut
+    shop: str | None
+    accepted_on: date | None  # qabul qilingan bo'lsa
+    items: list[OrphanItemOut]
+
+
+class OrphansOut(BaseModel):
+    items: list[OrphanOut]
+
+
+class NotMineIn(BaseModel):
+    note: Annotated[str | None, Field(max_length=500)] = None
+
+
+@router.get("/orgs/{org_id}/dispatches/orphans", response_model=OrphansOut)
+async def orphan_invoices(ctx: Viewer) -> OrphansOut:
+    """Dasturdan tashqari (jo'natmasiz) postavkalar — Omborimdagi SKU'lari bor, hech bir jo'natmaga bog'lanmagan (TM9.1)."""
+    from upapi.reports.common import sku_catalog
+
+    await linking.sync(ctx.conn, datetime.now(UTC))
+    found = await linking.orphans(ctx.conn)
+    catalog = await sku_catalog(ctx.conn, ids=list({s for o in found for s in o.items}))
+    shops = {r.id: r.name for r in await ctx.conn.execute(select(m.shops.c.id, m.shops.c.name))}
+    return OrphansOut(
+        items=[
+            OrphanOut(
+                invoice=_invoice(o.invoice),
+                shop=shops.get(o.invoice.shop_id),
+                accepted_on=o.accepted_on,
+                items=[
+                    OrphanItemOut(
+                        sku_id=sku,
+                        title=catalog[sku].title if sku in catalog else None,
+                        declared=qty,
+                        available=o.available.get(sku, 0),
+                    )
+                    for sku, qty in o.items.items()
+                ],
+            )
+            for o in found
+        ]
+    )
+
+
+async def _orphan(ctx: OrgContext, invoice_id: UUID) -> Any:
+    found = next((o for o in await linking.orphans(ctx.conn) if o.invoice.id == invoice_id), None)
+    if found is None:
+        raise AppError("invoice_not_found", 404, detail="jo'natmasiz postavka topilmadi")
+    return found
+
+
+@router.post(
+    "/orgs/{org_id}/dispatches/orphans/{invoice_id}/sent",
+    response_model=DispatchOut,
+    status_code=201,
+)
+async def orphan_sent(invoice_id: UUID, ctx: Manager) -> DispatchOut:
+    """ "Bu postavka Omborimdan ketgan" (TM9.1 (a)): postavka tarkibidan jo'natma yaratiladi va bog'lanadi — donalar
+    Omborimdan chiqadi (qabul qilingan postavka uchun ham; farq — "Qabul farqi")."""
+    found = await _orphan(ctx, invoice_id)
+    dispatch_id = await linking.from_invoice(ctx.conn, ctx.org_id, found.invoice, datetime.now(UTC))
+    await ctx.audit(
+        "dispatch.from_invoice", "dispatch", dispatch_id, after={"invoice_id": str(invoice_id)}
+    )
+    return (await _dispatches(ctx, dispatch_id))[0]
+
+
+@router.post("/orgs/{org_id}/dispatches/orphans/{invoice_id}/not-mine", status_code=204)
+async def orphan_not_mine(invoice_id: UUID, body: NotMineIn, ctx: Manager) -> Response:
+    """ "Bu postavka Omborimdan emas" (masalan, boshlang'ich qoldiqdan) — "Diqqat"da chiqmaydi, Omborimni band qilmaydi."""
+    await _orphan(ctx, invoice_id)
+    k = m.fbo_invoice_marks
+    await ctx.conn.execute(
+        insert(k).values(
+            org_id=ctx.org_id, invoice_id=invoice_id, decision="not_mine", note=body.note
+        )
+    )
+    await ctx.audit("invoice.not_mine", "fbo_invoice", invoice_id, after=_plain(body.model_dump()))
+    return Response(status_code=204)
+
+
+@router.delete("/orgs/{org_id}/dispatches/orphans/{invoice_id}/not-mine", status_code=204)
+async def orphan_not_mine_undo(invoice_id: UUID, ctx: Manager) -> Response:
+    """ "Omborimdan emas" qarorini bekor qilish."""
+    k = m.fbo_invoice_marks
+    await ctx.conn.execute(k.delete().where(k.c.invoice_id == invoice_id))
+    await ctx.audit("invoice.not_mine_undo", "fbo_invoice", invoice_id)
+    return Response(status_code=204)
+
+
+@router.get("/orgs/{org_id}/dispatches/{dispatch_id}/invoices", response_model=list[InvoiceOut])
+async def dispatch_invoices(dispatch_id: UUID, ctx: Manager) -> list[InvoiceOut]:
+    """Qo'lda tanlash (TM9.1 (b)): do'konning hech bir jo'natmaga bog'lanmagan, bekor qilinmagan hamma postavkasi (yangisi
+    birinchi, 100 tagacha)."""
+    row = await _row(ctx, dispatch_id)
+    v = m.fbo_invoices
+    taken = await dispatch.linked_invoices(ctx.conn)
+    rows = await ctx.conn.execute(
+        select(v)
+        .where(v.c.shop_id == row.shop_id)
+        .order_by(v.c.created_on.desc().nulls_last())
+        .limit(200)
+    )
+    return [_invoice(r) for r in rows if r.id not in taken and not dispatch._is_canceled(r.status)][
+        :100
+    ]

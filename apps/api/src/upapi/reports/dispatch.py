@@ -45,8 +45,35 @@ def _is_canceled(status: str | None) -> bool:
     return (status or "").upper() in CANCELED_INVOICES
 
 
-async def candidates(conn: AsyncConnection) -> dict[UUID, list[Any]]:
-    """``sending`` jo'natma → mos postavkalar (yangisi birinchi)."""
+@dataclass
+class Candidate:
+    """Jo'natma uchun postavka nomzodi (TM9.1): ``common`` — umumiy SKU'lar, ``union`` — ikkalasidagi hamma SKU'lar;
+    ``exact`` — SKU to'plami aynan teng (faqat shunday yagona nomzod o'zi bog'lanadi)."""
+
+    invoice: Any
+    common: int
+    union: int
+
+    @property
+    def exact(self) -> bool:
+        return self.common == self.union
+
+    @property
+    def id(self) -> UUID:
+        return UUID(str(self.invoice.id))
+
+
+async def not_mine(conn: AsyncConnection) -> set[UUID]:
+    """TM9.1: sotuvchi "Omborimdan emas" degan postavkalar (``fbo_invoice_marks``)."""
+    k = m.fbo_invoice_marks
+    return {r.invoice_id for r in await conn.execute(select(k.c.invoice_id))}
+
+
+async def candidates(conn: AsyncConnection) -> dict[UUID, list[Candidate]]:
+    """``sending`` jo'natma → mos postavkalar (TM9.1, ADR-068 (1)): o'sha do'kon, Excel'dan keyin (1 kun zaxira bilan),
+    boshqa jo'natmaga bog'lanmagan, bekor emas, "Omborimdan emas" deb belgilanmagan va **kamida bitta umumiy SKU** bor
+    (SKU to'plami aynan teng bo'lmasa ham — kabinetda SKU olib tashlangan yoki postavka bo'lingan bo'lishi mumkin).
+    Aniq mos (to'plam teng) birinchi, keyin umumiy SKU ulushi bo'yicha, yangisi birinchi."""
     d, di, v, vi = m.fbo_dispatches, m.fbo_dispatch_items, m.fbo_invoices, m.fbo_invoice_items
     pending = list(await conn.execute(select(d).where(d.c.status == "sending")))
     if not pending:
@@ -56,7 +83,7 @@ async def candidates(conn: AsyncConnection) -> dict[UUID, list[Any]]:
         for r in await conn.execute(
             select(d.c.invoice_id).where(d.c.status == "linked", d.c.invoice_id.is_not(None))
         )
-    }
+    } | await not_mine(conn)
     skus: dict[UUID, set[UUID]] = {}
     for r in await conn.execute(
         select(di.c.dispatch_id, di.c.sku_id).where(di.c.dispatch_id.in_([x.id for x in pending]))
@@ -78,23 +105,27 @@ async def candidates(conn: AsyncConnection) -> dict[UUID, list[Any]]:
             )
         ):
             inv_skus.setdefault(r.invoice_id, set()).add(r.sku_id)
-    out: dict[UUID, list[Any]] = {}
+    out: dict[UUID, list[Candidate]] = {}
     for x in pending:
         want = skus.get(x.id, set())
-        out[x.id] = [
-            inv
-            for inv in invoices
-            if inv.shop_id == x.shop_id
-            and (inv.created_on is None or inv.created_on >= x.exported_at - MATCH_SLACK)
-            and want
-            and inv_skus.get(inv.id, set()) == want
-        ]
+        found = []
+        for inv in invoices:
+            have = inv_skus.get(inv.id, set())
+            if (
+                inv.shop_id == x.shop_id
+                and (inv.created_on is None or inv.created_on >= x.exported_at - MATCH_SLACK)
+                and want & have
+            ):
+                found.append(Candidate(inv, len(want & have), len(want | have)))
+        found.sort(key=lambda c: (not c.exact, -c.common / c.union))
+        out[x.id] = found
     return out
 
 
 async def reconcile(conn: AsyncConnection, now: datetime) -> None:
-    """Postavka holatiga qarab jo'natmalarni yangilash (idempotent): bekor qilingan postavka — jo'natma bekor; yagona mos
-    postavka — bog'lanadi (bir postavka bitta jo'natmaga)."""
+    """Postavka holatiga qarab jo'natmalarni yangilash (idempotent): bekor qilingan postavka — jo'natma bekor; yagona
+    **aniq** mos postavka (SKU to'plami teng) — o'zi bog'lanadi (bir postavka bitta jo'natmaga). Qisman mos nomzodlar —
+    sotuvchi tasdiqlaydi (TM9.1)."""
     d, v = m.fbo_dispatches, m.fbo_invoices
     for r in await conn.execute(
         select(d.c.id, v.c.status).join(v, v.c.id == d.c.invoice_id).where(d.c.status == "linked")
@@ -105,10 +136,16 @@ async def reconcile(conn: AsyncConnection, now: datetime) -> None:
                 .where(d.c.id == r.id)
                 .values(status="canceled", canceled_at=now, updated_at=func.now())
             )
+    found = await candidates(conn)
+    exact: dict[UUID, list[UUID]] = {}
+    for dispatch_id, items in found.items():
+        for c in items:
+            if c.exact:
+                exact.setdefault(c.id, []).append(dispatch_id)
     used: set[UUID] = set()
-    for dispatch_id, found in (await candidates(conn)).items():
-        free = [x for x in found if x.id not in used]
-        if len(free) == 1:
+    for dispatch_id, items in found.items():
+        free = [c for c in items if c.exact and c.id not in used and len(exact[c.id]) == 1]
+        if len(free) == 1 and len([c for c in items if c.exact]) == 1:
             used.add(free[0].id)
             await conn.execute(
                 update(d)
@@ -132,14 +169,15 @@ async def held(conn: AsyncConnection) -> dict[UUID, int]:
 
 
 async def linked_invoices(conn: AsyncConnection) -> set[UUID]:
-    """Faol jo'natmaga bog'langan postavkalar — ADR-034 "postavkada" ajratmasi ular uchun ikki marta ayirilmaydi."""
+    """Faol jo'natmaga bog'langan postavkalar — ADR-034 "postavkada" ajratmasi ular uchun ikki marta ayirilmaydi. TM9.1:
+    "Omborimdan emas" deb belgilangan postavkalar ham (Omborimni band qilmaydi)."""
     d = m.fbo_dispatches
     return {
         r.invoice_id
         for r in await conn.execute(
             select(d.c.invoice_id).where(d.c.status.in_(ACTIVE), d.c.invoice_id.is_not(None))
         )
-    }
+    } | await not_mine(conn)
 
 
 async def attribute(

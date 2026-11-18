@@ -8,7 +8,21 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
-import { cancelDispatch, createDispatch, currentOrg, dispatchDraftQuery, dispatchesQuery, dispatchExcelUrl, linkDispatch, meQuery, shopsQuery } from "../../app/query";
+import {
+  cancelDispatch,
+  createDispatch,
+  currentOrg,
+  dispatchDraftQuery,
+  dispatchesQuery,
+  dispatchExcelUrl,
+  dispatchInvoicesQuery,
+  linkDispatch,
+  meQuery,
+  orphanInvoicesQuery,
+  orphanNotMine,
+  orphanSent,
+  shopsQuery,
+} from "../../app/query";
 import { Badge, Banner, Button, EmptyState, NumberInput, Select, Skeleton, useToast } from "../../components/ui";
 import { fileName } from "../../components/ui/ExportButton";
 import type { Dispatch } from "../../lib/api/types";
@@ -62,8 +76,88 @@ export function Dispatches() {
           {shop && <DraftForm key={shop} orgId={org.id} shopId={shop} />}
         </section>
       )}
+      <Orphans orgId={org.id} canManage={canManage} />
       <DispatchList orgId={org.id} canManage={canManage} />
     </section>
+  );
+}
+
+/** TM9.1 (a): dasturdan tashqari (kabinetda to'g'ridan-to'g'ri yaratilgan) postavkalar — bir bosishda "Omborimdan ketgan"
+ * (postavka tarkibidan jo'natma) yoki "Omborimdan emas". */
+function Orphans({ orgId, canManage }: { orgId: string; canManage: boolean }) {
+  const { t } = useTranslation();
+  const f = useFormat();
+  const toast = useToast();
+  const client = useQueryClient();
+  const orphans = useQuery(orphanInvoicesQuery(orgId));
+  const done = async (message: string) => {
+    toast.show(message, "positive");
+    await Promise.all([["inventory"], ["purchases"], ["dashboard"]].map((k) => client.invalidateQueries({ queryKey: ["orgs", orgId, ...k] })));
+  };
+  const fail = (error: unknown) => toast.show(errorText(error, t), "negative");
+  const sent = useMutation({ mutationFn: (id: string) => orphanSent(orgId, id), onSuccess: () => done(t("dispatch.orphans.sentSaved")), onError: fail });
+  const notMine = useMutation({ mutationFn: (id: string) => orphanNotMine(orgId, id), onSuccess: () => done(t("dispatch.orphans.notMineSaved")), onError: fail });
+  const items = orphans.data?.items ?? [];
+  if (items.length === 0) return null;
+  return (
+    <section className="purchase__block" aria-labelledby="dispatch-orphans-title">
+      <h2 id="dispatch-orphans-title" className="h3">
+        {t("dispatch.orphans.title", { count: items.length })}
+      </h2>
+      <p className="caption">{t("dispatch.orphans.lead")}</p>
+      <ul className="dispatch-list" aria-label={t("dispatch.orphans.title", { count: items.length })}>
+        {items.map((o) => {
+          const number = o.invoice.number ?? "—";
+          return (
+            <li key={o.invoice.id} className="cargo-pool__card">
+              <div className="purchase-cell">
+                <span>
+                  <Badge tone={o.accepted_on ? "positive" : "info"}>{o.accepted_on ? t("dispatch.orphans.accepted", { date: f.date(o.accepted_on) }) : t("dispatch.orphans.open")}</Badge> <strong>№ {number}</strong> {o.shop}
+                </span>
+                <span className="caption">
+                  {o.items.map((x) => t("dispatch.orphans.item", { name: x.title ?? "—", declared: f.number(x.declared), available: f.number(x.available) })).join(", ")}
+                </span>
+              </div>
+              {canManage && (
+                <div className="dispatch-list__actions">
+                  <Button variant="primary" loading={sent.isPending && sent.variables === o.invoice.id} onClick={() => sent.mutate(o.invoice.id)} aria-label={`${t("dispatch.orphans.sent")}: № ${number}`}>
+                    {t("dispatch.orphans.sent")}
+                  </Button>
+                  <Button variant="ghost" loading={notMine.isPending && notMine.variables === o.invoice.id} onClick={() => notMine.mutate(o.invoice.id)} aria-label={`${t("dispatch.orphans.notMine")}: № ${number}`}>
+                    {t("dispatch.orphans.notMine")}
+                  </Button>
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+/** TM9.1 (b): qo'lda tanlash — do'konning bog'lanmagan hamma postavkasi (bosilganda yuklanadi). */
+function OtherInvoice({ orgId, dispatchId, onPick }: { orgId: string; dispatchId: string; onPick: (invoice: string) => void }) {
+  const { t } = useTranslation();
+  const f = useFormat();
+  const [open, setOpen] = useState(false);
+  const all = useQuery({ ...dispatchInvoicesQuery(orgId, dispatchId), enabled: open });
+  if (!open)
+    return (
+      <Button variant="ghost" onClick={() => setOpen(true)}>
+        {t("dispatch.otherInvoice")}
+      </Button>
+    );
+  return (
+    <Select
+      label={t("dispatch.otherInvoice")}
+      value=""
+      onValueChange={(invoice) => invoice && onPick(invoice)}
+      options={[
+        { value: "", label: all.data ? t("dispatch.pickInvoiceHint", { count: all.data.length }) : t("common.loading") },
+        ...(all.data ?? []).map((c) => ({ value: c.id, label: `№ ${c.number ?? "—"}${c.created_on ? ` · ${f.date(c.created_on.slice(0, 10))}` : ""}` })),
+      ]}
+    />
   );
 }
 
@@ -191,6 +285,13 @@ function DispatchList({ orgId, canManage }: { orgId: string; canManage: boolean 
                 </span>
                 <span className="caption">{[f.date(d.exported_at.slice(0, 10)), t("dispatch.units", { count: d.units, skus: d.items.length }), d.note].filter(Boolean).join(" · ")}</span>
                 <span className="caption">{d.items.map((x) => `${x.title ?? x.barcode ?? "—"} × ${f.number(x.qty)}`).join(", ")}</span>
+                {d.origin === "invoice" && <span className="caption">{t("dispatch.fromInvoice")}</span>}
+                {d.adjustments.length > 0 && (
+                  <span className="caption">
+                    {t("dispatch.adjusted")}{" "}
+                    {d.adjustments.map((a) => t("dispatch.adjustment", { name: a.title ?? "—", before: f.number(a.before), after: f.number(a.after), declared: f.number(a.declared) })).join("; ")}
+                  </span>
+                )}
               </div>
               <div className="dispatch-list__actions">
                 {d.status !== "canceled" && (
@@ -198,14 +299,27 @@ function DispatchList({ orgId, canManage }: { orgId: string; canManage: boolean 
                     {t("dispatch.excel")}
                   </Button>
                 )}
-                {canManage && d.status === "sending" && d.candidates.length > 1 && (
+                {canManage && d.status === "sending" && d.candidates.length > 0 && (
                   <Select
                     label={t("dispatch.pickInvoice")}
                     value=""
                     onValueChange={(invoice) => invoice && link.mutate({ id: d.id, invoice })}
-                    options={[{ value: "", label: t("dispatch.pickInvoiceHint", { count: d.candidates.length }) }, ...d.candidates.map((c) => ({ value: c.id, label: `№ ${c.number ?? "—"}${c.created_on ? ` · ${f.date(c.created_on.slice(0, 10))}` : ""}` }))]}
+                    options={[
+                      { value: "", label: t("dispatch.pickInvoiceHint", { count: d.candidates.length }) },
+                      ...d.candidates.map((c) => ({
+                        value: c.id,
+                        label: [
+                          `№ ${c.number ?? "—"}`,
+                          c.created_on ? f.date(c.created_on.slice(0, 10)) : null,
+                          c.common !== null && c.union !== null && c.common !== c.union ? t("dispatch.partial", { common: c.common, union: c.union }) : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · "),
+                      })),
+                    ]}
                   />
                 )}
+                {canManage && d.status === "sending" && <OtherInvoice orgId={orgId} dispatchId={d.id} onPick={(invoice) => link.mutate({ id: d.id, invoice })} />}
                 {canManage && d.status === "linked" && (
                   <Button variant="ghost" onClick={() => link.mutate({ id: d.id, invoice: null })}>
                     {t("dispatch.unlink")}

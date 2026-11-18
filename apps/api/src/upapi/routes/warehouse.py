@@ -27,7 +27,7 @@ from upapi.auth.deps import OrgContext, require
 from upapi.auth.permissions import Permission
 from upapi.db import models as m
 from upapi.errors import AppError
-from upapi.reports import dispatch, integrity
+from upapi.reports import dispatch, integrity, linking
 from upapi.reports import purchases as rp
 from upapi.reports.common import sku_catalog, today
 from upapi.reports.stock import inbound_by_sku
@@ -160,7 +160,7 @@ async def warehouse(ctx: Viewer) -> WarehouseOut:
 
 async def stock(ctx: OrgContext, amounts: bool) -> WarehouseOut:
     """Omborim hisobi; ``amounts`` — summalar javobga chiqadimi (jo'natma narxi uchun ichkarida doim)."""
-    await dispatch.reconcile(ctx.conn, datetime.now(UTC))
+    await linking.sync(ctx.conn, datetime.now(UTC))
     book = await _book(ctx)
     it, sh, sm = m.items, m.shops, m.stock_moves
     rows: dict[str, dict[str, Any]] = {}

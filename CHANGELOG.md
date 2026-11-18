@@ -464,6 +464,13 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- TM9.1 (ADR-068 (1)) **Postavka ↔ jo'natma har qanday yo'lda.** Postavka nomzodi SKU to'plami aynan teng bo'lmasa ham
+  ko'rsatiladi ("1/2 SKU mos"; o'zi faqat yagona aniq mos bog'lanadi), qo'lda tanlash — do'konning bog'lanmagan hamma
+  postavkasidan ("Boshqa postavka tanlash"). Bog'langan jo'natma postavkada e'lon qilingan songa tenglashadi (kabinetda keyin
+  o'zgartirilsa ham, qabul qilingunga qadar): kam e'lon qilingan dona Omborimga qaytadi, postavkadagi qo'shimcha SKU Omborimda
+  bor qadar qo'shiladi — o'zgarish jo'natmada ko'rsatiladi. Dasturdan tashqari (kabinetda to'g'ridan-to'g'ri yaratilgan)
+  postavka — Jo'natmalarda va bosh sahifa "Diqqat"da: "Omborimdan ketgan" (postavka tarkibidan jo'natma, qabul qilinganda ham)
+  yoki "Omborimdan emas" (Omborimni band qilmaydi). Migratsiya 0032 (faqat qo'shish).
 - TM9.8 (ADR-069) **"Keldi" — sanashdan oldin.** Kargo puli oynasida majburiy, standartsiz tanlov "Tovar qoʻlimga keldimi?
   Ha / Hali yoʻq" (javobsiz saqlanmaydi; "Ha" — sana kargo toʻlov sanasi, oʻzgartiriladi; kodli qutida qutiga yoziladi);
   Xaridlar roʻyxatida bir nechtasini belgilab "Keldi"; sanash "Keldi"ni oʻzi qoʻyadi. "Omborimda · sanalmagan" — roʻyxat,

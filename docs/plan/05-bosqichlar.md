@@ -1000,12 +1000,20 @@ Kiritish qismi (xarid, kargo puli, sanash) ADR-061 dagidek; tuzatishlar **Ombori
 qabul farqi faqat "ideal yo'l"da to'g'ri edi. Tartib: B6.4 dan keyin, **B5.1–B5.2 dan oldin** (buyurtma va yuborish rejasi
 Omborim soniga tayanadi). Har biri — alohida PR, testlar bilan; 02 (M10, F33, F52) shu vazifalarda yangilanadi.
 
-- [ ] TM9.1 **Postavka ↔ jo'natma: har qanday yo'l** (G1, G2). (a) Jo'natmasiz postavka paydo bo'lsa — "Diqqat" qatori va
+- [x] TM9.1 **Postavka ↔ jo'natma: har qanday yo'l** (G1, G2). (a) Jo'natmasiz postavka paydo bo'lsa — "Diqqat" qatori va
   bir bosishda "Bu postavka omborimdan ketgan" (postavka tarkibidan jo'natma yaratiladi, donalar Omborimdan chiqadi);
   qabul qilingan postavka uchun ham. (b) Bog'lash sharti yumshaydi: SKU to'plami aynan teng bo'lmasa ham nomzod
   ko'rsatiladi (umumiy SKU'lar ulushi bilan), sotuvchi tasdiqlaydi; qo'lda tanlash — do'konning bog'lanmagan hamma
   postavkasidan. (c) Bog'langanda jo'natma tarkibi postavkadagi **e'lon qilingan** songa tenglashadi: kam e'lon qilingan
-  dona Omborimga qaytadi, jo'natmada yo'q SKU qo'shiladi (Omborimda bo'lsa) — sotuvchiga ko'rsatiladi.
+  dona Omborimga qaytadi, jo'natmada yo'q SKU qo'shiladi (Omborimda bo'lsa) — sotuvchiga ko'rsatiladi. ✓ 2026-11-17: migratsiya 0032
+  (`fbo_invoice_marks` — "Omborimdan emas"; `fbo_dispatches.origin`, `adjustments`). `reports.dispatch.candidates` — kamida bitta
+  umumiy SKU (ulush `common`/`union`), faqat yagona **aniq** mos o'zi bog'lanadi; `GET /dispatches/{id}/invoices` — qo'lda
+  tanlash hamma bog'lanmagan postavkadan. `reports.linking.equalize` — bog'langan, qabul qilinmagan postavka bo'yicha e'lon
+  qilingan songa (kabinetda keyin o'zgartirilsa ham; qabuldan keyin qotadi), qo'shiladigan SKU Omborimda bor qadar;
+  `adjustments` ko'rsatiladi. Jo'natmasiz postavka (`reports.linking.orphans`: Omborim davridan keyin, Omborimdagi SKU'si
+  bor) — `GET /dispatches/orphans`, `POST .../sent` (postavka tarkibidan jo'natma, qabul qilingan uchun ham), `POST/DELETE
+  .../not-mine` (Omborimni band qilmaydi); bosh sahifa "Diqqat" `orphan_invoices`. Web: Jo'natmalarda bo'lim, qisman mos
+  nomzod, "Boshqa postavka tanlash", tenglashtirish izohi. Testlar: API (`test_linking.py`), web, e2e.
 - [ ] TM9.2 **Qabul farqi — e'lon qilingan songa va qabul tugagach** (G3, G4, G15). Farq = e'lon qilingan
   (`quantityToStock`) − qabul qilingan (F33 dagidek). Farq va xabar postavka `ACCEPTED` bo'lgandan keyin **7 kun**
   (shartnoma 4.6) yoki qabul soni e'longa yetganda chiqadi — undan oldin "qabul davom etmoqda: 719 / 744". "Uzum
