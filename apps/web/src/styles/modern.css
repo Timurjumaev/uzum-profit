@@ -286,3 +286,168 @@ body {
 .home-card__label {
   gap: var(--space-2);
 }
+
+/* ===== D1-3: umumiy komponentlar — sidebar, sarlavha, tablar, jadvallar, nishonlar ===== */
+
+/* Sidebar: faol bo'lim — gradient tabletka */
+.nav-link {
+  border-radius: 12px;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.nav-link:hover {
+  background: var(--info-bg);
+  color: var(--info-text);
+}
+
+.nav-link.is-active {
+  background: linear-gradient(135deg, rgb(42 120 214 / 0.18), rgb(98 80 214 / 0.14));
+  color: var(--info-text);
+  box-shadow: inset 3px 0 0 var(--accent), 0 2px 8px rgb(42 120 214 / 0.12);
+}
+
+.nav-link.is-active svg {
+  filter: drop-shadow(0 2px 4px rgb(42 120 214 / 0.35));
+}
+
+/* Sahifa sarlavhasi: rangli aksent chiziq */
+.page-title > h1,
+.home-summary .page-title > h1 {
+  position: relative;
+  padding-inline-start: var(--space-4);
+}
+
+.page-title > h1::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 4px;
+  inline-size: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--gradient-accent);
+}
+
+/* Tablar: tabletka */
+.orders-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  border-block-end: 0;
+  padding-block-end: var(--space-2);
+}
+
+.orders-tabs [role="tab"] {
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: var(--space-2) var(--space-4);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-card);
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.orders-tabs [role="tab"]:hover {
+  color: var(--info-text);
+}
+
+.orders-tabs [role="tab"][aria-selected="true"] {
+  background: var(--gradient-accent);
+  color: #fff;
+  box-shadow: 0 4px 12px rgb(42 120 214 / 0.32);
+}
+
+/* Jadvallar: yumaloq, rangli sarlavha chizig'i, qator hover'i */
+.ui-table-wrap {
+  overflow: auto;
+  border-radius: var(--radius-panel);
+}
+
+.ui-table thead th {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 7%, var(--bg-raised)), var(--bg-raised));
+  border-block-end: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.ui-table thead tr > :first-child {
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg-raised));
+}
+
+.ui-table tbody tr {
+  transition: background 0.12s ease;
+}
+
+.ui-table tbody tr:hover > * {
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg-surface));
+}
+
+/* Mahsulot rasmi bo'lmasa — gradient harf belgisi */
+.ui-thumb {
+  border-radius: 12px;
+  color: var(--info-text);
+  background: linear-gradient(135deg, rgb(42 120 214 / 0.16), rgb(98 80 214 / 0.16));
+}
+
+/* Nishonlar (Foydali, Bekor, Jarayonda …): tabletka, ingichka chegara */
+.ui-badge {
+  border-radius: var(--radius-pill);
+  padding: 2px var(--space-3);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 22%, transparent);
+}
+
+/* Maydonlar: yumaloq, fokusda yumshoq nur */
+.ui-input:focus-visible,
+.ui-select:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--focus-ring) 22%, transparent);
+}
+
+/* Hisob varag'i: yakun qatori — gradient yo'l, oraliq yig'indi — yengil fon */
+.ui-ledger tr.is-subtotal > * {
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+.ui-ledger tr.is-total > * {
+  background: color-mix(in srgb, var(--positive-text) 9%, transparent);
+  font-weight: 650;
+}
+
+/* Foyda sahifasi */
+.pnl-ledger-box,
+.pnl-pending {
+  border-color: transparent;
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-card);
+}
+
+.pnl-pending {
+  background: linear-gradient(160deg, rgb(14 159 142 / 0.10), transparent 55%), var(--bg-surface);
+}
+
+.pnl-tabs {
+  gap: var(--space-2);
+  border-block-end: 0;
+  padding-block-end: var(--space-2);
+}
+
+.pnl-tab {
+  min-block-size: 44px;
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.pnl-tab.is-active {
+  background: var(--gradient-accent);
+  color: #fff;
+  box-shadow: 0 4px 12px rgb(42 120 214 / 0.32);
+}
+
+.pnl-lines tr.is-subtotal > * {
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+.pnl-lines tr.is-total > * {
+  background: color-mix(in srgb, var(--positive-text) 9%, transparent);
+}

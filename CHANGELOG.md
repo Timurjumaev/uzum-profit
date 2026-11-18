@@ -7,6 +7,7 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Qo'shildi
 
+- D1 3-qadam (ADR-070): gradient faol sidebar bo'limi, sarlavha aksenti, tabletka tablar, rangli jadval sarlavhasi va hover, tabletka nishonlar, mahsulot belgisi gradienti, hisob varag'i yakun qatori; Foyda panellari yumaloq va soyali.
 - D1 2-qadam (ADR-070): grafiklar — gradient ustunlar, radius 6 px, chiziq ostida yumshoq maydon, ketma-ket chizilish; rangli KPI ikonkalari; asosiy foyda raqamlari sanab chiqadi (`prefers-reduced-motion` da — yo'q).
 - Zamonaviy dizayn qatlami (ADR-070): soyali kartochkalar, radius 16 px, gradientli "Jami sof foyda" bloki va asosiy tugma, `styles/modern.css`; KPI guruhlari rangli (gradient, aksent chiziq), gradientli segmented, kirish animatsiyasi; vizual skrinshotlar yangilandi. Reja: dizayn bezakli va yorqin bo'lishi Temurning qat'iy talabi sifatida 04 §1, README tamoyil 12, CLAUDE.md ga yozildi.
 - Xarid sahifasi "Partiyadagi tovarlar" jadvali Uzum kabineti uslubida: rasm + nom, tagida xiraroq SKU kodi va SKU ID, qiymatlar bitta qatorda (API `LineOut`: `sku_code`, `sku_external_id`).
