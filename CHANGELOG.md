@@ -464,6 +464,11 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### O'zgartirildi
 
+- TM9.2 (ADR-068 (2)) **Qabul farqi — e'lon qilingan songa va qabul tugagach.** Farq = postavkada e'lon qilingan
+  (`quantityToStock`) − qabul qilingan (F33), Excel'dagi son emas — kabinetda son kamaytirilsa noto'g'ri "kamomad" chiqmaydi.
+  Farq, "Diqqat" va bildirishnoma faqat qabul tugagach (qabul boshlanganidan 7 kun yoki son e'longa yetganda); undan oldin
+  "Qabul davom etmoqda: 719 / 744". Kamomadda Uzumga da'vo muddati (30 kun). "Men sanashda adashganman" / "Sonni oshirish"
+  tanlanganda oqibat oldindan ko'rsatiladi (xarid soni va tannarx oldin → keyin), tasdiqlangach yoziladi.
 - TM9.1 (ADR-068 (1)) **Postavka ↔ jo'natma har qanday yo'lda.** Postavka nomzodi SKU to'plami aynan teng bo'lmasa ham
   ko'rsatiladi ("1/2 SKU mos"; o'zi faqat yagona aniq mos bog'lanadi), qo'lda tanlash — do'konning bog'lanmagan hamma
   postavkasidan ("Boshqa postavka tanlash"). Bog'langan jo'natma postavkada e'lon qilingan songa tenglashadi (kabinetda keyin

@@ -1157,6 +1157,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/receiving/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview
+         * @description TM9.2: "Men sanashda adashganman" (kam qabul) yoki "Sonni oshirish" (ko'p) tanlansa nima o'zgaradi — oldindan:
+         *     qaysi xaridning soni N ga kamayadi / oshadi, tannarx X dan Y ga. Hech narsa saqlanmaydi (savepoint, orqaga).
+         */
+        get: operations["preview_api_v1_orgs__org_id__receiving_preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/receiving/shortages/{shortage_id}": {
         parameters: {
             query?: never;
@@ -4065,6 +4086,37 @@ export interface components {
             /** Units */
             units: number;
         };
+        /**
+         * PreviewLineOut
+         * @description "Men sanashda adashganman" / "Sonni oshirish" oqibati (TM9.2): xarid soni va lot tannarxi oldin → keyin.
+         */
+        PreviewLineOut: {
+            /**
+             * Purchase Id
+             * Format: uuid
+             */
+            purchase_id: string;
+            /** Purchase Title */
+            purchase_title: string | null;
+            /**
+             * Line Id
+             * Format: uuid
+             */
+            line_id: string;
+            /** Qty Before */
+            qty_before: number;
+            /** Qty After */
+            qty_after: number;
+            /** Unit Cost Before */
+            unit_cost_before: string | null;
+            /** Unit Cost After */
+            unit_cost_after: string | null;
+        };
+        /** PreviewOut */
+        PreviewOut: {
+            /** Lines */
+            lines: components["schemas"]["PreviewLineOut"][];
+        };
         /** PriceIn */
         PriceIn: {
             /** Valid From */
@@ -4109,6 +4161,38 @@ export interface components {
          * @enum {string}
          */
         ProfitLabel: "loss" | "borderline" | "profitable" | "no_data" | "idle";
+        /**
+         * ProgressOut
+         * @description TM9.2: qabul davom etmoqda — farq qabul tugagach (7 kun yoki son e'longa yetganda) chiqadi.
+         */
+        ProgressOut: {
+            /**
+             * Dispatch Id
+             * Format: uuid
+             */
+            dispatch_id: string;
+            /**
+             * Invoice Id
+             * Format: uuid
+             */
+            invoice_id: string;
+            /** Invoice Number */
+            invoice_number: number | null;
+            /**
+             * Accepted On
+             * Format: date
+             */
+            accepted_on: string;
+            /** Accepted */
+            accepted: number;
+            /** Declared */
+            declared: number;
+            /**
+             * Until
+             * Format: date
+             */
+            until: string;
+        };
         /** PurchaseDetailOut */
         PurchaseDetailOut: {
             purchase: components["schemas"]["PurchaseOut"];
@@ -4337,6 +4421,11 @@ export interface components {
             shortages: components["schemas"]["ShortageOut"][];
             /** Amounts */
             amounts: boolean;
+            /**
+             * Progress
+             * @default []
+             */
+            progress: components["schemas"]["ProgressOut"][];
         };
         /** RefreshOut */
         RefreshOut: {
@@ -4893,6 +4982,8 @@ export interface components {
              * Format: date
              */
             created_on: string;
+            /** Claim Until */
+            claim_until?: string | null;
         };
         /** ShortagePatch */
         ShortagePatch: {
@@ -9395,6 +9486,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReceivingOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    preview_api_v1_orgs__org_id__receiving_preview_get: {
+        parameters: {
+            query: {
+                dispatch_id: string;
+                sku_id: string;
+                line_id?: string | null;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreviewOut"];
                 };
             };
             /** @description Validatsiya xatosi */

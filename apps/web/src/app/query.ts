@@ -553,6 +553,13 @@ export const receivingQuery = (orgId: string) =>
 
 export const resolveReceiving = (orgId: string, body: ResolveIn) => unwrap(api.POST("/api/v1/orgs/{org_id}/receiving/resolve", { params: { path: { org_id: orgId } }, body }));
 
+/** TM9.2: "Men sanashda adashganman" / "Sonni oshirish" oqibati — oldindan (hech narsa saqlanmaydi). */
+export const receivingPreviewQuery = (orgId: string, dispatchId: string, skuId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "inventory", "receiving-preview", dispatchId, skuId],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/receiving/preview", { params: { path: { org_id: orgId }, query: { dispatch_id: dispatchId, sku_id: skuId } } })),
+  });
+
 export const updateShortage = (orgId: string, id: string, body: ShortagePatch) =>
   unwrap(api.PATCH("/api/v1/orgs/{org_id}/receiving/shortages/{shortage_id}", { params: { path: { org_id: orgId, shortage_id: id } }, body }));
 

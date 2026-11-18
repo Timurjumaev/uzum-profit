@@ -693,3 +693,14 @@ a.purchase-cell__title:hover {
   margin: 0;
   padding-inline-start: var(--space-4);
 }
+
+/* TM9.2: "sanashda adashganman" oqibati oldindan. */
+.receiving__preview {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.receiving__preview ul {
+  margin: 0;
+  padding-inline-start: var(--space-4);
+}

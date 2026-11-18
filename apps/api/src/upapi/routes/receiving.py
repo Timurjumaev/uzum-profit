@@ -13,14 +13,15 @@ O'qish — ``view_purchases``; qaror — ``manage_purchases``; summalar (tannarx
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import func, insert, select, update
+from upcore.inventory import RECEIVING_WINDOW_DAYS
 
 from upapi import calc
 from upapi.auth.deps import OrgContext, require
@@ -80,12 +81,42 @@ class ShortageOut(BaseModel):
     closed_on: date | None
     note: str | None
     created_on: date
+    claim_until: date | None = None  # TM9.2: da'vo muddati (shartnoma 4.13 — qabuldan 30 kun)
+
+
+class ProgressOut(BaseModel):
+    """TM9.2: qabul davom etmoqda — farq qabul tugagach (7 kun yoki son e'longa yetganda) chiqadi."""
+
+    dispatch_id: UUID
+    invoice_id: UUID
+    invoice_number: int | None
+    accepted_on: date
+    accepted: int
+    declared: int
+    until: date  # shu kundan farq hisoblanadi (son e'longa yetmasa)
 
 
 class ReceivingOut(BaseModel):
     diffs: list[DiffOut]
     shortages: list[ShortageOut]
     amounts: bool
+    progress: list[ProgressOut] = []
+
+
+class PreviewLineOut(BaseModel):
+    """ "Men sanashda adashganman" / "Sonni oshirish" oqibati (TM9.2): xarid soni va lot tannarxi oldin → keyin."""
+
+    purchase_id: UUID
+    purchase_title: str | None
+    line_id: UUID
+    qty_before: int
+    qty_after: int
+    unit_cost_before: Decimal | None  # summalar ruxsati bilan
+    unit_cost_after: Decimal | None
+
+
+class PreviewOut(BaseModel):
+    lines: list[PreviewLineOut]
 
 
 class ResolveIn(BaseModel):
@@ -104,11 +135,14 @@ class ShortagePatch(BaseModel):
 
 
 async def _view(ctx: OrgContext) -> ReceivingOut:
+    from upcore.inventory import claim_until
     from upcore.money import Currency, Money
     from upcore.purchasing import receiving_loss
 
     amounts = _amounts(ctx)
     found = await rr.diffs(ctx.conn)
+    waiting = await rr.progress(ctx.conn)
+    accepted_on = {x.dispatch_id: x.accepted_on for x in found}
     rd = m.receiving_diffs
     lost = list(
         await ctx.conn.execute(
@@ -185,10 +219,25 @@ async def _view(ctx: OrgContext) -> ReceivingOut:
                 closed_on=x.closed_on,
                 note=x.note,
                 created_on=x.created_at.date(),
+                claim_until=claim_until(accepted_on[x.dispatch_id])
+                if x.dispatch_id in accepted_on
+                else None,
             )
             for x in lost
         ],
         amounts=amounts,
+        progress=[
+            ProgressOut(
+                dispatch_id=p.dispatch_id,
+                invoice_id=p.invoice_id,
+                invoice_number=p.invoice_number,
+                accepted_on=p.accepted_on,
+                accepted=p.accepted,
+                declared=p.declared,
+                until=p.accepted_on + timedelta(days=RECEIVING_WINDOW_DAYS),
+            )
+            for p in waiting
+        ],
     )
 
 
@@ -341,6 +390,89 @@ async def resolve(
     if touched:
         background.add_task(_kick, request, ctx.org_id)
     return await _view(ctx)
+
+
+async def _line_costs(ctx: OrgContext, purchase_ids: set[UUID]) -> dict[UUID, tuple[Any, Any]]:
+    """Qator → (xarid, qator javobi) — jonli tannarx (F20) bilan."""
+    from upapi.reports import purchases as rp
+
+    out: dict[UUID, tuple[Any, Any]] = {}
+    for pid in purchase_ids:
+        book = await rp.Book(ctx.conn, today()).load(pid)
+        if not book.purchases:
+            continue
+        detail = book.detail(book.purchases[0], True, False)
+        for line in detail.lines:
+            out[line.id] = (detail.purchase, line)
+    return out
+
+
+@router.get("/orgs/{org_id}/receiving/preview", response_model=PreviewOut)
+async def preview(
+    ctx: Manager,
+    dispatch_id: Annotated[UUID, Query()],
+    sku_id: Annotated[UUID, Query()],
+    line_id: Annotated[UUID | None, Query()] = None,
+) -> PreviewOut:
+    """TM9.2: "Men sanashda adashganman" (kam qabul) yoki "Sonni oshirish" (ko'p) tanlansa nima o'zgaradi — oldindan:
+    qaysi xaridning soni N ga kamayadi / oshadi, tannarx X dan Y ga. Hech narsa saqlanmaydi (savepoint, orqaga)."""
+    found = next(
+        (
+            x
+            for x in await rr.diffs(ctx.conn)
+            if x.dispatch_id == dispatch_id and x.sku_id == sku_id
+        ),
+        None,
+    )
+    if found is None or found.resolution is not None or found.diff == 0:
+        raise AppError("not_found", 404, detail="qarorsiz farq topilmadi")
+    pl = m.purchase_lines
+    before_qty = {
+        r.id: r.received_qty
+        for r in await ctx.conn.execute(
+            select(pl.c.id, pl.c.received_qty).where(pl.c.sku_id == sku_id)
+        )
+    }
+    purchases = {
+        r.purchase_id
+        for r in await ctx.conn.execute(select(pl.c.purchase_id).where(pl.c.sku_id == sku_id))
+    }
+    before = await _line_costs(ctx, purchases)
+    savepoint = await ctx.conn.begin_nested()
+    try:
+        await _adjust_lines(ctx, sku_id, found.diff, line_id)
+        after_qty = {
+            r.id: r.received_qty
+            for r in await ctx.conn.execute(
+                select(pl.c.id, pl.c.received_qty).where(pl.c.sku_id == sku_id)
+            )
+        }
+        changed = {lid for lid, q in after_qty.items() if q != before_qty.get(lid)}
+        after = await _line_costs(ctx, {before[lid][0].id for lid in changed if lid in before})
+    finally:
+        await savepoint.rollback()
+    amounts = _amounts(ctx)
+
+    def cost(line: Any) -> Decimal | None:
+        if not amounts or line.cost is None or line.cost.unit_cost is None:
+            return None
+        return Decimal(line.cost.unit_cost).quantize(Decimal("0.01"))
+
+    return PreviewOut(
+        lines=[
+            PreviewLineOut(
+                purchase_id=before[lid][0].id,
+                purchase_title=before[lid][0].title,
+                line_id=lid,
+                qty_before=int(before_qty[lid] or 0),
+                qty_after=int(after_qty[lid] or 0),
+                unit_cost_before=cost(before[lid][1]),
+                unit_cost_after=cost(after[lid][1]) if lid in after else None,
+            )
+            for lid in sorted(changed, key=str)
+            if lid in before
+        ]
+    )
 
 
 @router.patch("/orgs/{org_id}/receiving/shortages/{shortage_id}", response_model=ReceivingOut)

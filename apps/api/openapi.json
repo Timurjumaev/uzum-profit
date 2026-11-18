@@ -6291,6 +6291,97 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/receiving/preview": {
+      "get": {
+        "tags": [
+          "inventory"
+        ],
+        "summary": "Preview",
+        "description": "TM9.2: \"Men sanashda adashganman\" (kam qabul) yoki \"Sonni oshirish\" (ko'p) tanlansa nima o'zgaradi — oldindan:\nqaysi xaridning soni N ga kamayadi / oshadi, tannarx X dan Y ga. Hech narsa saqlanmaydi (savepoint, orqaga).",
+        "operationId": "preview_api_v1_orgs__org_id__receiving_preview_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "dispatch_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Dispatch Id"
+            }
+          },
+          {
+            "name": "sku_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Sku Id"
+            }
+          },
+          {
+            "name": "line_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Line Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/receiving/shortages/{shortage_id}": {
       "patch": {
         "tags": [
@@ -15973,6 +16064,89 @@
         "title": "PoolRow",
         "description": "Kargo puli kutilayotgan xarid. ``units`` — sanalgan bo'lsa kelgan, bo'lmasa buyurtma qilingan dona (ulushlar\nshu bo'yicha)."
       },
+      "PreviewLineOut": {
+        "properties": {
+          "purchase_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Purchase Id"
+          },
+          "purchase_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Purchase Title"
+          },
+          "line_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Line Id"
+          },
+          "qty_before": {
+            "type": "integer",
+            "title": "Qty Before"
+          },
+          "qty_after": {
+            "type": "integer",
+            "title": "Qty After"
+          },
+          "unit_cost_before": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Cost Before"
+          },
+          "unit_cost_after": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Cost After"
+          }
+        },
+        "type": "object",
+        "required": [
+          "purchase_id",
+          "purchase_title",
+          "line_id",
+          "qty_before",
+          "qty_after",
+          "unit_cost_before",
+          "unit_cost_after"
+        ],
+        "title": "PreviewLineOut",
+        "description": "\"Men sanashda adashganman\" / \"Sonni oshirish\" oqibati (TM9.2): xarid soni va lot tannarxi oldin → keyin."
+      },
+      "PreviewOut": {
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/PreviewLineOut"
+            },
+            "type": "array",
+            "title": "Lines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lines"
+        ],
+        "title": "PreviewOut"
+      },
       "PriceIn": {
         "properties": {
           "valid_from": {
@@ -16126,6 +16300,61 @@
         ],
         "title": "ProfitLabel",
         "description": "M6 SKU holat belgisi."
+      },
+      "ProgressOut": {
+        "properties": {
+          "dispatch_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dispatch Id"
+          },
+          "invoice_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Invoice Id"
+          },
+          "invoice_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Number"
+          },
+          "accepted_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Accepted On"
+          },
+          "accepted": {
+            "type": "integer",
+            "title": "Accepted"
+          },
+          "declared": {
+            "type": "integer",
+            "title": "Declared"
+          },
+          "until": {
+            "type": "string",
+            "format": "date",
+            "title": "Until"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dispatch_id",
+          "invoice_id",
+          "invoice_number",
+          "accepted_on",
+          "accepted",
+          "declared",
+          "until"
+        ],
+        "title": "ProgressOut",
+        "description": "TM9.2: qabul davom etmoqda — farq qabul tugagach (7 kun yoki son e'longa yetganda) chiqadi."
       },
       "PurchaseDetailOut": {
         "properties": {
@@ -16974,6 +17203,14 @@
           "amounts": {
             "type": "boolean",
             "title": "Amounts"
+          },
+          "progress": {
+            "items": {
+              "$ref": "#/components/schemas/ProgressOut"
+            },
+            "type": "array",
+            "title": "Progress",
+            "default": []
           }
         },
         "type": "object",
@@ -18712,6 +18949,18 @@
             "type": "string",
             "format": "date",
             "title": "Created On"
+          },
+          "claim_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claim Until"
           }
         },
         "type": "object",

@@ -18,6 +18,7 @@ const S1 = "e1111111-1111-4111-8111-111111111111";
 const S2 = "e2222222-2222-4222-8222-222222222222";
 const GET_ROUTE = `GET /api/v1/orgs/${ORG}/receiving`;
 const RESOLVE_ROUTE = `POST /api/v1/orgs/${ORG}/receiving/resolve`;
+const PREVIEW_ROUTE = `GET /api/v1/orgs/${ORG}/receiving/preview`;
 
 const diff = (over: Partial<ReceivingDiff>): ReceivingDiff => ({
   dispatch_id: D1,
@@ -55,12 +56,14 @@ const shortage = (over: Partial<Shortage>): Shortage => ({
   closed_on: null,
   note: null,
   created_on: "2026-11-05",
+  claim_until: "2026-12-12",
   ...over,
 });
 const data = (over: Partial<Receiving> = {}): Receiving => ({
   diffs: [diff({}), diff({ sku_id: SKU_B, title: "Koʻylak-Oq", shipped: 5, accepted: 6, diff: 1, value: "10000.00", fines: [], fines_total: null }), diff({ sku_id: SKU_C, title: "Kamar-L", shipped: 4, accepted: 5, diff: 1, open_shortages: 3, fines: [], fines_total: null })],
   shortages: [shortage({}), shortage({ id: S2, title: "Soat", status: "written_off", loss: "8000.00", closed_on: "2026-11-10" })],
   amounts: true,
+  progress: [],
   ...over,
 });
 
@@ -73,6 +76,7 @@ async function renderAt(routes: Routes = {}, role = "owner") {
   const api = mockApi({
     [GET_ROUTE]: () => json(200, data()),
     [RESOLVE_ROUTE]: () => json(200, data()),
+    [PREVIEW_ROUTE]: () => json(200, { lines: [{ purchase_id: "p1", purchase_title: "Oktabr partiyasi", line_id: "l1", qty_before: 10, qty_after: 8, unit_cost_before: "10000.00", unit_cost_after: "12500.00" }] }),
     [`PATCH /api/v1/orgs/${ORG}/receiving/shortages/${S1}`]: () => json(200, data()),
     [`PATCH /api/v1/orgs/${ORG}/receiving/shortages/${S2}`]: () => json(200, data()),
     [ME_ROUTE]: () => json(200, { ...ME, orgs: [{ ...ME.orgs[0]!, role }] }),
@@ -97,6 +101,12 @@ describe("Uzum qabulidagi farq", () => {
     expect(within(items[1]!).getByRole("button", { name: "Sonni oshirish: Koʻylak-Oq" })).toBeTruthy();
     expect(within(items[2]!).getByText(/ochiq kamomad: 3 dona/)).toBeTruthy();
     fireEvent.click(within(items[0]!).getByRole("button", { name: "Men sanashda adashganman: Mashina-Qizil" }));
+    // TM9.2: oqibat oldindan — tasdiqlanmaguncha yuborilmaydi.
+    const preview = await within(items[0]!).findByRole("group", { name: "Nima oʻzgaradi" });
+    await within(preview).findByText(/Oktabr partiyasi: soni 10 → 8/);
+    expect(preview.textContent).toMatch(/tannarx 10\D000\Dsoʻm → 12\D500\Dsoʻm/);
+    expect(bodiesOf(api, RESOLVE_ROUTE)).toEqual([]);
+    fireEvent.click(within(preview).getByRole("button", { name: "Tasdiqlash" }));
     await waitFor(() => expect(bodiesOf(api, RESOLVE_ROUTE)).toEqual([{ dispatch_id: D1, sku_id: SKU_A, action: "miscount" }]));
     expect(await screen.findByText(/Xarid soni tuzatildi/)).toBeTruthy();
     fireEvent.click(within(items[2]!).getByRole("button", { name: "Topildi: Kamar-L" }));
@@ -112,6 +122,7 @@ describe("Uzum qabulidagi farq", () => {
     await screen.findByRole("list", { name: "Kamomad roʻyxati" });
     const list = { get: () => screen.getByRole("list", { name: "Kamomad roʻyxati" }) };
     expect(within(list.get()).getByText("Ochiq")).toBeTruthy();
+    expect(within(list.get()).getByText(/Uzumga daʼvo muddati: 12.12.2026 gacha/)).toBeTruthy();
     expect(within(list.get()).getByText("Zarar deb yopildi")).toBeTruthy();
     expect(within(list.get()).getByText(/Foyda hisobidagi zarar/)).toBeTruthy();
     fireEvent.click(within(list.get()).getByRole("button", { name: "Kompensatsiya qilindi: Kamar-L" }));
@@ -132,9 +143,15 @@ describe("Uzum qabulidagi farq", () => {
     expect(screen.queryByRole("button", { name: /Uzum yoʻqotdi:/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /Qayta ochish/ })).toBeNull();
     cleanup();
-    await renderAt({ [GET_ROUTE]: () => json(200, { diffs: [], shortages: [], amounts: true }) });
+    await renderAt({ [GET_ROUTE]: () => json(200, { diffs: [], shortages: [], amounts: true, progress: [] }) });
     expect(await screen.findByText("Farq yoʻq")).toBeTruthy();
     expect(screen.getByText("Kamomad yoʻq")).toBeTruthy();
+  });
+
+  it("qabul davom etmoqda (TM9.2): 719 / 744, farq sanasi", async () => {
+    await renderAt({ [GET_ROUTE]: () => json(200, data({ progress: [{ dispatch_id: "d9", invoice_id: "i9", invoice_number: 18400, accepted_on: "2026-11-15", accepted: 719, declared: 744, until: "2026-11-22" }] })) });
+    const list = await screen.findByRole("list", { name: "Qabul davom etmoqda" });
+    expect(list.textContent).toMatch(/719 \/ 744 qabul qilindi · farq 22\.11\.2026 dan/);
   });
 
   it("a11y: jiddiy buzilish yo'q", async () => {
