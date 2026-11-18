@@ -360,29 +360,27 @@ describe("to'lov jadvali", () => {
 describe("muddatlar va qamrov", () => {
   it("qisman to'ldirish — ogohlantirish va saqlab bo'lmaydi; to'liq — PUT; standartga qaytarish — bo'sh tana", async () => {
     const saved = settingsData();
-    saved.inventory = { ...saved.inventory, lead_days: { prep: 8, china: 2, cargo: 13, receive: 7, handover: 2 }, cover_days: { A: 45, B: 30, C: 14 } };
+    saved.inventory = { ...saved.inventory, lead_days: { transit: 30, handover: 2 }, cover_days: { A: 45, B: 30, C: 14 } };
     const { api } = await renderSettings({ [INVENTORY_SETTINGS_ROUTE]: [() => json(200, saved), () => json(200, settingsData())] });
     await ready();
     const box = section("Muddatlar va qamrov");
     const save = within(box).getByRole("button", { name: "Saqlash" }) as HTMLButtonElement;
     expect(save.disabled).toBe(false); // hammasi bo'sh — sozlanmagan, qamrov standart: to'g'ri
-    fireEvent.change(within(box).getByLabelText(/^Tayyorlash/), { target: { value: "8" } });
+    fireEvent.change(within(box).getByLabelText(/^Yoʻl/), { target: { value: "30" } });
     expect(save.disabled).toBe(true);
-    expect(within(box).getByText("Muddatlarni hammasini kiriting yoki hammasini boʻsh qoldiring.")).toBeTruthy();
-    for (const [label, value] of [["Xitoy ichida", "2"], ["Kargo yoʻli", "13"], ["Qabul va yorliq", "7"], ["Uzumga topshirish", "2"]] as const) {
-      fireEvent.change(within(box).getByLabelText(new RegExp(`^${label}`)), { target: { value } });
-    }
+    expect(within(box).getByText("Ikkala muddatni kiriting yoki ikkalasini ham boʻsh qoldiring.")).toBeTruthy();
+    fireEvent.change(within(box).getByLabelText(/^Uzumga topshirish/), { target: { value: "2" } });
     fireEvent.change(within(box).getByLabelText("A sinfi"), { target: { value: "45" } });
     expect(save.disabled).toBe(false);
     fireEvent.click(save);
     await waitFor(() => expect(bodiesOf(api, INVENTORY_SETTINGS_ROUTE)).toHaveLength(1));
-    expect(bodiesOf(api, INVENTORY_SETTINGS_ROUTE)[0]).toEqual({ lead_days: { prep: 8, china: 2, cargo: 13, receive: 7, handover: 2 }, cover_days: { A: 45, B: 30, C: 14 } });
+    expect(bodiesOf(api, INVENTORY_SETTINGS_ROUTE)[0]).toEqual({ lead_days: { transit: 30, handover: 2 }, cover_days: { A: 45, B: 30, C: 14 } });
 
     fireEvent.click(within(box).getByRole("button", { name: "Standartga qaytarish" }));
     await waitFor(() => expect(bodiesOf(api, INVENTORY_SETTINGS_ROUTE)).toHaveLength(2));
     expect(bodiesOf(api, INVENTORY_SETTINGS_ROUTE)[1]).toEqual({});
     await waitFor(() => expect((within(box).getByLabelText("A sinfi") as HTMLInputElement).value).toBe("60"));
-    expect((within(box).getByLabelText(/^Tayyorlash/) as HTMLInputElement).value).toBe("");
+    expect((within(box).getByLabelText(/^Yoʻl/) as HTMLInputElement).value).toBe("");
   });
 });
 

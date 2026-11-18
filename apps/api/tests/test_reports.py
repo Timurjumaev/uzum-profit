@@ -1186,28 +1186,30 @@ def test_inventory(world: World) -> None:
         "fbo": 80, "fbs": 5, "defected": 2, "pending": 0, "china": 0, "road": 20, "own": 0,
         "inbound": 0,
     }  # fmt: skip
-    # F27 buyurtma sanasi = bugun + (hamma joydagi tovar zaxira kunlari − muddat 32 kun), kunga pastga yaxlitlanadi
+    # F27 buyurtma sanasi = bugun + (hamma joydagi tovar zaxira kunlari − muddat 33 kun), kunga pastga yaxlitlanadi
     # (ADR-057 Q2: Uzumda 85 + Xitoyda 20 = 105).
     assert D(xa["days_of_stock_all"]) == (D(105) / expected.value).quantize(D("0.1"))
-    slack = D(xa["days_of_stock_all"]) - 32
+    slack = D(xa["days_of_stock_all"]) - 33
     assert xa["order_by"] == {
         "day": (AS_OF + timedelta(days=int(slack))).isoformat(),
         "overdue": False,
     }
     assert D(xa["days_of_stock"]) == (D(85) / expected.value).quantize(D("0.1"))
-    assert xa["lead_time"]["stages"] == {
-        "cargo": "13",
-        "china": "2",
-        "handover": "2",
-        "prep": "8",
-        "receive": "7",
-    }
-    assert D(xa["lead_time"]["total"]) == 32 and xa["status"] == StockStatus.GOOD.value
+    # F25 (B5.1): ikki bo'lak — yo'l (buyurtma 1.08 → qabul 1.09 = 31 kun) va Uzumga topshirish (qabul → yuborildi = 2 kun),
+    # ikkalasi ham tovarning o'z xarididan (1 ta xarid).
+    assert xa["lead_time"]["stages"] == {"handover": "2", "transit": "31"}
+    assert xa["lead_time"]["sources"] == {"handover": "item", "transit": "item"}
+    assert xa["lead_time"]["samples"] == {"handover": 1, "transit": 1}
+    assert D(xa["lead_time"]["total"]) == 33 and xa["status"] == StockStatus.GOOD.value
     assert money(xa["unit_cost"]) == D(100_000) and money(xa["stock_value"]) == D(8_500_000)
     assert xa["reorder"]["qty"] == 0 and xa["last_sale_on"] == "2026-10-15"  # Jarayondagi ham sotuv
     zb = rows[str(world.ids["zb"])]
     # Oxirgi sotuv 2-oktabr (14 kunlik oynadan tashqari): tezlik 0, qoldiq 40 — Harakatsiz (muddatsiz ham aniq).
-    assert zb["lead_time"] is None and zb["reorder"] is None and zb["order_by"] is None
+    # F25 (B5.1): tovarning o'z xaridi yo'q — muddat tashkilot medianasidan (manba "org"); tezlik 0 — tavsiya 0, sana yo'q.
+    assert zb["lead_time"]["sources"] == {"handover": "org", "transit": "org"}
+    assert (
+        zb["reorder"]["qty"] == 0 and zb["order_by"] is None
+    )  # tezlik 0 — buyurtma kerak emas, sana yo'q
     # p2 qabul qilingan, Uzumga yuborilmagan — 50 dona o'z omborida (Uzumda 40 ta turibdi).
     assert zb["locations"]["own"] == 50 and zb["locations"]["china"] == zb["locations"]["road"] == 0
     assert zb["status"] == StockStatus.DEAD.value and zb["liquidity"] is None

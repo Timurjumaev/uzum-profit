@@ -23,6 +23,7 @@ from upcore.inventory import (
     days_of_stock,
     frozen_money,
     lead_time,
+    learn_lead,
     liquidity,
     lost_goods,
     order_by,
@@ -152,6 +153,29 @@ def test_lead_time_learns_median_of_last_five() -> None:
     assert lt.stages == {"tayyorlash": D(5), "kargo": D(20), "qabul": D(2)}
     assert lt.learned == {"kargo"} and lt.total == D(27)
     assert lead_time({"xitoy": [3, 4]}, {}).stages == {"xitoy": D("3.5")}
+
+
+def test_learn_lead_order_item_supplier_org_default() -> None:
+    """F25 (B5.1): har bo'lak uchun tartib — tovar (oxirgi 5 median) → yetkazib beruvchi → tashkilot → standart; manba va
+    namuna soni yoziladi (UI "5 xaridingizdan" / "standart")."""
+    lt = learn_lead(
+        {"transit": [20, 22, 24]},  # tovar: faqat yo'l
+        {"transit": [40], "handover": [6, 8]},  # yetkazib beruvchi
+        {"transit": [30], "handover": [9]},  # tashkilot
+        {"transit": 35, "handover": 4, "extra": 1},
+    )
+    assert lt.stages == {"transit": D(22), "handover": D(7), "extra": D(1)}
+    assert lt.sources == {"transit": "item", "handover": "supplier", "extra": "default"}
+    assert lt.samples == {"transit": 3, "handover": 2, "extra": 0}
+    assert lt.learned == {"transit", "handover"} and lt.total == D(30)
+    # Tovar va yetkazib beruvchida yo'q — tashkilot medianasi; hech qayerda yo'q va standart yo'q — bo'lak noma'lum.
+    org = learn_lead({}, {}, {"transit": [10, 12, 14]}, {})
+    assert org.stages == {"transit": D(12)} and org.sources == {"transit": "org"}
+    assert learn_lead({}, {}, {}, {}).stages == {}
+    # Oxirgi 5 xarid (eng yangisi oxirida): eski qiymatlar medianani buzmaydi.
+    assert learn_lead({"transit": [90, 10, 11, 12, 13, 14]}, {}, {}, {}).stages == {
+        "transit": D(12)
+    }
 
 
 @pytest.mark.parametrize(

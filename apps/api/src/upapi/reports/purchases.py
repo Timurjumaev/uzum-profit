@@ -5,14 +5,15 @@ xarid sahifasida tahrirdan keyin (yoki kurs o'zgarsa) raqam darhol yangi, sotuvl
 orqali (``recalc_pending``). Hisoblab bo'lmaydigan xarid (qo'lda kurs yo'q, ulush yetishmaydi ...) — summasiz,
 sababi bilan (``error``): raqam o'ylab topilmaydi.
 
-Partiya yo'li — :func:`upcore.purchasing.timeline`; kutilgan sana — tashkilot xaridlari tarixidan F25 bosqich
-medianasi (``upcore.inventory.lead_time``); tarix yo'q bosqichda — sozlamadagi standart muddat (``orgs.settings``, B4.8). Summalar (narx, komponentlar,
+Partiya yo'li — :func:`upcore.purchasing.supply_path`; kutilgan sana — F25 "yo'l" muddati (:func:`lead_history`:
+tashkilot xaridlari tarixidan oxirgi 5 ta mediana); tarix yo'q bo'lsa — sozlamadagi standart muddat (``orgs.settings``, B4.8). Summalar (narx, komponentlar,
 tannarx) faqat ``view_purchase_amounts`` bilan (omborchi — summasiz, 03 §10).
 """
 
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
@@ -22,18 +23,21 @@ from pydantic import BaseModel
 from sqlalchemy import Row, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.fx import to_uzs
-from upcore.inventory import lead_time
+from upcore.inventory import LeadTime, learn_lead
+from upcore.metrics import business_date
 from upcore.money import Money, to_decimal
 from upcore.purchasing import (
     DATED_STAGES,
+    HANDOVER,
+    TRANSIT,
     Flag,
     LotCost,
     Stage,
     SupplyState,
     average_unit_cost,
     defect_cost,
+    handover_days,
     purchase_total,
-    stage_days,
     supply_path,
     supply_state,
     transit_days,
@@ -41,6 +45,7 @@ from upcore.purchasing import (
 
 from upapi import orgsettings
 from upapi.calc import lots as calc_lots
+from upapi.calc.costs import arrival_day
 from upapi.db import models as m
 from upapi.reports import dispatch
 
@@ -215,28 +220,87 @@ class CarrierOut(BaseModel):
     pricing: str | None
 
 
-async def org_lead(conn: AsyncConnection) -> dict[str, Decimal]:
-    """F25 bosqich kunlari tashkilot xaridlari tarixidan (oxirgi 5 xarid medianasi)."""
-    p = m.purchases
-    history: dict[str, list[int]] = {}
+@dataclass
+class LeadHistory:
+    """F25 tarixi (B5.1): har bo'lak ("transit", "handover") uchun kunlar ro'yxati (eng eskisidan yangisiga) — tovar,
+    yetkazib beruvchi va butun tashkilot bo'yicha. ``item_supplier`` — tovarning oxirgi (yetkazib beruvchisi ko'rsatilgan)
+    xaridi yetkazib beruvchisi."""
+
+    item: dict[UUID, dict[str, list[int]]] = field(default_factory=dict)
+    supplier: dict[UUID, dict[str, list[int]]] = field(default_factory=dict)
+    org: dict[str, list[int]] = field(default_factory=dict)
+    item_supplier: dict[UUID, UUID] = field(default_factory=dict)
+
+    def learn(self, item_id: UUID | None, defaults: dict[str, int]) -> LeadTime:
+        """Tovar uchun F25: tovar → yetkazib beruvchi → tashkilot → standart."""
+        mine = self.item.get(item_id, {}) if item_id is not None else {}
+        sup = self.item_supplier.get(item_id) if item_id is not None else None
+        return learn_lead(mine, self.supplier.get(sup, {}) if sup else {}, self.org, defaults)
+
+
+async def lead_history(conn: AsyncConnection) -> LeadHistory:
+    """F25 tarixi xaridlardan: **yo'l** — buyurtma → keldi (``transit_days``; eski xaridlarda sanash), **topshirish** —
+    jo'natma (``fbo_dispatches`` → postavka savdoga chiqqan kun, ADR-056) yoki eski xaridlarda qabul → "Uzumga yuborildi"."""
+    out = LeadHistory()
+    p, pl = m.purchases, m.purchase_lines
     shipments = {r.id: r for r in await conn.execute(select(m.shipments))}
-    for row in await conn.execute(select(p).order_by(p.c.ordered_on.nulls_first(), p.c.created_at)):
-        row = calc_lots.effective_purchase(row, shipments.get(row.shipment_id))
-        for stage, days in stage_days(stage_dates(row)).items():
-            history.setdefault(stage, []).append(days)
-        transit = transit_days(stage_dates(row), arrival(row))
-        if transit is not None:
-            history.setdefault(TRANSIT, []).append(transit)
-    stages = dict(lead_time(history, (await orgsettings.load(conn)).lead_days).stages)
-    if TRANSIT not in stages and all(x in stages for x in TRANSIT_PARTS):
-        # Tarix yo'q: buyurtma → sanash standarti — sanashgacha bo'lgan eski bosqich muddatlari yig'indisi.
-        stages[TRANSIT] = sum((stages[x] for x in TRANSIT_PARTS), Decimal(0))
-    return stages
+    seen: set[UUID] = set()
+    rows = await conn.execute(
+        select(p, pl.c.item_id)
+        .join(pl, pl.c.purchase_id == p.c.id)
+        .order_by(p.c.ordered_on.nulls_first(), p.c.created_at, p.c.id)
+    )
+    for r in rows:
+        eff = calc_lots.effective_purchase(r, shipments.get(r.shipment_id))
+        dates = stage_dates(eff)
+        parts = {
+            TRANSIT: transit_days(dates, arrival(eff)),
+            HANDOVER: handover_days(dates),
+        }
+        for part, days in parts.items():
+            if days is None:
+                continue
+            if r.item_id is not None:
+                out.item.setdefault(r.item_id, {}).setdefault(part, []).append(days)
+            if r.id not in seen and r.supplier_id is not None:
+                out.supplier.setdefault(r.supplier_id, {}).setdefault(part, []).append(days)
+            if r.id not in seen:
+                out.org.setdefault(part, []).append(days)
+        seen.add(r.id)
+        if r.item_id is not None and r.supplier_id is not None:
+            out.item_supplier[r.item_id] = r.supplier_id
+    # Jo'natma: Excel chiqarilgan kun → postavka savdoga chiqqan kun (har jo'natma tashkilotga bir marta, tovarga — o'z qatori).
+    d, di, v, k = m.fbo_dispatches, m.fbo_dispatch_items, m.fbo_invoices, m.mp_skus
+    done: set[UUID] = set()
+    for r in await conn.execute(
+        select(d.c.id, d.c.exported_at, v.c.status, v.c.created_on, v.c.raw, k.c.item_id)
+        .select_from(
+            d.join(v, v.c.id == d.c.invoice_id)
+            .join(di, di.c.dispatch_id == d.c.id)
+            .join(k, k.c.id == di.c.sku_id)
+        )
+        .where(d.c.status == "linked")
+        .order_by(d.c.exported_at, d.c.id)
+    ):
+        accepted = arrival_day(r.status, r.created_on, r.raw)
+        if accepted is None:
+            continue
+        days = (accepted - business_date(r.exported_at)).days
+        if days < 0:
+            continue
+        if r.item_id is not None:
+            out.item.setdefault(r.item_id, {}).setdefault(HANDOVER, []).append(days)
+        if r.id not in done:
+            out.org.setdefault(HANDOVER, []).append(days)
+            done.add(r.id)
+    return out
 
 
-# F25 (ADR-061): "Yo'lda" muddati — buyurtma → sanash; tarix bo'lmasa eski to'rt bosqich standartlari yig'indisi.
-TRANSIT = "transit"
-TRANSIT_PARTS = ("prep", "china", "cargo", "receive")
+async def org_lead(conn: AsyncConnection) -> dict[str, Decimal]:
+    """F25 tashkilot darajasi: har bo'lak — tashkilot xaridlari tarixining oxirgi 5 ta medianasi, tarix yo'q bo'lsa
+    Sozlamalardagi standart (partiya yo'li va kutilgan sana uchun)."""
+    history = await lead_history(conn)
+    return dict(learn_lead({}, {}, history.org, (await orgsettings.load(conn)).lead_days).stages)
 
 
 def _path(

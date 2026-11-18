@@ -27,7 +27,7 @@ export function settingsData(over: Partial<S["SettingsOut"]> = {}): S["SettingsO
       { kind: "monthly", days_of_month: [7], fee_pct: "0.000" },
     ],
     inventory: {
-      stages: ["prep", "china", "cargo", "receive", "handover"],
+      stages: ["transit", "handover"],
       lead_days: null,
       cover_days: { A: 60, B: 30, C: 14 },
       cover_defaults: { A: 60, B: 30, C: 14 },

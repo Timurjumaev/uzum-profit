@@ -784,81 +784,26 @@ class Stage(StrEnum):
 
 DATED_STAGES: tuple[Stage, ...] = tuple(s for s in Stage if s is not Stage.DRAFT)
 
-# F25 bosqichlari: (bosqich nomi, boshlanish — birinchi sanasi bor, tugash). Tayyorlash to'lovdan (yo'q bo'lsa
-# buyurtmadan) boshlanadi.
-LEAD_STAGES: tuple[tuple[str, tuple[Stage, ...], Stage], ...] = (
-    ("prep", (Stage.PAID, Stage.ORDERED), Stage.CN_WAREHOUSE),
-    ("china", (Stage.CN_WAREHOUSE,), Stage.SHIPPED),
-    ("cargo", (Stage.SHIPPED,), Stage.ARRIVED),
-    ("receive", (Stage.ARRIVED,), Stage.RECEIVED),
-    ("handover", (Stage.RECEIVED,), Stage.SENT_TO_UZUM),
-)
+# F25 (ADR-061, B5.1): muddat ikki bo'lak — "yo'l" (buyurtma → keldi/sanash) va "Uzumga topshirish" (jo'natma Excel'i →
+# postavka savdoga chiqqan kun; eski xaridlarda qabul → "Uzumga yuborildi"). Eski besh bosqich (tayyorlash, Xitoy ichki,
+# kargo, qabul, topshirish) tugatildi: yangi xaridda faqat buyurtma va sanash sanasi bor.
+TRANSIT = "transit"
+HANDOVER = "handover"
+LEAD_PARTS: tuple[str, ...] = (TRANSIT, HANDOVER)
 
 
-def _first(dates: Mapping[Stage, date | None], stages: Sequence[Stage]) -> date | None:
-    return next((d for d in (dates.get(s) for s in stages) if d is not None), None)
-
-
-def stage_days(dates: Mapping[Stage, date | None]) -> dict[str, int]:
-    """F25 o'rganish: xarid sanalari → bosqich kunlari (ikkala sana bor va tartib to'g'ri bo'lsa)."""
-    out = {}
-    for name, starts, end in LEAD_STAGES:
-        a, b = _first(dates, starts), dates.get(end)
-        if a is not None and b is not None and b >= a:
-            out[name] = (b - a).days
-    return out
+def handover_days(dates: Mapping[Stage, date | None]) -> int | None:
+    """F25 "Uzumga topshirish" (eski xaridlar): qabul → "Uzumga yuborildi" kunlari, ikkala sana bor va tartib to'g'ri
+    bo'lsa. Yangi xaridlarda manba — jo'natma (``dispatch`` → postavka ``dateAccepted``), API qatlamida."""
+    a, b = dates.get(Stage.RECEIVED), dates.get(Stage.SENT_TO_UZUM)
+    if a is None or b is None or b < a:
+        return None
+    return (b - a).days
 
 
 def current_stage(dates: Mapping[Stage, date | None]) -> Stage:
     """Joriy bosqich — sanasi bor eng oxirgi bosqich; hech biri yo'q — qoralama."""
     return next((s for s in reversed(DATED_STAGES) if dates.get(s) is not None), Stage.DRAFT)
-
-
-@dataclass(frozen=True, slots=True)
-class StageMark:
-    """Partiya yo'li nuqtasi. ``state``: ``done`` (o'tilgan; sanasiz bo'lsa — o'tkazib yuborilgan), ``current``
-    (joriy: ``days`` o'tdi, keyingi bosqich ``expected`` da kutiladi), ``upcoming``."""
-
-    stage: Stage
-    state: str
-    on: date | None
-    days: int | None = None
-    expected: date | None = None
-    delayed: bool = False
-
-
-def timeline(
-    dates: Mapping[Stage, date | None], today: date, lead: Mapping[str, Decimal] | None = None
-) -> list[StageMark]:
-    """Partiya yo'li (M9, 04 §6.2). ``lead`` — F25 bosqich kunlari (tashkilot tarixidan median); joriy bosqichdan
-    keyingisiga muddat ma'lum bo'lsa kutilgan sana = joriy bosqich sanasi + muddat (yuqoriga yaxlitlab), bugun undan
-    keyin bo'lsa — kechikish. Muddat noma'lum bo'lsa kutilgan sana yo'q (raqam o'ylab topilmaydi). Yopilgan xaridda
-    hamma bosqich o'tilgan."""
-    current = current_stage(dates)
-    index = DATED_STAGES.index(current) if current is not Stage.DRAFT else -1
-    marks = []
-    for i, stage in enumerate(DATED_STAGES):
-        on = dates.get(stage)
-        if i < index or (i == index and stage is Stage.CLOSED):
-            marks.append(StageMark(stage, "done", on))
-        elif i == index and on is not None:
-            expected = None
-            for name, starts, end in LEAD_STAGES:
-                if stage in starts and dates.get(end) is None and lead and name in lead:
-                    expected = on + timedelta(days=math.ceil(lead[name]))
-            marks.append(
-                StageMark(
-                    stage,
-                    "current",
-                    on,
-                    days=max((today - on).days, 0),
-                    expected=expected,
-                    delayed=expected is not None and today > expected,
-                )
-            )
-        else:
-            marks.append(StageMark(stage, "upcoming", on))
-    return marks
 
 
 # --- Uch holat (ADR-061 §1) --------------------------------------------------------------------

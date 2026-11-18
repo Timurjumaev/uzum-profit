@@ -12930,6 +12930,22 @@
             },
             "type": "array",
             "title": "Learned"
+          },
+          "sources": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Sources",
+            "default": {}
+          },
+          "samples": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Samples",
+            "default": {}
           }
         },
         "type": "object",
