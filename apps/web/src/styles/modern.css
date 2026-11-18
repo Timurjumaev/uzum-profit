@@ -1,0 +1,262 @@
+/* Zamonaviy qatlam (ADR-070, 2026-11-18): yumshoq soyali kartochkalar, katta radius, gradientli asosiy blok, silliq o'tishlar.
+   Oxirida yuklanadi — faqat tashqi ko'rinish; tuzilma, matn va formulalar o'zgarmaydi. Statik panelda soya yo'q qoidasi (04 §3) bekor. */
+
+body {
+  background:
+    radial-gradient(1200px 500px at 85% -10%, rgb(42 120 214 / 0.10), transparent 60%),
+    radial-gradient(900px 400px at -5% 0%, rgb(98 80 214 / 0.07), transparent 55%),
+    var(--bg-page);
+}
+
+/* Kartochka va panellar: hairline o'rniga yengil soya */
+.home-sum,
+.home-period,
+.home-card,
+.ui-kpi,
+.chart-frame,
+.ui-table-wrap,
+.ui-banner,
+.ui-empty,
+.auth__card,
+.onb__history > li,
+.home-attention ul {
+  border-color: transparent;
+  box-shadow: var(--shadow-card);
+}
+
+.home-sum,
+.home-period,
+.home-card,
+.ui-kpi {
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+@media (hover: hover) {
+  .home-period:hover,
+  .home-card:hover,
+  .ui-kpi:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+  }
+}
+
+/* Asosiy blok — Jami sof foyda: gradient, oq matn */
+.home-sum--total {
+  border: 0;
+  color: #fff;
+  background: var(--gradient-hero);
+  box-shadow: 0 12px 32px rgb(31 92 184 / 0.32);
+  overflow: hidden;
+}
+
+.home-sum--total::after {
+  content: "";
+  position: absolute;
+  inset-block-start: -40%;
+  inset-inline-end: -15%;
+  inline-size: 60%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(255 255 255 / 0.18), transparent 65%);
+  pointer-events: none;
+}
+
+.home-sum--total .home-sum__label,
+.home-sum--total .caption,
+.home-sum--total .home-sum__amount,
+.home-sum--total .home-change,
+.home-sum--total button,
+.home-sum--total svg {
+  color: #fff;
+}
+
+.home-sum--total .caption {
+  opacity: 0.88;
+}
+
+.home-sum--total .home-sum__amount {
+  font-size: 2rem;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* Kutilayotgan — shtrix chegara saqlanadi (rangdan tashqari belgi, 04 §11) */
+.home-sum--expected {
+  border: 1.5px dashed var(--border-input);
+  background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
+  box-shadow: none;
+}
+
+.home-sum__op {
+  display: grid;
+  place-items: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Tugma, input, yorliqlar — yumaloqroq */
+.ui-btn,
+.ui-input,
+.ui-select {
+  border-radius: 10px;
+}
+
+.ui-btn--primary {
+  background: var(--gradient-accent);
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgb(42 120 214 / 0.30);
+  transition: box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.ui-btn--primary:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 16px rgb(42 120 214 / 0.38);
+}
+
+.ui-badge {
+  border-radius: var(--radius-pill);
+}
+
+/* Sidebar va yuqori panel: shishasimon */
+.shell-sidebar,
+.sidebar {
+  background: color-mix(in srgb, var(--bg-surface) 82%, transparent);
+  backdrop-filter: blur(14px);
+  border-color: var(--border-hairline);
+}
+
+.topbar {
+  background: color-mix(in srgb, var(--bg-page) 78%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-sum,
+  .home-period,
+  .home-card,
+  .ui-kpi {
+    transition: none;
+  }
+
+  .home-period:hover,
+  .home-card:hover,
+  .ui-kpi:hover {
+    transform: none;
+  }
+}
+
+/* --- KPI guruhlari: har guruh o'z rangi (ADR-070). Rang faqat bezak; ma'no matnda. --- */
+.home-kpi__group { --grp: #2A78D6; --grp-soft: rgb(42 120 214 / 0.10); }
+.home-kpi__group--uzum { --grp: #0E9F8E; --grp-soft: rgb(14 159 142 / 0.11); }
+.home-kpi__group--returns { --grp: #E0642F; --grp-soft: rgb(224 100 47 / 0.11); }
+.home-kpi__group--average { --grp: #D6458B; --grp-soft: rgb(214 69 139 / 0.10); }
+
+.home-kpi__group-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-block-end: 0;
+  padding-block-end: 0;
+  font: var(--type-h3);
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-primary);
+}
+
+.home-kpi__group-title::before {
+  content: "";
+  inline-size: 10px;
+  block-size: 22px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(180deg, var(--grp), color-mix(in srgb, var(--grp) 40%, #fff));
+}
+
+.home-kpi__group .home-card {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(160deg, var(--grp-soft), transparent 55%),
+    var(--bg-surface);
+}
+
+.home-kpi__group .home-card::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  block-size: 3px;
+  background: linear-gradient(90deg, var(--grp), transparent);
+}
+
+.home-card__value {
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+/* Bosh sahifa bo'limlarining sarlavhalari */
+.home h2.h3,
+.home-attention h2 {
+  font: var(--type-h2);
+  letter-spacing: -0.01em;
+}
+
+/* Segmented: tanlangan — gradient */
+.ui-segmented {
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+  border-color: transparent;
+  padding: 3px;
+}
+
+.ui-segmented__item {
+  border-radius: var(--radius-pill);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ui-segmented__item.is-checked {
+  background: var(--gradient-accent);
+  color: #fff;
+  box-shadow: 0 3px 10px rgb(42 120 214 / 0.30);
+}
+
+/* Bitta uyushgan kirish lahzasi: uch asosiy blok ketma-ket (boshqa joyda animatsiya yo'q) */
+@keyframes sum-rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.home-summary__cards > .home-sum {
+  animation: sum-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.home-summary__cards > .home-sum:nth-child(2) { animation-delay: 0.08s; }
+.home-summary__cards > .home-sum:nth-child(3) { animation-delay: 0.16s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .home-summary__cards > .home-sum { animation: none; }
+}
+
+/* Foyda hisob oqimi (waterfall qatorlari) — silliq to'ldirma */
+.home-flow__bar {
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.home-flow,
+.ledger,
+.ui-ledger {
+  border-color: transparent;
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-card);
+}
+
+.home-flow {
+  padding: var(--space-5);
+  background: linear-gradient(160deg, rgb(42 120 214 / 0.07), transparent 45%), var(--bg-surface);
+}

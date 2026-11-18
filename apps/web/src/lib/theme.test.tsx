@@ -17,7 +17,7 @@ function setSystemDark(dark: boolean) {
 
 beforeEach(() => {
   document.head.innerHTML =
-    '<meta name="theme-color" content="#F6F5F1" media="(prefers-color-scheme: light)">' +
+    '<meta name="theme-color" content="#F3F5FB" media="(prefers-color-scheme: light)">' +
     '<meta name="theme-color" content="#0E121A" media="(prefers-color-scheme: dark)">';
   document.documentElement.removeAttribute("data-theme");
   localStorage.clear();
@@ -38,7 +38,7 @@ describe("mavzu (04 §4.2)", () => {
     expect(applyTheme("system")).toBe("light");
     expect(document.documentElement.hasAttribute("data-theme")).toBe(false);
     expect(localStorage.getItem(THEME_KEY)).toBe("system"); // "system" ham tanlov: saqlanadi
-    expect(metas()).toEqual(["#F6F5F1", "#0E121A"]);
+    expect(metas()).toEqual(["#F3F5FB", "#0E121A"]);
   });
 
   it("tizim qorong'i bo'lsa — system → dark", () => {

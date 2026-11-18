@@ -7,14 +7,14 @@ export type Theme = "light" | "dark";
 /** 04 §4.2 — `--<nom>` CSS o'zgaruvchilari. */
 export const colors = {
   light: {
-    "bg-page": "#F6F5F1",
+    "bg-page": "#F3F5FB",
     "bg-surface": "#FFFFFF",
-    "bg-raised": "#EFEDE7",
+    "bg-raised": "#EBEFF8",
     "text-primary": "#121826",
     "text-secondary": "#4B5160",
     "text-muted": "#7C8291",
-    "border-hairline": "#E4E1D9",
-    "border-strong": "#CFCCC3",
+    "border-hairline": "#E2E7F2",
+    "border-strong": "#C9D0E1",
     "border-rule": "#121826",
     "border-input": "#7D828E",
     accent: "#256ABF",
