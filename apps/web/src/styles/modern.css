@@ -1,10 +1,30 @@
 /* Zamonaviy qatlam (ADR-070, 2026-11-18): yumshoq soyali kartochkalar, katta radius, gradientli asosiy blok, silliq o'tishlar.
    Oxirida yuklanadi — faqat tashqi ko'rinish; tuzilma, matn va formulalar o'zgarmaydi. Statik panelda soya yo'q qoidasi (04 §3) bekor. */
 
+:root {
+  --card-edge: transparent;
+  --glow-a: rgb(42 120 214 / 0.10);
+  --glow-b: rgb(98 80 214 / 0.07);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --card-edge: rgb(255 255 255 / 0.07);
+    --glow-a: rgb(42 120 214 / 0.26);
+    --glow-b: rgb(98 80 214 / 0.20);
+  }
+}
+
+:root[data-theme="dark"] {
+  --card-edge: rgb(255 255 255 / 0.07);
+  --glow-a: rgb(42 120 214 / 0.26);
+  --glow-b: rgb(98 80 214 / 0.20);
+}
+
 body {
   background:
-    radial-gradient(1200px 500px at 85% -10%, rgb(42 120 214 / 0.10), transparent 60%),
-    radial-gradient(900px 400px at -5% 0%, rgb(98 80 214 / 0.07), transparent 55%),
+    radial-gradient(1200px 520px at 85% -10%, var(--glow-a), transparent 60%),
+    radial-gradient(900px 420px at -5% 0%, var(--glow-b), transparent 55%),
     var(--bg-page);
 }
 
@@ -20,7 +40,7 @@ body {
 .auth__card,
 .onb__history > li,
 .home-attention ul {
-  border-color: transparent;
+  border-color: var(--card-edge);
   box-shadow: var(--shadow-card);
 }
 
@@ -108,7 +128,7 @@ body {
 
 .ui-btn--primary {
   background: var(--gradient-accent);
-  border-color: transparent;
+  border-color: var(--card-edge);
   box-shadow: 0 4px 12px rgb(42 120 214 / 0.30);
   transition: box-shadow 0.15s ease, filter 0.15s ease;
 }
@@ -210,7 +230,7 @@ body {
   border-radius: var(--radius-pill);
   background: var(--bg-surface);
   box-shadow: var(--shadow-card);
-  border-color: transparent;
+  border-color: var(--card-edge);
   padding: 3px;
 }
 
@@ -251,7 +271,7 @@ body {
 .home-flow,
 .ledger,
 .ui-ledger {
-  border-color: transparent;
+  border-color: var(--card-edge);
   border-radius: var(--radius-panel);
   box-shadow: var(--shadow-card);
 }
@@ -413,7 +433,7 @@ body {
 /* Foyda sahifasi */
 .pnl-ledger-box,
 .pnl-pending {
-  border-color: transparent;
+  border-color: var(--card-edge);
   border-radius: var(--radius-panel);
   box-shadow: var(--shadow-card);
 }
@@ -561,4 +581,139 @@ body {
 .purchase-path__dot.is-current {
   border-color: var(--st, var(--accent));
   background: linear-gradient(90deg, var(--st, var(--accent)) 50%, transparent 50%);
+}
+
+
+/* ===== D1-5: kirish, onboarding, bo'sh holat, skelet, progress ===== */
+
+/* Kirish: katta rangli yorug'liklar, gradient halqali karta */
+.auth {
+  background:
+    radial-gradient(700px 480px at 12% 8%, var(--glow-b), transparent 60%),
+    radial-gradient(800px 560px at 92% 92%, var(--glow-a), transparent 60%);
+  overflow: hidden;
+}
+
+.auth::before,
+.auth::after {
+  content: "";
+  position: absolute;
+  inline-size: 420px;
+  block-size: 420px;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.auth::before {
+  inset-block-start: -140px;
+  inset-inline-start: -120px;
+  background: #2A78D6;
+}
+
+.auth::after {
+  inset-block-end: -160px;
+  inset-inline-end: -120px;
+  background: #6250D6;
+}
+
+.auth__card {
+  position: relative;
+  z-index: 1;
+  padding: var(--space-10) var(--space-8);
+  border-radius: 24px;
+  box-shadow: 0 24px 60px rgb(31 60 120 / 0.18), 0 2px 6px rgb(31 60 120 / 0.06);
+}
+
+.auth__card::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  block-size: 5px;
+  border-radius: 24px 24px 0 0;
+  background: var(--gradient-accent);
+}
+
+.auth__brand {
+  font-size: 18px;
+}
+
+.auth__brand svg {
+  filter: drop-shadow(0 3px 6px rgb(42 120 214 / 0.35));
+}
+
+/* Onboarding: yuqori panel shishasimon, qadamlar gradientli */
+.onb__bar {
+  background: color-mix(in srgb, var(--bg-surface) 80%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+.ui-stepper li.is-done .ui-stepper__dot,
+.ui-stepper li.is-current .ui-stepper__dot {
+  border-color: transparent;
+  background: var(--gradient-accent);
+  box-shadow: 0 3px 10px rgb(42 120 214 / 0.35);
+}
+
+.onb__shop {
+  border-color: var(--card-edge);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-card);
+}
+
+/* Bo'sh holat: gradient ikonka, punktir ramka */
+.ui-empty {
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-6);
+  text-align: center;
+  border: 1.5px dashed color-mix(in srgb, var(--accent) 40%, var(--border-hairline));
+  background: linear-gradient(160deg, rgb(42 120 214 / 0.07), transparent 60%), var(--bg-surface);
+  box-shadow: none;
+}
+
+.ui-empty > * {
+  margin: 0;
+}
+
+.ui-empty__icon {
+  display: grid;
+  place-items: center;
+  inline-size: 48px;
+  block-size: 48px;
+  border-radius: 16px;
+  color: #fff;
+  background: var(--gradient-accent);
+  box-shadow: 0 6px 16px rgb(42 120 214 / 0.32);
+}
+
+/* Skelet: rangli yorug'lik o'tadi */
+.ui-skeleton__line {
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--bg-raised) 25%, color-mix(in srgb, var(--accent) 16%, var(--bg-raised)) 50%, var(--bg-raised) 75%);
+  background-size: 200% 100%;
+}
+
+/* Progress: gradient to'ldirma */
+.ui-progress__track {
+  block-size: 8px;
+}
+
+.ui-progress__bar {
+  background: var(--gradient-accent);
+  border-radius: var(--radius-pill);
+}
+
+/* Mobil pastki panel: shishasimon */
+.tabbar {
+  background: color-mix(in srgb, var(--bg-surface) 82%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-skeleton__line {
+    animation: none;
+  }
 }

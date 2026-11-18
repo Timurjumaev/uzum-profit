@@ -1,4 +1,5 @@
 // Bo'sh holat, skelet, progress (04 §5).
+import { Inbox } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { cx } from "./cx";
@@ -7,6 +8,9 @@ import { cx } from "./cx";
 export function EmptyState({ title, text, action }: { title: string; text?: string; action?: ReactNode }) {
   return (
     <section className="ui-empty">
+      <span className="ui-empty__icon" aria-hidden>
+        <Inbox size={22} />
+      </span>
       <h3>{title}</h3>
       {text && <p>{text}</p>}
       {action}
