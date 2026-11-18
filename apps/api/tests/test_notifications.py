@@ -282,3 +282,136 @@ def test_telegram_link_url(world: World) -> None:
         "SELECT count(*) FROM notification_links WHERE token_hash = sha256(%s::bytea)",
         [token.encode()],
     ) == [(1,)]
+
+
+def _rows(w: World, role: str, event: str) -> list[dict[str, Any]]:
+    """World'ning ``role`` foydalanuvchisi uchun qatorlar (egasi ikkita — sellerfake egasi ham bor)."""
+    me = phone_of(w, role)
+    return [r for r in queue(w) if r["phone"] == me and r["event"] == event]
+
+
+def test_stock_and_loss_notify_only_new_skus(world: World, monkeypatch: Any) -> None:
+    """B6.4 (A2): "Qoldiq kritik" va "Zarar bilan sotuv" holat o'zgarmasa takrorlanmaydi — faqat ro'yxatga YANGI SKU
+    kirganda. Ro'yxat qisqarsa baza yangilanadi (SKU qaytib kirsa — yana yangi), qisqarish xabar emas."""
+    w = world
+    sku_a, sku_b = w.ids["sku"], w.ids["sku2"]
+    state: dict[str, list[Any]] = {"crit": [], "loss": []}
+
+    async def crit(conn: Any, today: date) -> list[Any]:
+        return [(i, D(5)) for i in state["crit"]]
+
+    async def loss(conn: Any, today: date, streak: int) -> list[Any]:
+        return sorted(state["loss"], key=str)
+
+    monkeypatch.setattr(notify, "critical_stock", crit)
+    monkeypatch.setattr(notify, "losing_skus", loss)
+    fresh(w, NOW + timedelta(days=2))
+
+    def hour(k: int) -> datetime:
+        return NOW + timedelta(hours=k)  # har soatning boshi — og'ir tekshiruv ishlaydi
+
+    def stock_rows() -> list[dict[str, Any]]:
+        return _rows(w, "owner", "stock_critical")
+
+    def loss_rows() -> list[dict[str, Any]]:
+        return _rows(w, "owner", "loss_sales")
+
+    # 1) Birinchi marta: A yangi.
+    state["crit"], state["loss"] = [sku_a], [sku_a]
+    evaluate(w, hour(0))
+    assert [
+        (r["payload"]["count"], r["payload"]["total"], r["payload"]["new"]) for r in stock_rows()
+    ] == [(1, 1, True)]
+    assert [(r["payload"]["count"], r["payload"]["total"]) for r in loss_rows()] == [(1, 1)]
+    # 2) Holat o'zgarmadi — keyingi soat ham, keyingi kun ham xabar yo'q.
+    evaluate(w, hour(1))
+    evaluate(w, hour(25))
+    assert len(stock_rows()) == 1 and len(loss_rows()) == 1
+    # 3) Ro'yxat bo'shadi — xabar emas, baza yangilandi (skipped).
+    state["crit"], state["loss"] = [], []
+    evaluate(w, hour(26))
+    assert len(stock_rows()) == 2 and stock_rows()[-1]["payload"] == {"ids": []}
+    assert len(loss_rows()) == 2
+    sent = w.a.sql(
+        "SELECT n.status FROM notifications n JOIN users u ON u.id = n.user_id "
+        "WHERE u.phone = %s AND n.event = 'stock_critical' ORDER BY n.created_at, n.id",
+        [phone_of(w, "owner")],
+    )
+    assert [s[0] for s in sent] == ["pending", "skipped"]
+    # 4) A qaytib kirdi — yana yangi.
+    state["crit"], state["loss"] = [sku_a], [sku_a]
+    evaluate(w, hour(27))
+    assert len(stock_rows()) == 3 and stock_rows()[-1]["payload"]["count"] == 1
+    # 5) B qo'shildi — faqat B yangi (jami 2).
+    state["crit"], state["loss"] = [sku_a, sku_b], [sku_a, sku_b]
+    evaluate(w, hour(28))
+    last = stock_rows()[-1]["payload"]
+    assert (last["count"], last["total"], len(last["skus"])) == (1, 2, 1)
+    assert last["skus"][0]["sku_id"] == str(sku_b)
+    assert loss_rows()[-1]["payload"]["total"] == 2 and loss_rows()[-1]["payload"]["streak"] == 3
+    # 6) Soat boshida emas (har 5 daqiqa) — og'ir tekshiruv bajarilmaydi (A10).
+    state["crit"] = [sku_a, sku_b]
+    calls: list[int] = []
+
+    async def spy(conn: Any, today: date) -> list[Any]:
+        calls.append(1)
+        return []
+
+    monkeypatch.setattr(notify, "critical_stock", spy)
+    evaluate(w, hour(29) + timedelta(minutes=10))
+    assert calls == []
+    evaluate(w, hour(30))
+    assert calls == [1]
+
+
+def test_uncosted_alert_only_for_new_sku(world: World) -> None:
+    """B6.4 (A3): tannarxsiz sotuv haqida alohida xabar — faqat YANGI SKU (har SKU bir marta); qatorlar soni —
+    kunlik xulosada."""
+    w, a = world, world.a
+    a.sale(w.ids["sku2"], YESTERDAY, seller_profit=D(150_000))
+    a.request(calc.Scope.SHOP, a.shop_id)
+    a.recalc(NOW)
+    fresh(w, NOW - timedelta(hours=1))
+    evaluate(w)
+    rows = _rows(w, "owner", "uncosted_sales")
+    assert len(rows) == 1
+    payload = rows[0]["payload"]
+    assert payload["count"] == 1 and payload["lines"] == 1 and payload["skus"][0]["title"]
+    assert payload["day"] == "2026-11-15" and rows[0]["key"].startswith("uncosted:")
+    # Kunlik xulosada qatorlar soni bor (alohida xabar uni takrorlamaydi).
+    daily = next(r for r in _rows(w, "owner", "daily_summary"))
+    assert daily["payload"]["uncosted_lines"] == 1
+    # Takror: keyingi soat va keyingi kun (shu SKU yana sotilsa ham) — yangi xabar yo'q.
+    evaluate(w, NOW + timedelta(hours=1))
+    a.sale(w.ids["sku2"], date(2026, 11, 16), seller_profit=D(150_000))
+    a.request(calc.Scope.SHOP, a.shop_id)
+    a.recalc(NOW + timedelta(days=1))
+    fresh(w, NOW + timedelta(days=1))
+    evaluate(w, NOW + timedelta(days=1))
+    assert len(_rows(w, "owner", "uncosted_sales")) == 1
+
+
+def test_weekly_summary_any_day_and_not_recomputed(world: World, monkeypatch: Any) -> None:
+    """B6.4 (A6, A10): haftalik xulosa dushanba kuni yetib kelmasa ham hafta ichida birinchi imkoniyatda keladi; kalit
+    bor bo'lsa og'ir hisob (kitob) qayta bajarilmaydi."""
+    w = world
+    wednesday = NOW + timedelta(days=2)  # chorshanba 10:00 — o'tgan hafta (2–8 → 9–15 noyabr)
+    fresh(w, wednesday - timedelta(hours=1))
+    evaluate(w, wednesday)
+    weekly = _rows(w, "owner", "weekly_summary")
+    assert [r["key"] for r in weekly] == ["weekly:2026-11-09"]
+    assert (
+        weekly[0]["payload"]["start"] == "2026-11-09"
+        and weekly[0]["payload"]["end"] == "2026-11-15"
+    )
+    # Kalitlar bor — keyingi tekshiruvda xulosa qayta hisoblanmaydi.
+    calls: list[date] = []
+    real = notify.summary
+
+    async def spy(conn: Any, period: Any, today: date, **kw: Any) -> Any:
+        calls.append(period.start)
+        return await real(conn, period, today, **kw)
+
+    monkeypatch.setattr(notify, "summary", spy)
+    evaluate(w, wednesday + timedelta(minutes=5))
+    assert calls == []

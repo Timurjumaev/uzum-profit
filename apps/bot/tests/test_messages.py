@@ -116,3 +116,25 @@ def test_events(event: str, payload: dict[str, object], path: str, part: str) ->
 def test_unknown_event() -> None:
     with pytest.raises(ValueError):
         msg.notification("payout_late", {}, "uz")
+
+
+def test_new_sku_notifications_uz_ru() -> None:
+    """B6.4 (A2, A3): faqat YANGI SKU haqida xabar — "yangi N ta (jami M)", tannarxsiz yangi SKU."""
+    skus = [{"sku_id": "s1", "title": "Mashina", "days": "3"}]
+    stock = {"count": 1, "total": 4, "new": True, "skus": skus, "ids": ["s1"]}
+    uz = msg.notification("stock_critical", stock, "uz")
+    assert (
+        "yangi 1 ta SKU (jami 4)" in uz.text and "• Mashina" in uz.text and uz.path == "/inventory"
+    )
+    assert "новых 1 SKU (всего 4)" in msg.notification("stock_critical", stock, "ru").text
+    loss = {"count": 1, "total": 2, "streak": 3, "new": True, "skus": skus[:1]}
+    assert "yangi 1 ta SKU (jami 2; oxirgi 3 ta" in msg.notification("loss_sales", loss, "uz").text
+    unc = {"day": "2026-11-15", "count": 2, "lines": 5, "skus": skus}
+    text = msg.notification("uncosted_sales", unc, "uz").text
+    assert "Tannarxsiz yangi tovar sotildi (15.11.2026): 2 ta SKU, 5 ta qator" in text
+    assert "• Mashina" in text
+    # Eski ko'rinish (`/qoldiq` buyrug'i — hamma kritik) o'zgarmagan.
+    assert (
+        "Qoldiq kritik: 2 ta SKU"
+        in msg.notification("stock_critical", {"count": 2, "skus": skus}, "uz").text
+    )

@@ -131,10 +131,11 @@ def due_at(
     return end if end > now else end + timedelta(days=1)
 
 
-def summary_due(now: datetime, at: time, *, weekly: bool = False) -> bool:
-    """Xulosa vaqti keldimi: mahalliy vaqt ``at`` dan o'tgan (haftalik — faqat dushanba). Takror yuborilmasligi —
-    kun / hafta bo'yicha ``dedupe_key`` bilan."""
-    return now.time() >= at and (not weekly or now.weekday() == 0)
+def summary_due(now: datetime, at: time) -> bool:
+    """Xulosa vaqti keldimi: mahalliy vaqt ``at`` dan o'tgan. Haftalik xulosa ham shunday (B6.4, A6): faqat dushanba emas —
+    hafta ichida birinchi imkoniyatda (dushanba kuni sinxron yetib kelmagan bo'lsa ham hafta xulosasi yo'qolmaydi).
+    Takror yuborilmasligi — kun / hafta bo'yicha ``dedupe_key`` bilan."""
+    return now.time() >= at
 
 
 def line_profit(seller_profit: Decimal | None, cogs: Decimal | None) -> Decimal | None:
