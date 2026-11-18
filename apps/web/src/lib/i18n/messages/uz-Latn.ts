@@ -1426,7 +1426,7 @@ export const uzLatn = {
     claimUntil: "Uzumga daʼvo muddati: {{date}} gacha (shartnoma 4.13)",
     title: "Uzum qabulidagi farq",
     back: "Joʻnatmalarga qaytish",
-    lead: "Postavka qabul qilinganda joʻnatilgan va qabul qilingan son solishtiriladi. Kam boʻlsa — Uzum yoʻqotganmi yoki sanashda adashganmisiz, tanlang. Koʻp boʻlsa — avval yoʻqolgan dona topilgan boʻlishi yoki xarid soni kam yozilgan boʻlishi mumkin.",
+    lead: "Uzum qabulni tugatgach postavkada eʼlon qilingan va qabul qilingan son solishtiriladi. Kam boʻlsa — Uzum yoʻqotganmi yoki sanashda adashganmisiz, tanlang. Koʻp boʻlsa — avval yoʻqolgan dona topilgan boʻlishi yoki xarid soni kam yozilgan boʻlishi mumkin.",
     diffsTitle: "Qabul farqlari",
     diffsEmpty: "Farq yoʻq",
     diffsEmptyText: "Qabul qilingan postavkalar joʻnatmaga toʻliq mos keldi.",
