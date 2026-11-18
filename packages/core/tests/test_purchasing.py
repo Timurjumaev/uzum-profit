@@ -1,4 +1,5 @@
 import sys
+from dataclasses import replace
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -33,6 +34,7 @@ from upcore.purchasing import (
     fifo_attribute,
     purchase_total,
     receiving_loss,
+    refund_split,
     residual_goods,
     split_by_purchase,
     split_units,
@@ -145,8 +147,10 @@ def test_partial_receipt_uses_received_qty() -> None:
         (CostComponent(K.GOODS, uzs(800_000)), CostComponent(K.CARGO, uzs(0))),
     )
     lots = by_id(compute_lots(p))
-    assert lots["a"].unit_cost == uzs(10_000) and lots["a"].total == uzs(800_000)
+    # TM9.6: umuman kelmagan "b" o'z ulushini oladi (buyurtma soni bo'yicha) — F55 zarari, "a" ga yuklanmaydi.
+    assert lots["a"].unit_cost == uzs(8_000) and lots["a"].total == uzs(640_000)
     assert lots["b"].unit_cost is None and lots["b"].total == uzs(0)
+    assert lots["b"].missing == uzs(160_000) and lots["a"].missing is None
     assert lots["a"].flags == frozenset()
 
 
@@ -224,7 +228,12 @@ def test_errors() -> None:
             )
         )
     with pytest.raises(PurchaseError):
-        compute_lots(Purchase("p", (PurchaseLine("a", 1, 0),), (CostComponent(K.OTHER, uzs(1)),)))
+        compute_lots(Purchase("p", (PurchaseLine("a", 0),), (CostComponent(K.OTHER, uzs(1)),)))
+    # TM9.6: yagona qator kelmagan — xato emas, chiqim F55 zarariga.
+    (lost,) = compute_lots(
+        Purchase("p", (PurchaseLine("a", 1, 0),), (CostComponent(K.OTHER, uzs(1)),))
+    )
+    assert lost.missing == uzs(1) and lost.qty == 0
     with pytest.raises(PurchaseError):
         compute_lots(
             Purchase(
@@ -569,7 +578,8 @@ def test_counting_spreads_all_costs_over_good_units() -> None:
     assert lot.unit_cost == _uzs(11_000)
 
 
-def test_fully_defective_line_passes_its_cost_to_good_lines() -> None:
+def test_fully_defective_line_is_missing_loss_not_other_lines() -> None:
+    """TM9.6 (ADR-068 (6)): hammasi brak qator puli boshqa tovarga yuklanmaydi — F55 zarari."""
     p = Purchase(
         "p",
         (
@@ -579,8 +589,8 @@ def test_fully_defective_line_passes_its_cost_to_good_lines() -> None:
         (CostComponent(ComponentKind.GOODS, _uzs(200), base=AllocationBase.LINE_SUM),),
     )
     lots = {x.line_id: x for x in compute_lots(p)}
-    assert lots["a"].qty == 0 and lots["a"].unit_cost is None
-    assert lots["b"].total == _uzs(200)
+    assert lots["a"].qty == 0 and lots["a"].unit_cost is None and lots["a"].missing == _uzs(100)
+    assert lots["b"].total == _uzs(100)
 
 
 def test_defect_more_than_arrived_is_rejected() -> None:
@@ -912,3 +922,55 @@ def test_receiving_loss_uses_lot_cost_when_known() -> None:
     assert receiving_loss(2, uzs(15_000), None, uzs(20_000)) == uzs(20_000)
     assert receiving_loss(2, uzs(15_000), uzs(5_000), uzs(20_000)) == uzs(15_000)
     assert receiving_loss(2, uzs(15_000), uzs(25_000), uzs(20_000)) == uzs(0)
+
+
+def test_missing_line_loss_with_line_refund_and_cargo() -> None:
+    """TM9.6 (ADR-068 (6)): kelmagan qator — tovar va xarid ichidagi chiqim ulushi F55 ga, kargo (dona bo'yicha) — faqat
+    kelganlarga; qatorga yozilgan qaytarilgan summa o'sha qatordan (F55 kamayadi); qisman kelgan qator o'zgarmaydi."""
+    lines = (
+        PurchaseLine("a", 10, received_qty=10, line_sum=D(600)),
+        PurchaseLine("b", 10, received_qty=0, line_sum=D(400), refund=uzs(150_000)),
+    )
+    comps = (
+        CostComponent(K.GOODS, uzs(1_000_000), base=B.LINE_SUM),
+        CostComponent(K.AGENT_FEE, uzs(100_000), base=B.LINE_SUM),
+        CostComponent(K.CARGO, uzs(50_000), base=B.UNITS),
+    )
+    a, b = compute_lots(Purchase("p", lines, comps, refund=uzs(150_000)))
+    assert a.total == uzs(600_000 + 60_000 + 50_000)  # kargo hammasi "a" ga
+    assert b.qty == 0 and b.missing == uzs(400_000 + 40_000 - 150_000)
+    # Qatorning tovar summasidan ko'p qaytarish — rad (raqam o'ylab topilmaydi).
+    too_much = (lines[0], replace(lines[1], refund=uzs(400_001)))
+    with pytest.raises(PurchaseError):
+        compute_lots(Purchase("p", too_much, comps))
+
+
+def test_line_refund_on_partial_line_and_legacy_unchanged() -> None:
+    lines = (
+        PurchaseLine("a", 10, received_qty=8, line_sum=D(500)),
+        PurchaseLine("b", 10, received_qty=10, line_sum=D(500)),
+    )
+    goods = (CostComponent(K.GOODS, uzs(1_000), base=B.LINE_SUM),)
+    # Qatorga — faqat "a" dan.
+    per_line = (replace(lines[0], refund=uzs(100)), lines[1])
+    a, b = compute_lots(Purchase("p", per_line, goods, refund=uzs(100)))
+    assert a.total == uzs(400) and b.total == uzs(500)
+    # Eski yozuv (qatorsiz) — hamma qatorga qator summasi bo'yicha, avvalgidek.
+    a, b = compute_lots(Purchase("p", lines, goods, refund=uzs(100)))
+    assert a.total == uzs(450) and b.total == uzs(450)
+
+
+def test_refund_split_defaults_to_short_lines() -> None:
+    """Standart: kam kelgan qatorlarga, kam kelgan dona × dona narxi nisbatida; yig'indi aniq."""
+    lines = [
+        PurchaseLine("a", 10, received_qty=8, line_sum=D(1_000)),  # 2 kam × 100
+        PurchaseLine("b", 10, received_qty=0, line_sum=D(500)),  # 10 kam × 50
+        PurchaseLine("c", 5, received_qty=5, line_sum=D(300)),  # to'liq
+    ]
+    split = refund_split(uzs(700), lines)
+    assert split == {"a": uzs(200), "b": uzs(500)}
+    assert sum(x.amount for x in refund_split(uzs(701), lines).values()) == D(701)
+    no_sums = [replace(x, line_sum=None) for x in lines]
+    assert refund_split(uzs(120), no_sums) == {"a": uzs(20), "b": uzs(100)}
+    full = [PurchaseLine("a", 5, received_qty=5)]
+    assert refund_split(uzs(10), full) == {}

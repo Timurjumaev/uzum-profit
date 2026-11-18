@@ -39,6 +39,8 @@ export function purchaseRow(over: Partial<S["PurchaseOut"]> = {}): S["PurchaseOu
     on_hand: false,
     refund_amount: null,
     refund_currency: null,
+    missing_lines: 0,
+    missing_loss: null,
     supplier_id: null,
     supplier_name: "Yiwu Toys",
     carrier_id: null,

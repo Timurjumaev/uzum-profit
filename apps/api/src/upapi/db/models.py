@@ -626,6 +626,9 @@ purchase_lines = tenant(
     Column("line_sum", FX),
     Column("defect_qty", Integer, nullable=False, server_default="0"),
     Column("pack_unit_cost", UZS),
+    # TM9.6: qaytarilgan summaning shu qatorga yozilgan qismi (xarid ``refund_currency`` da; bo'sh — eski usul).
+    Column("refund_amount", FX),
+    CheckConstraint("refund_amount IS NULL OR refund_amount >= 0", name="line_refund"),
     CheckConstraint(
         "defect_qty >= 0 AND defect_qty <= coalesce(received_qty, ordered_qty)"
         " AND (line_sum IS NULL OR line_sum >= 0)"
@@ -737,6 +740,18 @@ lots = tenant(
     refs={"purchase_line_id": ("purchase_lines", False), "item_id": ("items", True)},
 )
 Index(None, lots.c.org_id, lots.c.item_id)
+# TM9.6 F55: kelmagan (sog' donasi 0) qator zarari — lotlar bilan birga qayta quriladi; ``day`` — sanash kuni.
+missing_losses = tenant(
+    "missing_losses",
+    Column("day", Date),
+    Column("amount", UZS, nullable=False),
+    UniqueConstraint("org_id", "purchase_line_id"),
+    refs={
+        "purchase_line_id": ("purchase_lines", False),
+        "item_id": ("items", True),
+        "sku_id": ("mp_skus", True),
+    },
+)
 sale_costs = tenant(
     "sale_costs",
     Column("method", Text, nullable=False),

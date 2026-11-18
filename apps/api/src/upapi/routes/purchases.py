@@ -671,19 +671,18 @@ async def update_purchase(
     row = await _purchase(ctx, purchase_id)
     values = body.model_dump(exclude_unset=True)
     dates = values.pop("dates", None) or {}
+    refund: tuple[Decimal, Currency | None, date] | None = None
     if {"refund_amount", "refund_currency", "refund_on"} & set(values):
         _require_amounts(ctx)
-        amount = values.get("refund_amount", row.refund_amount)
-        if not amount:
-            values |= {"refund_amount": None, "refund_currency": None, "refund_on": None}
-        else:
-            currency = values.get("refund_currency") or (
-                Currency(row.refund_currency) if row.refund_currency else None
-            )
-            if currency is None:
-                raise AppError("bad_refund", 422, detail="qaytarilgan summa valyutasi kerak")
-            values["refund_currency"] = currency.value
-            values.setdefault("refund_on", row.refund_on or today())
+        amount = values.pop("refund_amount", row.refund_amount)
+        currency = values.pop("refund_currency", None) or (
+            Currency(row.refund_currency) if row.refund_currency else None
+        )
+        day = values.pop("refund_on", None) or row.refund_on or today()
+        if amount and currency is None:
+            raise AppError("bad_refund", 422, detail="qaytarilgan summa valyutasi kerak")
+        # TM9.6: qatorga — standart bo'yicha kam kelgan qatorlarga (``counting.set_refund``).
+        refund = (Decimal(amount or 0), currency, day)
     await _exists(ctx, m.suppliers, values.get("supplier_id"), "supplier_not_found")
     await _exists(ctx, m.carriers, values.get("carrier_id"), "carrier_not_found")
     linked = values.get("shipment_id", row.shipment_id)
@@ -696,6 +695,16 @@ async def update_purchase(
         {**rp.stage_dates(row)} | {Stage(k.removesuffix("_on")): v for k, v in columns.items()}
     )
     values |= columns
+    if refund is not None:
+        from upapi.routes.counting import set_refund
+
+        await set_refund(ctx, purchase_id, *refund)
+        await ctx.audit(
+            "purchase.refund", "purchase", purchase_id, after=_plain({"refund": refund[0]})
+        )
+        if not values:
+            await _changed(ctx, request, background, purchase_id)
+            return await _detail(ctx, purchase_id)
     if not values:
         return await _detail(ctx, purchase_id)
     after_dates = {**rp.stage_dates(row)} | {

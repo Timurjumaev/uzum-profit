@@ -1557,6 +1557,11 @@ export const uzLatn = {
     atUzum: "{{count}} dona Uzumda",
     sending: "{{count}} dona joʻnatilmoqda",
     count: {
+      missing: "Kelmadi",
+      missingOf: "Kelmadi: {{name}}",
+      lineRefund: "Shu tovar uchun qaytarilgan summa",
+      lineRefundOf: "Qaytarilgan summa: {{name}}",
+      refundByLines: "Tovarlarga yozilgan summalar yigʻindisi saqlanadi.",
       open: "Sanash",
       fix: "Sanashni tuzatish",
       title: "Sanash",
@@ -1668,6 +1673,11 @@ export const uzLatn = {
     },
     error: "Tannarxni hisoblab boʻlmadi: {{reason}}",
     errorHint: "Raqam taxmin qilinmaydi — komponentlarni tekshiring.",
+    missing: {
+      title: "{{count}} ta tovar umuman kelmadi",
+      text: "Kelmagan tovar zarari: {{amount}} — foyda hisobida alohida qator, boshqa tovarlar tannarxiga qoʻshilmadi.",
+      textNoAmount: "Kelmagan tovar puli boshqa tovarlar tannarxiga qoʻshilmadi.",
+    },
     pending: "Sotuvlar tannarxi qayta hisoblanmoqda",
     pendingText: "Oʻtgan sotuvlar yangi tannarx bilan bir necha daqiqada yangilanadi; Foyda va zararda «qayta hisoblandi» belgisi chiqadi.",
     lines: {

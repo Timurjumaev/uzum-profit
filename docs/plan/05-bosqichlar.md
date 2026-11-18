@@ -1048,7 +1048,7 @@ Omborim soniga tayanadi). Har biri — alohida PR, testlar bilan; 02 (M10, F33, 
   `upcore.purchasing.Flag.GOODS_MISSING` (`goods_missing`) — qatorga tovar summasi tushmagan, taxminiy (tannarx raqami
   o'zgarmaydi); xarid sahifasida belgi, bosh sahifa "Diqqat" — `attention.goods_missing` (lot belgilaridan). Testlar: yadro,
   API, web.
-- [ ] TM9.6 **Kelmagan tovar va qaytarilgan pul — o'z tovariga** (G9, G10; Temur qarori 2026-11-17 — ikkalasida ikkinchi
+- [x] TM9.6 **Kelmagan tovar va qaytarilgan pul — o'z tovariga** (G9, G10; Temur qarori 2026-11-17 — ikkalasida ikkinchi
   variant; F20 o'zgaradi, yangi **F55**). (a) Sanashda qatorning sog' donasi 0 (umuman kelmagan yoki hammasi brak) — shu
   qatorga tushgan tovar summasi va xarid ichidagi qo'shimcha chiqim ulushi boshqa tovarlarga **yuklanmaydi**: **F55
   "Kelmagan tovar zarari"** = shu ulush − shu qatorga yozilgan qaytarilgan summa (manfiy bo'lmaydi), sanash kuniga, foyda

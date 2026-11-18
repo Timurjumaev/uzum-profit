@@ -123,6 +123,8 @@ class OwnExpense:
 # qatori sifatida alohida (boshqa dona tannarxiga qo'shilmaydi). F52 (§8): Uzum qabulida yo'qotish — TM7 da.
 DEFECT_LOSS = "Brak zarari"
 RECEIVING_LOSS = "Uzum qabulida yo\u02bbqotish"
+# F55 (TM9.6, ADR-068 (6)): umuman kelmagan yoki hammasi brak tovar puli — boshqa tovarga yuklanmaydi, sanash kuniga.
+MISSING_LOSS = "Kelmagan tovar zarari"
 
 
 class TaxBase(StrEnum):

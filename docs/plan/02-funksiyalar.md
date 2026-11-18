@@ -218,7 +218,8 @@ almashtirgan joylaridan tashqari.)
 - **Qadoq (§5):** umumiy qadoq chiqimi — O'z xarajatlarim (M8), sanasi bo'yicha, SKU'ga bog'lanmaydi; tovarga ixtiyoriy
   **qadoq qo'shimchasi, so'm/dona** — har sog' dona tannarxiga.
 - **Sanash (§6):** kelgan son (standart = buyurtma soni) va brak; "Hammasi keldi". Hamma chiqim **sog' donaga** bo'linadi
-  (F20). "Sotuvchi qaytargan summa" — ixtiyoriy, keyin ham. Kam uchraydigan holat — "Xaridni ikkiga bo'lish".
+  (F20). "Kelmadi" — bir bosishda kelgan 0 (puli F55 ga). "Sotuvchi qaytargan summa" — ixtiyoriy, keyin ham; kam kelgan
+  qator yonida — shu tovarga (TM9.6). Kam uchraydigan holat — "Xaridni ikkiga bo'lish".
 - **Birlik tannarx** (F20) jonli hisoblanadi, tarkibi ko'rinadi; kargo puli hali kiritilmagan bo'lsa "taxminiy" belgisi.
 - **Kech kiritilgan chiqim** (kargo narxi keyin chiqdi, sotuvchi pul qaytardi, son tuzatildi) — o'tgan sotuvlar tannarxi
   avtomatik qayta hisoblanadi, P&L'da "qayta hisoblandi" belgisi.
@@ -470,7 +471,11 @@ SKU tushumi. Bog'lanmagan reklama SKU'larga tushum ulushi bo'yicha taqsimlanadi 
 **F20. Xarid (lot) birlik tannarxi** (ADR-061). Har chiqim: summa × kurs → so'm; qatorlarga bo'linadi: tovar summasi —
 qator summasi bo'yicha (kiritilmagan bo'lsa dona), xarid ichidagi farq (jami − Σ qator summalari) va qo'shimcha chiqimlar —
 qator summasiga mutanosib (yo'q bo'lsa dona), kargo — dona bo'yicha yoki qo'lda ulush (eski yozuvlar o'z asosida: vazn /
-hajm / qiymat). Tovar summasidan **sotuvchi qaytargan summa** ayriladi. Qatorning birlik tannarxi = qatorga tushgan chiqimlar
+hajm / qiymat). Tovar summasidan **sotuvchi qaytargan summa** ayriladi — **o'z qatoridan** (TM9.6): sanashda qatorga
+yozilgan summa faqat shu qatordan (qatorning tovar summasidan oshsa — rad); qatorsiz kiritilsa — standart bo'linish kam
+kelgan qatorlarga, kam kelgan dona × qatorning dona narxi (qator summasi / buyurtma soni) nisbatida; kam kelgan qator yo'q
+yoki eski yozuv — avvalgidek hamma qatorga. **Sog' donasi 0 qator** (umuman kelmagan / hammasi brak) o'z ulushini
+(buyurtma soni bo'yicha; kargodan tashqari) oladi va boshqa tovarga yuklamaydi — F55. Qatorning birlik tannarxi = qatorga tushgan chiqimlar
 yig'indisi / **sog' dona** (kelgan − sanashdagi brak; hali sanalmagan bo'lsa buyurtma qilingan dona, "taxminiy") +
 tovarning **qadoq qo'shimchasi** (so'm/dona, ixtiyoriy). Kargo ulushi xaridlar orasida real kelgan dona bo'yicha. Yaxlitlash
 qoldig'i eng katta qatorga (kargo komponenti — butun kargo bo'yicha eng katta qatorga: kargodagi xaridlarga tushgan ulushlar
@@ -665,3 +670,9 @@ kompensatsiya: zarar ham, tannarx ham bir marta.
 **F53. Zarar bilan sotuv signali** (M15, B6.1) — SKU'ning oxirgi N ta hisobga olinadigan (F2) sotuvining hammasida qator
 foydasi = Uzum to'lovi (F6 `sellerProfit`) − tannarx (F21) < 0; N — sozlanadi (standart 3, 2–10). Tannarxi noma'lum sotuv
 zanjirni uzadi (taxmin bilan signal yo'q, tamoyil 9); soliq va reklama bu signalga kirmaydi. Oxirgi 30 kun.
+
+**F55. Kelmagan tovar zarari** (ADR-068 (6), TM9.6) = sanashda sog' donasi 0 bo'lgan (umuman kelmagan yoki hammasi brak)
+qatorga F20 bo'yicha tushgan tovar summasi va xarid ichidagi qo'shimcha chiqim ulushi (buyurtma soni bo'yicha) − shu qatorga
+yozilgan sotuvchi qaytargan summa; manfiy bo'lmaydi. Kargo dona bo'yicha — kelmagan qatorga tushmaydi. Sanash kuniga
+yoziladi; foyda hisobida alohida qator "Kelmagan tovar zarari" (F51, F52 kabi), boshqa tovarlar tannarxiga qo'shilmaydi.
+Qisman kelgan qator — F20 (o'sha tovar tannarxi oshadi, ADR-061 §6). `upcore.purchasing` (`LotCost.missing`).

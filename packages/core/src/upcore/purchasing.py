@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date, timedelta
 from decimal import Decimal
 from enum import StrEnum
@@ -134,6 +134,8 @@ class PurchaseLine:
     # ADR-061 §7 "Boshqa SKU'ga o'tkazish": shu xariddagi manba qator — dona uning birlik tannarxi bilan o'tadi
     # (taqsimotda qatnashmaydi, :func:`apply_transfers`).
     source_id: str | None = None
+    # TM9.6 (ADR-068 (6)): sotuvchi qaytargan summaning shu qatorga yozilgan qismi (xarid ``refund`` valyutasida).
+    refund: Money | None = None
 
     def __post_init__(self) -> None:
         if self.ordered_qty < 0 or (self.received_qty is not None and self.received_qty < 0):
@@ -156,6 +158,11 @@ class PurchaseLine:
     def qty(self) -> int:
         """F20: tannarx bo'linadigan **sog' dona** = kelgan − sanashdagi brak (sanalmagan — buyurtma qilingan)."""
         return self.arrived_qty - self.defect_qty
+
+    @property
+    def missing(self) -> bool:
+        """TM9.6: sanalgan, sog' donasi 0 (umuman kelmagan yoki hammasi brak) — ulushi F55 ga (boshqa tovarga emas)."""
+        return self.received_qty is not None and self.qty == 0 and self.source_id is None
 
 
 @dataclass(frozen=True, slots=True)
@@ -229,6 +236,8 @@ class LotCost:
     total: Money
     unit_cost: Money | None  # dona 0 bo'lsa None
     flags: frozenset[Flag]
+    # TM9.6 F55: kelmagan (sog' donasi 0) qatorning zarari — ulushi − shu qatorga yozilgan qaytarilgan summa (≥ 0).
+    missing: Money | None = None
 
     @property
     def estimated(self) -> bool:
@@ -357,6 +366,14 @@ def _compute_lots(purchase: Purchase) -> list[LotCost]:
         if unknown:
             raise PurchaseError(f"{component.kind}: noma'lum qatorlar {unknown}")
         targets = [lines[lid] for lid in targets_ids if lines[lid].qty > 0]
+        # TM9.6 (F55): kelmagan qator ham o'z ulushini oladi (buyurtma soni bo'yicha) — boshqa tovarga yuklanmaydi.
+        # Kargo — real kelgan dona bo'yicha (kelmagan qatorga tushmaydi).
+        if component.kind is not ComponentKind.CARGO:
+            targets += [
+                replace(lines[lid], received_qty=lines[lid].ordered_qty, defect_qty=0)
+                for lid in targets_ids
+                if lines[lid].missing and lines[lid].ordered_qty > 0
+            ]
         amount = component.in_uzs()
         if amount.is_zero():
             continue
@@ -386,6 +403,7 @@ def _compute_lots(purchase: Purchase) -> list[LotCost]:
         if line.qty > 0 and parts[lid].get(ComponentKind.GOODS, Money.zero(UZS)).is_zero():
             flags[lid].add(Flag.GOODS_MISSING)
     _apply_refund(purchase, lines, parts)
+    missing = _missing_losses(lines, parts)
     has_cargo = purchase.on_hand or any(c.kind is ComponentKind.CARGO for c in purchase.components)
     result = []
     for lid, line in lines.items():
@@ -400,6 +418,11 @@ def _compute_lots(purchase: Purchase) -> list[LotCost]:
                 bucket.get(ComponentKind.PACKAGING, Money.zero(UZS))
                 + line.pack_unit_cost * line.qty
             )
+        if lid in missing:
+            result.append(
+                LotCost(lid, 0, {}, Money.zero(UZS), None, frozenset(line_flags), missing[lid])
+            )
+            continue
         line_total = total(list(parts[lid].values()), UZS)
         result.append(
             LotCost(
@@ -419,13 +442,65 @@ def _compute_lots(purchase: Purchase) -> list[LotCost]:
     return result
 
 
+def _missing_losses(
+    lines: Mapping[str, PurchaseLine],
+    parts: dict[str, dict[ComponentKind, Money]],
+) -> dict[str, Money]:
+    """F55 "Kelmagan tovar zarari" (TM9.6, ADR-068 (6)) = kelmagan (sog' donasi 0) qatorga tushgan tovar summasi va xarid
+    ichidagi qo'shimcha chiqim ulushi − shu qatorga yozilgan qaytarilgan summa (manfiy bo'lmaydi). Sanash kuniga, foyda
+    hisobida alohida qator; boshqa tovarlar tannarxiga yuklanmaydi."""
+    out: dict[str, Money] = {}
+    for lid, line in lines.items():
+        if not line.missing:
+            continue
+        share = total(list(parts[lid].values()), UZS)
+        out[lid] = share if share.amount > 0 else Money.zero(UZS)
+    return out
+
+
+def refund_split(refund: Money, lines: Sequence[PurchaseLine]) -> dict[str, Money]:
+    """TM9.6 (ADR-068 (6)): qaytarilgan summaning standart bo'linishi — **kam kelgan qatorlarga**, kam kelgan dona ×
+    qatorning dona narxi (qator summasi / buyurtma soni; qator summasi yo'q bo'lsa — kam kelgan dona) nisbatida. Kam kelgan
+    qator yo'q bo'lsa — bo'sh (eski usul: hamma qatorga qator summasi bo'yicha). Yig'indi aniq (``allocate``)."""
+    short = [
+        x
+        for x in lines
+        if x.source_id is None and x.received_qty is not None and x.ordered_qty > x.qty
+    ]
+    if not short or refund.is_zero():
+        return {}
+    priced = all(x.line_sum is not None and x.ordered_qty > 0 for x in short)
+    weights = [
+        Decimal(x.ordered_qty - x.qty)
+        * (to_decimal(x.line_sum) / x.ordered_qty if priced and x.line_sum is not None else 1)
+        for x in short
+    ]
+    if not any(weights):
+        weights = [Decimal(x.ordered_qty - x.qty) for x in short]
+    return {x.id: share for x, share in zip(short, allocate(refund, weights), strict=True)}
+
+
 def _apply_refund(
     purchase: Purchase,
     lines: Mapping[str, PurchaseLine],
     parts: dict[str, dict[ComponentKind, Money]],
 ) -> None:
-    """F20 (ADR-061 §6): sotuvchi qaytargan summa tovar summasidan ayriladi — qator summasiga mutanosib (yo'q bo'lsa
-    dona). Qaytarilgan summa qatorning tovar summasidan ko'p bo'lsa — xato (raqam o'ylab topilmaydi)."""
+    """F20 (ADR-061 §6): sotuvchi qaytargan summa tovar summasidan ayriladi. TM9.6: qatorga yozilgan bo'lsa
+    (``PurchaseLine.refund``) — **o'sha qatordan** (kelmagan qatorda — F55 dan); qatorsiz (eski yozuvlar) — qator summasiga
+    mutanosib (yo'q bo'lsa dona), avvalgidek. Qatorning tovar summasidan ko'p bo'lsa — xato (raqam o'ylab topilmaydi)."""
+    per_line = {lid: x.refund for lid, x in lines.items() if x.refund is not None}
+    if per_line:
+        for lid, refund in per_line.items():
+            if refund.amount < 0:
+                raise PurchaseError("qaytarilgan summa manfiy bo'lishi mumkin emas")
+            share = to_uzs(refund, purchase.refund_rate)
+            goods = parts[lid].get(ComponentKind.GOODS, Money.zero(UZS)) - share
+            if goods.amount < 0:
+                raise PurchaseError(
+                    f"qator {lid}: qaytarilgan summa qatorning tovar summasidan ko'p"
+                )
+            parts[lid][ComponentKind.GOODS] = goods
+        return
     if purchase.refund is None or purchase.refund.is_zero():
         return
     if purchase.refund.amount < 0:

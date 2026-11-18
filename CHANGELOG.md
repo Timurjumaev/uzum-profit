@@ -692,6 +692,12 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- TM9.6 (ADR-068 (6), Temur qarori) Umuman kelmagan (yoki hammasi brak) tovarning puli va xarid ichidagi chiqim ulushi
+  endi boshqa tovarlar tannarxiga yuklanmaydi — "Kelmagan tovar zarari" (yangi F55), sanash kuniga, foyda hisobida alohida
+  qator; xarid sahifasida ogohlantirish. Sotuvchi qaytargan summa o'z qatoriga yoziladi: sanash oynasida kam kelgan qator
+  yonida maydon, qatorsiz kiritilsa — kam kelgan qatorlarga (kam dona × dona narxi); qatorning tovar summasidan ko'pi —
+  rad. Sanash oynasida "Kelmadi" (bir bosish). Qisman kelgan qator va kam kelgan qatorsiz eski qaytarilgan summa —
+  avvalgidek. Migratsiya 0034 (`purchase_lines.refund_amount`, `missing_losses`).
 - TM9.4 (ADR-068 (4)) "Uzum yo'qotdi" kamomadi "Zarar deb yopildi" / "Kompensatsiya qilindi" bo'lganda yo'qolgan dona
   partiya daftaridan ham chiqadi (avval faqat zarar yozilardi — keyingi sotuvlar tannarxi bir partiyaga siljirdi, oxirgi
   partiyada "sotilmaydigan" dona qolardi); "Topildi" yoki qayta ochilsa — qaytadi. F52 zarari — partiyadan chiqqan qiymatdan

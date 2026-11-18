@@ -183,7 +183,8 @@ def test_lots_from_purchase() -> None:
     p = Purchase(
         "P7",
         (PurchaseLine("a", 10, 10), PurchaseLine("b", 5, 0), PurchaseLine("c", 4, 4)),
-        (CostComponent(ComponentKind.GOODS, uzs(1400)), CostComponent(ComponentKind.CARGO, uzs(0))),
+        # TM9.6: kelmagan "b" ham ulush oladi (F55) — 1900 / 19 dona = 100.
+        (CostComponent(ComponentKind.GOODS, uzs(1900)), CostComponent(ComponentKind.CARGO, uzs(0))),
         order_date=d(0),
         received_date=d(9),
     )
