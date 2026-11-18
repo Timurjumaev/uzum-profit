@@ -451,3 +451,114 @@ body {
 .pnl-lines tr.is-total > * {
   background: color-mix(in srgb, var(--positive-text) 9%, transparent);
 }
+
+/* ===== D1-4: "Partiya yo'li" (ADR-061) — rangli, bog'langan bosqichlar ===== */
+.ui-timeline,
+.purchase-path {
+  --st-1: #E08A00;
+  --st-2: #2A78D6;
+  --st-3: #0E9F8E;
+}
+
+.ui-timeline li {
+  --st: var(--accent);
+  position: relative;
+  min-inline-size: 8rem;
+}
+
+.ui-timeline li:nth-child(1) { --st: var(--st-1); }
+.ui-timeline li:nth-child(2) { --st: var(--st-2); }
+.ui-timeline li:nth-child(3) { --st: var(--st-3); }
+
+.ui-timeline__dot {
+  position: relative;
+  inline-size: 24px;
+  block-size: 24px;
+  border: 2px solid var(--st);
+  background: var(--bg-surface);
+  display: grid;
+  place-items: center;
+  z-index: 1;
+}
+
+/* Bosqichlar orasidagi chiziq */
+.ui-timeline li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 11px;
+  inset-inline-start: 30px;
+  inline-size: calc(100% - 30px + var(--space-4) - 6px);
+  block-size: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--border-hairline);
+}
+
+.ui-timeline li.is-done:not(:last-child)::after {
+  background: linear-gradient(90deg, var(--st), color-mix(in srgb, var(--st) 35%, transparent));
+}
+
+.ui-timeline li.is-done .ui-timeline__dot {
+  background: var(--st);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--st) 40%, transparent);
+}
+
+.ui-timeline li.is-done .ui-timeline__dot::before {
+  content: "✓";
+  color: #fff;
+  font: 700 13px/1 var(--font-sans);
+}
+
+.ui-timeline li.is-current .ui-timeline__dot {
+  background: linear-gradient(90deg, var(--st) 50%, var(--bg-surface) 50%);
+  animation: st-pulse 2s ease-out infinite;
+}
+
+.ui-timeline li.is-upcoming .ui-timeline__dot {
+  border-style: dashed;
+  border-color: var(--border-input);
+}
+
+.ui-timeline li.is-delayed .ui-timeline__dot {
+  border-color: var(--warning-text);
+}
+
+@keyframes st-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--st) 45%, transparent); }
+  70%, 100% { box-shadow: 0 0 0 10px transparent; }
+}
+
+@media (max-width: 767px) {
+  .ui-timeline li:not(:last-child)::after {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-timeline li.is-current .ui-timeline__dot {
+    animation: none;
+  }
+}
+
+/* Ro'yxatdagi qisqa yo'l (nuqtalar) — bosqich ranglarida */
+.purchase-path__dots {
+  gap: 5px;
+}
+
+.purchase-path__dot {
+  inline-size: 11px;
+  block-size: 11px;
+}
+
+.purchase-path__dot:nth-child(1) { --st: var(--st-1); }
+.purchase-path__dot:nth-child(2) { --st: var(--st-2); }
+.purchase-path__dot:nth-child(3) { --st: var(--st-3); }
+
+.purchase-path__dot.is-done {
+  border-color: var(--st, var(--accent));
+  background: var(--st, var(--accent));
+}
+
+.purchase-path__dot.is-current {
+  border-color: var(--st, var(--accent));
+  background: linear-gradient(90deg, var(--st, var(--accent)) 50%, transparent 50%);
+}
