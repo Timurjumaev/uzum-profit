@@ -1280,6 +1280,7 @@ boshlanadi) → B5 → B6.5 (B5.1–B5.2 dan keyin) → B6.3 → B6.6.
     narsa qila olmaydi → tunda yuborilmaydi (kritik emas), Uzum uzilishi belgilangan (`provider_health`) paytda umuman
     yuborilmaydi (M3: "uzilishda ogohlantirish yo'q"), adminga — B8.5. Hozir ikkalasi ham kritik va kalit har kuni
     yangilangani uchun har kecha 00:00–00:05 da qayta keladi. Tiklanganda — bitta "tiklandi" xabari.
+    ✓ 2026-11-18: *kalit yaroqsiz* — kritik, bir marta, to'xtagan kundan boshlab har 3 kunda eslatma (`sync_key:<do'kon>:<kun>:<davr>`); *yangilanmayapti* — kritik emas (tinch soatlarga bo'ysunadi), `provider_health.outage_since` paytida yo'q, har to'xtash uchun bir marta (`sync_stale:<do'kon>:<oxirgi muvaffaqiyat>`); sog'lom bo'lsa bitta "tiklandi" (`sync_restored:<to'xtash kaliti>`), faqat to'xtash xabari olgan oluvchiga. `Found.critical` — katalog qiymatini bekor qiladi.
   - **Telegram xatosi kanalni uzmasin** (A5): hozir har `TelegramBadRequest` (masalan, bizning xabarimiz uzun yoki tugma
     havolasi noto'g'ri) "doimiy" sanalib, foydalanuvchining Telegram'i **o'chirib qo'yiladi**. Doimiy — faqat bot
     bloklangan / chat yo'q; qolgani — shu xabar `failed`. `retry_after` hurmat qilinadi (hozir 30 soniyada qayta urinib,

@@ -20,7 +20,8 @@ Hodisalar (ishlaydiganlari; qolganlari katalogda ``stage`` bilan):
 - **Yangi jarima** — oxirgi 3 kunda paydo bo'lgan jarima xarajati (har biri bir marta).
 - **Postavka kamomadi** — Uzum kam qabul qilgan va qaror yozilmagan farq (TM7).
 - **Xarid sanalmagan** (TM9.8) — "Keldi" belgilangan xarid N kun (standart 3) sanalmay tursa, har xarid uchun bir marta.
-- **Sinxron to'xtadi** (kritik) — faol do'kon buyurtmalari N soatdan beri yangilanmagan yoki kalit yaroqsiz.
+- **Sinxron to'xtadi** (B6.4, A4) — ikki xil: *kalit yaroqsiz* (kritik, bir marta, har 3 kunda eslatma) va
+  *yangilanmayapti* (kritik emas, Uzum uzilishida yuborilmaydi, har to'xtash uchun bir marta); tiklanganda bitta "tiklandi".
 """
 
 from __future__ import annotations
@@ -80,6 +81,7 @@ class Found:
     dedupe_key: str
     payload: dict[str, Any]
     status: str = "pending"  # "skipped" — faqat bazaviy ro'yxatni yangilaydi, yuborilmaydi
+    critical: bool | None = None  # ``None`` — katalogdagi qiymat (``CATALOG[event].critical``)
 
 
 @dataclass
@@ -383,9 +385,19 @@ async def uncounted_purchases(conn: AsyncConnection, today: date, days: int) -> 
     ]
 
 
-async def sync_stopped(conn: AsyncConnection, now: datetime, hours: int) -> list[Found]:
-    """Faol do'kon: kalit yaroqsiz yoki buyurtmalar ``hours`` soatdan beri yangilanmagan (birinchi sinxron hali
-    tugamagan do'kon — hisobga olinmaydi)."""
+REMIND_KEY_DAYS = 3  # kalit yaroqsiz bo'lib qolsa — eslatma har 3 kunda
+RESTORED_WINDOW = timedelta(days=7)
+
+
+@dataclass(frozen=True)
+class ShopSync:
+    id: UUID
+    name: str
+    key_invalid: bool
+    last_success_at: datetime | None
+
+
+async def shop_syncs(conn: AsyncConnection) -> list[ShopSync]:
     s, a, st = m.shops, m.mp_accounts, m.sync_state
     rows = await conn.execute(
         select(s.c.id, s.c.name, s.c.alias, a.c.status, st.c.last_success_at)
@@ -394,24 +406,109 @@ async def sync_stopped(conn: AsyncConnection, now: datetime, hours: int) -> list
         .where(s.c.active)
         .order_by(s.c.id)
     )
+    return [
+        ShopSync(r.id, r.alias or r.name, r.status == "invalid", r.last_success_at) for r in rows
+    ]
+
+
+async def provider_outage(conn: AsyncConnection) -> bool:
+    """Uzum uzilishi belgilangan (``provider_health.outage_since``) — sotuvchi hech narsa qila olmaydi (M3)."""
+    since = await conn.scalar(
+        select(m.provider_health.c.outage_since).where(m.provider_health.c.provider == "uzum")
+    )
+    return since is not None
+
+
+def _stale(x: ShopSync, now: datetime, hours: int) -> bool:
+    return (
+        not x.key_invalid
+        and x.last_success_at is not None
+        and now - x.last_success_at >= timedelta(hours=hours)
+    )
+
+
+def sync_stopped(shops: list[ShopSync], now: datetime, hours: int, *, outage: bool) -> list[Found]:
+    """Sinxron to'xtashi — ikki xil (B6.4, A4). Birinchi sinxron hali tugamagan do'kon hisobga olinmaydi.
+
+    - **Kalit yaroqsiz** (sotuvchi tuzatadi): kritik; bir marta, tuzalmasa har 3 kunda eslatma (kalit — to'xtagan kundan
+      boshlab 3 kunlik davr).
+    - **Yangilanmayapti** (Uzum uzilishi, WAF yoki bizning ishchi — sotuvchi qila olmaydi): kritik emas (tunda yuborilmaydi),
+      uzilish davrida umuman yo'q, har to'xtash uchun bir marta (kalit — oxirgi muvaffaqiyatli sinxron vaqti)."""
+    today = now.astimezone(TASHKENT).date()
     out = []
-    day = now.astimezone(TASHKENT).date().isoformat()
-    for r in rows:
-        if r.status == "invalid":
-            reason = "key_invalid"
-        elif r.last_success_at is not None and now - r.last_success_at >= timedelta(hours=hours):
-            reason = "stale"
-        else:
+    for x in shops:
+        since = None if x.last_success_at is None else x.last_success_at.isoformat()
+        base = {"shop": x.name, "shop_id": str(x.id), "since": since}
+        if x.key_invalid:
+            start = (
+                today
+                if x.last_success_at is None
+                else x.last_success_at.astimezone(TASHKENT).date()
+            )
+            bucket = max(0, (today - start).days) // REMIND_KEY_DAYS
+            out.append(
+                Found(
+                    Event.SYNC_STOPPED,
+                    f"sync_key:{x.id}:{start.isoformat()}:{bucket}",
+                    {**base, "reason": "key_invalid"},
+                    critical=True,
+                )
+            )
+        elif _stale(x, now, hours) and not outage:
+            out.append(
+                Found(
+                    Event.SYNC_STOPPED,
+                    f"sync_stale:{x.id}:{since}",
+                    {**base, "reason": "stale"},
+                    critical=False,
+                )
+            )
+    return out
+
+
+async def sync_restored(
+    conn: AsyncConnection, shops: list[ShopSync], now: datetime, hours: int
+) -> list[tuple[UUID, Found]]:
+    """Tiklandi (B6.4, A4): oxirgi 7 kunda "to'xtadi" xabari yuborilgan oluvchi uchun, do'kon endi sog'lom bo'lsa — bitta
+    "tiklandi" xabari (kalit — shu to'xtash xabarining kaliti, takror yo'q). Qaytaradi: (oluvchi, hodisa)."""
+    healthy = {
+        x.id
+        for x in shops
+        if not x.key_invalid and not _stale(x, now, hours) and x.last_success_at is not None
+    }
+    names = {x.id: x.name for x in shops}
+    n = m.notifications
+    rows = await conn.execute(
+        select(n.c.user_id, n.c.dedupe_key, n.c.payload, n.c.created_at)
+        .where(
+            n.c.event == Event.SYNC_STOPPED.value,
+            n.c.status.in_(("pending", "sent")),
+            n.c.created_at >= now - RESTORED_WINDOW,
+        )
+        .order_by(n.c.created_at, n.c.id)
+    )
+    latest: dict[tuple[UUID, str], tuple[str, dict[str, Any]]] = {}
+    for r in rows:  # har (oluvchi, do'kon) uchun eng oxirgi to'xtash/tiklandi qatori
+        shop = r.payload.get("shop_id")
+        if shop:
+            latest[(r.user_id, shop)] = (r.dedupe_key, r.payload)
+    out = []
+    for (user_id, shop), (key, payload) in latest.items():
+        if payload.get("reason") == "restored" or UUID(shop) not in healthy:
             continue
         out.append(
-            Found(
-                Event.SYNC_STOPPED,
-                f"sync_stopped:{r.id}:{day}",
-                {
-                    "shop": r.alias or r.name,
-                    "reason": reason,
-                    "since": None if r.last_success_at is None else r.last_success_at.isoformat(),
-                },
+            (
+                user_id,
+                Found(
+                    Event.SYNC_STOPPED,
+                    f"sync_restored:{key}",
+                    {
+                        "shop": names.get(UUID(shop), payload.get("shop")),
+                        "shop_id": shop,
+                        "reason": "restored",
+                    },
+                    critical=False,
+                ),
             )
         )
     return out
@@ -485,6 +582,9 @@ async def evaluate(conn: AsyncConnection, org_id: UUID, now: datetime) -> int:
                 elif base is not None and set(ids) != base:
                     personal.append((p, snapshot_row(Event.LOSS_SALES, ids, now)))
     if Event.SYNC_STOPPED in wanted:
+        shops = await shop_syncs(conn)
+        outage = await provider_outage(conn)
+        by_id = {p.user_id: p for p in people}
         for hours in sorted(
             {
                 int(p.params(Event.SYNC_STOPPED)["hours"])
@@ -492,12 +592,20 @@ async def evaluate(conn: AsyncConnection, org_id: UUID, now: datetime) -> int:
                 if p.wants(Event.SYNC_STOPPED)
             }
         ):
-            for found in await sync_stopped(conn, now, hours):
+            group = [
+                p
+                for p in people
+                if p.wants(Event.SYNC_STOPPED)
+                and int(p.params(Event.SYNC_STOPPED)["hours"]) == hours
+            ]
+            for found in sync_stopped(shops, now, hours, outage=outage):
+                personal += [(p, found) for p in group]
+            if not outage:
+                allowed = {p.user_id for p in group}
                 personal += [
-                    (p, found)
-                    for p in people
-                    if p.wants(Event.SYNC_STOPPED)
-                    and int(p.params(Event.SYNC_STOPPED)["hours"]) == hours
+                    (by_id[u], f)
+                    for u, f in await sync_restored(conn, shops, now, hours)
+                    if u in allowed
                 ]
     if Event.UNCOUNTED_PURCHASE in wanted:
         for days in sorted(
@@ -570,7 +678,7 @@ async def evaluate(conn: AsyncConnection, org_id: UUID, now: datetime) -> int:
     rows = [(p, f) for f in common for p in people if p.wants(f.event)] + personal
     created = 0
     for person, found in rows:
-        critical = CATALOG[found.event].critical
+        critical = CATALOG[found.event].critical if found.critical is None else found.critical
         when = due_at(local, person.quiet_from, person.quiet_to, critical=critical)
         result = await conn.execute(
             insert(m.notifications)
