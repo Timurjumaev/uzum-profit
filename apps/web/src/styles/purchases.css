@@ -732,14 +732,14 @@ a.purchase-cell__title:hover {
   padding-inline: var(--space-2);
 }
 
+.purchase__lines .ui-table th:first-child,
 .purchase__lines .ui-table td:first-child {
   white-space: normal;
-  min-inline-size: 300px;
-  max-inline-size: 460px;
+  inline-size: 100%; /* tovar ustuni qolgan joyni oladi, raqamli ustunlar o'z kengligida */
 }
 
 .line-cell {
-  min-inline-size: 190px; /* ustun toraymasin: SKU kodi va ID bir-ikki qatorda sig'sin */
+  min-inline-size: 220px;
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -763,9 +763,11 @@ a.purchase-cell__title:hover {
 .line-cell__title {
   font: var(--type-body-strong);
   color: var(--text-primary);
+  /* To'liq nom ikki qatorgacha ko'rinadi; undan uzun bo'lsa "…" (to'liqi sichqoncha ustida). */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .line-cell__sku {

@@ -75,8 +75,9 @@ def test_lost_units_leave_lots_once(world: World) -> None:
     res = ok(send(w, "POST", "receiving/resolve", dispatch_id=out["id"], sku_id=sku, action="lost"))
     shortage = next(x for x in res["shortages"] if x["dispatch_id"] == out["id"])
     # Kamomad ochiq — sotuv (10 dona) eski partiyadan to'liq: 10 × 10 000.
-    # Sotuv kamomad yopilgan kundan keyin (bir kunda hodisalar tartibi — sotuv avval).
-    sale = a.sale(sku_id, date.today() + timedelta(days=1), amount=10)
+    # Sotuv kamomad yopilgan kundan keyin (bir kunda hodisalar tartibi — sotuv avval). Kamomad Toshkent kuni bilan
+    # yopiladi (UTC dan 5 soat oldin), shuning uchun +2 kun: 19:00 UTC dan keyin ham sotuv keyingi kunga tushadi.
+    sale = a.sale(sku_id, date.today() + timedelta(days=2), amount=10)
     a.request(calc.Scope.ITEM, item)  # sotuv to'g'ridan-to'g'ri bazaga yozildi (sinxron o'rniga)
     a.recalc(datetime.now(UTC))
     assert cogs(w, sale) == Decimal("100000.00")
