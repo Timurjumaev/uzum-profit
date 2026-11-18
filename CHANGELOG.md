@@ -7,6 +7,7 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Qo'shildi
 
+- D1 5-qadam (ADR-070) — dizayn yangilanishi tugadi: kirish sahifasi (rangli yorug'liklar, gradient halqali karta), onboarding gradient qadamlar, ikonkali bo'sh holat, rangli skelet va gradient progress, qorong'i mavzu yorug'liklari va karta chekkalari, shishasimon mobil panel.
 - D1 4-qadam (ADR-070): "Partiya yo'li" rangli bosqichlar, bog'lovchi chiziq, ✓ belgisi, joriy bosqich pulsatsiyasi (`prefers-reduced-motion` da yo'q); ro'yxatdagi qisqa yo'l bosqich ranglarida.
 - D1 3-qadam (ADR-070): gradient faol sidebar bo'limi, sarlavha aksenti, tabletka tablar, rangli jadval sarlavhasi va hover, tabletka nishonlar, mahsulot belgisi gradienti, hisob varag'i yakun qatori; Foyda panellari yumaloq va soyali.
 - D1 2-qadam (ADR-070): grafiklar — gradient ustunlar, radius 6 px, chiziq ostida yumshoq maydon, ketma-ket chizilish; rangli KPI ikonkalari; asosiy foyda raqamlari sanab chiqadi (`prefers-reduced-motion` da — yo'q).
