@@ -204,3 +204,79 @@ def test_deliver_sends_once_and_handles_errors(world: World) -> None:
     assert not w.a.sql(
         "SELECT 1 FROM notification_channels WHERE user_id = %s", [user_of(w, "accountant")]
     )
+
+
+FINE = {"amount": "7000.00", "name": "Jarima", "shop": "byDurii", "on": "2026-11-15", "code": None}
+
+
+def _status(w: World, key: str) -> tuple[Any, ...]:
+    row = w.a.sql(
+        "SELECT status, attempts, error, due_at FROM notifications WHERE dedupe_key = %s", [key]
+    )[0]
+    return tuple(row)
+
+
+def _owner_channel(w: World) -> None:
+    """Oldingi testlar kanalni o'chirgan bo'lishi mumkin (umumiy ``world``) — owner kanali faol, boshqa navbat bo'sh."""
+    w.a.sql(
+        "UPDATE notification_channels SET active = true WHERE user_id = %s", [user_of(w, "owner")]
+    )
+    w.a.sql("DELETE FROM notifications WHERE status = 'pending'")
+
+
+def test_bad_request_fails_message_but_keeps_channel(world: World) -> None:
+    """B6.4 (A5): Telegram'ning ``BadRequest`` (matn uzun, tugma havolasi noto'g'ri) — bizning xatomiz: faqat shu xabar
+    ``failed``, foydalanuvchining Telegram'i uzilmaydi va qayta urinilmaydi."""
+    w = world
+    _owner_channel(w)
+    _queue(w, "owner", "new_fine", "fine:bad", FINE)
+    sender = FakeSender(fail={TG_OWNER: SendError("TelegramBadRequest", final=True)})
+    assert run(w, lambda e: service.deliver(e, sender, "", NOW)) == 0
+    status, attempts, error, _ = _status(w, "fine:bad")
+    assert (status, attempts, error) == ("failed", 1, "TelegramBadRequest")
+    assert w.a.sql(
+        "SELECT active FROM notification_channels WHERE user_id = %s", [user_of(w, "owner")]
+    ) == [(True,)]
+    # Keyingi xabar yetib boradi — kanal faol.
+    _queue(w, "owner", "new_fine", "fine:next", FINE)
+    ok_sender = FakeSender()
+    assert run(w, lambda e: service.deliver(e, ok_sender, "", NOW)) == 1
+
+
+def test_retry_after_waits_without_burning_attempts(world: World) -> None:
+    """B6.4 (A5): ``retry_after`` — urinish sanalmaydi, xabar kutish muddatidan keyin qayta yuboriladi, shu aylanishda
+    boshqa xabar yuborilmaydi (Telegram baribir rad etadi)."""
+    w = world
+    _owner_channel(w)
+    _queue(w, "owner", "new_fine", "fine:a", FINE)
+    _queue(w, "owner", "new_fine", "fine:b", FINE, due_at=NOW - timedelta(seconds=30))
+    sender = FakeSender(fail={TG_OWNER: SendError("retry_after", retry_after=20.0)})
+    assert run(w, lambda e: service.deliver(e, sender, "", NOW)) == 0
+    # Birinchi navbatdagi (fine:a, due_at eskiroq) — kutishga o'tdi; ikkinchisiga tegilmadi.
+    status_a = _status(w, "fine:a")
+    assert status_a[:3] == ("pending", 0, "retry_after")
+    assert status_a[3] == NOW + timedelta(seconds=21)
+    assert _status(w, "fine:b")[:3] == ("pending", 0, None)
+    # Kutish tugagach — yuboriladi (urinishlar yoqilmagan).
+    later = NOW + timedelta(seconds=30)
+    ok_sender = FakeSender()
+    assert run(w, lambda e: service.deliver(e, ok_sender, "", later)) == 2
+    assert _status(w, "fine:a")[0] == "sent" and _status(w, "fine:b")[0] == "sent"
+
+
+def test_purge_old_keeps_pending_and_recent(world: World) -> None:
+    """B6.4 (A9): 90 kundan eski yuborilgan / muvaffaqiyatsiz qatorlar o'chadi; pending va yangilari qoladi."""
+    w = world
+    old = NOW - timedelta(days=91)
+    _queue(w, "owner", "new_fine", "old:sent", FINE, created_at=old, status="sent")
+    _queue(w, "owner", "new_fine", "old:failed", FINE, created_at=old, status="failed")
+    _queue(w, "owner", "new_fine", "old:pending", FINE, created_at=old)
+    _queue(
+        w, "owner", "new_fine", "new:sent", FINE, created_at=NOW - timedelta(days=10), status="sent"
+    )
+    assert run(w, lambda e: service.purge_old(e, w.org_id, NOW)) == 2
+    keys = {
+        r[0]
+        for r in w.a.sql("SELECT dedupe_key FROM notifications WHERE dedupe_key ~ '^(old|new):'")
+    }
+    assert keys == {"old:pending", "new:sent"}
