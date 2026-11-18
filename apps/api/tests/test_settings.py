@@ -88,7 +88,7 @@ def test_defaults(world: World) -> None:
     assert next(t for t in body["payout_terms"] if t["kind"] == "daily")["days_of_month"] is None
     inv = body["inventory"]
     assert inv["lead_days"] is None
-    assert inv["stages"] == ["prep", "china", "cargo", "receive", "handover"]
+    assert inv["stages"] == ["transit", "handover"]  # F25 (B5.1): ikki bo'lak
     assert inv["cover_days"] == inv["cover_defaults"] == {"A": 60, "B": 30, "C": 14}
     # Ma'lumotnoma bazada bo'sh bo'lsa ham (deploy `seed` ishga tushirmaydi) upcore boshlang'ich qiymatlari ko'rinadi;
     # bazadagi yozuv ustun (turnover_ecommerce — testda 4).
@@ -252,7 +252,7 @@ def test_inventory_settings_drive_reports(world: World) -> None:
     # Muddat sozlanmagan, tarix yo'q: holat, buyurtma sanasi va tavsiya — yo'q (taxmin qilinmaydi).
     before = row()
     assert before["lead_time"] is None and before["reorder"] is None and before["order_by"] is None
-    lead = {"prep": 8, "china": 2, "cargo": 13, "receive": 7, "handover": 2}
+    lead = {"transit": 30, "handover": 2}
     body = ok(
         send(w, "PUT", "settings/inventory", lead_days=lead, cover_days={"A": 60, "B": 30, "C": 14})
     )
@@ -281,11 +281,15 @@ def test_inventory_settings_drive_reports(world: World) -> None:
 
 def test_inventory_settings_validation(world: World) -> None:
     w = world
-    partial = send(w, "PUT", "settings/inventory", lead_days={"prep": 5})
+    partial = send(w, "PUT", "settings/inventory", lead_days={"transit": 5})
     assert partial.status_code == 422 and partial.json()["code"] == "bad_lead_days"
-    lead = {"prep": 8, "china": 2, "cargo": 13, "receive": 7, "handover": 2}
-    assert send(w, "PUT", "settings/inventory", lead_days={**lead, "prep": -1}).status_code == 422
-    assert send(w, "PUT", "settings/inventory", lead_days={**lead, "prep": 9999}).status_code == 422
+    lead = {"transit": 30, "handover": 2}
+    assert (
+        send(w, "PUT", "settings/inventory", lead_days={**lead, "transit": -1}).status_code == 422
+    )
+    assert (
+        send(w, "PUT", "settings/inventory", lead_days={**lead, "transit": 9999}).status_code == 422
+    )
     bad = send(w, "PUT", "settings/inventory", cover_days={"A": 60})
     assert bad.status_code == 422 and bad.json()["code"] == "bad_cover_days"
 
@@ -335,16 +339,24 @@ def test_parse_ignores_garbage() -> None:
     assert orgsettings.parse(None) == orgsettings.OrgSettings()
     assert orgsettings.parse([1, 2]) == orgsettings.OrgSettings()
     bad = {
-        "lead_days": {"prep": -1, "nope": 3, "china": "x", "cargo": 4},
+        "lead_days": {"transit": -1, "nope": 3, "china": "x", "handover": 4},
         "cover_days": {"A": 5, "Z": 9, "B": -2},
     }
     got = orgsettings.parse(bad)
-    assert got.lead_days == {"cargo": 4} and got.cover_days == {AbcClass.A: 5}
+    assert got.lead_days == {"handover": 4} and got.cover_days == {AbcClass.A: 5}
     assert orgsettings.parse({"lead_days": 3, "cover_days": "x"}) == orgsettings.OrgSettings()
     # Qisman qamrov standartni to'ldiradi; bo'sh — aynan standart.
     assert got.inventory().cover_days == {**DEFAULT.cover_days, AbcClass.A: 5}
     assert orgsettings.OrgSettings().inventory() is DEFAULT
-    assert orgsettings.dump(got) == {"lead_days": {"cargo": 4}, "cover_days": {"A": 5}}
+    assert orgsettings.dump(got) == {"lead_days": {"handover": 4}, "cover_days": {"A": 5}}
+    # B5.1: eski besh bosqichli saqlangan qiymat ikki bo'lakka ko'chadi (yo'l = tayyorlash + Xitoy + kargo + qabul).
+    old = {"prep": 8, "china": 2, "cargo": 13, "receive": 7, "handover": 2}
+    assert orgsettings.parse({"lead_days": old}).lead_days == {"transit": 30, "handover": 2}
+    assert orgsettings.parse({"lead_days": {**old, "transit": 25}}).lead_days == {
+        "transit": 25,
+        "handover": 2,
+    }  # yangi kalit ustun
+    assert orgsettings.parse({"lead_days": {"prep": 8, "handover": 2}}).lead_days == {"handover": 2}
 
 
 def test_alerts_parse_and_over() -> None:

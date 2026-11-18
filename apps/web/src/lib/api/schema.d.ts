@@ -3142,6 +3142,20 @@ export interface components {
             };
             /** Learned */
             learned: string[];
+            /**
+             * Sources
+             * @default {}
+             */
+            sources: {
+                [key: string]: string;
+            };
+            /**
+             * Samples
+             * @default {}
+             */
+            samples: {
+                [key: string]: number;
+            };
         };
         /**
          * LimitLevel

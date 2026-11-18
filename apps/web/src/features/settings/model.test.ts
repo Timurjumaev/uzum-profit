@@ -105,26 +105,26 @@ describe("muddatlar va qamrov", () => {
   const inv = settingsData().inventory;
 
   it("sozlanmagan — hamma bo'sh; qamrov standart", () => {
-    expect(Object.values(leadDraft(inv))).toEqual([null, null, null, null, null]);
+    expect(Object.values(leadDraft(inv))).toEqual([null, null]); // F25 (B5.1): ikki bo'lak — yo'l va Uzumga topshirish
     expect(coverDraft(inv)).toEqual({ A: "60", B: "30", C: "14" });
     expect(inventoryState(leadDraft(inv), coverDraft(inv))).toBe("ok");
     expect(inventoryBody(leadDraft(inv), coverDraft(inv))).toEqual({ lead_days: null, cover_days: { A: 60, B: 30, C: 14 } });
   });
 
   it("sozlangan muddatlar formaga to'ldiriladi va serverga son bo'lib ketadi", () => {
-    const lead = leadDraft({ ...inv, lead_days: { prep: 8, china: 2, cargo: 13, receive: 7, handover: 2 } });
-    expect(lead.cargo).toBe("13");
+    const lead = leadDraft({ ...inv, lead_days: { transit: 30, handover: 2 } });
+    expect(lead.transit).toBe("30");
     expect(inventoryState(lead, coverDraft(inv))).toBe("ok");
-    expect(inventoryBody(lead, coverDraft(inv)).lead_days).toEqual({ prep: 8, china: 2, cargo: 13, receive: 7, handover: 2 });
+    expect(inventoryBody(lead, coverDraft(inv)).lead_days).toEqual({ transit: 30, handover: 2 });
   });
 
   it("qisman to'ldirilgan — 'partial'; noto'g'ri son yoki bo'sh qamrov — 'invalid'", () => {
     const empty = leadDraft(inv);
-    expect(inventoryState({ ...empty, prep: "5" }, coverDraft(inv))).toBe("partial");
-    const full = { prep: "8", china: "2", cargo: "13", receive: "7", handover: "2" };
-    expect(inventoryState({ ...full, prep: "-1" }, coverDraft(inv))).toBe("invalid");
-    expect(inventoryState({ ...full, prep: "400" }, coverDraft(inv))).toBe("invalid");
-    expect(inventoryState({ ...full, prep: "1.5" }, coverDraft(inv))).toBe("invalid");
+    expect(inventoryState({ ...empty, transit: "5" }, coverDraft(inv))).toBe("partial");
+    const full = { transit: "30", handover: "2" };
+    expect(inventoryState({ ...full, transit: "-1" }, coverDraft(inv))).toBe("invalid");
+    expect(inventoryState({ ...full, transit: "400" }, coverDraft(inv))).toBe("invalid");
+    expect(inventoryState({ ...full, transit: "1.5" }, coverDraft(inv))).toBe("invalid");
     expect(inventoryState(empty, { A: "60", B: null, C: "14" })).toBe("invalid");
   });
 

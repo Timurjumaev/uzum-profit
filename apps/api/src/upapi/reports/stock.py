@@ -30,7 +30,6 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Any
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -51,7 +50,6 @@ from upcore.inventory import (
     average_days_to_sell,
     days_of_stock,
     frozen_money,
-    lead_time,
     liquidity,
     order_by,
     own_warehouse_qty,
@@ -65,13 +63,13 @@ from upcore.inventory import (
 )
 from upcore.metrics import realization_rate_units
 from upcore.money import Currency, Money
-from upcore.purchasing import LEAD_STAGES, SupplyState, stage_days, supply_state
+from upcore.purchasing import HANDOVER, LEAD_PARTS, SupplyState, supply_state
 
 from upapi import orgsettings
 from upapi.calc.costs import openings
 from upapi.db import models as m
 from upapi.reports import dispatch
-from upapi.reports.purchases import arrival, stage_dates
+from upapi.reports.purchases import arrival, lead_history, stage_dates
 
 UZS = Currency.UZS
 WINDOW_DAYS = (
@@ -79,7 +77,6 @@ WINDOW_DAYS = (
 )
 REALIZATION_DAYS = 90  # F16 R — do'konning oxirgi 90 kuni (``upapi.reports.cells`` dagi kabi)
 ABC_DAYS = 30
-STAGES = tuple(name for name, _, _ in LEAD_STAGES)
 LOCATIONS = ("china", "road", "own", "inbound", "fbo", "fbs", "defected")
 # ADR-034: postavka (``fbo_invoices``) shu holatlarda yopiq; qolgani — "postavkada" (qabul qilinmagan: sotuvchida yoki
 # Uzum logistikasi bilan omborga yo'lda — ikkalasi ham Uzum qoldig'ida yo'q, o'z omborimda bo'sh emas).
@@ -138,29 +135,6 @@ class StockBook:
     units: dict[
         str, int
     ]  # joylar bo'yicha dona (Xitoyda, yo'lda, o'z omborim — tovar bo'yicha bir marta)
-
-
-def _stages(p: Any) -> dict[str, int]:
-    """Xarid sanalari → F25 bosqich kunlari (``upcore.purchasing.stage_days``)."""
-    return stage_days(stage_dates(p))
-
-
-async def _lead_history(
-    conn: AsyncConnection, items: Iterable[UUID]
-) -> dict[UUID, dict[str, list[int]]]:
-    p, pl = m.purchases, m.purchase_lines
-    rows = await conn.execute(
-        select(pl.c.item_id, p)
-        .join(p, p.c.id == pl.c.purchase_id)
-        .where(pl.c.item_id.in_(list(items)))
-        .distinct()
-        .order_by(p.c.ordered_on.nulls_first(), p.c.created_at)
-    )
-    out: dict[UUID, dict[str, list[int]]] = {}
-    for r in rows:
-        for stage, days in _stages(r).items():
-            out.setdefault(r.item_id, {}).setdefault(stage, []).append(days)
-    return out
 
 
 @dataclass
@@ -401,7 +375,7 @@ async def load_stock(
     cfg = await orgsettings.load(conn)
     inv = cfg.inventory()
     lots = await _lots(conn, items, as_of) if items else {}
-    history = await _lead_history(conn, items) if items else {}
+    history = await lead_history(conn) if items else None
     places = await _places(conn, items) if items else {}
     inbound = await inbound_by_sku(conn)
     # O'z omborimdan postavkaga ajratilgani ayiriladi (xarid "Uzumga yuborildi" deb belgilanmagan bo'lsa ikki marta
@@ -441,9 +415,12 @@ async def load_stock(
         everywhere = stock + sku_inbound + own + road + china
         lead, handover = None, None
         if r.item_id is not None:
-            learned = lead_time(history.get(r.item_id, {}), cfg.lead_days, inv)
-            lead = learned if set(learned.stages) >= set(STAGES) else None
-            handover = learned.stages.get("handover")
+            learned = history.learn(r.item_id, cfg.lead_days) if history is not None else None
+            # F25 (B5.1): ikki bo'lak — yo'l va Uzumga topshirish; ikkalasi ham ma'lum bo'lsa muddat bor.
+            lead = (
+                learned if learned is not None and set(learned.stages) >= set(LEAD_PARTS) else None
+            )
+            handover = None if learned is None else learned.stages.get(HANDOVER)
         if (
             v.value <= 0
         ):  # "Harakatsiz" — Uzumda (yoki postavkada) turib sotilmayotgan tovar; muddatsiz ham aniq.

@@ -186,16 +186,55 @@ def days_of_stock(fbo_active: int, fbs: int, speed: DecimalLike) -> Decimal | No
     return quantize(Decimal(fbo_active + fbs) / v, 1)
 
 
+LEAD_ITEM = "item"  # tovarning o'z xaridlari (oxirgi 5 ta medianasi)
+LEAD_SUPPLIER = "supplier"  # shu yetkazib beruvchining xaridlari
+LEAD_ORG = "org"  # tashkilotning hamma xaridlari
+LEAD_DEFAULT = "default"  # Sozlamalardagi standart
+
+
 @dataclass(frozen=True, slots=True)
 class LeadTime:
-    """F25 natijasi: bosqichlar bo'yicha kunlar va manba (tarix yoki standart)."""
+    """F25 natijasi: bo'laklar bo'yicha kunlar va manba (B5.1): har bo'lak qaysi manbadan (tovar → yetkazib beruvchi →
+    tashkilot → standart) va nechta xariddan o'rganilgani — UI "5 xaridingizdan" / "standart" deb yozadi."""
 
     stages: Mapping[str, Decimal]
     learned: frozenset[str]
+    sources: Mapping[str, str] = field(default_factory=dict)
+    samples: Mapping[str, int] = field(default_factory=dict)
 
     @property
     def total(self) -> Decimal:
         return sum(self.stages.values(), D0)
+
+
+def learn_lead(
+    item: Mapping[str, Sequence[int]],
+    supplier: Mapping[str, Sequence[int]],
+    org: Mapping[str, Sequence[int]],
+    defaults: Mapping[str, int],
+    s: InventorySettings = DEFAULT,
+) -> LeadTime:
+    """F25 (B5.1). To'liq muddat = bo'laklar yig'indisi (yo'l + Uzumga topshirish). Har bo'lak uchun tartib bilan birinchi
+    manba: tovar (oxirgi 5 xarid medianasi, tarix eng eskisidan yangisiga) → yetkazib beruvchi (ko'rsatilgan bo'lsa) →
+    tashkilot medianasi → Sozlamalardagi standart; hech biri yo'q bo'lsa bo'lak noma'lum (raqam o'ylab topilmaydi)."""
+    stages: dict[str, Decimal] = {}
+    learned: set[str] = set()
+    sources: dict[str, str] = {}
+    samples: dict[str, int] = {}
+    parts = {*defaults, *item, *supplier, *org}
+    for part in sorted(parts):
+        for source, history in ((LEAD_ITEM, item), (LEAD_SUPPLIER, supplier), (LEAD_ORG, org)):
+            past = list(history.get(part, ()))[-s.lead_history :]
+            if past:
+                stages[part] = Decimal(str(median(past)))
+                learned.add(part)
+                sources[part], samples[part] = source, len(past)
+                break
+        else:
+            if part in defaults:
+                stages[part] = Decimal(defaults[part])
+                sources[part], samples[part] = LEAD_DEFAULT, 0
+    return LeadTime(stages, frozenset(learned), sources, samples)
 
 
 def lead_time(
@@ -203,19 +242,8 @@ def lead_time(
     defaults: Mapping[str, int],
     s: InventorySettings = DEFAULT,
 ) -> LeadTime:
-    """F25. To'liq muddat = bosqichlar yig'indisi. Har bosqich — oxirgi 5 xarid medianasi (tarix eng
-    eskisidan yangisiga), tarix yo'q bo'lsa sozlamadagi standart. Bosqichlar: tayyorlash, Xitoy ichki,
-    kargo yo'li, qabul/yorliq, Uzumga topshirish."""
-    stages: dict[str, Decimal] = {}
-    learned = set()
-    for stage in {**defaults, **history}:
-        past = list(history.get(stage, ()))[-s.lead_history :]
-        if past:
-            stages[stage] = Decimal(str(median(past)))
-            learned.add(stage)
-        elif stage in defaults:
-            stages[stage] = Decimal(defaults[stage])
-    return LeadTime(stages, frozenset(learned))
+    """F25, bitta tarix manbasi (tashkilot): :func:`learn_lead` ning soddalashgan ko'rinishi."""
+    return learn_lead({}, {}, history, defaults, s)
 
 
 class StockStatus(StrEnum):

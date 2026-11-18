@@ -17,11 +17,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.inventory import DEFAULT, AbcClass, InventorySettings
 from upcore.metrics import DEFAULT_BORDERLINE
-from upcore.purchasing import LEAD_STAGES
+from upcore.purchasing import LEAD_PARTS, TRANSIT
 
 from upapi.db import models as m
 
-STAGES = tuple(name for name, _, _ in LEAD_STAGES)
+STAGES = LEAD_PARTS  # F25 (B5.1): yo'l va Uzumga topshirish
+OLD_TRANSIT = ("prep", "china", "cargo", "receive")  # eski besh bosqichli sozlama (B5.1 gacha)
 MAX_LEAD_DAYS = 365
 MAX_COVER_DAYS = 365
 ALERTS = ("cancel_share", "return_share")  # ADR-043: F17 va F18 ulushlari (kasr, 0..1)
@@ -64,16 +65,25 @@ class OrgSettings:
         return InventorySettings(cover_days={**DEFAULT.cover_days, **self.cover_days})
 
 
+def _lead_days(lead: dict[str, Any]) -> dict[str, int]:
+    """Standart muddatlar (F25). Eski besh bosqichli saqlangan qiymatlar ikki bo'lakka ko'chadi (B5.1): yo'l = tayyorlash +
+    Xitoy ichki + kargo + qabul yig'indisi, topshirish o'zgarmaydi; yangi kalitlar ustun."""
+
+    def ok(v: Any) -> bool:
+        return isinstance(v, int) and not isinstance(v, bool) and v >= 0
+
+    out = {k: int(v) for k, v in lead.items() if k in STAGES and ok(v)}
+    if TRANSIT not in out and all(ok(lead.get(k)) for k in OLD_TRANSIT):
+        out[TRANSIT] = sum(int(lead[k]) for k in OLD_TRANSIT)
+    return out
+
+
 def parse(raw: Any) -> OrgSettings:
     """Bazadagi JSON → sozlama. Noto'g'ri yoki noma'lum kalitlar tashlanadi (qo'lda tahrir ham tizimni buzmaydi)."""
     data = raw if isinstance(raw, dict) else {}
     lead = data.get("lead_days")
     cover = data.get("cover_days")
-    lead_days = (
-        {k: int(v) for k, v in lead.items() if k in STAGES and isinstance(v, int) and v >= 0}
-        if isinstance(lead, dict)
-        else {}
-    )
+    lead_days = _lead_days(lead) if isinstance(lead, dict) else {}
     cover_days = (
         {
             AbcClass(k): int(v)

@@ -12,6 +12,7 @@ from upcore.money import Currency, Money, total
 from upcore.purchasing import (
     DATED_STAGES,
     INFO_FLAGS,
+    LEAD_PARTS,
     SHIPMENT_KINDS,
     AllocationBase,
     ComponentKind,
@@ -32,16 +33,15 @@ from upcore.purchasing import (
     default_base,
     defect_cost,
     fifo_attribute,
+    handover_days,
     purchase_total,
     receiving_loss,
     refund_split,
     residual_goods,
     split_by_purchase,
     split_units,
-    stage_days,
     supply_path,
     supply_state,
-    timeline,
     transit_days,
 )
 
@@ -369,39 +369,14 @@ def test_current_stage_is_latest_dated() -> None:
     assert current_stage({s: oct_(1) for s in DATED_STAGES}) is S.CLOSED
 
 
-def test_stage_days_prep_from_paid_or_ordered() -> None:
-    dates = {S.ORDERED: oct_(1), S.PAID: oct_(3), S.CN_WAREHOUSE: oct_(9), S.SHIPPED: oct_(12)}
-    assert stage_days(dates) == {"prep": 6, "china": 3}
-    assert stage_days({S.ORDERED: oct_(1), S.CN_WAREHOUSE: oct_(9)}) == {"prep": 8}
-    assert (
-        stage_days({S.SHIPPED: oct_(12), S.ARRIVED: oct_(10)}) == {}
-    )  # tartib buzilgan — o'rganilmaydi
-
-
-def test_timeline_mockup() -> None:
-    """04 §6.2: Buyurtma ● To'landi ● Xitoy ombori ● Yo'lda ◐ (11 kun) — Toshkent kutilmoqda ~28.10."""
-    dates = {S.ORDERED: oct_(2), S.PAID: oct_(3), S.CN_WAREHOUSE: oct_(9), S.SHIPPED: oct_(12)}
-    marks = timeline(dates, oct_(23), {"cargo": D("15.5")})
-    states = {m.stage: m.state for m in marks}
-    assert [states[s] for s in DATED_STAGES] == ["done"] * 3 + ["current"] + ["upcoming"] * 4
-    cur = next(m for m in marks if m.state == "current")
-    assert (cur.on, cur.days, cur.expected, cur.delayed) == (oct_(12), 11, oct_(28), False)
-    late = next(m for m in timeline(dates, oct_(29), {"cargo": D(16)}) if m.state == "current")
-    assert late.expected == oct_(28) and late.delayed
-
-
-def test_timeline_without_history_has_no_expected_and_closed_is_done() -> None:
-    cur = next(m for m in timeline({S.ORDERED: oct_(2)}, oct_(5)) if m.state == "current")
-    assert cur.expected is None and not cur.delayed and cur.days == 3
-    skipped = timeline({S.ORDERED: oct_(2), S.RECEIVED: oct_(20)}, oct_(25))
-    assert {m.stage: (m.state, m.on) for m in skipped}[S.PAID] == (
-        "done",
-        None,
-    )  # o'tkazib yuborilgan
-    closed = timeline({S.ORDERED: oct_(2), S.CLOSED: oct_(30)}, oct_(31))
-    assert all(m.state == "done" for m in closed)
-    draft = timeline({}, oct_(5), {"prep": D(5)})
-    assert all(m.state == "upcoming" for m in draft)
+def test_handover_days_old_purchases_received_to_sent() -> None:
+    """F25 (B5.1) "Uzumga topshirish" eski xaridlarda: qabul → "Uzumga yuborildi"; tartib buzilgan yoki sana yo'q —
+    o'rganilmaydi. Yangi xaridlarda manba jo'natma (API qatlami)."""
+    assert handover_days({S.RECEIVED: oct_(10), S.SENT_TO_UZUM: oct_(13)}) == 3
+    assert handover_days({S.RECEIVED: oct_(10), S.SENT_TO_UZUM: oct_(10)}) == 0
+    assert handover_days({S.RECEIVED: oct_(13), S.SENT_TO_UZUM: oct_(10)}) is None
+    assert handover_days({S.RECEIVED: oct_(13)}) is None
+    assert LEAD_PARTS == ("transit", "handover")
 
 
 # --- Kargo: bitta kargo — ko'p xarid (ADR-046) ---------------------------------------------------------------------

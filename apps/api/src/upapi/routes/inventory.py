@@ -58,8 +58,11 @@ class VelocityOut(BaseModel):
 
 class LeadOut(BaseModel):
     total: Decimal  # F25, kun
-    stages: dict[str, Decimal]
+    stages: dict[str, Decimal]  # bo'laklar: "transit" (yo'l), "handover" (Uzumga topshirish)
     learned: list[str]
+    # B5.1: har bo'lak manbasi — "item" | "supplier" | "org" | "default" va nechta xariddan o'rganilgani (standart — 0).
+    sources: dict[str, str] = {}
+    samples: dict[str, int] = {}
 
 
 class PriceOut(BaseModel):
@@ -220,7 +223,11 @@ def rows_for(
                 days_of_stock=s.days_of_stock,
                 days_of_stock_all=s.days_of_stock_all,
                 lead_time=LeadOut(
-                    total=s.lead.total, stages=dict(s.lead.stages), learned=sorted(s.lead.learned)
+                    total=s.lead.total,
+                    stages=dict(s.lead.stages),
+                    learned=sorted(s.lead.learned),
+                    sources=dict(s.lead.sources),
+                    samples=dict(s.lead.samples),
                 )
                 if s.lead
                 else None,

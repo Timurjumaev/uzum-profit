@@ -30,7 +30,7 @@ export function stockRow(over: Partial<S["StockRowOut"]> = {}): S["StockRowOut"]
     velocity: { value: "2.0000", base: "2.0000", completion: "0.6100", trend_ratio: "1.0000", trend_factor: "1.00", days_counted: 14, new_item: false },
     days_of_stock: "5.0",
     days_of_stock_all: "5.0",
-    lead_time: { total: "32", stages: { prep: "8", china: "2", cargo: "13", receive: "7", handover: "2" }, learned: ["cargo", "china", "handover", "prep", "receive"] },
+    lead_time: { total: "32", stages: { transit: "30", handover: "2" }, learned: ["handover", "transit"], sources: { transit: "item", handover: "org" }, samples: { transit: 5, handover: 3 } },
     status: "critical",
     ship: null,
     product_status: null,
