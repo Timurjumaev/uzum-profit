@@ -547,7 +547,10 @@ Asos — *qabul qilingan* dona (e'lon qilingan emas): qabuldagi kamomad F33 da a
 
 **F32. Kompensatsiya taxmini** = yo'qolgan × o'rtacha sotuv narxi (oxirgi 30 sotuv) × (1 − komissiya%).
 
-**F33. Qabul kamomadi** = Σ (`quantityToStock` − `quantityAccepted`) postavka × SKU bo'yicha.
+**F33. Qabul kamomadi** = Σ (`quantityToStock` − `quantityAccepted`) postavka × SKU bo'yicha. Qabul farqi (M10, TM9.2) shu
+asosda — e'lon qilingan (kabinetdagi son, Excel emas) va qabul qilingan; **qabul tugagach** hisoblanadi: `ACCEPTED` dan 7
+kun o'tdi yoki qabul soni e'longa yetdi (shartnoma 4.6); undan oldin "qabul davom etmoqda: 719 / 744". "Uzum yo'qotdi"
+kamomadida da'vo muddati — qabuldan 30 kun (shartnoma 4.13).
 
 **F34. Tugab qolishdan yo'qotilgan foyda** = Σ (faol SKU qoldig'i 0 bo'lgan kunlar) × tugashdan oldingi F23 ×
 o'rtacha foyda/dona (oxirgi 90 kun). Faqat snapshot bor kunlar uchun.

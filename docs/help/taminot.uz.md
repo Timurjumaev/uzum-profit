@@ -68,15 +68,17 @@ Jo'natmani bekor qilsangiz yoki postavka bekor bo'lsa, donalar Omborimga qaytadi
 
 ## 6. Uzum qabulidagi farq
 
-**Uzumga jo'natish → Qabul farqi.** Uzum postavkani qabul qilgach, jo'natilgan va qabul qilingan son solishtiriladi.
-Farq bo'lsa bosh sahifadagi **"Diqqat"** blokida ko'rinadi.
+**Uzumga jo'natish → Qabul farqi.** Postavkada **e'lon qilingan** son (kabinetdagi, Excel'dagi emas) va qabul qilingan son
+solishtiriladi — Uzum qabulni tugatgach (son e'longa yetganda yoki qabul boshlanganidan 7 kun o'tgach). Undan oldin
+"Qabul davom etmoqda: 719 / 744" ko'rinadi. Farq bo'lsa bosh sahifadagi **"Diqqat"** blokida ko'rinadi.
 
 **Kam qabul qilingan bo'lsa** — ikkitadan birini tanlang:
 
 - **"Uzum yo'qotdi"** — donalar **kamomad ro'yxatiga** tushadi. Keyin holatini o'zgartirasiz: **Topildi**, **Kompensatsiya
   qilindi** (Uzum to'lagan summa bilan) yoki **Zarar deb yopildi**. Kompensatsiyadan ortgan yoki yopilgan zarar foyda hisobida
   alohida qator ("Uzum qabulida yo'qotish", F52).
-- **"Men sanashda adashganman"** — xaridning kelgan soni tuzatiladi, tannarx qayta hisoblanadi.
+- **"Men sanashda adashganman"** — xaridning kelgan soni tuzatiladi, tannarx qayta hisoblanadi. Tasdiqlashdan oldin nima o'zgarishi
+  ko'rsatiladi (qaysi xaridning soni va tannarxi qanchaga). Kamomad bo'yicha Uzumga e'tiroz — qabuldan 30 kun ichida.
 
 **Ko'p qabul qilingan bo'lsa** — shu SKU'da ochiq kamomad bo'lsa **"Topildi"** (kamomad yopiladi), bo'lmasa **"Sonni
 oshirish"** (xarid soni oshiriladi).

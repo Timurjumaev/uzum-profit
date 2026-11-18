@@ -18,8 +18,11 @@ world = tp.world
 _ext = iter(range(70_000, 80_000))
 
 
-def setup_dispatch(w: World, shipped: int, accepted: int, stock: int = 10) -> dict[str, Any]:
-    """Sanalgan xarid → jo'natma → bog'langan va qabul qilingan postavka (``accepted`` dona)."""
+def setup_dispatch(
+    w: World, shipped: int, accepted: int, stock: int = 10, days_ago: int = 8
+) -> dict[str, Any]:
+    """Sanalgan xarid → jo'natma → bog'langan va qabul qilingan postavka (``accepted`` dona). ``days_ago`` — qabul
+    qilingan kun (TM9.2: farq qabul tugagach — 7 kun o'tgach yoki son e'longa yetganda)."""
     a = w.a
     a.sql("UPDATE mp_skus SET barcode = '4780000000777' WHERE id = %s", [w.ids["sku"]])
     det = ok(
@@ -68,7 +71,11 @@ def setup_dispatch(w: World, shipped: int, accepted: int, stock: int = 10) -> di
     assert not [
         x for x in ok(send(w, "GET", "receiving"))["diffs"] if x["dispatch_id"] == out["id"]
     ]
-    a.sql("UPDATE fbo_invoices SET status = 'ACCEPTED' WHERE id = %s", [inv])
+    a.sql(
+        "UPDATE fbo_invoices SET status = 'ACCEPTED', created_on = now() - make_interval(days => %s) "
+        "WHERE id = %s",
+        [days_ago, inv],
+    )
     a.sql(
         "UPDATE fbo_invoice_items SET quantity_accepted = %s WHERE invoice_id = %s", [accepted, inv]
     )
@@ -279,3 +286,67 @@ def test_related_fine_shown(world: World) -> None:
     d = diff_of(w, s["dispatch"])
     assert [D(x["amount"]) for x in d["fines"]] == [D(7_000)]
     assert D(d["fines_total"]) == D(7_000)
+
+
+def test_progress_until_receiving_done(world: World) -> None:
+    """TM9.2 (G4): Uzum bosqichma-bosqich qabul qiladi — 7 kun o'tmaguncha va son e'longa yetmaguncha farq ham, "Diqqat"
+    ham yo'q, "qabul davom etmoqda: 7 / 10"; son yetgach — tugadi (farqsiz)."""
+    w, a = world, world.a
+    s = setup_dispatch(w, shipped=10, accepted=7, days_ago=0)
+    out = ok(send(w, "GET", "receiving"))
+    assert not [x for x in out["diffs"] if x["dispatch_id"] == s["dispatch"]]
+    prog = next(x for x in out["progress"] if x["dispatch_id"] == s["dispatch"])
+    assert (prog["accepted"], prog["declared"]) == (7, 10)
+    assert prog["until"] > prog["accepted_on"]
+    a.sql(
+        "UPDATE fbo_invoice_items SET quantity_accepted = 10 WHERE invoice_id = %s", [s["invoice"]]
+    )
+    out = ok(send(w, "GET", "receiving"))
+    assert not [x for x in out["progress"] if x["dispatch_id"] == s["dispatch"]]
+    assert not [x for x in out["diffs"] if x["dispatch_id"] == s["dispatch"]]
+
+
+def test_diff_against_declared_not_excel(world: World) -> None:
+    """TM9.2 (G3): Excel'da 10, kabinetda 8 e'lon qilindi va 8 qabul qilindi — farq yo'q (2 dona Omborimda)."""
+    w, a = world, world.a
+    s = setup_dispatch(w, shipped=10, accepted=8)
+    a.sql(
+        "UPDATE fbo_invoice_items SET quantity_to_stock = 8 WHERE invoice_id = %s", [s["invoice"]]
+    )
+    out = ok(send(w, "GET", "receiving"))
+    assert not [x for x in out["diffs"] if x["dispatch_id"] == s["dispatch"]]
+    # E'londan kam qabul — farq e'lon bo'yicha.
+    a.sql(
+        "UPDATE fbo_invoice_items SET quantity_accepted = 6 WHERE invoice_id = %s", [s["invoice"]]
+    )
+    d = diff_of(w, s["dispatch"])
+    assert (d["shipped"], d["accepted"], d["diff"]) == (8, 6, -2)
+
+
+def test_claim_deadline_and_miscount_preview(world: World) -> None:
+    """TM9.2 (G15): kamomadda da'vo muddati (qabuldan 30 kun); "Men sanashda adashganman" oqibati oldindan: xarid soni va
+    tannarx oldin → keyin (hech narsa saqlanmaydi)."""
+    w = world
+    s = setup_dispatch(w, shipped=10, accepted=8, stock=10)
+    d = diff_of(w, s["dispatch"])
+    sku = str(w.ids["sku"])
+    pv = ok(send(w, "GET", f"receiving/preview?dispatch_id={s['dispatch']}&sku_id={sku}"))
+    assert len(pv["lines"]) >= 1
+    first = pv["lines"][0]
+    assert first["qty_before"] - first["qty_after"] == 2
+    assert D(first["unit_cost_after"]) > D(first["unit_cost_before"])
+    # Saqlanmagan: farq hali qarorsiz.
+    assert diff_of(w, s["dispatch"])["resolution"] is None
+    assert (
+        send(
+            w, "GET", f"receiving/preview?dispatch_id={s['dispatch']}&sku_id={sku}", "accountant"
+        ).status_code
+        == 403
+    )
+    out = ok(
+        send(w, "POST", "receiving/resolve", dispatch_id=s["dispatch"], sku_id=sku, action="lost")
+    )
+    short = next(x for x in out["shortages"] if x["dispatch_id"] == s["dispatch"])
+    from datetime import date, timedelta
+
+    assert short["claim_until"] == str(date.fromisoformat(d["accepted_on"]) + timedelta(days=30))

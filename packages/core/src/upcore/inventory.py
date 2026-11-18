@@ -518,6 +518,30 @@ def acceptance_shortage(supplies: Iterable[SupplyLine]) -> int:
     return sum(max(0, x.declared - x.accepted) for x in supplies)
 
 
+# Uzum shartnomasi (08 §9): 4.6 — postavka 24 soatdan 7 kungacha qabul qilinadi; 4.13 — nomuvofiqlik dalolatnomasiga
+# 30 kun ichida e'tiroz bildiriladi (TM9.2, ADR-068 (2)).
+RECEIVING_WINDOW_DAYS = 7
+CLAIM_DAYS = 30
+
+
+def receiving_done(
+    accepted_on: date,
+    today: date,
+    declared: int,
+    accepted: int,
+    window_days: int = RECEIVING_WINDOW_DAYS,
+) -> bool:
+    """F33 qachon hisoblanadi (TM9.2): Uzum qabulni bosqichma-bosqich qiladi (ADR-055: 719 dona, ertasiga yana 25) —
+    farq faqat **qabul tugagach**: postavka ``ACCEPTED`` bo'lgan kundan ``window_days`` kun o'tdi yoki qabul qilingan
+    dona e'lon qilinganga yetdi. Undan oldin — "qabul davom etmoqda"."""
+    return accepted >= declared or today >= accepted_on + timedelta(days=window_days)
+
+
+def claim_until(accepted_on: date, days: int = CLAIM_DAYS) -> date:
+    """ "Uzum yo'qotdi" kamomadi bo'yicha da'vo muddati (shartnoma 4.13): qabul kunidan ``days`` kun."""
+    return accepted_on + timedelta(days=days)
+
+
 def stockout_days(days: Iterable[DayStat]) -> int:
     """F34 uchun: snapshot bo'yicha qoldiq 0 bo'lgan kunlar (snapshot yo'q kunlar sanalmaydi)."""
     return sum(1 for d in days if d.in_stock is False)

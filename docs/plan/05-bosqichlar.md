@@ -1014,11 +1014,16 @@ Omborim soniga tayanadi). Har biri — alohida PR, testlar bilan; 02 (M10, F33, 
   bor) — `GET /dispatches/orphans`, `POST .../sent` (postavka tarkibidan jo'natma, qabul qilingan uchun ham), `POST/DELETE
   .../not-mine` (Omborimni band qilmaydi); bosh sahifa "Diqqat" `orphan_invoices`. Web: Jo'natmalarda bo'lim, qisman mos
   nomzod, "Boshqa postavka tanlash", tenglashtirish izohi. Testlar: API (`test_linking.py`), web, e2e.
-- [ ] TM9.2 **Qabul farqi — e'lon qilingan songa va qabul tugagach** (G3, G4, G15). Farq = e'lon qilingan
+- [x] TM9.2 **Qabul farqi — e'lon qilingan songa va qabul tugagach** (G3, G4, G15). Farq = e'lon qilingan
   (`quantityToStock`) − qabul qilingan (F33 dagidek). Farq va xabar postavka `ACCEPTED` bo'lgandan keyin **7 kun**
   (shartnoma 4.6) yoki qabul soni e'longa yetganda chiqadi — undan oldin "qabul davom etmoqda: 719 / 744". "Uzum
   yo'qotdi" qatorida da'vo muddati (30 kun, shartnoma 4.13). "Men sanashda adashganman" tanlovida oqibat oldindan
-  ko'rsatiladi ("xarid soni N ga kamayadi, tannarx X dan Y ga o'zgaradi").
+  ko'rsatiladi ("xarid soni N ga kamayadi, tannarx X dan Y ga o'zgaradi"). ✓ 2026-11-18: `upcore.inventory.receiving_done`,
+  `claim_until` (7 / 30 kun — shartnoma); `reports.receiving` — farq e'lon qilingan (`quantity_to_stock`) − qabul qilingan,
+  faqat qabul tugagach (qarorsiz farq, "Diqqat" va bildirishnoma ham); `progress` — "qabul davom etmoqda"; kamomadda
+  `claim_until`; `GET /receiving/preview` — "adashganman" / "sonni oshirish" oqibati (savepoint, saqlanmaydi): xarid soni va
+  lot tannarxi oldin → keyin. Web: "Qabul davom etmoqda" bo'limi, tasdiqlashdan oldin oqibat, da'vo muddati. Testlar:
+  yadro, API, web.
 - [x] TM9.3 **Butunlik himoyasi** (G5, G14): jo'natilgan, o'tkazilgan, hisobdan chiqarilgan yoki farqi hal qilingan donasi bor
   xarid va qator — o'chirilmaydi; sanalgan son shulardan kamga tushmaydi; SKU almashtirilmaydi (sababi aytiladi, yo'l
   ko'rsatiladi). Qabul qilingan postavkaga bog'langan jo'natma bekor qilinmaydi. M10 mezoni — har SKU uchun avtomatik

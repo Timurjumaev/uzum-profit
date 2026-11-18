@@ -18,6 +18,7 @@ from upcore.inventory import (
     abc_classes,
     acceptance_shortage,
     average_days_to_sell,
+    claim_until,
     compensation_estimate,
     days_of_stock,
     frozen_money,
@@ -27,6 +28,7 @@ from upcore.inventory import (
     order_by,
     own_warehouse_qty,
     product_status,
+    receiving_done,
     reorder,
     ship_signal,
     stock_status,
@@ -382,3 +384,15 @@ def test_order_status_counts_every_location() -> None:
     # K3: Uzumda 10, omborimda 15, yo'lda 30, Xitoyda 20 = 75; tezlik 2 → 37,5 kun; muddat 30 → O'rta (≤ 51), Kritik emas
     assert stock_status(10, D(2), 30) is StockStatus.CRITICAL  # faqat Uzum — eski xato natija
     assert stock_status(10 + 15 + 30 + 20, D(2), 30) is StockStatus.MEDIUM
+
+
+def test_receiving_done_and_claim_until() -> None:
+    """TM9.2: farq qabul tugagach — 7 kun o'tdi yoki son e'longa yetdi; da'vo muddati — 30 kun (shartnoma 4.6, 4.13)."""
+    day = date(2026, 11, 10)
+    assert not receiving_done(day, day, declared=744, accepted=719)
+    assert not receiving_done(day, day + timedelta(days=6), declared=744, accepted=719)
+    assert receiving_done(day, day + timedelta(days=7), declared=744, accepted=719)
+    assert receiving_done(day, day, declared=744, accepted=744)
+    assert receiving_done(day, day, declared=10, accepted=12)  # ko'p qabul — ham tugagan
+    assert receiving_done(day, day + timedelta(days=2), declared=5, accepted=0, window_days=2)
+    assert claim_until(day) == date(2026, 12, 10)

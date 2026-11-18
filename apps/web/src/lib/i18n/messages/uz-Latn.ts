@@ -1412,6 +1412,18 @@ export const uzLatn = {
     status: { sending: "Joʻnatilmoqda", linked: "Uzumda · postavka № {{number}}", canceled: "Bekor qilingan" },
   },
   receiving: {
+    progress: {
+      title: "Qabul davom etmoqda",
+      lead: "Uzum postavkani bir necha kunda qabul qiladi. Farq qabul tugagach chiqadi: son eʼlonga yetganda yoki qabul boshlanganidan 7 kun oʻtgach.",
+      item: "{{accepted}} / {{declared}} qabul qilindi · farq {{date}} dan (yoki son yetganda)",
+    },
+    preview: {
+      title: "Nima oʻzgaradi",
+      line: "{{name}}: soni {{before}} → {{after}}",
+      cost: "tannarx {{before}} → {{after}}",
+      confirm: "Tasdiqlash",
+    },
+    claimUntil: "Uzumga daʼvo muddati: {{date}} gacha (shartnoma 4.13)",
     title: "Uzum qabulidagi farq",
     back: "Joʻnatmalarga qaytish",
     lead: "Postavka qabul qilinganda joʻnatilgan va qabul qilingan son solishtiriladi. Kam boʻlsa — Uzum yoʻqotganmi yoki sanashda adashganmisiz, tanlang. Koʻp boʻlsa — avval yoʻqolgan dona topilgan boʻlishi yoki xarid soni kam yozilgan boʻlishi mumkin.",

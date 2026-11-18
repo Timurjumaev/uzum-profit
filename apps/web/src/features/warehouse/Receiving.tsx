@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
-import { currentOrg, meQuery, receivingQuery, resolveReceiving, updateShortage } from "../../app/query";
+import { currentOrg, meQuery, receivingPreviewQuery, receivingQuery, resolveReceiving, updateShortage } from "../../app/query";
 import { Badge, Banner, Button, EmptyState, MoneyInput, Skeleton, useToast } from "../../components/ui";
 import type { Receiving as ReceivingData, ReceivingDiff, ResolveIn, Shortage, ShortagePatch } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
@@ -18,6 +18,7 @@ type Action = ResolveIn["action"];
 
 export function Receiving() {
   const { t } = useTranslation();
+  const f = useFormat();
   const { data: me } = useSuspenseQuery(meQuery);
   const org = currentOrg(me)!;
   const canManage = MANAGE_ROLES.includes(org.role);
@@ -57,6 +58,24 @@ export function Receiving() {
         <Skeleton label={t("common.loading")} lines={4} />
       ) : (
         <>
+          {query.data.progress.length > 0 && (
+            <section className="purchase__block" aria-labelledby="receiving-progress-title">
+              <h2 id="receiving-progress-title" className="h3">
+                {t("receiving.progress.title")}
+              </h2>
+              <p className="caption">{t("receiving.progress.lead")}</p>
+              <ul className="dispatch-list" aria-label={t("receiving.progress.title")}>
+                {query.data.progress.map((p) => (
+                  <li key={p.dispatch_id} className="cargo-pool__card">
+                    <span className="purchase-cell">
+                      <strong>{t("receiving.invoice", { number: p.invoice_number ?? "—" })}</strong>
+                      <span className="caption">{t("receiving.progress.item", { accepted: f.number(p.accepted), declared: f.number(p.declared), date: f.date(p.until) })}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
           <section className="purchase__block" aria-labelledby="receiving-diffs-title">
             <h2 id="receiving-diffs-title" className="h3">
               {t("receiving.diffsTitle")}
@@ -66,7 +85,7 @@ export function Receiving() {
             ) : (
               <ul className="dispatch-list" aria-label={t("receiving.diffsTitle")}>
                 {query.data.diffs.map((d) => (
-                  <DiffCard key={`${d.dispatch_id}:${d.sku_id}`} d={d} canManage={canManage} pending={resolve.isPending && resolve.variables?.dispatch_id === d.dispatch_id && resolve.variables.sku_id === d.sku_id ? resolve.variables.action : null} onResolve={(action) => resolve.mutate({ dispatch_id: d.dispatch_id, sku_id: d.sku_id, action })} />
+                  <DiffCard key={`${d.dispatch_id}:${d.sku_id}`} orgId={org.id} d={d} canManage={canManage} pending={resolve.isPending && resolve.variables?.dispatch_id === d.dispatch_id && resolve.variables.sku_id === d.sku_id ? resolve.variables.action : null} onResolve={(action) => resolve.mutate({ dispatch_id: d.dispatch_id, sku_id: d.sku_id, action })} />
                 ))}
               </ul>
             )}
@@ -91,12 +110,51 @@ export function Receiving() {
   );
 }
 
-function DiffCard({ d, canManage, pending, onResolve }: { d: ReceivingDiff; canManage: boolean; pending: Action | null; onResolve: (action: Action) => void }) {
+/** TM9.2: "Men sanashda adashganman" / "Sonni oshirish" — oqibat oldindan, tasdiqlash bilan. */
+function Consequence({ orgId, d, onConfirm, onCancel, pending }: { orgId: string; d: ReceivingDiff; onConfirm: () => void; onCancel: () => void; pending: boolean }) {
   const { t } = useTranslation();
   const f = useFormat();
+  const preview = useQuery(receivingPreviewQuery(orgId, d.dispatch_id, d.sku_id));
+  return (
+    <div className="receiving__preview" role="group" aria-label={t("receiving.preview.title")}>
+      {preview.isError ? (
+        <Banner tone="negative" title={errorText(preview.error, t)} />
+      ) : !preview.data ? (
+        <Skeleton label={t("common.loading")} lines={1} />
+      ) : (
+        <ul className="caption">
+          {preview.data.lines.map((x) => (
+            <li key={x.line_id}>
+              {t("receiving.preview.line", { name: x.purchase_title ?? t("purchases.untitled"), before: f.number(x.qty_before), after: f.number(x.qty_after) })}
+              {x.unit_cost_before !== null && x.unit_cost_after !== null && ` · ${t("receiving.preview.cost", { before: f.money(x.unit_cost_before), after: f.money(x.unit_cost_after) })}`}
+            </li>
+          ))}
+        </ul>
+      )}
+      <span className="dispatch-list__actions">
+        <Button variant="primary" disabled={!preview.data} loading={pending} onClick={onConfirm}>
+          {t("receiving.preview.confirm")}
+        </Button>
+        <Button variant="ghost" onClick={onCancel}>
+          {t("receiving.cancelEdit")}
+        </Button>
+      </span>
+    </div>
+  );
+}
+
+function DiffCard({ orgId, d, canManage, pending, onResolve }: { orgId: string; d: ReceivingDiff; canManage: boolean; pending: Action | null; onResolve: (action: Action) => void }) {
+  const { t } = useTranslation();
+  const f = useFormat();
+  const [confirm, setConfirm] = useState<Action | null>(null);
   const name = d.title ?? d.barcode ?? "—";
   const short = d.diff < 0;
   const actions: Action[] = short ? ["lost", "miscount"] : d.open_shortages > 0 ? ["found"] : ["recount"];
+  const needsPreview = (a: Action) => a === "miscount" || a === "recount";
+  const confirmed = (a: Action) => {
+    onResolve(a);
+    setConfirm(null);
+  };
   return (
     <li className="cargo-pool__card">
       <div className="purchase-cell">
@@ -111,10 +169,11 @@ function DiffCard({ d, canManage, pending, onResolve }: { d: ReceivingDiff; canM
         {d.fines_total !== null && <span className="caption">{t("receiving.fines", { count: d.fines.length, amount: f.money(d.fines_total) })}</span>}
         {!d.resolution && !short && d.open_shortages > 0 && <span className="caption">{t("receiving.openHint", { count: d.open_shortages })}</span>}
       </div>
-      {canManage && !d.resolution && (
+      {canManage && !d.resolution && confirm !== null && <Consequence orgId={orgId} d={d} pending={pending === confirm} onConfirm={() => confirmed(confirm)} onCancel={() => setConfirm(null)} />}
+      {canManage && !d.resolution && confirm === null && (
         <div className="dispatch-list__actions">
           {actions.map((a, i) => (
-            <Button key={a} variant={i === 0 ? "primary" : "secondary"} disabled={pending !== null && pending !== a} loading={pending === a} onClick={() => onResolve(a)} aria-label={`${t(`receiving.action.${a}`)}: ${name}`}>
+            <Button key={a} variant={i === 0 ? "primary" : "secondary"} disabled={pending !== null && pending !== a} loading={pending === a} onClick={() => (needsPreview(a) ? setConfirm(a) : onResolve(a))} aria-label={`${t(`receiving.action.${a}`)}: ${name}`}>
               {t(`receiving.action.${a}`)}
             </Button>
           ))}
@@ -142,6 +201,7 @@ function ShortageCard({ s, canManage, amounts, pending, onPatch }: { s: Shortage
         {s.compensation !== null && <span className="caption">{t("receiving.compensation", { amount: f.money(s.compensation) })}</span>}
         {s.loss !== null && <span className="caption">{t("receiving.loss", { amount: f.money(s.loss) })}</span>}
         {s.closed_on && <span className="caption">{t("receiving.closedOn", { date: f.date(s.closed_on) })}</span>}
+        {s.status === "open" && s.claim_until && <span className="caption">{t("receiving.claimUntil", { date: f.date(s.claim_until) })}</span>}
       </div>
       {canManage && (
         <div className="dispatch-list__actions">

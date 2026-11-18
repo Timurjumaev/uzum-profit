@@ -356,12 +356,14 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
         closed_on: null,
         note: null,
         created_on: "2026-11-05",
+        claim_until: "2026-12-12",
         ...over,
       });
       return json(route, 200, {
         diffs: [diff(1, 40, 38, { fines: [{ day: "2026-11-12", amount: "7000.00" }], fines_total: "7000.00" }), diff(2, 20, 21, { open_shortages: 2 }), diff(3, 10, 9, { resolution: "lost", shortage_id: "e0000001-0000-4000-8000-000000000000" })],
         shortages: [shortage("e0000001-0000-4000-8000-000000000000", 3, 1, "open"), shortage("e0000002-0000-4000-8000-000000000000", 2, 2, "compensated", { compensation: "30000.00", loss: "7000.00", closed_on: "2026-11-10" })],
         amounts: true,
+        progress: [],
       });
     }
     if (key === `GET /orgs/${ORG_ID}/notifications/settings` || key === `PUT /orgs/${ORG_ID}/notifications/settings`) return json(route, 200, notificationSettings());
