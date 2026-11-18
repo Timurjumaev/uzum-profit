@@ -8,7 +8,9 @@
   qoldiq (ombor ko'radigan rollar), ``/sozlamalar`` — ilovadagi sozlamalar. Har tashkilot alohida xabar.
 - **Yuborish**: har 30 soniyada ulangan tashkilotlar bo'yicha ``pending`` va vaqti kelgan (``due_at``) qatorlar —
   foydalanuvchining faol Telegram chatiga. Oxirgi 24 soatdagisi (ulanishdan oldingi eski navbat yog'ilib ketmasin).
-  Bloklangan / topilmagan chat — ``failed`` va kanal o'chiriladi; vaqtinchalik xato — qayta (5 urinishgacha).
+  Bloklangan / topilmagan chat — ``failed`` va kanal o'chiriladi; boshqa Telegram xatosi (``TelegramBadRequest``) —
+  faqat shu xabar ``failed``, kanal faol; ``retry_after`` — kutiladi (urinish sanalmaydi); boshqa vaqtinchalik xato —
+  qayta (5 urinishgacha). 90 kundan eski yuborilgan/muvaffaqiyatsiz qatorlar tozalanadi (``purge_old``).
 """
 
 from __future__ import annotations
@@ -35,6 +37,7 @@ from upbot import messages as msg
 
 MAX_ATTEMPTS = 5
 WINDOW = timedelta(hours=24)
+KEEP = timedelta(days=90)  # navbat qatorlarini saqlash muddati (B6.4, A9)
 BATCH = 50
 COMMANDS = ("bugun", "kecha", "hafta", "oy", "qoldiq", "sozlamalar")
 _log = get_logger("upbot")
@@ -57,12 +60,28 @@ class LinkResult(StrEnum):
 
 
 class SendError(Exception):
-    """Yuborilmadi. ``permanent`` — chat yo'q / bot bloklangan (qayta urinilmaydi, kanal o'chadi)."""
+    """Yuborilmadi (B6.4, A5).
 
-    def __init__(self, reason: str, *, permanent: bool) -> None:
+    - ``permanent`` — chat yo'q / bot bloklangan: kanal o'chadi (faqat shu holatlarda foydalanuvchi Telegram'i uziladi).
+    - ``final`` — shu xabarning o'zi yuborilmaydi (masalan, matn uzun yoki tugma havolasi noto'g'ri): xabar ``failed``,
+      kanal faol qoladi, qayta urinilmaydi.
+    - ``retry_after`` — Telegram kutishni so'radi (soniya): urinish sanalmaydi, xabar shu vaqtdan keyin qayta yuboriladi
+      va shu aylanishda boshqa xabar yuborilmaydi.
+    """
+
+    def __init__(
+        self,
+        reason: str,
+        *,
+        permanent: bool = False,
+        final: bool = False,
+        retry_after: float | None = None,
+    ) -> None:
         super().__init__(reason)
         self.reason = reason
         self.permanent = permanent
+        self.final = final
+        self.retry_after = retry_after
 
 
 class Sender(Protocol):
@@ -192,9 +211,22 @@ async def deliver(engine: AsyncEngine, sender: Sender, web_url: str, now: dateti
     for org_id in sorted({org for org, _ in await due_accounts(engine)}):
         try:
             sent += await _deliver_org(engine, org_id, sender, web_url, now)
+            await purge_old(engine, org_id, now)
         except Exception as exc:
             _log.warning("deliver_failed", org_id=str(org_id), error_code=type(exc).__name__)
     return sent
+
+
+async def purge_old(engine: AsyncEngine, org_id: UUID, now: datetime) -> int:
+    """90 kundan eski yuborilgan / muvaffaqiyatsiz / o'tkazib yuborilgan qatorlarni o'chiradi (B6.4, A9).
+
+    ``pending`` o'chirilmaydi (yuborish oynasi — 24 soat, ular o'zi eskiradi va hisobga olinmaydi)."""
+    n = m.notifications
+    async with org_transaction(engine, org_id) as conn:
+        result = await conn.execute(
+            delete(n).where(n.c.status != "pending", n.c.created_at < now - KEEP)
+        )
+    return int(result.rowcount or 0)
 
 
 async def _deliver_org(
@@ -224,9 +256,18 @@ async def _deliver_org(
                 values = {"status": "sent", "sent_at": now, "channel_id": r.ch, "error": None}
                 sent += 1
             except SendError as exc:
+                if exc.retry_after is not None:
+                    # Telegram kutishni so'radi: urinish sanalmaydi, shu aylanishda boshqa xabar yuborilmaydi.
+                    wait = timedelta(seconds=max(1.0, exc.retry_after) + 1)
+                    await conn.execute(
+                        update(n)
+                        .where(n.c.id == r.id)
+                        .values(due_at=now + wait, error="retry_after", updated_at=func.now())
+                    )
+                    break
                 attempts = r.attempts + 1
                 values = {"attempts": attempts, "error": exc.reason[:200]}
-                if exc.permanent or attempts >= MAX_ATTEMPTS:
+                if exc.permanent or exc.final or attempts >= MAX_ATTEMPTS:
                     values["status"] = "failed"
                 if exc.permanent:
                     await conn.execute(update(nc).where(nc.c.id == r.ch).values(active=False))

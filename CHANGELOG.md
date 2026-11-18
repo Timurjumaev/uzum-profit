@@ -7,6 +7,7 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Qo'shildi
 
+- B6.4 (1-qadam, A5, A9): Telegram `BadRequest` foydalanuvchi kanalini uzmaydi (faqat shu xabar `failed`); `retry_after` hurmat qilinadi (urinish sanalmaydi); 90 kundan eski yuborilgan/muvaffaqiyatsiz bildirishnomalar tozalanadi.
 - B5.0d: Foyda tafsiloti (drill-down) — "Yana yuklash" o'rniga sahifa raqamlari (`Pagination`, 20/50/100) sotuv va Uzum xarajatlari qatorlarida (ADR-054).
 - D1 5-qadam (ADR-070) — dizayn yangilanishi tugadi: kirish sahifasi (rangli yorug'liklar, gradient halqali karta), onboarding gradient qadamlar, ikonkali bo'sh holat, rangli skelet va gradient progress, qorong'i mavzu yorug'liklari va karta chekkalari, shishasimon mobil panel.
 - D1 4-qadam (ADR-070): "Partiya yo'li" rangli bosqichlar, bog'lovchi chiziq, ✓ belgisi, joriy bosqich pulsatsiyasi (`prefers-reduced-motion` da yo'q); ro'yxatdagi qisqa yo'l bosqich ranglarida.

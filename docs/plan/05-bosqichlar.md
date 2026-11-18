@@ -1257,7 +1257,7 @@ boshlanadi) → B5 → B6.5 (B5.1–B5.2 dan keyin) → B6.3 → B6.6.
   kelgan `pending`, oxirgi 24 soat, "Batafsil" — ilova sahifasi (HTTPS); bloklangan chat — kanal o'chadi, vaqtinchalik
   xato — 5 urinish. Matnlar uz/ru. Web: Sozlamalar → Bildirishnomalar → «Telegramʼni ulash» / «Uzish». Yo'riqnoma —
   `docs/staging.md`. **T:** bot tokenini staging'ga kiritish va 7 kun kunlik xulosani olish (B6 chiqish mezoni).
-- [ ] B6.4 **Xabar sifati — tuzatishlar** (09 §13 A1–A10, A18–A21; har biri test bilan; 02 M15 shu vazifada yangilanadi):
+- [→] B6.4 **Xabar sifati — tuzatishlar** (09 §13 A1–A10, A18–A21; har biri test bilan; 02 M15 shu vazifada yangilanadi):
   - **Xulosadagi sof foyda uch qismda** (A1): hozir bitta "Sof foyda" — kechagi kun uchun u deyarli to'liq
     *kutilayotgan* (Jarayondagi sotuvlar, 09 §11.2: ≈ 39% i keyin chiqib ketadi), belgisiz (tamoyil 9, ADR-037/038).
     Xabar: "Sof foyda: X · shundan kutilayotgan Y" + R fakti ("bunday sotuvlarning N% i yakunlanadi", F16) + "HH:MM
@@ -1282,6 +1282,7 @@ boshlanadi) → B5 → B6.5 (B5.1–B5.2 dan keyin) → B6.3 → B6.6.
     havolasi noto'g'ri) "doimiy" sanalib, foydalanuvchining Telegram'i **o'chirib qo'yiladi**. Doimiy — faqat bot
     bloklangan / chat yo'q; qolgani — shu xabar `failed`. `retry_after` hurmat qilinadi (hozir 30 soniyada qayta urinib,
     5 urinishni yoqib yuboradi). Kanal uzilsa — ilovada "Diqqat" qatori ("Telegram uzildi — qayta ulang").
+    ✓ 1-qadam 2026-11-18 (`apps/bot`): `TelegramBadRequest` — faqat shu xabar `failed`, kanal faol (`SendError.final`); doimiy — faqat bot bloklangan / chat yo'q; `retry_after` hurmat qilinadi (urinish sanalmaydi, xabar `due_at` ga surilib shu aylanishda boshqa xabar yuborilmaydi). Qoldi: kanal uzilsa ilovada "Diqqat" qatori ("Telegram uzildi — qayta ulang").
   - **Haftalik xulosa yo'qolmasin** (A6): hozir faqat dushanba kuni yuboriladi — dushanba kuni sinxron yetib kelmasa o'sha
     hafta xulosasi umuman kelmaydi. Shu hafta ichida birinchi imkoniyatda (kalit — hafta, o'zgarmaydi).
   - **Mayda:** "Batafsil" tugmasi ruscha foydalanuvchiga ham o'zbekcha (A7); Sozlamalarda "Tez orada (B5.4)" — ichki
@@ -1290,6 +1291,7 @@ boshlanadi) → B5 → B6.5 (B5.1–B5.2 dan keyin) → B6.3 → B6.6.
   - **Navbat tartibi** (A9, A10): `notifications` da saqlash muddati yo'q (cheksiz o'sadi) — 90 kundan eski qatorlar
     tozalanadi; og'ir hisob (`load_stock`, kitob) har 5 daqiqada har tashkilotga qayta bajariladi — bugungi kalit bor
     bo'lsa hisoblanmaydi (B8.4 yuklama testidan oldin).
+    ✓ A9 2026-11-18: `purge_old` — 90 kundan eski yuborilgan/muvaffaqiyatsiz qatorlar har yuborish aylanishida tozalanadi (`pending` tegilmaydi). Qoldi: A10 (og'ir hisob).
 - [ ] B6.5 **Yetishmayotgan hodisa: "Uzumga yuborish kerak"** (A11; F26 (2), F54 — B5.1 va B5.2 dan keyin): Uzumdagi zaxira
   topshirish muddatiga yetmaydi, omborimda esa tovar bor — eng tez bajariladigan signal, hozir faqat Ombor sahifasida.
   Yangi SKU kirganda bir marta; "Batafsil" — jo'natish qoralamasi. ("Qoldiq kritik" F25 ga bog'liq — B5.1 gacha yangi

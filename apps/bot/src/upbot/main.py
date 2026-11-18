@@ -64,9 +64,10 @@ class AiogramSender:
         except (TelegramForbiddenError, TelegramNotFound) as exc:
             raise service.SendError(type(exc).__name__, permanent=True) from exc
         except TelegramBadRequest as exc:
-            raise service.SendError(type(exc).__name__, permanent=True) from exc
+            # Matn uzun yoki tugma havolasi noto'g'ri — bizning xatoimiz; foydalanuvchining Telegram'i uzilmaydi (B6.4, A5).
+            raise service.SendError(type(exc).__name__, final=True) from exc
         except TelegramRetryAfter as exc:
-            raise service.SendError("retry_after", permanent=False) from exc
+            raise service.SendError("retry_after", retry_after=float(exc.retry_after)) from exc
         except Exception as exc:
             raise service.SendError(type(exc).__name__, permanent=False) from exc
 
