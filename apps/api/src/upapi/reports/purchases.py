@@ -115,6 +115,9 @@ class LineOut(BaseModel):
     # TM9.6: qatorga yozilgan qaytarilgan summa (xarid ``refund_currency`` da) va F55 — kelmagan qator zarari (so'm).
     refund_amount: Decimal | None = None
     missing_loss: Decimal | None = None
+    # Jadvalda nom tagida: SKU kodi (``skuFullTitle``) va Uzum SKU ID (qator SKU'ga bog'langan bo'lsa).
+    sku_code: str | None = None
+    sku_external_id: int | None = None
 
 
 class ComponentOut(BaseModel):
@@ -273,6 +276,7 @@ class Book:
         self.lines: dict[UUID, list[Row[Any]]] = {}
         self.components: dict[UUID, list[Row[Any]]] = {}
         self.items: dict[UUID, Any] = {}
+        self.skus: dict[UUID, Any] = {}
         self.suppliers: dict[UUID, str] = {}
         self.carriers: dict[UUID, str] = {}
         self.cost_types: dict[UUID, str] = {}
@@ -331,6 +335,15 @@ class Book:
                 r.id: r
                 for r in await self.conn.execute(
                     select(i.c.id, i.c.name, i.c.image_url).where(i.c.id.in_(item_ids))
+                )
+            }
+        sku_ids = {x.sku_id for rows in self.lines.values() for x in rows if x.sku_id}
+        if sku_ids:
+            k = m.mp_skus
+            self.skus = {
+                r.id: r
+                for r in await self.conn.execute(
+                    select(k.c.id, k.c.sku_code, k.c.external_id).where(k.c.id.in_(sku_ids))
                 )
             }
         s, c = m.suppliers, m.carriers
@@ -481,6 +494,7 @@ class Book:
 
     def _line(self, row: Row[Any], lot: LotCost | None, amounts: bool) -> LineOut:
         item = self.items.get(row.item_id) if row.item_id else None
+        sku = self.skus.get(row.sku_id) if row.sku_id else None
         cost = None
         if amounts and lot is not None:
             cost = LineCostOut(
@@ -505,6 +519,8 @@ class Book:
             unit_weight=row.unit_weight,
             unit_volume=row.unit_volume,
             sku_id=row.sku_id,
+            sku_code=None if sku is None else sku.sku_code,
+            sku_external_id=None if sku is None else sku.external_id,
             line_sum=row.line_sum if amounts else None,
             defect_qty=row.defect_qty,
             good_qty=(row.ordered_qty if row.received_qty is None else row.received_qty)

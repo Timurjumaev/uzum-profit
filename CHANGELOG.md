@@ -7,6 +7,7 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Qo'shildi
 
+- Xarid sahifasi "Partiyadagi tovarlar" jadvali Uzum kabineti uslubida: rasm + nom, tagida xiraroq SKU kodi va SKU ID, qiymatlar bitta qatorda (API `LineOut`: `sku_code`, `sku_external_id`).
 - B0.1 Production rejasi (`docs/plan`), `CLAUDE.md`.
 - B0.2 Monorepo skeleti: `packages/core` (upcore), `apps/api` (upapi, `/health`), `apps/bot` (upbot),
   `apps/web` (Vite + React + TS), `infra/`; uv va pnpm workspace'lari.

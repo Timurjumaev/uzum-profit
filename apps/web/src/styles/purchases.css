@@ -724,3 +724,53 @@ a.purchase-cell__title:hover {
   margin: 0;
   padding-inline-start: var(--space-4);
 }
+
+/* Partiyadagi tovarlar (Uzum kabineti kabi): rasm + nom, ostida xiraroq SKU; qiymatlar bitta qatorda. */
+.purchase__lines .ui-table th,
+.purchase__lines .ui-table td {
+  white-space: nowrap;
+}
+
+.purchase__lines .ui-table td:first-child {
+  white-space: normal;
+  min-inline-size: 280px;
+  max-inline-size: 460px;
+}
+
+.line-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-inline-size: 0;
+}
+
+.line-cell__img {
+  flex: none;
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: var(--radius-control);
+  object-fit: cover;
+  background: var(--bg-raised);
+}
+
+.line-cell__text {
+  display: grid;
+  min-inline-size: 0;
+  gap: 2px;
+}
+
+.line-cell__title {
+  font: var(--type-body-strong);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.line-cell__sku {
+  font: var(--type-caption);
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -84,6 +84,8 @@ export function line(over: Partial<S["LineOut"]> = {}): S["LineOut"] {
     unit_weight: "0.5000",
     unit_volume: null,
     sku_id: null,
+    sku_code: "MASHINA-QIZIL-3839",
+    sku_external_id: 11706316,
     line_sum: null,
     defect_qty: 0,
     good_qty: 98,
