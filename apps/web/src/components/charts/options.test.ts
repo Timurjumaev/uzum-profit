@@ -122,10 +122,10 @@ describe("lineBarOption (04 §5.1)", () => {
     const [bar, line] = build().series;
     expect(bar.type).toBe("bar");
     expect(bar.barMaxWidth).toBeLessThanOrEqual(24);
-    expect(bar.itemStyle.borderRadius).toEqual([4, 4, 0, 0]);
+    expect(bar.itemStyle.borderRadius).toEqual([6, 6, 0, 0]);
     expect(bar.itemStyle.borderWidth).toBe(1);
     expect(bar.itemStyle.borderColor).toBe(chartPalette("light").surface);
-    expect(line.lineStyle.width).toBe(2);
+    expect(line.lineStyle.width).toBe(3);
     expect(line.symbolSize).toBeGreaterThanOrEqual(8);
     expect(line.itemStyle.borderWidth).toBe(2);
     expect(line.itemStyle.borderColor).toBe(chartPalette("light").surface);
@@ -197,7 +197,7 @@ describe("lineBarOption (04 §5.1)", () => {
 
   it("manfiy ustunning tubi yumaloq", () => {
     const o = build([{ key: "p", name: "P", color: 1, values: ["5", "-3", "2"] }]);
-    expect(o.series[0].data[1]).toEqual({ value: -3, itemStyle: { borderRadius: [0, 0, 4, 4] } });
+    expect(o.series[0].data[1]).toEqual({ value: -3, itemStyle: { borderRadius: [0, 0, 6, 6] } });
     expect(o.series[0].data[0]).toBe(5);
   });
 
@@ -263,9 +263,9 @@ describe("stackedBarOption", () => {
     expect(o.series.every((s: Any) => s.stack === "total" && s.type === "bar")).toBe(true);
     expect(o.series[0].itemStyle.borderColor).toBe(chartPalette("light").surface);
     const radius = (s: number, i: number) => o.series[s].data[i].itemStyle.borderRadius;
-    expect(radius(1, 0)).toEqual([4, 4, 0, 0]); // 1-ustun: tannarx 0 → logistika yuqorida
+    expect(radius(1, 0)).toEqual([6, 6, 0, 0]); // 1-ustun: tannarx 0 → logistika yuqorida
     expect(radius(0, 0)).toBe(0);
-    expect(radius(2, 2)).toEqual([4, 4, 0, 0]); // 3-ustun: tannarx yuqorida
+    expect(radius(2, 2)).toEqual([6, 6, 0, 0]); // 3-ustun: tannarx yuqorida
     expect(radius(0, 2)).toBe(0);
     expect(o.yAxis.min).toBe(0);
   });
@@ -329,7 +329,7 @@ describe("waterfall", () => {
     expect(first.children).toHaveLength(2);
     const [rect, link] = first.children;
     expect(rect.shape.width).toBe(24);
-    expect(rect.shape.r).toEqual([4, 4, 0, 0]);
+    expect(rect.shape.r).toEqual([6, 6, 0, 0]);
     expect(rect.shape.height).toBe(500); // 1000 / 2
     expect(rect.style.fill).toBe(chartPalette("light").ink); // yakuniy qadam — siyoh
     expect(link.shape.x1).toBe(rect.shape.x + 24);

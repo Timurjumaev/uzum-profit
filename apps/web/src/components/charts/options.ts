@@ -58,8 +58,26 @@ function axes(ctx: Ctx, x: string[], xKind: XKind, nonNegative: boolean, unit: U
 // ECharts 6: o'q yorliqlari standart bo'yicha maydon ichida (`containLabel` eskirgan).
 const grid = (right = 16) => ({ left: 8, right, top: 16, bottom: 8 });
 
+/** Ustun/maydon to'ldirmasi: rang tepada to'liq, pastga yumshab boradi (D1, ADR-070). Faqat bezak — ma'no rangda va o'qlarda. */
+const fade = (color: string, from = "FF", to = "99") => ({
+  type: "linear" as const,
+  x: 0,
+  y: 0,
+  x2: 0,
+  y2: 1,
+  colorStops: [
+    { offset: 0, color: `${color}${from}` },
+    { offset: 1, color: `${color}${to}` },
+  ],
+});
+
+const RADIUS = 6;
+
 const base = (ctx: Ctx) => ({
   animation: ctx.motion,
+  animationDuration: 650,
+  animationEasing: "cubicOut" as const,
+  animationDelay: (index: number) => index * 35,
   textStyle: { fontFamily: ctx.palette.font },
   backgroundColor: "transparent",
 });
@@ -128,7 +146,8 @@ export function lineBarOption(
           type: "line",
           data: s.values.map(num),
           color,
-          lineStyle: { width: 2, color },
+          lineStyle: { width: 3, color },
+          areaStyle: series.length === 1 ? { color: fade(color, "33", "00") } : undefined,
           symbol: "circle",
           symbolSize: MARKER,
           showSymbol: dots,
@@ -162,12 +181,12 @@ export function lineBarOption(
         data: s.values.map((v) => {
           const n = num(v);
           return n !== null && n < 0
-            ? { value: n, itemStyle: { borderRadius: [0, 0, 4, 4] } }
+            ? { value: n, itemStyle: { borderRadius: [0, 0, RADIUS, RADIUS] } }
             : n;
         }),
         color,
         barMaxWidth: BAR_MAX,
-        itemStyle: { color, borderRadius: below ? 0 : [4, 4, 0, 0], borderColor: palette.surface, borderWidth: 1 },
+        itemStyle: { color: fade(color), borderRadius: below ? 0 : [RADIUS, RADIUS, 0, 0], borderColor: palette.surface, borderWidth: 1 },
         emphasis: { focus: "none" },
         markArea,
       };
@@ -215,11 +234,11 @@ export function stackedBarOption(
         stack: "total",
         data: s.values.map((v, i) => ({
           value: num(v),
-          itemStyle: { borderRadius: topSeries[i] === si ? [4, 4, 0, 0] : 0 },
+          itemStyle: { borderRadius: topSeries[i] === si ? [RADIUS, RADIUS, 0, 0] : 0 },
         })),
         color,
         barMaxWidth: BAR_MAX,
-        itemStyle: { color, borderColor: palette.surface, borderWidth: 1 },
+        itemStyle: { color: fade(color), borderColor: palette.surface, borderWidth: 1 },
         emphasis: { focus: "none" },
       };
     }),
@@ -298,7 +317,7 @@ export function waterfallOption(input: { steps: WaterfallStep[]; unit?: Unit; co
             children: [
               {
                 type: "rect",
-                shape: { x: x0 - width / 2, y: Math.min(y0, y1), width, height: Math.max(Math.abs(y1 - y0), 1), r: [4, 4, 0, 0] },
+                shape: { x: x0 - width / 2, y: Math.min(y0, y1), width, height: Math.max(Math.abs(y1 - y0), 1), r: [RADIUS, RADIUS, 0, 0] },
                 style: { fill: fill(steps[i].kind) }, // `api.style()` ECharts 6 da eskirgan
               },
               ...(last
