@@ -541,6 +541,21 @@ def test_sku_picker_lists_every_sku_and_lines_from_skus(world: World) -> None:
         a.sql("SELECT count(*) FROM items WHERE org_id = %s", [a.org_id])[0][0] == items_before + 1
     )
 
+    # Jadvalda nom tagida SKU kodi va Uzum SKU ID: SKU tanlangan qatorda ham, eski qatorda
+    # (``sku_id`` saqlanmagan — tovarning yagona SKU'si bo'yicha) ham.
+    assert (
+        det["lines"][0]["sku_code"] == "Ko'ylak-Oq-L"
+        and det["lines"][0]["sku_external_id"] == 7_102
+    )
+    line0 = det["lines"][0]["id"]
+    a.sql("UPDATE purchase_lines SET sku_id = NULL WHERE id = %s", [line0])
+    legacy = ok(send(w, "GET", f"purchases/{pid}"))["lines"][0]
+    assert legacy["sku_id"] is None and legacy["sku_code"] == "Ko'ylak-Oq-L"
+    # Tovarda ikkita SKU bo'lsa — taxmin qilinmaydi.
+    a.insert("mp_skus", shop_id=a.shop_id, external_id=7_104, sku_code="Ikkinchi", item_id=made[0])
+    ambiguous = ok(send(w, "GET", f"purchases/{pid}"))["lines"][0]
+    assert ambiguous["sku_code"] is None and ambiguous["sku_external_id"] is None
+
     # Ommaviy: ikkita SKU bitta so'rovda (har SKU — alohida tovar).
     det = ok(
         send(

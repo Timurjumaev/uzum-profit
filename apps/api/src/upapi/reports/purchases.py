@@ -277,6 +277,7 @@ class Book:
         self.components: dict[UUID, list[Row[Any]]] = {}
         self.items: dict[UUID, Any] = {}
         self.skus: dict[UUID, Any] = {}
+        self.skus_by_item: dict[UUID, Any] = {}
         self.suppliers: dict[UUID, str] = {}
         self.carriers: dict[UUID, str] = {}
         self.cost_types: dict[UUID, str] = {}
@@ -337,15 +338,29 @@ class Book:
                     select(i.c.id, i.c.name, i.c.image_url).where(i.c.id.in_(item_ids))
                 )
             }
-        sku_ids = {x.sku_id for rows in self.lines.values() for x in rows if x.sku_id}
-        if sku_ids:
+        # SKU kodi/ID nom tagida uchun. Qatorda ``sku_id`` bo'lsa — o'sha SKU; eski qatorlarda (``sku_id`` saqlanmagan)
+        # tovarning yagona SKU'si (standart — har SKU alohida tovar); tovarda bir nechta SKU bo'lsa — taxmin qilinmaydi.
+        all_lines = [x for rows in self.lines.values() for x in rows]
+        sku_ids = {x.sku_id for x in all_lines if x.sku_id}
+        legacy_items = {x.item_id for x in all_lines if x.sku_id is None and x.item_id}
+        if sku_ids or legacy_items:
             k = m.mp_skus
-            self.skus = {
-                r.id: r
-                for r in await self.conn.execute(
-                    select(k.c.id, k.c.sku_code, k.c.external_id).where(k.c.id.in_(sku_ids))
+            cond = []
+            if sku_ids:
+                cond.append(k.c.id.in_(sku_ids))
+            if legacy_items:
+                cond.append(k.c.item_id.in_(legacy_items))
+            found = list(
+                await self.conn.execute(
+                    select(k.c.id, k.c.item_id, k.c.sku_code, k.c.external_id).where(or_(*cond))
                 )
-            }
+            )
+            self.skus = {r.id: r for r in found}
+            per_item: dict[UUID, list[Any]] = {}
+            for r in found:
+                if r.item_id in legacy_items:
+                    per_item.setdefault(r.item_id, []).append(r)
+            self.skus_by_item = {i: rows[0] for i, rows in per_item.items() if len(rows) == 1}
         s, c = m.suppliers, m.carriers
         self.suppliers = {r.id: r.name for r in await self.conn.execute(select(s.c.id, s.c.name))}
         self.carriers = {r.id: r.name for r in await self.conn.execute(select(c.c.id, c.c.name))}
@@ -494,7 +509,11 @@ class Book:
 
     def _line(self, row: Row[Any], lot: LotCost | None, amounts: bool) -> LineOut:
         item = self.items.get(row.item_id) if row.item_id else None
-        sku = self.skus.get(row.sku_id) if row.sku_id else None
+        sku = (
+            self.skus.get(row.sku_id)
+            if row.sku_id
+            else (self.skus_by_item.get(row.item_id) if row.item_id else None)
+        )
         cost = None
         if amounts and lot is not None:
             cost = LineCostOut(
