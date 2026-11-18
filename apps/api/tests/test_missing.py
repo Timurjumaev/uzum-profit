@@ -20,9 +20,11 @@ D = Decimal
 
 
 def two_lines(w: World, name: str) -> dict[str, Any]:
+    """Xarid va qatorlar ``a`` (600 000) / ``b`` (400 000) — SKU bo'yicha (bir tranzaksiyada ``created_at`` teng, tartib
+    id bo'yicha tasodifiy)."""
     _ia, sku_a = w.a.item(f"{name}-A")
     _ib, sku_b = w.a.item(f"{name}-B")
-    return dict(
+    det = dict(
         ok(
             send(
                 w,
@@ -39,13 +41,16 @@ def two_lines(w: World, name: str) -> dict[str, Any]:
             201,
         )
     )
+    by_sku = {x["sku_id"]: x["id"] for x in det["lines"]}
+    det["a"], det["b"] = by_sku[str(sku_a)], by_sku[str(sku_b)]
+    return det
 
 
 def test_missing_line_is_loss_and_refund_goes_to_it(world: World) -> None:
     w = world
     det = two_lines(w, "Kelmadi")
     pid = det["purchase"]["id"]
-    a, b = det["lines"][0]["id"], det["lines"][1]["id"]
+    a, b = det["a"], det["b"]
     out = ok(
         send(
             w,
@@ -79,7 +84,7 @@ def test_explicit_line_refund_and_limit(world: World) -> None:
     w = world
     det = two_lines(w, "Qaytar")
     pid = det["purchase"]["id"]
-    a, b = det["lines"][0]["id"], det["lines"][1]["id"]
+    a, b = det["a"], det["b"]
     # Qatorning tovar summasidan (A: 600 000 + 60 000) ko'p — rad, hech narsa saqlanmaydi.
     r = send(
         w,
