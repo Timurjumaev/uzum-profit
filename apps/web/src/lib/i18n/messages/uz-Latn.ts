@@ -529,7 +529,6 @@ export const uzLatn = {
     },
     drill: {
       total: "Jami",
-      loadMore: "Yana yuklash",
       loading: "Yuklanmoqda",
       empty: "Bu qator uchun yozuv topilmadi.",
       day: "Sana",

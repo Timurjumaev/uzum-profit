@@ -107,21 +107,31 @@ export const pnlQuery = (orgId: string, p: ReportParams, view: "month" | "shop" 
       unwrap(api.GET("/api/v1/orgs/{org_id}/pnl", { params: { path: { org_id: orgId }, query: { ...reportQuery(p), view } } })),
   });
 
-/** Drill-down: hisobga kiradigan sotuv qatorlari — Yakunlangan + Jarayonda (ADR-036; P&L qatorlari yig'indisi shulardan), kursor bilan sahifalanadi. */
-export const salesPage = (orgId: string, p: ReportParams, cursor: string | null) =>
+/** Drill-down: hisobga kiradigan sotuv qatorlari — Yakunlangan + Jarayonda (ADR-036; P&L qatorlari yig'indisi shulardan), bitta sahifa (ADR-054, B5.0d). */
+export const drillSalesQuery = (orgId: string, p: ReportParams, page: number, size: number) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "drill", "sales", p, page, size],
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/v1/orgs/{org_id}/sales", {
+          params: { path: { org_id: orgId }, query: { ...reportQuery(p), counted: true, limit: size, page } },
+        }),
+      ),
+  });
+
+/** Bitta Uzum toifasi xarajatlari (yoki hamma toifa — `category: null`), bitta sahifa (ADR-054); `own_items` — hamma o'z xarajati. */
+export const expensesPage = (orgId: string, p: ReportParams, category: string | null, page = 1, size = 50) =>
   unwrap(
-    api.GET("/api/v1/orgs/{org_id}/sales", {
-      params: { path: { org_id: orgId }, query: { ...reportQuery(p), counted: true, limit: 50, cursor } },
+    api.GET("/api/v1/orgs/{org_id}/expenses", {
+      params: { path: { org_id: orgId }, query: { ...reportQuery(p), category, limit: size, page } },
     }),
   );
 
-/** Drill-down: bitta Uzum toifasi xarajatlari va o'z xarajatlari (`own_items` — hamma toifa, mijozda saralanadi). */
-export const expensesPage = (orgId: string, p: ReportParams, category: string | null, cursor: string | null) =>
-  unwrap(
-    api.GET("/api/v1/orgs/{org_id}/expenses", {
-      params: { path: { org_id: orgId }, query: { ...reportQuery(p), category, limit: 50, cursor } },
-    }),
-  );
+export const drillExpensesQuery = (orgId: string, p: ReportParams, category: string, page: number, size: number) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "drill", "uzum", category, p, page, size],
+    queryFn: () => expensesPage(orgId, p, category, page, size),
+  });
 
 // --- Mahsulotlar (M6, B4.3) ---------------------------------------------------------------------------------------
 
@@ -241,7 +251,7 @@ export const expensesListQuery = (orgId: string, p: ReportParams, category: stri
 
 /** Xarajatlar sahifasi: Uzum toifalari (F9), oylar, jarimalar, o'z xarajatlarim (F10) — bitta so'rov. */
 export const expensesQuery = (orgId: string, p: ReportParams) =>
-  queryOptions({ queryKey: ["orgs", orgId, "expenses", "summary", p], queryFn: () => expensesPage(orgId, p, null, null) });
+  queryOptions({ queryKey: ["orgs", orgId, "expenses", "summary", p], queryFn: () => expensesPage(orgId, p, null) });
 
 /** O'z xarajat toifalari: mavjudlari va tavsiya etilgan boshlang'ichlar. */
 export const ownCategoriesQuery = (orgId: string) =>
