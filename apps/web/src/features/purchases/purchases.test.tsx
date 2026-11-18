@@ -274,6 +274,39 @@ describe("xarid sahifasi", () => {
     expect(screen.getByRole("button", { name: "Sanashni tuzatish" })).toBeTruthy();
   });
 
+  it("sanash (TM9.6): «Kelmadi» — kelgan 0; kam kelgan qatorga qaytarilgan summa qatorda yuboriladi", async () => {
+    const count = purchaseSubRoute("POST", PURCHASE_1, "count");
+    const { api } = await renderAt(DETAIL, { [count]: () => json(200, purchaseDetail()) });
+    fireEvent.click(await screen.findByRole("button", { name: "Sanash" }));
+    const dialog = await screen.findByRole("dialog", { name: "Sanash" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Hammasi keldi" }));
+    expect(within(dialog).queryByLabelText(/^Qaytarilgan summa:/)).toBeNull();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Kelmadi: Yangi oʻyinchoq · qizil × M" }));
+    expect((within(dialog).getByLabelText("Kelgan: Yangi oʻyinchoq · qizil × M") as HTMLInputElement).value).toBe("0");
+    expect(within(dialog).queryByLabelText(/^Qaytarilgan summa: Mashina/)).toBeNull();
+    fireEvent.change(within(dialog).getByLabelText(/^Qaytarilgan summa: Yangi oʻyinchoq/), { target: { value: "15" } });
+    // Qatorga yozilgach jami maydon o'chadi (yig'indi saqlanadi).
+    expect((within(dialog).getByLabelText(/^Sotuvchi qaytargan summa/) as HTMLInputElement).disabled).toBe(true);
+    fireEvent.click(within(dialog).getByRole("button", { name: "Sanashni saqlash" }));
+    await waitFor(() => expect(bodiesOf(api, count)).toHaveLength(1));
+    expect(bodiesOf(api, count)[0]).toMatchObject({
+      lines: [
+        { line_id: LINE_1, received_qty: 100, defect_qty: 0 },
+        { line_id: LINE_2, received_qty: 0, defect_qty: 0, refund_amount: "15" },
+      ],
+      refund_currency: "CNY",
+    });
+    expect(bodiesOf(api, count)[0]).not.toHaveProperty("refund_amount");
+  });
+
+  it("xarid sahifasi (TM9.6): kelmagan tovar — zarar summasi bilan ogohlantirish", async () => {
+    await renderAt(DETAIL, {
+      [purchaseRoute("GET", PURCHASE_1)]: () => json(200, purchaseDetail({ purchase: purchaseRow({ missing_lines: 1, missing_loss: "290000.00" }) })),
+    });
+    const banner = await screen.findByText("1 ta tovar umuman kelmadi");
+    expect(norm(banner.parentElement!.textContent!)).toContain(norm(f.money("290000.00")));
+  });
+
   it("sanash: brak kelgandan ko'p — saqlab bo'lmaydi; omborchi qadoq va qaytarilgan summani ko'rmaydi", async () => {
     await renderAt(DETAIL);
     fireEvent.click(await screen.findByRole("button", { name: "Sanash" }));

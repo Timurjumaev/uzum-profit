@@ -231,6 +231,11 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
           {t("purchases.errorHint")}
         </Banner>
       )}
+      {(p.missing_lines ?? 0) > 0 && (
+        <Banner tone="warning" title={t("purchases.missing.title", { count: p.missing_lines ?? 0 })}>
+          {p.missing_loss == null ? t("purchases.missing.textNoAmount") : t("purchases.missing.text", { amount: f.money(p.missing_loss) })}
+        </Banner>
+      )}
       {detail.recalc_pending && amounts && (
         <Banner tone="info" title={t("purchases.pending")}>
           {t("purchases.pendingText")}

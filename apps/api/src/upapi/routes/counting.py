@@ -52,6 +52,9 @@ class CountLineIn(BaseModel):
     received_qty: Qty
     defect_qty: Qty = 0
     pack_unit_cost: Pack = None  # so'm/dona; berilmasa — tovardagi qiymat (bo'lsa)
+    # TM9.6: qaytarilgan summaning shu qatorga yozilgan qismi (``refund_currency`` da). Birorta qatorga berilsa —
+    # qatorlar bo'yicha (jami = yig'indi); berilmasa — jami summa standart bo'yicha kam kelgan qatorlarga bo'linadi.
+    refund_amount: Annotated[Decimal | None, Field(ge=0, max_digits=18, decimal_places=4)] = None
 
 
 class CountIn(BaseModel):
@@ -99,6 +102,9 @@ async def count_purchase(
     background: BackgroundTasks,
 ) -> rp.PurchaseDetailOut:
     """Sanash (ADR-061 §6): kelgan son, brak, qadoq qo'shimchasi va sotuvchi qaytargan summa — bitta tranzaksiyada."""
+    line_refunds = {x.line_id: x.refund_amount for x in body.lines if x.refund_amount is not None}
+    if line_refunds and body.refund_amount is None:
+        body.refund_amount = sum(line_refunds.values(), Decimal(0))
     if (
         body.refund_amount is not None
         or body.remember_pack
@@ -167,17 +173,18 @@ async def count_purchase(
         # "Toshkentga keldi" bosqich sanasi (belgisiz) saqlanadi — lot tayyor sanasi avvalgidek sanash kuni.
         if not row.arrival_marked and not (row.arrival_marked is None and row.arrived_on):
             values |= {"arrived_on": values["received_on"], "arrival_marked": True}
-    if body.refund_amount is not None:
-        values |= {
-            "refund_amount": body.refund_amount if body.refund_amount > 0 else None,
-            "refund_currency": body.refund_currency.value
-            if body.refund_currency and body.refund_amount > 0
-            else None,
-            "refund_on": (body.counted_on or today()) if body.refund_amount > 0 else None,
-        }
     if values:
         await ctx.conn.execute(
             update(p).where(p.c.id == purchase_id).values(**values, updated_at=func.now())
+        )
+    if body.refund_amount is not None:
+        await set_refund(
+            ctx,
+            purchase_id,
+            body.refund_amount,
+            body.refund_currency,
+            body.counted_on or today(),
+            line_refunds or None,
         )
     await ctx.audit(
         "purchase.count", "purchase", purchase_id, after=_plain(body.model_dump(mode="json"))
@@ -185,6 +192,67 @@ async def count_purchase(
     await _changed(ctx, request, background, purchase_id, touched)
     await request_shipment_members(ctx, row.shipment_id, skip=purchase_id)
     return await _detail(ctx, purchase_id)
+
+
+async def set_refund(
+    ctx: Any,
+    purchase_id: UUID,
+    total: Decimal,
+    currency: Currency | None,
+    day: date,
+    explicit: dict[UUID, Decimal] | None = None,
+) -> None:
+    """Sotuvchi qaytargan summa (ADR-061 §6; TM9.6, ADR-068 (6)) — **qatorga**: ``explicit`` (qator → summa) berilsa
+    shunday (jami — yig'indi, qolgan qatorlar 0); berilmasa — standart: kam kelgan qatorlarga, kam kelgan dona × dona narxi
+    nisbatida (``upcore.purchasing.refund_split``); kam kelgan qator yo'q — eski usul (qatorsiz, hamma qatorga). Qatorning
+    tovar summasidan oshsa — 422 ``bad_refund`` (raqam o'ylab topilmaydi). ``total`` 0 — o'chirish."""
+    from upcore.purchasing import refund_split
+
+    p, pl = m.purchases, m.purchase_lines
+    lines = await _lines(ctx, purchase_id)
+    if explicit is not None and set(explicit) - set(lines):
+        raise AppError("line_not_found", 404, detail="qator shu xaridda emas")
+    await ctx.conn.execute(
+        update(pl).where(pl.c.purchase_id == purchase_id).values(refund_amount=None)
+    )
+    if total <= 0:
+        await ctx.conn.execute(
+            update(p)
+            .where(p.c.id == purchase_id)
+            .values(refund_amount=None, refund_currency=None, refund_on=None, updated_at=func.now())
+        )
+        return
+    if currency is None:
+        raise AppError("bad_refund", 422, detail="qaytarilgan summa valyutasi kerak")
+    shares: dict[UUID, Decimal]
+    if explicit is not None:
+        shares = {lid: amount for lid, amount in explicit.items() if amount > 0}
+        total = sum(shares.values(), Decimal(0))
+    else:
+        split = refund_split(
+            Money(total, currency), [calc_lots.line_model(r) for r in lines.values()]
+        )
+        shares = {UUID(lid): money.amount for lid, money in split.items()}
+    for lid, amount in shares.items():
+        await ctx.conn.execute(
+            update(pl).where(pl.c.id == lid).values(refund_amount=amount, updated_at=func.now())
+        )
+    await ctx.conn.execute(
+        update(p)
+        .where(p.c.id == purchase_id)
+        .values(
+            refund_amount=total,
+            refund_currency=currency.value,
+            refund_on=day,
+            updated_at=func.now(),
+        )
+    )
+    # Tekshiruv: qatorning tovar summasidan oshmasin (F20 hisobi xato bersa — saqlanmaydi).
+    book = await rp.Book(ctx.conn, today()).load(purchase_id)
+    if book.purchases:
+        ev = book.evaluate(book.purchases[0])
+        if ev.error is not None and "qaytarilgan" in ev.error:
+            raise AppError("bad_refund", 422, detail=ev.error)
 
 
 @router.post(
