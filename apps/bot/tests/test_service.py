@@ -61,12 +61,14 @@ def link(w: World, param: str, tg: int) -> tuple[LinkResult, str | None]:
 class FakeSender:
     def __init__(self, fail: dict[int, SendError] | None = None) -> None:
         self.sent: list[tuple[int, str, str | None]] = []
+        self.langs: list[str] = []
         self.fail = fail or {}
 
-    async def send(self, chat_id: int, text: str, url: str | None) -> None:
+    async def send(self, chat_id: int, text: str, url: str | None, lang: str = "uz") -> None:
         if chat_id in self.fail:
             raise self.fail[chat_id]
         self.sent.append((chat_id, text, url))
+        self.langs.append(lang)
 
 
 def test_link_once_expiry_and_taken(world: World) -> None:
@@ -280,3 +282,69 @@ def test_purge_old_keeps_pending_and_recent(world: World) -> None:
         for r in w.a.sql("SELECT dedupe_key FROM notifications WHERE dedupe_key ~ '^(old|new):'")
     }
     assert keys == {"old:pending", "new:sent"}
+
+
+SUMMARY = {
+    "start": "2026-11-15",
+    "end": "2026-11-15",
+    "orders": 12,
+    "units": 14,
+    "revenue": "1234567.50",
+    "net_profit": "276709.00",
+    "net_profit_expected": "120000.00",
+    "rate": "0.613",
+    "canceled": 2,
+    "uncosted_lines": 0,
+    "fresh_at": "2026-11-16T04:30:00+00:00",
+}
+
+
+def test_deliver_expired_skipped_monday_merged_and_footer(world: World) -> None:
+    """B6.4 (A18–A21): o'z kunidan o'tgan kunlik xulosa yuborilmaydi (``skipped``); dushanba kuni haftalik va kunlik
+    xulosa — bitta xabar; "— tashkilot" imzosi faqat bir necha tashkilotda (bu yerda bitta — yo'q); til yuboruvchiga
+    uzatiladi ("Batafsil" tugmasi uchun)."""
+    w = world
+    _owner_channel(w)
+    weekly = {**SUMMARY, "start": "2026-11-09", "end": "2026-11-15"}
+    _queue(w, "owner", "weekly_summary", "weekly:2026-11-09", weekly)
+    _queue(w, "owner", "daily_summary", "daily:2026-11-15", SUMMARY)
+    old = {**SUMMARY, "start": "2026-11-13", "end": "2026-11-13"}
+    _queue(w, "owner", "daily_summary", "daily:2026-11-13", old)  # 2 kun oldingi — muddati o'tgan
+    sender = FakeSender()
+    assert run(w, lambda e: service.deliver(e, sender, "https://app.example", NOW)) == 2
+    assert len(sender.sent) == 1 and sender.langs == ["uz"]
+    chat, text, url = sender.sent[0]
+    assert chat == TG_OWNER and url == "https://app.example/pnl?from=2026-11-09&to=2026-11-15"
+    assert text.index("📊 Hafta: 09.11.2026") < text.index("📊 Kunlik xulosa, 15.11.2026")
+    assert "\n\n— " not in text  # bitta tashkilot — imzo yo'q
+    assert (
+        _status(w, "weekly:2026-11-09")[0] == "sent" and _status(w, "daily:2026-11-15")[0] == "sent"
+    )
+    old_status = _status(w, "daily:2026-11-13")
+    assert old_status[0] == "skipped" and old_status[2] == "expired"
+
+
+def test_commands_unfinished_note_and_previous_period(world: World) -> None:
+    """B6.4 (A18–A21): tugamagan davr — izoh; ``/hafta`` va ``/oy`` davr boshida — yonida oldingi to'liq davr."""
+    w = world
+    monday = run(w, lambda e: service.command(e, TG_OWNER, "hafta", NOW, ""))[0].text
+    assert "Davr hali tugamagan" in monday
+    assert "Oldingi toʻliq davr:" in monday and "📊 Hafta: 09.11.2026 – 15.11.2026" in monday
+    today_text = run(w, lambda e: service.command(e, TG_OWNER, "bugun", NOW, ""))[0].text
+    assert "Davr hali tugamagan" in today_text and "Oldingi" not in today_text
+    # Davr o'rtasida — oldingi davr yo'q.
+    thursday = NOW + timedelta(days=3)
+    assert (
+        "Oldingi"
+        not in run(w, lambda e: service.command(e, TG_OWNER, "hafta", thursday, ""))[0].text
+    )
+    # Oy: 1-2-kun — oldingi oy; 16-kun — yo'q.
+    assert "Oldingi" not in run(w, lambda e: service.command(e, TG_OWNER, "oy", NOW, ""))[0].text
+    first = datetime(2026, 12, 1, 5, 0, tzinfo=UTC)
+    month = run(w, lambda e: service.command(e, TG_OWNER, "oy", first, ""))[0].text
+    assert "Oldingi toʻliq davr:" in month and "📊 Oy: 01.11.2026 – 30.11.2026" in month
+    # "Kecha" — tugagan davr, izohsiz.
+    assert (
+        "Davr hali tugamagan"
+        not in run(w, lambda e: service.command(e, TG_OWNER, "kecha", NOW, ""))[0].text
+    )

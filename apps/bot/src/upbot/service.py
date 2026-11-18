@@ -23,7 +23,7 @@ from typing import Protocol
 from uuid import UUID
 
 from sqlalchemy import delete, func, insert, select, text, update
-from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 from upapi import notify
 from upapi.db import models as m
 from upapi.db.session import org_transaction
@@ -85,7 +85,7 @@ class SendError(Exception):
 
 
 class Sender(Protocol):
-    async def send(self, chat_id: int, text: str, url: str | None) -> None: ...
+    async def send(self, chat_id: int, text: str, url: str | None, lang: str = "uz") -> None: ...
 
 
 def page_url(web_url: str, path: str | None) -> str | None:
@@ -162,6 +162,17 @@ def periods(today: date) -> dict[str, tuple[Period, str]]:
     }
 
 
+def previous_period(name: str, today: date) -> tuple[Period, str] | None:
+    """``/hafta`` va ``/oy`` davr boshida (dushanba-seshanba / 1–2-kun) — oldingi to'liq davr."""
+    if name == "hafta" and (today - week_start(today)).days < 2:
+        start = week_start(today) - timedelta(days=7)
+        return Period(start, week_start(today) - timedelta(days=1)), "week"
+    if name == "oy" and today.day <= 2:
+        end = today.replace(day=1) - timedelta(days=1)
+        return Period(end.replace(day=1), end), "month"
+    return None
+
+
 async def command(
     engine: AsyncEngine, tg_user_id: int, name: str, now: datetime, web_url: str
 ) -> list[msg.Message]:
@@ -201,7 +212,14 @@ async def command(
             data = await notify.summary(conn, period, today, require_fresh=False)
             assert data is not None
             path = f"/pnl?from={period.start}&to={period.end}"
-            out.append(msg.Message(msg.summary(data, lang, title, partial=True) + footer, path))
+            text_ = msg.summary(data, lang, title, partial=True, unfinished=period.end >= today)
+            prev = previous_period(name, today)
+            if prev is not None:
+                # Davr boshida (B6.4, A18–A21): yonida oldingi to'liq davr — bo'sh-yarim hafta/oy chalg'itmasin.
+                before = await notify.summary(conn, prev[0], today, require_fresh=False)
+                if before is not None:
+                    text_ += f"\n\n{msg.t(lang, 'previous')}\n" + msg.summary(before, lang, prev[1])
+            out.append(msg.Message(text_ + footer, path))
     return out
 
 
@@ -232,8 +250,15 @@ async def purge_old(engine: AsyncEngine, org_id: UUID, now: datetime) -> int:
 async def _deliver_org(
     engine: AsyncEngine, org_id: UUID, sender: Sender, web_url: str, now: datetime
 ) -> int:
+    """Bitta tashkilotning navbatdagi xabarlarini yuboradi.
+
+    - Muddati o'tgan xulosa (kunlik — o'z kunidan keyin) yuborilmaydi, ``skipped`` (B6.4, A18–A21).
+    - Dushanba kuni haftalik va kunlik xulosa — bitta xabar.
+    - "— tashkilot" imzosi faqat foydalanuvchi bir necha tashkilotga ulangan bo'lsa."""
     n, nc, u = m.notifications, m.notification_channels, m.users
     sent = 0
+    today = now.astimezone(msg.TASHKENT).date()
+    several: dict[str, bool] = {}
     async with org_transaction(engine, org_id) as conn:
         org = await conn.scalar(select(m.orgs.c.name).where(m.orgs.c.id == org_id))
         rows = list(
@@ -247,22 +272,43 @@ async def _deliver_org(
                 .with_for_update(of=n, skip_locked=True)
             )
         )
+        live = [r for r in rows if not msg.expired(r.event, r.payload, today)]
+        weekly = {r.user_id: r for r in live if r.event == "weekly_summary"}
+        done: set[UUID] = set()
         for r in rows:
+            if r.id in done:
+                continue
+            if r not in live:
+                await _mark(conn, [r.id], {"status": "skipped", "error": "expired"})
+                continue
+            if r.event == "daily_summary" and r.user_id in weekly:
+                continue  # haftalik xulosa bilan bitta xabar bo'lib ketadi
+            group = [r]
+            if r.event == "weekly_summary":
+                group += [x for x in live if x.user_id == r.user_id and x.event == "daily_summary"][
+                    :1
+                ]
+            done.update(x.id for x in group)
             values: dict[str, object]
             try:
                 lang = msg.lang_of(r.language)
-                body = msg.notification(r.event, r.payload, lang, org)
-                await sender.send(int(r.target), body.text, page_url(web_url, body.path))
+                if r.target not in several:
+                    several[r.target] = len(await identities(engine, int(r.target))) > 1
+                body = msg.notification(r.event, r.payload, lang)
+                text_ = body.text
+                for extra in group[1:]:  # dushanba: haftalik + kunlik
+                    text_ += "\n\n" + msg.notification(extra.event, extra.payload, lang).text
+                if several[r.target] and org:
+                    text_ += f"\n\n— {org}"
+                await sender.send(int(r.target), text_, page_url(web_url, body.path), lang=lang)
                 values = {"status": "sent", "sent_at": now, "channel_id": r.ch, "error": None}
-                sent += 1
+                sent += len(group)
             except SendError as exc:
                 if exc.retry_after is not None:
                     # Telegram kutishni so'radi: urinish sanalmaydi, shu aylanishda boshqa xabar yuborilmaydi.
                     wait = timedelta(seconds=max(1.0, exc.retry_after) + 1)
-                    await conn.execute(
-                        update(n)
-                        .where(n.c.id == r.id)
-                        .values(due_at=now + wait, error="retry_after", updated_at=func.now())
+                    await _mark(
+                        conn, [x.id for x in group], {"due_at": now + wait, "error": "retry_after"}
                     )
                     break
                 attempts = r.attempts + 1
@@ -273,7 +319,10 @@ async def _deliver_org(
                     await conn.execute(update(nc).where(nc.c.id == r.ch).values(active=False))
             except (ValueError, KeyError) as exc:
                 values = {"status": "failed", "error": type(exc).__name__}
-            await conn.execute(
-                update(n).where(n.c.id == r.id).values(**values, updated_at=func.now())
-            )
+            await _mark(conn, [x.id for x in group], values)
     return sent
+
+
+async def _mark(conn: AsyncConnection, ids: list[UUID], values: dict[str, object]) -> None:
+    n = m.notifications
+    await conn.execute(update(n).where(n.c.id.in_(ids)).values(**values, updated_at=func.now()))

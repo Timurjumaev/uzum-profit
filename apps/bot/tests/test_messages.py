@@ -30,12 +30,13 @@ def test_summary_daily_and_partial() -> None:
     m = msg.notification("daily_summary", SUMMARY, "uz", "byDurii")
     assert m.path == "/"
     assert m.text.splitlines() == [
-        "📊 Kecha, 15.11.2026",
+        "📊 Kunlik xulosa, 15.11.2026",  # sarlavha — sana (kechikib kelsa "Kecha" yolg'on bo'lardi)
         "Buyurtmalar: 12",
         "Tushum: 1 234 568 soʻm",
         "Sof foyda: −7 000 soʻm",
         "Bekorlar: 2 dona",
         "Tannarxsiz qatorlar: 3 — sof foydaga kirmagan",
+        "Maʼlumot: 16.11 09:30 holatiga",
         "",
         "— byDurii",
     ]
@@ -146,3 +147,47 @@ def test_sync_restored_message() -> None:
     uz = msg.notification("sync_stopped", p, "uz")
     assert uz.text == "✅ Sinxron tiklandi: byDurii." and uz.path == "/status"
     assert "восстановлена: byDurii" in msg.notification("sync_stopped", p, "ru").text
+
+
+def test_summary_net_profit_in_three_parts_and_unfinished() -> None:
+    """B6.4 (A1): sof foyda uch qismda — jami, shundan kutilayotgan (Jarayondagi sotuvlar) va R (F16 fakti); davr
+    tugamagan bo'lsa — izoh; "HH:MM holatiga" har doim."""
+    data = {
+        **SUMMARY,
+        "net_profit": "276709.00",
+        "net_profit_expected": "120000.00",
+        "rate": "0.613",
+    }
+    uz = msg.summary(data, "uz", "today", partial=True, unfinished=True).splitlines()
+    assert uz[3] == f"Sof foyda: {msg.money('276709.00', 'uz')}"
+    assert uz[4] == f"  shundan kutilayotgan: {msg.money('120000.00', 'uz')} (Jarayondagi sotuvlar)"
+    assert uz[5] == "  bunday sotuvlarning 61% i yakunlanadi"
+    assert (
+        "Davr hali tugamagan — raqamlar oʻzgaradi." in uz
+        and uz[-1] == "Maʼlumot: 16.11 09:30 holatiga"
+    )
+    ru = msg.summary(data, "ru", "week", unfinished=True)
+    assert (
+        f"из них ожидаемая: {msg.money('120000.00', 'ru')}" in ru
+        and "завершаются в 61% случаев" in ru
+    )
+    # Kutilayotgan qism yo'q (0) yoki R noma'lum — ortiqcha qator yo'q.
+    zero = msg.summary({**data, "net_profit_expected": "0.00"}, "uz", "today")
+    assert "kutilayotgan" not in zero and "yakunlanadi" not in zero
+    no_rate = msg.summary({**data, "rate": None}, "uz", "today")
+    assert "shundan kutilayotgan" in no_rate and "yakunlanadi" not in no_rate
+
+
+def test_expired_summaries() -> None:
+    """B6.4 (A18–A21): kunlik xulosa o'z kunidan keyin yuborilmaydi; haftalik — keyingi haftagacha."""
+    from datetime import date
+
+    daily = {"start": "2026-11-15", "end": "2026-11-15"}
+    assert not msg.expired("daily_summary", daily, date(2026, 11, 16))  # yaratilgan kun
+    assert msg.expired(
+        "daily_summary", daily, date(2026, 11, 17)
+    )  # ertasi kuni — "kecha" deb yuborilmaydi
+    weekly = {"start": "2026-11-09", "end": "2026-11-15"}
+    assert not msg.expired("weekly_summary", weekly, date(2026, 11, 22))
+    assert msg.expired("weekly_summary", weekly, date(2026, 11, 23))
+    assert not msg.expired("stock_critical", daily, date(2030, 1, 1))

@@ -30,7 +30,9 @@ describe("bildirishnomalar sozlamasi", () => {
     expect(sync.closest("label")!.textContent).toContain("Kritik");
     const payout = within(list).getByRole("checkbox", { name: /Uzum toʻlovi kechikmoqda/ }) as HTMLInputElement;
     expect(payout.disabled).toBe(true);
-    expect(payout.closest("label")!.textContent).toContain("Tez orada (B5.7)");
+    // Ichki bosqich kodi (B5.7) sotuvchiga ko'rsatilmaydi (B6.4, A8).
+    expect(payout.closest("label")!.textContent).toContain("Tez orada");
+    expect(payout.closest("label")!.textContent).not.toContain("B5.7");
     expect(within(list).queryByRole("checkbox", { name: /Qaytish keskin oshdi/ })).toBeNull();
     expect((within(list).getByLabelText("Vaqti: Kunlik xulosa (kechagi buyurtma, tushum, sof foyda, bekorlar)") as HTMLInputElement).value).toBe("09:00");
   });

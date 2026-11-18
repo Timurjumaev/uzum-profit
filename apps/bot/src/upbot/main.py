@@ -57,10 +57,11 @@ class AiogramSender:
         self.bot = bot
 
     async def send(
-        self, chat_id: int, text: str, url: str | None
+        self, chat_id: int, text: str, url: str | None, lang: str = "uz"
     ) -> None:  # pragma: no cover — tarmoq
         try:
-            await self.bot.send_message(chat_id, text, reply_markup=keyboard(url, "uz"))
+            # "Batafsil" tugmasi foydalanuvchi tilida (B6.4, A7).
+            await self.bot.send_message(chat_id, text, reply_markup=keyboard(url, lang))
         except (TelegramForbiddenError, TelegramNotFound) as exc:
             raise service.SendError(type(exc).__name__, permanent=True) from exc
         except TelegramBadRequest as exc:
