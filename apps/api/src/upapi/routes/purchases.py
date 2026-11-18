@@ -113,6 +113,14 @@ class QuickLineIn(BaseModel):
     variant: Annotated[str | None, Field(max_length=200)] = None
     qty: Annotated[int, Field(ge=1, le=10_000_000)]
     line_sum: LineSum = None
+    # TM9.7 (G13): "Tovar qo'limda" — saqlashdan oldin brak (sog' dona = son − brak, F20); boshqa holatda — sanashda.
+    defect: Annotated[int, Field(ge=0, le=10_000_000)] = 0
+
+    @model_validator(mode="after")
+    def _defect(self) -> QuickLineIn:
+        if self.defect > self.qty:
+            raise ValueError("brak kelgan sondan ko'p")
+        return self
 
 
 class QuickPurchaseIn(BaseModel):
@@ -134,6 +142,8 @@ class QuickPurchaseIn(BaseModel):
 
     @model_validator(mode="after")
     def _check(self) -> QuickPurchaseIn:
+        if not self.on_hand and any(x.defect for x in self.lines):
+            raise ValueError('brak — sanashda (yoki "Tovar qo\'limda")')
         if self.paid_amount is not None:
             check_component(
                 {"currency": self.currency, "rate_mode": self.rate_mode, "rate": self.rate}
@@ -627,15 +637,22 @@ async def create_quick_purchase(
     for line in body.lines:
         values = line.model_dump()
         qty = values.pop("qty")
+        defect = values.pop("defect")
         await _resolve_item(ctx, values)
         _check_line(values)
         await _exists(ctx, m.items, values.get("item_id"), "item_not_found")
+        if body.on_hand and values.get("item_id") is not None:
+            # TM9.7 (G13): sanashdagi kabi — tovardagi qadoq qo'shimchasi qatorga nusxalanadi.
+            values["pack_unit_cost"] = await ctx.conn.scalar(
+                select(m.items.c.pack_unit_cost).where(m.items.c.id == values["item_id"])
+            )
         await ctx.conn.execute(
             insert(pl).values(
                 org_id=ctx.org_id,
                 purchase_id=purchase_id,
                 ordered_qty=qty,
                 received_qty=qty if body.on_hand else None,
+                defect_qty=defect,
                 **values,
             )
         )

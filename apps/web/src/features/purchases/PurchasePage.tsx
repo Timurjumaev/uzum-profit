@@ -259,7 +259,9 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
                   {t(p.state === "in_transit" ? "purchases.count.open" : "purchases.count.fix")}
                 </Button>
               )}
-              {p.state === "in_transit" && detail.lines.length > 0 && detail.lines.every((l) => l.received_qty === null) && (
+              {/* TM9.7 (G12): sanalgandan keyin ham — sanalmagan qoldiq (buyurtma − kelgan) yangi xaridga. */}
+              {((p.state === "in_transit" && detail.lines.length > 0 && detail.lines.every((l) => l.received_qty === null)) ||
+                (p.state !== "at_uzum" && !p.refund_amount && detail.lines.some((l) => l.received_qty !== null && l.received_qty < l.ordered_qty))) && (
                 <Button variant="ghost" onClick={() => setEditing({ kind: "split" })}>
                   {t("purchases.split.open")}
                 </Button>

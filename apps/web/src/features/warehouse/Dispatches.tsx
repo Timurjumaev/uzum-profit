@@ -2,6 +2,7 @@
 // (sonni kamaytirish va qatorni olib tashlash mumkin) → "Excel yuklab olish" (Uzum kabineti shablonida). Saqlangan zahoti
 // donalar "Jo'natilmoqda" — Omborimdan band. Postavka Open API'da ko'ringanda o'zi bog'lanadi ("Uzumda"); bir nechta nomzod
 // bo'lsa sotuvchi tanlaydi. Bekor — donalar Omborimga qaytadi. Shtrix-kodi yo'q SKU Excel'ga kirmaydi.
+// TM9.7 (G11): Excel'dagi tannarx tahrirlanadi; taxminiy (F22) — belgi, noma'lum — kiritmasdan saqlanmaydi (0 ketmaydi).
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -23,7 +24,7 @@ import {
   orphanSent,
   shopsQuery,
 } from "../../app/query";
-import { Badge, Banner, Button, EmptyState, NumberInput, Select, Skeleton, useToast } from "../../components/ui";
+import { Badge, Banner, Button, EmptyState, MoneyInput, NumberInput, Select, Skeleton, useToast } from "../../components/ui";
 import { fileName } from "../../components/ui/ExportButton";
 import type { Dispatch } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
@@ -169,13 +170,22 @@ function DraftForm({ orgId, shopId }: { orgId: string; shopId: string }) {
   const draft = useQuery(dispatchDraftQuery(orgId, shopId));
   const [qty, setQty] = useState<Record<string, string | null>>({});
   const [removed, setRemoved] = useState<string[]>([]);
+  const [cost, setCost] = useState<Record<string, string | null>>({});
   const rows = (draft.data?.rows ?? []).filter((r) => !removed.includes(r.sku_id));
   const valueOf = (id: string, max: number) => (qty[id] === undefined ? String(max) : qty[id]);
-  const items = rows.map((r) => ({ sku_id: r.sku_id, qty: Number(valueOf(r.sku_id, r.qty)), max: r.qty }));
-  const valid = items.length > 0 && items.every((x) => Number.isInteger(x.qty) && x.qty >= 1 && x.qty <= x.max);
+  const costOf = (id: string) => {
+    const v = cost[id];
+    return v === undefined || v === null || v === "" ? null : v;
+  };
+  const items = rows.map((r) => ({ sku_id: r.sku_id, qty: Number(valueOf(r.sku_id, r.qty)), max: r.qty, unit_cost: costOf(r.sku_id), unknown: r.unknown ?? false }));
+  const costOk = (x: (typeof items)[number]) => (x.unit_cost === null ? !x.unknown : Number(x.unit_cost) > 0);
+  const valid = items.length > 0 && items.every((x) => Number.isInteger(x.qty) && x.qty >= 1 && x.qty <= x.max && costOk(x));
   const save = useMutation({
     mutationFn: async () => {
-      const out = await createDispatch(orgId, { shop_id: shopId, items: items.map(({ sku_id, qty: n }) => ({ sku_id, qty: n })) });
+      const out = await createDispatch(orgId, {
+        shop_id: shopId,
+        items: items.map(({ sku_id, qty: n, unit_cost }) => ({ sku_id, qty: n, ...(unit_cost !== null ? { unit_cost } : {}) })),
+      });
       try {
         await download(dispatchExcelUrl(orgId, out.id), "uzum-jonatma.xlsx");
       } catch {
@@ -185,6 +195,7 @@ function DraftForm({ orgId, shopId }: { orgId: string; shopId: string }) {
     },
     onSuccess: async () => {
       setQty({});
+      setCost({});
       setRemoved([]);
       toast.show(t("dispatch.saved"), "positive");
       await Promise.all([["inventory"], ["purchases"]].map((k) => client.invalidateQueries({ queryKey: ["orgs", orgId, ...k] })));
@@ -212,12 +223,25 @@ function DraftForm({ orgId, shopId }: { orgId: string; shopId: string }) {
             {rows.map((r) => {
               const name = r.title ?? r.product_title ?? "—";
               return (
-                <li key={r.sku_id}>
+                <li key={r.sku_id} className={r.unknown || r.unit_cost !== null ? "has-cost" : undefined}>
                   <span className="purchase-cell">
                     <strong>{name}</strong>
-                    <span className="caption">{[r.barcode, t("dispatch.inStock", { count: r.qty }), r.unit_cost !== null ? f.money(r.unit_cost) : null].filter(Boolean).join(" · ")}</span>
+                    <span className="caption">
+                      {[r.barcode, t("dispatch.inStock", { count: r.qty }), r.unit_cost !== null && !r.unknown ? `${r.estimated ? "~" : ""}${f.money(r.unit_cost)}` : null].filter(Boolean).join(" · ")}
+                    </span>
+                    {r.unknown ? <Badge tone="warning">{t("dispatch.costUnknown")}</Badge> : r.estimated && <Badge tone="warning">{t("dispatch.costEstimated")}</Badge>}
                   </span>
                   <NumberInput label={t("dispatch.qty")} aria-label={t("dispatch.qtyOf", { name })} value={valueOf(r.sku_id, r.qty)} onValueChange={(v) => setQty((x) => ({ ...x, [r.sku_id]: v }))} digits={0} />
+                  {(r.unknown || r.unit_cost !== null) && (
+                    <MoneyInput
+                      label={t("dispatch.cost")}
+                      aria-label={t("dispatch.costOf", { name })}
+                      help={r.unknown ? t("dispatch.costRequired") : undefined}
+                      optional={!r.unknown}
+                      value={cost[r.sku_id] ?? null}
+                      onValueChange={(v) => setCost((x) => ({ ...x, [r.sku_id]: v }))}
+                    />
+                  )}
                   <Button variant="ghost" onClick={() => setRemoved((x) => [...x, r.sku_id])} aria-label={`${t("dispatch.remove")}: ${name}`}>
                     {t("dispatch.remove")}
                   </Button>

@@ -1,5 +1,6 @@
 // "Xaridni ikkiga bo'lish" (TM4, ADR-061 §6): xarid qismlab keladi — har qatorda "keyin keladi" dona; ular yangi xaridga
 // o'tadi ("Yo'lda" qoladi), chiqimlar dona bo'yicha serverda bo'linadi (F20), keyin tahrirlanadi. Kelgan qism sanaladi.
+// TM9.7 (G12): sanalgandan keyin — faqat sanalmagan qoldiq (buyurtma − kelgan, standart shu son); kargo kelgan qismda.
 import { useMutation } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,13 +13,16 @@ import { lineLabel } from "./ComponentForm";
 
 export function SplitForm({ orgId, detail, onClose, onSaved }: { orgId: string; detail: PurchaseDetail; onClose: () => void; onSaved: (d: PurchaseDetail, newId: string) => void }) {
   const { t } = useTranslation();
-  const [later, setLater] = useState<Record<string, string | null>>({});
-  const moves = detail.lines.map((l) => ({ line: l, qty: Number(later[l.id] ?? 0) })).filter((x) => x.qty > 0);
+  const counted = detail.lines.some((l) => l.received_qty !== null);
+  const restOf = (l: PurchaseDetail["lines"][number]) => (counted ? l.ordered_qty - (l.received_qty ?? 0) : l.ordered_qty);
+  const shown = detail.lines.filter((l) => restOf(l) > 0);
+  const [later, setLater] = useState<Record<string, string | null>>(() => (counted ? Object.fromEntries(shown.map((l) => [l.id, String(restOf(l))])) : {}));
+  const moves = shown.map((l) => ({ line: l, qty: Number(later[l.id] ?? 0) })).filter((x) => x.qty > 0);
   const totalOrdered = detail.lines.reduce((acc, l) => acc + l.ordered_qty, 0);
   const totalMoved = moves.reduce((acc, x) => acc + x.qty, 0);
-  const bad = detail.lines.some((l) => {
+  const bad = shown.some((l) => {
     const v = later[l.id];
-    return v !== undefined && v !== null && v !== "" && (!Number.isInteger(Number(v)) || Number(v) < 0 || Number(v) > l.ordered_qty);
+    return v !== undefined && v !== null && v !== "" && (!Number.isInteger(Number(v)) || Number(v) < 0 || Number(v) > restOf(l));
   });
   const valid = !bad && moves.length > 0 && totalMoved < totalOrdered;
   const save = useMutation({
@@ -47,11 +51,11 @@ export function SplitForm({ orgId, detail, onClose, onSaved }: { orgId: string; 
     >
       <form id="split-form" className="purchase-form" onSubmit={submit}>
         {save.isError && <Banner tone="negative" title={errorText(save.error, t)} />}
-        <p className="caption">{t("purchases.split.hint")}</p>
-        {detail.lines.map((l) => (
+        <p className="caption">{t(counted ? "purchases.split.hintCounted" : "purchases.split.hint")}</p>
+        {shown.map((l) => (
           <NumberInput
             key={l.id}
-            label={`${lineLabel(l)} · ${t("purchases.count.ordered", { count: l.ordered_qty })}`}
+            label={`${lineLabel(l)} · ${counted ? t("purchases.split.rest", { count: restOf(l) }) : t("purchases.count.ordered", { count: l.ordered_qty })}`}
             help={t("purchases.split.later")}
             optional
             value={later[l.id] ?? null}

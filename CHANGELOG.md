@@ -692,6 +692,12 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Tuzatildi
 
+- TM9.7 (ADR-068; 09 §17 G11–G13) Mayda: jo'natma qoralamasida Excel'dagi tannarx tahrirlanadi (ADR-050 "sotuvchi
+  o'zgartira oladi"); lot narxi taxminiy bo'lsa "~" va belgi, noma'lum (yo'q / 0) bo'lsa kiritmasdan saqlanmaydi —
+  Excel'ga 0 ketmaydi (`cost_unknown`); jo'natma qatorida `cost_mark` (`estimated` / `manual`). O'tkazilgan qator manba
+  narxi bilan (qayta hisobdan oldin ham). "Xaridni ikkiga bo'lish" sanalgandan keyin ham — sanalmagan qoldiq yangi xaridga,
+  kargo kelgan qismda; qaytarilgan summa bor xarid bo'linmaydi (`split_refund`). "Tovar qo'limda" — brak saqlashdan oldin,
+  qadoq qo'shimchasi tovardan. Migratsiya 0035 (`fbo_dispatch_items.cost_mark`).
 - TM9.6 (ADR-068 (6), Temur qarori) Umuman kelmagan (yoki hammasi brak) tovarning puli va xarid ichidagi chiqim ulushi
   endi boshqa tovarlar tannarxiga yuklanmaydi — "Kelmagan tovar zarari" (yangi F55), sanash kuniga, foyda hisobida alohida
   qator; xarid sahifasida ogohlantirish. Sotuvchi qaytargan summa o'z qatoriga yoziladi: sanash oynasida kam kelgan qator

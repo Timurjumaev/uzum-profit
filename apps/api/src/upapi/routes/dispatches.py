@@ -51,6 +51,9 @@ class DraftRow(BaseModel):
     barcode: str | None
     qty: int  # Omborimdagi to'liq son
     unit_cost: Decimal | None  # F21 lot narxi (summalar ruxsati bilan)
+    # TM9.7 (G11): lot narxi taxminiy (F22) yoki noma'lum (yo'q / 0) — Excel'ga 0 yozilmaydi, sotuvchi kiritadi.
+    estimated: bool = False
+    unknown: bool = False
 
 
 class DraftOut(BaseModel):
@@ -64,6 +67,9 @@ class DraftOut(BaseModel):
 class DispatchItemIn(BaseModel):
     sku_id: UUID
     qty: Annotated[int, Field(ge=1, le=10_000_000)]
+    # TM9.7 (G11, ADR-050 "sotuvchi o'zgartira oladi"): Excel'dagi tannarx, so'm/dona. Berilmasa — F21 lot narxi;
+    # lot narxi noma'lum bo'lsa — majburiy. Aniq narxni almashtirish — summalar ruxsati bilan.
+    unit_cost: Annotated[Decimal | None, Field(gt=0, max_digits=16, decimal_places=2)] = None
 
 
 class DispatchIn(BaseModel):
@@ -78,6 +84,7 @@ class DispatchItemOut(BaseModel):
     barcode: str | None
     qty: int
     unit_cost: Decimal | None
+    cost_mark: str | None = None  # TM9.7: ``estimated`` / ``manual`` / bo'sh — aniq lot narxi
 
 
 class InvoiceOut(BaseModel):
@@ -181,6 +188,7 @@ async def _dispatches(ctx: OrgContext, only: UUID | None = None) -> list[Dispatc
                     barcode=x.barcode,
                     qty=x.qty,
                     unit_cost=x.unit_cost if amounts else None,
+                    cost_mark=x.cost_mark,
                 )
                 for x in items.get(r.id, [])
             ],
@@ -215,7 +223,7 @@ async def _shop(ctx: OrgContext, shop_id: UUID) -> None:
 
 
 async def _draft(ctx: OrgContext, shop_id: UUID, amounts: bool) -> DraftOut:
-    current = await stock(ctx, amounts)
+    current = await stock(ctx, True)  # noma'lum / taxminiy belgisi — summalar ruxsatisiz rolda ham
     rows: list[DraftRow] = []
     missing: list[DraftRow] = []
     for r in current.items:
@@ -227,7 +235,9 @@ async def _draft(ctx: OrgContext, shop_id: UUID, amounts: bool) -> DraftOut:
             product_title=r.product_title,
             barcode=r.barcode,
             qty=r.qty,
-            unit_cost=r.unit_cost,
+            unit_cost=r.unit_cost if amounts else None,
+            estimated=r.estimated and r.unit_cost is not None and r.unit_cost > 0,
+            unknown=r.unit_cost is None or r.unit_cost <= 0,
         )
         (rows if r.barcode else missing).append(row)
     from upapi.reports.common import sku_catalog
@@ -269,8 +279,8 @@ async def create_dispatch(body: DispatchIn, ctx: Manager) -> DispatchOut:
             raise AppError(
                 "bad_dispatch", 422, detail=f"Omborimda {available[x.sku_id].qty} dona bor"
             )
+    costs = _costs(ctx, body, available)
     d, di = m.fbo_dispatches, m.fbo_dispatch_items
-    costs = {r.sku_id: r.unit_cost for r in draft.rows}
     dispatch_id = await ctx.conn.scalar(
         insert(d).values(org_id=ctx.org_id, shop_id=body.shop_id, note=body.note).returning(d.c.id)
     )
@@ -281,12 +291,40 @@ async def create_dispatch(body: DispatchIn, ctx: Manager) -> DispatchOut:
                 dispatch_id=dispatch_id,
                 sku_id=x.sku_id,
                 qty=x.qty,
-                unit_cost=costs.get(x.sku_id),
+                unit_cost=costs[x.sku_id][0],
+                cost_mark=costs[x.sku_id][1],
                 barcode=available[x.sku_id].barcode,
             )
         )
     await ctx.audit("dispatch.create", "dispatch", dispatch_id, after=_plain(body.model_dump()))
     return (await _dispatches(ctx, dispatch_id))[0]
+
+
+def _costs(
+    ctx: OrgContext, body: DispatchIn, available: dict[UUID, DraftRow]
+) -> dict[UUID, tuple[Decimal, str | None]]:
+    """TM9.7 (G11): Excel'dagi tannarx — sotuvchi kiritgani (``manual``) yoki F21 lot narxi (taxminiy — ``estimated``).
+    Noma'lum (lot yo'q yoki 0) narx Excel'ga 0 bo'lib ketmaydi — kiritilmasa rad (``cost_unknown``)."""
+    out: dict[UUID, tuple[Decimal, str | None]] = {}
+    unknown: list[str] = []
+    for x in body.items:
+        row = available[x.sku_id]
+        if x.unit_cost is not None:
+            if not row.unknown and not _amounts(ctx):
+                raise AppError("forbidden", 403, detail="view_purchase_amounts")
+            out[x.sku_id] = (x.unit_cost, "manual")
+        elif row.unknown or row.unit_cost is None:  # ``available`` — summalar bilan qurilgan
+            unknown.append(row.title or row.barcode or str(x.sku_id))
+        else:
+            out[x.sku_id] = (row.unit_cost, "estimated" if row.estimated else None)
+    if unknown:
+        raise AppError(
+            "cost_unknown",
+            422,
+            detail="tannarx noma'lum — Excel'ga 0 yozilmaydi, tannarxni kiriting: "
+            + ", ".join(unknown),
+        )
+    return out
 
 
 @router.get("/orgs/{org_id}/dispatches", response_model=DispatchesOut)
