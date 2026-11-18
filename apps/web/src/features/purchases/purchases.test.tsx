@@ -223,6 +223,7 @@ describe("xarid sahifasi", () => {
     expect(norm(path.textContent!)).toContain("kutilmoqda ~28.10");
     const lines = screen.getByRole("table", { name: "Partiyadagi tovarlar" });
     expect(within(lines).getByText("kamomad 2")).toBeTruthy();
+    expect(within(lines).getByText("MASHINA-QIZIL-3839 · SKU ID 11706316")).toBeTruthy();
     expect(within(lines).getByText("qabul qilinmagan")).toBeTruthy();
     expect(within(lines).getByRole("link", { name: /Havola/ }).getAttribute("href")).toBe("https://detail.1688.com/offer/1.html");
     const comps = screen.getByRole("table", { name: "Xarajat komponentlari" });

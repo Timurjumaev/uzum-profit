@@ -3250,6 +3250,10 @@ export interface components {
             refund_amount?: string | null;
             /** Missing Loss */
             missing_loss?: string | null;
+            /** Sku Code */
+            sku_code?: string | null;
+            /** Sku External Id */
+            sku_external_id?: number | null;
         };
         /** LinePatch */
         LinePatch: {

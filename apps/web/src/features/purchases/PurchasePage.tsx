@@ -41,6 +41,12 @@ export function PurchasePage() {
   return <PurchaseView orgId={org.id} detail={query.data} canManage={MANAGE_ROLES.includes(org.role)} />;
 }
 
+/** Tovar rasmi (Uzum kabineti kabi kichik kvadrat); rasm yo'q yoki yuklanmasa — bo'sh joy saqlanadi. */
+function LineThumb({ src }: { src: string | null }) {
+  const [bad, setBad] = useState(false);
+  return src && !bad ? <img className="line-cell__img" src={src} alt="" loading="lazy" onError={() => setBad(true)} /> : <span className="line-cell__img line-cell__img--empty" aria-hidden />;
+}
+
 function BackLink() {
   const { t } = useTranslation();
   return (
@@ -92,25 +98,32 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
   const amounts = detail.amounts;
   const est = (flags: string[]) => (isEstimated(flags) ? "~" : "");
 
+  const skuLine = (l: PurchaseLine) =>
+    [l.sku_code, l.variant, l.sku_external_id != null ? t("purchases.lines.skuId", { id: l.sku_external_id }) : null].filter(Boolean).join(" · ");
   const lineColumns: Column<PurchaseLine>[] = [
     {
       key: "item",
       header: t("purchases.lines.col.item"),
       render: (l) => (
-        <span className="purchase-cell">
-          <span className="purchase-cell__title">{l.item_name ?? l.temp_name ?? "—"}</span>
-          {l.variant && <span className="caption">{l.variant}</span>}
-          {l.item_id === null && <span className="caption">{t("purchases.lines.noSkuHint")}</span>}
-          {l.source_line_id && (
-            <span className="caption">
-              {t("purchases.lines.transferred")} <Link to="/warehouse">{t("warehouse.title")}</Link>
+        <span className="line-cell">
+          <LineThumb src={l.image_url ?? l.item_image} />
+          <span className="line-cell__text">
+            <span className="line-cell__title" title={l.item_name ?? l.temp_name ?? undefined}>
+              {l.item_name ?? l.temp_name ?? "—"}
             </span>
-          )}
-          {l.url && (
-            <a href={l.url} target="_blank" rel="noreferrer noopener" className="caption">
-              {t("purchases.lines.link")} <ExternalLink size={12} aria-hidden />
-            </a>
-          )}
+            {skuLine(l) && <span className="line-cell__sku">{skuLine(l)}</span>}
+            {l.item_id === null && <span className="line-cell__sku">{t("purchases.lines.noSkuHint")}</span>}
+            {l.source_line_id && (
+              <span className="line-cell__sku">
+                {t("purchases.lines.transferred")} <Link to="/warehouse">{t("warehouse.title")}</Link>
+              </span>
+            )}
+            {l.url && (
+              <a href={l.url} target="_blank" rel="noreferrer noopener" className="line-cell__sku">
+                {t("purchases.lines.link")} <ExternalLink size={12} aria-hidden />
+              </a>
+            )}
+          </span>
         </span>
       ),
     },
@@ -296,7 +309,7 @@ function PurchaseView({ orgId, detail, canManage }: { orgId: string; detail: Pur
 
       <div className="purchase__layout">
         <div className="purchase__main">
-          <section aria-labelledby="purchase-lines-title" className="purchase__block">
+          <section aria-labelledby="purchase-lines-title" className="purchase__block purchase__lines">
             <div className="purchase__section-head">
               <h2 id="purchase-lines-title" className="h3">
                 {t("purchases.lines.title")}

@@ -13408,6 +13408,28 @@
               }
             ],
             "title": "Missing Loss"
+          },
+          "sku_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku Code"
+          },
+          "sku_external_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sku External Id"
           }
         },
         "type": "object",

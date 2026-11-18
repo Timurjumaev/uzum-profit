@@ -1704,6 +1704,7 @@ export const uzLatn = {
       notReceived: "qabul qilinmagan",
       shortage: "kamomad {{count}}",
       link: "Havola",
+      skuId: "SKU ID {{id}}",
       mode: { item: "Uzumdagi tovar (SKU)", new: "Yangi tovar" },
       item: "Tovar",
       pickItem: "SKU qidiring: nom, rang, artikul",
