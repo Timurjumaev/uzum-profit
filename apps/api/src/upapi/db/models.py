@@ -513,6 +513,8 @@ receiving_diffs = tenant(
     Column("unit_cost", UZS),
     Column("compensation", UZS),
     Column("closed_on", Date),
+    # TM9.4: partiyadan chiqqan qiymat (tannarx dvigateli yozadi) — F52 shundan.
+    Column("lot_cost", UZS),
     Column("note", Text),
     check_in("resolution", ("lost", "miscount", "found", "recount")),
     CheckConstraint(

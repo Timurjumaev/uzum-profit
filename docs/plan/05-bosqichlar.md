@@ -1034,8 +1034,13 @@ Omborim soniga tayanadi). Har biri — alohida PR, testlar bilan; 02 (M10, F33, 
   `dispatch_accepted` — qabul qilingan postavka jo'natmasini bekor qilish / bog'lanishni olib tashlash. "Farqi hal qilingan"
   dona — bog'langan jo'natma orqali himoyada. Omborimda manfiy qoldiq — `broken` ("xato" belgisi), `realcheck` → `supply`.
   Testlar: API (`test_integrity.py`, M10 tenglamasi har SKU uchun), web.
-- [ ] TM9.4 **F52 va lot daftari** (G6; avval kod bilan tasdiqlanadi): "Zarar deb yopildi" / "Kompensatsiya qilindi" da
-  yo'qolgan dona partiyadan chiqadi (F51 dagi kabi), "Topildi" da qaytadi — zarar ham, tannarx ham bir marta.
+- [x] TM9.4 **F52 va lot daftari** (G6; avval kod bilan tasdiqlanadi): "Zarar deb yopildi" / "Kompensatsiya qilindi" da
+  yo'qolgan dona partiyadan chiqadi (F51 dagi kabi), "Topildi" da qaytadi — zarar ham, tannarx ham bir marta. ✓ 2026-11-18:
+  kodda tasdiqlandi (G6 haqiqiy: `calc/costs.py` faqat `stock_moves` ni olardi, kamomad holati qayta hisob so'ramasdi).
+  `calc.costs` — yopilgan (`written_off` / `compensated`) kamomad `WriteOff` hodisasi (yopilgan kun); qiymat migratsiya 0033
+  `receiving_diffs.lot_cost` ga; F52 (`upcore.purchasing.receiving_loss`, `lot_cost`) — shundan; `PATCH
+  /receiving/shortages/{id}` — tovar qayta hisobi. Testlar: yadro, API (`test_receiving_lots.py` — keyingi sotuv tannarxi,
+  "Topildi" — qaytadi).
 - [x] TM9.5 **Jim xatolar** (G7, G8): trekli kargo puli — xaridda "Kargo" bor bo'lsa rad (`cargo_twice`), qayta yuborish
   takror yozmaydi; tovar summasi kiritilmagan xarid — yangi F22 belgisi "tovar summasi kiritilmagan" (taxminiy),
   xarid sahifasida va "Diqqat"da. ✓ 2026-11-17: `POST /cargo-pool/tracked` — xaridda "Kargo"

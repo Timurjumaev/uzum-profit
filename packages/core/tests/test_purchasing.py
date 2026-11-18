@@ -905,3 +905,10 @@ def test_arrival_ready_date_and_state() -> None:
     assert path[1].on == came and path[1].uncounted
     path = supply_path({**dates, Stage.RECEIVED: counted}, date(2026, 10, 10), arrived=came)
     assert path[1].on == came and not path[1].uncounted
+
+
+def test_receiving_loss_uses_lot_cost_when_known() -> None:
+    """TM9.4: F52 — partiyadan chiqqan qiymat (FIFO) berilsa shundan, kompensatsiya ayiriladi."""
+    assert receiving_loss(2, uzs(15_000), None, uzs(20_000)) == uzs(20_000)
+    assert receiving_loss(2, uzs(15_000), uzs(5_000), uzs(20_000)) == uzs(15_000)
+    assert receiving_loss(2, uzs(15_000), uzs(25_000), uzs(20_000)) == uzs(0)
