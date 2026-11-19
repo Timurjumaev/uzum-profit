@@ -62,6 +62,9 @@ class InventorySettings:
     xyz_y: Decimal = Decimal("0.5")
     illiquid_days: int = 180  # F30
     slow_days: int = 90
+    unsold_days: int = (
+        30  # F30: hech sotilmagan tovar Uzumda birinchi ko'ringanidan shuncha kundan keyin nelikvid
+    )
     lead_history: int = 5  # F25: oxirgi 5 xarid medianasi
     lost_recent_supply_days: int = 3  # F31
     storage_free_days: int = 60  # F43/F54: Uzum 60 kundan oshgan aylanmaga saqlash haqi oladi
@@ -570,12 +573,19 @@ def liquidity(
     last_sale: date | None,
     as_of: date,
     s: InventorySettings = DEFAULT,
+    *,
+    first_seen: date | None = None,
 ) -> Liquidity | None:
     """F30. Nelikvid = qoldiq > 0, tezlik 0 va (hech sotilmagan yoki oxirgi sotuvdan > 180 kun);
-    "Sekin" = oxirgi sotuvdan 90–180 kun."""
+    "Sekin" = oxirgi sotuvdan 90–180 kun.
+
+    Hech sotilmagan tovar birinchi kundan nelikvid emas (kecha kelgan yangi tovar ham): ``first_seen`` — Uzumda birinchi
+    ko'ringan kun; undan ``s.unsold_days`` (30) o'tmaguncha yoki kun noma'lum bo'lsa — ``None`` (raqam o'ylab topilmaydi)."""
     if stock <= 0 or to_decimal(speed) > 0:
         return None
     if last_sale is None:
+        if first_seen is None or (as_of - first_seen).days < s.unsold_days:
+            return None
         return Liquidity.ILLIQUID
     idle = (as_of - last_sale).days
     if idle > s.illiquid_days:

@@ -548,7 +548,7 @@ yo'lda / o'z omborim — xarid bosqichidan.)
 **F29. Muzlagan pul** = Σ qoldiq × lot narxi (joylar bo'yicha). O'rtacha sotilish muddati = Σ (zaxira kunlari ×
 qiymat) / Σ qiymat.
 
-**F30. Nelikvid** = qoldiq > 0, tezlik 0 va (hech sotilmagan yoki oxirgi sotuvdan > 180 kun). "Sekin" = 90–180 kun.
+**F30. Nelikvid** = qoldiq > 0, tezlik 0 va (hech sotilmagan **va Uzumda birinchi ko'ringanidan ≥ 30 kun** yoki oxirgi sotuvdan > 180 kun). "Sekin" = 90–180 kun. Kecha kelgan yangi tovar nelikvid emas; birinchi ko'ringan kun noma'lum bo'lsa — belgi qo'yilmaydi.
 
 **F31. Yo'qolgan tovar** (SKU): kutilgan qoldiq = (FBO'ga qabul qilingan + FBS jo'natilgan) − sotilgan −
 (qaytarilgan + FBS qaytgan + brak); farq = max(0, kutilgan − omborda); yo'qolgan = max(0, farq − min(qaytish

@@ -574,7 +574,9 @@ async def load_stock(
             status=status,
             abc=cls,
             xyz=xyz_class(weekly_sales(days, as_of)),
-            liquidity=liquidity(stock, v.value, last_sale, as_of),
+            liquidity=liquidity(
+                stock, v.value, last_sale, as_of, inv, first_seen=first_snap.get(r.id)
+            ),
             last_sale=last_sale,
             sold_30d=sum(x.sold for x in days if x.day >= as_of - timedelta(days=ABC_DAYS - 1)),
             china=china,

@@ -1183,7 +1183,7 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
     yuboriladigan) / F23 > 60 kun bo'lsa ogohlantirish — Uzum 60 kundan oshgan aylanmaga saqlash haqi oladi (F43).
     Jo'natish qoralamasida (TM6) "Tavsiya bo'yicha to'ldirish" tugmasi; standart — to'liq son (ADR-061 §7) o'zgarmaydi.
 - [→] B5.3 (**ko'chdi → TM6, TM7**, ADR-061; qoldig'i — "Uzumga yuborish rejasi" — **B5.2** da, ADR-063.)
-- [ ] B5.4 **Yo'qotishlar** (F30–F34; D5) + bosh sahifa bloki (B5.0a). F29 muzlagan pul — ✓ B4 da (Asosiy, Ombor).
+- [→] B5.4 **Yo'qotishlar** (F30–F34; D5) + bosh sahifa bloki (B5.0a). F29 muzlagan pul — ✓ B4 da (Asosiy, Ombor).
   - `realcheck lost` (avval): har SKU uchun balans farqi, uning vaqt bo'yicha barqarorligi, `quantityMissing`, real
     "[Kompensatsiya]" qatorlari summasi ↔ F32.
   - **F31 qayta yoziladi.** (a) Hozirgi "butun tarix bo'yicha qabul qilingan − sotilgan" tarixi cheklangan do'konda
@@ -1195,7 +1195,7 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
     (`Себестоимость`, 08 §4) — real qatorlar bilan; tasdiqlanmaguncha summa ko'rsatilmaydi.
   - Yo'qolgan tovar **TM7 kamomad ro'yxatiga** tushadi (manba: "qabul farqi" / "omborda yo'qoldi"; holatlar va F52 bir
     xil) — ikkinchi ro'yxat qilinmaydi.
-  - **F30 tuzatiladi:** hozir hech sotilmagan tovar birinchi kundan "nelikvid" (kecha kelgan yangi tovar ham) — shart:
+  - [x] ✓ 2026-11-19 **F30** (1-qadam): `liquidity(..., first_seen=)`, `InventorySettings.unsold_days=30`; qolgani — saqlash xarajati (F43) yonida ko'rsatish. (Eski matn:) hozir hech sotilmagan tovar birinchi kundan "nelikvid" (kecha kelgan yangi tovar ham) — shart:
     Uzumda birinchi ko'ringanidan ≥ 30 kun (sozlanadi); yonida muzlagan summa va shu SKU'ning pullik saqlash xarajati (F43).
   - **F34:** "faol SKU" ta'rifi — tugashdan oldin F23 > 0 va tovar to'xtatilmagan (yo'lda / omborimda bor yoki 90 kun
     ichida qaytgan); bitta tugab qolish uchun ko'pi bilan 90 kun; SKU sahifasida va Omborda.
