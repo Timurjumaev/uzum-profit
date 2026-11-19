@@ -550,3 +550,27 @@ def test_stock_fields_report(db: dict[str, str]) -> None:
     sales = {r["status"]: r for r in stock["sales_last_60d_by_status"]}
     assert set(sales) == {"PROCESSING", "TO_WITHDRAW"}  # 100 kun oldingi sotuv oynadan tashqarida
     assert json.dumps(report, default=rc._json)  # JSON'ga yoziladi
+
+
+def test_lost_check_gap_stability_missing_and_compensation(db: dict[str, str]) -> None:
+    """B5.4: `lost` bo'limi — balans farqi, uning barqarorligi, `quantityMissing` va kompensatsiya qatorlari; faqat sonlar."""
+    fake = seller(shops=BOTH)
+    _, report = synced(db, fake)
+    lost = shop(report, A)["checks"]["lost"]
+    assert lost["skus"] >= 1
+    gap = lost["gap"]
+    assert set(gap["buckets"]) == {"1-2", "3-9", "10+"}
+    assert gap["positive"] == sum(gap["buckets"].values())
+    assert set(gap["stable_vs_days_ago"]) == {"14", "30"}
+    assert set(lost["quantity_missing"]) == {"skus", "units"}
+    assert set(lost["compensation"]) == {"rows", "amount", "codes"}
+    for row in lost["top"]:
+        assert row["gap"] > 0 and {
+            "accepted",
+            "sold",
+            "on_hand",
+            "gap_14d_ago",
+            "gap_30d_ago",
+        } <= set(row)
+        assert not {"title", "name", "token"} & set(row)  # nom va sirlar yo'q
+    json.dumps(report, default=rc._json)  # JSON'ga o'tadi

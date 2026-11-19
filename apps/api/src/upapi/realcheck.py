@@ -946,6 +946,142 @@ async def stock_check(conn: AsyncConnection, shop: UUID, now: datetime) -> dict[
     }
 
 
+LOST_DAYS = (0, 14, 30)  # balans farqi shu kunlar oldin ham hisoblanadi (barqarorlik)
+LOST_TOP = 40
+
+
+async def lost_check(conn: AsyncConnection, shop: UUID, now: datetime) -> dict[str, Any]:
+    """B5.4 (F31/F32 o'lchovi, 05 "realcheck lost"): yo'qolgan tovar signali ishlaydimi — real ma'lumotda o'lchash.
+
+    - **balans** — har SKU: qabul qilingan (postavka ``quantityAccepted``) − sotilgan − qaytarilgan − brak − omborda (FBO + FBS)
+      (SKU hisoblagichlari: ``quantitySold`` / ``quantityReturned`` / ``quantityDefected``); farq > 0 — shubhali;
+    - **barqarorlik** — farq oldingi 14 / 30 kun oldin (snapshot qoldig'i va kunlik sotuv / qaytish yig'indisi bilan, brak
+      — hozirgi) ham hisoblanadi: farq vaqt bo'yicha o'zgarmay tursa — haqiqiy yo'qotish, o'zgarib tursa — shovqin;
+    - ``quantityMissing`` — Uzumning o'z maydoni (> 0 — to'g'ridan-to'g'ri signal);
+    - **kompensatsiya** — xarajatlardagi "kompensatsiya" matnli qatorlar (soni, summasi, namuna kodlari) — F32 (Uzum sotuv
+      narxidanmi yoki postavkadagi tannarxdanmi) shu qatorlar bilan tasdiqlanadi.
+    Faqat sonlar va SKU identifikatorlari — nom, kalit va shaxsiy ma'lumot yo'q."""
+    today = now.astimezone(TASHKENT).date()
+    rows = (
+        await conn.execute(
+            text(
+                "SELECT k.id, k.external_id, "
+                "coalesce((k.raw ->> 'quantitySold')::int, k.qty_sold, 0) AS sold, "
+                "coalesce((k.raw ->> 'quantityReturned')::int, k.qty_returned, 0) AS returned, "
+                "coalesce((k.raw ->> 'quantityDefected')::int, k.qty_defected, 0) AS defected, "
+                "coalesce(k.qty_active, 0) + coalesce(k.qty_fbs, 0) AS on_hand, "
+                "coalesce((k.raw ->> 'quantityMissing')::int, 0) AS missing, "
+                "coalesce((SELECT sum(i.quantity_accepted) FROM fbo_invoice_items i "
+                "         WHERE i.sku_id = k.id), 0) AS accepted "
+                "FROM mp_skus k WHERE k.shop_id = :s"
+            ),
+            {"s": shop},
+        )
+    ).all()
+    gaps = {r.id: r.accepted - r.sold - r.returned - r.defected - r.on_hand for r in rows}
+    earlier: dict[int, dict[UUID, int]] = {}
+    for back in LOST_DAYS[1:]:
+        day = today - timedelta(days=back)
+        snap = {
+            r.sku_id: (r.qty_active or 0) + (r.qty_fbs or 0)
+            for r in await conn.execute(
+                text(
+                    "SELECT DISTINCT ON (d.sku_id) d.sku_id, d.qty_active, d.qty_fbs FROM sku_daily d "
+                    "JOIN mp_skus k ON k.id = d.sku_id WHERE k.shop_id = :s AND d.day <= :d "
+                    "ORDER BY d.sku_id, d.day DESC"
+                ),
+                {"s": shop, "d": day},
+            )
+        }
+        later = {
+            r.sku_id: (r.units, r.returns)
+            for r in await conn.execute(
+                text(
+                    "SELECT sku_id, sum(units) AS units, sum(returns) AS returns FROM daily_sku_metrics "
+                    "WHERE shop_id = :s AND day > :d GROUP BY sku_id"
+                ),
+                {"s": shop, "d": day},
+            )
+        }
+        earlier[back] = {
+            r.id: r.accepted
+            - (r.sold - later.get(r.id, (0, 0))[0])
+            - (r.returned - later.get(r.id, (0, 0))[1])
+            - r.defected
+            - snap[r.id]
+            for r in rows
+            if r.id in snap
+        }
+    suspicious = [r for r in rows if gaps[r.id] > 0]
+    suspicious.sort(key=lambda r: (-gaps[r.id], str(r.id)))
+    stable = {
+        back: sum(1 for r in suspicious if r.id in e and abs(e[r.id] - gaps[r.id]) <= 1)
+        for back, e in earlier.items()
+    }
+    comp = (
+        await conn.execute(
+            text(
+                "SELECT count(*) AS n, coalesce(sum(amount), 0) AS amount FROM mp_expenses "
+                "WHERE shop_id = :s AND (raw_code ILIKE '%ompens%' OR raw::text ILIKE '%ompens%')"
+            ),
+            {"s": shop},
+        )
+    ).one()
+    comp_rows = await conn.execute(
+        text(
+            "SELECT coalesce(raw_code, '<null>') AS code, raw ->> 'source' AS source, "
+            "count(*) AS n, sum(amount) AS amount FROM mp_expenses WHERE shop_id = :s "
+            "AND (raw_code ILIKE '%ompens%' OR raw::text ILIKE '%ompens%') GROUP BY 1, 2 "
+            "ORDER BY 3 DESC LIMIT :n"
+        ),
+        {"s": shop, "n": SAMPLE},
+    )
+    return {
+        "skus": len(rows),
+        "first_snapshot_on": await conn.scalar(
+            text(
+                "SELECT min(d.day) FROM sku_daily d JOIN mp_skus k ON k.id = d.sku_id WHERE k.shop_id = :s"
+            ),
+            {"s": shop},
+        ),
+        "gap": {
+            "positive": len(suspicious),
+            "negative": sum(1 for r in rows if gaps[r.id] < 0),
+            "positive_units": sum(gaps[r.id] for r in suspicious),
+            "buckets": {
+                "1-2": sum(1 for r in suspicious if gaps[r.id] <= 2),
+                "3-9": sum(1 for r in suspicious if 3 <= gaps[r.id] <= 9),
+                "10+": sum(1 for r in suspicious if gaps[r.id] >= 10),
+            },
+            "stable_vs_days_ago": {str(b): n for b, n in stable.items()},
+        },
+        "quantity_missing": {
+            "skus": sum(1 for r in rows if r.missing > 0),
+            "units": sum(r.missing for r in rows),
+        },
+        "top": [
+            {
+                "sku_id": r.id,
+                "external_id": r.external_id,
+                "accepted": r.accepted,
+                "sold": r.sold,
+                "returned": r.returned,
+                "defected": r.defected,
+                "on_hand": r.on_hand,
+                "missing": r.missing,
+                "gap": gaps[r.id],
+                **{f"gap_{b}d_ago": earlier[b].get(r.id) for b in earlier},
+            }
+            for r in suspicious[:LOST_TOP]
+        ],
+        "compensation": {
+            "rows": comp.n,
+            "amount": money(comp.amount),
+            "codes": [{**dict(r._mapping), "amount": money(r.amount)} for r in comp_rows],
+        },
+    }
+
+
 async def sync_check(conn: AsyncConnection, shop: UUID, since: datetime) -> dict[str, Any]:
     rows = await conn.execute(
         text(
@@ -1067,6 +1203,7 @@ async def shop_report(
             "logistics_payout": await logistics_payout_check(conn, shop.id),
             "expenses": await expenses_check(conn, shop.id),
             "stock": await stock_check(conn, shop.id, now),
+            "lost": await lost_check(conn, shop.id, now),
         },
         "sync": await sync_check(conn, shop.id, since),
     }

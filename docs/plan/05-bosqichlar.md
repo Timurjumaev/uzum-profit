@@ -1184,7 +1184,7 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
     Jo'natish qoralamasida (TM6) "Tavsiya bo'yicha to'ldirish" tugmasi; standart — to'liq son (ADR-061 §7) o'zgarmaydi.
 - [→] B5.3 (**ko'chdi → TM6, TM7**, ADR-061; qoldig'i — "Uzumga yuborish rejasi" — **B5.2** da, ADR-063.)
 - [→] B5.4 **Yo'qotishlar** (F30–F34; D5) + bosh sahifa bloki (B5.0a). F29 muzlagan pul — ✓ B4 da (Asosiy, Ombor).
-  - `realcheck lost` (avval): har SKU uchun balans farqi, uning vaqt bo'yicha barqarorligi, `quantityMissing`, real
+  - [x] `realcheck lost` ✓ 2026-11-19 (kod; **natija Temurdan kutilmoqda** — F31/F32 qarorlari shundan keyin): har SKU uchun balans farqi, uning vaqt bo'yicha barqarorligi, `quantityMissing`, real
     "[Kompensatsiya]" qatorlari summasi ↔ F32.
   - **F31 qayta yoziladi.** (a) Hozirgi "butun tarix bo'yicha qabul qilingan − sotilgan" tarixi cheklangan do'konda
     ishlamaydi (byDurii — 2026-07-14 dan): langar — boshlang'ich holat kuni (F41) yoki birinchi snapshot qoldig'i, balans
