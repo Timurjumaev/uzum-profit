@@ -1162,7 +1162,7 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
   - Yetkazib beruvchi — tez xarid oynasida ixtiyoriy maydon (jadval va `/suppliers` API bor; M9 da va'da qilingan, oynada
     yo'q). **Qilinmaydi:** kargo kompaniyalari ma'lumotnomasi ekrani (ADR-061 §9: ixtiyoriy maydon — bor), yetkazib
     beruvchi / kargo kartochkasida qo'lda "o'rtacha muddat" (`avg_prep_days`, `avg_transit_days` — o'rganiladi).
-- [→] B5.2 **Buyurtma rejasi va Uzumga yuborish rejasi** (F23–F27, F54; D4 — asosiy ustunlik). Bor: Omborda tavsiya
+- [x] B5.2 **Buyurtma rejasi va Uzumga yuborish rejasi** (F23–F27, F54; D4 — asosiy ustunlik). Bor: Omborda tavsiya
   miqdor, buyurtma sanasi, bitta tovar uchun "Xarid yaratish". Qoladi:
   - [x] Tovar darajasida reja (1-qadam): bir tovar bir necha SKU'da bo'lsa talab, qoldiq va yo'ldagi dona — SKU'lar
     yig'indisi, joylar bir marta (`upcore.inventory.item_reorder`, `reports/stock.py::_item_level`); tavsiya SKU'larga
@@ -1175,8 +1175,9 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
     yuqoriga yaxlitlanadi (tovar darajasidagi reja ham).
   - [x] **Uzumga yuborish rejasi — hisob** (4-qadam, Temur 2026-11-19: maqsad qamrov **dinamik, ABC sinfi bo'yicha**, standarti
     yo'q): `upcore.inventory.ship_plan` (F54), Sozlamalarda "Uzumda maqsad zaxira" (A/B/C, to'liq yoki bo'sh), Omborda "Yuborish
-    rejasi: N dona" va 60 kun ogohlantirishi; ko'p SKU'li tovarda omborimdagi dona SKU'lar orasida bir marta. **Qoldi:** quyidagi
-    "Tavsiya bo'yicha to'ldirish" tugmasi (jo'natma qoralamasida).
+    rejasi: N dona" va 60 kun ogohlantirishi; ko'p SKU'li tovarda omborimdagi dona SKU'lar orasida bir marta.
+  - [x] 5-qadam: jo'natma qoralamasida "Tavsiya bo'yicha to'ldirish" (`DraftRow.plan_qty`): rejasi bor qatorga reja miqdori, reja 0
+    (Uzumda yetarli) — qoralamadan olinadi ("qaytarish" bilan tiklanadi), rejasiz qator o'zgarmaydi; standart — to'liq son.
   - **Uzumga yuborish rejasi** (avval B5.3 qoldig'i) — yangi formula **F54**: yuborish = min(Omborimda, max(0, F23 ×
     (topshirish muddati + maqsad qamrov) − (Uzum qoldig'i + postavkada))); maqsad qamrov sozlanadi; (Uzumdagi +
     yuboriladigan) / F23 > 60 kun bo'lsa ogohlantirish — Uzum 60 kundan oshgan aylanmaga saqlash haqi oladi (F43).

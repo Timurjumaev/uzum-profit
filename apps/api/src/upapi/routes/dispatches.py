@@ -28,6 +28,8 @@ from upapi.auth.permissions import Permission
 from upapi.db import models as m
 from upapi.errors import AppError
 from upapi.reports import dispatch, linking
+from upapi.reports.common import today
+from upapi.reports.stock import SkuStock, load_stock
 from upapi.reports.xlsx import XLSX_TYPE
 from upapi.routes.purchases import _amounts, _plain
 from upapi.routes.warehouse import stock
@@ -54,6 +56,9 @@ class DraftRow(BaseModel):
     # TM9.7 (G11): lot narxi taxminiy (F22) yoki noma'lum (yo'q / 0) — Excel'ga 0 yozilmaydi, sotuvchi kiritadi.
     estimated: bool = False
     unknown: bool = False
+    # B5.2 (F54): "Tavsiya bo'yicha to'ldirish" — yuborish rejasi, omborimdagi sondan oshmaydi; ``0`` — Uzumda yetarli;
+    # ``None`` — reja yo'q (maqsad qamrov sozlanmagan yoki tezlik 0). Standart miqdor o'zgarmaydi: to'liq son (ADR-061 §7).
+    plan_qty: int | None = None
 
 
 class DraftOut(BaseModel):
@@ -222,10 +227,17 @@ async def _shop(ctx: OrgContext, shop_id: UUID) -> None:
         raise AppError("shop_not_found", 404)
 
 
+def _plan_qty(stock_row: SkuStock | None, own: int) -> int | None:
+    """F54 yuborish rejasi, omborimdagi sondan oshmaydi; reja yo'q — ``None``."""
+    plan = stock_row.ship_plan if stock_row is not None else None
+    return None if plan is None else min(plan.qty, own)
+
+
 async def _draft(ctx: OrgContext, shop_id: UUID, amounts: bool) -> DraftOut:
     current = await stock(ctx, True)  # noma'lum / taxminiy belgisi — summalar ruxsatisiz rolda ham
     rows: list[DraftRow] = []
     missing: list[DraftRow] = []
+    plans = (await load_stock(ctx.conn, [shop_id], today())).skus
     for r in current.items:
         if r.sku_id is None or r.shop_id != shop_id or r.qty <= 0:
             continue
@@ -238,6 +250,7 @@ async def _draft(ctx: OrgContext, shop_id: UUID, amounts: bool) -> DraftOut:
             unit_cost=r.unit_cost if amounts else None,
             estimated=r.estimated and r.unit_cost is not None and r.unit_cost > 0,
             unknown=r.unit_cost is None or r.unit_cost <= 0,
+            plan_qty=_plan_qty(plans.get(r.sku_id), r.qty),
         )
         (rows if r.barcode else missing).append(row)
     from upapi.reports.common import sku_catalog
