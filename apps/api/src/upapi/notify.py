@@ -217,6 +217,56 @@ async def stock_critical(conn: AsyncConnection, today: date) -> Found | None:
     return await stock_found(conn, await critical_stock(conn, today), today)
 
 
+async def ship_needed(conn: AsyncConnection, today: date) -> list[tuple[UUID, Decimal, int]]:
+    """B6.5: Uzumga yuborish kerak bo'lgan SKU'lar (F26): Uzumdagi (+ postavkadagi) zaxira topshirish muddatiga yetmaydi,
+    omborimda tovar bor. ``(sku, Uzumda necha kunga yetadi, yuboriladigan dona)`` — eng kam zaxiradan boshlab. Yuboriladigan
+    dona — F54 rejasi (maqsad qamrov sozlangan bo'lsa), aks holda omborimdagi son."""
+    stock = await load_stock(conn, None, today)
+    rows = sorted(
+        (x for x in stock.skus.values() if x.ship is not None),
+        key=lambda x: (x.ship.cover_days if x.ship else Decimal(0), str(x.sku_id)),
+    )
+    return [
+        (
+            x.sku_id,
+            x.ship.cover_days if x.ship else Decimal(0),
+            x.ship_plan.qty if x.ship_plan is not None and x.ship_plan.qty > 0 else x.own,
+        )
+        for x in rows
+    ]
+
+
+async def ship_found(
+    conn: AsyncConnection,
+    items: list[tuple[UUID, Decimal, int]],
+    today: date,
+    known: set[str],
+) -> Found | None:
+    """Yuborish hodisasi: faqat bazaviy ro'yxatda yo'q (yangi) SKU'lar — har SKU kirganda bir marta."""
+    fresh = [x for x in items if str(x[0]) not in known]
+    if not fresh:
+        return None
+    catalog = await sku_catalog(conn, ids=[i for i, _, _ in fresh[:TOP]])
+    return Found(
+        Event.SHIP_NEEDED,
+        f"ship_needed:{today.isoformat()}:{_digest([str(i) for i, _, _ in fresh])}",
+        {
+            "count": len(fresh),
+            "total": len(items),
+            "ids": [str(i) for i, _, _ in items][:IDS_CAP],
+            "skus": [
+                {
+                    "sku_id": str(i),
+                    "title": catalog[i].title if i in catalog else None,
+                    "days": _num(d),
+                    "qty": q,
+                }
+                for i, d, q in fresh[:TOP]
+            ],
+        },
+    )
+
+
 async def known_ids(conn: AsyncConnection, user_id: UUID, event: Event) -> set[str] | None:
     """Oluvchining shu hodisa bo'yicha oxirgi qatoridagi ro'yxat (`payload.ids`); qator yo'q — ``None``."""
     n = m.notifications
@@ -670,6 +720,18 @@ async def evaluate(conn: AsyncConnection, org_id: UUID, now: datetime) -> int:
                 personal.append((p, found))
             elif base is not None and set(ids) != base:
                 personal.append((p, snapshot_row(Event.STOCK_CRITICAL, ids, now)))
+    if Event.SHIP_NEEDED in wanted and heavy:
+        ship_items = await ship_needed(conn, today)
+        ship_ids = [str(i) for i, _, _ in ship_items]
+        for p in people:
+            if not p.wants(Event.SHIP_NEEDED):
+                continue
+            base = await known_ids(conn, p.user_id, Event.SHIP_NEEDED)
+            found = await ship_found(conn, ship_items, today, base or set())
+            if found is not None:
+                personal.append((p, found))
+            elif base is not None and set(ship_ids) != base:
+                personal.append((p, snapshot_row(Event.SHIP_NEEDED, ship_ids, now)))
     if Event.UNCOSTED_SALES in wanted and heavy:
         # B6.4 (A3): kunlik xulosada tannarxsiz qatorlar soni allaqachon bor; alohida xabar faqat tannarxsiz YANGI SKU
         # (hech qachon xabar qilinmagan) birinchi marta sotilganda — xulosa o'chirilgan bo'lsa ham.

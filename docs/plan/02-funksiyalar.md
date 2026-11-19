@@ -308,6 +308,7 @@ Kanallar: Telegram (asosiy), ilova ichida, web push (PWA); email [Keyin].
 | Kunlik xulosa (kechagi buyurtma, tushum, sof foyda, bekorlar) | yoqilgan, 09:00 | vaqt |
 | Haftalik xulosa | yoqilgan, dushanba 09:00 | — |
 | Qoldiq kritik (F26) | yoqilgan | holat |
+| Uzumga yuborish kerak (F26, F54) | yoqilgan | Uzumdagi zaxira topshirish muddatiga yetmaydi, omborimda bor; yangi SKU kirganda bir marta |
 | Zarar bilan sotuv | yoqilgan | foyda/dona < 0, ketma-ket 3 sotuv |
 | Tannarxsiz sotuvlar paydo bo'ldi | yoqilgan | kuniga 1 marta |
 | Yangi jarima | yoqilgan | summa > 0 |

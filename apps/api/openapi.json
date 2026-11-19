@@ -11643,7 +11643,8 @@
           "cargo_late",
           "commission_changed",
           "fbs_deadline",
-          "uncounted_purchase"
+          "uncounted_purchase",
+          "ship_needed"
         ],
         "title": "Event"
       },
@@ -14311,7 +14312,7 @@
               "$ref": "#/components/schemas/NotificationRuleIn"
             },
             "type": "array",
-            "maxItems": 15,
+            "maxItems": 16,
             "title": "Rules"
           },
           "quiet_from": {

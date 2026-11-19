@@ -534,3 +534,95 @@ def test_cargo_late_event_once_per_purchase(world: World) -> None:
         assert len(_rows(w, "warehouse", "cargo_late")) == 1
     finally:
         w.a.sql("UPDATE orgs SET settings = settings - 'lead_days' WHERE id = %s", [w.org_id])
+
+
+def test_ship_needed_notifies_only_new_skus(world: World, monkeypatch: Any) -> None:
+    """B6.5: "Uzumga yuborish kerak" — `stock_critical` kabi: faqat ro'yxatga YANGI SKU kirganda bir marta; ro'yxat
+    qisqarsa baza yangilanadi (xabar emas); ombor roli oladi, buxgalter olmaydi."""
+    w = world
+    _clean(w)
+    sku_a, sku_b = w.ids["sku"], w.ids["sku2"]
+    state: dict[str, list[Any]] = {"items": []}
+
+    async def ship(conn: Any, today: date) -> list[Any]:
+        return list(state["items"])
+
+    monkeypatch.setattr(notify, "ship_needed", ship)
+    fresh(w, NOW + timedelta(days=2))
+
+    def step(at: datetime) -> None:
+        evaluate(w, at)
+        w.a.sql(
+            "UPDATE notifications SET created_at = %s WHERE org_id = %s "
+            "AND created_at = (SELECT max(created_at) FROM notifications WHERE org_id = %s)",
+            [at, w.org_id, w.org_id],
+        )
+
+    def rows() -> list[
+        dict[str, Any]
+    ]:  # yuborilganlar (bazaviy ro'yxatni yangilovchi "skipped" qatorlarsiz)
+        return [r for r in _rows(w, "warehouse", "ship_needed") if ":state:" not in r["key"]]
+
+    state["items"] = [(sku_a, D("1.5"), 30)]
+    step(NOW)
+    assert [(r["payload"]["count"], r["payload"]["total"]) for r in rows()] == [(1, 1)]
+    assert rows()[0]["payload"]["skus"][0]["qty"] == 30
+    assert rows()[0]["payload"]["skus"][0]["days"] == "1.50"
+    assert not _rows(w, "accountant", "ship_needed") and not rows()[0]["critical"]
+    step(NOW + timedelta(hours=1))  # holat o'zgarmadi — takror yo'q
+    step(NOW + timedelta(hours=25))
+    assert len(rows()) == 1
+    state["items"] = [(sku_a, D("1.5"), 30), (sku_b, D("0.5"), 10)]  # B yangi
+    step(NOW + timedelta(hours=26))
+    assert [(r["payload"]["count"], r["payload"]["total"]) for r in rows()][-1] == (1, 2)
+    assert len(rows()) == 2
+    state["items"] = []  # ro'yxat bo'shadi — xabar yo'q, baza yangilanadi
+    step(NOW + timedelta(hours=27))
+    assert len(rows()) == 2
+    state["items"] = [(sku_a, D("1.5"), 30)]  # A qaytib kirdi — yana yangi
+    step(NOW + timedelta(hours=28))
+    assert len(rows()) == 3
+
+
+def test_ship_needed_uses_plan_qty_or_own(world: World) -> None:
+    """B6.5: yuboriladigan dona — F54 rejasi (maqsad qamrov sozlangan bo'lsa), aks holda omborimdagi son."""
+    w, a = world, world.a
+    item = a.insert("items", name="Yuborilsin")
+    sku = a.insert(
+        "mp_skus", shop_id=a.shop_id, external_id=9_401, sku_code="Yb", item_id=item, qty_active=2
+    )
+    a.sql(
+        "UPDATE orgs SET settings = jsonb_set(coalesce(settings, '{}'::jsonb), '{lead_days}', "
+        '\'{"transit": 20, "handover": 5}\') WHERE id = %s',
+        [w.org_id],
+    )
+    today = NOW.date()
+    for i in range(14):
+        day = today - timedelta(days=i + 1)
+        a.sale(sku, day, 2)
+        a.insert("sku_daily", sku_id=sku, day=day, qty_active=2, qty_fbs=0)
+    p = a.insert(
+        "purchases", ordered_on=today - timedelta(days=40), received_on=today - timedelta(days=2)
+    )
+    a.line(p, item, 30, received=30)
+    a.request(calc.Scope.PURCHASE)
+    a.request(calc.Scope.SHOP, a.shop_id)
+    a.recalc(NOW)
+    try:
+        found = {s: (d, q) for s, d, q in w.a.run(lambda conn: notify.ship_needed(conn, today))}
+        assert sku in found and found[sku][1] == 30  # reja sozlanmagan — omborimdagi son
+        assert found[sku][0] <= 5  # Uzumda ~1 kun: topshirish muddatidan oz
+        a.sql(
+            "UPDATE orgs SET settings = jsonb_set(settings, '{ship_cover_days}', "
+            '\'{"A": 5, "B": 5, "C": 5}\'::jsonb) WHERE id = %s',
+            [w.org_id],
+        )
+        found = {s: (d, q) for s, d, q in w.a.run(lambda conn: notify.ship_needed(conn, today))}
+        assert (
+            0 < found[sku][1] < 30
+        )  # F54 rejasi: tezlik × (5 + 5) − Uzumda 2 — omborimdagi 30 dan kam
+    finally:
+        a.sql(
+            "UPDATE orgs SET settings = (settings - 'lead_days') - 'ship_cover_days' WHERE id = %s",
+            [w.org_id],
+        )

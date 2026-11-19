@@ -141,6 +141,22 @@ def test_new_sku_notifications_uz_ru() -> None:
     )
 
 
+def test_ship_needed_message() -> None:
+    """B6.5: "Uzumga yuborish kerak" — SKU'lar, Uzumdagi zaxira kuni va yuboriladigan dona; "Batafsil" — jo'natmalar."""
+    skus = [
+        {"sku_id": "s1", "title": "Mashina", "days": "1.50", "qty": 30},
+        {"title": None, "days": "0.00", "qty": 5},
+    ]
+    p = {"count": 2, "total": 3, "skus": skus, "ids": ["s1", "s2", "s3"]}
+    uz = msg.notification("ship_needed", p, "uz")
+    assert "Uzumga yuborish kerak: 2 ta SKU" in uz.text and "(jami 3)" in uz.text
+    assert "• Mashina — Uzumda ~1.5 kunlik zaxira, yuborish: 30 dona" in uz.text
+    assert "• — — Uzumda ~0.0 kunlik zaxira, yuborish: 5 dona" in uz.text
+    assert uz.path == "/dispatches"
+    ru = msg.notification("ship_needed", p, "ru")
+    assert "Пора отправлять на Uzum: 2 SKU" in ru.text and "отправить: 30 шт." in ru.text
+
+
 def test_sync_restored_message() -> None:
     """B6.4 (A4): "tiklandi" — bitta xabar, holat sahifasiga havola."""
     p = {"shop": "byDurii", "shop_id": "x", "reason": "restored"}
