@@ -7,6 +7,7 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Qo'shildi
 
+- B5.2 (3-qadam): Omborda tavsiya miqdori bor qatorlarni tanlash — pastda panel (soni, jami byudjet valyutalar bo'yicha alohida, narxsiz qatorlar belgilanadi) va "Bitta xaridga qo'shish": tanlanganlar tavsiya miqdori bilan oldindan to'ldirilgan bitta xarid oynasida.
 - B5.2 (2-qadam): tovarning ixtiyoriy "odatiy partiya hajmi" (`items.order_batch`, migratsiya 0036; `PUT /skus/{id}/order-batch`, audit) — Ombordagi tavsiya miqdor shunga karrali yuqoriga yaxlitlanadi (F27); qiymat bo'sh bo'lsa yaxlitlanmaydi; Ombor qatorida "Partiya hajmi" oynasi.
 - B5.2 (1-qadam): tovar darajasida buyurtma rejasi — bir tovar bir necha SKU'da bo'lsa talab, qoldiq va yo'ldagi dona yig'indisi bir marta sanaladi (`item_reorder`), holat va "qachongacha buyurtma" tovar bo'yicha, tavsiya miqdor SKU'larga sotuv tezligi bo'yicha bo'linadi.
 - B5.1 (2-qadam): Ombor jadvalida muddat manbasi ("5 xaridingizdan" / "standart"); hodisa "Kargo kechikmoqda" (kutilgan keldi sanasi + 5 kun) va Bosh sahifa "Diqqat" qatori; tez xarid oynasida ixtiyoriy yetkazib beruvchi.

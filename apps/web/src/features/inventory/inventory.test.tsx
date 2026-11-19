@@ -297,3 +297,19 @@ describe("odatiy partiya hajmi", () => {
     expect(bodiesOf(api, ROUTE)[0]).toEqual({ batch: 50 });
   });
 });
+
+describe("tanlangan qatorlar", () => {
+  it("tanlansa panel jami byudjetni ko'rsatadi; bitta xarid oynasi tavsiya miqdor bilan ochiladi", async () => {
+    await renderAt("/inventory");
+    fireEvent.click((await screen.findAllByLabelText(/Mashina — buyurtmaga tanlash/))[0]!);
+    const bar = await screen.findByRole("region", { name: "Tanlangan tovarlar" });
+    expect(within(bar).getByText("1 ta tovar tanlandi")).toBeTruthy();
+    expect(within(bar).getByText(/Jami byudjet:/)).toBeTruthy();
+    fireEvent.click(within(bar).getByRole("button", { name: "Bitta xaridga qoʻshish" }));
+    const dialog = await screen.findByRole("dialog");
+    expect((within(dialog).getByLabelText(/^Soni|^Dona/) as HTMLInputElement).value).toBe("90");
+    fireEvent.click(within(dialog).getAllByRole("button").find((b) => /Bekor|Yopish/.test(b.textContent ?? ""))!);
+    fireEvent.click(within(bar).getByRole("button", { name: "Bekor qilish" }));
+    await waitFor(() => expect(screen.queryByRole("region", { name: "Tanlangan tovarlar" })).toBeNull());
+  });
+});

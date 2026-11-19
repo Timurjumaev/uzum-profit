@@ -159,3 +159,56 @@ th > .inventory-cell {
     padding: var(--space-3);
   }
 }
+
+/* B5.2: qatorni tanlash (tavsiya miqdori bor qatorlar) va tanlanganlar paneli — jami byudjet, bitta xarid. */
+.inventory-pick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  margin-inline-start: calc(var(--space-2) * -1);
+  cursor: pointer;
+}
+
+.inventory-pick input {
+  inline-size: 20px;
+  block-size: 20px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.inventory-pickbar {
+  position: sticky;
+  inset-block-end: var(--space-3);
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-block: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-panel);
+  color: var(--on-accent);
+  background: var(--gradient-hero);
+  box-shadow: var(--shadow-float);
+  animation: inventory-pickbar-in 220ms ease-out;
+}
+
+.inventory-pickbar .caption {
+  color: inherit;
+  opacity: 0.85;
+}
+
+@keyframes inventory-pickbar-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inventory-pickbar {
+    animation: none;
+  }
+}
