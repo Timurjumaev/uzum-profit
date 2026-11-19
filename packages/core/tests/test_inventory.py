@@ -283,7 +283,6 @@ def test_frozen_money_and_avg_days() -> None:
 @pytest.mark.parametrize(
     ("stock", "speed", "last", "expected"),
     [
-        (5, 0, None, Liquidity.ILLIQUID),
         (5, 0, 181, Liquidity.ILLIQUID),
         (5, 0, 180, Liquidity.SLOW),
         (5, 0, 90, Liquidity.SLOW),
@@ -294,6 +293,18 @@ def test_frozen_money_and_avg_days() -> None:
 )
 def test_liquidity(stock: int, speed: int, last: int | None, expected: Liquidity | None) -> None:
     assert liquidity(stock, speed, None if last is None else day(last), AS_OF) is expected
+
+
+def test_liquidity_unsold_waits_30_days_from_first_seen() -> None:
+    """F30 (B5.4): hech sotilmagan tovar Uzumda birinchi ko'ringanidan 30 kun o'tgach nelikvid; kecha kelgani — emas;
+    birinchi ko'ringan kun noma'lum — `None` (taxmin yo'q)."""
+    assert liquidity(5, 0, None, AS_OF, first_seen=day(31)) is Liquidity.ILLIQUID
+    assert liquidity(5, 0, None, AS_OF, first_seen=day(30)) is Liquidity.ILLIQUID
+    assert liquidity(5, 0, None, AS_OF, first_seen=day(29)) is None
+    assert liquidity(5, 0, None, AS_OF, first_seen=day(1)) is None
+    assert liquidity(5, 0, None, AS_OF) is None
+    custom = InventorySettings(unsold_days=10)
+    assert liquidity(5, 0, None, AS_OF, custom, first_seen=day(10)) is Liquidity.ILLIQUID
 
 
 # F31–F34 --------------------------------------------------------------------------------------
