@@ -63,6 +63,8 @@ T: dict[str, dict[str, str]] = {
         "stale": "Buyurtmalar hali yangilanmagan — raqamlar toʻliq emas",
         "stock_critical": "⚠️ Qoldiq kritik: {n} ta SKU — buyurtma berish kerak",
         "stock_critical_new": "⚠️ Qoldiq kritik: yangi {n} ta SKU (jami {total}) — buyurtma berish kerak",
+        "ship_needed": "📦 Uzumga yuborish kerak: {n} ta SKU — Uzumdagi zaxira topshirish muddatiga yetmaydi, omborimda tovar bor (jami {total})",
+        "ship_line": "• {name} — Uzumda ~{days} kunlik zaxira, yuborish: {qty} dona",
         "days": "{n} kunga",
         "no_stock_critical": "Kritik qoldiq yoʻq.",
         "loss_sales": "🔻 Zarar bilan sotuv: {n} ta SKU (oxirgi {streak} ta sotuv zararda)",
@@ -106,6 +108,8 @@ T: dict[str, dict[str, str]] = {
         "stale": "Заказы ещё не обновились — цифры неполные",
         "stock_critical": "⚠️ Критический остаток: {n} SKU — пора заказывать",
         "stock_critical_new": "⚠️ Критический остаток: новых {n} SKU (всего {total}) — пора заказывать",
+        "ship_needed": "📦 Пора отправлять на Uzum: {n} SKU — запаса на Uzum не хватит до срока передачи, на вашем складе товар есть (всего {total})",
+        "ship_line": "• {name} — на Uzum запас ~{days} дн., отправить: {qty} шт.",
         "days": "на {n} дн.",
         "no_stock_critical": "Критических остатков нет.",
         "loss_sales": "🔻 Продажи в убыток: {n} SKU (последние {streak} продажи в убыток)",
@@ -196,6 +200,20 @@ def _skus(skus: list[dict[str, Any]], lang: str) -> list[str]:
     return out
 
 
+def _ship_skus(skus: list[dict[str, Any]], lang: str) -> list[str]:
+    """B6.5: "• Nom — Uzumda N kun, yuborish: Q dona" (Uzumdagi zaxira va F54 rejasi / omborimdagi son)."""
+    return [
+        t(
+            lang,
+            "ship_line",
+            name=x.get("title") or "—",
+            days=Decimal(x["days"]).quantize(Decimal("0.1")),
+            qty=x["qty"],
+        )
+        for x in skus
+    ]
+
+
 def notification(event: str, payload: dict[str, Any], lang: str, org: str | None = None) -> Message:
     """Navbatdagi bildirishnoma → xabar. Noma'lum hodisa — ``ValueError`` (yuborilmaydi, ``failed``)."""
     p = payload
@@ -210,6 +228,9 @@ def notification(event: str, payload: dict[str, Any], lang: str, org: str | None
             else t(lang, "stock_critical", n=p["count"])
         )
         msg = Message("\n".join([head, *_skus(p["skus"], lang)]), "/inventory")
+    elif event == "ship_needed":
+        head = t(lang, "ship_needed", n=p["count"], total=p["total"])
+        msg = Message("\n".join([head, *_ship_skus(p["skus"], lang)]), "/dispatches")
     elif event == "loss_sales":
         key = "loss_sales_new" if p.get("new") else "loss_sales"
         head = t(lang, key, n=p["count"], total=p.get("total", p["count"]), streak=p["streak"])

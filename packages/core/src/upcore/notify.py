@@ -31,6 +31,7 @@ class Event(StrEnum):
     COMMISSION_CHANGED = "commission_changed"
     FBS_DEADLINE = "fbs_deadline"
     UNCOUNTED_PURCHASE = "uncounted_purchase"  # TM9.8: xarid keldi, N kun sanalmagan
+    SHIP_NEEDED = "ship_needed"  # B6.5: Uzumdagi zaxira yetmaydi, omborimda tovar bor (F26, F54)
 
 
 class Audience(StrEnum):
@@ -80,6 +81,8 @@ CATALOG: dict[Event, EventSpec] = {
         EventSpec(Event.FBS_DEADLINE, Audience.STOCK, critical=True, stage="B9.5"),
         # TM9.8 (ADR-069, ADR-064): kritik emas, har xarid uchun bir marta.
         EventSpec(Event.UNCOUNTED_PURCHASE, Audience.STOCK, params={"days": 3}),
+        # B6.5: kritik emas; yangi SKU kirganda bir marta (bazaviy ro'yxat, `stock_critical` kabi).
+        EventSpec(Event.SHIP_NEEDED, Audience.STOCK),
     )
 }
 

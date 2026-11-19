@@ -9,6 +9,7 @@ export function notificationSettings(over: Partial<NotificationSettings> = {}): 
       ev("daily_summary", { params: { at: "09:00" } }),
       ev("weekly_summary", { params: { at: "09:00" } }),
       ev("stock_critical"),
+      ev("ship_needed"),
       ev("loss_sales", { params: { streak: 3 } }),
       ev("new_fine"),
       ev("sync_stopped", { critical: true, params: { hours: 2 } }),

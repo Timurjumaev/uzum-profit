@@ -1316,10 +1316,11 @@ boshlanadi) → B5 → B6.5 (B5.1–B5.2 dan keyin) → B6.3 → B6.6.
     tozalanadi; og'ir hisob (`load_stock`, kitob) har 5 daqiqada har tashkilotga qayta bajariladi — bugungi kalit bor
     bo'lsa hisoblanmaydi (B8.4 yuklama testidan oldin).
     ✓ A9 2026-11-18: `purge_old` — 90 kundan eski yuborilgan/muvaffaqiyatsiz qatorlar har yuborish aylanishida tozalanadi (`pending` tegilmaydi). A10 ✓ 2026-11-18: kunlik/haftalik xulosa kaliti bor bo'lsa kitob qayta hisoblanmaydi; qoldiq, zarar va tannarxsiz tekshiruvlari soatda bir marta (har soatning dastlabki 5 daqiqasi).
-- [ ] B6.5 **Yetishmayotgan hodisa: "Uzumga yuborish kerak"** (A11; F26 (2), F54 — B5.1 va B5.2 dan keyin): Uzumdagi zaxira
+- [x] B6.5 **Yetishmayotgan hodisa: "Uzumga yuborish kerak"** (A11; F26 (2), F54 — B5.1 va B5.2 dan keyin): Uzumdagi zaxira
   topshirish muddatiga yetmaydi, omborimda esa tovar bor — eng tez bajariladigan signal, hozir faqat Ombor sahifasida.
   Yangi SKU kirganda bir marta; "Batafsil" — jo'natish qoralamasi. ("Qoldiq kritik" F25 ga bog'liq — B5.1 gacha yangi
   xaridli tovarlarda chiqmasligi mumkin, 09 §12 B1.)
+  ✓ 2026-11-19: `Event.SHIP_NEEDED` (ombor auditoriyasi, kritik emas), `notify.ship_needed/ship_found` — `stock_critical` kabi bazaviy ro'yxat (faqat yangi SKU, qisqarish — jim); xabarda SKU, Uzumdagi zaxira kuni va yuboriladigan dona (F54 rejasi, sozlanmagan bo'lsa omborimdagi son); "Batafsil" — Jo'natmalar.
 - [ ] B6.3 **Ilova ichidagi bildirishnomalar markazi + o'rnatiladigan ilova** (qayta yozildi, ADR-064):
   - Markaz: karkasda qo'ng'iroq, o'qilmaganlar soni, ro'yxat (navbat va `GET /notifications` bor), "Batafsil" — o'sha
     sahifa. `notifications.read_at` (migratsiya), "hammasini o'qilgan qilish". Yetkazish holati (`pending` / `sent` /

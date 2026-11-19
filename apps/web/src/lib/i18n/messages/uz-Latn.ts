@@ -1142,6 +1142,7 @@ export const uzLatn = {
         daily_summary: "Kunlik xulosa (kechagi buyurtma, tushum, sof foyda, bekorlar)",
         weekly_summary: "Haftalik xulosa (dushanba)",
         stock_critical: "Qoldiq kritik — buyurtma berish kerak",
+        ship_needed: "Uzumga yuborish kerak (Uzumda zaxira yetmaydi, omborimda tovar bor)",
         loss_sales: "Zarar bilan sotuv (ketma-ket sotuvlar zararda)",
         uncosted_sales: "Tannarxsiz sotuvlar paydo boʻldi",
         new_fine: "Yangi jarima",
