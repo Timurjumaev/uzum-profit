@@ -62,7 +62,9 @@ class InventorySettings:
     xyz_y: Decimal = Decimal("0.5")
     illiquid_days: int = 180  # F30
     slow_days: int = 90
-    unsold_days: int = 30  # F30: hech sotilmagan tovar Uzumda birinchi ko'ringanidan shuncha kundan keyin nelikvid
+    unsold_days: int = (
+        30  # F30: hech sotilmagan tovar Uzumda birinchi ko'ringanidan shuncha kundan keyin nelikvid
+    )
     lead_history: int = 5  # F25: oxirgi 5 xarid medianasi
     lost_recent_supply_days: int = 3  # F31
     storage_free_days: int = 60  # F43/F54: Uzum 60 kundan oshgan aylanmaga saqlash haqi oladi
