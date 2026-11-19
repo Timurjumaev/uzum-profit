@@ -1213,6 +1213,18 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
   vazifasi yo'q edi): sof foyda farqi omillarga — sotuv hajmi, narx, komissiya, logistika, tannarx, reklama, boshqa
   Uzum xarajatlari, o'z xarajatlar, soliq; omillar yig'indisi = farq (test), F-raqam bilan `upcore.pnl` da.
 - [ ] B5.7 **Uzum to'lov prognozi va to'lov kalendari** (M11; D6). Hisoblar daftari bu yerda **emas** (pastda "Keyinga").
+  - **Temurning kabinet skrinshotlari (2026-11-20, Uzum Seller ilovasi) — qoidalar, taxmin emas:** to'lov jadvalini sotuvchi
+    tanlaydi: *har kuni* (har ish kunida, yechish haqi 1,5%), *haftada* 7/14/21/28-sanalarda (1%), *2 haftada 1 marta*
+    7 va 21-sanalarda (0%), *har oy* 7-sanada (0%); Temurda — 7 va 21 (0%). "Pul faqat 10 kundan oldin olingan tovarlar
+    uchun to'lanadi"; 21.11 to'lovi — "10.11.2026 gacha yig'ilgan jami pul" (to'lov sanasidan 11 kun oldin). **Ertaroq yechib
+    olish:** istalgan payt, haqi 2,5% (2026-11-15 da 2 480 000 so'mdan 62 000), minimal 100 so'm, kuniga 1 marta, pul keyingi
+    bank ish kunida tushadi; yechish mumkin summa — faqat 10 kundan o'tgan qism. **10 kun qachondan sanaladi (Temur, 2026-11-20):** mijoz tovarni buyurtmalarni topshirish punktidan *olib ketgan* kundan; to'liq 10 kun o'tgach pul yechishga beriladi (10 kungacha mijoz bekor qilishi mumkin, keyin — yo'q). Umumiy balans (12 970 728 so'm) — to'lanadigandan
+    katta (hali 10 kunga yetmagan qismi ham). Real to'lovlar (Pul chiqarish tarixi): 21.10 jadval bo'yicha 5 134 121; 07.11 jadval
+    bo'yicha 12 265 472 (0%); shoshilinch: 11.10 va 13.10 (1 086 624, haqi 0% — Temur: vaqtinchalik aksiya bo'lgan, hozir 2,5%), 15.11 (21:51 yaratildi,
+    16.11 11:08 bajarildi). Hisob raqami hujjatga yozilmaydi. **Qaytish muddati (bekor / qaytgan tovar omborga) — Temur:
+    "aniq emas, gigiyenik tovar va boshqa holatlar bor — taxmin qilma, statik qilma" → faqat o'z ma'lumotidan o'rganiladi,
+    standart yo'q.** Yo'qolgan tovar (F31): kabinetda ham yaqqol ko'rinmaydi — yechilsa katta foyda; 30 kunlik snapshot
+    to'lgach (≈ 2026-11-25) `realcheck lost` qayta o'lchanadi.
   - `realcheck payout` (avval): `withdrawnProfit` maydoni nimani bildiradi (qator bo'yicha yechilgan summa — avtomatik
     "tushdi"); buyurtma → Yakunlangan oralig'i taqsimoti (`completed_seen_at`, 2026-11-12 dan); prognoz ↔ Temurning
     oxirgi 2–3 real to'lovi; to'lov jadvali — **butun akkauntga bitta** (Temur, 2026-11-16; pul yechish haqi ham `shopId: 0` bilan keladi,
