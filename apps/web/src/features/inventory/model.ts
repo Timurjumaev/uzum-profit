@@ -29,3 +29,25 @@ export function canReorder(row: StockRow): boolean {
 export function reorderTitle(row: StockRow, prefix: string): string {
   return `${prefix}: ${row.product_title ?? row.title ?? ""}`.trim().slice(0, 200);
 }
+
+/** Tanlangan qatorlar bo'yicha jami byudjet: valyutalar bo'yicha alohida (CNY va so'm aralashtirilmaydi). Summalar API'dan
+ * (F27 byudjet = miqdor × oxirgi narx) — bu yerda faqat qo'shiladi; butun tiyinlarda (suzuvchi nuqtasiz). Byudjet yo'q
+ * (omborchi yoki narx noma'lum) qatorlar `missing` da sanaladi. */
+export function budgetTotals(rows: ReadonlyArray<StockRow>): { totals: Array<{ currency: string; amount: string }>; missing: number } {
+  const cents = new Map<string, bigint>();
+  let missing = 0;
+  for (const row of rows) {
+    const budget = row.reorder?.budget;
+    if (!budget || budget.length === 0) {
+      missing += 1;
+      continue;
+    }
+    for (const b of budget) {
+      const [whole = "0", frac = ""] = b.amount.split(".");
+      const value = BigInt(whole) * 100n + BigInt(`${frac}00`.slice(0, 2)) * (whole.startsWith("-") ? -1n : 1n);
+      cents.set(b.currency, (cents.get(b.currency) ?? 0n) + value);
+    }
+  }
+  const totals = [...cents].map(([currency, c]) => ({ currency, amount: `${c / 100n}.${String(c % 100n).padStart(2, "0")}` }));
+  return { totals, missing };
+}

@@ -50,14 +50,17 @@ export function sumsExceed(paid: string | null, sums: ReadonlyArray<string | nul
   return total > Number(paid) + 1e-9;
 }
 
-export function QuickPurchaseForm({ orgId, amounts, onClose, onSaved }: { orgId: string; amounts: boolean; onClose: () => void; onSaved: (detail: PurchaseDetail) => void }) {
+export type InitialLine = { skuId: string; label: string; qty: number };
+
+/** `initial` — oldindan tanlangan qatorlar (Ombor: tavsiya miqdor bilan tanlanganlar); qolgani bo'sh. */
+export function QuickPurchaseForm({ orgId, amounts, initial = [], onClose, onSaved }: { orgId: string; amounts: boolean; initial?: ReadonlyArray<InitialLine>; onClose: () => void; onSaved: (detail: PurchaseDetail) => void }) {
   const { t } = useTranslation();
   const toast = useToast();
   const client = useQueryClient();
   const picker = useQuery(skuPickerQuery(orgId));
   const suppliers = useQuery(suppliersQuery(orgId));
   const [draft, setDraft] = useState<Draft>({
-    picked: [],
+    picked: initial.map((x) => ({ key: `sku:${x.skuId}`, label: x.label, qty: String(x.qty), sum: null })),
     newName: "",
     paid: null,
     currency: "CNY",

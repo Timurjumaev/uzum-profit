@@ -16,7 +16,8 @@ import { cx } from "../../components/ui/cx";
 import type { StockRow } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { MANAGE_ROLES } from "../purchases/Purchases";
-import { canReorder, extraPlaces, orderByKind, reorderTitle, STATUS_TONE } from "./model";
+import { QuickPurchaseForm } from "../purchases/QuickPurchaseForm";
+import { budgetTotals, canReorder, extraPlaces, orderByKind, reorderTitle, STATUS_TONE } from "./model";
 import { BatchForm } from "./BatchForm";
 import { StockMoveForm } from "./StockMoveForm";
 
@@ -26,6 +27,7 @@ export function Inventory() {
   const { t } = useTranslation();
   const f = useFormat();
   const navigate = useNavigate();
+  const client = useQueryClient();
   const { data: me } = useSuspenseQuery(meQuery);
   const org = currentOrg(me)!; // `app` marshruti tashkilotsiz foydalanuvchini onboarding'ga yuboradi
   const { filters } = useFilters();
@@ -35,6 +37,15 @@ export function Inventory() {
   const canManage = MANAGE_ROLES.includes(org.role);
   const [moving, setMoving] = useState<StockRow | null>(null);
   const [batching, setBatching] = useState<StockRow | null>(null);
+  // Tanlangan qatorlar (sahifalar bo'ylab saqlanadi): jami byudjet va bitta ko'p tovarli xarid (B5.2).
+  const [picked, setPicked] = useState<Map<string, StockRow>>(new Map());
+  const [ordering, setOrdering] = useState(false);
+  const toggle = (row: StockRow) =>
+    setPicked((prev) => {
+      const next = new Map(prev);
+      if (!next.delete(row.sku_id)) next.set(row.sku_id, row);
+      return next;
+    });
 
   // Filtr yoki qidiruv o'zgarsa — 1-sahifa (ADR-054); sahifa almashtirish `page` ni o'zi beradi.
   const update = (patch: Record<string, string | number | undefined>) => void navigate({ to: "/inventory", search: (prev) => ({ ...prev, page: undefined, ...patch }), replace: true });
@@ -62,7 +73,7 @@ export function Inventory() {
       void navigate({ to: "/inventory", search: (prev) => ({ ...prev, page: shownPage > 1 ? shownPage : undefined }), replace: true });
     }
   }, [shownPage, query.isPlaceholderData, search.page, navigate]);
-  const columns = useMemo(() => buildColumns({ t, f, canManage, onMove: setMoving, onBatch: setBatching }), [t, f, canManage]);
+  const columns = useMemo(() => buildColumns({ t, f, canManage, onMove: setMoving, onBatch: setBatching, picked, onToggle: toggle }), [t, f, canManage, picked]);
 
   if (query.isError && !first) {
     return (
@@ -202,6 +213,7 @@ export function Inventory() {
           <DataTable caption={t("inventory.list")} columns={columns} rows={rows} rowKey={(r) => r.sku_id} density="comfortable" mobileList />
         )}
       </div>
+      {picked.size > 0 && <PickBar rows={[...picked.values()]} onClear={() => setPicked(new Map())} onOrder={() => setOrdering(true)} />}
       <Pagination
         className="inventory__pages"
         page={first.page}
@@ -214,6 +226,19 @@ export function Inventory() {
           update({});
         }}
       />
+      {ordering && (
+        <QuickPurchaseForm
+          orgId={org.id}
+          amounts={totals.frozen_total !== null}
+          initial={[...picked.values()].map((r) => ({ skuId: r.sku_id, label: [r.product_title ?? r.title ?? "", r.product_title && r.title ? r.title : ""].filter(Boolean).join(" · "), qty: r.reorder!.qty }))}
+          onClose={() => setOrdering(false)}
+          onSaved={(saved) => {
+            setPicked(new Map());
+            void client.invalidateQueries({ queryKey: ["orgs", org.id, "purchases"] });
+            void navigate({ to: "/purchases/$purchaseId", params: { purchaseId: saved.purchase.id } });
+          }}
+        />
+      )}
       {batching && <BatchForm orgId={org.id} skuId={batching.sku_id} title={batching.product_title ?? batching.title ?? ""} current={batching.order_batch} onClose={() => setBatching(null)} />}
       {moving && moving.item_id && <StockMoveForm orgId={org.id} itemId={moving.item_id} title={moving.product_title ?? moving.title ?? ""} onClose={() => setMoving(null)} />}
     </section>
@@ -227,9 +252,9 @@ function Help({ id, metric }: { id: "f23" | "f24" | "f26" | "f27" | "f29"; metri
 
 // --- Ustunlar -----------------------------------------------------------------------------------------------------
 
-type Ctx = { t: ReturnType<typeof useTranslation>["t"]; f: ReturnType<typeof useFormat>; canManage: boolean; onMove: (row: StockRow) => void; onBatch: (row: StockRow) => void };
+type Ctx = { t: ReturnType<typeof useTranslation>["t"]; f: ReturnType<typeof useFormat>; canManage: boolean; onMove: (row: StockRow) => void; onBatch: (row: StockRow) => void; picked: ReadonlyMap<string, StockRow>; onToggle: (row: StockRow) => void };
 
-function buildColumns({ t, f, canManage, onMove, onBatch }: Ctx): Column<StockRow>[] {
+function buildColumns({ t, f, canManage, onMove, onBatch, picked, onToggle }: Ctx): Column<StockRow>[] {
   const dash = <span className="muted">—</span>;
   const columns: Column<StockRow>[] = [
     {
@@ -238,6 +263,12 @@ function buildColumns({ t, f, canManage, onMove, onBatch }: Ctx): Column<StockRo
       mobile: true,
       render: (r) => (
         <span className="inventory-cell">
+          {canManage && canReorder(r) && (
+            <label className="inventory-pick">
+              <input type="checkbox" checked={picked.has(r.sku_id)} onChange={() => onToggle(r)} />
+              <span className="ui-visually-hidden">{t("inventory.pick.row", { name: r.product_title ?? r.title ?? "" })}</span>
+            </label>
+          )}
           <Link to="/products/$skuId" params={{ skuId: r.sku_id }} className="inventory-cell__name">
             {r.product_title ?? r.title ?? "—"}
           </Link>
@@ -394,6 +425,26 @@ function Reorder({ row }: { row: StockRow }) {
       {row.order_batch !== null && <span className="caption">{t("inventory.batch.note", { n: f.number(row.order_batch) })}</span>}
       {budget && budget.length > 0 && row.reorder.qty > 0 && <span className="caption">{budget.map((b) => (b.currency === "UZS" ? f.money(b.amount) : f.currency(b.amount, b.currency))).join(" · ")}</span>}
     </span>
+  );
+}
+
+/** Tanlanganlar paneli: soni, jami byudjet (valyutalar alohida) va "bitta xaridga" tugmasi. */
+function PickBar({ rows, onClear, onOrder }: { rows: StockRow[]; onClear: () => void; onOrder: () => void }) {
+  const { t } = useTranslation();
+  const f = useFormat();
+  const { totals, missing } = budgetTotals(rows);
+  return (
+    <div className="inventory-pickbar" role="region" aria-label={t("inventory.pick.bar")}>
+      <strong>{t("inventory.pick.count", { count: rows.length })}</strong>
+      {totals.length > 0 && <span>{t("inventory.pick.budget", { sum: totals.map((b) => (b.currency === "UZS" ? f.money(b.amount) : f.currency(b.amount, b.currency))).join(" · ") })}</span>}
+      {missing > 0 && totals.length > 0 && <span className="caption">{t("inventory.pick.missing", { count: missing })}</span>}
+      <Button size="sm" onClick={onOrder}>
+        {t("inventory.pick.order")}
+      </Button>
+      <Button size="sm" variant="ghost" onClick={onClear}>
+        {t("inventory.pick.clear")}
+      </Button>
+    </div>
   );
 }
 

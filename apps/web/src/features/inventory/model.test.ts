@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { inventorySearch } from "../../app/search";
 import { deadRow, stockRow } from "../../test/inventory";
-import { canReorder, extraPlaces, orderByKind, reorderTitle, STATUS_TONE } from "./model";
+import { budgetTotals, canReorder, extraPlaces, orderByKind, reorderTitle, STATUS_TONE } from "./model";
 
 describe("ombor yordamchilari", () => {
   it("joylar: nolmaslari tartib bilan; hammasi nol — bo'sh", () => {
@@ -45,5 +45,15 @@ describe("ombor yordamchilari", () => {
     expect(inventorySearch({ status: "critical", q: "mashina" })).toEqual({ status: "critical", q: "mashina" });
     expect(inventorySearch({ status: "nope", q: "  " })).toEqual({});
     expect(inventorySearch({ q: "x".repeat(300) }).q).toHaveLength(100);
+  });
+
+  it("tanlangan byudjet: valyutalar alohida, butun tiyinlarda; narxsiz qator — alohida sanaladi", () => {
+    const row = (budget: Array<{ amount: string; currency: string }> | null) => stockRow({ reorder: { qty: 5, raw: "5.00", budget } });
+    const r = budgetTotals([row([{ amount: "0.10", currency: "CNY" }]), row([{ amount: "0.20", currency: "CNY" }, { amount: "9000000.50", currency: "UZS" }]), row(null)]);
+    expect(r.totals).toEqual([
+      { currency: "CNY", amount: "0.30" },
+      { currency: "UZS", amount: "9000000.50" },
+    ]);
+    expect(r.missing).toBe(1);
   });
 });

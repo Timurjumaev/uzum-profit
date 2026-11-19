@@ -1167,8 +1167,9 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
   - [x] Tovar darajasida reja (1-qadam): bir tovar bir necha SKU'da bo'lsa talab, qoldiq va yo'ldagi dona — SKU'lar
     yig'indisi, joylar bir marta (`upcore.inventory.item_reorder`, `reports/stock.py::_item_level`); tavsiya SKU'larga
     sotuv tezligi bo'yicha bo'linadi (eng katta qoldiq usuli).
-  - Tanlangan qatorlar bo'yicha jami byudjet (xarid valyutasi va so'm); tanlanganlardan **bitta** tez xarid oynasi (ko'p
-    tovar, TM2).
+  - [x] Tanlangan qatorlar bo'yicha jami byudjet (valyutalar alohida) va tanlanganlardan **bitta** tez xarid oynasi (3-qadam):
+    Ombor qatorida tanlash katagi (tavsiya miqdori bor qatorlar), pastda "Tanlangan tovarlar" paneli, "Bitta xaridga qo'shish" —
+    tavsiya miqdor bilan oldindan to'ldirilgan xarid oynasi.
   - [x] "Odatiy partiya hajmi" (F27 yaxlitlash; 2-qadam): tovarda ixtiyoriy `items.order_batch` (migratsiya 0036, standart
     yo'q — bo'sh bo'lsa 1), Ombor qatorida "Partiya hajmi" tugmasi (`PUT /skus/{id}/order-batch`), tavsiya shunga karrali
     yuqoriga yaxlitlanadi (tovar darajasidagi reja ham).
