@@ -574,3 +574,20 @@ def test_lost_check_gap_stability_missing_and_compensation(db: dict[str, str]) -
         } <= set(row)
         assert not {"title", "name", "token"} & set(row)  # nom va sirlar yo'q
     json.dumps(report, default=rc._json)  # JSON'ga o'tadi
+
+
+def test_payout_check_semantics_completion_days_keys_and_account_expenses(
+    db: dict[str, str],
+) -> None:
+    """B5.7: `payout` bo'limi — yechilgan summa holat bo'yicha, topshirilgandan Yakunlangangacha kunlar taqsimoti,
+    xom maydon nomlari va akkaunt darajasidagi xarajatlar; faqat sonlar, sanalar va ko'rinish namunalari."""
+    fake = seller(shops=BOTH)
+    _, report = synced(db, fake)
+    payout = shop(report, A)["checks"]["payout"]
+    assert {"withdrawn", "completion", "raw_keys", "account_expenses"} == set(payout)
+    for row in payout["withdrawn"]:
+        assert {"status", "lines", "withdrawn_lines", "withdrawn", "profit"} <= set(row)
+    comp = payout["completion"]
+    assert {"lines", "min_days", "median_days", "p90_days", "histogram_days"} <= set(comp)
+    assert "withdrawnProfit" in payout["raw_keys"]  # soxta Uzum qatorida bor
+    json.dumps(report, default=rc._json)
