@@ -568,6 +568,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/skus/{sku_id}/order-batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Order Batch
+         * @description F27 (B5.2): tovarning odatiy partiya hajmi (masalan, 50 ning karrali). Tovar SKU orqali topiladi (tovari yo'q
+         *     bo'lsa yaratiladi). Faqat tavsiya miqdorni yaxlitlaydi, tannarxga ta'sir qilmaydi — qayta hisob kerak emas.
+         */
+        put: operations["set_order_batch_api_v1_orgs__org_id__skus__sku_id__order_batch_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/dashboard": {
         parameters: {
             query?: never;
@@ -3639,6 +3660,24 @@ export interface components {
             /** Lots Before */
             lots_before: number;
         };
+        /**
+         * OrderBatchIn
+         * @description Odatiy partiya hajmi (dona); ``null`` — o'chirish (tavsiya bir donagacha yaxlitlanadi).
+         */
+        OrderBatchIn: {
+            /** Batch */
+            batch: number | null;
+        };
+        /** OrderBatchOut */
+        OrderBatchOut: {
+            /**
+             * Item Id
+             * Format: uuid
+             */
+            item_id: string;
+            /** Batch */
+            batch: number | null;
+        };
         /** OrderByOut */
         OrderByOut: {
             /**
@@ -5513,6 +5552,8 @@ export interface components {
             last_sale_on: string | null;
             order_by: components["schemas"]["OrderByOut"] | null;
             reorder: components["schemas"]["ReorderOut"] | null;
+            /** Order Batch */
+            order_batch: number | null;
             /** Unit Cost */
             unit_cost: string | null;
             /** Stock Value */
@@ -7596,6 +7637,51 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LinkedItemOut"] | null;
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    set_order_batch_api_v1_orgs__org_id__skus__sku_id__order_batch_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sku_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderBatchIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderBatchOut"];
                 };
             };
             /** @description Validatsiya xatosi */

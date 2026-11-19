@@ -17,6 +17,7 @@ import type { StockRow } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { MANAGE_ROLES } from "../purchases/Purchases";
 import { canReorder, extraPlaces, orderByKind, reorderTitle, STATUS_TONE } from "./model";
+import { BatchForm } from "./BatchForm";
 import { StockMoveForm } from "./StockMoveForm";
 
 const DEBOUNCE_MS = 250;
@@ -33,6 +34,7 @@ export function Inventory() {
   const query = useQuery({ ...inventoryQuery(org.id, filters.shops, { ...search, size }), placeholderData: keepPreviousData });
   const canManage = MANAGE_ROLES.includes(org.role);
   const [moving, setMoving] = useState<StockRow | null>(null);
+  const [batching, setBatching] = useState<StockRow | null>(null);
 
   // Filtr yoki qidiruv o'zgarsa — 1-sahifa (ADR-054); sahifa almashtirish `page` ni o'zi beradi.
   const update = (patch: Record<string, string | number | undefined>) => void navigate({ to: "/inventory", search: (prev) => ({ ...prev, page: undefined, ...patch }), replace: true });
@@ -60,7 +62,7 @@ export function Inventory() {
       void navigate({ to: "/inventory", search: (prev) => ({ ...prev, page: shownPage > 1 ? shownPage : undefined }), replace: true });
     }
   }, [shownPage, query.isPlaceholderData, search.page, navigate]);
-  const columns = useMemo(() => buildColumns({ t, f, canManage, onMove: setMoving }), [t, f, canManage]);
+  const columns = useMemo(() => buildColumns({ t, f, canManage, onMove: setMoving, onBatch: setBatching }), [t, f, canManage]);
 
   if (query.isError && !first) {
     return (
@@ -212,6 +214,7 @@ export function Inventory() {
           update({});
         }}
       />
+      {batching && <BatchForm orgId={org.id} skuId={batching.sku_id} title={batching.product_title ?? batching.title ?? ""} current={batching.order_batch} onClose={() => setBatching(null)} />}
       {moving && moving.item_id && <StockMoveForm orgId={org.id} itemId={moving.item_id} title={moving.product_title ?? moving.title ?? ""} onClose={() => setMoving(null)} />}
     </section>
   );
@@ -224,9 +227,9 @@ function Help({ id, metric }: { id: "f23" | "f24" | "f26" | "f27" | "f29"; metri
 
 // --- Ustunlar -----------------------------------------------------------------------------------------------------
 
-type Ctx = { t: ReturnType<typeof useTranslation>["t"]; f: ReturnType<typeof useFormat>; canManage: boolean; onMove: (row: StockRow) => void };
+type Ctx = { t: ReturnType<typeof useTranslation>["t"]; f: ReturnType<typeof useFormat>; canManage: boolean; onMove: (row: StockRow) => void; onBatch: (row: StockRow) => void };
 
-function buildColumns({ t, f, canManage, onMove }: Ctx): Column<StockRow>[] {
+function buildColumns({ t, f, canManage, onMove, onBatch }: Ctx): Column<StockRow>[] {
   const dash = <span className="muted">—</span>;
   const columns: Column<StockRow>[] = [
     {
@@ -242,7 +245,7 @@ function buildColumns({ t, f, canManage, onMove }: Ctx): Column<StockRow>[] {
           {/* ADR-057 Q11: telefonda amallar ustuni yashirin — shu yerda (faqat ≤ 639 px da ko'rinadi). */}
           {canManage && (
             <span className="inventory-cell__mobile-actions">
-              <RowActions row={r} onMove={() => onMove(r)} />
+              <RowActions row={r} onMove={() => onMove(r)} onBatch={() => onBatch(r)} />
             </span>
           )}
         </span>
@@ -306,7 +309,7 @@ function buildColumns({ t, f, canManage, onMove }: Ctx): Column<StockRow>[] {
     {
       key: "actions",
       header: t("inventory.col.actions"),
-      render: (r) => (canManage ? <RowActions row={r} onMove={() => onMove(r)} /> : null),
+      render: (r) => (canManage ? <RowActions row={r} onMove={() => onMove(r)} onBatch={() => onBatch(r)} /> : null),
     },
   ];
   return columns;
@@ -388,12 +391,13 @@ function Reorder({ row }: { row: StockRow }) {
   return (
     <span className="inventory-cell inventory-cell--num">
       <strong>{f.number(row.reorder.qty)}</strong>
+      {row.order_batch !== null && <span className="caption">{t("inventory.batch.note", { n: f.number(row.order_batch) })}</span>}
       {budget && budget.length > 0 && row.reorder.qty > 0 && <span className="caption">{budget.map((b) => (b.currency === "UZS" ? f.money(b.amount) : f.currency(b.amount, b.currency))).join(" · ")}</span>}
     </span>
   );
 }
 
-function RowActions({ row, onMove }: { row: StockRow; onMove: () => void }): ReactNode {
+function RowActions({ row, onMove, onBatch }: { row: StockRow; onMove: () => void; onBatch: () => void }): ReactNode {
   const { t } = useTranslation();
   const toast = useToast();
   const client = useQueryClient();
@@ -427,6 +431,9 @@ function RowActions({ row, onMove }: { row: StockRow; onMove: () => void }): Rea
           {t("inventory.reorder")}
         </Button>
       )}
+      <Button size="sm" variant="ghost" onClick={onBatch}>
+        {t("inventory.batch.action")}
+      </Button>
       {row.item_id && (
         <Button size="sm" variant="ghost" onClick={onMove}>
           {t("inventory.writeoff")}

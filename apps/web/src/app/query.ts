@@ -499,6 +499,10 @@ export const stockMovesQuery = (orgId: string, itemId: string) =>
 export const createStockMove = (orgId: string, body: StockMoveIn) =>
   unwrap(api.POST("/api/v1/orgs/{org_id}/stock-moves", { params: { path: { org_id: orgId } }, body }));
 
+/** F27 (B5.2): tovarning odatiy partiya hajmi (SKU orqali); `null` — o'chirish. */
+export const setOrderBatch = (orgId: string, skuId: string, batch: number | null) =>
+  unwrap(api.PUT("/api/v1/orgs/{org_id}/skus/{sku_id}/order-batch", { params: { path: { org_id: orgId, sku_id: skuId } }, body: { batch } }));
+
 /** Omborim (TM5, ADR-061 §7): SKU bo'yicha qoldiq, o'tkazish manbalari. */
 export const warehouseQuery = (orgId: string) =>
   queryOptions({

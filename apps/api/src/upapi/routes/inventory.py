@@ -136,6 +136,7 @@ class StockRowOut(BaseModel):
     last_sale_on: date | None
     order_by: OrderByOut | None  # F27 buyurtma sanasi (tezlik 0 yoki muddat noma'lum — null)
     reorder: ReorderOut | None
+    order_batch: int | None  # F27 odatiy partiya hajmi (tovarda; bo'sh — 1)
     unit_cost: Decimal | None  # lot narxi (so'm)
     stock_value: Decimal | None
 
@@ -249,6 +250,7 @@ def rows_for(
                 if s.order_by
                 else None,
                 reorder=plan,
+                order_batch=s.order_batch,
                 unit_cost=amount(s.unit_cost) if amounts else None,
                 stock_value=amount(s.stock_value) if amounts else None,
             )

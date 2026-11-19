@@ -15,6 +15,7 @@ import {
   ME,
   ME_ROUTE,
   mockApi,
+  ORG_ID,
   problem,
   PURCHASE_CREATE_ROUTE,
   purchaseRoute,
@@ -24,7 +25,7 @@ import {
   stockMovesRoute,
   type Routes,
 } from "../../test/api";
-import { deadRow, inventoryData, ITEM_CRIT, move, MOVE_1, stockRow } from "../../test/inventory";
+import { deadRow, inventoryData, ITEM_CRIT, move, MOVE_1, SKU_CRIT, stockRow } from "../../test/inventory";
 import { purchaseDetail, PURCHASE_1 } from "../../test/purchases";
 
 const f = formatterFor("uz-Latn");
@@ -277,4 +278,22 @@ it("a11y: jiddiy buzilish yo'q", async () => {
   await screen.findByRole("table", { name: "Qoldiq jadvali" });
   const result = await axe.run(document.body, { rules: { "color-contrast": { enabled: false }, region: { enabled: false } } });
   expect(result.violations.filter((v) => v.impact === "critical" || v.impact === "serious").map((v) => v.id)).toEqual([]);
+});
+
+describe("odatiy partiya hajmi", () => {
+  const ROUTE = `PUT /api/v1/orgs/${ORG_ID}/skus/${SKU_CRIT}/order-batch`;
+
+  it("hajm kiritiladi (butun, ≥ 1), tanasi to'g'ri; bo'sh — o'chirish", async () => {
+    const { api } = await renderAt("/inventory", { [ROUTE]: () => json(200, { item_id: ITEM_CRIT, batch: 50 }) });
+    fireEvent.click((await screen.findAllByRole("button", { name: "Partiya hajmi" }))[0]!);
+    const dialog = await screen.findByRole("dialog", { name: "Odatiy partiya hajmi: Mashina" });
+    const save = within(dialog).getByRole("button", { name: "Saqlash" }) as HTMLButtonElement;
+    fireEvent.change(within(dialog).getByLabelText(/^Partiya hajmi/), { target: { value: "0" } });
+    expect(save.disabled).toBe(true);
+    fireEvent.change(within(dialog).getByLabelText(/^Partiya hajmi/), { target: { value: "50" } });
+    expect(save.disabled).toBe(false);
+    fireEvent.click(save);
+    await waitFor(() => expect(bodiesOf(api, ROUTE)).toHaveLength(1));
+    expect(bodiesOf(api, ROUTE)[0]).toEqual({ batch: 50 });
+  });
 });

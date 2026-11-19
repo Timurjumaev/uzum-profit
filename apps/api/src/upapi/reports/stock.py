@@ -116,6 +116,7 @@ class SkuStock:
     ship: ShipSignal | None = None  # F26 "Uzumga yuborish" (ADR-057 Q2)
     own_uncounted: int = 0  # TM9.8: o'z omborimdagining sanalmagan qismi ("avval sanang")
     days_of_stock_all: Decimal | None = None  # hamma joydagi tovar necha kunga yetadi
+    order_batch: int | None = None  # F27 odatiy partiya hajmi (tovardan; ixtiyoriy)
 
     @property
     def in_transit(self) -> int:
@@ -145,6 +146,9 @@ class _ItemLots:
     unit_cost: Money | None = None
     ready_on: date | None = None
     last_price: Money | None = None
+    batch: int | None = (
+        None  # F27 odatiy partiya hajmi (tovarda ixtiyoriy; bo'sh — 1 ga yaxlitlanadi)
+    )
 
 
 async def _lots(conn: AsyncConnection, items: Iterable[UUID], as_of: date) -> dict[UUID, _ItemLots]:
@@ -179,6 +183,12 @@ async def _lots(conn: AsyncConnection, items: Iterable[UUID], as_of: date) -> di
             x = out.setdefault(item_id, _ItemLots())
             if unit is not None and (x.ready_on is None or x.ready_on < start):
                 x.unit_cost, x.ready_on = unit, start
+    for item_id, size in await conn.execute(
+        select(m.items.c.id, m.items.c.order_batch).where(
+            m.items.c.id.in_(list(items)), m.items.c.order_batch.is_not(None)
+        )
+    ):
+        out.setdefault(item_id, _ItemLots()).batch = int(size)
     return out
 
 
@@ -363,6 +373,7 @@ def _item_level(
             china,
             road,
             own,
+            batch=(lot.batch if lot else None) or 1,
             last_unit_prices=prices,
             s=inv,
         )
@@ -516,6 +527,7 @@ async def load_stock(
                 stock,
                 in_transit=road + own + sku_inbound,
                 ordered=china,
+                batch=(item.batch if item else None) or 1,
                 last_unit_prices=prices,
                 s=inv,
             )
@@ -548,6 +560,7 @@ async def load_stock(
             ship=ship,
             own_uncounted=min(own, place.uncounted) if place else 0,
             days_of_stock_all=cover_all,
+            order_batch=item.batch if item else None,
         )
     _item_level(out, places, lots, inv, as_of)
     units = {"china": 0, "road": 0, "own": 0}

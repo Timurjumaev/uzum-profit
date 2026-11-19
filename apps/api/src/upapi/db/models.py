@@ -336,6 +336,9 @@ items = tenant(
     # ADR-061 §5: tovarning qadoq qo'shimchasi (so'm/dona, ixtiyoriy) — sanashda xarid qatoriga nusxalanadi.
     Column("pack_unit_cost", UZS),
     CheckConstraint("pack_unit_cost IS NULL OR pack_unit_cost >= 0", name="pack_unit_cost"),
+    # B5.2 (F27): odatiy partiya hajmi (dona, ixtiyoriy) — tavsiya miqdor shunga yuqoriga yaxlitlanadi.
+    Column("order_batch", Integer),
+    CheckConstraint("order_batch IS NULL OR order_batch >= 1", name="order_batch"),
 )
 mp_products = tenant(
     "mp_products",

@@ -566,3 +566,19 @@ def test_borderline_follows_org_setting(world: World) -> None:
     assert {s: r["label"] for s, r in rows(world, **OCT).items()} == {
         s: r["label"] for s, r in before.items()
     }
+
+
+def test_order_batch_set_clear_and_permissions(world: World) -> None:
+    ya = world.ids["ya"]
+    path = f"skus/{ya}/order-batch"
+    r = send(world, "put", path, batch=50)
+    assert r.status_code == 200 and r.json()["batch"] == 50, r.text
+    item_id = r.json()["item_id"]
+    assert world.api.admin("SELECT order_batch FROM items WHERE id = %s", [item_id])[0][0] == 50
+    assert audit(world, "item")[-1][0] == "item.order_batch"
+    assert send(world, "put", path, batch=None).json()["batch"] is None
+    assert world.api.admin("SELECT order_batch FROM items WHERE id = %s", [item_id])[0][0] is None
+    assert send(world, "put", path, batch=0).status_code == 422
+    assert send(world, "put", path, batch=-5).status_code == 422
+    assert send(world, "put", f"skus/{uuid.uuid4()}/order-batch", batch=5).status_code == 404
+    assert send(world, "put", path, role="accountant", batch=5).status_code == 403
