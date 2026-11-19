@@ -1162,10 +1162,11 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
   - Yetkazib beruvchi — tez xarid oynasida ixtiyoriy maydon (jadval va `/suppliers` API bor; M9 da va'da qilingan, oynada
     yo'q). **Qilinmaydi:** kargo kompaniyalari ma'lumotnomasi ekrani (ADR-061 §9: ixtiyoriy maydon — bor), yetkazib
     beruvchi / kargo kartochkasida qo'lda "o'rtacha muddat" (`avg_prep_days`, `avg_transit_days` — o'rganiladi).
-- [ ] B5.2 **Buyurtma rejasi va Uzumga yuborish rejasi** (F23–F27, F54; D4 — asosiy ustunlik). Bor: Omborda tavsiya
+- [→] B5.2 **Buyurtma rejasi va Uzumga yuborish rejasi** (F23–F27, F54; D4 — asosiy ustunlik). Bor: Omborda tavsiya
   miqdor, buyurtma sanasi, bitta tovar uchun "Xarid yaratish". Qoladi:
-  - Tovar darajasida reja: bir tovar bir necha SKU'da bo'lsa talab — SKU'lar yig'indisi, yo'ldagi va omborimdagi dona —
-    bir marta (hozir har SKU'ga to'liq sanaladi, `reports/stock.py` izohi).
+  - [x] Tovar darajasida reja (1-qadam): bir tovar bir necha SKU'da bo'lsa talab, qoldiq va yo'ldagi dona — SKU'lar
+    yig'indisi, joylar bir marta (`upcore.inventory.item_reorder`, `reports/stock.py::_item_level`); tavsiya SKU'larga
+    sotuv tezligi bo'yicha bo'linadi (eng katta qoldiq usuli).
   - Tanlangan qatorlar bo'yicha jami byudjet (xarid valyutasi va so'm); tanlanganlardan **bitta** tez xarid oynasi (ko'p
     tovar, TM2).
   - "Odatiy partiya hajmi" (F27 yaxlitlash): manbasi yo'q (`reorder(batch=1)`) — tovarda ixtiyoriy maydon yoki oxirgi
