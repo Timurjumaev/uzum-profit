@@ -626,3 +626,46 @@ def test_ship_needed_uses_plan_qty_or_own(world: World) -> None:
             "UPDATE orgs SET settings = (settings - 'lead_days') - 'ship_cover_days' WHERE id = %s",
             [w.org_id],
         )
+
+
+def test_lost_goods_from_quantity_missing_only_new_skus(world: World) -> None:
+    """B5.4 (F31 (c)): "Yo'qolgan tovar" — faqat Uzumning `quantityMissing > 0` maydoni; ro'yxatga yangi SKU kirganda bir
+    marta; qisqarsa jim; ombor roli oladi. Balans usuli ishlatilmaydi (real o'lchovda shovqinli)."""
+    w, a = world, world.a
+    _clean(w)
+    sku = a.insert("mp_skus", shop_id=a.shop_id, external_id=9_501, sku_code="Yo'q")
+    a.sql("UPDATE mp_skus SET raw = jsonb_build_object('quantityMissing', 3) WHERE id = %s", [sku])
+    other = w.ids["sku"]
+    a.sql(
+        "UPDATE mp_skus SET raw = jsonb_build_object('quantityMissing', 0) WHERE id = %s", [other]
+    )
+    fresh(w, NOW + timedelta(days=2))
+    try:
+        found = w.a.run(lambda conn: notify.missing_skus(conn))
+        assert (sku, 3) in found and all(i != other for i, _ in found)  # 0 — signal emas
+
+        def step(at: datetime) -> None:
+            evaluate(w, at)
+            w.a.sql(
+                "UPDATE notifications SET created_at = %s WHERE org_id = %s "
+                "AND created_at = (SELECT max(created_at) FROM notifications WHERE org_id = %s)",
+                [at, w.org_id, w.org_id],
+            )
+
+        def rows() -> list[dict[str, Any]]:
+            return [r for r in _rows(w, "warehouse", "lost_goods") if ":state:" not in r["key"]]
+
+        step(NOW)
+        assert len(rows()) == 1 and str(sku) in rows()[0]["payload"]["ids"]
+        assert any(s["qty"] == 3 for s in rows()[0]["payload"]["skus"])
+        assert not _rows(w, "accountant", "lost_goods")
+        step(NOW + timedelta(hours=1))  # o'zgarmadi — takror yo'q
+        step(NOW + timedelta(hours=25))
+        assert len(rows()) == 1
+        a.sql(
+            "UPDATE mp_skus SET raw = jsonb_build_object('quantityMissing', 0) WHERE id = %s", [sku]
+        )
+        step(NOW + timedelta(hours=26))  # signal yo'qoldi — xabar emas
+        assert len(rows()) == 1
+    finally:
+        a.sql("UPDATE mp_skus SET raw = NULL WHERE id = %s", [sku])

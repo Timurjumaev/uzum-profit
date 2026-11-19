@@ -73,7 +73,8 @@ CATALOG: dict[Event, EventSpec] = {
         EventSpec(Event.NEW_FINE, Audience.FINANCE),
         EventSpec(Event.RETURNS_SPIKE, Audience.FINANCE, stage="B5.4"),
         EventSpec(Event.RECEIVING_SHORTAGE, Audience.STOCK),
-        EventSpec(Event.LOST_GOODS, Audience.STOCK, stage="B5.4"),
+        # B5.4 (real o'lchov, 2026-11-19): faqat Uzumning `quantityMissing > 0` maydoni; balans usuli shovqinli — ko'rsatilmaydi.
+        EventSpec(Event.LOST_GOODS, Audience.STOCK),
         EventSpec(Event.SYNC_STOPPED, Audience.ALL, critical=True, params={"hours": 2}),
         EventSpec(Event.PAYOUT_LATE, Audience.FINANCE, stage="B5.7"),
         EventSpec(Event.CARGO_LATE, Audience.STOCK, params={"days": 5}),

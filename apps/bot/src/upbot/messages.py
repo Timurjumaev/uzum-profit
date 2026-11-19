@@ -65,6 +65,8 @@ T: dict[str, dict[str, str]] = {
         "stock_critical_new": "⚠️ Qoldiq kritik: yangi {n} ta SKU (jami {total}) — buyurtma berish kerak",
         "ship_needed": "📦 Uzumga yuborish kerak: {n} ta SKU — Uzumdagi zaxira topshirish muddatiga yetmaydi, omborimda tovar bor (jami {total})",
         "ship_line": "• {name} — Uzumda ~{days} kunlik zaxira, yuborish: {qty} dona",
+        "lost_goods": "🔎 Uzum yoʻqolgan deb belgilagan tovar: {n} ta SKU (jami {total}) — Uzum bilan bogʻlaning, kamomadni talab qiling",
+        "lost_line": "• {name} — {qty} dona",
         "days": "{n} kunga",
         "no_stock_critical": "Kritik qoldiq yoʻq.",
         "loss_sales": "🔻 Zarar bilan sotuv: {n} ta SKU (oxirgi {streak} ta sotuv zararda)",
@@ -110,6 +112,8 @@ T: dict[str, dict[str, str]] = {
         "stock_critical_new": "⚠️ Критический остаток: новых {n} SKU (всего {total}) — пора заказывать",
         "ship_needed": "📦 Пора отправлять на Uzum: {n} SKU — запаса на Uzum не хватит до срока передачи, на вашем складе товар есть (всего {total})",
         "ship_line": "• {name} — на Uzum запас ~{days} дн., отправить: {qty} шт.",
+        "lost_goods": "🔎 Uzum отметил товар как потерянный: {n} SKU (всего {total}) — свяжитесь с Uzum, требуйте компенсацию",
+        "lost_line": "• {name} — {qty} шт.",
         "days": "на {n} дн.",
         "no_stock_critical": "Критических остатков нет.",
         "loss_sales": "🔻 Продажи в убыток: {n} SKU (последние {streak} продажи в убыток)",
@@ -231,6 +235,10 @@ def notification(event: str, payload: dict[str, Any], lang: str, org: str | None
     elif event == "ship_needed":
         head = t(lang, "ship_needed", n=p["count"], total=p["total"])
         msg = Message("\n".join([head, *_ship_skus(p["skus"], lang)]), "/dispatches")
+    elif event == "lost_goods":
+        head = t(lang, "lost_goods", n=p["count"], total=p["total"])
+        lines = [t(lang, "lost_line", name=x.get("title") or "—", qty=x["qty"]) for x in p["skus"]]
+        msg = Message("\n".join([head, *lines]), "/inventory")
     elif event == "loss_sales":
         key = "loss_sales_new" if p.get("new") else "loss_sales"
         head = t(lang, key, n=p["count"], total=p.get("total", p["count"]), streak=p["streak"])

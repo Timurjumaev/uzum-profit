@@ -7,6 +7,7 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Qo'shildi
 
+- B5.4 (3-qadam): real o'lchov (byDurii, EL-ONE) natijasi bo'yicha — hodisa "Yo'qolgan tovar" faqat Uzumning `quantityMissing > 0` maydonidan (yangi SKU kirganda bir marta, ombor roli); balans usuli (F31) ko'rsatilmaydi (manfiy farq ko'p, haqiqiy yo'qotish topilmadi), F32 summasi tasdiqlanmaguncha ko'rsatilmaydi.
 - B5.4 (2-qadam): `realcheck` ga `lost` bo'limi — yo'qolgan tovar o'lchovi: har SKU balans farqi (qabul − sotilgan − qaytgan − brak − omborda), uning 14 / 30 kun oldingi qiymati (barqarorlik), `quantityMissing` va kompensatsiya qatorlari (F32); faqat sonlar va SKU identifikatorlari.
 - B5.4 (1-qadam): F30 "Nelikvid" tuzatildi — hech sotilmagan tovar Uzumda birinchi ko'ringanidan (birinchi snapshot) 30 kun o'tgach nelikvid; kecha kelgan yangi tovar va birinchi ko'ringan kuni noma'lum tovar belgilanmaydi (`unsold_days`).
 - B6.5: hodisa "Uzumga yuborish kerak" (Telegram va ilova sozlamasi, ombor auditoriyasi) — Uzumdagi zaxira topshirish muddatiga yetmaydi, omborimda tovar bor; yangi SKU kirganda bir marta; xabarda Uzumdagi zaxira kuni va yuboriladigan dona (F54 rejasi yoki omborimdagi son), "Batafsil" — Jo'natmalar.
