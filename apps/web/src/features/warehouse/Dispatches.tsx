@@ -177,6 +177,20 @@ function DraftForm({ orgId, shopId }: { orgId: string; shopId: string }) {
     const v = cost[id];
     return v === undefined || v === null || v === "" ? null : v;
   };
+  // F54: "Tavsiya bo'yicha to'ldirish" — rejasi bor qatorlarga yuborish rejasi; reja 0 (Uzumda yetarli) — qoralamadan olib
+  // tashlanadi ("qaytarish" bilan tiklanadi); rejasiz qatorlar o'zgarmaydi. Standart — to'liq son (ADR-061 §7).
+  const planned = (draft.data?.rows ?? []).filter((r) => r.plan_qty !== null && r.plan_qty !== undefined);
+  const applyPlan = () => {
+    const nextQty: Record<string, string | null> = {};
+    const drop: string[] = [];
+    for (const r of planned) {
+      if ((r.plan_qty ?? 0) > 0) nextQty[r.sku_id] = String(r.plan_qty);
+      else drop.push(r.sku_id);
+    }
+    setQty((x) => ({ ...x, ...nextQty }));
+    setRemoved((x) => [...new Set([...x, ...drop])]);
+    toast.show(t("dispatch.planApplied", { count: Object.keys(nextQty).length, skipped: drop.length }), "positive");
+  };
   const items = rows.map((r) => ({ sku_id: r.sku_id, qty: Number(valueOf(r.sku_id, r.qty)), max: r.qty, unit_cost: costOf(r.sku_id), unknown: r.unknown ?? false }));
   const costOk = (x: (typeof items)[number]) => (x.unit_cost === null ? !x.unknown : Number(x.unit_cost) > 0);
   const valid = items.length > 0 && items.every((x) => Number.isInteger(x.qty) && x.qty >= 1 && x.qty <= x.max && costOk(x));
@@ -251,6 +265,11 @@ function DraftForm({ orgId, shopId }: { orgId: string; shopId: string }) {
           </ul>
           {save.isError && <Banner tone="negative" title={errorText(save.error, t)} />}
           <div className="cargo-pool__footer">
+            {planned.length > 0 && (
+              <Button variant="secondary" onClick={applyPlan} title={t("dispatch.planHint")}>
+                {t("dispatch.fillPlan")}
+              </Button>
+            )}
             {removed.length > 0 && (
               <Button variant="ghost" onClick={() => setRemoved([])}>
                 {t("dispatch.restore", { count: removed.length })}

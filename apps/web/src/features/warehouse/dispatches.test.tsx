@@ -95,6 +95,24 @@ describe("Uzumga jo'natish", () => {
     expect(await screen.findByText(/Joʻnatma saqlandi/)).toBeTruthy();
   });
 
+  it("F54: \"Tavsiya bo'yicha to'ldirish\" — reja miqdori qo'yiladi, reja 0 — olib tashlanadi, rejasiz — o'zgarmaydi; standart — to'liq son", async () => {
+    const rows = [draftRow({ plan_qty: 25 }), draftRow({ sku_id: SKU_B, title: "Koʻylak-Oq", barcode: "4780000000002", qty: 5, plan_qty: 0 }), draftRow({ sku_id: "c", title: "Rejasiz", barcode: "4780000000003", qty: 9, plan_qty: null })];
+    await renderAt({ [DRAFT_ROUTE]: () => json(200, { shop_id: SHOP, rows, no_barcode: [] }) });
+    expect((await screen.findByLabelText("Dona: Mashina-Qizil") as HTMLInputElement).value).toBe("70"); // standart — to'liq
+    fireEvent.click(screen.getByRole("button", { name: "Tavsiya boʻyicha toʻldirish" }));
+    expect((screen.getByLabelText("Dona: Mashina-Qizil") as HTMLInputElement).value).toBe("25");
+    expect(screen.queryByLabelText("Dona: Koʻylak-Oq")).toBeNull(); // Uzumda yetarli — olib tashlandi
+    expect((screen.getByLabelText("Dona: Rejasiz") as HTMLInputElement).value).toBe("9");
+    fireEvent.click(screen.getByRole("button", { name: "Olib tashlanganlarni qaytarish (1)" }));
+    expect(screen.getByLabelText("Dona: Koʻylak-Oq")).toBeTruthy();
+  });
+
+  it("reja yo'q (maqsad qamrov sozlanmagan) — tugma ko'rinmaydi", async () => {
+    await renderAt();
+    await screen.findByLabelText("Dona: Mashina-Qizil");
+    expect(screen.queryByRole("button", { name: "Tavsiya boʻyicha toʻldirish" })).toBeNull();
+  });
+
   it("TM9.7: tannarx — taxminiy belgi, noma'lum bo'lsa kiritmasdan saqlanmaydi, kiritilgani yuboriladi", async () => {
     const api = await renderAt({
       [DRAFT_ROUTE]: () =>

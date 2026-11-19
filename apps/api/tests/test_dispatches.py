@@ -72,6 +72,7 @@ def test_dispatch_flow(world: World) -> None:
     draft = ok(send(w, "GET", f"dispatches/draft?shop_id={shop}"))
     row = next(r for r in draft["rows"] if r["sku_id"] == str(w.ids["sku"]))
     assert row["qty"] == before and D(row["unit_cost"]) > 0
+    assert row["plan_qty"] is None  # maqsad qamrov sozlanmagan — tavsiya yo'q (standart yo'q)
     assert any(r["sku_id"] == str(w.ids["sku2"]) for r in draft["no_barcode"])
     assert not any(r["sku_id"] == str(w.ids["sku2"]) for r in draft["rows"])
 
@@ -129,6 +130,48 @@ def test_dispatch_flow(world: World) -> None:
     mine = next(x for x in ok(send(w, "GET", "dispatches"))["items"] if x["id"] == out["id"])
     assert mine["status"] == "canceled"
     assert qty_of(w, "sku") == before
+
+
+def test_draft_plan_qty_follows_ship_plan_and_never_exceeds_own(world: World) -> None:
+    """B5.2 (F54): "Tavsiya bo'yicha to'ldirish" uchun `plan_qty` — yuborish rejasi, omborimdagi sondan oshmaydi."""
+    w, a = world, world.a
+    shop = str(a.shop_id)
+    a.sql("UPDATE mp_skus SET barcode = '4780000000001' WHERE id = %s", [w.ids["sku"]])
+    counted(w, 50)
+    from datetime import timedelta
+
+    from upapi.reports.common import today
+
+    for i in range(14):  # tezlik 0 bo'lmasin: oxirgi 14 kun har kuni 2 dona
+        day = today() - timedelta(days=i)
+        a.sale(w.ids["sku"], day, 2)
+        a.insert("sku_daily", sku_id=w.ids["sku"], day=day, qty_active=5, qty_fbs=0)
+    a.recalc(datetime.now(UTC))
+    lead = {"transit": 20, "handover": 2}
+    ok(
+        send(
+            w,
+            "PUT",
+            "settings/inventory",
+            lead_days=lead,
+            ship_cover_days={"A": 365, "B": 365, "C": 365},
+        )
+    )
+    row = next(
+        r
+        for r in ok(send(w, "GET", f"dispatches/draft?shop_id={shop}"))["rows"]
+        if r["sku_id"] == str(w.ids["sku"])
+    )
+    assert (
+        isinstance(row["plan_qty"], int) and row["plan_qty"] == row["qty"]
+    )  # juda katta maqsad — hammasi
+    ok(send(w, "PUT", "settings/inventory", lead_days=lead, ship_cover_days=None))
+    row = next(
+        r
+        for r in ok(send(w, "GET", f"dispatches/draft?shop_id={shop}"))["rows"]
+        if r["sku_id"] == str(w.ids["sku"])
+    )
+    assert row["plan_qty"] is None
 
 
 def test_dispatch_at_uzum_state_and_manual_link(world: World) -> None:

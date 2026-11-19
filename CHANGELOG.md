@@ -7,6 +7,7 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Qo'shildi
 
+- B5.2 (5-qadam, tugadi): jo'natma qoralamasida "Tavsiya bo'yicha to'ldirish" — F54 yuborish rejasi miqdori qo'yiladi (omborimdagidan oshmaydi), reja 0 (Uzumda yetarli) bo'lgan qator qoralamadan olinadi va "qaytarish" bilan tiklanadi; rejasiz qator o'zgarmaydi; standart — to'liq son.
 - B5.2 (4-qadam): F54 "Uzumga yuborish rejasi" — yuborish = min(omborim, max(0, tezlik × (topshirish muddati + maqsad qamrov) − (Uzumda + postavkada))); maqsad qamrov ABC sinfi bo'yicha Sozlamalarda (standarti yo'q, bo'sh — reja chiqmaydi); Omborda "Yuborish rejasi: N dona"; yuborgandan keyin Uzumda 60 kundan oshsa saqlash haqi ogohlantirishi; ko'p SKU'li tovarda omborimdagi dona SKU'lar orasida bir marta.
 - B5.2 (3-qadam): Omborda tavsiya miqdori bor qatorlarni tanlash — pastda panel (soni, jami byudjet valyutalar bo'yicha alohida, narxsiz qatorlar belgilanadi) va "Bitta xaridga qo'shish": tanlanganlar tavsiya miqdori bilan oldindan to'ldirilgan bitta xarid oynasida.
 - B5.2 (2-qadam): tovarning ixtiyoriy "odatiy partiya hajmi" (`items.order_batch`, migratsiya 0036; `PUT /skus/{id}/order-batch`, audit) — Ombordagi tavsiya miqdor shunga karrali yuqoriga yaxlitlanadi (F27); qiymat bo'sh bo'lsa yaxlitlanmaydi; Ombor qatorida "Partiya hajmi" oynasi.

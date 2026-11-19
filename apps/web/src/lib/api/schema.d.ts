@@ -2688,6 +2688,8 @@ export interface components {
              * @default false
              */
             unknown: boolean;
+            /** Plan Qty */
+            plan_qty?: number | null;
         };
         /**
          * Event

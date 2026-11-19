@@ -11602,6 +11602,17 @@
             "type": "boolean",
             "title": "Unknown",
             "default": false
+          },
+          "plan_qty": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Qty"
           }
         },
         "type": "object",
