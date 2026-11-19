@@ -64,3 +64,35 @@ def test_two_skus_share_one_plan(world: World) -> None:
     assert xa.days_of_stock_all == xb.days_of_stock_all
     assert xa.status == xb.status and xa.order_by == xb.order_by
     a.sql("UPDATE orgs SET settings = settings - 'lead_days' WHERE id = %s", [w.org_id])
+
+
+def test_batch_rounds_item_plan_up(world: World) -> None:
+    w, a = world, world.a
+    item = a.insert("items", name="Partiyali tovar")
+    sku = a.insert(
+        "mp_skus",
+        shop_id=a.shop_id,
+        external_id=9_202,
+        sku_code="Partiya",
+        item_id=item,
+        qty_active=5,
+    )
+    a.sql(
+        "UPDATE orgs SET settings = jsonb_set(coalesce(settings, '{}'::jsonb), '{lead_days}', "
+        '\'{"transit": 20, "handover": 2}\') WHERE id = %s',
+        [w.org_id],
+    )
+    for i in range(14):
+        day = AS_OF - timedelta(days=13 - i)
+        a.sale(sku, day, 3)
+        a.insert("sku_daily", sku_id=sku, day=day, qty_active=5, qty_fbs=0)
+    a.request(calc.Scope.SHOP, a.shop_id)
+    a.recalc(NOW)
+    plain = w.a.run(lambda conn: load_stock(conn, None, AS_OF)).skus[sku]
+    assert plain.reorder is not None and plain.reorder.qty > 0 and plain.order_batch is None
+    a.sql("UPDATE items SET order_batch = 50 WHERE id = %s", [item])
+    rounded = w.a.run(lambda conn: load_stock(conn, None, AS_OF)).skus[sku]
+    assert rounded.order_batch == 50 and rounded.reorder is not None
+    assert rounded.reorder.qty % 50 == 0 and 0 <= rounded.reorder.qty - plain.reorder.qty < 50
+    a.sql("UPDATE items SET order_batch = NULL WHERE id = %s", [item])
+    a.sql("UPDATE orgs SET settings = settings - 'lead_days' WHERE id = %s", [w.org_id])

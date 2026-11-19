@@ -249,3 +249,32 @@ async def link_item(sku_id: UUID, body: ItemLinkIn, ctx: Manager) -> LinkedItemO
                 await calc.request(ctx.conn, ctx.org_id, calc.Scope.ITEM, item)
         await calc.request(ctx.conn, ctx.org_id, calc.Scope.SHOP, sku.shop_id)
     return None if target is None else await item_of(ctx, target)
+
+
+class OrderBatchIn(BaseModel):
+    """Odatiy partiya hajmi (dona); ``null`` — o'chirish (tavsiya bir donagacha yaxlitlanadi)."""
+
+    batch: Annotated[int | None, Field(ge=1, le=1_000_000)]
+
+
+class OrderBatchOut(BaseModel):
+    item_id: UUID
+    batch: int | None
+
+
+@router.put("/orgs/{org_id}/skus/{sku_id}/order-batch", response_model=OrderBatchOut)
+async def set_order_batch(sku_id: UUID, body: OrderBatchIn, ctx: Manager) -> OrderBatchOut:
+    """F27 (B5.2): tovarning odatiy partiya hajmi (masalan, 50 ning karrali). Tovar SKU orqali topiladi (tovari yo'q
+    bo'lsa yaratiladi). Faqat tavsiya miqdorni yaxlitlaydi, tannarxga ta'sir qilmaydi — qayta hisob kerak emas."""
+    item_id = await item_of_sku(ctx, sku_id)
+    i = m.items
+    before = await ctx.conn.scalar(select(i.c.order_batch).where(i.c.id == item_id))
+    await ctx.conn.execute(update(i).where(i.c.id == item_id).values(order_batch=body.batch))
+    await ctx.audit(
+        "item.order_batch",
+        "item",
+        item_id,
+        before={"order_batch": before},
+        after={"order_batch": body.batch},
+    )
+    return OrderBatchOut(item_id=item_id, batch=body.batch)

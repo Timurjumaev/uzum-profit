@@ -1271,6 +1271,16 @@ export const uzLatn = {
       f27: { code: "F27", formula: "Buyurtma sanasi = bugun + (hamma joydagi tovar zaxira kunlari − toʻliq muddat). Tavsiya = tezlik × (muddat + qamrov) − (qoldiq + yoʻlda + buyurtma qilingan + oʻz omborim); qamrov ABC sinfiga qarab 60 / 30 / 14 kun", source: "F23, F25, ABC (F28), xarid joylari" },
       f29: { code: "F29", formula: "Muzlagan pul = Σ qoldiq × lot tannarxi, joylar boʻyicha. Oʻrtacha sotilish muddati = Σ (zaxira kunlari × qiymat) / Σ qiymat", source: "Uzum qoldigʻi, xarid joylari, lot tannarxi (F20)" },
     },
+    batch: {
+      action: "Partiya hajmi",
+      title: "Odatiy partiya hajmi: {{name}}",
+      save: "Saqlash",
+      saved: "Partiya hajmi saqlandi",
+      hint: "Yetkazib beruvchi tovarni qanchadan beradi (masalan, kartonda 50 dona)? Tavsiya miqdor shu sonning karralisigacha yuqoriga yaxlitlanadi. Boʻsh qoldirsangiz — yaxlitlanmaydi. Tannarxga taʼsir qilmaydi.",
+      label: "Partiya hajmi",
+      help: "Boʻsh — yaxlitlanmaydi",
+      note: "partiya: {{n}} ning karralisi",
+    },
     move: {
       title: "Hisobdan chiqarish: {{name}}",
       close: "Yopish",

@@ -1169,8 +1169,9 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
     sotuv tezligi bo'yicha bo'linadi (eng katta qoldiq usuli).
   - Tanlangan qatorlar bo'yicha jami byudjet (xarid valyutasi va so'm); tanlanganlardan **bitta** tez xarid oynasi (ko'p
     tovar, TM2).
-  - "Odatiy partiya hajmi" (F27 yaxlitlash): manbasi yo'q (`reorder(batch=1)`) — tovarda ixtiyoriy maydon yoki oxirgi
-    xarid donasidan taklif.
+  - [x] "Odatiy partiya hajmi" (F27 yaxlitlash; 2-qadam): tovarda ixtiyoriy `items.order_batch` (migratsiya 0036, standart
+    yo'q — bo'sh bo'lsa 1), Ombor qatorida "Partiya hajmi" tugmasi (`PUT /skus/{id}/order-batch`), tavsiya shunga karrali
+    yuqoriga yaxlitlanadi (tovar darajasidagi reja ham).
   - **Uzumga yuborish rejasi** (avval B5.3 qoldig'i) — yangi formula **F54**: yuborish = min(Omborimda, max(0, F23 ×
     (topshirish muddati + maqsad qamrov) − (Uzum qoldig'i + postavkada))); maqsad qamrov sozlanadi; (Uzumdagi +
     yuboriladigan) / F23 > 60 kun bo'lsa ogohlantirish — Uzum 60 kundan oshgan aylanmaga saqlash haqi oladi (F43).
