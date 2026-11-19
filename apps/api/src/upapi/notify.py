@@ -20,6 +20,7 @@ Hodisalar (ishlaydiganlari; qolganlari katalogda ``stage`` bilan):
 - **Yangi jarima** — oxirgi 3 kunda paydo bo'lgan jarima xarajati (har biri bir marta).
 - **Postavka kamomadi** — Uzum kam qabul qilgan va qaror yozilmagan farq (TM7).
 - **Xarid sanalmagan** (TM9.8) — "Keldi" belgilangan xarid N kun (standart 3) sanalmay tursa, har xarid uchun bir marta.
+- **Kargo kechikmoqda** (B5.1) — "Yo'lda" xarid kutilgan keldi sanasi (F25 "yo'l") + N kun (standart 5) dan o'tgan, har xarid bir marta.
 - **Sinxron to'xtadi** (B6.4, A4) — ikki xil: *kalit yaroqsiz* (kritik, bir marta, har 3 kunda eslatma) va
   *yangilanmayapti* (kritik emas, Uzum uzilishida yuborilmaydi, har to'xtash uchun bir marta); tiklanganda bitta "tiklandi".
 """
@@ -61,6 +62,7 @@ from upapi.logs import get_logger
 from upapi.reports import cells as rc
 from upapi.reports import receiving as rr
 from upapi.reports.common import Filters, freshness, sku_catalog
+from upapi.reports.purchases import late_cargo
 from upapi.reports.stock import load_stock
 
 TASHKENT = ZoneInfo("Asia/Tashkent")
@@ -391,6 +393,24 @@ async def uncounted_purchases(conn: AsyncConnection, today: date, days: int) -> 
     ]
 
 
+async def cargo_late(conn: AsyncConnection, today: date, days: int) -> list[Found]:
+    """B5.1: kargo kechikmoqda — kutilgan keldi sanasi (F25 "yo'l") + ``days`` kundan o'tgan "Yo'lda" xaridlar; har xarid
+    bir marta (``dedupe_key`` — xarid)."""
+    return [
+        Found(
+            Event.CARGO_LATE,
+            f"cargo_late:{x.id}",
+            {
+                "purchase_id": str(x.id),
+                "title": x.title,
+                "expected": x.expected.isoformat(),
+                "days_late": x.days_late,
+            },
+        )
+        for x in await late_cargo(conn, today, days)
+    ]
+
+
 REMIND_KEY_DAYS = 3  # kalit yaroqsiz bo'lib qolsa — eslatma har 3 kunda
 RESTORED_WINDOW = timedelta(days=7)
 
@@ -612,6 +632,16 @@ async def evaluate(conn: AsyncConnection, org_id: UUID, now: datetime) -> int:
                     (by_id[u], f)
                     for u, f in await sync_restored(conn, shops, now, hours)
                     if u in allowed
+                ]
+    if Event.CARGO_LATE in wanted and heavy:
+        for days in sorted(
+            {int(p.params(Event.CARGO_LATE)["days"]) for p in people if p.wants(Event.CARGO_LATE)}
+        ):
+            for found in await cargo_late(conn, today, days):
+                personal += [
+                    (p, found)
+                    for p in people
+                    if p.wants(Event.CARGO_LATE) and int(p.params(Event.CARGO_LATE)["days"]) == days
                 ]
     if Event.UNCOUNTED_PURCHASE in wanted:
         for days in sorted(

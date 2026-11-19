@@ -3,6 +3,7 @@ standart tartibi, manba va namuna soni; topshirish muddati — jo'natma Excel'i 
 
 from __future__ import annotations
 
+import math
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
@@ -96,3 +97,30 @@ def test_lead_tiers_item_supplier_org_default_and_dispatch(world: World) -> None
     ]  # eski xarid (2) + jo'natma (6) — eng eskisidan yangisiga
     assert after.org["handover"] == [2, 6]
     assert after.learn(item, {}).stages["handover"] == D(4)  # median(2, 6)
+
+
+def test_late_cargo_only_in_transit_past_expected_plus_grace(world: World) -> None:
+    """B5.1: "Yo'lda" xarid kutilgan keldi sanasi (buyurtma + F25 "yo'l") + imtiyoz kunidan o'tsa kechikkan; "Keldi"
+    belgilangan, yangi (muddat ichida) va muddati noma'lum xarid — kechikmagan."""
+    from upapi.reports.purchases import late_cargo, org_lead
+
+    w, a = world, world.a
+    item = w.ids["item"]
+    old = purchase_for(w, item, None, ordered_on=date(2026, 9, 1), title="Kechikkan partiya")
+    purchase_for(w, item, None, ordered_on=date(2026, 11, 28), title="Yangi partiya")
+    arrived = a.purchase(
+        None, ordered_on=date(2026, 9, 2), arrived_on=date(2026, 10, 1), arrival_marked=True
+    )
+    a.line(arrived, item, 5)
+    today = date(2026, 11, 30)
+    lead = w.a.run(lambda conn: org_lead(conn))[
+        "transit"
+    ]  # tashkilot medianasi (umumiy bazadagi hamma xarid)
+    found = {x.id: x for x in w.a.run(lambda conn: late_cargo(conn, today, 5))}
+    expected = date(2026, 9, 1).toordinal() + math.ceil(lead)
+    assert old in found and arrived not in found
+    assert found[old].expected.toordinal() == expected
+    assert found[old].days_late == today.toordinal() - expected
+    assert not [x for x in found.values() if x.title == "Yangi partiya"]
+    # Imtiyoz kunlari uzun — hech kim kechikmagan.
+    assert w.a.run(lambda conn: late_cargo(conn, today, 365)) == []

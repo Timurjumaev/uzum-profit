@@ -33,6 +33,7 @@ from upcore.metrics import (
     share_change,
 )
 from upcore.money import Currency, Money, total
+from upcore.notify import CATALOG, Event
 from upcore.pnl import CellKey, Cells, Statement, compare, expected_value, order_to_profit
 
 from upapi import orgsettings
@@ -51,12 +52,15 @@ from upapi.reports.common import (
     meta,
     sku_catalog,
 )
-from upapi.reports.purchases import goods_missing
+from upapi.reports.purchases import goods_missing, late_cargo
 from upapi.reports.purchases import uncounted as uncounted_purchases
 from upapi.reports.receiving import attention as receiving_attention
 from upapi.reports.schemas import ExpectedOut, RevenueLimitOut, RowOut, StatementOut
 from upapi.reports.stock import load_stock
 
+CARGO_LATE_DAYS = int(
+    CATALOG[Event.CARGO_LATE].params["days"]
+)  # "Diqqat" qatori — hodisa standart muddati bilan
 router = APIRouter(tags=["reports"])
 Finance = Annotated[OrgContext, Depends(require(Permission.VIEW_FINANCE))]
 Filter = Annotated[Filters, Depends(filters)]
@@ -175,6 +179,7 @@ class AttentionOut(BaseModel):
     goods_missing: int = 0  # TM9.5: tovar summasi kiritilmagan xaridlar (F22, taxminiy)
     uncounted: int = 0  # TM9.8: xarid keldi, sanalmagan
     orphan_invoices: int = 0  # TM9.1: dasturdan tashqari (jo'natmasiz) postavkalar
+    cargo_late: int = 0  # B5.1: kutilgan keldi sanasidan 5 kundan ko'p o'tgan "Yo'lda" xaridlar
     telegram_lost: int = (
         0  # B6.4 (A5): Telegram kanali uzilgan (bot bloklangan / chat yo'q) — 1, qayta ulash kerak
     )
@@ -559,6 +564,7 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
             goods_missing=await goods_missing(conn),
             uncounted=await uncounted_purchases(conn),
             orphan_invoices=len(await linking.orphans(conn)),
+            cargo_late=len(await late_cargo(conn, today, CARGO_LATE_DAYS)),
             telegram_lost=await telegram_lost(conn, ctx.user.user_id),
         ),
         revenue_limit=None if limit is None else RevenueLimitOut.of(limit),

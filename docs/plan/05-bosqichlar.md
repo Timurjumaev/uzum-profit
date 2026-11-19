@@ -1136,7 +1136,7 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
     ushlashi tasdiqlanmagan (08 §6), import tovarida kirim QQS manbasi aniqlanmagan — real ma'lumotda tekshirib bo'lmaydi.
   - [ ] B5.0f (avval B4.76, taklif) Foyda sahifasida "Uzum kabineti ko'rsatadigan" qator (09 §11.3: tushum − komissiya) —
     B5.6 bilan birga; Temur ko'rgach qoladi yoki olinadi.
-- [→] B5.1 **Muddatni o'rganish — F25 ikki bo'lak (tuzatish, birinchi navbatda).** Hozir kodda F25 hali eski 5 bosqich
+- [x] B5.1 **Muddatni o'rganish — F25 ikki bo'lak (tuzatish, birinchi navbatda).** Hozir kodda F25 hali eski 5 bosqich
   (`upcore.purchasing.LEAD_STAGES`: tayyorlash, Xitoy ichki, kargo, qabul, topshirish), `reports/stock.py` esa 5 tasi ham
   bo'lmasa muddatni "noma'lum" deydi. ADR-061 dan keyingi xaridda faqat buyurtma va sanash sanasi bor — yangi xaridlar
   hech narsa o'rgatmaydi; F26 holat, F27 tavsiya va "Uzumga yuborish" signali faqat Sozlamalardagi 5 ta qo'lda raqamga
@@ -1154,8 +1154,11 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
     yetkazib beruvchi → tashkilot → Sozlamalardagi standart; `LeadTime.sources` / `.samples` (manba va nechta xariddan). `upapi.reports.purchases.lead_history`
     — bitta manba (xaridlar + jo'natma → postavka `dateAccepted`, ADR-056); `stock.py` va partiya yo'li shundan. Sozlamalar 5 → 2 maydon
     (`orgsettings`: eski besh bosqichli saqlangan qiymat o'qishda ikkiga ko'chadi — yo'l = tayyorlash + Xitoy + kargo + qabul); `/inventory`
-    `lead_time.sources` va `samples`. Qoldi: UI'da manba matni ("5 xaridingizdan" / "standart"), hodisa "Kargo kechikmoqda" + "Diqqat",
-    yetkazib beruvchi maydoni tez xarid oynasida.
+    `lead_time.sources` va `samples`. 
+  - ✓ 2-qadam 2026-11-18: Ombor jadvalida muddat manbasi ("yo'l 30 kun (5 xaridingizdan) · topshirish 2 kun (standart)"); hodisa "Kargo kechikmoqda"
+    (`late_cargo`: "Yo'lda" xarid, buyurtma + F25 "yo'l" + 5 kun dan o'tgan, har xarid bir marta; ombor va egasi/menejer oladi) va Bosh sahifa "Diqqat"
+    qatori (`attention.cargo_late`); tez xarid oynasida ixtiyoriy "Yetkazib beruvchi" (yangisini ham qo'shish). Muddat noma'lum — kechikish yo'q (raqam o'ylab topilmaydi).
+    **T:** staging'da bir xaridning buyurtma sanasini eski qilib (yoki kutilgan sanadan o'tgan xarid bilan) Omborni ochib, "Kargo kechikmoqda" qatori va Telegram xabarini ko'rish.
   - Yetkazib beruvchi — tez xarid oynasida ixtiyoriy maydon (jadval va `/suppliers` API bor; M9 da va'da qilingan, oynada
     yo'q). **Qilinmaydi:** kargo kompaniyalari ma'lumotnomasi ekrani (ADR-061 §9: ixtiyoriy maydon — bor), yetkazib
     beruvchi / kargo kartochkasida qo'lda "o'rtacha muddat" (`avg_prep_days`, `avg_transit_days` — o'rganiladi).

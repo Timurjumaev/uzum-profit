@@ -4,6 +4,7 @@ to'xtadi), rol bo'yicha oluvchilar, takror yo'q, tinch soatlar va eski sinxronda
 
 from __future__ import annotations
 
+import math
 from datetime import date, datetime, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -15,6 +16,7 @@ from test_receiving import setup_dispatch
 from test_reports import World
 from upapi import calc, notify
 from upapi.auth.deps import COOKIE
+from upapi.reports.purchases import org_lead
 from upapi.sync import jobs
 
 db = tp.db
@@ -494,3 +496,41 @@ def test_sync_stale_once_not_during_outage_and_restored(world: World) -> None:
     # Sog'lom do'konda boshqa "to'xtadi" bo'lmasa — yangi xabar yo'q.
     evaluate(w, NOW + timedelta(hours=2))
     assert len(_rows(w, "owner", "sync_stopped")) == 2
+
+
+def test_cargo_late_event_once_per_purchase(world: World) -> None:
+    """B5.1: "Kargo kechikmoqda" — kutilgan keldi sanasi (F25 "yo'l", bu yerda standart 20 kun) + 5 kundan o'tgan "Yo'lda"
+    xarid; har xarid bir marta; ombor roli oladi."""
+    w, a = world, world.a
+    _clean(w)
+    w.a.sql(
+        "UPDATE orgs SET settings = jsonb_set(coalesce(settings, '{}'::jsonb), '{lead_days}', "
+        '\'{"transit": 20, "handover": 2}\') WHERE id = %s',
+        [w.org_id],
+    )
+    try:
+        p = a.purchase(None, ordered_on=date(2026, 9, 1), title="Presslangan o'ram")
+        a.line(p, w.ids["item"], 10)
+        evaluate(w)
+        rows = _rows(w, "warehouse", "cargo_late")
+        assert len(rows) == 1 and rows[0]["key"] == f"cargo_late:{p}"
+        payload = rows[0]["payload"]
+        assert payload["purchase_id"] == str(p) and payload["title"] == "Presslangan o'ram"
+        lead = w.a.run(lambda conn: org_lead(conn))[
+            "transit"
+        ]  # umumiy bazadagi boshqa xaridlar medianani o'zgartirishi mumkin
+        expected = date(2026, 9, 1) + timedelta(days=math.ceil(lead))
+        assert payload["expected"] == expected.isoformat()
+        assert payload["days_late"] == (NOW.date() - expected).days
+        assert _rows(w, "owner", "cargo_late") and not _rows(w, "accountant", "cargo_late")
+        evaluate(w, NOW + timedelta(hours=1))  # takror emas
+        assert len(_rows(w, "warehouse", "cargo_late")) == 1
+        # "Keldi" belgilangach — yangi xabar yo'q (boshqa xarid ham kechikmagan).
+        w.a.sql(
+            "UPDATE purchases SET arrival_marked = true, arrived_on = %s WHERE id = %s",
+            [date(2026, 11, 1), p],
+        )
+        evaluate(w, NOW + timedelta(days=1))
+        assert len(_rows(w, "warehouse", "cargo_late")) == 1
+    finally:
+        w.a.sql("UPDATE orgs SET settings = settings - 'lead_days' WHERE id = %s", [w.org_id])
