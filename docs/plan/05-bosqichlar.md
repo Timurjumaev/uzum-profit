@@ -1225,7 +1225,7 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
     "aniq emas, gigiyenik tovar va boshqa holatlar bor — taxmin qilma, statik qilma" → faqat o'z ma'lumotidan o'rganiladi,
     standart yo'q.** Yo'qolgan tovar (F31): kabinetda ham yaqqol ko'rinmaydi — yechilsa katta foyda; 30 kunlik snapshot
     to'lgach (≈ 2026-11-25) `realcheck lost` qayta o'lchanadi.
-  - `realcheck payout` (avval): `withdrawnProfit` maydoni nimani bildiradi (qator bo'yicha yechilgan summa — avtomatik
+  - [x] `realcheck payout` kodi ✓ 2026-11-20 (`checks.payout`; **natija Temurdan kutilmoqda**): `withdrawnProfit` maydoni nimani bildiradi (qator bo'yicha yechilgan summa — avtomatik
     "tushdi"); buyurtma → Yakunlangan oralig'i taqsimoti (`completed_seen_at`, 2026-11-12 dan); prognoz ↔ Temurning
     oxirgi 2–3 real to'lovi; to'lov jadvali — **butun akkauntga bitta** (Temur, 2026-11-16; pul yechish haqi ham `shopId: 0` bilan keladi,
     ADR-062): `payout_schedules` do'kondan akkaunt (`mp_accounts`) darajasiga ko'chadi (migratsiya), Sozlamalar ham.

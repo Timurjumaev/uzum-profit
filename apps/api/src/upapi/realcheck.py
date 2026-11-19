@@ -946,6 +946,96 @@ async def stock_check(conn: AsyncConnection, shop: UUID, now: datetime) -> dict[
     }
 
 
+PAYOUT_SAMPLE_KEYS = 300  # xom qatordagi maydon nomlarini yig'ish uchun qatorlar soni
+
+
+async def payout_check(conn: AsyncConnection, shop: UUID, now: datetime) -> dict[str, Any]:
+    """B5.7 (05 "realcheck payout"): to'lov prognozi uchun real o'lchov — faqat sonlar va sanalar, shaxsiy ma'lumot yo'q.
+
+    - **withdrawn** — ``withdrawnProfit`` ma'nosi: holat bo'yicha qatorlar, yechilgan (> 0) qatorlar va summalar;
+    - **completion** — topshirilgandan (``dateIssued``, mijoz BBP'dan olgan kun) Yakunlangan holatda birinchi ko'rilgunga
+      (``completed_seen_at``) o'tgan kunlar taqsimoti: nechta qator, minimal / mediana / 90-persentil va kunlar bo'yicha
+      gistogramma — "10 kun" qoidasi ma'lumotda ko'rinadimi;
+    - **raw_keys** — sotuv qatoridagi xom maydonlar (to'lov, sana, yechish bilan bog'liq nomlar) va ko'rinish namunasi:
+      Uzum to'lov qoidalari yoki sanalarini beradimi;
+    - **account_expenses** — akkaunt darajasidagi (``shopId: 0``) xarajatlar: kod, manba, soni, summa, birinchi / oxirgi
+      sana (shoshilinch pul yechish haqi C000010 / C000011) — haq foizi real to'lovlar bilan solishtirish uchun.
+    """
+    by_status = [
+        {**dict(r._mapping), "withdrawn": money(r.withdrawn), "profit": money(r.profit)}
+        for r in await conn.execute(
+            text(
+                "SELECT upper(trim(status)) AS status, count(*) AS lines, "
+                "count(*) FILTER (WHERE coalesce(nullif(raw ->> 'withdrawnProfit', '')::numeric, 0) > 0) AS withdrawn_lines, "
+                "coalesce(sum(nullif(raw ->> 'withdrawnProfit', '')::numeric), 0) AS withdrawn, "
+                "coalesce(sum(seller_profit), 0) AS profit FROM sale_items WHERE shop_id = :s GROUP BY 1 ORDER BY 2 DESC"
+            ),
+            {"s": shop},
+        )
+    ]
+    days = (
+        await conn.execute(
+            text(
+                "SELECT count(*) AS lines, min(d) AS min_days, "
+                "percentile_cont(0.5) WITHIN GROUP (ORDER BY d) AS median_days, "
+                "percentile_cont(0.9) WITHIN GROUP (ORDER BY d) AS p90_days, "
+                "min(completed_seen_at) AS first_completed_seen "
+                "FROM (SELECT extract(epoch FROM (completed_seen_at - issued_at)) / 86400 AS d, completed_seen_at "
+                "FROM sale_items WHERE shop_id = :s AND completed_seen_at IS NOT NULL AND issued_at IS NOT NULL "
+                "AND completed_seen_at >= issued_at) x"
+            ),
+            {"s": shop},
+        )
+    ).one()
+    histogram = {
+        str(r.day): r.n
+        for r in await conn.execute(
+            text(
+                "SELECT least(floor(extract(epoch FROM (completed_seen_at - issued_at)) / 86400)::int, 30) AS day, "
+                "count(*) AS n FROM sale_items WHERE shop_id = :s AND completed_seen_at IS NOT NULL "
+                "AND issued_at IS NOT NULL AND completed_seen_at >= issued_at GROUP BY 1 ORDER BY 1"
+            ),
+            {"s": shop},
+        )
+    }
+    keys: Counter[str] = Counter()
+    samples: dict[str, str] = {}
+    for r in await conn.execute(
+        text(
+            "SELECT raw FROM sale_items WHERE shop_id = :s AND raw IS NOT NULL ORDER BY ordered_at DESC LIMIT :n"
+        ),
+        {"s": shop, "n": PAYOUT_SAMPLE_KEYS},
+    ):
+        for key, value in (r.raw or {}).items():
+            if re.search(r"withdraw|payout|payment|date|paid|schedule|fee", key, re.IGNORECASE):
+                keys[key] += 1
+                samples.setdefault(key, pattern(value))
+    account = [
+        {**dict(r._mapping), "amount": money(r.amount)}
+        for r in await conn.execute(
+            text(
+                "SELECT coalesce(raw_code, '<null>') AS code, raw ->> 'source' AS source, count(*) AS n, "
+                "sum(amount) AS amount, min(created_on) AS first_on, max(created_on) AS last_on "
+                "FROM mp_expenses WHERE shop_id = :s AND (raw ->> 'shopId') ~ '^0+$' GROUP BY 1, 2 ORDER BY 3 DESC LIMIT :n"
+            ),
+            {"s": shop, "n": SAMPLE},
+        )
+    ]
+    return {
+        "withdrawn": by_status,
+        "completion": {
+            "lines": days.lines,
+            "min_days": None if days.min_days is None else round(float(days.min_days), 2),
+            "median_days": None if days.median_days is None else round(float(days.median_days), 2),
+            "p90_days": None if days.p90_days is None else round(float(days.p90_days), 2),
+            "first_completed_seen": days.first_completed_seen,
+            "histogram_days": histogram,
+        },
+        "raw_keys": {k: {"rows": n, "pattern": samples[k]} for k, n in keys.most_common(40)},
+        "account_expenses": account,
+    }
+
+
 LOST_DAYS = (0, 14, 30)  # balans farqi shu kunlar oldin ham hisoblanadi (barqarorlik)
 LOST_TOP = 40
 
@@ -1204,6 +1294,7 @@ async def shop_report(
             "expenses": await expenses_check(conn, shop.id),
             "stock": await stock_check(conn, shop.id, now),
             "lost": await lost_check(conn, shop.id, now),
+            "payout": await payout_check(conn, shop.id, now),
         },
         "sync": await sync_check(conn, shop.id, since),
     }
