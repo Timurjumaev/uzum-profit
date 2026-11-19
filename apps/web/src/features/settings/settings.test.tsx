@@ -374,13 +374,30 @@ describe("muddatlar va qamrov", () => {
     expect(save.disabled).toBe(false);
     fireEvent.click(save);
     await waitFor(() => expect(bodiesOf(api, INVENTORY_SETTINGS_ROUTE)).toHaveLength(1));
-    expect(bodiesOf(api, INVENTORY_SETTINGS_ROUTE)[0]).toEqual({ lead_days: { transit: 30, handover: 2 }, cover_days: { A: 45, B: 30, C: 14 } });
+    expect(bodiesOf(api, INVENTORY_SETTINGS_ROUTE)[0]).toEqual({ lead_days: { transit: 30, handover: 2 }, cover_days: { A: 45, B: 30, C: 14 }, ship_cover_days: null });
 
     fireEvent.click(within(box).getByRole("button", { name: "Standartga qaytarish" }));
     await waitFor(() => expect(bodiesOf(api, INVENTORY_SETTINGS_ROUTE)).toHaveLength(2));
-    expect(bodiesOf(api, INVENTORY_SETTINGS_ROUTE)[1]).toEqual({});
+    expect(bodiesOf(api, INVENTORY_SETTINGS_ROUTE)[1]).toEqual({ ship_cover_days: null });
     await waitFor(() => expect((within(box).getByLabelText("A sinfi") as HTMLInputElement).value).toBe("60"));
     expect((within(box).getByLabelText(/^Yoʻl/) as HTMLInputElement).value).toBe("");
+  });
+});
+
+describe("Uzumda maqsad zaxira (F54)", () => {
+  it("bo'sh — sozlanmagan; qisman — saqlab bo'lmaydi; uchala sinf — PUT tanasida", async () => {
+    const { api } = await renderSettings({ [INVENTORY_SETTINGS_ROUTE]: () => json(200, settingsData()) });
+    await ready();
+    const box = section("Muddatlar va qamrov");
+    const save = within(box).getByRole("button", { name: "Saqlash" }) as HTMLButtonElement;
+    fireEvent.change(within(box).getByLabelText(/^A sinfi \(Uzumda\)/), { target: { value: "30" } });
+    expect(save.disabled).toBe(true); // faqat bittasi — to'liq emas
+    fireEvent.change(within(box).getByLabelText(/^B sinfi \(Uzumda\)/), { target: { value: "21" } });
+    fireEvent.change(within(box).getByLabelText(/^C sinfi \(Uzumda\)/), { target: { value: "14" } });
+    expect(save.disabled).toBe(false);
+    fireEvent.click(save);
+    await waitFor(() => expect(bodiesOf(api, INVENTORY_SETTINGS_ROUTE)).toHaveLength(1));
+    expect(bodiesOf(api, INVENTORY_SETTINGS_ROUTE)[0]).toMatchObject({ ship_cover_days: { A: 30, B: 21, C: 14 } });
   });
 });
 

@@ -64,6 +64,9 @@ class InventorySettings:
     slow_days: int = 90
     lead_history: int = 5  # F25: oxirgi 5 xarid medianasi
     lost_recent_supply_days: int = 3  # F31
+    storage_free_days: int = 60  # F43/F54: Uzum 60 kundan oshgan aylanmaga saqlash haqi oladi
+    # F54: Uzumda maqsad zaxira (kun, ABC sinfi bo'yicha). Standarti yo'q (``None``) — sotuvchi sozlamaguncha reja chiqmaydi.
+    ship_cover_days: Mapping[AbcClass, int] | None = None
 
 
 DEFAULT = InventorySettings()
@@ -446,6 +449,42 @@ def ship_signal(
     if cover > lt:
         return None
     return ShipSignal(quantize(cover, 1), lt, own)
+
+
+@dataclass(frozen=True, slots=True)
+class ShipPlan:
+    """F54 "Uzumga yuborish rejasi": ``qty`` — yuboriladigan dona (omboringdan oshmaydi), ``need`` — omborim cheklovisiz
+    kerak bo'lgan dona, ``target_days`` — maqsad qamrov, ``days_after`` — yuborgandan keyin Uzumda necha kunga yetadi,
+    ``overstock`` — ``days_after`` Uzum bepul saqlash muddatidan (60 kun, F43) oshdi."""
+
+    qty: int
+    need: int
+    target_days: int
+    days_after: Decimal
+    overstock: bool
+
+
+def ship_plan(
+    uzum: int,
+    own: int,
+    speed: DecimalLike,
+    handover_days: DecimalLike | None,
+    target_days: int | None,
+    s: InventorySettings = DEFAULT,
+) -> ShipPlan | None:
+    """F54. Yuborish = min(omborim, max(0, F23 × (topshirish muddati + maqsad qamrov) − (Uzum qoldig'i + postavkada))).
+
+    ``uzum`` — Uzum qoldig'i + postavkadagi dona (F26 "Uzumga yuborish" dagidek). Maqsad qamrov sotuvchi sozlaydi (ABC
+    sinfi bo'yicha, standarti yo'q): tezlik 0, muddat yoki maqsad noma'lum bo'lsa — ``None`` (raqam o'ylab topilmaydi).
+    Yuborgandan keyingi zaxira ``s.storage_free_days`` dan oshsa — ``overstock`` (Uzum saqlash haqi oladi, F43)."""
+    v = to_decimal(speed)
+    if v <= 0 or handover_days is None or target_days is None:
+        return None
+    raw = max(v * (to_decimal(handover_days) + target_days) - uzum, D0)
+    need = int(raw.to_integral_value(rounding=ROUND_CEILING))
+    qty = min(max(own, 0), need)
+    after = quantize(Decimal(uzum + qty) / v, 1)
+    return ShipPlan(qty, need, target_days, after, after > s.storage_free_days)
 
 
 # --- M10 joylar: yo'ldagi, buyurtma qilingan va o'z omboridagi tovar -------------------------

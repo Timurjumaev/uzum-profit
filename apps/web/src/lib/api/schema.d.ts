@@ -2947,6 +2947,10 @@ export interface components {
             cover_days?: {
                 [key: string]: number;
             } | null;
+            /** Ship Cover Days */
+            ship_cover_days?: {
+                [key: string]: number;
+            } | null;
         };
         /** InventorySettingsOut */
         InventorySettingsOut: {
@@ -2964,6 +2968,10 @@ export interface components {
             cover_defaults: {
                 [key: string]: number;
             };
+            /** Ship Cover Days */
+            ship_cover_days: {
+                [key: string]: number;
+            } | null;
         };
         /** InviteAccept */
         InviteAccept: {
@@ -4812,6 +4820,23 @@ export interface components {
              */
             uncounted: number;
         };
+        /**
+         * ShipPlanOut
+         * @description F54 "Uzumga yuborish rejasi": ``qty`` — yuboriladigan dona (omboringdan oshmaydi), ``need`` — omborim cheklovisiz
+         *     kerak bo'lgani, ``days_after`` — yuborgandan keyin Uzumda necha kunga yetadi, ``overstock`` — 60 kundan oshdi (F43).
+         */
+        ShipPlanOut: {
+            /** Qty */
+            qty: number;
+            /** Need */
+            need: number;
+            /** Target Days */
+            target_days: number;
+            /** Days After */
+            days_after: string;
+            /** Overstock */
+            overstock: boolean;
+        };
         /** ShipmentDetailOut */
         ShipmentDetailOut: {
             shipment: components["schemas"]["ShipmentOut"];
@@ -5541,6 +5566,7 @@ export interface components {
             lead_time: components["schemas"]["LeadOut"] | null;
             status: components["schemas"]["StockStatus"] | null;
             ship: components["schemas"]["ShipOut"] | null;
+            ship_plan: components["schemas"]["ShipPlanOut"] | null;
             product_status: components["schemas"]["StockStatus"] | null;
             /** Abc */
             abc: string;

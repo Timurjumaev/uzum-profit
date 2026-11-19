@@ -12305,6 +12305,22 @@
               }
             ],
             "title": "Cover Days"
+          },
+          "ship_cover_days": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer",
+                  "maximum": 365.0,
+                  "minimum": 0.0
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ship Cover Days"
           }
         },
         "type": "object",
@@ -12347,6 +12363,20 @@
             },
             "type": "object",
             "title": "Cover Defaults"
+          },
+          "ship_cover_days": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ship Cover Days"
           }
         },
         "type": "object",
@@ -12354,7 +12384,8 @@
           "stages",
           "lead_days",
           "cover_days",
-          "cover_defaults"
+          "cover_defaults",
+          "ship_cover_days"
         ],
         "title": "InventorySettingsOut"
       },
@@ -18293,6 +18324,40 @@
         "title": "ShipOut",
         "description": "F26 \"Uzumga yuborish\" (ADR-057 Q2): Uzumdagi + postavkadagi zaxira topshirish muddatiga yetmaydi, omborimda bor."
       },
+      "ShipPlanOut": {
+        "properties": {
+          "qty": {
+            "type": "integer",
+            "title": "Qty"
+          },
+          "need": {
+            "type": "integer",
+            "title": "Need"
+          },
+          "target_days": {
+            "type": "integer",
+            "title": "Target Days"
+          },
+          "days_after": {
+            "type": "string",
+            "title": "Days After"
+          },
+          "overstock": {
+            "type": "boolean",
+            "title": "Overstock"
+          }
+        },
+        "type": "object",
+        "required": [
+          "qty",
+          "need",
+          "target_days",
+          "days_after",
+          "overstock"
+        ],
+        "title": "ShipPlanOut",
+        "description": "F54 \"Uzumga yuborish rejasi\": ``qty`` — yuboriladigan dona (omboringdan oshmaydi), ``need`` — omborim cheklovisiz\nkerak bo'lgani, ``days_after`` — yuborgandan keyin Uzumda necha kunga yetadi, ``overstock`` — 60 kundan oshdi (F43)."
+      },
       "ShipmentDetailOut": {
         "properties": {
           "shipment": {
@@ -20731,6 +20796,16 @@
               }
             ]
           },
+          "ship_plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ShipPlanOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "product_status": {
             "anyOf": [
               {
@@ -20854,6 +20929,7 @@
           "lead_time",
           "status",
           "ship",
+          "ship_plan",
           "product_status",
           "abc",
           "xyz",

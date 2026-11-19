@@ -108,7 +108,7 @@ describe("muddatlar va qamrov", () => {
     expect(Object.values(leadDraft(inv))).toEqual([null, null]); // F25 (B5.1): ikki bo'lak — yo'l va Uzumga topshirish
     expect(coverDraft(inv)).toEqual({ A: "60", B: "30", C: "14" });
     expect(inventoryState(leadDraft(inv), coverDraft(inv))).toBe("ok");
-    expect(inventoryBody(leadDraft(inv), coverDraft(inv))).toEqual({ lead_days: null, cover_days: { A: 60, B: 30, C: 14 } });
+    expect(inventoryBody(leadDraft(inv), coverDraft(inv))).toEqual({ lead_days: null, cover_days: { A: 60, B: 30, C: 14 }, ship_cover_days: null });
   });
 
   it("sozlangan muddatlar formaga to'ldiriladi va serverga son bo'lib ketadi", () => {

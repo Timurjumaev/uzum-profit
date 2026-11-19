@@ -133,6 +133,18 @@ describe("ombor jadvali", () => {
     expect(tab.getAttribute("aria-selected")).toBe("true");
   });
 
+  it("F54 yuborish rejasi qatorda; 60 kundan oshsa — ogohlantirish; reja yo'q — hech narsa", async () => {
+    const plan = { qty: 15, need: 54, target_days: 30, days_after: "27.5", overstock: false };
+    const over = { ...plan, days_after: "75.0", overstock: true };
+    const data = inventoryData({ items: [stockRow({ ship_plan: plan }), deadRow({ ship_plan: over })] });
+    await renderAt("/inventory", { [INVENTORY_ROUTE]: () => json(200, data) });
+    const table = await screen.findByRole("table", { name: "Qoldiq jadvali" });
+    const [first, second] = within(table).getAllByRole("row").slice(1);
+    expect(norm(first!.textContent!)).toContain("Yuborish rejasi: 15 dona (Uzumda ~28 kunga)");
+    expect(norm(first!.textContent!)).not.toContain("saqlash haqi");
+    expect(norm(second!.textContent!)).toContain("60 kundan oshadi — saqlash haqi");
+  });
+
   it("bo'sh holat: filtr bilan — tozalash taklifi; filtrsiz — sinxron haqida", async () => {
     const empty = { [INVENTORY_ROUTE]: () => json(200, inventoryData({ items: [], total: 0, totals: { ...inventoryData().totals, statuses: {} } })) };
     await renderAt("/inventory?status=good", empty);

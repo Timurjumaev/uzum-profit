@@ -1122,6 +1122,9 @@ export const uzLatn = {
       lead: "Muddat (F25) ikki boʻlak: yoʻl va Uzumga topshirish. Avval tovaringizning oxirgi 5 xaridi medianasi, keyin yetkazib beruvchi, keyin barcha xaridlaringiz medianasi olinadi; tarix yoʻq boʻlsa — shu yerdagi standart. Qamrov — tavsiya miqdor uchun zaxira kunlari (F27).",
       leadLegend: "Standart yetkazish muddati",
       coverLegend: "Zaxira qamrovi (ABC sinfi boʻyicha)",
+      shipCover: "{{abc}} sinfi (Uzumda)",
+      shipLegend: "Uzumda maqsad zaxira (ABC sinfi boʻyicha)",
+      shipHint: "Uzum omborida tovar necha kunga yetib turishi kerak. Ombor shu boʻyicha qancha yuborishni hisoblaydi. Boʻsh qoldirsangiz — yuborish rejasi chiqmaydi; uchala sinfni toʻldiring. Uzum 60 kundan oshgan tovarga saqlash haqi oladi.",
       stage: { transit: "Yoʻl (buyurtmadan kelgunga)", handover: "Uzumga topshirish (joʻnatmadan savdoga chiqquncha)" },
       days: "kun",
       cover: "{{abc}} sinfi",
@@ -1270,6 +1273,11 @@ export const uzLatn = {
       f26: { code: "F26", formula: "Buyurtma berish: hamma joydagi tovar (Uzum, postavka, oʻz omborim, yoʻlda, Xitoyda) necha kunga yetadi — Kritik: ≤ toʻliq muddat · Yuqori: ≤ muddat + 7 · Oʻrta: ≤ muddat + 21 · Yaxshi · Harakatsiz: tezlik 0, Uzumda qoldiq bor. Uzumga yuborish: Uzumdagi va postavkadagi zaxira Uzumga topshirish muddatiga yetmaydi, oʻz omborimda tovar bor", source: "Sotuv tezligi (F23), xarid joylari va toʻliq muddat (F25) — oxirgi xaridlaringiz bosqich sanalaridan" },
       f27: { code: "F27", formula: "Buyurtma sanasi = bugun + (hamma joydagi tovar zaxira kunlari − toʻliq muddat). Tavsiya = tezlik × (muddat + qamrov) − (qoldiq + yoʻlda + buyurtma qilingan + oʻz omborim); qamrov ABC sinfiga qarab 60 / 30 / 14 kun", source: "F23, F25, ABC (F28), xarid joylari" },
       f29: { code: "F29", formula: "Muzlagan pul = Σ qoldiq × lot tannarxi, joylar boʻyicha. Oʻrtacha sotilish muddati = Σ (zaxira kunlari × qiymat) / Σ qiymat", source: "Uzum qoldigʻi, xarid joylari, lot tannarxi (F20)" },
+    },
+    shipPlan: {
+      line: "Yuborish rejasi: {{qty}} dona (Uzumda ~{{days}} kunga)",
+      hint: "Uzumda {{target}} kunlik zaxira uchun; omboringizdagi sondan oshmaydi",
+      over: "60 kundan oshadi — saqlash haqi",
     },
     pick: {
       row: "{{name}} — buyurtmaga tanlash",
