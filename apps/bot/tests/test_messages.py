@@ -157,6 +157,22 @@ def test_ship_needed_message() -> None:
     assert "Пора отправлять на Uzum: 2 SKU" in ru.text and "отправить: 30 шт." in ru.text
 
 
+def test_lost_goods_message() -> None:
+    """B5.4: "Yo'qolgan tovar" (Uzumning `quantityMissing` maydoni) — SKU va dona; "Batafsil" — Ombor."""
+    p = {
+        "count": 2,
+        "total": 2,
+        "skus": [{"title": "Mashina", "qty": 3}, {"title": None, "qty": 1}],
+        "ids": ["a", "b"],
+    }
+    uz = msg.notification("lost_goods", p, "uz")
+    assert "Uzum yoʻqolgan deb belgilagan tovar: 2 ta SKU" in uz.text
+    assert "• Mashina — 3 dona" in uz.text and "• — — 1 dona" in uz.text and uz.path == "/inventory"
+    assert (
+        "Uzum отметил товар как потерянный: 2 SKU" in msg.notification("lost_goods", p, "ru").text
+    )
+
+
 def test_sync_restored_message() -> None:
     """B6.4 (A4): "tiklandi" — bitta xabar, holat sahifasiga havola."""
     p = {"shop": "byDurii", "shop_id": "x", "reason": "restored"}

@@ -1184,7 +1184,7 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
     Jo'natish qoralamasida (TM6) "Tavsiya bo'yicha to'ldirish" tugmasi; standart — to'liq son (ADR-061 §7) o'zgarmaydi.
 - [→] B5.3 (**ko'chdi → TM6, TM7**, ADR-061; qoldig'i — "Uzumga yuborish rejasi" — **B5.2** da, ADR-063.)
 - [→] B5.4 **Yo'qotishlar** (F30–F34; D5) + bosh sahifa bloki (B5.0a). F29 muzlagan pul — ✓ B4 da (Asosiy, Ombor).
-  - [x] `realcheck lost` ✓ 2026-11-19 (kod; **natija Temurdan kutilmoqda** — F31/F32 qarorlari shundan keyin): har SKU uchun balans farqi, uning vaqt bo'yicha barqarorligi, `quantityMissing`, real
+  - [x] `realcheck lost` ✓ 2026-11-19. **O'lchov natijasi (Temur, staging, 2026-11-19; byDurii 226 SKU, EL-ONE 292 SKU):** balans farqi *manfiy* — byDurii 124 SKU (55%), EL-ONE 89 SKU (30%); *musbat* (shubhali) — byDurii 0, EL-ONE 2 SKU, 1 dona har biri (barqarorlik: 14 kunda 2 dan 1 tasi, 30 kunda o'lchab bo'lmadi — snapshot 2026-10-25 dan). `quantityMissing` — ikkala do'konda ham 0. Kompensatsiya — 1 qator (byDurii, 948 so'm, kod `return-…`, manba "Ombor"), EL-ONE 0. **Xulosa (reja qoidasi bo'yicha):** balans usuli shovqinli (manfiy farq ko'p, haqiqiy yo'qotish topilmadi) — **F31 balans ko'rinishida ko'rsatilmaydi**, signal faqat Uzumning `quantityMissing > 0` maydoni (c); **F32 summasi ko'rsatilmaydi** (bitta namuna — tasdiqlanmadi), kompensatsiya qatorlari ko'paygach qayta o'lchanadi. Asl vazifa: har SKU uchun balans farqi, uning vaqt bo'yicha barqarorligi, `quantityMissing`, real
     "[Kompensatsiya]" qatorlari summasi ↔ F32.
   - **F31 qayta yoziladi.** (a) Hozirgi "butun tarix bo'yicha qabul qilingan − sotilgan" tarixi cheklangan do'konda
     ishlamaydi (byDurii — 2026-07-14 dan): langar — boshlang'ich holat kuni (F41) yoki birinchi snapshot qoldig'i, balans
@@ -1202,7 +1202,7 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
   - Bosh sahifa "Yo'qotishlar va imkoniyat" (ADR-043 (5), AI'siz): qaytarish xarajati, jarimalar, brak zarari (F51), qabul
     yo'qotishi (F52), nelikvid saqlash haqi, tugab qolishdan yo'qotilgan foyda (F34); "imkoniyat" — nelikviddagi pul.
     "Diqqat" va "Zarar 5 SKU" dagi raqamlar takrorlanmaydi; bekor summasi yo'qotish emas.
-  - Hodisalar: "Yo'qolgan tovar", "Qaytish keskin oshdi".
+  - Hodisalar: "Yo'qolgan tovar" ✓ 2026-11-19 (faqat `quantityMissing > 0`), "Qaytish keskin oshdi" (qoldi).
 - [ ] B5.5 **Reklama va assortiment tahlili.** Open API'da kampaniya, ko'rish va klik yo'q — faqat yechilgan summa
   (`Y000119` / `Y000120` / `Y000050`); ROMI, CTR va'da qilinmaydi. Doira: reklama turlari bo'yicha summa va DRR trendi,
   SKU ACOS (bog'langan reklama, F19), "reklama foydasini yeb qo'ygan SKU" ro'yxati; ABC × XYZ (hisob bor —

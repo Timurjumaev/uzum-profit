@@ -35,7 +35,7 @@ from typing import Any
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import select
+from sqlalchemy import Integer, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 from upcore.expenses import ExpenseCategory
@@ -262,6 +262,46 @@ async def ship_found(
                     "qty": q,
                 }
                 for i, d, q in fresh[:TOP]
+            ],
+        },
+    )
+
+
+async def missing_skus(conn: AsyncConnection) -> list[tuple[UUID, int]]:
+    """B5.4 (F31 (c)): Uzumning o'z `quantityMissing` maydoni > 0 bo'lgan SKU'lar (to'g'ridan-to'g'ri signal), eng ko'pidan.
+    Balans usuli real ma'lumotda shovqinli chiqdi (manfiy farq ko'p) — ko'rsatilmaydi."""
+    k = m.mp_skus
+    qty = (k.c.raw["quantityMissing"].astext).cast(Integer)
+    rows = await conn.execute(
+        select(k.c.id, qty.label("qty"))
+        .where(k.c.raw["quantityMissing"].astext.op("~")("^[0-9]+$"), qty > 0)
+        .order_by(qty.desc(), k.c.id)
+    )
+    return [(r.id, int(r.qty)) for r in rows]
+
+
+async def missing_found(
+    conn: AsyncConnection, items: list[tuple[UUID, int]], today: date, known: set[str]
+) -> Found | None:
+    """Yangi (xabar qilinmagan) SKU'lardan "Yo'qolgan tovar" hodisasi."""
+    fresh = [x for x in items if str(x[0]) not in known]
+    if not fresh:
+        return None
+    catalog = await sku_catalog(conn, ids=[i for i, _ in fresh[:TOP]])
+    return Found(
+        Event.LOST_GOODS,
+        f"lost_goods:{today.isoformat()}:{_digest([str(i) for i, _ in fresh])}",
+        {
+            "count": len(fresh),
+            "total": len(items),
+            "ids": [str(i) for i, _ in items][:IDS_CAP],
+            "skus": [
+                {
+                    "sku_id": str(i),
+                    "title": catalog[i].title if i in catalog else None,
+                    "qty": q,
+                }
+                for i, q in fresh[:TOP]
             ],
         },
     )
@@ -732,6 +772,18 @@ async def evaluate(conn: AsyncConnection, org_id: UUID, now: datetime) -> int:
                 personal.append((p, found))
             elif base is not None and set(ship_ids) != base:
                 personal.append((p, snapshot_row(Event.SHIP_NEEDED, ship_ids, now)))
+    if Event.LOST_GOODS in wanted and heavy:
+        lost_items = await missing_skus(conn)
+        lost_ids = [str(i) for i, _ in lost_items]
+        for p in people:
+            if not p.wants(Event.LOST_GOODS):
+                continue
+            base = await known_ids(conn, p.user_id, Event.LOST_GOODS)
+            found = await missing_found(conn, lost_items, today, base or set())
+            if found is not None:
+                personal.append((p, found))
+            elif base is not None and set(lost_ids) != base:
+                personal.append((p, snapshot_row(Event.LOST_GOODS, lost_ids, now)))
     if Event.UNCOSTED_SALES in wanted and heavy:
         # B6.4 (A3): kunlik xulosada tannarxsiz qatorlar soni allaqachon bor; alohida xabar faqat tannarxsiz YANGI SKU
         # (hech qachon xabar qilinmagan) birinchi marta sotilganda — xulosa o'chirilgan bo'lsa ham.

@@ -314,7 +314,7 @@ Kanallar: Telegram (asosiy), ilova ichida, web push (PWA); email [Keyin].
 | Yangi jarima | yoqilgan | summa > 0 |
 | Qaytish keskin oshdi | yoqilgan | 7 kun ulushi 30 kunlikdan 2 barobar |
 | Postavka kamomadi | yoqilgan | > 0 dona |
-| Yo'qolgan tovar signali | yoqilgan | taxmin > 0 |
+| Yo'qolgan tovar signali (Uzumning `quantityMissing` > 0; balans usuli shovqinli — ko'rsatilmaydi) | yoqilgan | yangi SKU kirganda bir marta |
 | Sinxron to‘xtadi (kalit yaroqsiz — kritik, 3 kunda eslatma; yangilanmayapti — kritik emas, Uzum uzilishida yo‘q) / tiklandi | yoqilgan | 2 soat |
 | Uzum to'lovi kutilmoqda / tushmadi | yoqilgan | kutilgan + 4 ish kuni |
 | Kargo kechikmoqda | yoqilgan | kutilgan sana + 5 kun |
