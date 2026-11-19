@@ -27,7 +27,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date, timedelta
 from decimal import Decimal
 from uuid import UUID
@@ -38,6 +38,8 @@ from upcore.inventory import (
     AbcClass,
     DayStat,
     Holding,
+    InventorySettings,
+    ItemSku,
     LeadTime,
     Liquidity,
     OrderBy,
@@ -50,6 +52,7 @@ from upcore.inventory import (
     average_days_to_sell,
     days_of_stock,
     frozen_money,
+    item_reorder,
     liquidity,
     order_by,
     own_warehouse_qty,
@@ -62,7 +65,7 @@ from upcore.inventory import (
     xyz_class,
 )
 from upcore.metrics import realization_rate_units
-from upcore.money import Currency, Money
+from upcore.money import Currency, Money, to_decimal
 from upcore.purchasing import HANDOVER, LEAD_PARTS, SupplyState, supply_state
 
 from upapi import orgsettings
@@ -320,6 +323,64 @@ async def completion_by_shop(
     }
 
 
+def _item_level(
+    out: dict[UUID, SkuStock],
+    places: dict[UUID, _Places],
+    lots: dict[UUID, _ItemLots],
+    inv: InventorySettings,
+    as_of: date,
+) -> None:
+    """B5.2 (09 §12 B11): bir tovar bir necha SKU'da bo'lsa F26 holat, F27 tavsiya va buyurtma sanasi **tovar darajasida**:
+    talab — SKU'lar yig'indisi, Uzumdagi qoldiq — yig'indi, Xitoy / yo'l / o'z ombor — bir marta (har SKU'ga to'liq
+    sanalmaydi). Tavsiya miqdor SKU'larga talabiga mutanosib bo'linadi (yig'indi — tovar miqdori). Muddat noma'lum —
+    SKU hisobi o'zgarmaydi (raqam o'ylab topilmaydi)."""
+    groups: dict[UUID, list[UUID]] = {}
+    for sku_id, st in out.items():
+        if st.item_id is not None:
+            groups.setdefault(st.item_id, []).append(sku_id)
+    for item_id, sku_ids in groups.items():
+        members = [out[i] for i in sku_ids]
+        lead = members[0].lead
+        if len(members) < 2 or lead is None:
+            continue
+        place = places.get(item_id)
+        china, road, own = (place.china, place.road, place.own) if place else (0, 0, 0)
+        lot = lots.get(item_id)
+        prices = [
+            p
+            for p in (lot.unit_cost if lot else None, lot.last_price if lot else None)
+            if p is not None
+        ]
+        best = min((x.abc for x in members), key=lambda c: c.value)  # A < B < C: eng kuchli sinf
+        speed = sum((to_decimal(x.velocity.value) for x in members), Decimal(0))
+        _, parts = item_reorder(
+            [
+                ItemSku(str(x.sku_id), to_decimal(x.velocity.value), x.stock, x.inbound)
+                for x in members
+            ],
+            lead.total,
+            best,
+            china,
+            road,
+            own,
+            last_unit_prices=prices,
+            s=inv,
+        )
+        everywhere = sum(x.stock + x.inbound for x in members) + own + road + china
+        cover_all = days_of_stock(everywhere, 0, speed)
+        for x in members:
+            changes: dict[str, object] = {"reorder": parts[str(x.sku_id)]}
+            if (
+                x.velocity.value > 0
+            ):  # sotilayotgan SKU'lar tovarning umumiy zaxirasi bilan baholanadi
+                changes |= {
+                    "status": stock_status(everywhere, speed, lead.total),
+                    "days_of_stock_all": cover_all,
+                    "order_by": order_by(as_of, cover_all, lead.total),
+                }
+            out[x.sku_id] = replace(x, **changes)  # type: ignore[arg-type]
+
+
 async def load_stock(
     conn: AsyncConnection,
     shops: Sequence[UUID] | None,
@@ -488,6 +549,7 @@ async def load_stock(
             own_uncounted=min(own, place.uncounted) if place else 0,
             days_of_stock_all=cover_all,
         )
+    _item_level(out, places, lots, inv, as_of)
     units = {"china": 0, "road": 0, "own": 0}
     for x in (
         places.values()

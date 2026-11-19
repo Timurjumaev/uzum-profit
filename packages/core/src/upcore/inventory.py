@@ -331,6 +331,74 @@ def reorder(
 
 
 @dataclass(frozen=True, slots=True)
+class ItemSku:
+    """Tovarning bitta SKU'si F27 tovar darajasidagi hisobi uchun: talab (F23), Uzumdagi qoldiq va postavkadagi dona."""
+
+    key: str
+    speed: Decimal
+    stock: int
+    inbound: int = 0
+
+
+def split_by_weight(total: int, weights: Sequence[Decimal]) -> list[int]:
+    """``total`` ni og'irliklarga mutanosib butun sonlarga bo'ladi (eng katta qoldiq usuli): yig'indi doim ``total``;
+    nol og'irlik — nol ulush (hamma og'irlik nol bo'lsa, hammasi nol)."""
+    weight = sum(weights, D0)
+    if total <= 0 or weight <= 0:
+        return [0] * len(weights)
+    exact = [Decimal(total) * w / weight for w in weights]
+    parts = [int(x) for x in exact]
+    rest = total - sum(parts)
+    order = sorted(
+        range(len(weights)), key=lambda i: (exact[i] - parts[i], weights[i]), reverse=True
+    )
+    for i in order[:rest]:
+        parts[i] += 1
+    return parts
+
+
+def item_reorder(
+    skus: Sequence[ItemSku],
+    lead: DecimalLike,
+    abc: AbcClass,
+    china: int,
+    road: int,
+    own: int,
+    batch: int = 1,
+    last_unit_prices: Iterable[Money] = (),
+    s: InventorySettings = DEFAULT,
+) -> tuple[Reorder, dict[str, Reorder]]:
+    """F27 tovar darajasida (B5.2, 09 §12 B11): bir tovar bir necha SKU'da bo'lsa talab — SKU'lar tezligi yig'indisi,
+    qoldiq — SKU'lar yig'indisi, yo'ldagi, o'z omborimdagi va Xitoydagi dona — **bir marta** (har SKU'ga to'liq emas).
+    Tovar miqdori SKU'larga talabiga mutanosib bo'linadi (yig'indi — tovar miqdori); tezligi nol SKU — nol ulush.
+    Qaytaradi: tovar rejasi va SKU kaliti → ulush."""
+    speed = sum((x.speed for x in skus), D0)
+    stock = sum(x.stock for x in skus)
+    inbound = sum(x.inbound for x in skus)
+    whole = reorder(
+        speed,
+        lead,
+        abc,
+        stock,
+        in_transit=road + own + inbound,
+        ordered=china,
+        batch=batch,
+        last_unit_prices=last_unit_prices,
+        s=s,
+    )
+    prices = tuple(last_unit_prices)
+    shares = split_by_weight(whole.qty, [x.speed for x in skus])
+    raws = (
+        [quantize(whole.raw * x.speed / speed, 2) for x in skus] if speed > 0 else [D0] * len(skus)
+    )
+    parts = {
+        x.key: Reorder(q, r, tuple(p * q for p in prices))
+        for x, q, r in zip(skus, shares, raws, strict=True)
+    }
+    return whole, parts
+
+
+@dataclass(frozen=True, slots=True)
 class OrderBy:
     """F27 buyurtma sanasi: ``day`` — shu kungacha buyurtma berilsa tovar tugamasdan keladi."""
 

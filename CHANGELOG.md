@@ -7,6 +7,7 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Qo'shildi
 
+- B5.2 (1-qadam): tovar darajasida buyurtma rejasi — bir tovar bir necha SKU'da bo'lsa talab, qoldiq va yo'ldagi dona yig'indisi bir marta sanaladi (`item_reorder`), holat va "qachongacha buyurtma" tovar bo'yicha, tavsiya miqdor SKU'larga sotuv tezligi bo'yicha bo'linadi.
 - B5.1 (2-qadam): Ombor jadvalida muddat manbasi ("5 xaridingizdan" / "standart"); hodisa "Kargo kechikmoqda" (kutilgan keldi sanasi + 5 kun) va Bosh sahifa "Diqqat" qatori; tez xarid oynasida ixtiyoriy yetkazib beruvchi.
 - B5.1 (1-qadam): F25 muddat ikki bo'lak — yo'l (buyurtma → keldi) va Uzumga topshirish (jo'natma → postavka savdoga chiqqan kun); har bo'lak tovar → yetkazib beruvchi → tashkilot → standart tartibida o'rganiladi (`learn_lead`), manba va namuna soni `lead_time.sources/samples` da; Sozlamalarda 5 → 2 muddat (eski saqlangan qiymatlar yig'indiga ko'chadi); eski `LEAD_STAGES` va bosqichli `timeline` kodi tozalandi.
 - B6.4 (5-qadam, A5): Telegram kanali uzilsa (bot bloklangan / chat yo'q) Bosh sahifa "Diqqat" qatorida "Telegram uzildi — qayta ulang" (`attention.telegram_lost`); katalog `stage` qiymatlari ADR-063 ga moslandi (FBS — B9.5); 02 M15 dan "kvota tugayapti" olib tashlandi.

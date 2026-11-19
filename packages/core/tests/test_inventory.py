@@ -10,6 +10,7 @@ from upcore.inventory import (
     DayStat,
     Holding,
     InventorySettings,
+    ItemSku,
     Liquidity,
     ShipSignal,
     StockStatus,
@@ -22,6 +23,7 @@ from upcore.inventory import (
     compensation_estimate,
     days_of_stock,
     frozen_money,
+    item_reorder,
     lead_time,
     learn_lead,
     liquidity,
@@ -32,6 +34,7 @@ from upcore.inventory import (
     receiving_done,
     reorder,
     ship_signal,
+    split_by_weight,
     stock_status,
     stockout_days,
     stockout_lost_profit,
@@ -40,7 +43,7 @@ from upcore.inventory import (
     weekly_sales,
     xyz_class,
 )
-from upcore.money import Money
+from upcore.money import Currency, Money
 
 D = Decimal
 AS_OF = date(2026, 10, 31)
@@ -420,3 +423,42 @@ def test_receiving_done_and_claim_until() -> None:
     assert receiving_done(day, day, declared=10, accepted=12)  # ko'p qabul — ham tugagan
     assert receiving_done(day, day + timedelta(days=2), declared=5, accepted=0, window_days=2)
     assert claim_until(day) == date(2026, 12, 10)
+
+
+def test_split_by_weight_largest_remainder() -> None:
+    assert split_by_weight(220, [D(2), D(1)]) == [
+        147,
+        73,
+    ]  # 146,67 / 73,33 — eng katta qoldiq birinchiga
+    assert sum(split_by_weight(10, [D(1), D(1), D(1)])) == 10
+    assert split_by_weight(7, [D(0), D(3)]) == [0, 7]  # nol talab — nol ulush
+    assert split_by_weight(5, [D(0), D(0)]) == [0, 0] and split_by_weight(0, [D(1)]) == [0]
+
+
+def test_item_reorder_counts_places_once_and_splits_by_demand() -> None:
+    """F27 tovar darajasida (B5.2): tezlik va qoldiq — SKU'lar yig'indisi; Xitoy, yo'l va o'z ombor — bir marta."""
+    skus = [ItemSku("a", D(2), 10), ItemSku("b", D(1), 5, inbound=3)]
+    price = Money(D(100), Currency.UZS)
+    whole, parts = item_reorder(
+        skus, 30, AbcClass.A, china=20, road=10, own=5, last_unit_prices=[price]
+    )
+    # 3 × (30 + 60) − (15 qoldiq + (10 + 5 + 3 yo'lda) + 20 Xitoyda) = 270 − 53 = 217
+    assert whole.qty == 217 and whole.raw == D("217.00")
+    assert whole.budget == (Money(D(21700), Currency.UZS),)
+    assert {k: v.qty for k, v in parts.items()} == {
+        "a": 145,
+        "b": 72,
+    }  # 144,67 → 145 (eng katta qoldiq), 72,33
+    assert sum(v.qty for v in parts.values()) == whole.qty
+    assert parts["a"].budget == (Money(D(14500), Currency.UZS),)
+    # Eski usul (har SKU'ga joylar to'liq): bir SKU'ning o'zi ham Xitoydagi 20 donani ikki marta sanardi.
+    per_sku = sum(
+        reorder(x.speed, 30, AbcClass.A, x.stock, in_transit=15 + x.inbound, ordered=20).qty
+        for x in skus
+    )
+    assert per_sku < whole.qty
+    # Partiya hajmi tovarga yaxlitlanadi (SKU'ga emas); tezlik 0 — hamma ulush nol.
+    boxed, _ = item_reorder(skus, 30, AbcClass.A, china=20, road=10, own=5, batch=50)
+    assert boxed.qty == 250
+    idle, idle_parts = item_reorder([ItemSku("a", D(0), 4)], 30, AbcClass.A, china=0, road=0, own=0)
+    assert idle.qty == 0 and idle_parts["a"].qty == 0 and idle_parts["a"].raw == D(0)
