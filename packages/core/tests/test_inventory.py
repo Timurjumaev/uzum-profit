@@ -33,6 +33,7 @@ from upcore.inventory import (
     product_status,
     receiving_done,
     reorder,
+    ship_plan,
     ship_signal,
     split_by_weight,
     stock_status,
@@ -462,3 +463,26 @@ def test_item_reorder_counts_places_once_and_splits_by_demand() -> None:
     assert boxed.qty == 250
     idle, idle_parts = item_reorder([ItemSku("a", D(0), 4)], 30, AbcClass.A, china=0, road=0, own=0)
     assert idle.qty == 0 and idle_parts["a"].qty == 0 and idle_parts["a"].raw == D(0)
+
+
+def test_ship_plan_fills_target_cover_capped_by_own() -> None:
+    """F54: tezlik 10, topshirish 5 kun, maqsad 25 kun, Uzumda 100 → 10 × 30 − 100 = 200; omborimda 150 — 150 yuboriladi."""
+    plan = ship_plan(100, 150, 10, 5, 25)
+    assert plan is not None
+    assert (plan.qty, plan.need, plan.target_days) == (150, 200, 25)
+    assert plan.days_after == Decimal("25.0") and not plan.overstock
+    full = ship_plan(100, 500, 10, 5, 25)
+    assert full is not None and (full.qty, full.need) == (200, 200)  # omborim yetarli — kerakli son
+
+
+def test_ship_plan_nothing_needed_unknown_and_overstock() -> None:
+    enough = ship_plan(400, 50, 10, 5, 25)  # Uzumda 40 kunlik zaxira — yuborish kerak emas
+    assert enough is not None and (enough.qty, enough.need) == (0, 0)
+    assert ship_plan(100, 50, 0, 5, 25) is None  # tezlik 0
+    assert ship_plan(100, 50, 10, None, 25) is None  # topshirish muddati noma'lum
+    assert ship_plan(100, 50, 10, 5, None) is None  # maqsad qamrov sozlanmagan
+    over = ship_plan(0, 1000, 10, 5, 70)  # (0 + 750) / 10 = 75 kun > 60
+    assert over is not None and over.qty == 750 and over.overstock
+    assert ship_plan(0, 1000, 10, 5, 55) is not None and not ship_plan(0, 1000, 10, 5, 55).overstock  # type: ignore[union-attr]
+    ceil = ship_plan(0, 100, Decimal("0.3"), 5, 10)  # 0,3 × 15 = 4,5 → yuqoriga 5
+    assert ceil is not None and ceil.qty == 5

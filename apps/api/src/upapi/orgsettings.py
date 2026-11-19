@@ -43,6 +43,8 @@ def _share(value: Any) -> Decimal | None:
 class OrgSettings:
     lead_days: dict[str, int] = field(default_factory=dict)  # bosqich → kun; bo'sh — sozlanmagan
     cover_days: dict[AbcClass, int] = field(default_factory=dict)  # bo'sh — standart
+    # F54: Uzumda maqsad zaxira (kun, ABC bo'yicha); bo'sh — sozlanmagan (yuborish rejasi chiqmaydi, standart yo'q).
+    ship_cover_days: dict[AbcClass, int] = field(default_factory=dict)
     # ADR-043: ogohlantirish chegaralari (ulush, 0..1); bo'sh — ogohlantirish yo'q (kodda standart chegara yo'q).
     alerts: dict[str, Decimal] = field(default_factory=dict)
     # B5.0b: "Chegarada" chegarasi (F13 marja, kasr 0..1); ``None`` — standart (``upcore.metrics.DEFAULT_BORDERLINE``).
@@ -60,9 +62,12 @@ class OrgSettings:
 
     def inventory(self) -> InventorySettings:
         """F23–F30 parametrlari: sozlangan qamrov standartni almashtiradi."""
-        if not self.cover_days:
+        if not self.cover_days and not self.ship_cover_days:
             return DEFAULT
-        return InventorySettings(cover_days={**DEFAULT.cover_days, **self.cover_days})
+        return InventorySettings(
+            cover_days={**DEFAULT.cover_days, **self.cover_days},
+            ship_cover_days=dict(self.ship_cover_days) if self.ship_cover_days else None,
+        )
 
 
 def _lead_days(lead: dict[str, Any]) -> dict[str, int]:
@@ -83,6 +88,7 @@ def parse(raw: Any) -> OrgSettings:
     data = raw if isinstance(raw, dict) else {}
     lead = data.get("lead_days")
     cover = data.get("cover_days")
+    ship = data.get("ship_cover_days")
     lead_days = _lead_days(lead) if isinstance(lead, dict) else {}
     cover_days = (
         {
@@ -93,13 +99,29 @@ def parse(raw: Any) -> OrgSettings:
         if isinstance(cover, dict)
         else {}
     )
+    ship_cover = (
+        {
+            AbcClass(k): int(v)
+            for k, v in ship.items()
+            if k in AbcClass.__members__
+            and isinstance(v, int)
+            and not isinstance(v, bool)
+            and v >= 0
+        }
+        if isinstance(ship, dict)
+        else {}
+    )
+    if set(ship_cover) != set(AbcClass):  # to'liq A, B, C bo'lmasa — sozlanmagan
+        ship_cover = {}
     alerts_raw = data.get("alerts")
     alerts = (
         {k: v for k, v in ((k, _share(alerts_raw.get(k))) for k in ALERTS) if v is not None}
         if isinstance(alerts_raw, dict)
         else {}
     )
-    return OrgSettings(lead_days, cover_days, alerts, _share(data.get("margin_borderline")))
+    return OrgSettings(
+        lead_days, cover_days, ship_cover, alerts, _share(data.get("margin_borderline"))
+    )
 
 
 def dump(settings: OrgSettings) -> dict[str, Any]:
@@ -108,6 +130,8 @@ def dump(settings: OrgSettings) -> dict[str, Any]:
         out["lead_days"] = dict(settings.lead_days)
     if settings.cover_days:
         out["cover_days"] = {k.value: v for k, v in settings.cover_days.items()}
+    if settings.ship_cover_days:
+        out["ship_cover_days"] = {k.value: v for k, v in settings.ship_cover_days.items()}
     if settings.alerts:
         out["alerts"] = {k: str(v) for k, v in settings.alerts.items()}
     if settings.borderline is not None:

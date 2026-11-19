@@ -96,3 +96,52 @@ def test_batch_rounds_item_plan_up(world: World) -> None:
     assert rounded.reorder.qty % 50 == 0 and 0 <= rounded.reorder.qty - plain.reorder.qty < 50
     a.sql("UPDATE items SET order_batch = NULL WHERE id = %s", [item])
     a.sql("UPDATE orgs SET settings = settings - 'lead_days' WHERE id = %s", [w.org_id])
+
+
+def test_ship_plan_follows_target_cover_and_shares_own(world: World) -> None:
+    w, a = world, world.a
+    item = a.insert("items", name="Yuboriladigan")
+    sku1 = a.insert(
+        "mp_skus", shop_id=a.shop_id, external_id=9_301, sku_code="Y1", item_id=item, qty_active=10
+    )
+    sku2 = a.insert(
+        "mp_skus", shop_id=a.shop_id, external_id=9_302, sku_code="Y2", item_id=item, qty_active=10
+    )
+    cfg = '{"transit": 20, "handover": 2}'
+    a.sql(
+        "UPDATE orgs SET settings = jsonb_set(coalesce(settings, '{}'::jsonb), '{lead_days}', "
+        f"'{cfg}'::jsonb) WHERE id = %s",
+        [w.org_id],
+    )
+    for i in range(14):
+        day = AS_OF - timedelta(days=13 - i)
+        a.sale(sku1, day, 2)
+        a.sale(sku2, day, 2)
+        a.insert("sku_daily", sku_id=sku1, day=day, qty_active=10, qty_fbs=0)
+        a.insert("sku_daily", sku_id=sku2, day=day, qty_active=10, qty_fbs=0)
+    p = a.insert(
+        "purchases", ordered_on=AS_OF - timedelta(days=40), received_on=AS_OF - timedelta(days=2)
+    )
+    a.line(p, item, 30, received=30)  # omborimda 30 dona (qabul qilingan)
+    a.component(p, "goods", 30 * 100_000)
+    a.request(calc.Scope.PURCHASE)
+    a.request(calc.Scope.SHOP, a.shop_id)
+    a.recalc(NOW)
+    # Maqsad qamrov sozlanmagan — reja yo'q (standart o'ylab topilmaydi).
+    book = w.a.run(lambda conn: load_stock(conn, None, AS_OF))
+    assert book.skus[sku1].ship_plan is None and book.skus[sku2].ship_plan is None
+    a.sql(
+        "UPDATE orgs SET settings = jsonb_set(settings, '{ship_cover_days}', "
+        '\'{"A": 30, "B": 30, "C": 30}\'::jsonb) WHERE id = %s',
+        [w.org_id],
+    )
+    book = w.a.run(lambda conn: load_stock(conn, None, AS_OF))
+    p1, p2 = book.skus[sku1].ship_plan, book.skus[sku2].ship_plan
+    assert p1 is not None and p2 is not None
+    # Har SKU: tezlik 2 × (2 + 30) − 10 = 54 kerak; omborim 30 — SKU'lar orasida bir marta (15 + 15).
+    assert (p1.need, p2.need) == (54, 54)
+    assert p1.qty + p2.qty == 30 and p1.qty == p2.qty == 15
+    a.sql(
+        "UPDATE orgs SET settings = (settings - 'ship_cover_days') - 'lead_days' WHERE id = %s",
+        [w.org_id],
+    )

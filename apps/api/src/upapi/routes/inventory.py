@@ -65,6 +65,17 @@ class LeadOut(BaseModel):
     samples: dict[str, int] = {}
 
 
+class ShipPlanOut(BaseModel):
+    """F54 "Uzumga yuborish rejasi": ``qty`` — yuboriladigan dona (omboringdan oshmaydi), ``need`` — omborim cheklovisiz
+    kerak bo'lgani, ``days_after`` — yuborgandan keyin Uzumda necha kunga yetadi, ``overstock`` — 60 kundan oshdi (F43)."""
+
+    qty: int
+    need: int
+    target_days: int
+    days_after: Decimal
+    overstock: bool
+
+
 class PriceOut(BaseModel):
     amount: Decimal
     currency: str
@@ -129,6 +140,7 @@ class StockRowOut(BaseModel):
         StockStatus | None
     )  # F26 "Buyurtma berish" — hamma joydagi tovar to'liq muddatga nisbatan (ADR-057 Q2)
     ship: ShipOut | None  # F26 "Uzumga yuborish" (signal yo'q — null)
+    ship_plan: ShipPlanOut | None  # F54 (maqsad qamrov sozlanmagan yoki tezlik 0 — null)
     product_status: StockStatus | None
     abc: str  # F28
     xyz: str | None
@@ -240,6 +252,15 @@ def rows_for(
                     uncounted=s.own_uncounted,
                 )
                 if s.ship
+                else None,
+                ship_plan=ShipPlanOut(
+                    qty=s.ship_plan.qty,
+                    need=s.ship_plan.need,
+                    target_days=s.ship_plan.target_days,
+                    days_after=s.ship_plan.days_after,
+                    overstock=s.ship_plan.overstock,
+                )
+                if s.ship_plan
                 else None,
                 product_status=book.products.get(s.product_id) if s.product_id else None,
                 abc=s.abc.value,

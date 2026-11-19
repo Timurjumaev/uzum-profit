@@ -279,6 +279,26 @@ def test_inventory_settings_drive_reports(world: World) -> None:
     assert "settings.inventory" in audited(w)
 
 
+def test_ship_cover_days_set_keep_clear(world: World) -> None:
+    """F54: Uzumda maqsad zaxira — standarti yo'q; berilmasa o'zgarmaydi, `null` tozalaydi, to'liq A/B/C kerak."""
+    w = world
+    assert ok(send(w, "GET", "settings"))["inventory"]["ship_cover_days"] is None
+    ship = {"A": 45, "B": 30, "C": 14}
+    body = ok(send(w, "PUT", "settings/inventory", ship_cover_days=ship))
+    assert body["inventory"]["ship_cover_days"] == ship
+    again = ok(
+        send(w, "PUT", "settings/inventory", lead_days=None, cover_days=None)
+    )  # ship berilmagan
+    assert again["inventory"]["ship_cover_days"] == ship
+    bad = send(w, "PUT", "settings/inventory", ship_cover_days={"A": 45})
+    assert bad.status_code == 422 and bad.json()["code"] == "bad_ship_cover_days"
+    assert (
+        send(w, "PUT", "settings/inventory", ship_cover_days={**ship, "A": 9999}).status_code == 422
+    )
+    cleared = ok(send(w, "PUT", "settings/inventory", ship_cover_days=None))
+    assert cleared["inventory"]["ship_cover_days"] is None
+
+
 def test_inventory_settings_validation(world: World) -> None:
     w = world
     partial = send(w, "PUT", "settings/inventory", lead_days={"transit": 5})
@@ -348,6 +368,10 @@ def test_parse_ignores_garbage() -> None:
     # Qisman qamrov standartni to'ldiradi; bo'sh — aynan standart.
     assert got.inventory().cover_days == {**DEFAULT.cover_days, AbcClass.A: 5}
     assert orgsettings.OrgSettings().inventory() is DEFAULT
+    # F54: maqsad zaxira faqat to'liq A/B/C bo'lsa o'qiladi (qisman — sozlanmagan).
+    assert orgsettings.parse({"ship_cover_days": {"A": 30, "B": 20}}).ship_cover_days == {}
+    full = orgsettings.parse({"ship_cover_days": {"A": 30, "B": 20, "C": 10}})
+    assert full.inventory().ship_cover_days == {AbcClass.A: 30, AbcClass.B: 20, AbcClass.C: 10}
     assert orgsettings.dump(got) == {"lead_days": {"handover": 4}, "cover_days": {"A": 5}}
     # B5.1: eski besh bosqichli saqlangan qiymat ikki bo'lakka ko'chadi (yo'l = tayyorlash + Xitoy + kargo + qabul).
     old = {"prep": 8, "china": 2, "cargo": 13, "receive": 7, "handover": 2}

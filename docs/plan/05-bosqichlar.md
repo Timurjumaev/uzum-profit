@@ -1173,6 +1173,10 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
   - [x] "Odatiy partiya hajmi" (F27 yaxlitlash; 2-qadam): tovarda ixtiyoriy `items.order_batch` (migratsiya 0036, standart
     yo'q — bo'sh bo'lsa 1), Ombor qatorida "Partiya hajmi" tugmasi (`PUT /skus/{id}/order-batch`), tavsiya shunga karrali
     yuqoriga yaxlitlanadi (tovar darajasidagi reja ham).
+  - [x] **Uzumga yuborish rejasi — hisob** (4-qadam, Temur 2026-11-19: maqsad qamrov **dinamik, ABC sinfi bo'yicha**, standarti
+    yo'q): `upcore.inventory.ship_plan` (F54), Sozlamalarda "Uzumda maqsad zaxira" (A/B/C, to'liq yoki bo'sh), Omborda "Yuborish
+    rejasi: N dona" va 60 kun ogohlantirishi; ko'p SKU'li tovarda omborimdagi dona SKU'lar orasida bir marta. **Qoldi:** quyidagi
+    "Tavsiya bo'yicha to'ldirish" tugmasi (jo'natma qoralamasida).
   - **Uzumga yuborish rejasi** (avval B5.3 qoldig'i) — yangi formula **F54**: yuborish = min(Omborimda, max(0, F23 ×
     (topshirish muddati + maqsad qamrov) − (Uzum qoldig'i + postavkada))); maqsad qamrov sozlanadi; (Uzumdagi +
     yuboriladigan) / F23 > 60 kun bo'lsa ogohlantirish — Uzum 60 kundan oshgan aylanmaga saqlash haqi oladi (F43).

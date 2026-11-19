@@ -124,6 +124,9 @@ class InventorySettingsOut(BaseModel):
     lead_days: dict[str, int] | None  # sozlanmagan — ``null`` (muddat xaridlar tarixidan)
     cover_days: dict[str, int]  # ABC qamrov (sozlangan yoki standart)
     cover_defaults: dict[str, int]
+    ship_cover_days: (
+        dict[str, int] | None
+    )  # F54 Uzumda maqsad zaxira (ABC); sozlanmagan — ``null`` (standart yo'q)
 
 
 class AlertsOut(BaseModel):
@@ -191,6 +194,10 @@ class InventorySettingsIn(BaseModel):
 
     lead_days: dict[str, Annotated[int, Field(ge=0, le=orgsettings.MAX_LEAD_DAYS)]] | None = None
     cover_days: dict[str, Annotated[int, Field(ge=0, le=orgsettings.MAX_COVER_DAYS)]] | None = None
+    # F54: berilmasa o'zgarmaydi; ``null`` — tozalash; A, B, C — Uzumda maqsad zaxira kunlari.
+    ship_cover_days: (
+        dict[str, Annotated[int, Field(ge=0, le=orgsettings.MAX_COVER_DAYS)]] | None
+    ) = None
 
 
 Share = Annotated[Decimal, Field(gt=0, le=1, max_digits=7, decimal_places=6)]
@@ -322,6 +329,7 @@ async def _read(ctx: OrgContext) -> SettingsOut:
             lead_days=dict(cfg.lead_days) or None,
             cover_days={k.value: effective[k] for k in AbcClass},
             cover_defaults={k.value: DEFAULT.cover_days[k] for k in AbcClass},
+            ship_cover_days={k.value: v for k, v in cfg.ship_cover_days.items()} or None,
         ),
         alerts=AlertsOut(
             cancel_share=cfg.alerts.get("cancel_share"),
@@ -515,10 +523,18 @@ async def set_inventory(body: InventorySettingsIn, ctx: Manager) -> SettingsOut:
         raise AppError("bad_cover_days", 422, detail="A, B va C kerak")
     o = m.orgs
     before = orgsettings.parse(await ctx.conn.scalar(select(o.c.settings)))
+    ship = body.ship_cover_days
+    if ship is not None and set(ship) != set(AbcClass.__members__):
+        raise AppError("bad_ship_cover_days", 422, detail="A, B va C kerak")
     after = replace(
         before,
         lead_days=dict(lead) if lead else {},
         cover_days={AbcClass(k): v for k, v in cover.items()} if cover else {},
+        ship_cover_days=(
+            ({AbcClass(k): v for k, v in ship.items()} if ship else {})
+            if "ship_cover_days" in body.model_fields_set
+            else before.ship_cover_days
+        ),
     )
     if after != before:
         await ctx.conn.execute(

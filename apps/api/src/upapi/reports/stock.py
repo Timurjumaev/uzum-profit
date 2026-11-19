@@ -44,6 +44,7 @@ from upcore.inventory import (
     Liquidity,
     OrderBy,
     Reorder,
+    ShipPlan,
     ShipSignal,
     StockStatus,
     Velocity,
@@ -58,7 +59,9 @@ from upcore.inventory import (
     own_warehouse_qty,
     product_status,
     reorder,
+    ship_plan,
     ship_signal,
+    split_by_weight,
     stock_status,
     velocity,
     weekly_sales,
@@ -114,6 +117,7 @@ class SkuStock:
     reorder: Reorder | None
     order_by: OrderBy | None  # F27: hamma joydagi tovar bo'yicha (ADR-057 Q2)
     ship: ShipSignal | None = None  # F26 "Uzumga yuborish" (ADR-057 Q2)
+    ship_plan: ShipPlan | None = None  # F54 yuborish rejasi (maqsad qamrov sozlanmagan — yo'q)
     own_uncounted: int = 0  # TM9.8: o'z omborimdagining sanalmagan qismi ("avval sanang")
     days_of_stock_all: Decimal | None = None  # hamma joydagi tovar necha kunga yetadi
     order_batch: int | None = None  # F27 odatiy partiya hajmi (tovardan; ixtiyoriy)
@@ -379,8 +383,30 @@ def _item_level(
         )
         everywhere = sum(x.stock + x.inbound for x in members) + own + road + china
         cover_all = days_of_stock(everywhere, 0, speed)
+        # F54: omborimdagi dona SKU'lar orasida bir marta — kerakliga mutanosib bo'linadi (har SKU'ga to'liq emas).
+        needy = [x for x in members if x.ship_plan is not None and x.ship_plan.need > 0]
+        shares = dict(
+            zip(
+                (x.sku_id for x in needy),
+                split_by_weight(
+                    min(own, sum(x.ship_plan.need for x in needy if x.ship_plan)),
+                    [Decimal(x.ship_plan.need) for x in needy if x.ship_plan],
+                ),
+                strict=True,
+            )
+        )
         for x in members:
             changes: dict[str, object] = {"reorder": parts[str(x.sku_id)]}
+            if x.sku_id in shares and x.ship_plan is not None:
+                target = x.ship_plan.target_days
+                changes["ship_plan"] = ship_plan(
+                    x.stock + x.inbound,
+                    shares[x.sku_id],
+                    x.velocity.value,
+                    x.lead.stages.get(HANDOVER) if x.lead else None,
+                    target,
+                    inv,
+                )
             if (
                 x.velocity.value > 0
             ):  # sotilayotgan SKU'lar tovarning umumiy zaxirasi bilan baholanadi
@@ -503,6 +529,8 @@ async def load_stock(
         else:
             status = None
         ship = ship_signal(stock + sku_inbound, own, v.value, handover)
+        target = inv.ship_cover_days[abc[str(r.id)]] if inv.ship_cover_days else None
+        plan_ship = ship_plan(stock + sku_inbound, own, v.value, handover, target, inv)
         cover_all = days_of_stock(everywhere, 0, v.value)
         unit = item.unit_cost if item else None
         cover = days_of_stock(active, fbs, v.value)
@@ -558,6 +586,7 @@ async def load_stock(
             reorder=plan,
             order_by=order_by(as_of, cover_all, lead.total) if lead is not None else None,
             ship=ship,
+            ship_plan=plan_ship,
             own_uncounted=min(own, place.uncounted) if place else 0,
             days_of_stock_all=cover_all,
             order_batch=item.batch if item else None,

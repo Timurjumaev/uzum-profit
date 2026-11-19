@@ -136,23 +136,30 @@ export type CoverDraft = Record<"A" | "B" | "C", string | null>;
 
 export const leadDraft = (s: Settings["inventory"]): LeadDraft => Object.fromEntries(s.stages.map((st) => [st, s.lead_days ? String(s.lead_days[st] ?? "") || null : null]));
 export const coverDraft = (s: Settings["inventory"]): CoverDraft => ({ A: String(s.cover_days.A), B: String(s.cover_days.B), C: String(s.cover_days.C) });
+/** F54: Uzumda maqsad zaxira (ABC); sozlanmagan — bo'sh (standart yo'q). */
+export type ShipDraft = Record<"A" | "B" | "C", string | null>;
+export const shipDraft = (s: Settings["inventory"]): ShipDraft => ({ A: s.ship_cover_days ? String(s.ship_cover_days.A) : null, B: s.ship_cover_days ? String(s.ship_cover_days.B) : null, C: s.ship_cover_days ? String(s.ship_cover_days.C) : null });
 
 const whole = (v: string | null, max: number) => v !== null && /^\d+$/.test(v) && Number(v) <= max;
 
 /** Muddatlar: hammasi bo'sh (sozlanmagan) yoki hammasi to'ldirilgan; qamrov — uchalasi ham. */
-export function inventoryState(lead: LeadDraft, cover: CoverDraft): "ok" | "partial" | "invalid" {
+export function inventoryState(lead: LeadDraft, cover: CoverDraft, ship: ShipDraft = { A: null, B: null, C: null }): "ok" | "partial" | "invalid" {
   const values = Object.values(lead);
   const filled = values.filter((v) => v !== null).length;
   if (filled !== 0 && filled !== values.length) return "partial";
+  const shipFilled = Object.values(ship).filter((v) => v !== null && v !== "").length;
+  if (shipFilled !== 0 && shipFilled !== 3) return "partial";
+  if (shipFilled === 3 && !(["A", "B", "C"] as const).every((k) => whole(ship[k], 365))) return "invalid";
   if (filled > 0 && !values.every((v) => whole(v, 365))) return "invalid";
   return (["A", "B", "C"] as const).every((k) => whole(cover[k], 365)) ? "ok" : "invalid";
 }
 
-export function inventoryBody(lead: LeadDraft, cover: CoverDraft): InventorySettingsIn {
+export function inventoryBody(lead: LeadDraft, cover: CoverDraft, ship: ShipDraft = { A: null, B: null, C: null }): InventorySettingsIn {
   const filled = Object.values(lead).every((v) => v !== null) && Object.keys(lead).length > 0;
   return {
     lead_days: filled ? Object.fromEntries(Object.entries(lead).map(([k, v]) => [k, Number(v)])) : null,
     cover_days: { A: Number(cover.A), B: Number(cover.B), C: Number(cover.C) },
+    ship_cover_days: ship.A !== null && ship.A !== "" ? { A: Number(ship.A), B: Number(ship.B), C: Number(ship.C) } : null,
   };
 }
 

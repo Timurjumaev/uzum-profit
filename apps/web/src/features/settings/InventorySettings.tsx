@@ -6,21 +6,23 @@ import { useTranslation } from "react-i18next";
 import { setInventorySettings } from "../../app/query";
 import { Banner, Button, NumberInput } from "../../components/ui";
 import type { InventorySettingsIn, Settings } from "../../lib/api/types";
-import { coverDraft, inventoryBody, inventoryState, leadDraft, type CoverDraft, type LeadDraft } from "./model";
+import { coverDraft, inventoryBody, inventoryState, leadDraft, shipDraft, type CoverDraft, type LeadDraft, type ShipDraft } from "./model";
 import { useSettingsMutation } from "./useSettingsMutation";
 
 export function InventorySettings({ orgId, data, canManage }: { orgId: string; data: Settings["inventory"]; canManage: boolean }) {
   const { t } = useTranslation();
   const [lead, setLead] = useState<LeadDraft>(() => leadDraft(data));
   const [cover, setCover] = useState<CoverDraft>(() => coverDraft(data));
+  const [ship, setShip] = useState<ShipDraft>(() => shipDraft(data));
   const [epoch, setEpoch] = useState(0); // kiritish maydonlari o'z matnini saqlaydi — qaytarilganda qayta yaratiladi
   const save = useSettingsMutation(orgId, (body: InventorySettingsIn) => setInventorySettings(orgId, body), "settings.inventory.saved");
-  const reset = useSettingsMutation(orgId, () => setInventorySettings(orgId, {}), "settings.inventory.resetDone", () => {
+  const reset = useSettingsMutation(orgId, () => setInventorySettings(orgId, { ship_cover_days: null }), "settings.inventory.resetDone", () => {
     setLead(Object.fromEntries(data.stages.map((s) => [s, null])));
     setCover({ A: String(data.cover_defaults.A), B: String(data.cover_defaults.B), C: String(data.cover_defaults.C) });
+    setShip({ A: null, B: null, C: null });
     setEpoch((n) => n + 1);
   });
-  const state = inventoryState(lead, cover);
+  const state = inventoryState(lead, cover, ship);
   return (
     <section className="settings-section" aria-labelledby="settings-inventory">
       <h2 id="settings-inventory" className="h3">
@@ -31,7 +33,7 @@ export function InventorySettings({ orgId, data, canManage }: { orgId: string; d
         className="settings-form settings-form--grid"
         onSubmit={(e) => {
           e.preventDefault();
-          if (state === "ok") save.mutate(inventoryBody(lead, cover));
+          if (state === "ok") save.mutate(inventoryBody(lead, cover, ship));
         }}
       >
         <fieldset key={`lead-${epoch}`} className="settings-fieldset" disabled={!canManage}>
@@ -44,6 +46,13 @@ export function InventorySettings({ orgId, data, canManage }: { orgId: string; d
           <legend className="label">{t("settings.inventory.coverLegend")}</legend>
           {(["A", "B", "C"] as const).map((k) => (
             <NumberInput key={k} label={t("settings.inventory.cover", { abc: k })} suffix={t("settings.inventory.days")} digits={0} value={cover[k]} onValueChange={(v) => setCover((d) => ({ ...d, [k]: v }))} />
+          ))}
+        </fieldset>
+        <fieldset key={`ship-${epoch}`} className="settings-fieldset" disabled={!canManage}>
+          <legend className="label">{t("settings.inventory.shipLegend")}</legend>
+          <p className="caption">{t("settings.inventory.shipHint")}</p>
+          {(["A", "B", "C"] as const).map((k) => (
+            <NumberInput key={k} label={t("settings.inventory.shipCover", { abc: k })} suffix={t("settings.inventory.days")} digits={0} optional value={ship[k]} onValueChange={(v) => setShip((d) => ({ ...d, [k]: v }))} />
           ))}
         </fieldset>
         {state === "partial" && <Banner tone="warning" title={t("settings.inventory.partial")} />}

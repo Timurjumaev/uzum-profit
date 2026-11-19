@@ -355,13 +355,21 @@ function StatusCell({ row }: { row: StockRow }) {
       {row.ship.uncounted > 0 && <span className="caption"> {t("inventory.ship.countFirst", { count: f.number(row.ship.uncounted) })}</span>}
     </span>
   );
+  // F54: yuborish rejasi — maqsad qamrov sozlangan va yuboriladigan dona bor bo'lsa; 60 kundan oshsa — ogohlantirish.
+  const plan = row.ship_plan && row.ship_plan.qty > 0 && (
+    <span className="caption" title={t("inventory.shipPlan.hint", { target: f.number(row.ship_plan.target_days, { digits: 0 }) })}>
+      {t("inventory.shipPlan.line", { qty: f.number(row.ship_plan.qty), days: f.number(row.ship_plan.days_after, { digits: 0 }) })}
+      {row.ship_plan.overstock && <Badge tone="warning">{t("inventory.shipPlan.over")}</Badge>}
+    </span>
+  );
   if (!row.status) {
-    return ship ? <span className="inventory-cell">{ship}</span> : <span className="muted" title={row.lead_time ? undefined : t("inventory.noLeadHint")}>—</span>;
+    return ship || plan ? <span className="inventory-cell">{ship}{plan}</span> : <span className="muted" title={row.lead_time ? undefined : t("inventory.noLeadHint")}>—</span>;
   }
   return (
     <span className="inventory-cell">
       <StatusPill tone={STATUS_TONE[row.status]}>{t(`inventory.status.${row.status}`)}</StatusPill>
       {ship}
+      {plan}
       {row.product_status && row.product_status !== row.status && <span className="caption">{t("inventory.productStatus", { status: t(`inventory.status.${row.product_status}`) })}</span>}
       {row.liquidity && <Badge tone="warning">{t(`inventory.liquidity.${row.liquidity as "illiquid" | "slow"}`)}</Badge>}
     </span>
