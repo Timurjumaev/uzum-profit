@@ -584,7 +584,17 @@ def test_payout_check_semantics_completion_days_keys_and_account_expenses(
     fake = seller(shops=BOTH)
     _, report = synced(db, fake)
     payout = shop(report, A)["checks"]["payout"]
-    assert {"withdrawn", "completion", "raw_keys", "account_expenses"} == set(payout)
+    assert {
+        "withdrawn",
+        "ready_unwithdrawn",
+        "withdrawn_vs_profit",
+        "events",
+        "completion",
+        "raw_keys",
+        "account_expenses",
+    } == set(payout)
+    assert {"lines", "profit", "first_issued", "last_issued"} == set(payout["ready_unwithdrawn"])
+    assert {"lines", "profit", "withdrawn"} == set(payout["withdrawn_vs_profit"])
     for row in payout["withdrawn"]:
         assert {"status", "lines", "withdrawn_lines", "withdrawn", "profit"} <= set(row)
     comp = payout["completion"]

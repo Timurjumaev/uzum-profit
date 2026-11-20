@@ -1021,8 +1021,55 @@ async def payout_check(conn: AsyncConnection, shop: UUID, now: datetime) -> dict
             {"s": shop, "n": SAMPLE},
         )
     ]
+    ready = (
+        await conn.execute(
+            text(
+                "SELECT count(*) AS lines, coalesce(sum(seller_profit), 0) AS profit, "
+                "min(issued_at) AS first_issued, max(issued_at) AS last_issued FROM sale_items "
+                "WHERE shop_id = :s AND upper(trim(status)) = 'TO_WITHDRAW' "
+                "AND coalesce(nullif(raw ->> 'withdrawnProfit', '')::numeric, 0) <= 0"
+            ),
+            {"s": shop},
+        )
+    ).one()
+    gap = (
+        await conn.execute(
+            text(
+                "SELECT count(*) AS lines, coalesce(sum(seller_profit), 0) AS profit, "
+                "coalesce(sum(nullif(raw ->> 'withdrawnProfit', '')::numeric), 0) AS withdrawn FROM sale_items "
+                "WHERE shop_id = :s AND coalesce(nullif(raw ->> 'withdrawnProfit', '')::numeric, 0) > 0"
+            ),
+            {"s": shop},
+        )
+    ).one()
+    events = [
+        {"day": r.day, "lines": r.lines, "withdrawn": money(r.withdrawn)}
+        for r in await conn.execute(
+            text(
+                "SELECT (withdrawn_seen_at AT TIME ZONE 'Asia/Tashkent')::date AS day, count(*) AS lines, "
+                "sum(nullif(raw ->> 'withdrawnProfit', '')::numeric) AS withdrawn FROM sale_items "
+                "WHERE shop_id = :s AND withdrawn_seen_at IS NOT NULL GROUP BY 1 ORDER BY 1"
+            ),
+            {"s": shop},
+        )
+    ]
     return {
         "withdrawn": by_status,
+        # B5.7: yechishga tayyor, lekin yechilmagan Yakunlangan qatorlar (prognoz "available" bilan solishtiriladi).
+        "ready_unwithdrawn": {
+            "lines": ready.lines,
+            "profit": money(ready.profit),
+            "first_issued": ready.first_issued,
+            "last_issued": ready.last_issued,
+        },
+        # Yechilgan qatorlarda sellerProfit ↔ withdrawnProfit farqi (ushlanma / logistika tuzatishi).
+        "withdrawn_vs_profit": {
+            "lines": gap.lines,
+            "profit": money(gap.profit),
+            "withdrawn": money(gap.withdrawn),
+        },
+        # To'lov hodisalari: qator birinchi marta yechilgan ko'rilgan kun bo'yicha (birinchi kun — boshlang'ich holat).
+        "events": events,
         "completion": {
             "lines": days.lines,
             "min_days": None if days.min_days is None else round(float(days.min_days), 2),

@@ -31,6 +31,7 @@ from upapi.routes import (
     orders,
     orgs,
     own_expenses,
+    payouts,
     pnl,
     purchases,
     receiving,
@@ -122,6 +123,7 @@ def create_app(
         orders,
         expenses,
         inventory,
+        payouts,  # B5.7 to'lov prognozi
         exports,  # B4.10 Excel eksport
     ):  # B2.9 o'qish API'lari
         app.include_router(reports.router, prefix=API_PREFIX)
