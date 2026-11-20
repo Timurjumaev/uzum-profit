@@ -79,6 +79,7 @@ export type Shortage = Schemas["ShortageOut"];
 export type ResolveIn = Schemas["ResolveIn"];
 export type ShortagePatch = Schemas["ShortagePatch"];
 export type NotificationSettings = Schemas["NotificationSettingsOut"];
+export type CalculatorScenario = Schemas["ScenarioOut"];
 export type CargoSuggestion = Schemas["CargoSuggestionOut"];
 export type CalculatorDefaults = Schemas["CalculatorDefaultsOut"];
 export type Calculator = Schemas["CalculatorOut"];

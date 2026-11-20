@@ -107,3 +107,23 @@
 .calculator__suggest p {
   margin: 0;
 }
+
+.calculator__scenarios {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.calculator__scenarios li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgb(124 92 255 / 0.1), rgb(255 140 66 / 0.1));
+}
+.calculator__scenarios li span {
+  flex: 1;
+  font-weight: 600;
+}

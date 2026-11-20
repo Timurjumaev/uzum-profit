@@ -760,6 +760,13 @@ missing_losses = tenant(
         "sku_id": ("mp_skus", True),
     },
 )
+# B5.9-3: saqlangan kalkulyator ssenariylari — faqat kiritish (maydon → qiymat), natija saqlanmaydi.
+calculator_scenarios = tenant(
+    "calculator_scenarios",
+    Column("name", Text, nullable=False),
+    Column("inputs", JSONB, nullable=False),
+    UniqueConstraint("org_id", "name"),
+)
 sale_costs = tenant(
     "sale_costs",
     Column("method", Text, nullable=False),
