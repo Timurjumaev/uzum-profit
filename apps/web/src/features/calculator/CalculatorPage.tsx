@@ -2,13 +2,13 @@
 // komissiya, soliq va mo'ljallangan narxdan birlik tannarx, Uzum logistikasi, foyda, marja, ROI, zararsizlik va maqsadli
 // marja narxi. Hisob serverda (`/calculator`, tamoyil 4) — bu yerda faqat kiritish va ko'rsatish. Kurs — CBU (manbasi va sanasi
 // ko'rsatiladi), qo'lda o'zgartirsa bo'ladi; qiymat yo'q bo'lsa taxmin qilinmaydi: maydon bo'sh.
-import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { calculatorDefaultsQuery, cargoSuggestionQuery, calculatorQuery, currentOrg, meQuery, type CalculatorInput } from "../../app/query";
+import { calculatorDefaultsQuery, cargoSuggestionQuery, deleteScenario, saveScenario, scenariosQuery, calculatorQuery, currentOrg, meQuery, type CalculatorInput } from "../../app/query";
 import { errorText } from "../../app/errors";
-import { Banner, Button, FormulaPopover, NumberInput, Skeleton } from "../../components/ui";
+import { Banner, Button, FormulaPopover, NumberInput, Skeleton, TextInput, useToast } from "../../components/ui";
 import { ApiError } from "../../lib/api/client";
 import type { CalculatorDefaults } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
@@ -70,6 +70,18 @@ export function toInput(v: Values): CalculatorInput | null {
   return out as unknown as CalculatorInput;
 }
 
+/** Ssenariyga faqat to'ldirilgan maydonlar saqlanadi (bo'sh — server taklifi / 0). */
+export function scenarioInputs(v: Values): Record<string, string> {
+  return Object.fromEntries(Object.entries(v).filter((e): e is [string, string] => e[1] !== null));
+}
+
+/** Saqlangan kiritishni formaga qaytarish: noma'lum maydon e'tiborga olinmaydi, qolganlari bo'sh. */
+export function fromScenario(inputs: Record<string, string>): Values {
+  const out: Values = { ...EMPTY };
+  for (const key of Object.keys(EMPTY) as Field[]) out[key] = inputs[key] ?? null;
+  return out;
+}
+
 function useDebounced<T>(value: T, ms: number): T {
   const [out, setOut] = useState(value);
   useEffect(() => {
@@ -107,6 +119,21 @@ function Form({ orgId, defaults }: { orgId: string; defaults: CalculatorDefaults
   const start = useMemo<Values>(() => ({ ...EMPTY, tax_pct: defaults.tax_pct }), [defaults.tax_pct]);
   const [values, setValues] = useState<Values>(start);
   const set = (field: Field) => (value: string | null) => setValues((v) => ({ ...v, [field]: value }));
+  const [scenarioName, setScenarioName] = useState("");
+  const toast = useToast();
+  const qc = useQueryClient();
+  const scenarios = useQuery(scenariosQuery(orgId)).data ?? [];
+  const refresh = () => void qc.invalidateQueries({ queryKey: ["orgs", orgId, "calculator-scenarios"] });
+  const fail = (error: unknown) => toast.show(errorText(error, t), "negative");
+  const save = useMutation({
+    mutationFn: () => saveScenario(orgId, scenarioName.trim(), scenarioInputs(values)),
+    onSuccess: () => {
+      toast.show(t("calculator.scenario.saved"), "positive");
+      refresh();
+    },
+    onError: fail,
+  });
+  const remove = useMutation({ mutationFn: (id: string) => deleteScenario(orgId, id), onSuccess: refresh, onError: fail });
   const suggestion = useQuery(cargoSuggestionQuery(orgId)).data;
   const key = useDebounced(JSON.stringify(toInput(values)), DEBOUNCE_MS);
   const input = useMemo(() => JSON.parse(key) as CalculatorInput | null, [key]);
@@ -180,6 +207,38 @@ function Form({ orgId, defaults }: { orgId: string; defaults: CalculatorDefaults
           <legend className="h4">{t("calculator.group.rates")}</legend>
           <NumberInput label={t("calculator.cny_rate")} value={values.cny_rate} onValueChange={set("cny_rate")} optional help={rateHint(rate.cny)} />
           <NumberInput label={t("calculator.usd_rate")} value={values.usd_rate} onValueChange={set("usd_rate")} optional help={rateHint(rate.usd)} />
+        </fieldset>
+        <fieldset className="calculator__group" data-testid="scenarios">
+          <legend className="h4">{t("calculator.scenario.title")}</legend>
+          <TextInput label={t("calculator.scenario.name")} value={scenarioName} onValueChange={setScenarioName} maxLength={80} />
+          <Button size="sm" disabled={scenarioName.trim() === "" || input === null || save.isPending} onClick={() => save.mutate()}>
+            {t("calculator.scenario.save")}
+          </Button>
+          {input === null && <p className="caption">{t("calculator.scenario.needInput")}</p>}
+          {scenarios.length === 0 ? (
+            <p className="caption">{t("calculator.scenario.empty")}</p>
+          ) : (
+            <ul className="calculator__scenarios">
+              {scenarios.map((s) => (
+                <li key={s.id}>
+                  <span>{s.name}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setValues(fromScenario(s.inputs));
+                      setScenarioName(s.name);
+                    }}
+                  >
+                    {t("calculator.scenario.open")}
+                  </Button>
+                  <Button variant="ghost" size="sm" aria-label={t("calculator.scenario.delete", { name: s.name })} onClick={() => remove.mutate(s.id)}>
+                    ✕
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
         </fieldset>
         <Button variant="ghost" size="sm" disabled={JSON.stringify(values) === JSON.stringify(start)} onClick={() => setValues(start)}>
           {t("calculator.reset")}

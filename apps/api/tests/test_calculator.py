@@ -5,8 +5,10 @@ from __future__ import annotations
 
 from datetime import timedelta
 from decimal import Decimal
+from typing import Any
 
 import test_reports as tr
+from upapi.auth.deps import COOKIE
 from upapi.reports.common import today
 
 D = Decimal
@@ -150,3 +152,33 @@ def test_cargo_suggestion_from_similar_purchases(world: tr.World) -> None:
         assert w.call("calculator/cargo-suggestion", "warehouse").status_code == 403
     finally:
         w.a.sql("DELETE FROM fx_rates")
+
+
+def send(w: tr.World, method: str, path: str, role: str = "owner", **json: object) -> Any:
+    w.api.client.cookies.set(COOKIE, w.sessions[role])
+    return w.api.client.request(
+        method,
+        f"/api/v1/orgs/{w.org_id}/{path}",
+        json=json if method == "POST" else None,
+        headers={"X-Requested-With": "fetch"},
+    )
+
+
+def test_scenarios_save_update_delete(world: tr.World) -> None:
+    """Ssenariy: nom bo'yicha saqlash (yangi — 201, shu nom — 200 yangilanadi), ro'yxat, o'chirish, tekshiruv, ruxsat."""
+    w = world
+    path = "calculator/scenarios"
+    assert w.get(path) == []
+    r = send(w, "POST", path, name=" Mashina ", inputs={"price_cny": "10", "qty": "50"})
+    assert r.status_code == 201 and r.json()["name"] == "Mashina"
+    r2 = send(w, "POST", path, name="Mashina", inputs={"price_cny": "12"})
+    assert r2.status_code == 200 and r2.json()["id"] == r.json()["id"]
+    listed = w.get(path)
+    assert len(listed) == 1 and listed[0]["inputs"] == {"price_cny": "12"}
+    for bad in ({"hack": "1"}, {"price": "abc"}, {"price": "NaN"}):
+        resp = send(w, "POST", path, name="x", inputs=bad)
+        assert resp.status_code == 422 and resp.json()["code"] == "scenario_invalid"
+    assert w.call(path, "warehouse").status_code == 403
+    sid = listed[0]["id"]
+    assert send(w, "DELETE", f"{path}/{sid}").status_code == 204
+    assert send(w, "DELETE", f"{path}/{sid}").status_code == 404

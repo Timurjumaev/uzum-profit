@@ -210,6 +210,19 @@ export const cargoSuggestionQuery = (orgId: string) =>
     queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/calculator/cargo-suggestion", { params: { path: { org_id: orgId } } })),
   });
 
+/** Saqlangan kalkulyator ssenariylari (B5.9-3): faqat kiritish; natija ochilganda joriy kurs/tarif bilan qayta hisoblanadi. */
+export const scenariosQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "calculator-scenarios"],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/calculator/scenarios", { params: { path: { org_id: orgId } } })),
+  });
+
+export const saveScenario = (orgId: string, name: string, inputs: Record<string, string>) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/calculator/scenarios", { params: { path: { org_id: orgId } }, body: { name, inputs } }));
+
+export const deleteScenario = (orgId: string, id: string) =>
+  unwrap(api.DELETE("/api/v1/orgs/{org_id}/calculator/scenarios/{scenario_id}", { params: { path: { org_id: orgId, scenario_id: id } } }));
+
 /** Xariddan oldingi kalkulyator (M13): hisob serverda (tamoyil 4); kiritish o'zgargan sayin qayta so'raladi. */
 export const calculatorQuery = (orgId: string, input: CalculatorInput) =>
   queryOptions({

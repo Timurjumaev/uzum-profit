@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App, createAppState } from "../../App";
 import { formatterFor } from "../../lib/format";
-import { CALCULATOR_DEFAULTS_ROUTE, CALCULATOR_ROUTE, CARGO_SUGGESTION_ROUTE, json, ME, ME_ROUTE, mockApi, problem, type Routes } from "../../test/api";
+import { CALCULATOR_DEFAULTS_ROUTE, CALCULATOR_ROUTE, CARGO_SUGGESTION_ROUTE, SCENARIOS_ROUTE, SCENARIOS_SAVE_ROUTE, json, ME, ME_ROUTE, mockApi, problem, type Routes } from "../../test/api";
 import { calculatorDefaults, calculatorResult, cargoSuggestion } from "../../test/calculator";
 import { toInput, type Values } from "./CalculatorPage";
 
@@ -25,6 +25,7 @@ async function renderPage(routes: Routes = {}, lang: "uz-Latn" | "ru" = "uz-Latn
     [CALCULATOR_DEFAULTS_ROUTE]: () => json(200, calculatorDefaults()),
     [CALCULATOR_ROUTE]: () => json(200, calculatorResult()),
     [CARGO_SUGGESTION_ROUTE]: () => json(200, cargoSuggestion()),
+    [SCENARIOS_ROUTE]: () => json(200, []),
     ...routes,
   });
   render(<App state={createAppState(createMemoryHistory({ initialEntries: ["/calculator"] }), lang)} />);
@@ -41,6 +42,24 @@ async function fill(label: RegExp | string, value: string) {
 }
 
 describe("kalkulyator", () => {
+  it("ssenariy: saqlanganni ochish formani toʻldiradi; saqlash toʻldirilgan maydonlarni nom bilan yuboradi", async () => {
+    const saved = [{ id: "s1", name: "Mashina", inputs: { price_cny: "10", qty: "50", price: "90000", commission_pct: "15" }, updated_at: "2026-11-20T10:00:00Z" }];
+    const api = await renderPage({ [SCENARIOS_ROUTE]: () => json(200, saved), [SCENARIOS_SAVE_ROUTE]: () => json(201, saved[0]) });
+    fireEvent.click(await screen.findByRole("button", { name: "Ochish" }));
+    expect((screen.getByLabelText(/^1688 narxi/) as HTMLInputElement).value).toBe("10");
+    expect((screen.getByLabelText(/^Dona soni/) as HTMLInputElement).value).toBe("50");
+    expect((screen.getByLabelText("Ssenariy nomi") as HTMLInputElement).value).toBe("Mashina");
+    const saveBtn = screen.getByRole("button", { name: "Saqlash" }) as HTMLButtonElement;
+    await waitFor(() => expect(saveBtn.disabled).toBe(false));
+    fireEvent.click(saveBtn);
+    await waitFor(() => expect(api.bodies.some((b) => b.key === SCENARIOS_SAVE_ROUTE)).toBe(true));
+    const body = api.bodies.find((b) => b.key === SCENARIOS_SAVE_ROUTE)!.body as { name: string; inputs: Record<string, string> };
+    expect(body.name).toBe("Mashina");
+    expect(body.inputs.price_cny).toBe("10");
+    expect("weight_kg" in body.inputs).toBe(false); // boʻsh maydon saqlanmaydi
+  });
+
+
   it("kargo taklifi: oʻxshash xaridlar oʻrtachasi, tugma $/kg ni toʻldiradi; xarid yoʻq — taklif chiqmaydi", async () => {
     expect((await renderPage(), screen.queryByTestId("cargo-suggestion"))).toBeNull();
     cleanup();

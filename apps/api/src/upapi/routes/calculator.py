@@ -9,13 +9,15 @@ Formulalar — ``upcore`` da (tamoyil 4); bu yerda faqat kiritishni yig'ish va m
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Annotated, Any
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel
-from sqlalchemy import func, select
+from fastapi import APIRouter, Depends, Query, Response
+from pydantic import BaseModel, Field
+from sqlalchemy import delete, func, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.fx import FxError
 from upcore.money import Currency, Money
@@ -348,4 +350,95 @@ async def calculator(
         ),
         tax_pct=tax_pct,
         unit=unit_calc_out(unit),
+    )
+
+
+# --- Saqlangan ssenariylar (B5.9-3): faqat kiritish; natija har ochilganda joriy kurs va tarif bilan qayta hisoblanadi ---
+
+SCENARIO_FIELDS = frozenset(
+    {
+        "price_cny", "qty", "china_cny_total", "weight_kg", "length_cm", "width_cm", "height_cm",
+        "cargo_usd_per_kg", "cargo_usd_per_m3", "extra_uzs", "packaging_uzs", "price", "commission_pct",
+        "tax_pct", "ads_pct", "target_margin_pct", "cny_rate", "usd_rate",
+    }
+)  # fmt: skip
+MAX_SCENARIOS = 100
+
+
+class ScenarioIn(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    inputs: dict[str, str]
+
+
+class ScenarioOut(BaseModel):
+    id: UUID
+    name: str
+    inputs: dict[str, str]
+    updated_at: datetime
+
+
+def _scenario_out(r: Any) -> ScenarioOut:
+    return ScenarioOut(id=r.id, name=r.name, inputs=r.inputs, updated_at=r.updated_at)
+
+
+def _clean_inputs(inputs: dict[str, str]) -> dict[str, str]:
+    out: dict[str, str] = {}
+    for key, value in inputs.items():
+        if key not in SCENARIO_FIELDS:
+            raise AppError("scenario_invalid", 422, detail=f"noma'lum maydon: {key}")
+        try:
+            number = Decimal(value)
+        except ArithmeticError:
+            raise AppError("scenario_invalid", 422, detail=f"{key}: son emas") from None
+        if not number.is_finite() or abs(number) > Decimal("1e12"):
+            raise AppError("scenario_invalid", 422, detail=f"{key}: noto'g'ri qiymat")
+        out[key] = value.strip()
+    return out
+
+
+@router.get("/orgs/{org_id}/calculator/scenarios", response_model=list[ScenarioOut])
+async def list_scenarios(ctx: Finance) -> list[ScenarioOut]:
+    t = m.calculator_scenarios
+    rows = await ctx.conn.execute(select(t).order_by(t.c.updated_at.desc(), t.c.id))
+    return [_scenario_out(r) for r in rows]
+
+
+@router.post("/orgs/{org_id}/calculator/scenarios", response_model=ScenarioOut)
+async def save_scenario(body: ScenarioIn, ctx: Finance, response: Response) -> ScenarioOut:
+    """Shu nomli ssenariy bor bo'lsa — kiritishi yangilanadi (201 — yangi, 200 — yangilandi)."""
+    t = m.calculator_scenarios
+    name = body.name.strip()
+    if not name:
+        raise AppError("scenario_invalid", 422, detail="nom bo'sh")
+    inputs = _clean_inputs(body.inputs)
+    existing = await ctx.conn.scalar(select(t.c.id).where(t.c.name == name))
+    if (
+        existing is None
+        and (await ctx.conn.scalar(select(func.count()).select_from(t)) or 0) >= MAX_SCENARIOS
+    ):
+        raise AppError("scenario_limit", 422, detail=f"ko'pi bilan {MAX_SCENARIOS} ta ssenariy")
+    stmt = pg_insert(t).values(org_id=ctx.org_id, name=name, inputs=inputs)
+    row = (
+        await ctx.conn.execute(
+            stmt.on_conflict_do_update(
+                index_elements=[t.c.org_id, t.c.name],
+                set_={"inputs": stmt.excluded.inputs, "updated_at": func.now()},
+            ).returning(t)
+        )
+    ).one()
+    await ctx.audit("calculator_scenario.save", "calculator_scenario", row.id, after={"name": name})
+    response.status_code = 200 if existing is not None else 201
+    return _scenario_out(row)
+
+
+@router.delete("/orgs/{org_id}/calculator/scenarios/{scenario_id}", status_code=204)
+async def delete_scenario(scenario_id: UUID, ctx: Finance) -> None:
+    t = m.calculator_scenarios
+    row = (
+        await ctx.conn.execute(delete(t).where(t.c.id == scenario_id).returning(t.c.id, t.c.name))
+    ).first()
+    if row is None:
+        raise AppError("scenario_not_found", 404, detail="ssenariy topilmadi")
+    await ctx.audit(
+        "calculator_scenario.delete", "calculator_scenario", row.id, before={"name": row.name}
     )
