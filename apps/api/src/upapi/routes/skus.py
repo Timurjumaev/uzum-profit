@@ -126,6 +126,9 @@ class SkuRowOut(BaseModel):
     stock: int  # FBO + FBS
     days_of_stock: Decimal | None  # F24
     abc: str  # F28 (bizniki, oxirgi 30 kun)
+    xyz: Literal["X", "Y", "Z"] | None = (
+        None  # F28 XYZ: oxirgi 8 hafta sotuv barqarorligi; sotuv yo'q — null
+    )
     rank: str | None  # Uzum ``rankInfo``
     status: str | None  # Uzum SKU holati
 
@@ -264,6 +267,7 @@ def _row(
         stock=st.stock if st else 0,
         days_of_stock=st.days_of_stock if st else None,
         abc=st.abc.value if st else "C",
+        xyz=st.xyz.value if st and st.xyz else None,
         rank=info.rank,
         status=info.status,
     )
@@ -276,6 +280,7 @@ async def ranked(
     label: ProfitLabel | None,
     abc: str | None,
     sort: str,
+    xyz: str | None = None,
 ) -> tuple[list[SkuRowOut], dict[str | None, Statement]]:
     """Filtrlangan va saralangan hamma SKU qatorlari (sahifalashsiz) va SKU kesimi; Excel eksport ham shundan oladi."""
     desc = sort.startswith("-")
@@ -315,7 +320,11 @@ async def ranked(
             lots.get(info.item_id) if info.item_id else None,
             _sold_before(prev_sku.get(str(info.id))),
         )
-        if (label is None or row.label is label) and (abc is None or row.abc == abc):
+        if (
+            (label is None or row.label is label)
+            and (abc is None or row.abc == abc)
+            and (xyz is None or row.xyz == xyz)
+        ):
             rows.append(row)
     present = sorted(
         rows, key=lambda r: (fold(_shown_title(r)), str(r.sku_id))
@@ -337,11 +346,12 @@ async def skus(
     q: Annotated[str | None, Query(max_length=100)] = None,
     label: Annotated[ProfitLabel | None, Query(description="Holat belgisi bo'yicha")] = None,
     abc: Annotated[Literal["A", "B", "C"] | None, Query(description="ABC (F28)")] = None,
+    xyz: Annotated[Literal["X", "Y", "Z"] | None, Query(description="XYZ (F28)")] = None,
     sort: Annotated[str, Query(pattern=r"^-?[a-z_]+$")] = "-revenue",
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
     page: Annotated[int, Query(ge=1, le=100_000)] = 1,
 ) -> SkusOut:
-    ordered, by_sku = await ranked(ctx, f, q, label, abc, sort)
+    ordered, by_sku = await ranked(ctx, f, q, label, abc, sort, xyz)
     empty = Cells(f.period, {}).statement()
     pages = max(1, -(-len(ordered) // limit))
     page = min(page, pages)  # filtr o'zgargach sahifa oxirgidan oshib ketsa — oxirgisi

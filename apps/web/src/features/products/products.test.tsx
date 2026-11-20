@@ -145,6 +145,19 @@ describe("jadval", () => {
     expect(history.location.search).toContain("label=loss");
   });
 
+  it("B5.5: XYZ filtri URL'ga va API'ga yoziladi; XYZ ustuni (sotuv yo'q — '—') ustunlar tanlovidan yoqiladi", async () => {
+    const rows = skusData().items.map((r, i) => (i === 0 ? { ...r, xyz: "Y" as const } : { ...r, xyz: null }));
+    localStorage.setItem(`up.products.columns.${ORG_ID}`, JSON.stringify([...DEFAULT_COLUMNS, "xyz"]));
+    const { api, history } = await renderTable({ [SKUS_ROUTE]: () => json(200, skusData({ items: rows })) });
+    expect(headers().map((h) => h!.replace(/Qanday hisoblanadi.*$/, "").trim())).toContain("XYZ");
+    const [first, second] = within(table()).getAllByRole("row").slice(1);
+    expect(within(first!).getByText("Y")).toBeTruthy();
+    expect(within(second!).getAllByText("—").length).toBeGreaterThan(0);
+    fireEvent.change(screen.getByLabelText("XYZ"), { target: { value: "Z" } });
+    await waitFor(() => expect(skusUrls(api).some((u) => u.searchParams.get("xyz") === "Z")).toBe(true));
+    expect(history.location.search).toContain("xyz=Z");
+  });
+
   it("filtr natijasi bo'sh — 'Hech narsa topilmadi' va tozalash tugmasi", async () => {
     const { history } = await renderAt(`${PATH}&q=yoq`, { [SKUS_ROUTE]: () => json(200, skusData({ items: [], total: 0 })) });
     expect(await screen.findByText("Hech narsa topilmadi")).toBeTruthy();

@@ -1,6 +1,6 @@
 // Mahsulotlar modeli (M6, B4.3): ustunlar, saralash kalitlari, holat belgisi va brauzerda saqlanadigan ko'rinishlar.
 // Hisoblash yo'q (tamoyil 4) — raqamlar API'dan; bu yerda faqat tanlov, tartib va matn kalitlari.
-import type { ProductAbc, ProductLabel, ProductSort } from "../../app/search";
+import type { ProductAbc, ProductLabel, ProductSort, ProductXyz } from "../../app/search";
 import { addDays, type IsoDate } from "../../lib/dates";
 import type { SkuDay } from "../../lib/api/types";
 import type { Tone } from "../../components/ui";
@@ -27,6 +27,7 @@ export const COLUMN_IDS = [
   "stock",
   "days",
   "abc",
+  "xyz",
   "label",
 ] as const;
 export type ColumnId = (typeof COLUMN_IDS)[number];
@@ -120,6 +121,7 @@ export type SavedView = {
   sort?: string;
   label?: ProductLabel;
   abc?: ProductAbc;
+  xyz?: ProductXyz;
 };
 
 const COLUMNS_KEY = (orgId: string) => `up.products.columns.${orgId}`;

@@ -5398,6 +5398,8 @@ export interface components {
             days_of_stock: string | null;
             /** Abc */
             abc: string;
+            /** Xyz */
+            xyz?: ("X" | "Y" | "Z") | null;
             /** Rank */
             rank: string | null;
             /** Status */
@@ -7989,6 +7991,8 @@ export interface operations {
                 label?: components["schemas"]["ProfitLabel"] | null;
                 /** @description ABC (F28) */
                 abc?: ("A" | "B" | "C") | null;
+                /** @description XYZ (F28) */
+                xyz?: ("X" | "Y" | "Z") | null;
                 sort?: string;
                 limit?: number;
                 page?: number;
@@ -8456,6 +8460,7 @@ export interface operations {
                 label?: components["schemas"]["ProfitLabel"] | null;
                 abc?: ("A" | "B" | "C") | null;
                 sort?: string;
+                xyz?: ("X" | "Y" | "Z") | null;
                 /** @description Davr boshi (Toshkent kuni) */
                 start?: string | null;
                 /** @description Davr oxiri, kiradi; standart — bugun */

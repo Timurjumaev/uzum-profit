@@ -137,7 +137,7 @@ export const drillExpensesQuery = (orgId: string, p: ReportParams, category: str
 
 // --- Mahsulotlar (M6, B4.3) ---------------------------------------------------------------------------------------
 
-export type SkuListParams = { q?: string; sort?: string; label?: string; abc?: string; page?: number; size?: number };
+export type SkuListParams = { q?: string; sort?: string; label?: string; abc?: string; xyz?: string; page?: number; size?: number };
 
 /** SKU jadvali, bitta sahifa (ADR-054: `page` 1 dan, `limit` 20/50/100); `placeholderData` bilan sahifa almashganda jadval yo'qolmaydi. */
 export const skusQuery = (orgId: string, p: ReportParams, l: SkuListParams) =>
@@ -154,6 +154,7 @@ export const skusQuery = (orgId: string, p: ReportParams, l: SkuListParams) =>
               sort: l.sort,
               label: l.label as "loss" | undefined,
               abc: l.abc as "A" | undefined,
+              xyz: l.xyz as "X" | undefined,
               limit: l.size ?? 50,
               page: l.page ?? 1,
             },
