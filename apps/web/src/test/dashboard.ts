@@ -127,6 +127,7 @@ export function dashboardData(over: Partial<Dashboard> = {}, ago: (minutes: numb
       average_days_to_sell: "41.50",
     },
     attention: { uncosted_lines: 0, uncosted_revenue: "0.00", loss_skus: 1, stock_critical: 2, stock_high: 3, stock_ship: 0, recalculated: 0, receiving: 0, goods_missing: 0, uncounted: 0, orphan_invoices: 0, cargo_late: 0, telegram_lost: 0 },
+    losses: { return_cost: "1000.00", fines: "120000.00", defect_loss: "0.00", receiving_loss: "0.00", illiquid_storage: "250000.00", illiquid_skus: 3, stockout_loss: "800000.00", stockout_skus: 2, total: "1171000.00", illiquid_money: "9000000.00" },
     revenue_limit: null,
     ...over,
   };

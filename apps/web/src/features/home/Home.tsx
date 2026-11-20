@@ -15,7 +15,7 @@ import { currentOrg, dashboardQuery, meQuery, syncQuery } from "../../app/query"
 import { Banner, Button, EmptyState, Skeleton } from "../../components/ui";
 import { RevenueLimitBanner } from "../settings/RevenueLimit";
 import { syncSummary } from "../../lib/sync";
-import { Attention, DailyChart, Kpis, PeriodStrip, SkuLists } from "./Blocks";
+import { Attention, DailyChart, Kpis, PeriodStrip, SkuLists, Losses } from "./Blocks";
 import { KpiSummary } from "./KpiSummary";
 import { attentionItems } from "./model";
 import { Summary } from "./Summary";
@@ -95,6 +95,7 @@ export function Home() {
       <DailyChart data={data} />
       <KpiSummary data={data} />
       <SkuLists top={data.top} bottom={data.bottom} />
+      <Losses data={data} />
       <Kpis data={data} />
     </section>
   );

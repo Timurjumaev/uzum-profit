@@ -563,7 +563,7 @@ kun o'tdi yoki qabul soni e'longa yetdi (shartnoma 4.6); undan oldin "qabul davo
 kamomadida da'vo muddati — qabuldan 30 kun (shartnoma 4.13).
 
 **F34. Tugab qolishdan yo'qotilgan foyda** = Σ (faol SKU qoldig'i 0 bo'lgan kunlar) × tugashdan oldingi F23 ×
-o'rtacha foyda/dona (oxirgi 90 kun). Faqat snapshot bor kunlar uchun.
+o'rtacha foyda/dona (oxirgi 90 kun). Faqat snapshot bor kunlar uchun. **Amalda (B5.4):** tugash — ketma-ket snapshot bo'yicha qoldiq 0 kunlar (snapshot yo'q kun bo'lakni uzadi); tugashdan oldingi F23 hisoblanadi; davom etayotgan tugash faqat tovar yo'lda / omborimda / postavkada bo'lsa sanaladi (aks holda to'xtatilgan); tugagan (qoldiq qaytgan) — faol; foyda/dona — SKU'ning oxirgi 90 kunlik sof foydasi / sotilgan dona (sotuvi yo'q SKU'da hisoblanmaydi). `upcore.inventory.stockout_loss`.
 
 **F35. Zararsizlik narxi** = qat'iy / (1 − ulush/100); qat'iy = tannarx + logistika + qadoq/dona;
 ulush = komissiya% + soliq% + reklama%. Ulush ≥ 100% → "hech qanday narx foyda bermaydi".

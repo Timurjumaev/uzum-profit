@@ -702,6 +702,80 @@ def stockout_lost_profit(
     return avg_profit_per_unit * (to_decimal(speed_before) * zero_days)
 
 
+STOCKOUT_MAX_DAYS = 90  # F34: bitta tugab qolish uchun ko'pi bilan shuncha kun
+
+
+@dataclass(frozen=True, slots=True)
+class StockoutLoss:
+    """F34 natijasi (SKU): davrdagi hisobga olingan kunlar, tugashlar soni va yo'qotilgan foyda."""
+
+    zero_days: int
+    runs: int
+    lost: Money
+
+
+def stockout_runs(days: Sequence[DayStat]) -> list[tuple[date, date]]:
+    """F34: ketma-ket snapshot bo'yicha qoldiq 0 kunlar bo'lagi (``[boshi, oxiri]``, kunlar kalendar tartibida).
+    Snapshot yo'q kun bo'lakni uzadi — oraliqni taxmin qilmaymiz (tamoyil 9)."""
+    runs: list[tuple[date, date]] = []
+    start: date | None = None
+    prev: date | None = None
+    for d in sorted(days, key=lambda x: x.day):
+        if d.in_stock is False:
+            if start is not None and prev is not None and (d.day - prev).days == 1:
+                prev = d.day
+                continue
+            if start is not None and prev is not None:
+                runs.append((start, prev))
+            start = prev = d.day
+        elif start is not None and prev is not None:
+            runs.append((start, prev))
+            start = prev = None
+    if start is not None and prev is not None:
+        runs.append((start, prev))
+    return runs
+
+
+def stockout_loss(
+    days: Sequence[DayStat],
+    period_start: date,
+    period_end: date,
+    avg_profit_per_unit: Money,
+    *,
+    replenishing: bool,
+    first_day: date | None = None,
+    s: InventorySettings = DEFAULT,
+    completion: Decimal | None = None,
+) -> StockoutLoss:
+    """F34. Tugab qolishdan yo'qotilgan foyda (SKU, ``[period_start, period_end]``) = Σ tugashlar (snapshot bo'yicha
+    qoldiq 0 kunlar) × tugashdan oldingi F23 × o'rtacha foyda/dona (oxirgi 90 kun).
+
+    "Faol SKU": tugashdan oldin F23 > 0 (sotilgan, to'xtatilmagan) va tugash tugagan (tovar qaytgan) yoki hali davom
+    etayotgan bo'lsa — tovar yo'lda / omborimda bor (``replenishing``); aks holda tovar to'xtatilgan deb olinadi va
+    yo'qotish yo'q. Bitta tugash uchun ko'pi bilan ``STOCKOUT_MAX_DAYS`` (90) kun. Hisobga olinadi — faqat davr ichidagi
+    kunlar; snapshot yo'q kunlar sanalmaydi."""
+    zero = 0
+    count = 0
+    lost = Money.zero(avg_profit_per_unit.currency)
+    for start, end in stockout_runs(days):
+        is_open = not any(
+            d.in_stock is True and d.day > end for d in days
+        )  # keyin qoldiq qaytmagan
+        if is_open and not replenishing:
+            continue
+        speed = velocity(days, start - timedelta(days=1), first_day, s, completion).value
+        if speed <= 0:
+            continue
+        capped = min(end, start + timedelta(days=STOCKOUT_MAX_DAYS - 1))
+        n = max(0, (min(capped, period_end) - max(start, period_start)).days + 1)
+        if n == 0:
+            continue
+        zero += n
+        count += 1
+        lost = lost + stockout_lost_profit(n, speed, avg_profit_per_unit)
+    return StockoutLoss(zero, count, lost)
+
+
 def weekly_sales(days: Iterable[DayStat], as_of: date, weeks: int = 8) -> list[int]:
     """F28 XYZ uchun: oxirgi ``weeks`` haftaning (``as_of`` bilan tugaydigan 7 kunlik bloklar) sotuvi."""
     result = [0] * weeks

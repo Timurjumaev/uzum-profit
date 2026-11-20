@@ -859,6 +859,18 @@ def test_dashboard_blocks(world: World) -> None:
     expected = None if today.day == 1 else run_rate(to_yesterday, today.day - 1, days_in_month)
     got = dash["forecast"]["revenue"]
     assert (None if got is None else D(got)) == expected
+    # B5.4 / B5.0a "Yo'qotishlar va imkoniyat": jarimalar hisobdagi bilan bir xil; yig'indi = qismlar (F34 bo'lsa u ham).
+    lost = dash["losses"]
+    assert D(lost["fines"]) == D(120_000) and D(lost["return_cost"]) >= 0
+    parts = [
+        lost[k]
+        for k in ("return_cost", "fines", "defect_loss", "receiving_loss", "illiquid_storage")
+    ]
+    parts += [] if lost["stockout_loss"] is None else [lost["stockout_loss"]]
+    assert D(lost["total"]) == sum((D(x) for x in parts), D(0))
+    assert (
+        D(lost["illiquid_money"]) >= 0 and lost["illiquid_skus"] >= 0 and lost["stockout_skus"] >= 0
+    )
     # KPI sarhisob (ADR-043): 4 guruh, har kartochkada joriy, oldingi, o'zgarish va trend.
     summary = dash["summary"]
     assert [g["key"] for g in summary["groups"]] == ["orders", "uzum", "returns", "average"]
@@ -1453,3 +1465,37 @@ def test_dashboard_weekly_summary(world: World) -> None:
     cards = {c["key"]: c for g in summary["groups"] for c in g["cards"]}
     for key in ("revenue", "units", "orders"):
         assert sum(D(x) for x in cards[key]["series"]) == D(cards[key]["value"])
+
+
+def test_f34_candidates_and_series_from_snapshots(world: World) -> None:
+    """B5.4 (F34): snapshot bo'yicha qoldig'i 0 bo'lgan SKU'lar nomzod (davrdan 90 kun oldin boshlangan tugash ham);
+    kunlik qatorda snapshot yo'q kun ``None``, sotuv — ``daily_sku_metrics`` dan."""
+    from upapi.reports import losses
+
+    w, a = world, world.a
+    sku = a.insert("mp_skus", shop_id=a.shop_id, external_id=9_700, sku_code="F34")
+    quiet = a.insert("mp_skus", shop_id=a.shop_id, external_id=9_701, sku_code="F34-bor")
+    base = date(2027, 3, 1)
+    for i, qty in enumerate([5, 5, 0, 0, 5]):
+        a.insert("sku_daily", sku_id=sku, day=base + timedelta(days=i), qty_active=qty, qty_fbs=0)
+    a.insert("sku_daily", sku_id=quiet, day=base, qty_active=3, qty_fbs=0)
+    a.insert(
+        "daily_sku_metrics", shop_id=a.shop_id, sku_id=sku, day=base + timedelta(days=1), units=4
+    )
+    period = Period(
+        base + timedelta(days=60), base + timedelta(days=70)
+    )  # 60 kun keyin — tugash 90 kun ichida
+    try:
+        found = w.a.run(lambda conn: losses._zero_candidates(conn, [sku, quiet], period))
+        assert found == {sku}
+        far = Period(base + timedelta(days=200), base + timedelta(days=210))
+        assert w.a.run(lambda conn: losses._zero_candidates(conn, [sku], far)) == set()
+        series = w.a.run(lambda conn: losses._series(conn, {sku}, base, base + timedelta(days=6)))[
+            sku
+        ]
+        assert [d.in_stock for d in series] == [True, True, False, False, True, None, None]
+        assert series[1].sold == 4 and series[0].sold == 0
+    finally:
+        a.sql("DELETE FROM sku_daily WHERE sku_id IN (%s, %s)", [sku, quiet])
+        a.sql("DELETE FROM daily_sku_metrics WHERE sku_id = %s", [sku])
+        a.sql("DELETE FROM mp_skus WHERE id IN (%s, %s)", [sku, quiet])
