@@ -184,6 +184,22 @@ def test_returns_spike_message() -> None:
     assert "Возвраты резко выросли: 1 магазинов" in ru.text
 
 
+def test_commission_changed_message() -> None:
+    """B5.5: "SKU komissiyasi o'zgardi" — SKU va eski → yangi foiz; "Batafsil" — Mahsulotlar."""
+    p = {
+        "day": "2026-11-20",
+        "count": 2,
+        "skus": [
+            {"sku_id": "a", "title": "Mashina", "old": "10", "new": "12.5"},
+            {"sku_id": "b", "title": None, "old": "8", "new": "6"},
+        ],
+    }
+    uz = msg.notification("commission_changed", p, "uz")
+    assert "Uzum komissiyasi oʻzgardi: 2 ta SKU" in uz.text and uz.path == "/products"
+    assert "• Mashina — 10% → 12.5%" in uz.text and "• — — 8% → 6%" in uz.text
+    assert "Комиссия Uzum изменилась: 2 SKU" in msg.notification("commission_changed", p, "ru").text
+
+
 def test_sync_restored_message() -> None:
     """B6.4 (A4): "tiklandi" — bitta xabar, holat sahifasiga havola."""
     p = {"shop": "byDurii", "shop_id": "x", "reason": "restored"}

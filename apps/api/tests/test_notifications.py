@@ -802,3 +802,54 @@ def test_returns_spike_levels_and_only_new_keys(world: World) -> None:
     finally:
         configure({"level": None, "min_returns": None})
         a.sql("DELETE FROM daily_sku_metrics WHERE org_id = %s", [w.org_id])
+
+
+def test_commission_changed_groups_by_day_and_does_not_repeat(world: World) -> None:
+    """B5.5: Uzum komissiyasi (`sku_daily.commission_pct`) oldingi snapshotdan farq qilsa — o'zgarish kuni bo'yicha bitta
+    xabar (moliya roli); birinchi ko'rinish (oldingi snapshot yo'q), oynadan eski o'zgarish va o'zgarmagan SKU — yo'q;
+    takror baholash yangi qator yaratmaydi."""
+    w, a = world, world.a
+    _clean(w)
+    today = NOW.date()
+    changed = a.insert(
+        "mp_skus", shop_id=a.shop_id, external_id=9_801, sku_code="Komissiya-o'zgardi"
+    )
+    first = a.insert("mp_skus", shop_id=a.shop_id, external_id=9_802, sku_code="Komissiya-yangi")
+    old = a.insert("mp_skus", shop_id=a.shop_id, external_id=9_803, sku_code="Komissiya-eski")
+    same = a.insert("mp_skus", shop_id=a.shop_id, external_id=9_804, sku_code="Komissiya-bir xil")
+    rows = [
+        (changed, 3, "10.0"),
+        (changed, 1, "10.0"),
+        (changed, 0, "12.5"),  # bugun 10 → 12,5
+        (first, 0, "5.0"),  # birinchi ko'rinish — taqqoslash yo'q
+        (old, 8, "8.0"),
+        (old, 7, "9.0"),  # 7 kun oldin o'zgargan — oynadan tashqari
+        (same, 2, "7.0"),
+        (same, 0, "7.0"),
+    ]
+    for sku, ago, pct in rows:
+        a.insert(
+            "sku_daily",
+            sku_id=sku,
+            day=today - timedelta(days=ago),
+            qty_active=5,
+            qty_fbs=0,
+            commission_pct=D(pct),
+        )
+    fresh(w, NOW + timedelta(days=2))
+    try:
+        found = w.a.run(lambda conn: notify.commission_changes(conn, today))
+        assert len(found) == 1
+        p = found[0].payload
+        assert p["day"] == today.isoformat() and p["count"] == 1
+        item = p["skus"][0]
+        assert (item["sku_id"], item["old"], item["new"]) == (str(changed), "10", "12.5")
+        evaluate(w)
+        rows_out = _rows(w, "accountant", "commission_changed")
+        assert len(rows_out) == 1 and rows_out[0]["payload"]["count"] == 1
+        assert not _rows(w, "warehouse", "commission_changed")  # ombor roli moliya xabarini olmaydi
+        evaluate(w, NOW + timedelta(hours=1))  # o'zgarmadi — takror yo'q
+        assert len(_rows(w, "accountant", "commission_changed")) == 1
+    finally:
+        a.sql("DELETE FROM sku_daily WHERE sku_id = ANY(%s)", [[changed, first, old, same]])
+        a.sql("DELETE FROM mp_skus WHERE id = ANY(%s)", [[changed, first, old, same]])
