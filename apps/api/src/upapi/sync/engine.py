@@ -705,6 +705,7 @@ async def _write_sales(run: _Run, shop: ShopRef, page: Any, save_cursor: bool = 
         run.counts[shop.id].written += result.written
         run.counts[shop.id].total = page.total
         await store.mark_completed_seen(conn, shop.id, run.job.rt.clock())
+        await store.mark_withdrawn_seen(conn, shop.id, run.job.rt.clock())
         changed = [
             r["ordered_at"]
             for r in rows

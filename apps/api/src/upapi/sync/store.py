@@ -20,7 +20,7 @@ from datetime import date, datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import Table, delete, func, insert, literal, select, text, tuple_, update
+from sqlalchemy import Numeric, Table, delete, func, insert, literal, select, text, tuple_, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.metrics import StatusGroup, statuses
@@ -262,6 +262,19 @@ async def snapshot(conn: AsyncConnection, org_id: UUID, shop_id: UUID, day: date
             "zero_seen": daily.c.zero_seen | stmt.excluded.zero_seen,
             "updated_at": func.now(),
         },
+    )
+    return (await conn.execute(stmt)).rowcount
+
+
+async def mark_withdrawn_seen(conn: AsyncConnection, shop_id: UUID, now: datetime) -> int:
+    """B5.7: yechib olingan (``withdrawnProfit`` > 0), hali belgilanmagan sotuv qatorlariga birinchi ko'rilgan vaqt — Uzum
+    to'lov sanasini bermaydi, to'lov hodisalari (sana, summa) shundan tiklanadi."""
+    s = m.sale_items
+    withdrawn = func.coalesce(func.nullif(s.c.raw["withdrawnProfit"].astext, "").cast(Numeric), 0)
+    stmt = (
+        update(s)
+        .where(s.c.shop_id == shop_id, s.c.withdrawn_seen_at.is_(None), withdrawn > 0)
+        .values(withdrawn_seen_at=now)
     )
     return (await conn.execute(stmt)).rowcount
 
