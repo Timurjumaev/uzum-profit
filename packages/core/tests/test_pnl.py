@@ -26,10 +26,10 @@ from upcore.pnl import (
     TaxBase,
     TaxRule,
     build_cells,
+    cabinet_profit,
     compare,
     expected_value,
     expense_items,
-    cabinet_profit,
     explain_change,
     order_to_profit,
 )

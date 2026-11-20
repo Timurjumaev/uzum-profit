@@ -672,6 +672,19 @@ ko'rinadi. Asos — F33 (e'lon − qabul); "Men sanashda adashganman" tanlansa y
 F51 dagi kabi), "Topildi" yoki qayta ochilsa — qaytadi; zarar — partiyadan chiqqan qiymat (`lot_cost`, FIFO / o'rtacha) −
 kompensatsiya: zarar ham, tannarx ham bir marta.
 
+**F56. "Nega o'zgardi"** (M5, B5.6) — sof foyda (F12) farqi (joriy − oldingi davr) omillarga. Model (tannarxi ma'lum qism, F15):
+foyda = dona × (narx − komissiya − logistika − tannarx) − xarajatlar; narx = shu qism tushumi / dona; komissiya va logistika =
+shu qism Uzum ushlagan puli (tushum − F6 to'lov) ning davrdagi F4 : F5 nisbati bo'yicha bo'lingani, dona uchun; tannarx = F7 / dona;
+ayrilgan xarajat (F15) F9 reklama, F9 boshqa, F10, F11 bo'yicha ularning yig'indisiga nisbatan bo'lingan. Ketma-ket almashtirish
+tartibi: **hajm** (dona farqi × oldingi marja), **narx**, **komissiya**, **logistika**, **tannarx** (joriy donada), **reklama**, **boshqa Uzum**,
+**o'z xarajatlari**, **soliq** (xarajat o'zgarishi, teskari ishora); omillar yig'indisi **aniq** farqqa teng (tiyin yaxlitlash qoldig'i
+eng katta omilga). Biror davrda tannarxi ma'lum dona 0 bo'lsa — butun yalpi foyda farqi "hajm"ga. Xarajat toifalari yo'q, lekin ayrilgan
+xarajat bor bo'lsa — "boshqa". `upcore.pnl.explain_change`.
+
+**F57. Kabinet foydasi** (B5.0f, ADR-071) = F3 − F4: Uzum kabineti "Tahlil" sahifasidagi "Foyda" faqat komissiyani ayiradi (logistika,
+reklama, saqlash, jarima, tannarx va soliq ayirilmaydi; 09 §11.3). Faqat kabinet bilan solishtirish uchun; farq = F57 − F12.
+`upcore.pnl.cabinet_profit`.
+
 **F53. Zarar bilan sotuv signali** (M15, B6.1) — SKU'ning oxirgi N ta hisobga olinadigan (F2) sotuvining hammasida qator
 foydasi = Uzum to'lovi (F6 `sellerProfit`) − tannarx (F21) < 0; N — sozlanadi (standart 3, 2–10). Tannarxi noma'lum sotuv
 zanjirni uzadi (taxmin bilan signal yo'q, tamoyil 9); soliq va reklama bu signalga kirmaydi. Oxirgi 30 kun.
