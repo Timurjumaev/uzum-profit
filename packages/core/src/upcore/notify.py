@@ -85,7 +85,8 @@ CATALOG: dict[Event, EventSpec] = {
         EventSpec(Event.SYNC_STOPPED, Audience.ALL, critical=True, params={"hours": 2}),
         EventSpec(Event.PAYOUT_LATE, Audience.FINANCE, stage="B5.7"),
         EventSpec(Event.CARGO_LATE, Audience.STOCK, params={"days": 5}),
-        EventSpec(Event.COMMISSION_CHANGED, Audience.FINANCE, stage="B5.5"),
+        # B5.5: SKU komissiyasi (Uzum) oldingi snapshotdan farq qilsa; sozlanadigan chegara yo'q.
+        EventSpec(Event.COMMISSION_CHANGED, Audience.FINANCE),
         EventSpec(Event.FBS_DEADLINE, Audience.STOCK, critical=True, stage="B9.5"),
         # TM9.8 (ADR-069, ADR-064): kritik emas, har xarid uchun bir marta.
         EventSpec(Event.UNCOUNTED_PURCHASE, Audience.STOCK, params={"days": 3}),
