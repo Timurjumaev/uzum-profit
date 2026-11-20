@@ -921,6 +921,18 @@ tax_lines = tenant(
     UniqueConstraint("org_id", "profile_id", "name"),
     refs={"profile_id": ("tax_profiles", False)},
 )
+ref_payout_terms = global_table(
+    "ref_payout_terms",
+    _id(),
+    Column("kind", Text, nullable=False),
+    Column("valid_from", Date, nullable=False),
+    Column("days_of_month", ARRAY(Integer)),  # NULL — har ish kuni
+    Column("fee_pct", Numeric(7, 4), nullable=False),
+    Column("note", Text),
+    check_in("kind", ("daily", "weekly", "biweekly", "monthly")),
+    CheckConstraint("fee_pct >= 0 AND fee_pct <= 100", name="fee_pct_range"),
+    UniqueConstraint("kind", "valid_from"),
+)
 ref_amounts = global_table(
     "ref_amounts",
     _id(),

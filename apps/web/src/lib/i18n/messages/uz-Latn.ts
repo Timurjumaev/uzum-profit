@@ -1103,6 +1103,7 @@ export const uzLatn = {
     payout: {
       title: "Uzum toʻlov jadvali",
       lead: "Uzum sotuvchiga qaysi kunlari toʻlaydi (F38). Toʻlov prognozi shu jadvaldan foydalanadi.",
+      rules: "Hozirgi qoidalar (maʼlumotnomadan): pul tovar mijozga topshirilgandan {{lag}} kun oʻtgach yechishga beriladi; ertaroq yechish — {{fee}}.",
       add: "Jadval qoʻshish",
       addTitle: "Yangi toʻlov jadvali",
       empty: "Toʻlov jadvali kiritilmagan",

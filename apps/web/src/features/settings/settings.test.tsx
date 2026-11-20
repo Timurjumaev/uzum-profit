@@ -83,6 +83,8 @@ describe("sahifa", () => {
     const text = norm(row!.textContent!);
     expect(text).toContain("Haftalik");
     expect(text).toContain("Oy kunlari: 7, 14, 21, 28");
+    // Qoidalar serverdan (ma'lumotnoma), kodga qotirilmagan.
+    expect(norm(section("Uzum toʻlov jadvali").textContent!)).toContain("mijozga topshirilgandan 10 kun oʻtgach yechishga beriladi; ertaroq yechish — 2,5%");
   });
 
   it("xato (ruxsat yo'q) — xato bannerida sabab", async () => {
