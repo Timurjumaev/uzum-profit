@@ -76,6 +76,7 @@ export const PNL_ROUTE = `GET /api/v1/orgs/${ORG_ID}/pnl`;
 export const SKUS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/skus`;
 export const skuRoute = (skuId: string) => `GET /api/v1/orgs/${ORG_ID}/skus/${skuId}`;
 export const CALCULATOR_ROUTE = `GET /api/v1/orgs/${ORG_ID}/calculator`;
+export const CARGO_SUGGESTION_ROUTE = `GET /api/v1/orgs/${ORG_ID}/calculator/cargo-suggestion`;
 export const CALCULATOR_DEFAULTS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/calculator/defaults`;
 export const UNIT_CALC_ROUTE = `GET /api/v1/orgs/${ORG_ID}/unit-calc`;
 export const ITEMS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/items`;

@@ -203,6 +203,13 @@ export const calculatorDefaultsQuery = (orgId: string) =>
     queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/calculator/defaults", { params: { path: { org_id: orgId } } })),
   });
 
+/** Kargo taklifi (B5.9): oldingi xaridlardagi haqiqiy kargo xarajatidan o'rtacha ($/kg, so'm/dona); tarif kiritilmaydi (ADR-061). */
+export const cargoSuggestionQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "calculator-cargo-suggestion"],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/calculator/cargo-suggestion", { params: { path: { org_id: orgId } } })),
+  });
+
 /** Xariddan oldingi kalkulyator (M13): hisob serverda (tamoyil 4); kiritish o'zgargan sayin qayta so'raladi. */
 export const calculatorQuery = (orgId: string, input: CalculatorInput) =>
   queryOptions({

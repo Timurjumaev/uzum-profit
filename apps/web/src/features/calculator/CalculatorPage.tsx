@@ -6,7 +6,7 @@ import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-qu
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { calculatorDefaultsQuery, calculatorQuery, currentOrg, meQuery, type CalculatorInput } from "../../app/query";
+import { calculatorDefaultsQuery, cargoSuggestionQuery, calculatorQuery, currentOrg, meQuery, type CalculatorInput } from "../../app/query";
 import { errorText } from "../../app/errors";
 import { Banner, Button, FormulaPopover, NumberInput, Skeleton } from "../../components/ui";
 import { ApiError } from "../../lib/api/client";
@@ -107,6 +107,7 @@ function Form({ orgId, defaults }: { orgId: string; defaults: CalculatorDefaults
   const start = useMemo<Values>(() => ({ ...EMPTY, tax_pct: defaults.tax_pct }), [defaults.tax_pct]);
   const [values, setValues] = useState<Values>(start);
   const set = (field: Field) => (value: string | null) => setValues((v) => ({ ...v, [field]: value }));
+  const suggestion = useQuery(cargoSuggestionQuery(orgId)).data;
   const key = useDebounced(JSON.stringify(toInput(values)), DEBOUNCE_MS);
   const input = useMemo(() => JSON.parse(key) as CalculatorInput | null, [key]);
   const result = useQuery({ ...calculatorQuery(orgId, input!), enabled: input !== null, placeholderData: keepPreviousData });
@@ -142,6 +143,21 @@ function Form({ orgId, defaults }: { orgId: string; defaults: CalculatorDefaults
           <p className="caption">{t("calculator.dimsHelp")}</p>
           <NumberInput label={t("calculator.cargo_usd_per_kg")} value={values.cargo_usd_per_kg} onValueChange={set("cargo_usd_per_kg")} suffix="$/kg" optional />
           <NumberInput label={t("calculator.cargo_usd_per_m3")} value={values.cargo_usd_per_m3} onValueChange={set("cargo_usd_per_m3")} suffix="$/m³" optional help={t("calculator.cargoHelp")} />
+          {suggestion && suggestion.purchases > 0 && (suggestion.usd_per_kg !== null || suggestion.uzs_per_unit !== null) && (
+            <div className="calculator__suggest" data-testid="cargo-suggestion">
+              <p className="caption">
+                {t("calculator.cargoSuggest", { count: suggestion.purchases })}{" "}
+                {suggestion.usd_per_kg !== null && <strong>{t("calculator.cargoSuggestKg", { value: f.number(suggestion.usd_per_kg, { digits: 2, trim: true }) })}</strong>}
+                {suggestion.usd_per_kg !== null && suggestion.uzs_per_unit !== null && " · "}
+                {suggestion.uzs_per_unit !== null && t("calculator.cargoSuggestUnit", { value: f.money(suggestion.uzs_per_unit) })}
+              </p>
+              {suggestion.usd_per_kg !== null && values.cargo_usd_per_kg !== suggestion.usd_per_kg && (
+                <Button variant="ghost" size="sm" onClick={() => set("cargo_usd_per_kg")(suggestion.usd_per_kg)}>
+                  {t("calculator.cargoApply")}
+                </Button>
+              )}
+            </div>
+          )}
           <NumberInput label={t("calculator.extra_uzs")} value={values.extra_uzs} onValueChange={set("extra_uzs")} optional />
         </fieldset>
         <fieldset className="calculator__group">

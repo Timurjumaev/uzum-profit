@@ -6,8 +6,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App, createAppState } from "../../App";
 import { formatterFor } from "../../lib/format";
-import { CALCULATOR_DEFAULTS_ROUTE, CALCULATOR_ROUTE, json, ME, ME_ROUTE, mockApi, problem, type Routes } from "../../test/api";
-import { calculatorDefaults, calculatorResult } from "../../test/calculator";
+import { CALCULATOR_DEFAULTS_ROUTE, CALCULATOR_ROUTE, CARGO_SUGGESTION_ROUTE, json, ME, ME_ROUTE, mockApi, problem, type Routes } from "../../test/api";
+import { calculatorDefaults, calculatorResult, cargoSuggestion } from "../../test/calculator";
 import { toInput, type Values } from "./CalculatorPage";
 
 const f = formatterFor("uz-Latn");
@@ -24,6 +24,7 @@ async function renderPage(routes: Routes = {}, lang: "uz-Latn" | "ru" = "uz-Latn
     [ME_ROUTE]: () => json(200, { ...ME, user: { ...ME.user, language: lang } }),
     [CALCULATOR_DEFAULTS_ROUTE]: () => json(200, calculatorDefaults()),
     [CALCULATOR_ROUTE]: () => json(200, calculatorResult()),
+    [CARGO_SUGGESTION_ROUTE]: () => json(200, cargoSuggestion()),
     ...routes,
   });
   render(<App state={createAppState(createMemoryHistory({ initialEntries: ["/calculator"] }), lang)} />);
@@ -40,6 +41,20 @@ async function fill(label: RegExp | string, value: string) {
 }
 
 describe("kalkulyator", () => {
+  it("kargo taklifi: oʻxshash xaridlar oʻrtachasi, tugma $/kg ni toʻldiradi; xarid yoʻq — taklif chiqmaydi", async () => {
+    expect((await renderPage(), screen.queryByTestId("cargo-suggestion"))).toBeNull();
+    cleanup();
+    const api = await renderPage({ [CARGO_SUGGESTION_ROUTE]: () => json(200, cargoSuggestion({ purchases: 3, weighed: 2, usd_per_kg: "4.20", uzs_per_unit: "18000" })) });
+    const box = await screen.findByTestId("cargo-suggestion");
+    expect(norm(box.textContent!)).toContain("3 ta xarid");
+    expect(norm(box.textContent!)).toContain("4,2 $/kg");
+    fireEvent.click(screen.getByRole("button", { name: "Taklifni qoʻllash" }));
+    expect((screen.getByLabelText(/^Kargo narxi \(\$\/kg\)/) as HTMLInputElement).value).toMatch(/4[,.]2/);
+    expect(screen.queryByRole("button", { name: "Taklifni qoʻllash" })).toBeNull(); // qiymat taklifga teng
+    expect(api.fetch).toBeTruthy();
+  });
+
+
   it("majburiy maydonlar to'lmaguncha hisob so'ralmaydi; to'lgach natija server qiymatlari bilan", async () => {
     const api = await renderPage();
     expect(screen.getByText(/Hisoblash uchun 1688 narxi/)).toBeTruthy();

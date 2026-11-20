@@ -2483,6 +2483,59 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/calculator/cargo-suggestion": {
+      "get": {
+        "tags": [
+          "calculator"
+        ],
+        "summary": "Cargo Suggestion",
+        "operationId": "cargo_suggestion_api_v1_orgs__org_id__calculator_cargo_suggestion_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CargoSuggestionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/calculator/defaults": {
       "get": {
         "tags": [
@@ -11201,6 +11254,62 @@
         ],
         "title": "CargoBasis",
         "description": "Kargo narxi nimaga ko'ra olingan (``landed_unit_cost``)."
+      },
+      "CargoSuggestionOut": {
+        "properties": {
+          "purchases": {
+            "type": "integer",
+            "title": "Purchases"
+          },
+          "usd_per_kg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usd Per Kg"
+          },
+          "weighed": {
+            "type": "integer",
+            "title": "Weighed"
+          },
+          "uzs_per_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uzs Per Unit"
+          },
+          "since": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Since"
+          }
+        },
+        "type": "object",
+        "required": [
+          "purchases",
+          "usd_per_kg",
+          "weighed",
+          "uzs_per_unit",
+          "since"
+        ],
+        "title": "CargoSuggestionOut",
+        "description": "O'xshash (oldingi) xaridlardagi haqiqiy kargo xarajatidan o'rtacha (ADR-061: tarif kiritilmaydi)."
       },
       "CarrierIn": {
         "properties": {
