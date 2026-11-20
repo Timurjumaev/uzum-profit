@@ -383,6 +383,26 @@ describe("eng foydali 5 / zarar 5 va ko'rsatkichlar", () => {
     expect(kpis.queryByText("Jarayondagi sotuvlar")).toBeNull();
   });
 
+  it("yo'qotishlar va imkoniyat: noldan katta qatorlar, jami va nelikviddagi pul", async () => {
+    await renderHome();
+    const box = within(screen.getByRole("region", { name: "Yoʻqotishlar va imkoniyat" }));
+    const row = (label: string) => norm(box.getByText(label).closest("li")!.querySelector("strong")!.textContent ?? "");
+    expect(row("Jarimalar")).toBe(m("120000.00"));
+    expect(row("Tugab qolishdan yoʻqotilgan foyda")).toBe(m("800000.00"));
+    expect(box.getByText(/· 2 ta SKU/)).toBeTruthy(); // F34: tugagan SKU'lar
+    expect(box.queryByText("Brak zarari")).toBeNull(); // 0 — ko'rsatilmaydi
+    expect(norm(box.getByText("Davrdagi yoʻqotishlar").parentElement!.querySelector(".kpi")!.textContent ?? "")).toBe(m("1171000.00"));
+    expect(norm(box.getByText(/^Imkoniyat/).parentElement!.querySelector(".kpi")!.textContent ?? "")).toBe(m("9000000.00"));
+  });
+
+  it("yo'qotish yo'q — 'topilmadi'; F34 hisoblanmasa — izoh", async () => {
+    const zero = { return_cost: "0.00", fines: "0.00", defect_loss: "0.00", receiving_loss: "0.00", illiquid_storage: "0.00", illiquid_skus: 0, stockout_loss: null, stockout_skus: 0, total: "0.00", illiquid_money: "0.00" };
+    await renderHome("/", { [DASHBOARD_ROUTE]: () => json(200, dashboardData({ losses: zero })) });
+    const box = within(screen.getByRole("region", { name: "Yoʻqotishlar va imkoniyat" }));
+    expect(box.getByText(/Yoʻqotish topilmadi/)).toBeTruthy();
+    expect(box.getByText(/hisoblanmadi/)).toBeTruthy();
+  });
+
   it("tannarxsiz qism marja kartochkasida; qiymat yo'q — '—'; chegaradan oshgan ulush ogohlantiriladi", async () => {
     const base = dashboardData();
     const groups = base.summary.groups.map((g) => ({

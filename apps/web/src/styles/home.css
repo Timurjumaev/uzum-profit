@@ -636,6 +636,60 @@
   color: var(--text-secondary);
 }
 
+/* --- Yo'qotishlar va imkoniyat (B5.4, ADR-070: jonli, rangli) --- */
+.home-losses__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: var(--space-3);
+}
+
+.home-losses__card {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg, 1rem);
+  border: 1px solid var(--border-subtle, rgb(0 0 0 / 8%));
+  box-shadow: var(--shadow-md, 0 6px 18px rgb(0 0 0 / 8%));
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.home-losses__card:hover {
+  transform: translateY(-2px);
+}
+
+.home-losses__card--loss {
+  background: linear-gradient(135deg, rgb(244 63 94 / 12%), rgb(251 146 60 / 10%));
+}
+
+.home-losses__card--chance {
+  background: linear-gradient(135deg, rgb(99 102 241 / 14%), rgb(34 197 94 / 10%));
+}
+
+.home-losses__list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-losses__list li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-losses__card {
+    transition: none;
+  }
+
+  .home-losses__card:hover {
+    transform: none;
+  }
+}
+
 /* --- Drill-down --- */
 .home-drill {
   display: grid;

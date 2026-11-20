@@ -2494,6 +2494,7 @@ export interface components {
             summary: components["schemas"]["KpiSummaryOut"];
             kpis: components["schemas"]["KpiOut"];
             attention: components["schemas"]["AttentionOut"];
+            losses: components["schemas"]["LossesOut"];
             revenue_limit: components["schemas"]["RevenueLimitOut"] | null;
         };
         /** DayOut */
@@ -3434,6 +3435,33 @@ export interface components {
             orgs: components["schemas"]["OrgSummary"][];
             /** Created */
             created: boolean;
+        };
+        /**
+         * LossesOut
+         * @description B5.4 / B5.0a "Yo'qotishlar va imkoniyat" (ADR-043 (5)): davr bo'yicha so'mda; ``stockout_loss`` ``null`` —
+         *     hisoblab bo'lmadi.
+         */
+        LossesOut: {
+            /** Return Cost */
+            return_cost: string;
+            /** Fines */
+            fines: string;
+            /** Defect Loss */
+            defect_loss: string;
+            /** Receiving Loss */
+            receiving_loss: string;
+            /** Illiquid Storage */
+            illiquid_storage: string;
+            /** Illiquid Skus */
+            illiquid_skus: number;
+            /** Stockout Loss */
+            stockout_loss: string | null;
+            /** Stockout Skus */
+            stockout_skus: number;
+            /** Total */
+            total: string;
+            /** Illiquid Money */
+            illiquid_money: string;
         };
         /**
          * LotOut

@@ -52,6 +52,7 @@ from upapi.reports.common import (
     meta,
     sku_catalog,
 )
+from upapi.reports.losses import losses as losses_of
 from upapi.reports.purchases import goods_missing, late_cargo
 from upapi.reports.purchases import uncounted as uncounted_purchases
 from upapi.reports.receiving import attention as receiving_attention
@@ -185,6 +186,22 @@ class AttentionOut(BaseModel):
     )
 
 
+class LossesOut(BaseModel):
+    """B5.4 / B5.0a "Yo'qotishlar va imkoniyat" (ADR-043 (5)): davr bo'yicha so'mda; ``stockout_loss`` ``null`` —
+    hisoblab bo'lmadi."""
+
+    return_cost: Decimal  # Uzum qaytim saqlash (F9)
+    fines: Decimal
+    defect_loss: Decimal  # F51
+    receiving_loss: Decimal  # F52
+    illiquid_storage: Decimal  # F30 × F43
+    illiquid_skus: int
+    stockout_loss: Decimal | None  # F34
+    stockout_skus: int
+    total: Decimal
+    illiquid_money: Decimal  # imkoniyat: nelikvid tovarda muzlagan pul (F29, F30)
+
+
 class DashboardOut(BaseModel):
     meta: Meta
     statement: StatementOut
@@ -198,6 +215,7 @@ class DashboardOut(BaseModel):
     summary: KpiSummaryOut
     kpis: KpiOut
     attention: AttentionOut
+    losses: LossesOut
     # F50 (B4.80): yillik tushum chegarasi (butun tashkilot, do'kon filtrisiz); profilda soliq to'lovchi turi yo'q — null.
     revenue_limit: RevenueLimitOut | None
 
@@ -530,6 +548,7 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
     )
 
     limit = await rc.revenue_limit(conn, today)
+    lost = await losses_of(conn, f, s, cur.by_sku(), stock, today)
     return DashboardOut(
         meta=await meta(conn, f, KINDS, previous),
         statement=StatementOut.of(s),
@@ -566,6 +585,18 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
             orphan_invoices=len(await linking.orphans(conn)),
             cargo_late=len(await late_cargo(conn, today, CARGO_LATE_DAYS)),
             telegram_lost=await telegram_lost(conn, ctx.user.user_id),
+        ),
+        losses=LossesOut(
+            return_cost=lost.return_cost.amount,
+            fines=lost.fines.amount,
+            defect_loss=lost.defect_loss.amount,
+            receiving_loss=lost.receiving_loss.amount,
+            illiquid_storage=lost.illiquid_storage.amount,
+            illiquid_skus=lost.illiquid_skus,
+            stockout_loss=None if lost.stockout_loss is None else lost.stockout_loss.amount,
+            stockout_skus=lost.stockout_skus,
+            total=lost.total.amount,
+            illiquid_money=lost.illiquid_money.amount,
         ),
         revenue_limit=None if limit is None else RevenueLimitOut.of(limit),
     )

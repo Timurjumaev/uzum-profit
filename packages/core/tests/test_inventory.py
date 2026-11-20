@@ -13,6 +13,7 @@ from upcore.inventory import (
     ItemSku,
     Liquidity,
     ShipSignal,
+    StockoutLoss,
     StockStatus,
     SupplyLine,
     XyzClass,
@@ -38,7 +39,9 @@ from upcore.inventory import (
     split_by_weight,
     stock_status,
     stockout_days,
+    stockout_loss,
     stockout_lost_profit,
+    stockout_runs,
     trend_factor,
     velocity,
     weekly_sales,
@@ -497,3 +500,53 @@ def test_ship_plan_nothing_needed_unknown_and_overstock() -> None:
     assert ship_plan(0, 1000, 10, 5, 55) is not None and not ship_plan(0, 1000, 10, 5, 55).overstock  # type: ignore[union-attr]
     ceil = ship_plan(0, 100, Decimal("0.3"), 5, 10)  # 0,3 × 15 = 4,5 → yuqoriga 5
     assert ceil is not None and ceil.qty == 5
+
+
+def at(n: int) -> date:
+    """Kalendar tartibidagi n-kun (0 — birinchi kun)."""
+    return date(2026, 1, 1) + timedelta(days=n)
+
+
+def _series(pattern: str, sold: int = 2) -> list[DayStat]:
+    """``+`` — qoldiq bor (sotuv ``sold``), ``0`` — qoldiq 0, ``.`` — snapshot yo'q."""
+    out = []
+    for i, c in enumerate(pattern):
+        out.append(DayStat(at(i), sold if c == "+" else 0, 0, {"+": True, "0": False}.get(c)))
+    return out
+
+
+def test_f34_stockout_runs_gaps_break_a_run() -> None:
+    assert stockout_runs(_series("++000+0.0+")) == [
+        (at(2), at(4)),
+        (at(6), at(6)),
+        (at(8), at(8)),
+    ]
+    assert stockout_runs(_series("0000")) == [(at(0), at(3))]
+    assert stockout_runs(_series("++++")) == []
+
+
+def test_f34_stockout_loss_closed_run_in_period() -> None:
+    """Tugashdan oldin F23 = 2 dona/kun; 3 kun tugagan, qaytgan — faol; foyda/dona 10 000 → 3 × 2 × 10 000."""
+    days = _series("++++++++000++")
+    out = stockout_loss(days, at(0), at(12), uzs(10_000), replenishing=False)
+    assert out == StockoutLoss(3, 1, uzs(60_000))
+    # Faqat davr ichidagi kunlar sanaladi.
+    assert stockout_loss(days, at(9), at(12), uzs(10_000), replenishing=False).zero_days == 2
+
+
+def test_f34_open_run_needs_replenishment_and_is_capped() -> None:
+    days = _series("+" * 20 + "0" * 120)
+    assert stockout_loss(days, at(0), at(200), uzs(1_000), replenishing=False).zero_days == 0
+    out = stockout_loss(days, at(0), at(200), uzs(1_000), replenishing=True)
+    assert out.zero_days == 90 and out.runs == 1  # 90 kundan oshmaydi
+    # tugashdan keyin snapshot yo'q kunlar qoldiq qaytganini bildirmaydi — davom etayotgan deb olinadi
+    gap = _series("+" * 20 + "00" + "." * 5)
+    assert stockout_loss(gap, at(0), at(40), uzs(1_000), replenishing=False).zero_days == 0
+
+
+def test_f34_no_sales_before_or_loss_per_unit_gives_zero() -> None:
+    days = _series("+++000+++", sold=0)  # tugashdan oldin sotuv yo'q — faol emas
+    assert stockout_loss(days, at(0), at(9), uzs(10_000), replenishing=True).lost == uzs(0)
+    assert stockout_loss(
+        _series("++++++000++"), at(0), at(10), uzs(-5), replenishing=True
+    ).lost == uzs(0)

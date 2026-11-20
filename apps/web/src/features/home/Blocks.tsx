@@ -256,3 +256,62 @@ export function Kpis({ data }: { data: Dashboard }) {
     </section>
   );
 }
+
+// --- Yo'qotishlar va imkoniyat (B5.4 / B5.0a, ADR-043 (5)) ------------------------------------------------------------
+
+/** Davr bo'yicha yo'qotishlar (qaytarish, jarima, F51, F52, nelikvid saqlash, F34) va imkoniyat (nelikviddagi pul). Faqat
+ * noldan katta qatorlar; hammasi nol bo'lsa — "topilmadi". Hisoblash serverda (`losses`), bu yerda faqat ko'rsatish. */
+export function Losses({ data }: { data: Dashboard }) {
+  const { t } = useTranslation();
+  const f = useFormat();
+  const l = data.losses;
+  const rows: { key: string; value: string; note?: string; formula?: string }[] = [
+    { key: "returnCost", value: l.return_cost },
+    { key: "fines", value: l.fines },
+    { key: "defect", value: l.defect_loss, formula: "F51" },
+    { key: "receiving", value: l.receiving_loss, formula: "F52" },
+    { key: "illiquidStorage", value: l.illiquid_storage, note: l.illiquid_skus > 0 ? t("home.losses.skus", { value: f.number(l.illiquid_skus) }) : undefined, formula: "F30" },
+    { key: "stockout", value: l.stockout_loss ?? "0", note: l.stockout_skus > 0 ? t("home.losses.skus", { value: f.number(l.stockout_skus) }) : undefined, formula: "F34" },
+  ].filter((r) => Number(r.value) > 0);
+  const opportunity = Number(l.illiquid_money) > 0;
+  return (
+    <section aria-labelledby="home-losses" className="home-losses">
+      <h2 id="home-losses" className="h3">
+        {t("home.losses.title")}
+      </h2>
+      {rows.length === 0 && !opportunity ? (
+        <p className="muted">
+          <strong>{t("home.losses.empty")}.</strong> {t("home.losses.emptyText")}
+        </p>
+      ) : (
+        <div className="home-losses__grid">
+          {rows.length > 0 && (
+            <div className="home-losses__card home-losses__card--loss">
+              <div className="label">{t("home.losses.total")}</div>
+              <div className="kpi ui-text--negative">{f.money(l.total)}</div>
+              <ul className="home-losses__list">
+                {rows.map((r) => (
+                  <li key={r.key}>
+                    <span>
+                      {t(`home.losses.${r.key}`)}
+                      {r.note && <span className="caption"> · {r.note}</span>}
+                    </span>
+                    <strong className="ui-text--negative">{f.money(r.value)}</strong>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {opportunity && (
+            <div className="home-losses__card home-losses__card--chance">
+              <div className="label">{t("home.losses.opportunity")}</div>
+              <div className="kpi">{f.money(l.illiquid_money)}</div>
+              <p className="caption">{t("home.losses.opportunityNote", { value: f.number(l.illiquid_skus) })}</p>
+            </div>
+          )}
+        </div>
+      )}
+      {l.stockout_loss === null && <p className="caption muted">{t("home.losses.stockoutUnknown")}</p>}
+    </section>
+  );
+}
