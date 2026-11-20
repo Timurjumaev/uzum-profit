@@ -11409,6 +11409,10 @@
           },
           "unit": {
             "$ref": "#/components/schemas/UnitCalcOut"
+          },
+          "order_cny": {
+            "type": "string",
+            "title": "Order Cny"
           }
         },
         "type": "object",
@@ -11417,7 +11421,8 @@
           "landed",
           "logistics",
           "tax_pct",
-          "unit"
+          "unit",
+          "order_cny"
         ],
         "title": "CalculatorOut"
       },

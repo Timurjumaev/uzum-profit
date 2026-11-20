@@ -623,6 +623,7 @@ export const ru: Messages = {
     cargo_usd_per_kg: "Цена карго ($/кг)",
     cargo_usd_per_m3: "Цена карго ($/м³)",
     cargoHelp: "Если указаны оба — берётся большая",
+    order: { button: "Превратить в закупку" },
     scenario: {
       title: "Сохранённые сценарии",
       name: "Название сценария",

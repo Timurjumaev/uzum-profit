@@ -625,6 +625,7 @@ export const uzLatn = {
     cargo_usd_per_kg: "Kargo narxi ($/kg)",
     cargo_usd_per_m3: "Kargo narxi ($/m³)",
     cargoHelp: "Ikkalasi berilsa — qimmatrogʻi olinadi",
+    order: { button: "Xaridga aylantirish" },
     scenario: {
       title: "Saqlangan ssenariylar",
       name: "Ssenariy nomi",
