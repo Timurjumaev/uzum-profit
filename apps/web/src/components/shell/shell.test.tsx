@@ -69,9 +69,10 @@ describe("menyu", () => {
       "Xarajatlar",
       "Xaridlar",
       "Ombor",
+      "Pul oqimi",
       "Maʼlumotlar holati",
       "Sozlamalar",
-    ]); // ADR-057 Q12: tayyor bo'lmagan "Pul oqimi" va "Hisobotlar" menyuda yo'q
+    ]); // ADR-057 Q12: tayyor bo'lmagan "Hisobotlar" menyuda yo'q
     expect(sidebar().getByRole("link", { name: "Asosiy" }).getAttribute("aria-current")).toBe("page");
     expect(sidebar().getByRole("link", { name: "Sozlamalar" }).getAttribute("aria-current")).toBeNull();
 
@@ -82,11 +83,11 @@ describe("menyu", () => {
   });
 
   it("menyudan olib tashlangan bo'lim eski havola bilan 404 emas — \"qurilmoqda\" sahifasi", async () => {
-    const { history } = await renderShell("/cash");
-    expect(await screen.findByRole("heading", { name: "Pul oqimi" })).toBeTruthy();
+    const { history } = await renderShell("/reports");
+    expect(await screen.findByRole("heading", { name: "Hisobotlar" })).toBeTruthy();
     expect(screen.getByText("Sahifa qurilmoqda. Hozircha eski dasturdan foydalaning.")).toBeTruthy();
-    expect(history.location.pathname).toBe("/cash");
-    expect(sidebar().queryByRole("link", { name: "Pul oqimi" })).toBeNull();
+    expect(history.location.pathname).toBe("/reports");
+    expect(sidebar().queryByRole("link", { name: "Hisobotlar" })).toBeNull();
   });
 
   it("har bo'lim o'z sahifasiga olib boradi (404 emas)", async () => {
@@ -592,6 +593,7 @@ describe("mobil tab bar", () => {
       "Mahsulotlar",
       "Buyurtmalar",
       "Xarajatlar",
+      "Pul oqimi",
       "Maʼlumotlar holati",
       "Sozlamalar",
     ]);

@@ -99,6 +99,7 @@ export const PURCHASE_CREATE_ROUTE = `POST /api/v1/orgs/${ORG_ID}/purchases`;
 export const PURCHASE_QUICK_ROUTE = `POST /api/v1/orgs/${ORG_ID}/purchases/quick`;
 export const purchaseRoute = (method: "GET" | "PATCH" | "DELETE", id: string) => `${method} /api/v1/orgs/${ORG_ID}/purchases/${id}`;
 export const purchaseSubRoute = (method: "POST" | "PATCH" | "DELETE", id: string, sub: string) => `${method} /api/v1/orgs/${ORG_ID}/purchases/${id}/${sub}`;
+export const PAYOUT_FORECAST_ROUTE = `GET /api/v1/orgs/${ORG_ID}/payouts/forecast`;
 export const INVENTORY_ROUTE = `GET /api/v1/orgs/${ORG_ID}/inventory`;
 export const STOCK_MOVE_CREATE_ROUTE = `POST /api/v1/orgs/${ORG_ID}/stock-moves`;
 export const stockMovesRoute = (itemId: string) => `GET /api/v1/orgs/${ORG_ID}/items/${itemId}/stock-moves`;
