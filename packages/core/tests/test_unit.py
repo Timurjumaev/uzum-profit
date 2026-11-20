@@ -6,7 +6,7 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 from upcore.money import Currency, Money
-from upcore.unit import unit_calc
+from upcore.unit import CargoBasis, landed_unit_cost, unit_calc
 
 D = Decimal
 
@@ -68,3 +68,64 @@ def test_breakeven_profit_is_never_negative_by_more_than_rounding(
 def test_float_or_text_percent_is_rejected(bad: object) -> None:
     with pytest.raises(ValueError):
         unit_calc(uzs(1), uzs(1), uzs(0), uzs(0), bad)  # type: ignore[arg-type]
+
+
+def test_landed_cost_goods_china_cargo_extra() -> None:
+    """M13: 10 CNY × 1 800 + Xitoy ichki 50 CNY / 50 dona + kargo ($/kg × 0,3 kg × 12 500) + qo'shimcha 1 000."""
+    c = landed_unit_cost(
+        price_cny=10,
+        qty=50,
+        cny_rate=1800,
+        china_cny_total=50,
+        weight_kg=D("0.3"),
+        cargo_usd_per_kg=D(4),
+        usd_rate=12_500,
+        extra_uzs=1_000,
+    )
+    assert c.goods.amount == D(18_000) and c.china.amount == D(1_800)  # 50 / 50 × 1 800
+    assert c.cargo.amount == D(15_000) and c.cargo_basis is CargoBasis.WEIGHT  # 4 × 0,3 × 12 500
+    assert c.extra.amount == D(1_000)
+    assert c.unit_cost.amount == D(35_800)
+
+
+def test_landed_cargo_takes_the_larger_of_weight_and_volume_and_never_guesses() -> None:
+    base = dict(price_cny=10, qty=10, cny_rate=1800, usd_rate=12_500)
+    both = landed_unit_cost(
+        **base,
+        weight_kg=D("0.2"),
+        cargo_usd_per_kg=D(4),
+        volume_m3=D("0.004"),
+        cargo_usd_per_m3=D(300),
+    )
+    assert both.cargo_basis is CargoBasis.VOLUME and both.cargo.amount == D(
+        15_000
+    )  # 300 × 0,004 × 12 500 > 4 × 0,2 × 12 500
+    # Narx bor, lekin o'lcham yo'q — o'sha usul hisobga olinmaydi (taxmin yo'q): faqat hajm.
+    only_volume = landed_unit_cost(
+        **base, cargo_usd_per_kg=D(4), volume_m3=D("0.004"), cargo_usd_per_m3=D(300)
+    )
+    assert only_volume.cargo_basis is CargoBasis.VOLUME
+    none = landed_unit_cost(**base, weight_kg=D(1))  # kargo narxi yo'q
+    assert none.cargo.amount == D(0) and none.cargo_basis is None
+    no_rate = landed_unit_cost(
+        price_cny=10, qty=10, cny_rate=1800, weight_kg=D(1), cargo_usd_per_kg=D(4)
+    )  # $ kursi yo'q
+    assert no_rate.cargo.amount == D(0) and no_rate.cargo_basis is None
+
+
+def test_landed_requires_positive_qty() -> None:
+    with pytest.raises(ValueError):
+        landed_unit_cost(price_cny=10, qty=0, cny_rate=1800)
+
+
+@given(
+    st.decimals(0, 10_000, places=2),
+    st.integers(1, 10_000),
+    st.decimals(1, 3_000, places=2),
+    st.decimals(0, 100_000, places=2),
+)
+def test_landed_unit_cost_is_the_sum_of_its_parts(
+    price: Decimal, qty: int, rate: Decimal, china: Decimal
+) -> None:
+    c = landed_unit_cost(price_cny=price, qty=qty, cny_rate=rate, china_cny_total=china)
+    assert c.unit_cost == c.goods + c.china + c.cargo + c.extra and c.unit_cost.amount >= 0

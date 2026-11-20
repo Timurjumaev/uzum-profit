@@ -183,6 +183,12 @@ const cash = createRoute({
   path: "/cash",
   component: lazyRouteComponent(() => import("../routes/cash"), "Cash"),
 });
+/** Kalkulyator (M13, B5.9): xariddan oldin tannarx va foyda. */
+const calculator = createRoute({
+  getParentRoute: () => app,
+  path: "/calculator",
+  component: lazyRouteComponent(() => import("../routes/calculator"), "Calculator"),
+});
 const reports = soon("/reports", "Reports");
 /** Sozlamalar (M16, B4.8): tannarx usuli, soliq, to'lov jadvali, muddatlar, do'konlar. */
 const settings = createRoute({
@@ -229,7 +235,7 @@ const uiKit = createRoute({
 
 export const routeTree = root.addChildren([
   auth.addChildren([
-    app.addChildren([home, status, pnl, products, product, orders, expenses, purchases, purchase, shipments, shipment, cargoPool, inventory, warehouse, dispatches, receiving, cash, reports, settings, opening]),
+    app.addChildren([home, status, pnl, products, product, orders, expenses, purchases, purchase, shipments, shipment, cargoPool, inventory, warehouse, dispatches, receiving, cash, calculator, reports, settings, opening]),
     onboarding,
     invite,
   ]),

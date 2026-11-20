@@ -289,6 +289,13 @@ Kiritish: 1688 narxi (CNY) + Xitoy ichki yetkazish, dona, dona vazni (kg) va o'l
 $/m³), qo'shimcha xarajat/dona, Uzum toifasi komissiyasi (%), mo'ljallangan narx.
 Natija: tannarx/dona, Uzum logistika (F37), komissiya, soliq, foyda/dona, marja, ROI, zararsizlik narxi (F35),
 maqsadli marja narxi (F36). Ssenariyni saqlash, xaridga aylantirish.
+**Amalda (B5.9, 1-qadam):** birlik tannarx = 1688 narxi × CNY kursi + Xitoy ichki yetkazish (jami / dona) × CNY kursi + kargo + qo'shimcha.
+Kargo (dona uchun, so'mga USD kursi bilan): `$/kg × vazn` va/yoki `$/m³ × hajm` (hajm = u × e × b sm / 1 000 000); ikkalasi berilsa —
+kattasi; narx berilgan, lekin unga mos o'lcham (vazn / hajm) yo'q usul hisobga olinmaydi (taxmin qilinmaydi). Kurs — CBU (bozor kursi
+zaxira, belgisi bilan), qo'lda o'zgartirsa bo'ladi; kurs yo'q va qo'lda ham kiritilmagan — hisoblanmaydi. Uzum logistikasi — F37, o'lcham
+sm → mm (uchalasi kiritilsa); kiritilmasa tarifdagi "o'lchamsiz" narx (50 000), sahifada belgilanadi. Soliq % — profildan taklif (foizli,
+tushumga qo'llanadigan qatorlar yig'indisi; to'lovga qo'llanadigan qator bo'lsa hisobga olinmaydi va aytiladi). `upcore.unit.landed_unit_cost`,
+`/calculator`.
 **Ochiq versiya** (ro'yxatdan o'tmasdan) landing sahifada — mijoz jalb qilish uchun [B8.7].
 
 ## M14. Hisobotlar va eksport [B7; doirasi ADR-065 bo'yicha — 05 B7]

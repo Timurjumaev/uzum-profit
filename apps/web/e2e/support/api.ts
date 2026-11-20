@@ -6,6 +6,7 @@ import type { Page, Route } from "@playwright/test";
 import { dashboardData } from "../../src/test/dashboard";
 import { expensesData } from "../../src/test/expenses";
 import { inventoryData } from "../../src/test/inventory";
+import { calculatorDefaults, calculatorResult } from "../../src/test/calculator";
 import { payoutForecast } from "../../src/test/payouts";
 import { pnlData, skuColumns } from "../../src/test/pnl";
 import { openingData, openingRow } from "../../src/test/opening";
@@ -269,6 +270,8 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
     }
     if (key === `GET /orgs/${ORG_ID}/inventory`) return json(route, 200, inventoryData());
     if (key === `GET /orgs/${ORG_ID}/payouts/forecast`) return json(route, 200, payoutForecast());
+    if (key === `GET /orgs/${ORG_ID}/calculator/defaults`) return json(route, 200, calculatorDefaults());
+    if (key === `GET /orgs/${ORG_ID}/calculator`) return json(route, 200, calculatorResult());
     if (key === `GET /orgs/${ORG_ID}/purchases`) return json(route, 200, { items: [purchaseRow()], amounts: true, total: 1, page: 1, pages: 1 });
     if (key === `GET /orgs/${ORG_ID}/purchases/${PURCHASE_1}`) return json(route, 200, purchaseDetail());
     if (key === `GET /orgs/${ORG_ID}/sku-picker`) {

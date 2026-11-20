@@ -623,6 +623,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/calculator/defaults": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Calculator Defaults */
+        get: operations["calculator_defaults_api_v1_orgs__org_id__calculator_defaults_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/calculator": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Calculator */
+        get: operations["calculator_api_v1_orgs__org_id__calculator_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/pnl": {
         parameters: {
             query?: never;
@@ -2339,6 +2373,33 @@ export interface components {
                 [key: string]: string;
             };
         };
+        /**
+         * CalculatorDefaultsOut
+         * @description Kalkulyator boshlang'ich qiymatlari: kurslar (CBU), soliq taklifi va F37 tarifi.
+         */
+        CalculatorDefaultsOut: {
+            rates: components["schemas"]["RateOut"];
+            /** Tax Pct */
+            tax_pct: string | null;
+            /** Tax On Payout */
+            tax_on_payout: boolean;
+            tariff: components["schemas"]["TariffOut"] | null;
+        };
+        /** CalculatorOut */
+        CalculatorOut: {
+            rates: components["schemas"]["RateOut"];
+            landed: components["schemas"]["LandedOut"];
+            logistics: components["schemas"]["LogisticsOut"];
+            /** Tax Pct */
+            tax_pct: string;
+            unit: components["schemas"]["UnitCalcOut"];
+        };
+        /**
+         * CargoBasis
+         * @description Kargo narxi nimaga ko'ra olingan (``landed_unit_cost``).
+         * @enum {string}
+         */
+        CargoBasis: "weight" | "volume";
         /** CarrierIn */
         CarrierIn: {
             /** Name */
@@ -3284,6 +3345,20 @@ export interface components {
             /** Flow */
             flow: components["schemas"]["FlowStepOut"][];
         };
+        /** LandedOut */
+        LandedOut: {
+            /** Goods */
+            goods: string;
+            /** China */
+            china: string;
+            /** Cargo */
+            cargo: string;
+            /** Extra */
+            extra: string;
+            /** Unit Cost */
+            unit_cost: string;
+            cargo_basis: components["schemas"]["CargoBasis"] | null;
+        };
         /** LeadOut */
         LeadOut: {
             /** Total */
@@ -3533,6 +3608,15 @@ export interface components {
             orgs: components["schemas"]["OrgSummary"][];
             /** Created */
             created: boolean;
+        };
+        /** LogisticsOut */
+        LogisticsOut: {
+            /** Fee */
+            fee: string;
+            /** Liters */
+            liters: number | null;
+            /** Source */
+            source: string;
         };
         /**
          * LossesOut
@@ -4736,6 +4820,17 @@ export interface components {
              */
             on_hand: boolean;
         };
+        /** RateOut */
+        RateOut: {
+            /** Cny */
+            cny: string | null;
+            /** Usd */
+            usd: string | null;
+            /** Day */
+            day: string | null;
+            /** Source */
+            source: string | null;
+        };
         /** ReceivingOut */
         ReceivingOut: {
             /** Diffs */
@@ -5898,6 +5993,22 @@ export interface components {
             freshness: {
                 [key: string]: string | null;
             };
+        };
+        /** TariffOut */
+        TariffOut: {
+            /**
+             * Valid From
+             * Format: date
+             */
+            valid_from: string;
+            /** Base Fee */
+            base_fee: string;
+            /** Per Liter */
+            per_liter: string;
+            /** Max Fee */
+            max_fee: string;
+            /** No Dims Fee */
+            no_dims_fee: string;
         };
         /**
          * TaxAmountOut
@@ -8048,6 +8159,105 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdsOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    calculator_defaults_api_v1_orgs__org_id__calculator_defaults_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalculatorDefaultsOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    calculator_api_v1_orgs__org_id__calculator_get: {
+        parameters: {
+            query: {
+                price_cny: number | string;
+                price: number | string;
+                commission_pct: number | string;
+                qty?: number;
+                china_cny_total?: number | string;
+                weight_kg?: number | string | null;
+                length_cm?: number | string | null;
+                width_cm?: number | string | null;
+                height_cm?: number | string | null;
+                cargo_usd_per_kg?: number | string | null;
+                cargo_usd_per_m3?: number | string | null;
+                extra_uzs?: number | string;
+                packaging_uzs?: number | string;
+                tax_pct?: number | string | null;
+                ads_pct?: number | string;
+                target_margin_pct?: number | string | null;
+                cny_rate?: number | string | null;
+                usd_rate?: number | string | null;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalculatorOut"];
                 };
             };
             /** @description Validatsiya xatosi */

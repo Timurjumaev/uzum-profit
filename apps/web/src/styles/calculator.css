@@ -1,0 +1,94 @@
+/* Kalkulyator (M13, B5.9). ADR-070: jonli, rangli natija kartasi. */
+.calculator {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.calculator__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.calculator__inputs {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+.calculator__group {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg, 1rem);
+  background: var(--bg-surface);
+  min-inline-size: 0;
+}
+
+.calculator__group legend {
+  padding-inline: var(--space-2);
+}
+
+.calculator__dims {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.calculator__result {
+  position: sticky;
+  inset-block-start: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle, rgb(0 0 0 / 8%));
+  border-radius: var(--radius-lg, 1rem);
+  background: linear-gradient(135deg, rgb(99 102 241 / 12%), rgb(34 197 94 / 10%));
+  box-shadow: var(--shadow-md, 0 6px 18px rgb(0 0 0 / 8%));
+  min-inline-size: 0;
+}
+
+.calculator__list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.calculator__list > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.calculator__list dt {
+  color: var(--text-secondary);
+}
+
+.calculator__list dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.calculator__main dd {
+  font-size: var(--text-xl, 1.5rem);
+}
+
+.calculator__section {
+  padding-block-start: var(--space-2);
+  border-block-start: 1px dashed var(--border-hairline);
+}
+
+@media (max-width: 56rem) {
+  .calculator__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .calculator__result {
+    position: static;
+    order: -1; /* natija yuqorida: telefonda uzun forma tagida qolib ketmasin */
+  }
+}

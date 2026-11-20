@@ -37,7 +37,7 @@ from upcore.metrics import (
 from upcore.money import Currency, Money, quantize
 from upcore.pnl import Cells, Statement, unit_economics
 from upcore.tax import effective_rate
-from upcore.unit import unit_calc
+from upcore.unit import UnitCalc, unit_calc
 
 from upapi import orgsettings
 from upapi.auth.deps import OrgContext, require
@@ -714,6 +714,23 @@ class UnitCalcOut(BaseModel):
     target_price: Decimal | None
 
 
+def unit_calc_out(c: UnitCalc) -> UnitCalcOut:
+    """Yadro natijasi → API javobi (``/unit-calc`` va ``/calculator`` uchun umumiy)."""
+    return UnitCalcOut(
+        price=c.price.amount,
+        fixed=c.fixed.amount,
+        share_pct=c.share_pct,
+        commission=c.commission.amount,
+        tax=c.tax.amount,
+        ads=c.ads.amount,
+        profit=c.profit.amount,
+        margin=c.margin,
+        roi=c.roi,
+        breakeven=amount(c.breakeven),
+        target_price=amount(c.target_price),
+    )
+
+
 @router.get("/orgs/{org_id}/unit-calc", response_model=UnitCalcOut)
 async def unit_calculator(
     ctx: Finance,
@@ -727,26 +744,15 @@ async def unit_calculator(
     target_margin_pct: Annotated[Decimal | None, Query(ge=0, le=100)] = None,
 ) -> UnitCalcOut:
     del ctx  # faqat ruxsat: hisob tashkilot ma'lumotiga tayanmaydi
-    c = unit_calc(
-        Money(price, UZS),
-        Money(unit_cost, UZS),
-        Money(logistics, UZS),
-        Money(packaging, UZS),
-        commission_pct,
-        tax_pct,
-        ads_pct,
-        target_margin_pct,
-    )
-    return UnitCalcOut(
-        price=c.price.amount,
-        fixed=c.fixed.amount,
-        share_pct=c.share_pct,
-        commission=c.commission.amount,
-        tax=c.tax.amount,
-        ads=c.ads.amount,
-        profit=c.profit.amount,
-        margin=c.margin,
-        roi=c.roi,
-        breakeven=amount(c.breakeven),
-        target_price=amount(c.target_price),
+    return unit_calc_out(
+        unit_calc(
+            Money(price, UZS),
+            Money(unit_cost, UZS),
+            Money(logistics, UZS),
+            Money(packaging, UZS),
+            commission_pct,
+            tax_pct,
+            ads_pct,
+            target_margin_pct,
+        )
     )

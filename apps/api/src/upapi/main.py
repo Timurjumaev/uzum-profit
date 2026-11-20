@@ -18,6 +18,7 @@ from upapi.routes import (
     accounts,
     ads,
     auth,
+    calculator,
     cargo,
     counting,
     dashboard,
@@ -119,6 +120,7 @@ def create_app(
     for reports in (
         dashboard,
         ads,  # B5.5 reklama tahlili
+        calculator,  # B5.9 kalkulyator
         pnl,
         skus,
         sales,
