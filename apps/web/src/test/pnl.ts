@@ -122,6 +122,16 @@ export function pnlData(over: Partial<Pnl> = {}): Pnl {
       { key: "2026-09-01", statement: pnlStatement({ revenue: "4000000.00", net_profit: "1210000.00", net_profit_done: "1210000.00", net_profit_processing: "0.00" }), title: null, shop_id: null },
       { key: "2026-10-01", statement: pnlStatement({ revenue: "6000000.00", net_profit: "2000000.00", net_profit_done: "1810000.00", net_profit_processing: "190000.00" }), title: null, shop_id: null },
     ],
+    why: {
+      diff: "1010000.00",
+      factors: [
+        { code: "volume", amount: "900000.00" },
+        { code: "price", amount: "300000.00" },
+        { code: "commission", amount: "-120000.00" },
+        { code: "logistics", amount: "0.00" },
+        { code: "cogs", amount: "-70000.00" },
+      ],
+    },
     expected: expectedPart(),
     expected_shops: [
       { shop_id: SHOP_A, ...expectedPart({ units: 6, lines: 4, revenue: "900000.00", net_profit: "160000.00", rate: "0.870000" }) },

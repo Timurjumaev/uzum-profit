@@ -16471,6 +16471,9 @@
             "type": "array",
             "title": "Rows"
           },
+          "why": {
+            "$ref": "#/components/schemas/WhyOut"
+          },
           "columns": {
             "items": {
               "$ref": "#/components/schemas/ColumnOut"
@@ -16510,6 +16513,7 @@
           "statement",
           "previous",
           "rows",
+          "why",
           "columns",
           "expected",
           "expected_shops",
@@ -22804,6 +22808,46 @@
           "transfers_in"
         ],
         "title": "WarehouseRow"
+      },
+      "WhyFactorOut": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "amount"
+        ],
+        "title": "WhyFactorOut"
+      },
+      "WhyOut": {
+        "properties": {
+          "diff": {
+            "type": "string",
+            "title": "Diff"
+          },
+          "factors": {
+            "items": {
+              "$ref": "#/components/schemas/WhyFactorOut"
+            },
+            "type": "array",
+            "title": "Factors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "diff",
+          "factors"
+        ],
+        "title": "WhyOut",
+        "description": "F56 \"Nega o'zgardi\": sof foyda farqi (joriy − oldingi) va omillar; omillar yig'indisi = farq."
       },
       "upapi__routes__inventory__PriceOut": {
         "properties": {

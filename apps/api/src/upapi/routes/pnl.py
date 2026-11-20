@@ -14,13 +14,14 @@ Drill-down: sotuvlar — ``/sales``, xarajatlar — ``/expenses`` (shu filtrlar 
 from __future__ import annotations
 
 from collections.abc import Callable
+from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from upcore.pnl import COMMON, CellKey, Cells, Statement, compare
+from upcore.pnl import COMMON, CellKey, Cells, Statement, WhyChanged, compare, explain_change
 from upcore.tax import TaxRegime, uncalculated_regimes
 
 from upapi.auth.deps import OrgContext, require
@@ -62,11 +63,31 @@ class ExpectedShopOut(ExpectedOut):
     shop_id: UUID
 
 
+class WhyFactorOut(BaseModel):
+    code: str  # volume, price, commission, logistics, cogs, advertising, uzum_other, own_expenses, tax, other
+    amount: Decimal  # sof foydaga ta'siri (so'm): musbat — foydani oshirgan
+
+
+class WhyOut(BaseModel):
+    """F56 "Nega o'zgardi": sof foyda farqi (joriy − oldingi) va omillar; omillar yig'indisi = farq."""
+
+    diff: Decimal
+    factors: list[WhyFactorOut]
+
+    @classmethod
+    def of(cls, why: WhyChanged) -> WhyOut:
+        return cls(
+            diff=why.diff.amount,
+            factors=[WhyFactorOut(code=f.code, amount=f.amount.amount) for f in why.factors],
+        )
+
+
 class PnlOut(BaseModel):
     meta: Meta
     statement: StatementOut
     previous: StatementOut
     rows: list[RowOut]
+    why: WhyOut  # F56 (B5.6): sof foyda farqi omillarga
     columns: list[ColumnOut]
     expected: ExpectedOut  # F16 (ADR-037): kutilayotgan sof foyda tafsiloti va R
     expected_shops: list[ExpectedShopOut]  # Jarayondagi sotuvi bor do'konlar
@@ -112,6 +133,7 @@ async def pnl(ctx: Finance, f: Filter, _: Heavy, view: View = View.TOTAL) -> Pnl
         statement=StatementOut.of(s),
         previous=StatementOut.of(p),
         rows=[RowOut.of(r) for r in compare(s, p, rates.total)],
+        why=WhyOut.of(explain_change(s, p)),
         columns=cols,
         expected=ExpectedOut.of(s, rates.total),
         expected_shops=[

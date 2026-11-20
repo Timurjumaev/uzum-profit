@@ -38,6 +38,7 @@ from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import Decimal
 from enum import StrEnum
+from fractions import Fraction
 from typing import NamedTuple, cast
 
 from upcore.expenses import ExpenseCategory, ExpenseRecord
@@ -1112,6 +1113,115 @@ class CompareRow:
     estimated: bool = (
         False  # ``change`` kutilayotgan qism × yakunlanish ulushi bilan (ADR-057 Q4) — taxminiy
     )
+
+
+# --- F56 "Nega o'zgardi" -----------------------------------------------------------------------------------------------
+
+WHY_CODES = (
+    "volume",
+    "price",
+    "commission",
+    "logistics",
+    "cogs",
+    "advertising",
+    "uzum_other",
+    "own_expenses",
+    "tax",
+    "other",
+)
+
+
+@dataclass(frozen=True, slots=True)
+class WhyFactor:
+    code: str
+    amount: Money
+
+
+@dataclass(frozen=True, slots=True)
+class WhyChanged:
+    """F56 natijasi: sof foyda farqi (``current − previous``) va omillar; omillar yig'indisi doim farqqa teng."""
+
+    diff: Money
+    factors: tuple[WhyFactor, ...]
+
+
+def _frac(value: Decimal) -> Fraction:
+    return Fraction(value)
+
+
+def _expense_shares(s: Statement) -> dict[str, Fraction]:
+    """F15 bo'yicha ayrilgan xarajat (``expenses_deducted``) toifalar bo'yicha: reklama, boshqa Uzum, o'z, soliq — F9, F10,
+    F11 yig'indisiga nisbatan (yig'indisi doim ``expenses_deducted``; xarajat bo'lmasa — hammasi "other")."""
+    ads = s.uzum_expenses.get(ExpenseCategory.ADVERTISING, ZERO).amount
+    parts = {
+        "advertising": ads,
+        "uzum_other": s.uzum_total.amount - ads,
+        "own_expenses": s.own_total.amount,
+        "tax": s.tax.amount,
+    }
+    deducted = _frac(s.expenses_deducted.amount)
+    base = sum((_frac(v) for v in parts.values()), Fraction(0))
+    if base == 0:
+        return {"other": deducted}
+    return {k: deducted * _frac(v) / base for k, v in parts.items()}
+
+
+def explain_change(current: Statement, previous: Statement) -> WhyChanged:
+    """F56. "Nega o'zgardi": sof foyda (F12) farqi omillarga — ketma-ket almashtirish (har qadamda bitta omil oldingi
+    davrdan joriyga o'tadi, qolganlari ushlab turiladi), shuning uchun yig'indi aniq farqqa teng.
+
+    Model (tannarxi ma'lum qism, F15): foyda = dona × (narx − komissiya − logistika − tannarx) − xarajatlar. Dona — tannarxi
+    ma'lum dona; narx — shu qism tushumi / dona; komissiya va logistika — shu qism Uzum ushlagan puli (tushum − to'lov, F6)
+    ning davrdagi F4 : F5 nisbati bo'yicha bo'lingani; tannarx — F7 / dona. Tartib: **hajm** (dona o'zgarishi oldingi
+    marjada), **narx**, **komissiya**, **logistika**, **tannarx** (joriy donada), so'ng xarajatlar: **reklama**, **boshqa Uzum**
+    (F9), **o'z xarajatlari** (F10), **soliq** (F11). Biror davrda tannarxi ma'lum dona 0 bo'lsa — birlik omillari
+    aniqlanmaydi: butun yalpi foyda o'zgarishi "hajm"ga yoziladi. Tiyin yaxlitlashi qoldig'i eng katta omilga qo'shiladi."""
+    cur, prev = _unit_model(current), _unit_model(previous)
+    f: dict[str, Fraction] = {}
+    gross_cur = _frac(current.gross_profit.amount)
+    gross_prev = _frac(previous.gross_profit.amount)
+    if cur["units"] == 0 or prev["units"] == 0:
+        f["volume"] = gross_cur - gross_prev
+        for code in ("price", "commission", "logistics", "cogs"):
+            f[code] = Fraction(0)
+    else:
+        margin_prev = prev["price"] - prev["commission"] - prev["logistics"] - prev["cogs"]
+        f["volume"] = (cur["units"] - prev["units"]) * margin_prev
+        f["price"] = cur["units"] * (cur["price"] - prev["price"])
+        f["commission"] = -cur["units"] * (cur["commission"] - prev["commission"])
+        f["logistics"] = -cur["units"] * (cur["logistics"] - prev["logistics"])
+        f["cogs"] = -cur["units"] * (cur["cogs"] - prev["cogs"])
+    exp_cur, exp_prev = _expense_shares(current), _expense_shares(previous)
+    for code in (*exp_cur, *(c for c in exp_prev if c not in exp_cur)):
+        f[code] = -(exp_cur.get(code, Fraction(0)) - exp_prev.get(code, Fraction(0)))
+    diff = current.net_profit - previous.net_profit
+    rounded = {k: Money(Decimal(v.numerator) / Decimal(v.denominator), UZS) for k, v in f.items()}
+    rounded = {k: Money(v.amount.quantize(Decimal("0.01")), UZS) for k, v in rounded.items()}
+    remainder = diff - total(list(rounded.values()), UZS)
+    if not remainder.is_zero() and rounded:
+        biggest = max(rounded, key=lambda k: abs(rounded[k].amount))
+        rounded[biggest] = rounded[biggest] + remainder
+    factors = tuple(WhyFactor(code, rounded[code]) for code in WHY_CODES if code in rounded)
+    return WhyChanged(diff, factors)
+
+
+def _unit_model(s: Statement) -> dict[str, Fraction]:
+    """F56: birlik ko'rsatkichlari (tannarxi ma'lum qism bo'yicha)."""
+    units = s.covered_units
+    if units <= 0:
+        zero = Fraction(0)
+        return {"units": zero, "price": zero, "commission": zero, "logistics": zero, "cogs": zero}
+    n = Fraction(units)
+    fees = _frac(s.covered_revenue.amount) - _frac(s.covered_payout.amount)
+    c, lg = _frac(s.commission.amount), _frac(s.logistics.amount)
+    share = c / (c + lg) if c + lg != 0 else Fraction(1)
+    return {
+        "units": n,
+        "price": _frac(s.covered_revenue.amount) / n,
+        "commission": fees * share / n,
+        "logistics": fees * (1 - share) / n,
+        "cogs": _frac(s.cogs.amount) / n,
+    }
 
 
 def expected_value(full: Money, processing: Money, completion: Decimal | None) -> Money:
