@@ -20,6 +20,7 @@ import { Drill } from "../home/Drill";
 import { rowLabel } from "../home/model";
 import { Breakdown } from "./Breakdown";
 import { Expected } from "./Expected";
+import { WhyChanged } from "./WhyChanged";
 import { PARTS, pnlLines, waterfallSteps, type Part, type PnlLine, type View } from "./model";
 import { PnlLedger } from "./PnlLedger";
 
@@ -155,6 +156,8 @@ export function Pnl() {
         <WaterfallChart title={t("pnl.waterfall.title")} steps={s.lines === 0 ? [] : steps} />
         <Expected orgId={org.id} data={data} />
       </div>
+
+      <WhyChanged data={data} />
 
       <Breakdown orgId={org.id} data={data} view={view} busy={query.isPlaceholderData} />
       <Drill orgId={org.id} params={params} row={drill} onClose={() => setDrill(null)} />

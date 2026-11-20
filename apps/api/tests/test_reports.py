@@ -428,6 +428,14 @@ def test_pnl_rows_and_previous(world: World) -> None:
     assert money(rows["net_profit"]["amount"]) == money(body["statement"]["net_profit"])
     assert money(body["previous"]["revenue"]) == D(400_000)
     assert "uzum:fine" in rows and "own:ijara" in rows and "uncovered_payout" in rows
+    # F56 "Nega o'zgardi": omillar yig'indisi = sof foyda farqi (joriy − oldingi), farq qatordagi farqqa teng.
+    why = body["why"]
+    assert D(why["diff"]) == money(rows["net_profit"]["diff"])
+    assert sum((D(f["amount"]) for f in why["factors"]), D(0)) == D(why["diff"])
+    assert {f["code"] for f in why["factors"]} <= {
+        "volume", "price", "commission", "logistics", "cogs",
+        "advertising", "uzum_other", "own_expenses", "tax", "other",
+    }  # fmt: skip
 
 
 @pytest.mark.parametrize("view", ["month", "day", "shop", "sku"])

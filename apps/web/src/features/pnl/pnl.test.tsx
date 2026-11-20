@@ -465,6 +465,27 @@ describe("holatlar", () => {
   });
 });
 
+describe("nega o'zgardi (F56)", () => {
+  it("omillar kattaligi bo'yicha, nol omil yashirin, jami farq ko'rinadi", async () => {
+    await renderPnl();
+    const box = within(await screen.findByRole("region", { name: /Nega oʻzgardi/ }));
+    const names = box.getAllByRole("listitem").map((li) => li.querySelector(".pnl-why__name")!.textContent);
+    expect(names).toEqual(["Sotuv hajmi", "Sotuv narxi", "Komissiya", "Tannarx"]); // logistika 0 — yashirin
+    expect(norm(box.getByText("Sof foyda oldingi davrga nisbatan").parentElement!.querySelector(".kpi")!.textContent ?? "")).toBe(m("1010000.00"));
+    expect(norm(box.getByText("Komissiya").closest("li")!.querySelector("strong")!.textContent ?? "")).toBe(m("-120000.00"));
+    expect(box.getByText(/Omillar yigʻindisi sof foyda farqiga teng/)).toBeTruthy();
+  });
+
+  it("oldingi davrda sotuv yo'q — izoh; farq yo'q — izoh", async () => {
+    const base = pnlData();
+    await renderPnl(PATH, { [PNL_ROUTE]: () => json(200, pnlData({ previous: { ...base.previous, lines: 0 } })) });
+    expect(within(await screen.findByRole("region", { name: /Nega oʻzgardi/ })).getByText(/Oldingi davrda sotuv boʻlmagan/)).toBeTruthy();
+    cleanup();
+    await renderPnl(PATH, { [PNL_ROUTE]: () => json(200, pnlData({ why: { diff: "0.00", factors: [{ code: "volume", amount: "0.00" }] } })) });
+    expect(within(await screen.findByRole("region", { name: /Nega oʻzgardi/ })).getByText(/omillar yoʻq/)).toBeTruthy();
+  });
+});
+
 describe("kirish imkoniyati", () => {
   it("axe-core: jiddiy xato 0 (oylar va SKU kesimi, drawer ochiq ham)", async () => {
     await renderPnl(PATH, { [PNL_ROUTE]: (r) => json(200, pnlData(new URL(r.url).searchParams.get("view") === "sku" ? { columns: skuColumns() } : {})) });

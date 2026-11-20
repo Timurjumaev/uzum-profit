@@ -4237,6 +4237,7 @@ export interface components {
             previous: components["schemas"]["StatementOut"];
             /** Rows */
             rows: components["schemas"]["RowOut"][];
+            why: components["schemas"]["WhyOut"];
             /** Columns */
             columns: components["schemas"]["ColumnOut"][];
             expected: components["schemas"]["ExpectedOut"];
@@ -6207,6 +6208,23 @@ export interface components {
             sources: components["schemas"]["SourceOut"][];
             /** Transfers In */
             transfers_in: components["schemas"]["TransferOut"][];
+        };
+        /** WhyFactorOut */
+        WhyFactorOut: {
+            /** Code */
+            code: string;
+            /** Amount */
+            amount: string;
+        };
+        /**
+         * WhyOut
+         * @description F56 "Nega o'zgardi": sof foyda farqi (joriy − oldingi) va omillar; omillar yig'indisi = farq.
+         */
+        WhyOut: {
+            /** Diff */
+            diff: string;
+            /** Factors */
+            factors: components["schemas"]["WhyFactorOut"][];
         };
         /** PriceOut */
         upapi__routes__inventory__PriceOut: {

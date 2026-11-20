@@ -1207,7 +1207,7 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
   (`Y000119` / `Y000120` / `Y000050`); ROMI, CTR va'da qilinmaydi. Doira: reklama turlari bo'yicha summa va DRR trendi,
   SKU ACOS (bog'langan reklama, F19), "reklama foydasini yeb qo'ygan SKU" ro'yxati; ABC × XYZ (hisob bor —
   `/inventory`; Mahsulotlarda ustun va filtr); hodisa "SKU komissiyasi o'zgardi" (`sku_daily.commission_pct` dan).
-- [ ] B5.6 **Solishtirish va "Nega o'zgardi".** "Barcha hisobotlarda" o'rniga aniq doira: (1) "o'tgan yil shu davri"
+- [→] B5.6 **Solishtirish va "Nega o'zgardi".** **Holat 2026-11-20:** (3) "Nega o'zgardi" ✓ (F56, `upcore.pnl.explain_change`, `/pnl` → `why`, Foyda sahifasida blok); qoldi: (1) "o'tgan yil shu davri" rejimi, (2) Mahsulotlar va Buyurtmalar tahlilida farq ustuni, B5.0f (Temur: kerakmi?). "Barcha hisobotlarda" o'rniga aniq doira: (1) "o'tgan yil shu davri"
   rejimi — Asosiy va Foyda (M4; oldingi davr bor); o'tgan yil ma'lumoti yo'q bo'lsa rejim o'chiq, izoh bilan; (2)
   Mahsulotlar va Buyurtmalar tahlilida oldingi davrga farq ustuni; (3) **"Nega o'zgardi"** (08 §3 da B5 ga yozilgan,
   vazifasi yo'q edi): sof foyda farqi omillarga — sotuv hajmi, narx, komissiya, logistika, tannarx, reklama, boshqa
