@@ -863,3 +863,25 @@ def test_ad_expense_links_to_its_sale(db: dict[str, str]) -> None:
         [account.org_id],
     )
     assert [(r[0], r[1], str(r[2])) for r in rows] == [(201, 1, "1881.50"), (202, None, "500.00")]
+
+
+def test_withdrawn_seen_at_set_once_when_paid_out(db: dict[str, str]) -> None:
+    """B5.7: Uzum to'lov sanasini bermaydi — qator birinchi marta yechilgan (`withdrawnProfit` > 0) ko'rilgan vaqt yoziladi,
+    keyin o'zgarmaydi; yechilmagan qatorlar — `NULL`."""
+    clock = Clock()
+    fake = seller()
+    query = "SELECT external_id, withdrawn_seen_at FROM sale_items WHERE org_id = %s ORDER BY 1"
+    with runtime(db, fake, clock) as run:
+        account = create_account(db, sf.settings_for(db), TOKEN, [A])
+        sync(run, account)
+        first = dict(admin(db, query, [account.org_id]))
+        assert all(v is None for v in first.values())
+        fake.orders[A][2]["withdrawnProfit"] = 50_000  # 3 — kecha, inkremental oynada
+        clock.advance(minutes=16)
+        sync(run, account, kinds=[eng.Kind.ORDERS])
+        paid = dict(admin(db, query, [account.org_id]))
+        assert paid[3] == NOW + timedelta(minutes=16) and paid[1] is None and paid[2] is None
+        clock.advance(minutes=16)
+        sync(run, account, kinds=[eng.Kind.ORDERS])
+    later = dict(admin(db, query, [account.org_id]))
+    assert later[3] == NOW + timedelta(minutes=16)  # bir marta yoziladi, keyin o'zgarmaydi

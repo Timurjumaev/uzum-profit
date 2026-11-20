@@ -417,6 +417,8 @@ sale_items = tenant(
     Column("issued_at", TS),
     # B4.70 (ADR-057 Q7): birinchi marta Yakunlangan holatda ko'rilgan vaqt (Uzum yakunlanish sanasini bermaydi).
     Column("completed_seen_at", TS),
+    # B5.7: birinchi marta yechib olingan (``withdrawnProfit`` > 0) ko'rilgan vaqt — to'lov hodisalari shundan tiklanadi.
+    Column("withdrawn_seen_at", TS),
     UniqueConstraint("org_id", "shop_id", "order_id", "external_id"),
     refs={"shop_id": ("shops", False), "sku_id": ("mp_skus", True)},
 )
