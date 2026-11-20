@@ -35,14 +35,15 @@ from typing import Any
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import Integer, select
+from sqlalchemy import Integer, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 from upcore.expenses import ExpenseCategory
 from upcore.inventory import StockStatus
-from upcore.metrics import COUNTED, Period, status_group
+from upcore.metrics import COUNTED, Period, return_share, status_group
 from upcore.notify import (
     CATALOG,
+    PARAM_CHOICES,
     QUIET_FROM,
     QUIET_TO,
     Event,
@@ -52,6 +53,7 @@ from upcore.notify import (
     loss_streak,
     merged_params,
     parse_hhmm,
+    returns_spike,
     summary_due,
     week_start,
 )
@@ -302,6 +304,99 @@ async def missing_found(
                     "qty": q,
                 }
                 for i, q in fresh[:TOP]
+            ],
+        },
+    )
+
+
+SPIKE_DAYS = 7
+SPIKE_BASE_DAYS = 30
+
+
+async def return_windows(
+    conn: AsyncConnection, today: date, level: str
+) -> dict[UUID, tuple[int, int, int, int]]:
+    """F18, B5.4: har do'kon (``level="shop"``) yoki SKU (``"sku"``) uchun (sotilgan7, qaytgan7, sotilgan30, qaytgan30)
+    — tugagan oxirgi 7 / 30 kun (bugun kirmaydi); qaytgan = ``canceled_issued + returns`` (``OrderFlow.return_units``)."""
+    d = m.daily_sku_metrics
+    key = d.c.shop_id if level == "shop" else d.c.sku_id
+    recent = d.c.day >= today - timedelta(days=SPIKE_DAYS)
+    ret = d.c.canceled_issued + d.c.returns
+    rows = await conn.execute(
+        select(
+            key.label("k"),
+            func.coalesce(func.sum(d.c.units).filter(recent), 0).label("u7"),
+            func.coalesce(func.sum(ret).filter(recent), 0).label("r7"),
+            func.coalesce(func.sum(d.c.units), 0).label("u30"),
+            func.coalesce(func.sum(ret), 0).label("r30"),
+        )
+        .where(
+            key.is_not(None),
+            d.c.day >= today - timedelta(days=SPIKE_BASE_DAYS),
+            d.c.day < today,
+        )
+        .group_by(key)
+    )
+    return {r.k: (int(r.u7), int(r.r7), int(r.u30), int(r.r30)) for r in rows}
+
+
+def spiking(
+    windows: dict[UUID, tuple[int, int, int, int]], min_returns: int
+) -> list[tuple[UUID, int, int, int, int]]:
+    """Signal bergan kalitlar (qaytgan7 kamayish tartibida): F18 ``returns_spike`` qoidasi."""
+    hit = [(k, *w) for k, w in windows.items() if returns_spike(*w, min_returns)]
+    return sorted(hit, key=lambda x: (-x[2], str(x[0])))
+
+
+def _pct(returns: int, units: int) -> str:
+    share = return_share(units, returns)
+    return str(((share or Decimal(0)) * 100).quantize(Decimal("0.1")))
+
+
+async def spike_found(
+    conn: AsyncConnection,
+    items: list[tuple[UUID, int, int, int, int]],
+    level: str,
+    min_returns: int,
+    today: date,
+    known: set[str],
+) -> Found | None:
+    """Yangi (xabar qilinmagan) kalitlardan "Qaytish keskin oshdi" hodisasi."""
+    fresh = [x for x in items if str(x[0]) not in known]
+    if not fresh:
+        return None
+    top = fresh[:TOP]
+    if level == "shop":
+        names = {
+            r.id: r.alias or r.name
+            for r in await conn.execute(
+                select(m.shops.c.id, m.shops.c.alias, m.shops.c.name).where(
+                    m.shops.c.id.in_([k for k, *_ in top])
+                )
+            )
+        }
+    else:
+        cat = await sku_catalog(conn, ids=[k for k, *_ in top])
+        names = {k: cat[k].title for k in cat}
+    ids = [str(x[0]) for x in items]
+    return Found(
+        Event.RETURNS_SPIKE,
+        f"returns_spike:{level}:{today.isoformat()}:{_digest([str(x[0]) for x in fresh])}",
+        {
+            "level": level,
+            "min_returns": min_returns,
+            "count": len(fresh),
+            "total": len(items),
+            "ids": ids[:IDS_CAP],
+            "items": [
+                {
+                    "id": str(k),
+                    "title": names.get(k),
+                    "returns": r7,
+                    "share7": _pct(r7, u7),
+                    "share30": _pct(r30, u30),
+                }
+                for k, u7, r7, u30, r30 in top
             ],
         },
     )
@@ -784,6 +879,25 @@ async def evaluate(conn: AsyncConnection, org_id: UUID, now: datetime) -> int:
                 personal.append((p, found))
             elif base is not None and set(lost_ids) != base:
                 personal.append((p, snapshot_row(Event.LOST_GOODS, lost_ids, now)))
+    if Event.RETURNS_SPIKE in wanted and heavy:
+        spike_cache: dict[str, dict[UUID, tuple[int, int, int, int]]] = {}
+        for p in people:
+            if not p.wants(Event.RETURNS_SPIKE):
+                continue
+            prm = p.params(Event.RETURNS_SPIKE)
+            level, n_min = prm["level"], prm["min_returns"]
+            if level not in PARAM_CHOICES["level"] or not isinstance(n_min, int):
+                continue  # Temur qarori: daraja va N kiritilmaguncha xabar yo'q
+            if level not in spike_cache:
+                spike_cache[level] = await return_windows(conn, today, level)
+            hits = spiking(spike_cache[level], n_min)
+            hit_ids = [str(x[0]) for x in hits]
+            base = await known_ids(conn, p.user_id, Event.RETURNS_SPIKE)
+            found = await spike_found(conn, hits, level, n_min, today, base or set())
+            if found is not None:
+                personal.append((p, found))
+            elif base is not None and set(hit_ids) != base:
+                personal.append((p, snapshot_row(Event.RETURNS_SPIKE, hit_ids, now)))
     if Event.UNCOSTED_SALES in wanted and heavy:
         # B6.4 (A3): kunlik xulosada tannarxsiz qatorlar soni allaqachon bor; alohida xabar faqat tannarxsiz YANGI SKU
         # (hech qachon xabar qilinmagan) birinchi marta sotilganda — xulosa o'chirilgan bo'lsa ham.

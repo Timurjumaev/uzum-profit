@@ -312,7 +312,7 @@ Kanallar: Telegram (asosiy), ilova ichida, web push (PWA); email [Keyin].
 | Zarar bilan sotuv | yoqilgan | foyda/dona < 0, ketma-ket 3 sotuv |
 | Tannarxsiz sotuvlar paydo bo'ldi | yoqilgan | kuniga 1 marta |
 | Yangi jarima | yoqilgan | summa > 0 |
-| Qaytish keskin oshdi | yoqilgan | 7 kun ulushi 30 kunlikdan 2 barobar |
+| Qaytish keskin oshdi (F18) | yoqilgan, lekin **standart yo'q** | oxirgi 7 kun qaytarish ulushi ≥ 30 kunlikdan 2 barobar **va** 7 kunda ≥ N qaytish; daraja (butun do'kon / har bir SKU) va N — Sozlamalarda foydalanuvchi tanlaydi, kiritilmaguncha xabar yo'q; yangi do'kon / SKU ro'yxatga kirganda bir marta |
 | Postavka kamomadi | yoqilgan | > 0 dona |
 | Yo'qolgan tovar signali (Uzumning `quantityMissing` > 0; balans usuli shovqinli — ko'rsatilmaydi) | yoqilgan | yangi SKU kirganda bir marta |
 | Sinxron to‘xtadi (kalit yaroqsiz — kritik, 3 kunda eslatma; yangilanmayapti — kritik emas, Uzum uzilishida yo‘q) / tiklandi | yoqilgan | 2 soat |

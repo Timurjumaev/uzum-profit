@@ -669,3 +669,136 @@ def test_lost_goods_from_quantity_missing_only_new_skus(world: World) -> None:
         assert len(rows()) == 1
     finally:
         a.sql("UPDATE mp_skus SET raw = NULL WHERE id = %s", [sku])
+
+
+def test_returns_spike_params_need_user_choice_and_validation(world: World) -> None:
+    """B5.4 (Temur qarori): daraja va N standartsiz (``None``); noto'g'ri qiymat — 422; tanlov olib tashlanadi."""
+    w = world
+    got = {x["event"]: x for x in ok(send(w, "GET", "notifications/settings"))["events"]}
+    spike = got["returns_spike"]
+    assert spike["available"] and spike["params"] == {"level": None, "min_returns": None}
+    for params in (
+        {"level": "category"},
+        {"level": 1},
+        {"min_returns": 0},
+        {"min_returns": 1001},
+        {"min_returns": "5"},
+        {"min_returns": True},
+    ):
+        r = send(
+            w,
+            "PUT",
+            "notifications/settings",
+            rules=[{"event": "returns_spike", "enabled": True, "params": params}],
+        )
+        assert r.status_code == 422 and r.json()["code"] == "bad_notification_params", params
+    ok(
+        send(
+            w,
+            "PUT",
+            "notifications/settings",
+            role="accountant",
+            rules=[
+                {
+                    "event": "returns_spike",
+                    "enabled": True,
+                    "params": {"level": "sku", "min_returns": 5},
+                }
+            ],
+        )
+    )
+    mine = {
+        x["event"]: x for x in ok(send(w, "GET", "notifications/settings", "accountant"))["events"]
+    }
+    assert mine["returns_spike"]["params"] == {"level": "sku", "min_returns": 5}
+    ok(
+        send(
+            w,
+            "PUT",
+            "notifications/settings",
+            role="accountant",
+            rules=[
+                {
+                    "event": "returns_spike",
+                    "enabled": True,
+                    "params": {"level": None, "min_returns": None},
+                }
+            ],
+        )
+    )
+    mine = {
+        x["event"]: x for x in ok(send(w, "GET", "notifications/settings", "accountant"))["events"]
+    }
+    assert mine["returns_spike"]["params"] == {"level": None, "min_returns": None}
+
+
+def test_returns_spike_levels_and_only_new_keys(world: World) -> None:
+    """B5.4: 7 kun qaytarish ulushi 30 kunlikdan ≥ 2 barobar va ≥ N; daraja do'kon / SKU; xabar faqat yangi kalit
+    kirganda; N yoki daraja kiritilmaguncha — jim."""
+    w, a = world, world.a
+    _clean(w)
+    sku = w.ids["sku"]
+    today = NOW.date()
+    a.sql("DELETE FROM daily_sku_metrics WHERE org_id = %s", [w.org_id])
+    # 23 kun oldin: 100 sotildi, 5 qaytdi; so'nggi 7 kun: 30 sotildi, 10 qaytdi (25% va 12,3%).
+    a.insert(
+        "daily_sku_metrics",
+        shop_id=a.shop_id,
+        sku_id=sku,
+        day=today - timedelta(days=20),
+        units=100,
+        returns=5,
+    )
+    a.insert(
+        "daily_sku_metrics",
+        shop_id=a.shop_id,
+        sku_id=sku,
+        day=today - timedelta(days=3),
+        units=30,
+        returns=4,
+        canceled_issued=6,
+        canceled=6,
+    )
+    fresh(w, NOW + timedelta(days=2))
+    accountant = {"level": "sku", "min_returns": 5}
+
+    def configure(params: dict[str, Any]) -> None:
+        ok(
+            send(
+                w,
+                "PUT",
+                "notifications/settings",
+                role="accountant",
+                rules=[{"event": "returns_spike", "enabled": True, "params": params}],
+            )
+        )
+
+    def rows() -> list[dict[str, Any]]:
+        return [r for r in _rows(w, "accountant", "returns_spike") if ":state:" not in r["key"]]
+
+    try:
+        win = w.a.run(lambda conn: notify.return_windows(conn, today, "sku"))
+        assert win[sku] == (30, 10, 130, 15)
+        shop = w.a.run(lambda conn: notify.return_windows(conn, today, "shop"))
+        assert shop[a.shop_id] == (30, 10, 130, 15)
+        assert [x[0] for x in notify.spiking(win, 10)] == [sku]
+        assert notify.spiking(win, 11) == []
+        evaluate(w)  # daraja va N yo'q — jim
+        assert not rows()
+        configure({"level": "sku"})  # N yo'q — jim
+        evaluate(w, NOW + timedelta(hours=1))
+        assert not rows()
+        configure(accountant)
+        evaluate(w, NOW + timedelta(hours=2))
+        assert len(rows()) == 1
+        p = rows()[0]["payload"]
+        assert p["level"] == "sku" and str(sku) in p["ids"]
+        assert p["items"][0]["returns"] == 10 and p["items"][0]["share7"] == "25.0"
+        evaluate(w, NOW + timedelta(hours=3))  # o'zgarmadi — takror yo'q
+        assert len(rows()) == 1
+        configure({"level": "shop", "min_returns": 5})  # boshqa daraja — o'z ro'yxati
+        evaluate(w, NOW + timedelta(hours=4))
+        assert any(r["payload"]["level"] == "shop" for r in rows())
+    finally:
+        configure({"level": None, "min_returns": None})
+        a.sql("DELETE FROM daily_sku_metrics WHERE org_id = %s", [w.org_id])

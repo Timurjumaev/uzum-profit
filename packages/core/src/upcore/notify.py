@@ -14,6 +14,8 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Any
 
+from upcore.metrics import return_share
+
 
 class Event(StrEnum):
     DAILY_SUMMARY = "daily_summary"
@@ -71,7 +73,12 @@ CATALOG: dict[Event, EventSpec] = {
         EventSpec(Event.LOSS_SALES, Audience.FINANCE, params={"streak": 3}),
         EventSpec(Event.UNCOSTED_SALES, Audience.FINANCE),
         EventSpec(Event.NEW_FINE, Audience.FINANCE),
-        EventSpec(Event.RETURNS_SPIKE, Audience.FINANCE, stage="B5.4"),
+        # B5.4 (Temur qarori, 2026-11-20): daraja va N — foydalanuvchi tanlaydi, standart yo'q (``None`` — xabar yo'q).
+        EventSpec(
+            Event.RETURNS_SPIKE,
+            Audience.FINANCE,
+            params={"level": None, "min_returns": None},
+        ),
         EventSpec(Event.RECEIVING_SHORTAGE, Audience.STOCK),
         # B5.4 (real o'lchov, 2026-11-19): faqat Uzumning `quantityMissing > 0` maydoni; balans usuli shovqinli — ko'rsatilmaydi.
         EventSpec(Event.LOST_GOODS, Audience.STOCK),
@@ -88,7 +95,17 @@ CATALOG: dict[Event, EventSpec] = {
 }
 
 # Chegaralar oralig'i (sozlamada tekshiriladi).
-PARAM_LIMITS: dict[str, tuple[int, int]] = {"streak": (2, 10), "hours": (1, 24), "days": (1, 30)}
+PARAM_LIMITS: dict[str, tuple[int, int]] = {
+    "streak": (2, 10),
+    "hours": (1, 24),
+    "days": (1, 30),
+    "min_returns": (1, 1000),
+}
+# Matnli tanlov parametrlari (``None`` — hali tanlanmagan).
+PARAM_CHOICES: dict[str, tuple[str, ...]] = {"level": ("shop", "sku")}
+# Qiymati bo'lmasligi mumkin bo'lgan parametrlar: standart yo'q, kiritilmaguncha hodisa ishlamaydi.
+PARAM_OPTIONAL = frozenset({"level", "min_returns"})
+SPIKE_FACTOR = 2
 
 QUIET_FROM = time(22, 0)
 QUIET_TO = time(8, 0)
@@ -156,6 +173,22 @@ def loss_streak(profits: Sequence[Decimal | None], streak: int) -> bool:
     if streak < 1 or len(profits) < streak:
         return False
     return all(p is not None and p < 0 for p in profits[-streak:])
+
+
+def returns_spike(
+    units7: int, returns7: int, units30: int, returns30: int, min_returns: int | None
+) -> bool:
+    """F18 asosidagi signal "Qaytish keskin oshdi" (02 M15): oxirgi 7 kunning qaytarish ulushi, oxirgi 30 kunnikidan
+    ``SPIKE_FACTOR`` (2) barobar yoki ko'p **va** 7 kunda kamida ``min_returns`` (N) qaytish. Ulush = qaytgan /
+    (sotilgan + qaytgan) (``metrics.return_share``); 30 kun 7 kunni ham o'z ichiga oladi. N kiritilmagan (``None``) —
+    signal yo'q (tamoyil 9: taxmin bilan xabar berilmaydi)."""
+    if min_returns is None or min_returns < 1 or returns7 < min_returns:
+        return False
+    share7 = return_share(units7, returns7)
+    share30 = return_share(units30, returns30)
+    if share7 is None or share30 is None or share30 <= 0:
+        return False
+    return share7 >= share30 * SPIKE_FACTOR
 
 
 def week_start(day: date) -> date:

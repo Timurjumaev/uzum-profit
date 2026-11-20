@@ -14,7 +14,7 @@ export function notificationSettings(over: Partial<NotificationSettings> = {}): 
       ev("new_fine"),
       ev("sync_stopped", { critical: true, params: { hours: 2 } }),
       ev("payout_late", { available: false, stage: "B5.7" }),
-      ev("returns_spike", { available: false, stage: null }),
+      ev("returns_spike", { params: { level: null, min_returns: null } }),
     ],
     quiet_from: "22:00:00",
     quiet_to: "08:00:00",

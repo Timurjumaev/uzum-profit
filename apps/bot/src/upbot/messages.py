@@ -67,6 +67,9 @@ T: dict[str, dict[str, str]] = {
         "ship_line": "• {name} — Uzumda ~{days} kunlik zaxira, yuborish: {qty} dona",
         "lost_goods": "🔎 Uzum yoʻqolgan deb belgilagan tovar: {n} ta SKU (jami {total}) — Uzum bilan bogʻlaning, kamomadni talab qiling",
         "lost_line": "• {name} — {qty} dona",
+        "returns_spike_shop": "↩️ Qaytish keskin oshdi: {n} ta doʻkon (jami {total}) — oxirgi 7 kunda ulush 30 kunlikdan ≥ 2 barobar",
+        "returns_spike_sku": "↩️ Qaytish keskin oshdi: {n} ta SKU (jami {total}) — oxirgi 7 kunda ulush 30 kunlikdan ≥ 2 barobar",
+        "returns_line": "• {name} — {qty} ta qaytdi, ulush {share7}% (30 kunda {share30}%)",
         "days": "{n} kunga",
         "no_stock_critical": "Kritik qoldiq yoʻq.",
         "loss_sales": "🔻 Zarar bilan sotuv: {n} ta SKU (oxirgi {streak} ta sotuv zararda)",
@@ -114,6 +117,9 @@ T: dict[str, dict[str, str]] = {
         "ship_line": "• {name} — на Uzum запас ~{days} дн., отправить: {qty} шт.",
         "lost_goods": "🔎 Uzum отметил товар как потерянный: {n} SKU (всего {total}) — свяжитесь с Uzum, требуйте компенсацию",
         "lost_line": "• {name} — {qty} шт.",
+        "returns_spike_shop": "↩️ Возвраты резко выросли: {n} магазинов (всего {total}) — доля за 7 дней ≥ 2× доли за 30 дней",
+        "returns_spike_sku": "↩️ Возвраты резко выросли: {n} SKU (всего {total}) — доля за 7 дней ≥ 2× доли за 30 дней",
+        "returns_line": "• {name} — возвратов {qty}, доля {share7}% (за 30 дней {share30}%)",
         "days": "на {n} дн.",
         "no_stock_critical": "Критических остатков нет.",
         "loss_sales": "🔻 Продажи в убыток: {n} SKU (последние {streak} продажи в убыток)",
@@ -239,6 +245,20 @@ def notification(event: str, payload: dict[str, Any], lang: str, org: str | None
         head = t(lang, "lost_goods", n=p["count"], total=p["total"])
         lines = [t(lang, "lost_line", name=x.get("title") or "—", qty=x["qty"]) for x in p["skus"]]
         msg = Message("\n".join([head, *lines]), "/inventory")
+    elif event == "returns_spike":
+        head = t(lang, f"returns_spike_{p['level']}", n=p["count"], total=p["total"])
+        lines = [
+            t(
+                lang,
+                "returns_line",
+                name=x.get("title") or "—",
+                qty=x["returns"],
+                share7=x["share7"],
+                share30=x["share30"],
+            )
+            for x in p["items"]
+        ]
+        msg = Message("\n".join([head, *lines]), "/orders")
     elif event == "loss_sales":
         key = "loss_sales_new" if p.get("new") else "loss_sales"
         head = t(lang, key, n=p["count"], total=p.get("total", p["count"]), streak=p["streak"])

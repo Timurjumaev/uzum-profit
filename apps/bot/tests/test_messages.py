@@ -173,6 +173,17 @@ def test_lost_goods_message() -> None:
     )
 
 
+def test_returns_spike_message() -> None:
+    """B5.4: "Qaytish keskin oshdi" — daraja (doʻkon / SKU), ulushlar; "Batafsil" — Buyurtmalar."""
+    items = [{"title": "Mashina", "returns": 6, "share7": "20.0", "share30": "8.5"}]
+    p = {"level": "sku", "count": 1, "total": 1, "ids": ["a"], "items": items}
+    uz = msg.notification("returns_spike", p, "uz")
+    assert "Qaytish keskin oshdi: 1 ta SKU" in uz.text and uz.path == "/orders"
+    assert "• Mashina — 6 ta qaytdi, ulush 20.0% (30 kunda 8.5%)" in uz.text
+    ru = msg.notification("returns_spike", {**p, "level": "shop"}, "ru")
+    assert "Возвраты резко выросли: 1 магазинов" in ru.text
+
+
 def test_sync_restored_message() -> None:
     """B6.4 (A4): "tiklandi" — bitta xabar, holat sahifasiga havola."""
     p = {"shop": "byDurii", "shop_id": "x", "reason": "restored"}
