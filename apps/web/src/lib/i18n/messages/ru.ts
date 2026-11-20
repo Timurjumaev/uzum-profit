@@ -727,7 +727,7 @@ export const ru: Messages = {
     back: "Назад к товарам",
     search: "Поиск товара",
     searchPlaceholder: "Название, артикул или штрихкод",
-    filter: { label: "Статус", abc: "ABC", all: "Все" },
+    filter: { label: "Статус", abc: "ABC", xyz: "XYZ", all: "Все" },
     label: { loss: "Убыток", borderline: "На грани", profitable: "Прибыльный", no_data: "Нет данных", idle: "Нет продаж" },
     col: {
       product: "Товар",
@@ -751,6 +751,7 @@ export const ru: Messages = {
       stock: "Остаток",
       days: "Дней запаса",
       abc: "ABC",
+      xyz: "XYZ",
       label: "Статус",
     },
     unitCostSource: { lot: "(последняя партия)", opening: "(начальная)", transit: "(партия в пути)" },

@@ -729,7 +729,7 @@ export const uzLatn = {
     back: "Mahsulotlarga qaytish",
     search: "Mahsulot qidirish",
     searchPlaceholder: "Nomi, artikul yoki shtrix-kod",
-    filter: { label: "Holat", abc: "ABC", all: "Hammasi" },
+    filter: { label: "Holat", abc: "ABC", xyz: "XYZ", all: "Hammasi" },
     label: { loss: "Zarar", borderline: "Chegarada", profitable: "Foydali", no_data: "Maʼlumot yoʻq", idle: "Sotuv yoʻq" },
     col: {
       product: "Mahsulot",
@@ -753,6 +753,7 @@ export const uzLatn = {
       stock: "Qoldiq",
       days: "Zaxira kunlari",
       abc: "ABC",
+      xyz: "XYZ",
       label: "Holat",
     },
     unitCostSource: { lot: "(oxirgi partiya)", opening: "(boshlangʻich)", transit: "(yoʻldagi partiya)" },

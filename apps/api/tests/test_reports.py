@@ -1500,6 +1500,20 @@ def test_dashboard_weekly_summary(world: World) -> None:
         assert sum(D(x) for x in cards[key]["series"]) == D(cards[key]["value"])
 
 
+def test_skus_xyz_column_and_filter(world: World) -> None:
+    """B5.5: ABC × XYZ — qatorda ``xyz`` (F28: oxirgi 8 hafta sotuv barqarorligi; sotuv yo'q — null); filtr xuddi shu
+    qiymatli qatorlarni qaytaradi, noto'g'ri qiymat — 422."""
+    everything = world.get("skus", limit=100, **OCT)["items"]
+    classes = {r["xyz"] for r in everything}
+    assert classes <= {"X", "Y", "Z", None}
+    known = sorted(c for c in classes if c is not None)
+    assert known, "kamida bitta SKU'da XYZ bo'lishi kerak (oxirgi 8 haftada sotuv)"
+    for cls in known:
+        got = world.get("skus", xyz=cls, limit=100, **OCT)["items"]
+        assert {r["sku_id"] for r in got} == {r["sku_id"] for r in everything if r["xyz"] == cls}
+    assert world.call("skus", xyz="Q", **OCT).status_code == 422
+
+
 def test_skus_diff_against_previous_period(world: World) -> None:
     """B5.6: Mahsulotlar farq ustuni — oldingi shu uzunlikdagi davr (11–30 sentabr): X'da 2 dona (400 000) sotilgan edi;
     oldingi davrda sotuvi bo'lmagan SKU'da farq yo'q (null)."""

@@ -56,11 +56,13 @@ export const PRODUCT_LABELS = ["loss", "borderline", "profitable", "no_data", "i
 export type ProductLabel = (typeof PRODUCT_LABELS)[number];
 export const PRODUCT_ABC = ["A", "B", "C"] as const;
 export type ProductAbc = (typeof PRODUCT_ABC)[number];
+export const PRODUCT_XYZ = ["X", "Y", "Z"] as const;
+export type ProductXyz = (typeof PRODUCT_XYZ)[number];
 
 /** Standart saralash: tushum kamayish tartibida (URL'da yozilmaydi). */
 export const DEFAULT_PRODUCT_SORT = { key: "revenue", desc: true } as const;
 
-export type ProductsSearch = { q?: string; sort?: string; label?: ProductLabel; abc?: ProductAbc; page?: number };
+export type ProductsSearch = { q?: string; sort?: string; label?: ProductLabel; abc?: ProductAbc; xyz?: ProductXyz; page?: number };
 
 /** Sahifa raqami (ADR-054): 2 va undan katta butun son; 1-sahifa URL'da yozilmaydi. */
 export function pageParam(value: unknown): number | undefined {
@@ -78,6 +80,7 @@ export function productsSearch(search: Record<string, unknown>): ProductsSearch 
   }
   if ((PRODUCT_LABELS as readonly unknown[]).includes(search.label)) out.label = search.label as ProductLabel;
   if ((PRODUCT_ABC as readonly unknown[]).includes(search.abc)) out.abc = search.abc as ProductAbc;
+  if ((PRODUCT_XYZ as readonly unknown[]).includes(search.xyz)) out.xyz = search.xyz as ProductXyz;
   const page = pageParam(search.page);
   if (page !== undefined) out.page = page;
   return out;

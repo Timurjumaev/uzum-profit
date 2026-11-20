@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import { errorText } from "../../app/errors";
 import { useFilters } from "../../app/filters";
 import { currentOrg, meQuery, shopsQuery, skusQuery, syncQuery } from "../../app/query";
-import { DEFAULT_PRODUCT_SORT, parseSort, productsSearch, PRODUCT_ABC, PRODUCT_LABELS, type ProductsSearch, type ProductSort } from "../../app/search";
+import { DEFAULT_PRODUCT_SORT, parseSort, productsSearch, PRODUCT_ABC, PRODUCT_LABELS, PRODUCT_XYZ, type ProductsSearch, type ProductSort } from "../../app/search";
 import { Badge, Banner, Button, DataTable, EmptyState, ExportButton, FormulaPopover, loadPageSize, Pagination, Popover, ProductThumb, savePageSize, Select, Skeleton, StatusPill, type Column, PageHelp } from "../../components/ui";
 import type { SkuRow, Skus } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
@@ -49,7 +49,7 @@ export function Products() {
     [filters.shops, filters.range.start, filters.range.end],
   );
   const [size, setSize] = useState(loadPageSize);
-  const list = { q: search.q, sort: search.sort, label: search.label, abc: search.abc, page: search.page, size };
+  const list = { q: search.q, sort: search.sort, label: search.label, abc: search.abc, xyz: search.xyz, page: search.page, size };
   const query = useQuery({ ...skusQuery(org.id, params, list), placeholderData: keepPreviousData });
   const sync = useQuery(syncQuery(org.id));
   const shops = useQuery(shopsQuery(org.id));
@@ -116,13 +116,13 @@ export function Products() {
 
   const summary = sync.data ? syncSummary(sync.data) : null;
   const emptyState = summary?.state === "never" ? "never" : summary && summary.state !== "fresh" ? "partial" : "none";
-  const filtered = Boolean(search.q || search.label || search.abc);
+  const filtered = Boolean(search.q || search.label || search.abc || search.xyz);
   const apply = (view: SavedView) => {
     setColumns(view.columns);
-    update({ q: view.q, sort: view.sort, label: view.label, abc: view.abc });
+    update({ q: view.q, sort: view.sort, label: view.label, abc: view.abc, xyz: view.xyz });
   };
   const saveView = (name: string) => {
-    const next = upsertView(views, { name, columns: [...chosen], q: search.q, sort: search.sort, label: search.label, abc: search.abc });
+    const next = upsertView(views, { name, columns: [...chosen], q: search.q, sort: search.sort, label: search.label, abc: search.abc, xyz: search.xyz });
     setViews(next);
     saveViews(org.id, next);
   };
@@ -163,9 +163,15 @@ export function Products() {
           onValueChange={(v) => update({ abc: v || undefined })}
           options={[{ value: "", label: t("products.filter.all") }, ...PRODUCT_ABC.map((c) => ({ value: c, label: c }))]}
         />
+        <Select
+          label={t("products.filter.xyz")}
+          value={search.xyz ?? ""}
+          onValueChange={(v) => update({ xyz: v || undefined })}
+          options={[{ value: "", label: t("products.filter.all") }, ...PRODUCT_XYZ.map((c) => ({ value: c, label: c }))]}
+        />
         <ColumnsMenu chosen={chosen} onChange={setColumns} />
         <ViewsMenu views={views} onApply={apply} onSave={saveView} onRemove={removeView} />
-        <ExportButton orgId={org.id} table="skus" query={{ start: params.start, end: params.end, shop: params.shops, q: search.q, label: search.label, abc: search.abc, sort: search.sort }} />
+        <ExportButton orgId={org.id} table="skus" query={{ start: params.start, end: params.end, shop: params.shops, q: search.q, label: search.label, abc: search.abc, xyz: search.xyz, sort: search.sort }} />
       </div>
 
       {rows.length === 0 ? (
@@ -177,7 +183,7 @@ export function Products() {
                 variant="secondary"
                 onClick={() => {
                   setDraft("");
-                  update({ q: undefined, label: undefined, abc: undefined });
+                  update({ q: undefined, label: undefined, abc: undefined, xyz: undefined });
                 }}
               >
                 {t("products.resetFilters")}
@@ -291,6 +297,8 @@ function buildColumns(ids: readonly ColumnId[], { t, f, shopName, list }: Ctx): 
     stock: (r) => f.number(r.stock),
     days: (r) => cell(r.days_of_stock, (x) => f.number(x, { digits: 0 })),
     abc: (r) => <Badge>{r.abc}</Badge>,
+    // B5.5: XYZ (F28) — oxirgi 8 hafta sotuv barqarorligi; sotuv yo'q — "—".
+    xyz: (r) => cell(r.xyz ?? null, (x) => <Badge>{x}</Badge>),
     label: (r) => (
       <>
         <StatusPill tone={LABEL_TONE[r.label]}>{t(`products.label.${r.label}`)}</StatusPill>
@@ -301,7 +309,7 @@ function buildColumns(ids: readonly ColumnId[], { t, f, shopName, list }: Ctx): 
   return COLUMN_IDS.filter((id) => ids.includes(id)).map((id) => ({
     key: id,
     header: header(id),
-    numeric: !["product", "shop", "abc", "label"].includes(id),
+    numeric: !["product", "shop", "abc", "xyz", "label"].includes(id),
     render: all[id],
     sortKey: SORT_KEY[id],
     help: help(id),

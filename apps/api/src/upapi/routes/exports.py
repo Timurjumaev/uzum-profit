@@ -167,6 +167,7 @@ SKUS = [
     xlsx.Col("Qoldiq", lambda r: r.stock, "int", total=True),
     xlsx.Col("Zaxira kunlari (F24)", lambda r: r.days_of_stock, "money"),
     xlsx.Col("ABC (F28)", lambda r: r.abc),
+    xlsx.Col("XYZ (F28)", lambda r: r.xyz or ""),
 ]
 
 
@@ -178,11 +179,12 @@ async def export_skus(
     label: ProfitLabel | None = None,
     abc: Literal["A", "B", "C"] | None = None,
     sort: Annotated[str, Query(pattern=r"^-?[a-z_]+$")] = "-revenue",
+    xyz: Literal["X", "Y", "Z"] | None = None,
 ) -> Response:
     _need(ctx, Permission.VIEW_FINANCE)
 
     rows, _ = await skus_routes.ranked(
-        ctx, f, q, label, abc, sort
+        ctx, f, q, label, abc, sort, xyz
     )  # sahifalashsiz — Excel hamma qatorni chiqaradi
     note = [_period(f), *_shops(f)]
     names = {

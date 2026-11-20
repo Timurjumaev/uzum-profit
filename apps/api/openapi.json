@@ -2569,6 +2569,29 @@
             "description": "ABC (F28)"
           },
           {
+            "name": "xyz",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "X",
+                    "Y",
+                    "Z"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "XYZ (F28)",
+              "title": "Xyz"
+            },
+            "description": "XYZ (F28)"
+          },
+          {
             "name": "sort",
             "in": "query",
             "required": false,
@@ -4102,6 +4125,27 @@
               "pattern": "^-?[a-z_]+$",
               "default": "-revenue",
               "title": "Sort"
+            }
+          },
+          {
+            "name": "xyz",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "X",
+                    "Y",
+                    "Z"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Xyz"
             }
           },
           {
@@ -20500,6 +20544,22 @@
           "abc": {
             "type": "string",
             "title": "Abc"
+          },
+          "xyz": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "X",
+                  "Y",
+                  "Z"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Xyz"
           },
           "rank": {
             "anyOf": [
