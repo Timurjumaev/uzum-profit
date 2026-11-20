@@ -3684,6 +3684,59 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/payouts/forecast": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Payout Forecast",
+        "operationId": "payout_forecast_api_v1_orgs__org_id__payouts_forecast_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayoutForecastOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/exports/sales.xlsx": {
       "get": {
         "tags": [
@@ -15823,6 +15876,100 @@
         "title": "PathOut",
         "description": "Partiya yo'li nuqtasi (ADR-061 §1, 04 §6.2): Yo'lda → Omborimda → Uzumda. ``mark``: ``done`` / ``current`` /\n``upcoming``; \"Yo'lda\" joriy bo'lsa — ``days`` o'tdi, sanash ``expected`` da kutiladi (F25)."
       },
+      "PayoutEventSchema": {
+        "properties": {
+          "expected": {
+            "type": "string",
+            "format": "date",
+            "title": "Expected"
+          },
+          "latest": {
+            "type": "string",
+            "format": "date",
+            "title": "Latest"
+          },
+          "gross": {
+            "type": "string",
+            "title": "Gross"
+          },
+          "fee": {
+            "type": "string",
+            "title": "Fee"
+          },
+          "net": {
+            "type": "string",
+            "title": "Net"
+          },
+          "estimated": {
+            "type": "boolean",
+            "title": "Estimated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "expected",
+          "latest",
+          "gross",
+          "fee",
+          "net",
+          "estimated"
+        ],
+        "title": "PayoutEventSchema"
+      },
+      "PayoutForecastOut": {
+        "properties": {
+          "schedule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schedule"
+          },
+          "fee_pct": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fee Pct"
+          },
+          "rules": {
+            "$ref": "#/components/schemas/PayoutRulesSchema"
+          },
+          "available": {
+            "type": "string",
+            "title": "Available"
+          },
+          "unknown_date": {
+            "type": "string",
+            "title": "Unknown Date"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/PayoutEventSchema"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "schedule",
+          "fee_pct",
+          "rules",
+          "available",
+          "unknown_date",
+          "events"
+        ],
+        "title": "PayoutForecastOut"
+      },
       "PayoutRulesOut": {
         "properties": {
           "lag_days": {
@@ -15846,6 +15993,29 @@
         ],
         "title": "PayoutRulesOut",
         "description": "Bugun amal qiladigan to'lov qoidalari (ma'lumotnoma, sanasi bilan — kodga qotirilmagan)."
+      },
+      "PayoutRulesSchema": {
+        "properties": {
+          "lag_days": {
+            "type": "integer",
+            "title": "Lag Days"
+          },
+          "urgent_fee_pct": {
+            "type": "string",
+            "title": "Urgent Fee Pct"
+          },
+          "delay_workdays": {
+            "type": "integer",
+            "title": "Delay Workdays"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lag_days",
+          "urgent_fee_pct",
+          "delay_workdays"
+        ],
+        "title": "PayoutRulesSchema"
       },
       "PayoutScheduleIn": {
         "properties": {

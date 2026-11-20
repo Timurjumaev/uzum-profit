@@ -742,6 +742,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/payouts/forecast": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Payout Forecast */
+        get: operations["payout_forecast_api_v1_orgs__org_id__payouts_forecast_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/exports/sales.xlsx": {
         parameters: {
             query?: never;
@@ -4009,11 +4026,55 @@ export interface components {
              */
             uncounted: boolean;
         };
+        /** PayoutEventSchema */
+        PayoutEventSchema: {
+            /**
+             * Expected
+             * Format: date
+             */
+            expected: string;
+            /**
+             * Latest
+             * Format: date
+             */
+            latest: string;
+            /** Gross */
+            gross: string;
+            /** Fee */
+            fee: string;
+            /** Net */
+            net: string;
+            /** Estimated */
+            estimated: boolean;
+        };
+        /** PayoutForecastOut */
+        PayoutForecastOut: {
+            /** Schedule */
+            schedule: string | null;
+            /** Fee Pct */
+            fee_pct: string | null;
+            rules: components["schemas"]["PayoutRulesSchema"];
+            /** Available */
+            available: string;
+            /** Unknown Date */
+            unknown_date: string;
+            /** Events */
+            events: components["schemas"]["PayoutEventSchema"][];
+        };
         /**
          * PayoutRulesOut
          * @description Bugun amal qiladigan to'lov qoidalari (ma'lumotnoma, sanasi bilan — kodga qotirilmagan).
          */
         PayoutRulesOut: {
+            /** Lag Days */
+            lag_days: number;
+            /** Urgent Fee Pct */
+            urgent_fee_pct: string;
+            /** Delay Workdays */
+            delay_workdays: number;
+        };
+        /** PayoutRulesSchema */
+        PayoutRulesSchema: {
             /** Lag Days */
             lag_days: number;
             /** Urgent Fee Pct */
@@ -8180,6 +8241,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InventoryOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    payout_forecast_api_v1_orgs__org_id__payouts_forecast_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayoutForecastOut"];
                 };
             };
             /** @description Validatsiya xatosi */
