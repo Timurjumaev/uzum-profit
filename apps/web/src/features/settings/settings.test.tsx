@@ -76,12 +76,11 @@ describe("sahifa", () => {
     expect(norm(second!.textContent!)).not.toContain("Amalda");
   });
 
-  it("to'lov jadvali: do'kon nomi, jadval turi va shartlar", async () => {
+  it("to'lov jadvali: jadval turi va shartlar (butun akkaunt)", async () => {
     await renderSettings();
     await ready();
     const [row] = rowsOf("Uzum toʻlov jadvali");
     const text = norm(row!.textContent!);
-    expect(text).toContain("Durii");
     expect(text).toContain("Haftalik");
     expect(text).toContain("Oy kunlari: 7, 14, 21, 28");
   });
@@ -335,7 +334,7 @@ describe("soliq profili jadvali: qatorlar tavsifi", () => {
 });
 
 describe("to'lov jadvali", () => {
-  it("qo'shish: do'kon, jadval, sana — POST; o'chirish tasdiq bilan", async () => {
+  it("qo'shish: jadval va sana (butun akkaunt) — POST; o'chirish tasdiq bilan", async () => {
     const { api } = await renderSettings({
       [PAYOUT_CREATE_ROUTE]: () => json(201, settingsData()),
       [payoutDeleteRoute(PAY_1)]: () => json(200, settingsData({ payout_schedules: [] })),
@@ -343,11 +342,10 @@ describe("to'lov jadvali", () => {
     await ready();
     fireEvent.click(within(section("Uzum toʻlov jadvali")).getByRole("button", { name: "Jadval qoʻshish" }));
     const dialog = await screen.findByRole("dialog", { name: "Yangi toʻlov jadvali" });
-    await within(dialog).findByRole("option", { name: "Durii" });
     fireEvent.change(within(dialog).getByLabelText("Jadval"), { target: { value: "monthly" } });
     fireEvent.change(within(dialog).getByLabelText("Qaysi sanadan"), { target: { value: "2026-11-01" } });
     fireEvent.click(within(dialog).getByRole("button", { name: "Saqlash" }));
-    await waitFor(() => expect(bodiesOf(api, PAYOUT_CREATE_ROUTE)).toEqual([{ shop_id: SHOP_A, kind: "monthly", valid_from: "2026-11-01" }]));
+    await waitFor(() => expect(bodiesOf(api, PAYOUT_CREATE_ROUTE)).toEqual([{ kind: "monthly", valid_from: "2026-11-01" }]));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 
     fireEvent.click(within(rowsOf("Uzum toʻlov jadvali")[0]!).getByRole("button", { name: "Oʻchirish" }));

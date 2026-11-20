@@ -4011,11 +4011,8 @@ export interface components {
         };
         /** PayoutScheduleIn */
         PayoutScheduleIn: {
-            /**
-             * Shop Id
-             * Format: uuid
-             */
-            shop_id: string;
+            /** Account Id */
+            account_id?: string | null;
             kind: components["schemas"]["ScheduleKind"];
             /**
              * Valid From
@@ -4031,10 +4028,10 @@ export interface components {
              */
             id: string;
             /**
-             * Shop Id
+             * Account Id
              * Format: uuid
              */
-            shop_id: string;
+            account_id: string;
             kind: components["schemas"]["ScheduleKind"];
             /**
              * Valid From

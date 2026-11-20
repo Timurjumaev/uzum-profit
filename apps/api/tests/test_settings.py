@@ -185,33 +185,39 @@ def test_tax_profile_drives_pnl(world: World) -> None:
 
 
 def test_payout_schedules(world: World) -> None:
+    """B5.7: jadval butun akkauntga bitta; `account_id` berilmasa — tashkilotning yagona akkaunti."""
     w = world
-    shop = str(w.a.shop_id)
+    acc = w.api.admin("SELECT id FROM mp_accounts WHERE org_id = %s", [w.org_id])[0][0]
     body = ok(
-        send(w, "POST", "payout-schedules", shop_id=shop, kind="weekly", valid_from="2026-01-01"),
+        send(w, "POST", "payout-schedules", kind="weekly", valid_from="2026-01-01"),
         201,
     )
     [row] = body["payout_schedules"]
-    assert row["shop_id"] == shop and row["kind"] == "weekly"
-    dup = send(w, "POST", "payout-schedules", shop_id=shop, kind="daily", valid_from="2026-01-01")
+    assert row["account_id"] == str(acc) and row["kind"] == "weekly"
+    dup = send(w, "POST", "payout-schedules", kind="daily", valid_from="2026-01-01")
     assert dup.status_code == 409 and dup.json()["code"] == "payout_schedule_exists"
     ghost = send(
         w,
         "POST",
         "payout-schedules",
-        shop_id=str(uuid.uuid4()),
+        account_id=str(uuid.uuid4()),
         kind="daily",
         valid_from="2026-02-01",
     )
-    assert ghost.status_code == 404 and ghost.json()["code"] == "shop_not_found"
+    assert ghost.status_code == 404 and ghost.json()["code"] == "account_not_found"
     assert (
-        send(
-            w, "POST", "payout-schedules", shop_id=shop, kind="yearly", valid_from="2026-02-01"
-        ).status_code
+        send(w, "POST", "payout-schedules", kind="yearly", valid_from="2026-02-01").status_code
         == 422
     )
     body = ok(
-        send(w, "POST", "payout-schedules", shop_id=shop, kind="monthly", valid_from="2026-09-01"),
+        send(
+            w,
+            "POST",
+            "payout-schedules",
+            account_id=str(acc),
+            kind="monthly",
+            valid_from="2026-09-01",
+        ),
         201,
     )
     assert [p["kind"] for p in body["payout_schedules"]] == ["monthly", "weekly"]  # yangisi tepada
@@ -322,7 +328,7 @@ def test_roles(world: World) -> None:
         ("PUT", "settings/cost-method", {"cost_method": "fifo"}),
         ("POST", "tax-profiles", {"valid_from": "2027-01-01", "regime": "none"}),
         ("PUT", "settings/inventory", {}),
-        ("POST", "payout-schedules", {"shop_id": str(w.a.shop_id), "kind": "daily", "valid_from": "2027-01-01"}),
+        ("POST", "payout-schedules", {"kind": "daily", "valid_from": "2027-01-01"}),
         ("DELETE", f"tax-profiles/{uuid.uuid4()}", {}),
         ("DELETE", f"payout-schedules/{uuid.uuid4()}", {}),
     ]  # fmt: skip

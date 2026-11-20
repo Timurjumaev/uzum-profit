@@ -871,7 +871,9 @@ payout_schedules = tenant(
     Column("kind", Text, nullable=False),
     Column("valid_from", Date, nullable=False),
     check_in("kind", ("daily", "weekly", "biweekly", "monthly")),
-    refs={"shop_id": ("shops", False)},
+    # B5.7: jadval butun akkauntga bitta (do'konga emas) — Temur 2026-11-16, ADR-062.
+    UniqueConstraint("org_id", "account_id", "valid_from"),
+    refs={"account_id": ("mp_accounts", False)},
 )
 goals = tenant(
     "goals",

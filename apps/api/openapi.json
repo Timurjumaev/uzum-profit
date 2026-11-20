@@ -15825,10 +15825,17 @@
       },
       "PayoutScheduleIn": {
         "properties": {
-          "shop_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Shop Id"
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
           },
           "kind": {
             "$ref": "#/components/schemas/ScheduleKind"
@@ -15841,7 +15848,6 @@
         },
         "type": "object",
         "required": [
-          "shop_id",
           "kind",
           "valid_from"
         ],
@@ -15854,10 +15860,10 @@
             "format": "uuid",
             "title": "Id"
           },
-          "shop_id": {
+          "account_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Shop Id"
+            "title": "Account Id"
           },
           "kind": {
             "$ref": "#/components/schemas/ScheduleKind"
@@ -15871,7 +15877,7 @@
         "type": "object",
         "required": [
           "id",
-          "shop_id",
+          "account_id",
           "kind",
           "valid_from"
         ],
