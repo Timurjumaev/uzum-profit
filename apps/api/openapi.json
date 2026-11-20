@@ -10142,6 +10142,25 @@
         "title": "BoxSharesIn",
         "description": "Qutining qo'lda ulushlari (to'liq almashtiriladi; bo'sh — hammasi dona bo'yicha)."
       },
+      "CabinetOut": {
+        "properties": {
+          "profit": {
+            "type": "string",
+            "title": "Profit"
+          },
+          "gap": {
+            "type": "string",
+            "title": "Gap"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profit",
+          "gap"
+        ],
+        "title": "CabinetOut",
+        "description": "F57 (B5.0f): Uzum kabineti \"Foyda\"si (tushum − faqat komissiya) va u haqiqiy sof foydadan qancha baland."
+      },
       "CalcDefaultsOut": {
         "properties": {
           "price": {
@@ -16722,6 +16741,9 @@
           "why": {
             "$ref": "#/components/schemas/WhyOut"
           },
+          "cabinet": {
+            "$ref": "#/components/schemas/CabinetOut"
+          },
           "columns": {
             "items": {
               "$ref": "#/components/schemas/ColumnOut"
@@ -16762,6 +16784,7 @@
           "previous",
           "rows",
           "why",
+          "cabinet",
           "columns",
           "expected",
           "expected_shops",

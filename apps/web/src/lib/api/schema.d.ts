@@ -2213,6 +2213,16 @@ export interface components {
             };
         };
         /**
+         * CabinetOut
+         * @description F57 (B5.0f): Uzum kabineti "Foyda"si (tushum − faqat komissiya) va u haqiqiy sof foydadan qancha baland.
+         */
+        CabinetOut: {
+            /** Profit */
+            profit: string;
+            /** Gap */
+            gap: string;
+        };
+        /**
          * CalcDefaultsOut
          * @description Unit kalkulyator boshlang'ich qiymatlari (F35, F36) va ularning manbasi; ``null`` — qiymat yo'q (UI so'raydi).
          *
@@ -4254,6 +4264,7 @@ export interface components {
             /** Rows */
             rows: components["schemas"]["RowOut"][];
             why: components["schemas"]["WhyOut"];
+            cabinet: components["schemas"]["CabinetOut"];
             /** Columns */
             columns: components["schemas"]["ColumnOut"][];
             expected: components["schemas"]["ExpectedOut"];

@@ -666,6 +666,17 @@ export const uzLatn = {
       more: "Yana koʻrsatish",
       empty: "Bu davrda maʼlumot yoʻq.",
     },
+    cabinet: {
+      title: "Uzum kabineti koʻrsatadigan",
+      profit: "Kabinet “Foyda”si",
+      profitNote: "Tushum − faqat komissiya (Uzum kabinetidagi “Tahlil”)",
+      net: "Haqiqiy sof foyda",
+      netNote: "Logistika, reklama, saqlash, jarima, tannarx va soliqdan keyin",
+      gap: "Farq",
+      gapNote: "Kabinet bu xarajatlarni va tannarxni hisobga olmaydi — shuning uchun baland koʻrinadi",
+      formula: "Kabinet foydasi = tushum − komissiya; logistika, reklama, saqlash, jarima, tannarx va soliq ayirilmaydi",
+      source: "Sotuvlar (kabinet “Tahlil” bilan solishtirilgan)",
+    },
     why: {
       title: "Nega oʻzgardi",
       total: "Sof foyda oldingi davrga nisbatan",

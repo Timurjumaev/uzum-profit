@@ -26,6 +26,7 @@ from upcore.pnl import (
     TaxBase,
     TaxRule,
     build_cells,
+    cabinet_profit,
     compare,
     expected_value,
     expense_items,
@@ -1006,3 +1007,13 @@ def test_f56_factors_always_sum_to_the_difference(
     then = _statement(u0, p0, c0, l0, k0, ads=a0)
     out = explain_change(now, then)
     assert total([f.amount for f in out.factors], Money.zero("UZS").currency) == out.diff
+
+
+def test_f57_cabinet_profit_is_revenue_minus_commission_only() -> None:
+    """Kabinet "Foyda"si — tushum − faqat komissiya; logistika, reklama, tannarx ayirilmaydi (09 §11.3)."""
+    s = _statement(100, 1000, commission=20_000, logistics=10_000, cogs=40_000, ads=5_000)
+    assert cabinet_profit(s) == uzs(80_000)  # 100 000 − 20 000
+    assert cabinet_profit(s) - s.net_profit == uzs(
+        80_000 - (100_000 - 20_000 - 10_000 - 40_000 - 5_000)
+    )
+    assert cabinet_profit(_statement(0, 0, 0, 0, 0)) == uzs(0)

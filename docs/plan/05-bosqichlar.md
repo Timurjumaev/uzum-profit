@@ -1134,8 +1134,7 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
   - [→] B5.0e (**ko'chdi → B8.10**, ADR-063; avval B4.81) Soliq, 2-bosqich (QQS va foyda solig'i). Sabab: ADR-057 Q5 —
     "to'liq hisob QQS to'lovchi birinchi mijoz paydo bo'lganda"; hozir bunday foydalanuvchi yo'q, MChJ stavkalari va Uzum
     ushlashi tasdiqlanmagan (08 §6), import tovarida kirim QQS manbasi aniqlanmagan — real ma'lumotda tekshirib bo'lmaydi.
-  - [ ] B5.0f (avval B4.76, taklif) Foyda sahifasida "Uzum kabineti ko'rsatadigan" qator (09 §11.3: tushum − komissiya) —
-    B5.6 bilan birga; Temur ko'rgach qoladi yoki olinadi.
+  - [x] B5.0f ✓ 2026-11-20 (avval B4.76, taklif; **Temur: "qaysi maqul deb topsang shuni qil" — ADR-071**) Foyda sahifasida "Uzum kabineti ko'rsatadigan" bloki (F57: tushum − faqat komissiya, 09 §11.3) — kabinet foydasi, haqiqiy sof foyda va farq; hisob varag'i qatori emas (qatorlar yig'indisi buzilmasin).
 - [x] B5.1 **Muddatni o'rganish — F25 ikki bo'lak (tuzatish, birinchi navbatda).** Hozir kodda F25 hali eski 5 bosqich
   (`upcore.purchasing.LEAD_STAGES`: tayyorlash, Xitoy ichki, kargo, qabul, topshirish), `reports/stock.py` esa 5 tasi ham
   bo'lmasa muddatni "noma'lum" deydi. ADR-061 dan keyingi xaridda faqat buyurtma va sanash sanasi bor — yangi xaridlar
