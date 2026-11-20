@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Uzum Seller API uchun LOKAL MCP server (faqat o'qish).
 
 Claude Desktop / Claude Code shu serverga stdio orqali ulanadi va kabinetingizni tahlil qiladi:
@@ -11,6 +10,7 @@ Uzum bilan gaplashish uchun legacy `uzum_profit.api.Uzum` klienti ishlatiladi (f
 Eslatma: bu yerdagi "foyda" — Uzum bergan `sellerProfit` (F6: tushum − komissiya − logistika),
 tannarxsiz. Tannarxli sof foyda — yangi tizimda (packages/core, F-formulalar).
 """
+
 import json
 import os
 import re
@@ -107,7 +107,9 @@ def parse_day(s, default):
 
 def period(date_from, date_to, default_days=30):
     now = datetime.now(TZ)
-    end = parse_day(date_to, now.replace(hour=0, minute=0, second=0, microsecond=0)) + timedelta(days=1)
+    end = parse_day(date_to, now.replace(hour=0, minute=0, second=0, microsecond=0)) + timedelta(
+        days=1
+    )
     start = parse_day(date_from, end - timedelta(days=default_days))
     return start, end
 
@@ -135,7 +137,10 @@ def rows_of(data):
 def out(obj):
     s = json.dumps(obj, ensure_ascii=False, default=str, indent=1)
     if len(s) > MAX_CHARS:
-        s = s[:MAX_CHARS] + "\n... (qisqartirildi: so'rovni toraytiring — sana, limit yoki filtr bilan)"
+        s = (
+            s[:MAX_CHARS]
+            + "\n... (qisqartirildi: so'rovni toraytiring — sana, limit yoki filtr bilan)"
+        )
     return s
 
 
@@ -180,8 +185,9 @@ def shops() -> str:
 
 
 @mcp.tool()
-def sales_summary(shop_id: int, date_from: str = "", date_to: str = "", group_by: str = "month",
-                  top: int = 20) -> str:
+def sales_summary(
+    shop_id: int, date_from: str = "", date_to: str = "", group_by: str = "month", top: int = 20
+) -> str:
     """Do'kon sotuvlari va foydasi (Uzum `sellerProfit`, tannarxsiz) jamlanmasi.
 
     date_from/date_to — YYYY-MM-DD (bo'sh: oxirgi 30 kun). group_by: day | week | month | product | status.
@@ -226,42 +232,81 @@ def sales_summary(shop_id: int, date_from: str = "", date_to: str = "", group_by
         def fmt(g):
             return {k: num(v) for k, v in g.items()}
 
-        items = sorted(groups.items(), key=lambda kv: kv[1]["uzum_foydasi"], reverse=(group_by == "product"))
+        items = sorted(
+            groups.items(), key=lambda kv: kv[1]["uzum_foydasi"], reverse=(group_by == "product")
+        )
         if group_by in ("day", "week", "month", "status"):
             items = sorted(groups.items())
-        return out({"davr": f"{start:%Y-%m-%d} .. {(end - timedelta(days=1)):%Y-%m-%d}",
-                    "jami": fmt(total), "guruh": group_by,
-                    "qatorlar": [{"kalit": k, **fmt(g)} for k, g in items[:max(1, min(top, 500))]],
-                    "eslatma": "uzum_foydasi = Uzum sellerProfit (tushum − komissiya − logistika), tannarxsiz"})
+        return out(
+            {
+                "davr": f"{start:%Y-%m-%d} .. {(end - timedelta(days=1)):%Y-%m-%d}",
+                "jami": fmt(total),
+                "guruh": group_by,
+                "qatorlar": [{"kalit": k, **fmt(g)} for k, g in items[: max(1, min(top, 500))]],
+                "eslatma": "uzum_foydasi = Uzum sellerProfit (tushum − komissiya − logistika), tannarxsiz",
+            }
+        )
     except Exception as e:
         return fail(e)
 
 
 @mcp.tool()
-def orders(shop_id: int, date_from: str = "", date_to: str = "", status: str = "",
-           product_query: str = "", limit: int = 50) -> str:
+def orders(
+    shop_id: int,
+    date_from: str = "",
+    date_to: str = "",
+    status: str = "",
+    product_query: str = "",
+    limit: int = 50,
+) -> str:
     """Alohida sotuv qatorlari (ixcham). status: TO_WITHDRAW | PROCESSING | CANCELED ... (bo'sh: hammasi).
     product_query — tovar/SKU nomidan qidiruv. limit ≤ 200. Eng yangilari birinchi."""
     try:
         start, end = period(date_from, date_to)
         rows = in_period(get_orders(shop_id, start), start, end)
         q = product_query.lower()
-        rows = [r for r in rows
-                if (not status or str(r.get("status")).upper() == status.upper())
-                and (not q or q in f"{r.get('productTitle')} {r.get('skuTitle')}".lower())]
+        rows = [
+            r
+            for r in rows
+            if (not status or str(r.get("status")).upper() == status.upper())
+            and (not q or q in f"{r.get('productTitle')} {r.get('skuTitle')}".lower())
+        ]
         rows.sort(key=lambda r: to_dt(r.get("date")), reverse=True)
-        keys = ("id", "orderId", "date", "dateIssued", "status", "productTitle", "skuTitle", "sellPrice",
-                "amount", "commission", "logisticDeliveryFee", "sellerProfit", "amountReturns",
-                "returnCause", "purchasePrice")
-        return out({"jami": len(rows), "korsatildi": min(len(rows), limit),
-                    "qatorlar": [{k: r.get(k) for k in keys if k in r} for r in rows[:max(1, min(limit, MAX_ROWS))]]})
+        keys = (
+            "id",
+            "orderId",
+            "date",
+            "dateIssued",
+            "status",
+            "productTitle",
+            "skuTitle",
+            "sellPrice",
+            "amount",
+            "commission",
+            "logisticDeliveryFee",
+            "sellerProfit",
+            "amountReturns",
+            "returnCause",
+            "purchasePrice",
+        )
+        return out(
+            {
+                "jami": len(rows),
+                "korsatildi": min(len(rows), limit),
+                "qatorlar": [
+                    {k: r.get(k) for k in keys if k in r}
+                    for r in rows[: max(1, min(limit, MAX_ROWS))]
+                ],
+            }
+        )
     except Exception as e:
         return fail(e)
 
 
 @mcp.tool()
-def expenses_summary(shop_id: int, date_from: str = "", date_to: str = "", group_by: str = "code",
-                     top: int = 30) -> str:
+def expenses_summary(
+    shop_id: int, date_from: str = "", date_to: str = "", group_by: str = "code", top: int = 30
+) -> str:
     """Xarajatlar (saqlash, reklama, jarimalar, pul yechish va h.k.) jamlanmasi.
     group_by: code | month | name. date_from/date_to — YYYY-MM-DD (bo'sh: oxirgi 30 kun)."""
     try:
@@ -283,18 +328,30 @@ def expenses_summary(shop_id: int, date_from: str = "", date_to: str = "", group
         items = sorted(groups.items(), key=lambda kv: abs(kv[1]["summa"]), reverse=True)
         if group_by == "month":
             items = sorted(groups.items())
-        return out({"davr": f"{start:%Y-%m-%d} .. {(end - timedelta(days=1)):%Y-%m-%d}",
-                    "jami_summa": num(total), "qatorlar_soni": len(rows),
-                    "guruhlar": [{"kalit": k, "soni": g["soni"], "summa": num(g["summa"])}
-                                 for k, g in items[:max(1, min(top, 200))]],
-                    "eslatma": "BALANCE_CORRECTION xarajat emas; bu yerda alohida ajratilmagan — kodga qarang"})
+        return out(
+            {
+                "davr": f"{start:%Y-%m-%d} .. {(end - timedelta(days=1)):%Y-%m-%d}",
+                "jami_summa": num(total),
+                "qatorlar_soni": len(rows),
+                "guruhlar": [
+                    {"kalit": k, "soni": g["soni"], "summa": num(g["summa"])}
+                    for k, g in items[: max(1, min(top, 200))]
+                ],
+                "eslatma": "BALANCE_CORRECTION xarajat emas; bu yerda alohida ajratilmagan — kodga qarang",
+            }
+        )
     except Exception as e:
         return fail(e)
 
 
 @mcp.tool()
-def products(shop_id: int, query: str = "", sort_by: str = "sold", only_low_stock_below: int = -1,
-             limit: int = 50) -> str:
+def products(
+    shop_id: int,
+    query: str = "",
+    sort_by: str = "sold",
+    only_low_stock_below: int = -1,
+    limit: int = 50,
+) -> str:
     """Tovar (SKU) holati: narx, FBO qoldiq, sotilgan, qaytgan, brak. sort_by: sold | stock | price | returned.
     only_low_stock_below=N — qoldig'i N dan kam SKU'lar (-1: o'chiq). query — nom/kod bo'yicha qidiruv."""
     try:
@@ -304,13 +361,22 @@ def products(shop_id: int, query: str = "", sort_by: str = "sold", only_low_stoc
             for s in p.get("skuList") or []:
                 stock = s.get("quantityAvailableByStockType") or {}
                 st = s.get("status")
-                row = {"sku": s.get("skuFullTitle"), "skuId": s.get("skuId"), "productId": p.get("productId"),
-                       "tovar": p.get("title"), "kod": s.get("sellerItemCode"), "narx": s.get("price"),
-                       "komissiya_foiz": s.get("commission"), "fbo_qoldiq": stock.get("fbo"),
-                       "fbs_qoldiq": stock.get("fbs"), "sotilgan": s.get("quantitySold"),
-                       "qaytgan": s.get("quantityReturned"), "brak": s.get("quantityDefected"),
-                       "tannarx_uzumda": s.get("purchasePrice"),
-                       "holat": st.get("value") if isinstance(st, dict) else st}
+                row = {
+                    "sku": s.get("skuFullTitle"),
+                    "skuId": s.get("skuId"),
+                    "productId": p.get("productId"),
+                    "tovar": p.get("title"),
+                    "kod": s.get("sellerItemCode"),
+                    "narx": s.get("price"),
+                    "komissiya_foiz": s.get("commission"),
+                    "fbo_qoldiq": stock.get("fbo"),
+                    "fbs_qoldiq": stock.get("fbs"),
+                    "sotilgan": s.get("quantitySold"),
+                    "qaytgan": s.get("quantityReturned"),
+                    "brak": s.get("quantityDefected"),
+                    "tannarx_uzumda": s.get("purchasePrice"),
+                    "holat": st.get("value") if isinstance(st, dict) else st,
+                }
                 if q and q not in f"{row['sku']} {row['tovar']} {row['kod']}".lower():
                     continue
                 if only_low_stock_below >= 0 and D(row["fbo_qoldiq"]) >= only_low_stock_below:
@@ -319,8 +385,13 @@ def products(shop_id: int, query: str = "", sort_by: str = "sold", only_low_stoc
         keymap = {"sold": "sotilgan", "stock": "fbo_qoldiq", "price": "narx", "returned": "qaytgan"}
         k = keymap.get(sort_by, "sotilgan")
         res.sort(key=lambda r: D(r.get(k)), reverse=(sort_by != "stock"))
-        return out({"jami_sku": len(res), "korsatildi": min(len(res), limit),
-                    "sku_lar": res[:max(1, min(limit, MAX_ROWS))]})
+        return out(
+            {
+                "jami_sku": len(res),
+                "korsatildi": min(len(res), limit),
+                "sku_lar": res[: max(1, min(limit, MAX_ROWS))],
+            }
+        )
     except Exception as e:
         return fail(e)
 
@@ -333,11 +404,19 @@ def invoices(shop_id: int, limit: int = 30) -> str:
         res = []
         for r in rows:
             st = r.get("invoiceStatus")
-            res.append({"id": r.get("id"), "raqam": r.get("invoiceNumber"), "sana": r.get("dateCreated"),
-                        "holat": st.get("value") if isinstance(st, dict) else r.get("status"),
-                        "summa": r.get("fullPrice"), "qabul_qilingan": r.get("totalAccepted"),
-                        "omborga": r.get("totalToStock"), "muammo": bool(r.get("hasIssue"))})
-        return out({"jami": len(res), "fakturalar": res[:max(1, min(limit, MAX_ROWS))]})
+            res.append(
+                {
+                    "id": r.get("id"),
+                    "raqam": r.get("invoiceNumber"),
+                    "sana": r.get("dateCreated"),
+                    "holat": st.get("value") if isinstance(st, dict) else r.get("status"),
+                    "summa": r.get("fullPrice"),
+                    "qabul_qilingan": r.get("totalAccepted"),
+                    "omborga": r.get("totalToStock"),
+                    "muammo": bool(r.get("hasIssue")),
+                }
+            )
+        return out({"jami": len(res), "fakturalar": res[: max(1, min(limit, MAX_ROWS))]})
     except Exception as e:
         return fail(e)
 
@@ -346,6 +425,7 @@ def invoices(shop_id: int, limit: int = 30) -> str:
 def returns(shop_id: int = 0, limit: int = 50) -> str:
     """Qaytarishlar (`/v1/return`, butun akkaunt bo'yicha; shop_id berilsa shu do'kon qatorlari)."""
     try:
+
         def load():
             res, page = [], 0
             while page < 20:
@@ -359,7 +439,7 @@ def returns(shop_id: int = 0, limit: int = 50) -> str:
         rows = cached(("returns",), load)
         if shop_id:
             rows = [r for r in rows if r.get("shopId") in (None, shop_id)]
-        return out({"jami": len(rows), "qaytarishlar": rows[:max(1, min(limit, 100))]})
+        return out({"jami": len(rows), "qaytarishlar": rows[: max(1, min(limit, 100))]})
     except Exception as e:
         return fail(e)
 
