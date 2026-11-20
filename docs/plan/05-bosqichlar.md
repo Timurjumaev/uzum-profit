@@ -1212,7 +1212,7 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
   Mahsulotlar va Buyurtmalar tahlilida oldingi davrga farq ustuni; (3) **"Nega o'zgardi"** (08 §3 da B5 ga yozilgan,
   vazifasi yo'q edi): sof foyda farqi omillarga — sotuv hajmi, narx, komissiya, logistika, tannarx, reklama, boshqa
   Uzum xarajatlari, o'z xarajatlar, soliq; omillar yig'indisi = farq (test), F-raqam bilan `upcore.pnl` da.
-- [ ] B5.7 **Uzum to'lov prognozi va to'lov kalendari** (M11; D6). Hisoblar daftari bu yerda **emas** (pastda "Keyinga").
+- [→] B5.7 **Uzum to'lov prognozi va to'lov kalendari** (M11; D6). Hisoblar daftari bu yerda **emas** (pastda "Keyinga"). **Holat 2026-11-20:** ✓ jadval butun akkauntga bitta (0038), ✓ qoidalar `ref_payout_terms` / `ref_amounts` `payout_*` da sanasi bilan (0039), ✓ `withdrawn_seen_at` (0037), ✓ prognoz `/payouts/forecast`, ✓ "Pul oqimi" sahifasi (`/cash`). **Qoldi:** hodisa "Uzum to'lovi kutilmoqda / tushmadi" + "Diqqat" qatori (prognoz tekshirilgandan keyin — soxta signal bermasligi uchun), ushlanmalarni ayirish (qaysi xarajatlar to'lovdan ushlanishi o'lchanadi), bayram ma'lumotnomasi (`ref_holidays`), prognozni real to'lov bilan tekshirish.
   - **Temurning kabinet skrinshotlari (2026-11-20, Uzum Seller ilovasi) — qoidalar, taxmin emas:** to'lov jadvalini sotuvchi
     tanlaydi: *har kuni* (har ish kunida, yechish haqi 1,5%), *haftada* 7/14/21/28-sanalarda (1%), *2 haftada 1 marta*
     7 va 21-sanalarda (0%), *har oy* 7-sanada (0%); Temurda — 7 va 21 (0%). "Pul faqat 10 kundan oldin olingan tovarlar
