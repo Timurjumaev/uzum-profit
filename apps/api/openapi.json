@@ -2483,6 +2483,464 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/calculator/defaults": {
+      "get": {
+        "tags": [
+          "calculator"
+        ],
+        "summary": "Calculator Defaults",
+        "operationId": "calculator_defaults_api_v1_orgs__org_id__calculator_defaults_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalculatorDefaultsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/calculator": {
+      "get": {
+        "tags": [
+          "calculator"
+        ],
+        "summary": "Calculator",
+        "operationId": "calculator_api_v1_orgs__org_id__calculator_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "price_cny",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 1000000000000.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "title": "Price Cny"
+            }
+          },
+          {
+            "name": "price",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 1000000000000.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "title": "Price"
+            }
+          },
+          {
+            "name": "commission_pct",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 100.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "title": "Commission Pct"
+            }
+          },
+          {
+            "name": "qty",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000000,
+              "minimum": 1,
+              "default": 1,
+              "title": "Qty"
+            }
+          },
+          {
+            "name": "china_cny_total",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 1000000000000.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "default": "0",
+              "title": "China Cny Total"
+            }
+          },
+          {
+            "name": "weight_kg",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 100000.0,
+                  "exclusiveMinimum": 0.0
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Weight Kg"
+            }
+          },
+          {
+            "name": "length_cm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 100000.0,
+                  "exclusiveMinimum": 0.0
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Length Cm"
+            }
+          },
+          {
+            "name": "width_cm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 100000.0,
+                  "exclusiveMinimum": 0.0
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Width Cm"
+            }
+          },
+          {
+            "name": "height_cm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 100000.0,
+                  "exclusiveMinimum": 0.0
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Height Cm"
+            }
+          },
+          {
+            "name": "cargo_usd_per_kg",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 1000000.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cargo Usd Per Kg"
+            }
+          },
+          {
+            "name": "cargo_usd_per_m3",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 1000000.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cargo Usd Per M3"
+            }
+          },
+          {
+            "name": "extra_uzs",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 1000000000000.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "default": "0",
+              "title": "Extra Uzs"
+            }
+          },
+          {
+            "name": "packaging_uzs",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 1000000000000.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "default": "0",
+              "title": "Packaging Uzs"
+            }
+          },
+          {
+            "name": "tax_pct",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 100.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tax Pct"
+            }
+          },
+          {
+            "name": "ads_pct",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 100.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "default": "0",
+              "title": "Ads Pct"
+            }
+          },
+          {
+            "name": "target_margin_pct",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 100.0,
+                  "minimum": 0.0
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Target Margin Pct"
+            }
+          },
+          {
+            "name": "cny_rate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 1000000.0,
+                  "exclusiveMinimum": 0.0
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cny Rate"
+            }
+          },
+          {
+            "name": "usd_rate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 1000000.0,
+                  "exclusiveMinimum": 0.0
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Usd Rate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalculatorOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/pnl": {
       "get": {
         "tags": [
@@ -10665,6 +11123,85 @@
         "title": "CalcDefaultsOut",
         "description": "Unit kalkulyator boshlang'ich qiymatlari (F35, F36) va ularning manbasi; ``null`` — qiymat yo'q (UI so'raydi).\n\nManbalar: ``price`` — ``period`` (davr o'rtachasi) | ``catalog``; ``unit_cost`` — ``last_lot`` | ``opening`` | ``transit`` (jadval\nzanjiri, B4.45) | ``period``;\n``logistics`` — ``last_paid`` | ``shop_typical`` (standart tarif — F40); ``commission_pct`` — ``period`` |\n``snapshot`` | ``catalog``; ``tax_pct`` va ``ads_pct`` — ``period``."
       },
+      "CalculatorDefaultsOut": {
+        "properties": {
+          "rates": {
+            "$ref": "#/components/schemas/RateOut"
+          },
+          "tax_pct": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Pct"
+          },
+          "tax_on_payout": {
+            "type": "boolean",
+            "title": "Tax On Payout"
+          },
+          "tariff": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TariffOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "rates",
+          "tax_pct",
+          "tax_on_payout",
+          "tariff"
+        ],
+        "title": "CalculatorDefaultsOut",
+        "description": "Kalkulyator boshlang'ich qiymatlari: kurslar (CBU), soliq taklifi va F37 tarifi."
+      },
+      "CalculatorOut": {
+        "properties": {
+          "rates": {
+            "$ref": "#/components/schemas/RateOut"
+          },
+          "landed": {
+            "$ref": "#/components/schemas/LandedOut"
+          },
+          "logistics": {
+            "$ref": "#/components/schemas/LogisticsOut"
+          },
+          "tax_pct": {
+            "type": "string",
+            "title": "Tax Pct"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/UnitCalcOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rates",
+          "landed",
+          "logistics",
+          "tax_pct",
+          "unit"
+        ],
+        "title": "CalculatorOut"
+      },
+      "CargoBasis": {
+        "type": "string",
+        "enum": [
+          "weight",
+          "volume"
+        ],
+        "title": "CargoBasis",
+        "description": "Kargo narxi nimaga ko'ra olingan (``landed_unit_cost``)."
+      },
       "CarrierIn": {
         "properties": {
           "name": {
@@ -13679,6 +14216,50 @@
         ],
         "title": "KpiSummaryOut"
       },
+      "LandedOut": {
+        "properties": {
+          "goods": {
+            "type": "string",
+            "title": "Goods"
+          },
+          "china": {
+            "type": "string",
+            "title": "China"
+          },
+          "cargo": {
+            "type": "string",
+            "title": "Cargo"
+          },
+          "extra": {
+            "type": "string",
+            "title": "Extra"
+          },
+          "unit_cost": {
+            "type": "string",
+            "title": "Unit Cost"
+          },
+          "cargo_basis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CargoBasis"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "goods",
+          "china",
+          "cargo",
+          "extra",
+          "unit_cost",
+          "cargo_basis"
+        ],
+        "title": "LandedOut"
+      },
       "LeadOut": {
         "properties": {
           "total": {
@@ -14616,6 +15197,36 @@
           "created"
         ],
         "title": "LoginResult"
+      },
+      "LogisticsOut": {
+        "properties": {
+          "fee": {
+            "type": "string",
+            "title": "Fee"
+          },
+          "liters": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Liters"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fee",
+          "liters",
+          "source"
+        ],
+        "title": "LogisticsOut"
       },
       "LossesOut": {
         "properties": {
@@ -18449,6 +19060,63 @@
         "title": "QuickPurchaseIn",
         "description": "Tez xarid (ADR-061 §2) — bitta so'rovda xarid, tovarlar va tovar summasi. ``paid_amount`` — hisobdan real\nyechilgan jami summa (``currency``: CNY / USD / UZS ...); kurs: ``cbu`` (buyurtma kunidagi Markaziy bank kursi) yoki\n``manual`` (``rate``). ``on_hand`` — \"Tovar qo'limda\" (mahalliy xarid): darhol sanalgan, kargo kutilmaydi."
       },
+      "RateOut": {
+        "properties": {
+          "cny": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cny"
+          },
+          "usd": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usd"
+          },
+          "day": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cny",
+          "usd",
+          "day",
+          "source"
+        ],
+        "title": "RateOut"
+      },
       "ReceivingOut": {
         "properties": {
           "diffs": {
@@ -22246,6 +22914,40 @@
           "freshness"
         ],
         "title": "SyncStatusOut"
+      },
+      "TariffOut": {
+        "properties": {
+          "valid_from": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid From"
+          },
+          "base_fee": {
+            "type": "string",
+            "title": "Base Fee"
+          },
+          "per_liter": {
+            "type": "string",
+            "title": "Per Liter"
+          },
+          "max_fee": {
+            "type": "string",
+            "title": "Max Fee"
+          },
+          "no_dims_fee": {
+            "type": "string",
+            "title": "No Dims Fee"
+          }
+        },
+        "type": "object",
+        "required": [
+          "valid_from",
+          "base_fee",
+          "per_liter",
+          "max_fee",
+          "no_dims_fee"
+        ],
+        "title": "TariffOut"
       },
       "TaxAmountOut": {
         "properties": {

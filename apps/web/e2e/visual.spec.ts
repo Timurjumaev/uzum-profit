@@ -45,6 +45,16 @@ const SHOTS: Shot[] = [
   { name: "expenses", path: "/expenses" },
   { name: "inventory", path: "/inventory" },
   { name: "cash", path: "/cash" },
+  {
+    name: "calculator",
+    path: "/calculator",
+    prepare: async (page) => {
+      await page.getByLabel(/^1688 narxi/).fill("10");
+      await page.getByLabel(/^Moʻljallangan sotuv narxi/).fill("90000");
+      await page.getByLabel(/^Uzum komissiyasi/).fill("15");
+      await page.getByTestId("calc-profit").waitFor();
+    },
+  },
   { name: "settings", path: "/settings" },
   { name: "opening", path: "/opening" },
   { name: "purchases", path: "/purchases" },

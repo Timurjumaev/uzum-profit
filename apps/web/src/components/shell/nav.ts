@@ -4,6 +4,7 @@
 import {
   Activity,
   Banknote,
+  Calculator,
   FileText,
   LayoutDashboard,
   Package,
@@ -25,11 +26,12 @@ export type NavKey =
   | "purchases"
   | "inventory"
   | "cash"
+  | "calculator"
   | "reports"
   | "status"
   | "settings";
 
-export type NavTo = "/" | "/pnl" | "/products" | "/orders" | "/expenses" | "/purchases" | "/inventory" | "/cash" | "/reports" | "/status" | "/settings";
+export type NavTo = "/" | "/pnl" | "/products" | "/orders" | "/expenses" | "/purchases" | "/inventory" | "/cash" | "/calculator" | "/reports" | "/status" | "/settings";
 
 export type NavItem = { key: NavKey; to: NavTo; icon: LucideIcon };
 
@@ -45,6 +47,7 @@ export const NAV_MAIN: readonly NavItem[] = [
   item("purchases", "/purchases", ShoppingCart),
   item("inventory", "/inventory", Warehouse),
   item("cash", "/cash", Banknote),
+  item("calculator", "/calculator", Calculator),
 ];
 
 /** Hali tayyor bo'lmagan bo'limlar (menyuda yo'q, ADR-057 Q12) — tayyor bo'lganda `NAV_MAIN` ga ko'chadi. */

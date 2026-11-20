@@ -171,6 +171,45 @@ export const skuQuery = (orgId: string, skuId: string, p: ReportParams) =>
       unwrap(api.GET("/api/v1/orgs/{org_id}/skus/{sku_id}", { params: { path: { org_id: orgId, sku_id: skuId }, query: reportQuery(p) } })),
   });
 
+export type CalculatorInput = {
+  price_cny: string;
+  price: string;
+  commission_pct: string;
+  qty: string;
+} & Partial<
+  Record<
+    | "china_cny_total"
+    | "weight_kg"
+    | "length_cm"
+    | "width_cm"
+    | "height_cm"
+    | "cargo_usd_per_kg"
+    | "cargo_usd_per_m3"
+    | "extra_uzs"
+    | "packaging_uzs"
+    | "tax_pct"
+    | "ads_pct"
+    | "target_margin_pct"
+    | "cny_rate"
+    | "usd_rate",
+    string
+  >
+>;
+
+/** Kalkulyator boshlang'ich qiymatlari (B5.9): CBU kurslari, soliq taklifi, F37 tarifi. */
+export const calculatorDefaultsQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "calculator-defaults"],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/calculator/defaults", { params: { path: { org_id: orgId } } })),
+  });
+
+/** Xariddan oldingi kalkulyator (M13): hisob serverda (tamoyil 4); kiritish o'zgargan sayin qayta so'raladi. */
+export const calculatorQuery = (orgId: string, input: CalculatorInput) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "calculator", input],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/calculator", { params: { path: { org_id: orgId }, query: { ...input, qty: Number(input.qty) } } })),
+  });
+
 export type UnitCalcInput = {
   price: string;
   unit_cost: string;

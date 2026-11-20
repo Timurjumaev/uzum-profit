@@ -51,7 +51,8 @@ describe("ECharts bilan haqiqiy chizish", () => {
       </I18nextProvider>,
     );
     await waitFor(() => expect(container.querySelectorAll(".chart__canvas svg")).toHaveLength(5), { timeout: 10_000 });
-    expect(container.querySelector(".chart__overlay")).toBeNull();
+    // Yuklanish qatlami SVG paydo bo'lgach keyingi renderda olinadi — poygasiz kutiladi (CI'da band mashinada tasodifiy qizarardi).
+    await waitFor(() => expect(container.querySelector(".chart__overlay")).toBeNull(), { timeout: 10_000 });
     // Ustunlar, chiziq, issiqlik kataklari va sharshara qadamlari haqiqatan chizilgan (zrender kadrda chizadi).
     await waitFor(
       () => {

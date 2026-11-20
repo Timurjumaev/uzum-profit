@@ -23,7 +23,7 @@ const WORDS: Record<string, string> = {
 
 /** Kirillga o'girilmaydigan nomlar va qisqartmalar. */
 const KEEP = new Set([
-  "uzum", "profit", "roi", "drr", "sku", "id", "telegram", "api", "fifo", "cbu", "abc", "xyz", "acos", "romi",
+  "uzum", "profit", "roi", "drr", "sku", "id", "telegram", "api", "fifo", "cbu", "abc", "xyz", "acos", "romi", "cny", "usd",
   "x", "xx", "xxx", // telefon namunasi: +998 XX XXX XX XX
 ]);
 
