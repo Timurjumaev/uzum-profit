@@ -466,6 +466,21 @@ describe("holatlar", () => {
   });
 });
 
+describe("kabinet foydasi (B5.0f, F57)", () => {
+  it("kabinet \"Foyda\"si, haqiqiy sof foyda va farq — server qiymatlari; sotuv yo'q — blok yo'q", async () => {
+    await renderPnl();
+    const box = within(await screen.findByRole("region", { name: /Uzum kabineti koʻrsatadigan/ }));
+    const value = (label: string) => norm(box.getByText(label).closest(".ui-kpi")!.querySelector(".kpi")!.textContent ?? "");
+    expect(value("Kabinet “Foyda”si")).toBe(m("4800000.00"));
+    expect(value("Haqiqiy sof foyda")).toBe(m("3210000.00"));
+    expect(value("Farq")).toBe(m("1590000.00"));
+    cleanup();
+    const base = pnlData();
+    await renderPnl(PATH, { [PNL_ROUTE]: () => json(200, pnlData({ statement: { ...base.statement, lines: 0 } })) });
+    expect(screen.queryByRole("region", { name: /Uzum kabineti koʻrsatadigan/ })).toBeNull();
+  });
+});
+
 describe("o'tgan yil shu davri (B5.6)", () => {
   it("so'rovga compare=last_year, sarlavha izohi; o'tgan yil sotuvi yo'q — izoh", async () => {
     const urls: string[] = [];

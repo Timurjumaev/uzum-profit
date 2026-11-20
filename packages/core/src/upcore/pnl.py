@@ -1115,6 +1115,16 @@ class CompareRow:
     )
 
 
+# --- F57 Kabinet foydasi ---------------------------------------------------------------------------------------------
+
+
+def cabinet_profit(s: Statement) -> Money:
+    """F57 (B5.0f, ADR-071). Uzum kabineti "Tahlil" sahifasidagi "Foyda" = tushum − **faqat komissiya** (F3 − F4):
+    logistika, reklama, saqlash, jarima, tannarx va soliq ayirilmaydi (09 §11.3 da kabinet bilan tasdiqlangan). Faqat
+    kabinet bilan solishtirish uchun — sotuvchining haqiqiy foydasi F12."""
+    return s.revenue - s.commission
+
+
 # --- F56 "Nega o'zgardi" -----------------------------------------------------------------------------------------------
 
 WHY_CODES = (

@@ -122,6 +122,7 @@ export function pnlData(over: Partial<Pnl> = {}): Pnl {
       { key: "2026-09-01", statement: pnlStatement({ revenue: "4000000.00", net_profit: "1210000.00", net_profit_done: "1210000.00", net_profit_processing: "0.00" }), title: null, shop_id: null },
       { key: "2026-10-01", statement: pnlStatement({ revenue: "6000000.00", net_profit: "2000000.00", net_profit_done: "1810000.00", net_profit_processing: "190000.00" }), title: null, shop_id: null },
     ],
+    cabinet: { profit: "4800000.00", gap: "1590000.00" },
     why: {
       diff: "1010000.00",
       factors: [

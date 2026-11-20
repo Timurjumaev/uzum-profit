@@ -21,7 +21,16 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from upcore.pnl import COMMON, CellKey, Cells, Statement, WhyChanged, compare, explain_change
+from upcore.pnl import (
+    COMMON,
+    CellKey,
+    Cells,
+    Statement,
+    WhyChanged,
+    cabinet_profit,
+    compare,
+    explain_change,
+)
 from upcore.tax import TaxRegime, uncalculated_regimes
 
 from upapi.auth.deps import OrgContext, require
@@ -82,12 +91,20 @@ class WhyOut(BaseModel):
         )
 
 
+class CabinetOut(BaseModel):
+    """F57 (B5.0f): Uzum kabineti "Foyda"si (tushum − faqat komissiya) va u haqiqiy sof foydadan qancha baland."""
+
+    profit: Decimal
+    gap: Decimal  # kabinet foydasi − sof foyda (F12)
+
+
 class PnlOut(BaseModel):
     meta: Meta
     statement: StatementOut
     previous: StatementOut
     rows: list[RowOut]
     why: WhyOut  # F56 (B5.6): sof foyda farqi omillarga
+    cabinet: CabinetOut  # F57 (B5.0f): Uzum kabineti ko'rsatadigan "Foyda"
     columns: list[ColumnOut]
     expected: ExpectedOut  # F16 (ADR-037): kutilayotgan sof foyda tafsiloti va R
     expected_shops: list[ExpectedShopOut]  # Jarayondagi sotuvi bor do'konlar
@@ -134,6 +151,9 @@ async def pnl(ctx: Finance, f: Filter, _: Heavy, view: View = View.TOTAL) -> Pnl
         previous=StatementOut.of(p),
         rows=[RowOut.of(r) for r in compare(s, p, rates.total)],
         why=WhyOut.of(explain_change(s, p)),
+        cabinet=CabinetOut(
+            profit=cabinet_profit(s).amount, gap=(cabinet_profit(s) - s.net_profit).amount
+        ),
         columns=cols,
         expected=ExpectedOut.of(s, rates.total),
         expected_shops=[

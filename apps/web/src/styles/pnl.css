@@ -112,6 +112,21 @@
   }
 }
 
+/* --- Uzum kabineti ko'rsatadigan (B5.0f, F57) --- */
+.pnl-cabinet {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+}
+
+.pnl-cabinet__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-3);
+}
+
 /* --- Nega o'zgardi (B5.6, F56) --- */
 .pnl-why {
   display: grid;

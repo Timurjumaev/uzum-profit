@@ -428,6 +428,12 @@ def test_pnl_rows_and_previous(world: World) -> None:
     assert money(rows["net_profit"]["amount"]) == money(body["statement"]["net_profit"])
     assert money(body["previous"]["revenue"]) == D(400_000)
     assert "uzum:fine" in rows and "own:ijara" in rows and "uncovered_payout" in rows
+    # F57 (B5.0f): kabinet "Foyda"si = tushum − faqat komissiya; farq = kabinet − sof foyda.
+    cab = body["cabinet"]
+    assert D(cab["profit"]) == money(body["statement"]["revenue"]) - money(
+        body["statement"]["commission"]
+    )
+    assert D(cab["gap"]) == D(cab["profit"]) - money(body["statement"]["net_profit"])
     # F56 "Nega o'zgardi": omillar yig'indisi = sof foyda farqi (joriy − oldingi), farq qatordagi farqqa teng.
     why = body["why"]
     assert D(why["diff"]) == money(rows["net_profit"]["diff"])

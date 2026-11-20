@@ -20,6 +20,7 @@ import { Drill } from "../home/Drill";
 import { rowLabel } from "../home/model";
 import { Breakdown } from "./Breakdown";
 import { Expected } from "./Expected";
+import { Cabinet } from "./Cabinet";
 import { WhyChanged } from "./WhyChanged";
 import { PARTS, pnlLines, waterfallSteps, type Part, type PnlLine, type View } from "./model";
 import { PnlLedger } from "./PnlLedger";
@@ -158,6 +159,7 @@ export function Pnl() {
       </div>
 
       <WhyChanged data={data} />
+      <Cabinet data={data} />
 
       <Breakdown orgId={org.id} data={data} view={view} busy={query.isPlaceholderData} />
       <Drill orgId={org.id} params={params} row={drill} onClose={() => setDrill(null)} />
