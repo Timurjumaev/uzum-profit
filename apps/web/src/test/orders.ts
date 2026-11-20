@@ -76,13 +76,17 @@ export function analysisData(over: Partial<Analysis> = {}): Analysis {
       cancel_revenue: "600000.00",
       return_revenue: "1000000.00",
       return_storage_cost: "49000.00",
+      previous_canceled: 4,
+      previous_returns: 6,
+      previous_cancel_share: "0.200000",
+      previous_return_share: "0.300000",
     },
     daily: [
       { day: "2026-10-02", units: 7, canceled: 0, returns: 1, cancel_share: "0.000000", return_share: "0.125000" },
       { day: "2026-10-04", units: 1, canceled: 1, returns: 1, cancel_share: "0.500000", return_share: "0.500000" },
     ],
     by_sku: [
-      { sku_id: SKU_X, title: "Oʻyinchoq mashina", units: 6, canceled: 2, returns: 2, cancel_share: "0.250000", return_share: "0.250000" },
+      { sku_id: SKU_X, title: "Oʻyinchoq mashina", units: 6, canceled: 2, returns: 2, cancel_share: "0.250000", return_share: "0.250000", canceled_diff: -1, returns_diff: 1, cancel_share_diff: "-0.050000", return_share_diff: "0.025000" },
       { sku_id: null, title: null, units: 1, canceled: 0, returns: 1, cancel_share: "0.000000", return_share: "0.500000" },
     ],
     return_causes: [

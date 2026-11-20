@@ -16,6 +16,7 @@ from upapi.middleware import csrf_guard, request_context
 from upapi.ratelimit import SlidingWindow
 from upapi.routes import (
     accounts,
+    ads,
     auth,
     cargo,
     counting,
@@ -117,6 +118,7 @@ def create_app(
     app.include_router(items.router, prefix=API_PREFIX)  # tovar ↔ SKU bog'lash (M6)
     for reports in (
         dashboard,
+        ads,  # B5.5 reklama tahlili
         pnl,
         skus,
         sales,

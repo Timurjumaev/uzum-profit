@@ -14,13 +14,23 @@ Drill-down: sotuvlar — ``/sales``, xarajatlar — ``/expenses`` (shu filtrlar 
 from __future__ import annotations
 
 from collections.abc import Callable
+from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from upcore.pnl import COMMON, CellKey, Cells, Statement, compare
+from upcore.pnl import (
+    COMMON,
+    CellKey,
+    Cells,
+    Statement,
+    WhyChanged,
+    cabinet_profit,
+    compare,
+    explain_change,
+)
 from upcore.tax import TaxRegime, uncalculated_regimes
 
 from upapi.auth.deps import OrgContext, require
@@ -62,11 +72,39 @@ class ExpectedShopOut(ExpectedOut):
     shop_id: UUID
 
 
+class WhyFactorOut(BaseModel):
+    code: str  # volume, price, commission, logistics, cogs, advertising, uzum_other, own_expenses, tax, other
+    amount: Decimal  # sof foydaga ta'siri (so'm): musbat — foydani oshirgan
+
+
+class WhyOut(BaseModel):
+    """F56 "Nega o'zgardi": sof foyda farqi (joriy − oldingi) va omillar; omillar yig'indisi = farq."""
+
+    diff: Decimal
+    factors: list[WhyFactorOut]
+
+    @classmethod
+    def of(cls, why: WhyChanged) -> WhyOut:
+        return cls(
+            diff=why.diff.amount,
+            factors=[WhyFactorOut(code=f.code, amount=f.amount.amount) for f in why.factors],
+        )
+
+
+class CabinetOut(BaseModel):
+    """F57 (B5.0f): Uzum kabineti "Foyda"si (tushum − faqat komissiya) va u haqiqiy sof foydadan qancha baland."""
+
+    profit: Decimal
+    gap: Decimal  # kabinet foydasi − sof foyda (F12)
+
+
 class PnlOut(BaseModel):
     meta: Meta
     statement: StatementOut
     previous: StatementOut
     rows: list[RowOut]
+    why: WhyOut  # F56 (B5.6): sof foyda farqi omillarga
+    cabinet: CabinetOut  # F57 (B5.0f): Uzum kabineti ko'rsatadigan "Foyda"
     columns: list[ColumnOut]
     expected: ExpectedOut  # F16 (ADR-037): kutilayotgan sof foyda tafsiloti va R
     expected_shops: list[ExpectedShopOut]  # Jarayondagi sotuvi bor do'konlar
@@ -97,7 +135,7 @@ def columns(cells: Cells, view: View) -> tuple[list[ColumnOut], Statement]:
 
 @router.get("/orgs/{org_id}/pnl", response_model=PnlOut)
 async def pnl(ctx: Finance, f: Filter, _: Heavy, view: View = View.TOTAL) -> PnlOut:
-    previous = f.period.previous()
+    previous = f.compare_period()
     book = await rc.load_book(ctx.conn, rc.span(previous, f.period), f.today)
     cur, before = book.scoped(f, f.period), book.scoped(f, previous)
     cols, s = columns(cur, view)
@@ -112,6 +150,10 @@ async def pnl(ctx: Finance, f: Filter, _: Heavy, view: View = View.TOTAL) -> Pnl
         statement=StatementOut.of(s),
         previous=StatementOut.of(p),
         rows=[RowOut.of(r) for r in compare(s, p, rates.total)],
+        why=WhyOut.of(explain_change(s, p)),
+        cabinet=CabinetOut(
+            profit=cabinet_profit(s).amount, gap=(cabinet_profit(s) - s.net_profit).amount
+        ),
         columns=cols,
         expected=ExpectedOut.of(s, rates.total),
         expected_shops=[

@@ -428,6 +428,39 @@ def test_pnl_rows_and_previous(world: World) -> None:
     assert money(rows["net_profit"]["amount"]) == money(body["statement"]["net_profit"])
     assert money(body["previous"]["revenue"]) == D(400_000)
     assert "uzum:fine" in rows and "own:ijara" in rows and "uncovered_payout" in rows
+    # F57 (B5.0f): kabinet "Foyda"si = tushum − faqat komissiya; farq = kabinet − sof foyda.
+    cab = body["cabinet"]
+    assert D(cab["profit"]) == money(body["statement"]["revenue"]) - money(
+        body["statement"]["commission"]
+    )
+    assert D(cab["gap"]) == D(cab["profit"]) - money(body["statement"]["net_profit"])
+    # F56 "Nega o'zgardi": omillar yig'indisi = sof foyda farqi (joriy − oldingi), farq qatordagi farqqa teng.
+    why = body["why"]
+    assert D(why["diff"]) == money(rows["net_profit"]["diff"])
+    assert sum((D(f["amount"]) for f in why["factors"]), D(0)) == D(why["diff"])
+    assert {f["code"] for f in why["factors"]} <= {
+        "volume", "price", "commission", "logistics", "cogs",
+        "advertising", "uzum_other", "own_expenses", "tax", "other",
+    }  # fmt: skip
+
+
+def test_pnl_and_dashboard_compare_with_last_year(world: World) -> None:
+    """B5.6: ``compare=last_year`` — o'tgan yilning xuddi shu sanalari; 20-sentabr 2026 (2 dona, 400 000) ga nisbatan."""
+    q = {"start": "2027-09-20", "end": "2027-09-20", "compare": "last_year"}
+    body = world.get("pnl", **q)
+    assert body["meta"]["previous"] == {"start": "2026-09-20", "end": "2026-09-20", "days": 1}
+    assert money(body["previous"]["revenue"]) == D(400_000)
+    dash = world.get("dashboard", **q)
+    assert dash["meta"]["previous"]["start"] == "2026-09-20"
+    # Standart — oldingi shu uzunlikdagi davr (kun oldin).
+    assert (
+        world.get("pnl", start="2027-09-20", end="2027-09-20")["meta"]["previous"]["start"]
+        == "2027-09-19"
+    )
+    assert world.call("pnl", compare="never", **OCT).status_code == 422
+    # 29-fevral — o'tgan yil 28-fevral.
+    leap = world.get("pnl", start="2028-02-29", end="2028-03-01", compare="last_year")
+    assert leap["meta"]["previous"] == {"start": "2027-02-28", "end": "2027-03-01", "days": 2}
 
 
 @pytest.mark.parametrize("view", ["month", "day", "shop", "sku"])
@@ -1465,6 +1498,83 @@ def test_dashboard_weekly_summary(world: World) -> None:
     cards = {c["key"]: c for g in summary["groups"] for c in g["cards"]}
     for key in ("revenue", "units", "orders"):
         assert sum(D(x) for x in cards[key]["series"]) == D(cards[key]["value"])
+
+
+def test_ads_analysis(world: World) -> None:
+    """B5.5 (F19, F42, F58): reklama turlari Uzum kodi bo'yicha (kompensatsiya ayirilgan), kunlik DRR, SKU ACOS va
+    "reklama foydasini yeb qo'ygan" SKU'lar; jami hisob varag'idagi reklama bilan bir xil."""
+    a = world.a
+    ids = [
+        world.expense(
+            a, d(10, 11), "advertising", 5_000, code="Y000120", name="Xaridor tovarni olganida"
+        ),
+        world.expense(a, d(10, 12), "advertising", 3_000, code="Y000119", name="Boshqa reklama"),
+        world.expense(
+            a, d(10, 13), "advertising", 1_000, "INCOME", code="Y000120", name="Qaytarildi"
+        ),
+    ]
+    try:
+        out = world.get("ads", **OCT)
+        pnl = world.get("pnl", **OCT)["statement"]
+        assert D(out["total"]) == money(pnl["uzum_expenses"]["advertising"])
+        assert D(out["revenue"]) == money(pnl["revenue"])
+        assert out["drr"] is not None and D(out["drr"]) == D(out["total"]) / D(out["revenue"])
+        by_type = {t["code"]: t for t in out["by_type"]}
+        assert D(by_type["Y000120"]["amount"]) == D(4_000)  # 5 000 − 1 000 (kompensatsiya)
+        assert (
+            D(by_type["Y000119"]["amount"]) == D(3_000)
+            and by_type["Y000119"]["name"] == "Boshqa reklama"
+        )
+        assert D(by_type[None]["amount"]) == D(20_000)  # kodsiz, sotuvga bog'langan qator
+        charged = sum((D(t["amount"]) for t in out["by_type"]), D(0))
+        assert charged == D(27_000) and charged == D(out["total"]) - D(out["estimated"])
+        assert abs(sum(D(t["share"]) for t in out["by_type"]) - 1) < D("0.001")
+        assert out["by_type"][0]["code"] is None  # eng ko'pi birinchi
+        assert len(out["daily"]) == 20 and sum(D(x["ads"]) for x in out["daily"]) == D(out["total"])
+        oct11 = next(x for x in out["daily"] if x["day"] == "2026-10-11")
+        assert D(oct11["ads"]) == D(5_000)
+        for sku in out["skus"]:
+            assert D(sku["ads"]) > 0
+            if sku["eats_profit"]:  # F58: reklamadan oldin foyda > 0, keyin ≤ 0
+                assert D(sku["net_profit"]) <= 0 < D(sku["net_profit"]) + D(sku["ads"])
+        assert [x["ads"] for x in out["skus"]] == sorted(
+            (x["ads"] for x in out["skus"]), key=D, reverse=True
+        )
+        assert all(x["eats_profit"] for x in out["eaten"]) and out["eaten_total"] >= len(
+            out["eaten"]
+        )
+        assert world.call("ads", "warehouse", **OCT).status_code == 403  # moliya ruxsati kerak
+    finally:
+        a.sql("DELETE FROM mp_expenses WHERE id = ANY(%s)", [ids])
+
+
+def test_skus_xyz_column_and_filter(world: World) -> None:
+    """B5.5: ABC × XYZ — qatorda ``xyz`` (F28: oxirgi 8 hafta sotuv barqarorligi; sotuv yo'q — null); filtr xuddi shu
+    qiymatli qatorlarni qaytaradi, noto'g'ri qiymat — 422."""
+    everything = world.get("skus", limit=100, **OCT)["items"]
+    classes = {r["xyz"] for r in everything}
+    assert classes <= {"X", "Y", "Z", None}
+    known = sorted(c for c in classes if c is not None)
+    assert known, "kamida bitta SKU'da XYZ bo'lishi kerak (oxirgi 8 haftada sotuv)"
+    for cls in known:
+        got = world.get("skus", xyz=cls, limit=100, **OCT)["items"]
+        assert {r["sku_id"] for r in got} == {r["sku_id"] for r in everything if r["xyz"] == cls}
+    assert world.call("skus", xyz="Q", **OCT).status_code == 422
+
+
+def test_skus_diff_against_previous_period(world: World) -> None:
+    """B5.6: Mahsulotlar farq ustuni — oldingi shu uzunlikdagi davr (11–30 sentabr): X'da 2 dona (400 000) sotilgan edi;
+    oldingi davrda sotuvi bo'lmagan SKU'da farq yo'q (null)."""
+    items = {r["sku_id"]: r for r in world.get("skus", **OCT)["items"]}
+    x, y = items[str(world.ids["xa"])], items[str(world.ids["ya"])]
+    assert x["previous_net_profit"] is not None
+    assert D(x["net_profit_diff"]) == D(x["net_profit"]) - D(x["previous_net_profit"])
+    assert D(x["revenue_diff"]) == D(x["revenue"]) - D(400_000)
+    assert (
+        y["previous_net_profit"] is None
+        and y["net_profit_diff"] is None
+        and y["revenue_diff"] is None
+    )
 
 
 def test_f34_candidates_and_series_from_snapshots(world: World) -> None:

@@ -20,6 +20,8 @@ import { Drill } from "../home/Drill";
 import { rowLabel } from "../home/model";
 import { Breakdown } from "./Breakdown";
 import { Expected } from "./Expected";
+import { Cabinet } from "./Cabinet";
+import { WhyChanged } from "./WhyChanged";
 import { PARTS, pnlLines, waterfallSteps, type Part, type PnlLine, type View } from "./model";
 import { PnlLedger } from "./PnlLedger";
 
@@ -32,8 +34,8 @@ export function Pnl() {
   // Bola marshrutga ota marshrutning xom qidiruvi ham keladi — qiymat shu yerda ham tekshiriladi (app/search).
   const view: View = pnlSearch(useSearch({ strict: false }) as Record<string, unknown>).view ?? "month";
   const params = useMemo(
-    () => ({ shops: filters.shops, start: filters.range.start, end: filters.range.end }),
-    [filters.shops, filters.range.start, filters.range.end],
+    () => ({ shops: filters.shops, start: filters.range.start, end: filters.range.end, lastYear: filters.compare === "lastYear" }),
+    [filters.shops, filters.range.start, filters.range.end, filters.compare],
   );
   const query = useQuery({ ...pnlQuery(org.id, params, view), placeholderData: keepPreviousData });
   const sync = useQuery(syncQuery(org.id));
@@ -83,10 +85,10 @@ export function Pnl() {
           <h1 className="h2">{t("pnl.title", { period: f.period(current.start, current.end) })}</h1>
           <PageHelp page="pnl" />
         </div>
-        {previous && <p className="caption">{t("pnl.previousNote", { period: f.period(previous.start, previous.end) })}</p>}
+        {previous && <p className="caption">{t(filters.compare === "lastYear" ? "pnl.lastYearNote" : "pnl.previousNote", { period: f.period(previous.start, previous.end) })}</p>}
         {filters.shops.length > 0 && <p className="caption">{t("pnl.commonNote")}</p>}
       </header>
-      {filters.compare === "lastYear" && <Banner tone="info" title={t("home.lastYearSoon")} />}
+      {filters.compare === "lastYear" && data.previous.lines === 0 && <Banner tone="info" title={t("home.lastYearEmpty")} />}
       {s.lines === 0 && (
         <EmptyState
           title={t(`home.empty.${emptyState}`)}
@@ -155,6 +157,9 @@ export function Pnl() {
         <WaterfallChart title={t("pnl.waterfall.title")} steps={s.lines === 0 ? [] : steps} />
         <Expected orgId={org.id} data={data} />
       </div>
+
+      <WhyChanged data={data} />
+      <Cabinet data={data} />
 
       <Breakdown orgId={org.id} data={data} view={view} busy={query.isPlaceholderData} />
       <Drill orgId={org.id} params={params} row={drill} onClose={() => setDrill(null)} />

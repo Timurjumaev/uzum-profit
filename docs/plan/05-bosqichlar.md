@@ -1134,8 +1134,7 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
   - [→] B5.0e (**ko'chdi → B8.10**, ADR-063; avval B4.81) Soliq, 2-bosqich (QQS va foyda solig'i). Sabab: ADR-057 Q5 —
     "to'liq hisob QQS to'lovchi birinchi mijoz paydo bo'lganda"; hozir bunday foydalanuvchi yo'q, MChJ stavkalari va Uzum
     ushlashi tasdiqlanmagan (08 §6), import tovarida kirim QQS manbasi aniqlanmagan — real ma'lumotda tekshirib bo'lmaydi.
-  - [ ] B5.0f (avval B4.76, taklif) Foyda sahifasida "Uzum kabineti ko'rsatadigan" qator (09 §11.3: tushum − komissiya) —
-    B5.6 bilan birga; Temur ko'rgach qoladi yoki olinadi.
+  - [x] B5.0f ✓ 2026-11-20 (avval B4.76, taklif; **Temur: "qaysi maqul deb topsang shuni qil" — ADR-071**) Foyda sahifasida "Uzum kabineti ko'rsatadigan" bloki (F57: tushum − faqat komissiya, 09 §11.3) — kabinet foydasi, haqiqiy sof foyda va farq; hisob varag'i qatori emas (qatorlar yig'indisi buzilmasin).
 - [x] B5.1 **Muddatni o'rganish — F25 ikki bo'lak (tuzatish, birinchi navbatda).** Hozir kodda F25 hali eski 5 bosqich
   (`upcore.purchasing.LEAD_STAGES`: tayyorlash, Xitoy ichki, kargo, qabul, topshirish), `reports/stock.py` esa 5 tasi ham
   bo'lmasa muddatni "noma'lum" deydi. ADR-061 dan keyingi xaridda faqat buyurtma va sanash sanasi bor — yangi xaridlar
@@ -1203,11 +1202,11 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
     yo'qotishi (F52), nelikvid saqlash haqi, tugab qolishdan yo'qotilgan foyda (F34); "imkoniyat" — nelikviddagi pul.
     "Diqqat" va "Zarar 5 SKU" dagi raqamlar takrorlanmaydi; bekor summasi yo'qotish emas.
   - Hodisalar: "Yo'qolgan tovar" ✓ 2026-11-19 (faqat `quantityMissing > 0`), "Qaytish keskin oshdi" ✓ 2026-11-20 (`upcore.notify.returns_spike`, F18 asosida: 7 kun ulushi ≥ 2 × 30 kunlik va ≥ N; Sozlamalarda daraja va N — standartsiz, bo'sh bo'lsa jim; manba `daily_sku_metrics`, bildirishnoma faqat yangi kalit kirganda; Telegram va ilova sozlamasi). **Bosh sahifa "Yo'qotishlar va imkoniyat" bloki ✓ 2026-11-20 (B5.0a)** — qaytarish xarajati, jarimalar, F51, F52, nelikvid saqlash (F30 × F43), **F34 ✓** (`upcore.inventory.stockout_loss`, `upapi.reports.losses`), imkoniyat — nelikviddagi pul. Qoldi: F31 (25.11 dan keyin `realcheck lost` qayta); F34 real ma'lumotda tekshirilmagan (Temur kabinetda tugab qolgan SKU'lar bilan solishtiradi); F34 SKU sahifasi va Omborda hali ko'rsatilmaydi. **Temur qarori (2026-11-20):** signalning *darajasi* (butun do'kon yoki har bir tovar) va *eng kam qaytish soni N* — Sozlamalar → Bildirishnomalar da foydalanuvchi tanlaydi (ikkalasi ham dinamik); standart yo'q — N kiritilmaguncha xabar kelmaydi. **Temur qarori (2026-11-20):** "7 kun ulushi 30 kunlikdan 2 barobar" signalining *darajasi* (butun do'kon yoki har bir tovar) va *eng kam qaytish soni N* — Sozlamalar → Bildirishnomalar da foydalanuvchi tanlaydi (ikkalasi ham dinamik); standart yo'q — N kiritilmaguncha xabar kelmaydi.
-- [ ] B5.5 **Reklama va assortiment tahlili.** Open API'da kampaniya, ko'rish va klik yo'q — faqat yechilgan summa
+- [x] B5.5 ✓ 2026-11-20 **Reklama va assortiment tahlili.** **Holat 2026-11-20:** ABC × XYZ Mahsulotlarda ✓ (ustun + filtr + Excel); reklama tahlili ✓ (Xarajatlar → "Reklama": turlar, DRR trendi, SKU ACOS, "foydani yeb qo'ygan" — F58); hodisa "SKU komissiyasi o'zgardi" ✓ (`notify.commission_changes`). Open API'da kampaniya, ko'rish va klik yo'q — faqat yechilgan summa
   (`Y000119` / `Y000120` / `Y000050`); ROMI, CTR va'da qilinmaydi. Doira: reklama turlari bo'yicha summa va DRR trendi,
   SKU ACOS (bog'langan reklama, F19), "reklama foydasini yeb qo'ygan SKU" ro'yxati; ABC × XYZ (hisob bor —
   `/inventory`; Mahsulotlarda ustun va filtr); hodisa "SKU komissiyasi o'zgardi" (`sku_daily.commission_pct` dan).
-- [ ] B5.6 **Solishtirish va "Nega o'zgardi".** "Barcha hisobotlarda" o'rniga aniq doira: (1) "o'tgan yil shu davri"
+- [x] B5.6 (**B5.0f dan tashqari — Temur javobini kutadi**) **Solishtirish va "Nega o'zgardi".** ✓ 2026-11-20: (1) o'tgan yil shu davri, (2) farq ustuni (Mahsulotlar "Foyda farqi", Buyurtmalar "Oldingi davrga nisbatan"), (3) "Nega o'zgardi" (F56). **Holat 2026-11-20:** (3) "Nega o'zgardi" ✓ (F56, `upcore.pnl.explain_change`, `/pnl` → `why`, Foyda sahifasida blok); (1) "o'tgan yil shu davri" ✓ (`compare=last_year`, Asosiy va Foyda); qoldi: (2) Mahsulotlar va Buyurtmalar tahlilida farq ustuni, B5.0f (Temur: kerakmi?). "Barcha hisobotlarda" o'rniga aniq doira: (1) "o'tgan yil shu davri"
   rejimi — Asosiy va Foyda (M4; oldingi davr bor); o'tgan yil ma'lumoti yo'q bo'lsa rejim o'chiq, izoh bilan; (2)
   Mahsulotlar va Buyurtmalar tahlilida oldingi davrga farq ustuni; (3) **"Nega o'zgardi"** (08 §3 da B5 ga yozilgan,
   vazifasi yo'q edi): sof foyda farqi omillarga — sotuv hajmi, narx, komissiya, logistika, tannarx, reklama, boshqa

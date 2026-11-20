@@ -2302,6 +2302,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {
@@ -2311,6 +2327,135 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DashboardOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/ads": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Ads",
+        "operationId": "ads_api_v1_orgs__org_id__ads_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Davr boshi (Toshkent kuni)",
+              "title": "Start"
+            },
+            "description": "Davr boshi (Toshkent kuni)"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Davr oxiri, kiradi; standart — bugun",
+              "title": "End"
+            },
+            "description": "Davr oxiri, kiradi; standart — bugun"
+          },
+          {
+            "name": "shop",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Do'konlar (bir necha marta)",
+              "title": "Shop"
+            },
+            "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdsOut"
                 }
               }
             }
@@ -2424,6 +2569,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {
@@ -2537,6 +2698,29 @@
             "description": "ABC (F28)"
           },
           {
+            "name": "xyz",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "X",
+                    "Y",
+                    "Z"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "XYZ (F28)",
+              "title": "Xyz"
+            },
+            "description": "XYZ (F28)"
+          },
+          {
             "name": "sort",
             "in": "query",
             "required": false,
@@ -2630,6 +2814,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {
@@ -2753,6 +2953,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {
@@ -3179,6 +3395,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {
@@ -3292,6 +3524,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {
@@ -3485,6 +3733,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {
@@ -3859,6 +4123,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {
@@ -3977,6 +4257,27 @@
             }
           },
           {
+            "name": "xyz",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "X",
+                    "Y",
+                    "Z"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Xyz"
+            }
+          },
+          {
             "name": "start",
             "in": "query",
             "required": false,
@@ -4035,6 +4336,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {
@@ -4188,6 +4505,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {
@@ -9485,6 +9818,243 @@
         "title": "AdjustmentOut",
         "description": "TM9.1 (c): bog'langanda jo'natma soni postavkada e'lon qilingan songa tenglashtirildi."
       },
+      "AdsDayOut": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date",
+            "title": "Day"
+          },
+          "ads": {
+            "type": "string",
+            "title": "Ads"
+          },
+          "revenue": {
+            "type": "string",
+            "title": "Revenue"
+          },
+          "drr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Drr"
+          }
+        },
+        "type": "object",
+        "required": [
+          "day",
+          "ads",
+          "revenue",
+          "drr"
+        ],
+        "title": "AdsDayOut"
+      },
+      "AdsOut": {
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          },
+          "total": {
+            "type": "string",
+            "title": "Total"
+          },
+          "estimated": {
+            "type": "string",
+            "title": "Estimated"
+          },
+          "revenue": {
+            "type": "string",
+            "title": "Revenue"
+          },
+          "drr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Drr"
+          },
+          "by_type": {
+            "items": {
+              "$ref": "#/components/schemas/AdsTypeOut"
+            },
+            "type": "array",
+            "title": "By Type"
+          },
+          "daily": {
+            "items": {
+              "$ref": "#/components/schemas/AdsDayOut"
+            },
+            "type": "array",
+            "title": "Daily"
+          },
+          "skus": {
+            "items": {
+              "$ref": "#/components/schemas/AdsSkuOut"
+            },
+            "type": "array",
+            "title": "Skus"
+          },
+          "eaten": {
+            "items": {
+              "$ref": "#/components/schemas/AdsSkuOut"
+            },
+            "type": "array",
+            "title": "Eaten"
+          },
+          "eaten_total": {
+            "type": "integer",
+            "title": "Eaten Total"
+          },
+          "skipped": {
+            "type": "integer",
+            "title": "Skipped"
+          }
+        },
+        "type": "object",
+        "required": [
+          "meta",
+          "total",
+          "estimated",
+          "revenue",
+          "drr",
+          "by_type",
+          "daily",
+          "skus",
+          "eaten",
+          "eaten_total",
+          "skipped"
+        ],
+        "title": "AdsOut"
+      },
+      "AdsSkuOut": {
+        "properties": {
+          "sku_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sku Id"
+          },
+          "shop_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shop Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "revenue": {
+            "type": "string",
+            "title": "Revenue"
+          },
+          "ads": {
+            "type": "string",
+            "title": "Ads"
+          },
+          "acos": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acos"
+          },
+          "net_profit": {
+            "type": "string",
+            "title": "Net Profit"
+          },
+          "eats_profit": {
+            "type": "boolean",
+            "title": "Eats Profit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku_id",
+          "shop_id",
+          "title",
+          "revenue",
+          "ads",
+          "acos",
+          "net_profit",
+          "eats_profit"
+        ],
+        "title": "AdsSkuOut"
+      },
+      "AdsTypeOut": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "share": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "amount",
+          "share"
+        ],
+        "title": "AdsTypeOut"
+      },
       "AlertsIn": {
         "properties": {
           "cancel_share": {
@@ -9981,6 +10551,25 @@
         "type": "object",
         "title": "BoxSharesIn",
         "description": "Qutining qo'lda ulushlari (to'liq almashtiriladi; bo'sh — hammasi dona bo'yicha)."
+      },
+      "CabinetOut": {
+        "properties": {
+          "profit": {
+            "type": "string",
+            "title": "Profit"
+          },
+          "gap": {
+            "type": "string",
+            "title": "Gap"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profit",
+          "gap"
+        ],
+        "title": "CabinetOut",
+        "description": "F57 (B5.0f): Uzum kabineti \"Foyda\"si (tushum − faqat komissiya) va u haqiqiy sof foydadan qancha baland."
       },
       "CalcDefaultsOut": {
         "properties": {
@@ -15077,6 +15666,50 @@
               }
             ],
             "title": "Return Share"
+          },
+          "canceled_diff": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canceled Diff"
+          },
+          "returns_diff": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Returns Diff"
+          },
+          "cancel_share_diff": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Share Diff"
+          },
+          "return_share_diff": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return Share Diff"
           }
         },
         "type": "object",
@@ -15138,6 +15771,50 @@
           "return_storage_cost": {
             "type": "string",
             "title": "Return Storage Cost"
+          },
+          "previous_canceled": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Canceled"
+          },
+          "previous_returns": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Returns"
+          },
+          "previous_cancel_share": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Cancel Share"
+          },
+          "previous_return_share": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Return Share"
           }
         },
         "type": "object",
@@ -16471,6 +17148,12 @@
             "type": "array",
             "title": "Rows"
           },
+          "why": {
+            "$ref": "#/components/schemas/WhyOut"
+          },
+          "cabinet": {
+            "$ref": "#/components/schemas/CabinetOut"
+          },
           "columns": {
             "items": {
               "$ref": "#/components/schemas/ColumnOut"
@@ -16510,6 +17193,8 @@
           "statement",
           "previous",
           "rows",
+          "why",
+          "cabinet",
           "columns",
           "expected",
           "expected_shops",
@@ -20171,6 +20856,39 @@
             ],
             "title": "Cancel Share"
           },
+          "previous_net_profit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Net Profit"
+          },
+          "net_profit_diff": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Profit Diff"
+          },
+          "revenue_diff": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revenue Diff"
+          },
           "label": {
             "$ref": "#/components/schemas/ProfitLabel"
           },
@@ -20192,6 +20910,22 @@
           "abc": {
             "type": "string",
             "title": "Abc"
+          },
+          "xyz": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "X",
+                  "Y",
+                  "Z"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Xyz"
           },
           "rank": {
             "anyOf": [
@@ -22804,6 +23538,46 @@
           "transfers_in"
         ],
         "title": "WarehouseRow"
+      },
+      "WhyFactorOut": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "amount"
+        ],
+        "title": "WhyFactorOut"
+      },
+      "WhyOut": {
+        "properties": {
+          "diff": {
+            "type": "string",
+            "title": "Diff"
+          },
+          "factors": {
+            "items": {
+              "$ref": "#/components/schemas/WhyFactorOut"
+            },
+            "type": "array",
+            "title": "Factors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "diff",
+          "factors"
+        ],
+        "title": "WhyOut",
+        "description": "F56 \"Nega o'zgardi\": sof foyda farqi (joriy − oldingi) va omillar; omillar yig'indisi = farq."
       },
       "upapi__routes__inventory__PriceOut": {
         "properties": {

@@ -10,6 +10,7 @@ from upcore.metrics import (
     Period,
     SaleLine,
     StatusGroup,
+    ads_eat_profit,
     breakeven_price,
     business_date,
     cogs,
@@ -93,6 +94,19 @@ def test_business_date_tashkent() -> None:
 def test_date_from_epoch_ms() -> None:
     ms = int(datetime(2026, 10, 9, 19, 30, tzinfo=UTC).timestamp() * 1000)
     assert date_from_epoch_ms(ms) == date(2026, 10, 10)
+
+
+def test_period_year_ago() -> None:
+    """B5.6: o'tgan yil shu davri — xuddi shu sanalar; 29-fevral — 28-fevral (o'tgan yil kabisa emas)."""
+    assert Period(date(2026, 10, 1), date(2026, 10, 31)).year_ago() == Period(
+        date(2025, 10, 1), date(2025, 10, 31)
+    )
+    assert Period(date(2028, 2, 29), date(2028, 3, 1)).year_ago() == Period(
+        date(2027, 2, 28), date(2027, 3, 1)
+    )
+    assert Period(date(2028, 2, 1), date(2028, 2, 29)).year_ago() == Period(
+        date(2027, 2, 1), date(2027, 2, 28)
+    )
 
 
 def test_period() -> None:
@@ -521,3 +535,22 @@ def test_storage_weights() -> None:
     paid = storage_weights({"A": 2, "B": 3}, {"A": Decimal(10), "B": Decimal(10)}, paid={"B"})
     assert paid == {"B": Decimal(30)}
     assert storage_weights({"A": 2}, {}, paid={"Z"}) == {"A": Decimal(2)}
+
+
+def test_f58_ads_eat_profit() -> None:
+    """B5.5: reklamadan oldin foyda musbat, keyin ≤ 0; faqat to'liq tannarxli SKU; reklama yo'q — yo'q."""
+    uzs = lambda x: Money.of(x, "UZS")  # noqa: E731
+    assert ads_eat_profit(
+        uzs(-10_000), uzs(50_000), fully_costed=True
+    )  # 40 000 edi, reklama yeb qo'ydi
+    assert ads_eat_profit(uzs(0), uzs(1), fully_costed=True)  # aynan nolga tushdi
+    assert not ads_eat_profit(
+        uzs(20_000), uzs(50_000), fully_costed=True
+    )  # reklamadan keyin ham foyda bor
+    assert not ads_eat_profit(
+        uzs(-60_000), uzs(50_000), fully_costed=True
+    )  # reklamasiz ham zarar — sabab reklama emas
+    assert not ads_eat_profit(uzs(-5), uzs(0), fully_costed=True)  # reklama yo'q
+    assert not ads_eat_profit(
+        uzs(-10_000), uzs(50_000), fully_costed=False
+    )  # tannarxsiz qism bor — noaniq

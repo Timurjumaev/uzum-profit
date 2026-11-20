@@ -26,8 +26,8 @@ export function Home() {
   const org = currentOrg(me)!; // `app` marshruti tashkilotsiz foydalanuvchini onboarding'ga yuboradi
   const { filters } = useFilters();
   const params = useMemo(
-    () => ({ shops: filters.shops, start: filters.range.start, end: filters.range.end }),
-    [filters.shops, filters.range.start, filters.range.end],
+    () => ({ shops: filters.shops, start: filters.range.start, end: filters.range.end, lastYear: filters.compare === "lastYear" }),
+    [filters.shops, filters.range.start, filters.range.end, filters.compare],
   );
   const query = useQuery({ ...dashboardQuery(org.id, params), placeholderData: keepPreviousData });
   const sync = useQuery(syncQuery(org.id));
@@ -57,7 +57,7 @@ export function Home() {
   const emptyState = summary?.state === "never" ? "never" : summary && summary.state !== "fresh" ? "partial" : "none";
   return (
     <section className="home" aria-busy={query.isPlaceholderData || undefined}>
-      {filters.compare === "lastYear" && <Banner tone="info" title={t("home.lastYearSoon")} />}
+      {filters.compare === "lastYear" && Number(data.rows.find((r) => r.code === "revenue")?.previous ?? 0) === 0 && <Banner tone="info" title={t("home.lastYearEmpty")} />}
       {/* F50 (B4.80): yillik tushum chegarasiga yaqin (≥ 80%) yoki oshgan — rejimni o'zgartirish vaqti. */}
       <RevenueLimitBanner
         limit={data.revenue_limit}

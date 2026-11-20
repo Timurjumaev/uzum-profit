@@ -606,6 +606,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/ads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ads */
+        get: operations["ads_api_v1_orgs__org_id__ads_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/pnl": {
         parameters: {
             query?: never;
@@ -2031,6 +2048,77 @@ export interface components {
             /** Declared */
             declared: number;
         };
+        /** AdsDayOut */
+        AdsDayOut: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Ads */
+            ads: string;
+            /** Revenue */
+            revenue: string;
+            /** Drr */
+            drr: string | null;
+        };
+        /** AdsOut */
+        AdsOut: {
+            meta: components["schemas"]["Meta"];
+            /** Total */
+            total: string;
+            /** Estimated */
+            estimated: string;
+            /** Revenue */
+            revenue: string;
+            /** Drr */
+            drr: string | null;
+            /** By Type */
+            by_type: components["schemas"]["AdsTypeOut"][];
+            /** Daily */
+            daily: components["schemas"]["AdsDayOut"][];
+            /** Skus */
+            skus: components["schemas"]["AdsSkuOut"][];
+            /** Eaten */
+            eaten: components["schemas"]["AdsSkuOut"][];
+            /** Eaten Total */
+            eaten_total: number;
+            /** Skipped */
+            skipped: number;
+        };
+        /** AdsSkuOut */
+        AdsSkuOut: {
+            /**
+             * Sku Id
+             * Format: uuid
+             */
+            sku_id: string;
+            /** Shop Id */
+            shop_id: string | null;
+            /** Title */
+            title: string | null;
+            /** Revenue */
+            revenue: string;
+            /** Ads */
+            ads: string;
+            /** Acos */
+            acos: string | null;
+            /** Net Profit */
+            net_profit: string;
+            /** Eats Profit */
+            eats_profit: boolean;
+        };
+        /** AdsTypeOut */
+        AdsTypeOut: {
+            /** Code */
+            code: string | null;
+            /** Name */
+            name: string | null;
+            /** Amount */
+            amount: string;
+            /** Share */
+            share: string | null;
+        };
         /**
          * AlertsIn
          * @description Bekor (F17) va qaytarish (F18) ulushi chegarasi; ``null`` — o'chirish. ``margin_borderline`` — "Chegarada"
@@ -2211,6 +2299,16 @@ export interface components {
             fixed?: {
                 [key: string]: number | string;
             };
+        };
+        /**
+         * CabinetOut
+         * @description F57 (B5.0f): Uzum kabineti "Foyda"si (tushum − faqat komissiya) va u haqiqiy sof foydadan qancha baland.
+         */
+        CabinetOut: {
+            /** Profit */
+            profit: string;
+            /** Gap */
+            gap: string;
         };
         /**
          * CalcDefaultsOut
@@ -3797,6 +3895,14 @@ export interface components {
             cancel_share: string | null;
             /** Return Share */
             return_share: string | null;
+            /** Canceled Diff */
+            canceled_diff?: number | null;
+            /** Returns Diff */
+            returns_diff?: number | null;
+            /** Cancel Share Diff */
+            cancel_share_diff?: string | null;
+            /** Return Share Diff */
+            return_share_diff?: string | null;
         };
         /** OrdersSummaryOut */
         OrdersSummaryOut: {
@@ -3816,6 +3922,14 @@ export interface components {
             return_revenue: string;
             /** Return Storage Cost */
             return_storage_cost: string;
+            /** Previous Canceled */
+            previous_canceled?: number | null;
+            /** Previous Returns */
+            previous_returns?: number | null;
+            /** Previous Cancel Share */
+            previous_cancel_share?: string | null;
+            /** Previous Return Share */
+            previous_return_share?: string | null;
         };
         /** OrgCreate */
         OrgCreate: {
@@ -4237,6 +4351,8 @@ export interface components {
             previous: components["schemas"]["StatementOut"];
             /** Rows */
             rows: components["schemas"]["RowOut"][];
+            why: components["schemas"]["WhyOut"];
+            cabinet: components["schemas"]["CabinetOut"];
             /** Columns */
             columns: components["schemas"]["ColumnOut"][];
             expected: components["schemas"]["ExpectedOut"];
@@ -5357,6 +5473,12 @@ export interface components {
             return_share: string | null;
             /** Cancel Share */
             cancel_share: string | null;
+            /** Previous Net Profit */
+            previous_net_profit?: string | null;
+            /** Net Profit Diff */
+            net_profit_diff?: string | null;
+            /** Revenue Diff */
+            revenue_diff?: string | null;
             label: components["schemas"]["ProfitLabel"];
             /** Stock */
             stock: number;
@@ -5364,6 +5486,8 @@ export interface components {
             days_of_stock: string | null;
             /** Abc */
             abc: string;
+            /** Xyz */
+            xyz?: ("X" | "Y" | "Z") | null;
             /** Rank */
             rank: string | null;
             /** Status */
@@ -6207,6 +6331,23 @@ export interface components {
             sources: components["schemas"]["SourceOut"][];
             /** Transfers In */
             transfers_in: components["schemas"]["TransferOut"][];
+        };
+        /** WhyFactorOut */
+        WhyFactorOut: {
+            /** Code */
+            code: string;
+            /** Amount */
+            amount: string;
+        };
+        /**
+         * WhyOut
+         * @description F56 "Nega o'zgardi": sof foyda farqi (joriy − oldingi) va omillar; omillar yig'indisi = farq.
+         */
+        WhyOut: {
+            /** Diff */
+            diff: string;
+            /** Factors */
+            factors: components["schemas"]["WhyFactorOut"][];
         };
         /** PriceOut */
         upapi__routes__inventory__PriceOut: {
@@ -7840,6 +7981,8 @@ export interface operations {
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {
@@ -7878,6 +8021,55 @@ export interface operations {
             };
         };
     };
+    ads_api_v1_orgs__org_id__ads_get: {
+        parameters: {
+            query?: {
+                /** @description Davr boshi (Toshkent kuni) */
+                start?: string | null;
+                /** @description Davr oxiri, kiradi; standart — bugun */
+                end?: string | null;
+                /** @description Do'konlar (bir necha marta) */
+                shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdsOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     pnl_api_v1_orgs__org_id__pnl_get: {
         parameters: {
             query?: {
@@ -7888,6 +8080,8 @@ export interface operations {
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {
@@ -7934,6 +8128,8 @@ export interface operations {
                 label?: components["schemas"]["ProfitLabel"] | null;
                 /** @description ABC (F28) */
                 abc?: ("A" | "B" | "C") | null;
+                /** @description XYZ (F28) */
+                xyz?: ("X" | "Y" | "Z") | null;
                 sort?: string;
                 limit?: number;
                 page?: number;
@@ -7943,6 +8139,8 @@ export interface operations {
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {
@@ -7990,6 +8188,8 @@ export interface operations {
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {
@@ -8099,6 +8299,8 @@ export interface operations {
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {
@@ -8146,6 +8348,8 @@ export interface operations {
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {
@@ -8202,6 +8406,8 @@ export interface operations {
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {
@@ -8344,6 +8550,8 @@ export interface operations {
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {
@@ -8389,12 +8597,15 @@ export interface operations {
                 label?: components["schemas"]["ProfitLabel"] | null;
                 abc?: ("A" | "B" | "C") | null;
                 sort?: string;
+                xyz?: ("X" | "Y" | "Z") | null;
                 /** @description Davr boshi (Toshkent kuni) */
                 start?: string | null;
                 /** @description Davr oxiri, kiradi; standart — bugun */
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {
@@ -8446,6 +8657,8 @@ export interface operations {
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {

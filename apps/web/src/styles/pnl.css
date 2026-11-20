@@ -112,6 +112,85 @@
   }
 }
 
+/* --- Uzum kabineti ko'rsatadigan (B5.0f, F57) --- */
+.pnl-cabinet {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+}
+
+.pnl-cabinet__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-3);
+}
+
+/* --- Nega o'zgardi (B5.6, F56) --- */
+.pnl-why {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-hairline);
+  background: var(--bg-surface);
+}
+
+.pnl-why__list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pnl-why__row {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.pnl-why__bar {
+  display: block;
+  block-size: 0.75rem;
+  border-radius: 999px;
+  background: var(--bg-subtle, rgb(0 0 0 / 6%));
+  overflow: hidden;
+}
+
+.pnl-why__fill {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  transition: inline-size 0.3s ease;
+}
+
+.pnl-why__fill.is-positive {
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+}
+
+.pnl-why__fill.is-negative {
+  background: linear-gradient(90deg, #fb7185, #e11d48);
+}
+
+@media (max-width: 40rem) {
+  .pnl-why__row {
+    grid-template-columns: 1fr auto;
+  }
+
+  .pnl-why__bar {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pnl-why__fill {
+    transition: none;
+  }
+}
+
 /* --- Kutilayotgan sof foyda (F16, ADR-037) --- */
 .pnl-pending {
   display: grid;

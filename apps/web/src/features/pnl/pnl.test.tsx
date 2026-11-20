@@ -451,9 +451,10 @@ describe("holatlar", () => {
     expect(api.count(PNL_ROUTE)).toBeGreaterThan(0);
   });
 
-  it("o'tgan yil bilan solishtirish — hozircha oldingi davr ekani aytiladi", async () => {
+  it("o'tgan yil bilan solishtirish — o'tgan yilda sotuv bo'lsa izoh chiqmaydi, sarlavha izohi o'zgaradi", async () => {
     await renderPnl(`${PATH}&cmp=lastYear`);
-    expect(screen.getByText(/Oʻtgan yil bilan solishtirish keyinroq/)).toBeTruthy();
+    expect(screen.getByText(/^Oʻtgan yil shu davri: /)).toBeTruthy();
+    expect(screen.queryByText(/Oʻtgan yilning shu davrida sotuv maʼlumoti yoʻq/)).toBeNull();
   });
 
   it("ruscha: sarlavha va ustunlar", async () => {
@@ -462,6 +463,53 @@ describe("holatlar", () => {
     const heads = within(screen.getByRole("table", { name: "Прибыль и убыток: от выручки до чистой прибыли" })).getAllByRole("columnheader");
     expect(heads.slice(1, 4).map((h) => h.textContent)).toEqual(["Факт", "Ожидается", "Итого"]);
     expect(screen.getByRole("tab", { name: "Магазины" })).toBeTruthy();
+  });
+});
+
+describe("kabinet foydasi (B5.0f, F57)", () => {
+  it("kabinet \"Foyda\"si, haqiqiy sof foyda va farq — server qiymatlari; sotuv yo'q — blok yo'q", async () => {
+    await renderPnl();
+    const box = within(await screen.findByRole("region", { name: /Uzum kabineti koʻrsatadigan/ }));
+    const value = (label: string) => norm(box.getByText(label).closest(".ui-kpi")!.querySelector(".kpi")!.textContent ?? "");
+    expect(value("Kabinet “Foyda”si")).toBe(m("4800000.00"));
+    expect(value("Haqiqiy sof foyda")).toBe(m("3210000.00"));
+    expect(value("Farq")).toBe(m("1590000.00"));
+    cleanup();
+    const base = pnlData();
+    await renderPnl(PATH, { [PNL_ROUTE]: () => json(200, pnlData({ statement: { ...base.statement, lines: 0 } })) });
+    expect(screen.queryByRole("region", { name: /Uzum kabineti koʻrsatadigan/ })).toBeNull();
+  });
+});
+
+describe("o'tgan yil shu davri (B5.6)", () => {
+  it("so'rovga compare=last_year, sarlavha izohi; o'tgan yil sotuvi yo'q — izoh", async () => {
+    const urls: string[] = [];
+    const base = pnlData();
+    await renderPnl(`${PATH}&cmp=lastYear`, { [PNL_ROUTE]: (r) => (urls.push(r.url), json(200, pnlData({ previous: { ...base.previous, lines: 0 } }))) });
+    expect(new URL(urls[0]!).searchParams.get("compare")).toBe("last_year");
+    expect(await screen.findByText(/^Oʻtgan yil shu davri: /)).toBeTruthy();
+    expect(screen.getByText(/Oʻtgan yilning shu davrida sotuv maʼlumoti yoʻq/)).toBeTruthy();
+  });
+});
+
+describe("nega o'zgardi (F56)", () => {
+  it("omillar kattaligi bo'yicha, nol omil yashirin, jami farq ko'rinadi", async () => {
+    await renderPnl();
+    const box = within(await screen.findByRole("region", { name: /Nega oʻzgardi/ }));
+    const names = box.getAllByRole("listitem").map((li) => li.querySelector(".pnl-why__name")!.textContent);
+    expect(names).toEqual(["Sotuv hajmi", "Sotuv narxi", "Komissiya", "Tannarx"]); // logistika 0 — yashirin
+    expect(norm(box.getByText("Sof foyda oldingi davrga nisbatan").parentElement!.querySelector(".kpi")!.textContent ?? "")).toBe(m("1010000.00"));
+    expect(norm(box.getByText("Komissiya").closest("li")!.querySelector("strong")!.textContent ?? "")).toBe(m("-120000.00"));
+    expect(box.getByText(/Omillar yigʻindisi sof foyda farqiga teng/)).toBeTruthy();
+  });
+
+  it("oldingi davrda sotuv yo'q — izoh; farq yo'q — izoh", async () => {
+    const base = pnlData();
+    await renderPnl(PATH, { [PNL_ROUTE]: () => json(200, pnlData({ previous: { ...base.previous, lines: 0 } })) });
+    expect(within(await screen.findByRole("region", { name: /Nega oʻzgardi/ })).getByText(/Oldingi davrda sotuv boʻlmagan/)).toBeTruthy();
+    cleanup();
+    await renderPnl(PATH, { [PNL_ROUTE]: () => json(200, pnlData({ why: { diff: "0.00", factors: [{ code: "volume", amount: "0.00" }] } })) });
+    expect(within(await screen.findByRole("region", { name: /Nega oʻzgardi/ })).getByText(/omillar yoʻq/)).toBeTruthy();
   });
 });
 

@@ -78,3 +78,46 @@ export function expensesData(over: Partial<Expenses> = {}): Expenses {
     ...over,
   };
 }
+
+type Ads = components["schemas"]["AdsOut"];
+type AdsSku = components["schemas"]["AdsSkuOut"];
+
+const SKU_AD = "c1111111-1111-4111-8111-111111111111";
+const SKU_EATEN = "c2222222-2222-4222-8222-222222222222";
+
+export const adsSku = (over: Partial<AdsSku> = {}): AdsSku => ({
+  sku_id: SKU_AD,
+  shop_id: SHOP_A,
+  title: "Oʻyinchoq mashina",
+  revenue: "1000000.00",
+  ads: "50000.00",
+  acos: "0.050000",
+  net_profit: "200000.00",
+  eats_profit: false,
+  ...over,
+});
+
+/** Namunaviy `/ads` javobi (B5.5): ikki reklama turi, ikki kun, bitta "foydani yeb qo'ygan" SKU. */
+export function adsData(over: Partial<Ads> = {}): Ads {
+  const eaten = adsSku({ sku_id: SKU_EATEN, title: "Krujka", revenue: "300000.00", ads: "60000.00", acos: "0.200000", net_profit: "-10000.00", eats_profit: true });
+  return {
+    meta,
+    total: "110000.00",
+    estimated: "10000.00",
+    revenue: "1300000.00",
+    drr: "0.084615",
+    by_type: [
+      { code: "Y000120", name: "Xaridor tovarni olganida", amount: "70000.00", share: "0.700000" },
+      { code: "Y000119", name: null, amount: "30000.00", share: "0.300000" },
+    ],
+    daily: [
+      { day: "2026-10-01", ads: "40000.00", revenue: "500000.00", drr: "0.080000" },
+      { day: "2026-10-02", ads: "0.00", revenue: "0.00", drr: null },
+    ],
+    skus: [eaten, adsSku()],
+    eaten: [eaten],
+    eaten_total: 1,
+    skipped: 2,
+    ...over,
+  };
+}

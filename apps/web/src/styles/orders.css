@@ -8,7 +8,8 @@
 
 .orders > *,
 .orders-list > *,
-.orders-analysis > * {
+.orders-analysis > *,
+.ads-analysis > * {
   min-inline-size: 0;
 }
 
@@ -42,7 +43,8 @@
 
 #orders-panel,
 .orders-list,
-.orders-analysis {
+.orders-analysis,
+.ads-analysis {
   display: grid;
   gap: var(--space-4);
   min-inline-size: 0;

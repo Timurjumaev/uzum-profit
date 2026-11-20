@@ -18,6 +18,8 @@ Hodisalar (ishlaydiganlari; qolganlari katalogda ``stage`` bilan):
 - **Zarar bilan sotuv** (F53) — SKU'ning oxirgi N ta sotuvi zararda; xuddi shunday, faqat yangi SKU kirganda.
 - **Tannarxsiz sotuvlar** — kecha tannarxsiz sotilgan **yangi** SKU (har SKU bir marta; B6.4, A3); soni — kunlik xulosada.
 - **Yangi jarima** — oxirgi 3 kunda paydo bo'lgan jarima xarajati (har biri bir marta).
+- **SKU komissiyasi o'zgardi** (B5.5) — kunlik qoldiq snapshotidagi Uzum komissiyasi (`sku_daily.commission_pct`) oldingi
+  snapshotdan farq qilsa (oxirgi 2 kun ichida); o'zgargan kun bo'yicha bitta xabar (SKU, eski → yangi %), takror yo'q.
 - **Postavka kamomadi** — Uzum kam qabul qilgan va qaror yozilmagan farq (TM7).
 - **Xarid sanalmagan** (TM9.8) — "Keldi" belgilangan xarid N kun (standart 3) sanalmay tursa, har xarid uchun bir marta.
 - **Kargo kechikmoqda** (B5.1) — "Yo'lda" xarid kutilgan keldi sanasi (F25 "yo'l") + N kun (standart 5) dan o'tgan, har xarid bir marta.
@@ -70,6 +72,8 @@ from upapi.reports.stock import load_stock
 TASHKENT = ZoneInfo("Asia/Tashkent")
 TOP = 5
 FINE_DAYS = 3
+COMMISSION_DAYS = 2  # komissiya o'zgarishi shuncha kun ichida xabar qilinadi
+COMMISSION_LOOKBACK = 10  # oldingi snapshotni topish uchun (snapshot yo'q kunlar bo'lishi mumkin)
 IDS_CAP = 500  # bazaviy ro'yxat (`payload.ids`) uzunligi
 HEAVY_EVERY_MINUTES = (
     5  # og'ir tekshiruvlar (qoldiq, zarar) — soatda bir marta (har soatning dastlabki 5 daqiqasi)
@@ -500,6 +504,74 @@ async def uncosted_new_skus(conn: AsyncConnection, day: date) -> list[tuple[UUID
         if r.cogs is None and status_group(r.status) in COUNTED:
             lines[r.sku_id] = lines.get(r.sku_id, 0) + 1
     return sorted(lines.items(), key=lambda kv: str(kv[0]))
+
+
+def _pct_text(value: Decimal) -> str:
+    return format(value.quantize(Decimal("0.01")).normalize(), "f")
+
+
+async def commission_changes(conn: AsyncConnection, today: date) -> list[Found]:
+    """B5.5. Uzum komissiyasi o'zgargan SKU'lar: har SKU'ning kunlik snapshotidagi ``commission_pct`` o'zidan oldingi
+    snapshotdan farq qilsa (o'zgarish kuni oxirgi ``COMMISSION_DAYS`` kunda). Oldingi snapshot yo'q (birinchi ko'rinish) —
+    taqqoslash yo'q, xabar yo'q. O'zgarish kuni bo'yicha bitta ``Found``; kaliti — o'zgarish ro'yxati (SKU, yangi qiymat),
+    shuning uchun bir xil ro'yxat takror yuborilmaydi, yangi o'zgargan SKU esa yangi xabar beradi."""
+    sd = m.sku_daily
+    known = (
+        select(
+            sd.c.sku_id,
+            sd.c.day,
+            sd.c.commission_pct.label("new"),
+            func.lag(sd.c.commission_pct)
+            .over(partition_by=sd.c.sku_id, order_by=sd.c.day)
+            .label("old"),
+        )
+        .where(
+            sd.c.commission_pct.is_not(None),
+            sd.c.day >= today - timedelta(days=COMMISSION_DAYS + COMMISSION_LOOKBACK),
+            sd.c.day <= today,
+        )
+        .subquery()
+    )
+    rows = (
+        await conn.execute(
+            select(known.c.sku_id, known.c.day, known.c.old, known.c.new)
+            .where(
+                known.c.old.is_not(None),
+                known.c.new != known.c.old,
+                known.c.day >= today - timedelta(days=COMMISSION_DAYS),
+            )
+            .order_by(known.c.day, known.c.sku_id)
+        )
+    ).all()
+    by_day: dict[date, list[Any]] = {}
+    for r in rows:
+        by_day.setdefault(r.day, []).append(r)
+    out = []
+    for day, items in by_day.items():
+        # Eng katta o'zgarish birinchi (xabarda birinchi 5 ta).
+        items = sorted(items, key=lambda r: (-abs(r.new - r.old), str(r.sku_id)))
+        catalog = await sku_catalog(conn, ids=[r.sku_id for r in items[:TOP]])
+        digest = _digest([f"{r.sku_id}:{r.new}" for r in items])
+        out.append(
+            Found(
+                Event.COMMISSION_CHANGED,
+                f"commission:{day.isoformat()}:{digest}",
+                {
+                    "day": day.isoformat(),
+                    "count": len(items),
+                    "skus": [
+                        {
+                            "sku_id": str(r.sku_id),
+                            "title": catalog[r.sku_id].title if r.sku_id in catalog else None,
+                            "old": _pct_text(r.old),
+                            "new": _pct_text(r.new),
+                        }
+                        for r in items[:TOP]
+                    ],
+                },
+            )
+        )
+    return out
 
 
 async def new_fines(conn: AsyncConnection, now: datetime) -> list[Found]:
@@ -938,6 +1010,8 @@ async def evaluate(conn: AsyncConnection, org_id: UUID, now: datetime) -> int:
         common += await new_fines(conn, now)
     if Event.RECEIVING_SHORTAGE in wanted:
         common += await receiving_shortages(conn)
+    if Event.COMMISSION_CHANGED in wanted and heavy:
+        common += await commission_changes(conn, today)
 
     rows = [(p, f) for f in common for p in people if p.wants(f.event)] + personal
     created = 0

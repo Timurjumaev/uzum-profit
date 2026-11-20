@@ -22,12 +22,15 @@ from upcore.pnl import (
     CellSales,
     ExpenseItem,
     OwnExpense,
+    Statement,
     TaxBase,
     TaxRule,
     build_cells,
+    cabinet_profit,
     compare,
     expected_value,
     expense_items,
+    explain_change,
     order_to_profit,
 )
 
@@ -907,3 +910,110 @@ def test_label_borderline_is_a_setting() -> None:
     assert (
         loss.label(0) is ProfitLabel.LOSS and loss.label(1) is ProfitLabel.LOSS
     )  # zarar chegaraga bog'liq emas
+
+
+def _statement(
+    units: int,
+    price: int,
+    commission: int,
+    logistics: int,
+    cogs: int,
+    ads: int = 0,
+    other: int = 0,
+    own: int = 0,
+    tax: int = 0,
+    deducted: int | None = None,
+) -> Statement:
+    """Tannarxi hammasi ma'lum Statement: tushum = dona × narx, komissiya va logistika — jami (dona uchun emas)."""
+    revenue = uzs(units * price)
+    return Statement(
+        revenue=revenue,
+        commission=uzs(commission),
+        logistics=uzs(logistics),
+        cogs=uzs(cogs),
+        covered_revenue=revenue,
+        covered_payout=revenue - uzs(commission) - uzs(logistics),
+        uzum_expenses={C.ADVERTISING: uzs(ads), C.STORAGE: uzs(other)},
+        own_expenses={"Ijara": uzs(own)},
+        tax=uzs(tax),
+        expenses_deducted=uzs(ads + other + own + tax if deducted is None else deducted),
+        units=units,
+        lines=units,
+        uncovered_lines=0,
+        covered_units=units,
+    )
+
+
+def test_f56_why_changed_known_factors() -> None:
+    """Dona 100 → 120, narx 1000 → 1100, komissiya, tannarx ko'tarildi, reklama o'sdi: har omil o'z qiymatida."""
+    before = _statement(100, 1000, commission=20_000, logistics=10_000, cogs=40_000, ads=5_000)
+    after = _statement(120, 1100, commission=26_400, logistics=12_000, cogs=54_000, ads=8_000)
+    out = explain_change(after, before)
+    got = {f.code: f.amount.amount for f in out.factors}
+    assert out.diff == after.net_profit - before.net_profit
+    # oldingi marja = 1000 − 200 − 100 − 400 = 300 → hajm = 20 × 300
+    assert got["volume"] == D(6_000)
+    assert got["price"] == D(12_000)  # 120 × (1100 − 1000)
+    assert got["advertising"] == D(-3_000)
+    assert sum(got.values()) == out.diff.amount
+    assert [f.code for f in out.factors][:2] == ["volume", "price"]
+
+
+def test_f56_no_units_in_one_period_goes_to_volume() -> None:
+    empty = _statement(0, 0, 0, 0, 0)
+    after = _statement(10, 1000, commission=2_000, logistics=1_000, cogs=4_000, ads=500)
+    out = explain_change(after, empty)
+    got = {f.code: f.amount.amount for f in out.factors}
+    assert got["volume"] == after.gross_profit.amount and got["advertising"] == D(-500)
+    assert sum(got.values()) == out.diff.amount == after.net_profit.amount
+    back = explain_change(empty, after)
+    assert (
+        sum(f.amount.amount for f in back.factors) == back.diff.amount == -after.net_profit.amount
+    )
+
+
+def test_f56_expenses_without_categories_go_to_other() -> None:
+    """Xarajat toifalari bo'sh, lekin ayrilgan xarajat bor — "other" omili (yig'indi baribir farqqa teng)."""
+    a = _statement(10, 1000, 2_000, 1_000, 4_000, deducted=700)
+    b = _statement(10, 1000, 2_000, 1_000, 4_000, deducted=100)
+    out = explain_change(a, b)
+    assert {f.code: f.amount.amount for f in out.factors}["other"] == D(-600)
+    assert sum(f.amount.amount for f in out.factors) == out.diff.amount
+
+
+@given(
+    st.integers(0, 500),
+    st.integers(0, 5_000),
+    st.integers(0, 200_000),
+    st.integers(0, 100_000),
+    st.integers(0, 400_000),
+    st.integers(0, 50_000),
+    st.integers(0, 50_000),
+    st.integers(0, 50_000),
+    st.integers(0, 50_000),
+    st.integers(0, 500),
+    st.integers(0, 5_000),
+    st.integers(0, 200_000),
+    st.integers(0, 100_000),
+    st.integers(0, 400_000),
+    st.integers(0, 50_000),
+)
+def test_f56_factors_always_sum_to_the_difference(
+    u1: int, p1: int, c1: int, l1: int, k1: int, a1: int, o1: int, w1: int, t1: int,
+    u0: int, p0: int, c0: int, l0: int, k0: int, a0: int,
+) -> None:  # fmt: skip
+    """Omillar yig'indisi — har qanday ikki hisobot uchun — sof foyda farqiga aniq teng (tiyingacha)."""
+    now = _statement(u1, p1, c1, l1, k1, ads=a1, other=o1, own=w1, tax=t1)
+    then = _statement(u0, p0, c0, l0, k0, ads=a0)
+    out = explain_change(now, then)
+    assert total([f.amount for f in out.factors], Money.zero("UZS").currency) == out.diff
+
+
+def test_f57_cabinet_profit_is_revenue_minus_commission_only() -> None:
+    """Kabinet "Foyda"si — tushum − faqat komissiya; logistika, reklama, tannarx ayirilmaydi (09 §11.3)."""
+    s = _statement(100, 1000, commission=20_000, logistics=10_000, cogs=40_000, ads=5_000)
+    assert cabinet_profit(s) == uzs(80_000)  # 100 000 − 20 000
+    assert cabinet_profit(s) - s.net_profit == uzs(
+        80_000 - (100_000 - 20_000 - 10_000 - 40_000 - 5_000)
+    )
+    assert cabinet_profit(_statement(0, 0, 0, 0, 0)) == uzs(0)

@@ -26,6 +26,8 @@ describe("productsSearch", () => {
     expect(productsSearch({ q: " mashina ", sort: "-roi", label: "loss", abc: "B" })).toEqual({ q: " mashina ", sort: "-roi", label: "loss", abc: "B" });
     expect(productsSearch({ q: "  ", sort: "-revenue" })).toEqual({});
     expect(productsSearch({ sort: "nope", label: "x", abc: "D" })).toEqual({});
+    expect(productsSearch({ xyz: "Z" })).toEqual({ xyz: "Z" }); // B5.5: XYZ filtri URL'dan
+    expect(productsSearch({ xyz: "W" })).toEqual({});
     expect(productsSearch({ q: "a".repeat(300) }).q).toHaveLength(100);
     expect(productsSearch({ sort: 5, q: 3 })).toEqual({});
   });
