@@ -7,6 +7,7 @@ Yangi tizim (`packages/`, `apps/`) uchun; legacy ilova o'zgarishlari git tarixid
 
 ### Qo'shildi
 
+- B5.7 (2-qadam): `sale_items.withdrawn_seen_at` (migratsiya 0037) — qator birinchi marta yechilgan (`withdrawnProfit` > 0) ko'rilgan vaqt; Uzum to'lov sanasini bermagani uchun to'lov hodisalari (sana, summa) shundan tiklanadi. Birinchi sinxronda oldin yechilgan qatorlar bir paytda belgilanadi (boshlang'ich holat). Real o'lchov natijasi 05 B5.7 da.
 - B5.7 (1-qadam): `realcheck` ga `payout` bo'limi — to'lov prognozi o'lchovi: `withdrawnProfit` holat bo'yicha, topshirilgandan Yakunlangangacha kunlar taqsimoti ("10 kun" qoidasi ma'lumotda ko'rinadimi), to'lov / sana / yechish bilan bog'liq xom maydonlar (Uzum qoidalarni beradimi) va akkaunt darajasidagi xarajatlar (yechish haqi); faqat sonlar va sanalar.
 - B5.4 (3-qadam): real o'lchov (byDurii, EL-ONE) natijasi bo'yicha — hodisa "Yo'qolgan tovar" faqat Uzumning `quantityMissing > 0` maydonidan (yangi SKU kirganda bir marta, ombor roli); balans usuli (F31) ko'rsatilmaydi (manfiy farq ko'p, haqiqiy yo'qotish topilmadi), F32 summasi tasdiqlanmaguncha ko'rsatilmaydi.
 - B5.4 (2-qadam): `realcheck` ga `lost` bo'limi — yo'qolgan tovar o'lchovi: har SKU balans farqi (qabul − sotilgan − qaytgan − brak − omborda), uning 14 / 30 kun oldingi qiymati (barqarorlik), `quantityMissing` va kompensatsiya qatorlari (F32); faqat sonlar va SKU identifikatorlari.
