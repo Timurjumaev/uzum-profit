@@ -357,7 +357,7 @@ export const uzLatn = {
   home: {
     heroTitle: "Sof foyda, {{period}}",
     vsPrevious: "oldingi davrga nisbatan ({{period}})",
-    lastYearSoon: "Oʻtgan yil bilan solishtirish keyinroq qoʻshiladi. Hozir oldingi davr bilan solishtirilmoqda.",
+    lastYearEmpty: "Oʻtgan yilning shu davrida sotuv maʼlumoti yoʻq — solishtirib boʻlmaydi. Oldingi davr bilan solishtirish uchun “Oldingi davr”ni tanlang.",
     ledger: {
       uzum: "Uzum xarajatlari",
       own: "Oʻz xarajatlarim",
@@ -621,6 +621,7 @@ export const uzLatn = {
       diff: "Farq",
     },
     previousNote: "Oldingi davr: {{period}}",
+    lastYearNote: "Oʻtgan yil shu davri: {{period}}",
     commonNote: "Doʻkon tanlangan: umumiy xarajatlar (akkaunt xarajatlari, qatʼiy soliq, doʻkonsiz oʻz xarajatlaringiz) bu hisobga kirmaydi — ular faqat hamma doʻkonlar jamida.",
     partLabel: "Hisob varagʻi ustuni",
     partsNote: "Yakunlangan — mijoz olgan va qaytarish muddati oʻtgan sotuvlar. Kutilayotgan — jarayondagi sotuvlar (mijoz hali olmagan yoki 10 kun oʻtmagan), xuddi yakunlanganlar kabi hisoblangan. Jami = yakunlangan + kutilayotgan.",

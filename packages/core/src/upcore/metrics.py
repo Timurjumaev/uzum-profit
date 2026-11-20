@@ -51,6 +51,14 @@ def date_from_epoch_ms(epoch_ms: int) -> date:
     return business_date(datetime.fromtimestamp(epoch_ms / 1000, tz=UTC))
 
 
+def _year_back(day: date) -> date:
+    return (
+        day.replace(year=day.year - 1, day=28)
+        if (day.month, day.day) == (2, 29)
+        else day.replace(year=day.year - 1)
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class Period:
     """F1. Yopiq sana oralig'i [start; end] — Toshkent kunlari, ikkala chekka ham kiradi."""
@@ -68,6 +76,10 @@ class Period:
     @property
     def days(self) -> int:
         return (self.end - self.start).days + 1
+
+    def year_ago(self) -> Period:
+        """O'tgan yilning xuddi shu sanalari (solishtirish: "o'tgan yil shu davri", B5.6); 29-fevral — 28-fevral."""
+        return Period(_year_back(self.start), _year_back(self.end))
 
     def previous(self) -> Period:
         """Oldingi xuddi shu uzunlikdagi davr (solishtirish uchun)."""

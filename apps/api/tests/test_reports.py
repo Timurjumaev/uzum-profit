@@ -438,6 +438,25 @@ def test_pnl_rows_and_previous(world: World) -> None:
     }  # fmt: skip
 
 
+def test_pnl_and_dashboard_compare_with_last_year(world: World) -> None:
+    """B5.6: ``compare=last_year`` — o'tgan yilning xuddi shu sanalari; 20-sentabr 2026 (2 dona, 400 000) ga nisbatan."""
+    q = {"start": "2027-09-20", "end": "2027-09-20", "compare": "last_year"}
+    body = world.get("pnl", **q)
+    assert body["meta"]["previous"] == {"start": "2026-09-20", "end": "2026-09-20", "days": 1}
+    assert money(body["previous"]["revenue"]) == D(400_000)
+    dash = world.get("dashboard", **q)
+    assert dash["meta"]["previous"]["start"] == "2026-09-20"
+    # Standart — oldingi shu uzunlikdagi davr (kun oldin).
+    assert (
+        world.get("pnl", start="2027-09-20", end="2027-09-20")["meta"]["previous"]["start"]
+        == "2027-09-19"
+    )
+    assert world.call("pnl", compare="never", **OCT).status_code == 422
+    # 29-fevral — o'tgan yil 28-fevral.
+    leap = world.get("pnl", start="2028-02-29", end="2028-03-01", compare="last_year")
+    assert leap["meta"]["previous"] == {"start": "2027-02-28", "end": "2027-03-01", "days": 2}
+
+
 @pytest.mark.parametrize("view", ["month", "day", "shop", "sku"])
 def test_pnl_columns_sum_to_total(world: World, view: str) -> None:
     body = world.get("pnl", view=view, **OCT)

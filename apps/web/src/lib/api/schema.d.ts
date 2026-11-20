@@ -7858,6 +7858,8 @@ export interface operations {
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {
@@ -7906,6 +7908,8 @@ export interface operations {
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {
@@ -7961,6 +7965,8 @@ export interface operations {
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {
@@ -8008,6 +8014,8 @@ export interface operations {
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {
@@ -8117,6 +8125,8 @@ export interface operations {
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {
@@ -8164,6 +8174,8 @@ export interface operations {
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {
@@ -8220,6 +8232,8 @@ export interface operations {
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {
@@ -8362,6 +8376,8 @@ export interface operations {
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {
@@ -8413,6 +8429,8 @@ export interface operations {
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {
@@ -8464,6 +8482,8 @@ export interface operations {
                 end?: string | null;
                 /** @description Do'konlar (bir necha marta) */
                 shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {

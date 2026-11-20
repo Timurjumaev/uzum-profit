@@ -2302,6 +2302,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {
@@ -2424,6 +2440,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {
@@ -2630,6 +2662,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {
@@ -2753,6 +2801,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {
@@ -3179,6 +3243,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {
@@ -3292,6 +3372,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {
@@ -3485,6 +3581,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {
@@ -3859,6 +3971,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {
@@ -4035,6 +4163,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {
@@ -4188,6 +4332,22 @@
               "title": "Shop"
             },
             "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
           }
         ],
         "responses": {

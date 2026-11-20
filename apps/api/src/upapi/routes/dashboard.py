@@ -417,7 +417,7 @@ async def telegram_lost(conn: AsyncConnection, user_id: UUID) -> int:
 @router.get("/orgs/{org_id}/dashboard", response_model=DashboardOut)
 async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
     conn, today = ctx.conn, f.today
-    previous = f.period.previous()
+    previous = f.compare_period()
     this_month = Period(today.replace(day=1), today)
     last_end = this_month.start - timedelta(days=1)
     last_month = Period(last_end.replace(day=1), last_end)
