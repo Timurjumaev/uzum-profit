@@ -685,6 +685,11 @@ xarajat bor bo'lsa — "boshqa". `upcore.pnl.explain_change`.
 reklama, saqlash, jarima, tannarx va soliq ayirilmaydi; 09 §11.3). Faqat kabinet bilan solishtirish uchun; farq = F57 − F12.
 `upcore.pnl.cabinet_profit`.
 
+**F58. Reklama foydasini yeb qo'ygan SKU** (B5.5) — davrda reklama > 0, **sof foyda + reklama > 0** (reklamadan oldingi foyda musbat) va
+**sof foyda ≤ 0**; faqat hamma sotuvi tannarxli SKU (F15: aks holda xarajatning bir qismi ayrilmagan, "reklamadan oldingi foyda" noaniq —
+bunday reklamali SKU'lar soni alohida ko'rsatiladi). Reklamasiz ham zarar bo'lsa — sabab reklama emas, ro'yxatga kirmaydi. Reklama
+turlari — Uzum kodi va uning o'z matni; ROMI, CTR yo'q (Open API kampaniya, ko'rish va klik bermaydi). `upcore.metrics.ads_eat_profit`, `/ads`.
+
 **F53. Zarar bilan sotuv signali** (M15, B6.1) — SKU'ning oxirgi N ta hisobga olinadigan (F2) sotuvining hammasida qator
 foydasi = Uzum to'lovi (F6 `sellerProfit`) − tannarx (F21) < 0; N — sozlanadi (standart 3, 2–10). Tannarxi noma'lum sotuv
 zanjirni uzadi (taxmin bilan signal yo'q, tamoyil 9); soliq va reklama bu signalga kirmaydi. Oxirgi 30 kun.

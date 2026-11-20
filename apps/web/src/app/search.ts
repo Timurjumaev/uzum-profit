@@ -110,11 +110,11 @@ export function ordersSearch(search: Record<string, unknown>): OrdersSearch {
   return out;
 }
 
-export type ExpensesSearch = { section?: "own"; page?: number };
+export type ExpensesSearch = { section?: "own" | "ads"; page?: number };
 
-/** Xarajatlar (M8): bo'lim (`section`) — Uzum xarajatlari (standart, URL'da yo'q) yoki o'z xarajatlarim. */
+/** Xarajatlar (M8): bo'lim (`section`) — Uzum xarajatlari (standart, URL'da yo'q), reklama tahlili (B5.5) yoki o'z xarajatlarim. */
 export function expensesSearch(search: Record<string, unknown>): ExpensesSearch {
-  const out: ExpensesSearch = search.section === "own" ? { section: "own" } : {};
+  const out: ExpensesSearch = search.section === "own" || search.section === "ads" ? { section: search.section } : {};
   const page = pageParam(search.page);
   if (page !== undefined) out.page = page;
   return out;

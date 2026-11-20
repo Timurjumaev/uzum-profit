@@ -606,6 +606,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/ads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ads */
+        get: operations["ads_api_v1_orgs__org_id__ads_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/pnl": {
         parameters: {
             query?: never;
@@ -2030,6 +2047,77 @@ export interface components {
             after: number;
             /** Declared */
             declared: number;
+        };
+        /** AdsDayOut */
+        AdsDayOut: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Ads */
+            ads: string;
+            /** Revenue */
+            revenue: string;
+            /** Drr */
+            drr: string | null;
+        };
+        /** AdsOut */
+        AdsOut: {
+            meta: components["schemas"]["Meta"];
+            /** Total */
+            total: string;
+            /** Estimated */
+            estimated: string;
+            /** Revenue */
+            revenue: string;
+            /** Drr */
+            drr: string | null;
+            /** By Type */
+            by_type: components["schemas"]["AdsTypeOut"][];
+            /** Daily */
+            daily: components["schemas"]["AdsDayOut"][];
+            /** Skus */
+            skus: components["schemas"]["AdsSkuOut"][];
+            /** Eaten */
+            eaten: components["schemas"]["AdsSkuOut"][];
+            /** Eaten Total */
+            eaten_total: number;
+            /** Skipped */
+            skipped: number;
+        };
+        /** AdsSkuOut */
+        AdsSkuOut: {
+            /**
+             * Sku Id
+             * Format: uuid
+             */
+            sku_id: string;
+            /** Shop Id */
+            shop_id: string | null;
+            /** Title */
+            title: string | null;
+            /** Revenue */
+            revenue: string;
+            /** Ads */
+            ads: string;
+            /** Acos */
+            acos: string | null;
+            /** Net Profit */
+            net_profit: string;
+            /** Eats Profit */
+            eats_profit: boolean;
+        };
+        /** AdsTypeOut */
+        AdsTypeOut: {
+            /** Code */
+            code: string | null;
+            /** Name */
+            name: string | null;
+            /** Amount */
+            amount: string;
+            /** Share */
+            share: string | null;
         };
         /**
          * AlertsIn
@@ -7911,6 +7999,55 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DashboardOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ads_api_v1_orgs__org_id__ads_get: {
+        parameters: {
+            query?: {
+                /** @description Davr boshi (Toshkent kuni) */
+                start?: string | null;
+                /** @description Davr oxiri, kiradi; standart — bugun */
+                end?: string | null;
+                /** @description Do'konlar (bir necha marta) */
+                shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdsOut"];
                 };
             };
             /** @description Validatsiya xatosi */

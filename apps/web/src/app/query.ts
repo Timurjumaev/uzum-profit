@@ -230,6 +230,13 @@ export const ordersQuery = (orgId: string, p: ReportParams, group: string | unde
       ),
   });
 
+/** Reklama tahlili (B5.5): turlar bo'yicha summa, kunlik DRR (F19), SKU ACOS va "reklama foydasini yeb qo'ygan" SKU (F58). */
+export const adsQuery = (orgId: string, p: ReportParams) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "ads", p],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/ads", { params: { path: { org_id: orgId }, query: reportQuery(p) } })),
+  });
+
 /** Bekor va qaytish tahlili: ulushlar (F17, F18), kunlik trend, sabablar, SKU bo'yicha, qaytim saqlash xarajati. */
 export const ordersAnalysisQuery = (orgId: string, p: ReportParams) =>
   queryOptions({

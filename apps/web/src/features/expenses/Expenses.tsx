@@ -12,10 +12,11 @@ import { expensesSearch } from "../../app/search";
 import { Banner, Button, Skeleton, PageHelp } from "../../components/ui";
 import { cx } from "../../components/ui/cx";
 import { useFormat } from "../../lib/i18n";
+import { AdsAnalysis } from "./Ads";
 import { OwnExpenses } from "./OwnExpenses";
 import { UzumExpenses } from "./UzumExpenses";
 
-const TABS = ["uzum", "own"] as const;
+const TABS = ["uzum", "ads", "own"] as const;
 
 export function Expenses() {
   const { t } = useTranslation();
@@ -32,7 +33,7 @@ export function Expenses() {
   );
   const query = useQuery(expensesQuery(org.id, params));
   const setTab = (next: (typeof TABS)[number]) =>
-    void navigate({ to: "/expenses", search: (prev) => ({ ...prev, section: next === "own" ? ("own" as const) : undefined, page: undefined }), replace: true });
+    void navigate({ to: "/expenses", search: (prev) => ({ ...prev, section: next === "uzum" ? undefined : next, page: undefined }), replace: true });
   return (
     <section className="expenses">
       <header className="orders__head">
@@ -58,7 +59,9 @@ export function Expenses() {
         ))}
       </div>
       <div id="expenses-panel" role="tabpanel" aria-labelledby={`expenses-tab-${tab}`} className="expenses__panel">
-        {query.isError ? (
+        {tab === "ads" ? (
+          <AdsAnalysis orgId={org.id} params={params} />
+        ) : query.isError ? (
           <Banner tone="negative" title={errorText(query.error, t)} action={<Button onClick={() => void query.refetch()}>{t("common.retry")}</Button>} />
         ) : !query.data ? (
           <Skeleton label={t("common.loading")} lines={8} />
