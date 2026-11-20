@@ -4009,6 +4009,18 @@ export interface components {
              */
             uncounted: boolean;
         };
+        /**
+         * PayoutRulesOut
+         * @description Bugun amal qiladigan to'lov qoidalari (ma'lumotnoma, sanasi bilan — kodga qotirilmagan).
+         */
+        PayoutRulesOut: {
+            /** Lag Days */
+            lag_days: number;
+            /** Urgent Fee Pct */
+            urgent_fee_pct: string;
+            /** Delay Workdays */
+            delay_workdays: number;
+        };
         /** PayoutScheduleIn */
         PayoutScheduleIn: {
             /** Account Id */
@@ -4771,6 +4783,7 @@ export interface components {
             payout_schedules: components["schemas"]["PayoutScheduleOut"][];
             /** Payout Terms */
             payout_terms: components["schemas"]["PayoutTermsOut"][];
+            payout_rules: components["schemas"]["PayoutRulesOut"];
             inventory: components["schemas"]["InventorySettingsOut"];
             alerts: components["schemas"]["AlertsOut"];
             revenue_limit: components["schemas"]["RevenueLimitOut"] | null;

@@ -227,6 +227,37 @@ def test_payout_schedules(world: World) -> None:
     assert {"payout_schedule.create", "payout_schedule.delete"} <= audited(w)
 
 
+def test_payout_rules_come_from_reference_tables(world: World) -> None:
+    """B5.7 (Temur: "qoidalar kodga qotirilmasin"): to'lov shartlari va qoidalari bazadagi ma'lumotnomadan, sanasi bilan;
+    bazada yozuv bo'lmasa — boshlang'ich; `payout_*` kodlari soliq summalari ro'yxatiga chiqmaydi."""
+    w = world
+    base = ok(send(w, "GET", "settings"))
+    assert base["payout_rules"]["lag_days"] == 10
+    assert D(str(base["payout_rules"]["urgent_fee_pct"])) == D("2.5")
+    assert base["payout_rules"]["delay_workdays"] == 4
+    weekly = next(x for x in base["payout_terms"] if x["kind"] == "weekly")
+    assert weekly["days_of_month"] == [7, 14, 21, 28] and D(str(weekly["fee_pct"])) == 1
+    w.api.admin(
+        "INSERT INTO ref_payout_terms (kind, valid_from, days_of_month, fee_pct, note) "
+        "VALUES ('weekly', '2026-11-01', '{1,8,15,22}', 0.5, 'test')"
+    )
+    w.api.admin(
+        "INSERT INTO ref_amounts (code, valid_from, amount, note) VALUES "
+        "('payout_lag_days', '2026-11-01', 12, 'test'), ('payout_urgent_fee_pct', '2026-11-01', 3, 'test')"
+    )
+    try:
+        body = ok(send(w, "GET", "settings"))
+        weekly = next(x for x in body["payout_terms"] if x["kind"] == "weekly")
+        assert weekly["days_of_month"] == [1, 8, 15, 22] and D(str(weekly["fee_pct"])) == D("0.5")
+        rules = body["payout_rules"]
+        assert rules["lag_days"] == 12 and D(str(rules["urgent_fee_pct"])) == 3
+        assert rules["delay_workdays"] == 4  # bazada yo'q — boshlang'ich
+        assert not [x for x in body["tax_amounts"] if x["code"].startswith("payout_")]
+    finally:
+        w.api.admin("DELETE FROM ref_payout_terms WHERE note = 'test'")
+        w.api.admin("DELETE FROM ref_amounts WHERE note = 'test'")
+
+
 def test_cost_method_requests_full_recalc(world: World) -> None:
     w = world
     w.a.sql("DELETE FROM recalc_queue WHERE org_id = %s", [w.org_id])

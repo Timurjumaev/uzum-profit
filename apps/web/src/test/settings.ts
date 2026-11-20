@@ -20,6 +20,7 @@ export function settingsData(over: Partial<S["SettingsOut"]> = {}): S["SettingsO
     ],
     tax_amounts: [{ code: "bhm", amount: "440000.00", note: "PF-115" }],
     payout_schedules: [{ id: PAY_1, account_id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", kind: "weekly", valid_from: "2026-01-01" }],
+    payout_rules: { lag_days: 10, urgent_fee_pct: "2.5000", delay_workdays: 4 },
     payout_terms: [
       { kind: "daily", days_of_month: null, fee_pct: "1.500" },
       { kind: "weekly", days_of_month: [7, 14, 21, 28], fee_pct: "1.000" },

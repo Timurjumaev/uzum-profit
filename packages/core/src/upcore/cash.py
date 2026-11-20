@@ -42,6 +42,60 @@ SEED_SCHEDULES: Mapping[ScheduleKind, ScheduleTerms] = {
 }
 URGENT_FEE_PCT = Decimal("2.5")  # shoshilinch yechish (seed)
 DELAY_WORKDAYS = 4  # Uzum kechiktirishi mumkin bo'lgan ish kunlari (seed)
+LAG_DAYS = 10  # mijoz tovarni olgandan keyin pul yechishga beriladigan kun (seed; Temur kabineti, realcheck payout)
+
+# To'lov qoidalari kodga qotirilmaydi (Temur, 2026-11-20: "Uzum o'zgartirsa dastur xato qila boshlamasin"): bu qiymatlar
+# faqat boshlang'ich; bazadagi ma'lumotnoma (``ref_payout_terms``, ``ref_amounts`` ``payout_*``) sanasi bo'yicha ustun turadi.
+RULE_LAG_DAYS = "payout_lag_days"
+RULE_URGENT_FEE = "payout_urgent_fee_pct"
+RULE_DELAY_WORKDAYS = "payout_delay_workdays"
+SEED_RULES: Mapping[str, tuple[date, Decimal]] = {
+    RULE_LAG_DAYS: (date(2026, 1, 1), Decimal(LAG_DAYS)),
+    RULE_URGENT_FEE: (date(2026, 1, 1), URGENT_FEE_PCT),
+    RULE_DELAY_WORKDAYS: (date(2026, 1, 1), Decimal(DELAY_WORKDAYS)),
+}
+
+
+@dataclass(frozen=True, slots=True)
+class PayoutRules:
+    """Berilgan sanada amal qiladigan to'lov qoidalari: pul yechishga berilish kechikishi (kun), shoshilinch yechish foizi
+    va Uzum kechiktirishi mumkin bo'lgan ish kunlari."""
+
+    lag_days: int
+    urgent_fee_pct: Decimal
+    delay_workdays: int
+
+
+def payout_rules(rows: Iterable[tuple[str, date, DecimalLike]], on: date) -> PayoutRules:
+    """Qoidalar ``on`` sanasida: har kod bo'yicha ``valid_from`` ≤ ``on`` bo'lgan eng yangi qiymat (``rows`` — bazadagi
+    ma'lumotnoma); yo'q bo'lsa — boshlang'ich (:data:`SEED_RULES`). Bir sanada bazadagi yozuv ustun."""
+    best: dict[str, tuple[date, Decimal]] = {}
+    for code, valid_from, amount in rows:
+        if (
+            code in SEED_RULES
+            and valid_from <= on
+            and (code not in best or valid_from >= best[code][0])
+        ):
+            best[code] = (valid_from, to_decimal(amount))
+    current: dict[str, Decimal] = {
+        code: (best.get(code) or seed)[1] for code, seed in SEED_RULES.items()
+    }
+    return PayoutRules(
+        int(current[RULE_LAG_DAYS]), current[RULE_URGENT_FEE], int(current[RULE_DELAY_WORKDAYS])
+    )
+
+
+def schedule_terms(
+    kind: ScheduleKind, on: date, stored: Iterable[ScheduleTerms] = ()
+) -> ScheduleTerms:
+    """Jadval shartlari ``on`` sanasida: bazadagi (``stored``) va boshlang'ich (:data:`SEED_SCHEDULES`) ichidan
+    ``valid_from`` ≤ ``on`` bo'lgan eng yangisi; bir sanada bazadagi yozuv ustun."""
+    seed = SEED_SCHEDULES[kind]
+    candidates = [x for x in stored if x.kind is kind and x.valid_from <= on]
+    best = max(candidates, key=lambda x: x.valid_from, default=None)
+    if best is not None and best.valid_from >= seed.valid_from:
+        return best
+    return seed
 
 
 def is_workday(day: date, holidays: frozenset[date] = frozenset()) -> bool:
@@ -70,7 +124,10 @@ def _scheduled_dates(terms: ScheduleTerms, start: date, end: date) -> list[date]
 
 
 def next_payout(
-    after: date, terms: ScheduleTerms, holidays: frozenset[date] = frozenset()
+    after: date,
+    terms: ScheduleTerms,
+    holidays: frozenset[date] = frozenset(),
+    delay_workdays: int = DELAY_WORKDAYS,
 ) -> tuple[date, date]:
     """F38. ``after`` kunidan keyingi to'lov: (kutilgan sana, eng kech sana).
 
@@ -79,7 +136,7 @@ def next_payout(
     for d in _scheduled_dates(terms, after + timedelta(days=1), after + timedelta(days=62)):
         expected = next_workday(d, holidays)
         if expected > after:
-            return expected, add_workdays(expected, DELAY_WORKDAYS, holidays)
+            return expected, add_workdays(expected, delay_workdays, holidays)
     raise ValueError(f"{terms.kind}: jadval sanasi topilmadi")  # pragma: no cover
 
 
@@ -101,6 +158,7 @@ def forecast_payouts(
     daily_net: Mapping[date, Money],
     terms: ScheduleTerms,
     holidays: frozenset[date] = frozenset(),
+    delay_workdays: int = DELAY_WORKDAYS,
 ) -> list[PayoutEvent]:
     """F38. Kunlik summalar (o'sha kuni Yakunlangan bo'lgan F6 − ushlanmalar) navbatdagi to'lovga yig'iladi.
 
@@ -108,7 +166,7 @@ def forecast_payouts(
     by_date: dict[date, Money] = {}
     latest: dict[date, date] = {}
     for day in sorted(daily_net):
-        expected, late = next_payout(day, terms, holidays)
+        expected, late = next_payout(day, terms, holidays, delay_workdays)
         by_date[expected] = by_date.get(expected, Money.zero(UZS)) + daily_net[day]
         latest[expected] = late
     events = []

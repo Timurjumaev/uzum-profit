@@ -50,6 +50,7 @@ export function Payouts({ orgId, data, canManage }: { orgId: string; data: Setti
         {canManage && <Button onClick={() => setAdding(true)}>{t("settings.payout.add")}</Button>}
       </header>
       <p className="caption">{t("settings.payout.lead")}</p>
+      <p className="caption">{t("settings.payout.rules", { lag: data.payout_rules.lag_days, fee: f.percent(String(Number(data.payout_rules.urgent_fee_pct) / 100)) })}</p>
       {data.payout_schedules.length === 0 ? (
         <EmptyState title={t("settings.payout.empty")} text={t("settings.payout.emptyText")} />
       ) : (

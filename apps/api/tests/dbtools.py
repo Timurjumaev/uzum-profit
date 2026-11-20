@@ -253,6 +253,16 @@ def seed_two_orgs(admin_url: str) -> Seed:
         insert(
             conn, "ref_amounts", {"code": "bhm", "valid_from": date(2026, 9, 1), "amount": 440000}
         )
+        insert(
+            conn,
+            "ref_payout_terms",
+            {
+                "kind": "weekly",
+                "valid_from": date(2026, 1, 1),
+                "days_of_month": [7, 14, 21, 28],
+                "fee_pct": 1,
+            },
+        )
         insert(conn, "ref_logistics_tariffs", {"valid_from": date(2026, 6, 1), "rules": Jsonb({})})
         for i, org in enumerate(orgs):
             insert(conn, "orgs", {"id": org, "name": f"Org {i}"})

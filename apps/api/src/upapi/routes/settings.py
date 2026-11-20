@@ -20,7 +20,7 @@ from uuid import UUID
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, func, insert, select, update
-from upcore.cash import SEED_SCHEDULES, ScheduleKind
+from upcore.cash import ScheduleKind, ScheduleTerms, payout_rules, schedule_terms
 from upcore.inventory import DEFAULT, AbcClass
 from upcore.metrics import DEFAULT_BORDERLINE
 from upcore.pnl import TaxBase
@@ -119,6 +119,14 @@ class PayoutTermsOut(BaseModel):
     fee_pct: Decimal  # pul yechish foizi
 
 
+class PayoutRulesOut(BaseModel):
+    """Bugun amal qiladigan to'lov qoidalari (ma'lumotnoma, sanasi bilan — kodga qotirilmagan)."""
+
+    lag_days: int  # mijoz tovarni olgandan keyin pul yechishga beriladigan kun
+    urgent_fee_pct: Decimal  # ertaroq (shoshilinch) yechish foizi
+    delay_workdays: int  # Uzum kechiktirishi mumkin bo'lgan ish kunlari
+
+
 class InventorySettingsOut(BaseModel):
     stages: list[str]  # F25 bosqichlari tartib bilan
     lead_days: dict[str, int] | None  # sozlanmagan — ``null`` (muddat xaridlar tarixidan)
@@ -146,6 +154,7 @@ class SettingsOut(BaseModel):
     tax_amounts: list[TaxAmountOut]
     payout_schedules: list[PayoutScheduleOut]
     payout_terms: list[PayoutTermsOut]
+    payout_rules: PayoutRulesOut
     inventory: InventorySettingsOut
     alerts: AlertsOut
     revenue_limit: (
@@ -300,8 +309,25 @@ async def _read(ctx: OrgContext) -> SettingsOut:
         [*stored_rates, *((r.code, r.valid_from, r.rate_pct, r.note or None) for r in SEED_RATES)]
     )
     amounts = _current(
-        [*stored_amounts, *((v.code, v.valid_from, v.amount, v.note or None) for v in SEED_AMOUNTS)]
+        [
+            *((c, d, a, n) for c, d, a, n in stored_amounts if not c.startswith("payout_")),
+            *((v.code, v.valid_from, v.amount, v.note or None) for v in SEED_AMOUNTS),
+        ]
     )
+    # To'lov qoidalari kodga qotirilmaydi: bazadagi ma'lumotnoma sanasi bilan (yo'q bo'lsa — boshlang'ich).
+    day = today()
+    rules = payout_rules(
+        [(c, d, a) for c, d, a, _ in stored_amounts if c.startswith("payout_")], day
+    )
+    stored_terms = [
+        ScheduleTerms(
+            ScheduleKind(r.kind),
+            None if r.days_of_month is None else tuple(r.days_of_month),
+            r.fee_pct,
+            r.valid_from,
+        )
+        for r in await conn.execute(select(m.ref_payout_terms))
+    ]
     effective = {**DEFAULT.cover_days, **cfg.cover_days}
     # F50: tushum — moliya ma'lumoti; sozlamani ko'radigan, lekin foydani ko'rmaydigan rolga berilmaydi.
     limit = (
@@ -324,8 +350,13 @@ async def _read(ctx: OrgContext) -> SettingsOut:
                 days_of_month=list(v.days_of_month) if v.days_of_month is not None else None,
                 fee_pct=v.fee_pct,
             )
-            for k, v in SEED_SCHEDULES.items()
+            for k, v in ((k, schedule_terms(k, day, stored_terms)) for k in ScheduleKind)
         ],
+        payout_rules=PayoutRulesOut(
+            lag_days=rules.lag_days,
+            urgent_fee_pct=rules.urgent_fee_pct,
+            delay_workdays=rules.delay_workdays,
+        ),
         inventory=InventorySettingsOut(
             stages=list(orgsettings.STAGES),
             lead_days=dict(cfg.lead_days) or None,

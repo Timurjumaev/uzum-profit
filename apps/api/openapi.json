@@ -15823,6 +15823,30 @@
         "title": "PathOut",
         "description": "Partiya yo'li nuqtasi (ADR-061 §1, 04 §6.2): Yo'lda → Omborimda → Uzumda. ``mark``: ``done`` / ``current`` /\n``upcoming``; \"Yo'lda\" joriy bo'lsa — ``days`` o'tdi, sanash ``expected`` da kutiladi (F25)."
       },
+      "PayoutRulesOut": {
+        "properties": {
+          "lag_days": {
+            "type": "integer",
+            "title": "Lag Days"
+          },
+          "urgent_fee_pct": {
+            "type": "string",
+            "title": "Urgent Fee Pct"
+          },
+          "delay_workdays": {
+            "type": "integer",
+            "title": "Delay Workdays"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lag_days",
+          "urgent_fee_pct",
+          "delay_workdays"
+        ],
+        "title": "PayoutRulesOut",
+        "description": "Bugun amal qiladigan to'lov qoidalari (ma'lumotnoma, sanasi bilan — kodga qotirilmagan)."
+      },
       "PayoutScheduleIn": {
         "properties": {
           "account_id": {
@@ -18197,6 +18221,9 @@
             "type": "array",
             "title": "Payout Terms"
           },
+          "payout_rules": {
+            "$ref": "#/components/schemas/PayoutRulesOut"
+          },
           "inventory": {
             "$ref": "#/components/schemas/InventorySettingsOut"
           },
@@ -18222,6 +18249,7 @@
           "tax_amounts",
           "payout_schedules",
           "payout_terms",
+          "payout_rules",
           "inventory",
           "alerts",
           "revenue_limit"

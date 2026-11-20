@@ -22,6 +22,7 @@ from uuid import UUID
 from sqlalchemy import Table, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncConnection
+from upcore.cash import SEED_RULES, SEED_SCHEDULES
 from upcore.expenses import SEED_CODEBOOK
 from upcore.tariffs import SEED_LOGISTICS
 from upcore.tax import SEED_AMOUNTS, SEED_RATES
@@ -60,6 +61,34 @@ async def seed_reference(conn: AsyncConnection) -> None:
     )
     await _upsert(conn, m.ref_tax_rates, [asdict(r) for r in SEED_RATES])
     await _upsert(conn, m.ref_amounts, [asdict(a) for a in SEED_AMOUNTS])
+    # To'lov qoidalari (B5.7): boshlang'ich qiymatlar bazaga yoziladi; keyin Uzum o'zgartirsa — shu jadvallar yangilanadi.
+    await _upsert(
+        conn,
+        m.ref_amounts,
+        [
+            {
+                "code": code,
+                "valid_from": day,
+                "amount": amount,
+                "note": "boshlang'ich (kabinet, 2026-11)",
+            }
+            for code, (day, amount) in SEED_RULES.items()
+        ],
+    )
+    await _upsert(
+        conn,
+        m.ref_payout_terms,
+        [
+            {
+                "kind": t.kind.value,
+                "valid_from": t.valid_from,
+                "days_of_month": None if t.days_of_month is None else list(t.days_of_month),
+                "fee_pct": t.fee_pct,
+                "note": "boshlang'ich (kabinet, 2026-11)",
+            }
+            for t in SEED_SCHEDULES.values()
+        ],
+    )
     await _upsert(
         conn,
         m.ref_logistics_tariffs,

@@ -3,13 +3,19 @@ from decimal import Decimal
 
 import pytest
 from upcore.cash import (
+    RULE_DELAY_WORKDAYS,
+    RULE_LAG_DAYS,
+    RULE_URGENT_FEE,
     SEED_SCHEDULES,
     ScheduleKind,
+    ScheduleTerms,
     add_workdays,
     cash_forecast,
     forecast_payouts,
     next_payout,
     next_workday,
+    payout_rules,
+    schedule_terms,
     urgent_withdrawal_fee,
 )
 from upcore.metrics import Period, SaleLine
@@ -239,3 +245,42 @@ def test_cash_forecast_gap() -> None:
     assert f.balances[-1][1] == uzs(400_000)
     ok = cash_forecast(uzs(1), start, [], [], days=3)
     assert ok.gap_day is None
+
+
+def test_payout_rules_are_data_not_code() -> None:
+    """To'lov qoidalari bazadagi ma'lumotnomadan (sanasi bilan); yo'q bo'lsa boshlang'ich. Uzum o'zgartirsa — kod emas, jadval."""
+    on = date(2026, 11, 20)
+    seed = payout_rules([], on)
+    assert (seed.lag_days, seed.urgent_fee_pct, seed.delay_workdays) == (10, Decimal("2.5"), 4)
+    rows = [
+        (RULE_LAG_DAYS, date(2026, 12, 1), 7),  # kelajakda — hozir amal qilmaydi
+        (RULE_LAG_DAYS, date(2026, 11, 1), 12),
+        (RULE_URGENT_FEE, date(2026, 11, 10), Decimal("3")),
+        ("payout_unknown", date(2026, 11, 1), 99),  # noma'lum kod e'tiborga olinmaydi
+    ]
+    now = payout_rules(rows, on)
+    assert (now.lag_days, now.urgent_fee_pct, now.delay_workdays) == (12, Decimal(3), 4)
+    later = payout_rules(rows, date(2026, 12, 2))
+    assert later.lag_days == 7
+    assert RULE_DELAY_WORKDAYS in {RULE_DELAY_WORKDAYS}  # kod nomi barqaror
+
+
+def test_schedule_terms_latest_effective_with_seed_fallback() -> None:
+    weekly = ScheduleKind.WEEKLY
+    on = date(2026, 11, 20)
+    assert schedule_terms(weekly, on) == SEED_SCHEDULES[weekly]
+    new = ScheduleTerms(weekly, (1, 8, 15, 22), Decimal("0.5"), date(2026, 11, 1))
+    future = ScheduleTerms(weekly, (3,), Decimal(9), date(2027, 1, 1))
+    other = ScheduleTerms(ScheduleKind.MONTHLY, (1,), Decimal(9), date(2026, 11, 1))
+    assert (
+        schedule_terms(weekly, on, [future, other, new]) == new
+    )  # eng yangi amaldagi, boshqa turi emas
+    assert schedule_terms(weekly, date(2027, 2, 1), [future, new]) == future
+    old = ScheduleTerms(
+        weekly, (5,), Decimal(2), date(2025, 1, 1)
+    )  # boshlang'ichdan eskisi — boshlang'ich ustun
+    assert schedule_terms(weekly, on, [old]) == SEED_SCHEDULES[weekly]
+    # Boshqa kechikish — keyingi to'lov kechroq (kechikish parametri).
+    assert next_payout(date(2026, 10, 15), SEED_SCHEDULES[weekly], delay_workdays=0)[1] == date(
+        2026, 10, 21
+    )
