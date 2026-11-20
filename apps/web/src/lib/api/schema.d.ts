@@ -623,6 +623,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/calculator/cargo-suggestion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cargo Suggestion */
+        get: operations["cargo_suggestion_api_v1_orgs__org_id__calculator_cargo_suggestion_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/calculator/defaults": {
         parameters: {
             query?: never;
@@ -2400,6 +2417,22 @@ export interface components {
          * @enum {string}
          */
         CargoBasis: "weight" | "volume";
+        /**
+         * CargoSuggestionOut
+         * @description O'xshash (oldingi) xaridlardagi haqiqiy kargo xarajatidan o'rtacha (ADR-061: tarif kiritilmaydi).
+         */
+        CargoSuggestionOut: {
+            /** Purchases */
+            purchases: number;
+            /** Usd Per Kg */
+            usd_per_kg: string | null;
+            /** Weighed */
+            weighed: number;
+            /** Uzs Per Unit */
+            uzs_per_unit: string | null;
+            /** Since */
+            since: string | null;
+        };
         /** CarrierIn */
         CarrierIn: {
             /** Name */
@@ -8159,6 +8192,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdsOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    cargo_suggestion_api_v1_orgs__org_id__calculator_cargo_suggestion_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CargoSuggestionOut"];
                 };
             };
             /** @description Validatsiya xatosi */

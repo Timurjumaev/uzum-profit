@@ -4,6 +4,15 @@ import type { components } from "../lib/api/schema";
 type Defaults = components["schemas"]["CalculatorDefaultsOut"];
 type Calc = components["schemas"]["CalculatorOut"];
 
+export const cargoSuggestion = (over: Partial<components["schemas"]["CargoSuggestionOut"]> = {}): components["schemas"]["CargoSuggestionOut"] => ({
+  purchases: 0,
+  usd_per_kg: null,
+  weighed: 0,
+  uzs_per_unit: null,
+  since: null,
+  ...over,
+});
+
 export function calculatorDefaults(over: Partial<Defaults> = {}): Defaults {
   return {
     rates: { cny: "1750.00", usd: "12600.00", day: "2026-11-19", source: "cbu" },

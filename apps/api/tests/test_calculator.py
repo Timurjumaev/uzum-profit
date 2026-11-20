@@ -103,3 +103,50 @@ def test_calculator_landed_cost_logistics_and_unit_economics(world: tr.World) ->
         assert w.call("calculator/defaults", "warehouse").status_code == 403
     finally:
         w.a.sql("DELETE FROM fx_rates")
+
+
+def test_cargo_suggestion_from_similar_purchases(world: tr.World) -> None:
+    """Kargo taklifi: oldingi xaridlar kargosidan o'rtacha $/kg va so'm/dona; kursi yo'q xarid o'tkazib yuboriladi."""
+    w = world
+    day = today() - timedelta(days=1)
+    w.a.sql("DELETE FROM fx_rates")
+    w.a.sql(
+        "INSERT INTO fx_rates (day, currency, source, rate) VALUES (%s, 'USD', 'cbu', 12000)", [day]
+    )
+    try:
+        assert w.get("calculator/cargo-suggestion")["purchases"] == 0
+        # Xarid 1: 100 dona × 0,5 kg = 50 kg, kargo $200 → $4/kg; 2 400 000 so'm.
+        p1 = w.a.insert("purchases", ordered_on=day, paid_on=day)
+        w.a.insert(
+            "purchase_lines",
+            purchase_id=p1,
+            ordered_qty=100,
+            received_qty=100,
+            unit_weight=D("0.5"),
+        )
+        w.a.insert(
+            "cost_components",
+            purchase_id=p1,
+            kind="cargo",
+            amount=D(200),
+            currency="USD",
+            paid_on=day,
+        )
+        # Xarid 2: vazni noma'lum — faqat so'm/donaga kiradi (1 200 000 so'm / 100 dona).
+        p2 = w.a.insert("purchases", ordered_on=day, paid_on=day)
+        w.a.insert("purchase_lines", purchase_id=p2, ordered_qty=100, received_qty=100)
+        w.a.insert(
+            "cost_components",
+            purchase_id=p2,
+            kind="cargo",
+            amount=D(1_200_000),
+            currency="UZS",
+            paid_on=day,
+        )
+        out = w.get("calculator/cargo-suggestion")
+        assert out["purchases"] == 2 and out["weighed"] == 1
+        assert D(out["usd_per_kg"]) == D("4.00")
+        assert D(out["uzs_per_unit"]) == D(18_000)  # (2 400 000 + 1 200 000) / 200
+        assert w.call("calculator/cargo-suggestion", "warehouse").status_code == 403
+    finally:
+        w.a.sql("DELETE FROM fx_rates")

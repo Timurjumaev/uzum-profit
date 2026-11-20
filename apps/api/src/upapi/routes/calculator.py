@@ -15,7 +15,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.fx import FxError
 from upcore.money import Currency, Money
@@ -96,6 +96,95 @@ class CalculatorOut(BaseModel):
     logistics: LogisticsOut
     tax_pct: Decimal  # hisobda ishlatilgan
     unit: UnitCalcOut
+
+
+class CargoSuggestionOut(BaseModel):
+    """O'xshash (oldingi) xaridlardagi haqiqiy kargo xarajatidan o'rtacha (ADR-061: tarif kiritilmaydi)."""
+
+    purchases: int  # hisobga olingan xaridlar soni (kargo xarajati va vazni/donasi ma'lum)
+    usd_per_kg: Decimal | None  # vazni ma'lum xaridlar bo'yicha o'rtacha (jami $ / jami kg)
+    weighed: int  # shundan vazni ma'lum xaridlar
+    uzs_per_unit: Decimal | None  # jami so'm / jami dona (kurs — to'langan kuni CBU)
+    since: date | None  # eng eski hisobga olingan xarid kuni
+
+
+SUGGEST_LIMIT = 20
+
+
+async def _cargo_suggestion(conn: AsyncConnection, day: date) -> CargoSuggestionOut:
+    cargo = (
+        select(
+            m.cost_components.c.purchase_id,
+            m.cost_components.c.amount,
+            m.cost_components.c.currency,
+            m.cost_components.c.paid_on,
+            m.cost_components.c.weight_kg,
+        )
+        .where(m.cost_components.c.kind == "cargo", m.cost_components.c.purchase_id.is_not(None))
+        .subquery()
+    )
+    units = (
+        select(
+            m.purchase_lines.c.purchase_id,
+            func.sum(
+                func.coalesce(m.purchase_lines.c.received_qty, m.purchase_lines.c.ordered_qty)
+            ).label("qty"),
+            func.sum(
+                m.purchase_lines.c.unit_weight
+                * func.coalesce(m.purchase_lines.c.received_qty, m.purchase_lines.c.ordered_qty)
+            ).label("kg"),
+        )
+        .group_by(m.purchase_lines.c.purchase_id)
+        .subquery()
+    )
+    rows = (
+        await conn.execute(
+            select(cargo, units.c.qty, units.c.kg, m.purchases.c.ordered_on)
+            .join(units, units.c.purchase_id == cargo.c.purchase_id)
+            .join(m.purchases, m.purchases.c.id == cargo.c.purchase_id)
+            .where(cargo.c.amount > 0)
+            .order_by(func.coalesce(cargo.c.paid_on, m.purchases.c.ordered_on).desc().nulls_last())
+            .limit(SUGGEST_LIMIT)
+        )
+    ).all()
+    rates = Rates(conn, day)
+    await rates.load([Currency.USD, Currency.CNY])
+    usd_sum = kg_sum = uzs_sum = qty_sum = Decimal(0)
+    n = weighed = 0
+    since: date | None = None
+    for r in rows:
+        when = r.paid_on or r.ordered_on
+        try:
+            ccy = Currency(r.currency)
+            uzs = r.amount if ccy is UZS else r.amount * rates.cbu(ccy, when).rate
+            usd_rate = rates.cbu(Currency.USD, when).rate
+        except (FxError, ValueError):
+            continue  # kursi yo'q xarid — taxmin qilinmaydi, o'rtachaga kirmaydi
+        qty = Decimal(r.qty or 0)
+        if qty <= 0:
+            continue
+        n += 1
+        uzs_sum += uzs
+        qty_sum += qty
+        if when is not None and (since is None or when < since):
+            since = when
+        kg = r.weight_kg if r.weight_kg else r.kg
+        if kg and kg > 0:
+            weighed += 1
+            kg_sum += kg
+            usd_sum += uzs / usd_rate
+    return CargoSuggestionOut(
+        purchases=n,
+        usd_per_kg=(usd_sum / kg_sum).quantize(Decimal("0.01")) if kg_sum > 0 else None,
+        weighed=weighed,
+        uzs_per_unit=(uzs_sum / qty_sum).quantize(Decimal("1")) if qty_sum > 0 else None,
+        since=since,
+    )
+
+
+@router.get("/orgs/{org_id}/calculator/cargo-suggestion", response_model=CargoSuggestionOut)
+async def cargo_suggestion(ctx: Finance) -> CargoSuggestionOut:
+    return await _cargo_suggestion(ctx.conn, today())
 
 
 async def logistics_tariffs(conn: AsyncConnection) -> list[LogisticsTariff]:
