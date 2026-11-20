@@ -1494,6 +1494,21 @@ def test_dashboard_weekly_summary(world: World) -> None:
         assert sum(D(x) for x in cards[key]["series"]) == D(cards[key]["value"])
 
 
+def test_skus_diff_against_previous_period(world: World) -> None:
+    """B5.6: Mahsulotlar farq ustuni — oldingi shu uzunlikdagi davr (11–30 sentabr): X'da 2 dona (400 000) sotilgan edi;
+    oldingi davrda sotuvi bo'lmagan SKU'da farq yo'q (null)."""
+    items = {r["sku_id"]: r for r in world.get("skus", **OCT)["items"]}
+    x, y = items[str(world.ids["xa"])], items[str(world.ids["ya"])]
+    assert x["previous_net_profit"] is not None
+    assert D(x["net_profit_diff"]) == D(x["net_profit"]) - D(x["previous_net_profit"])
+    assert D(x["revenue_diff"]) == D(x["revenue"]) - D(400_000)
+    assert (
+        y["previous_net_profit"] is None
+        and y["net_profit_diff"] is None
+        and y["revenue_diff"] is None
+    )
+
+
 def test_f34_candidates_and_series_from_snapshots(world: World) -> None:
     """B5.4 (F34): snapshot bo'yicha qoldig'i 0 bo'lgan SKU'lar nomzod (davrdan 90 kun oldin boshlangan tugash ham);
     kunlik qatorda snapshot yo'q kun ``None``, sotuv — ``daily_sku_metrics`` dan."""

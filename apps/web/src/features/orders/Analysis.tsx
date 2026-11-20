@@ -28,6 +28,9 @@ export function Analysis({ orgId, params, kind }: Props) {
   const causes = cancel ? query.data.cancel_causes : query.data.return_causes;
   const formula = cancel ? "cancel" : "returns";
   const share = (value: string | null) => (value === null ? "—" : f.percent(value));
+  /** "oldingi davr: ..." izohi (B5.6); oldingi davrda harakat bo'lmasa — izoh yo'q. */
+  const previousNote = (value: string | number | null | undefined, show: (v: string) => string) =>
+    value == null ? undefined : t("orders.previous", { value: show(String(value)) });
   const help = (
     <FormulaPopover
       metric={t(`orders.${kind}.share`)}
@@ -55,6 +58,25 @@ export function Analysis({ orgId, params, kind }: Props) {
     { key: "units", header: t("orders.col.sold"), numeric: true, render: (r) => f.number(r.units) },
     { key: "count", header: t(`orders.${kind}.units`), numeric: true, render: (r) => f.number(unitsOf(r)) },
     { key: "share", header: t(`orders.${kind}.share`), numeric: true, render: (r) => share(cancel ? r.cancel_share : r.return_share), help },
+    {
+      key: "change",
+      header: t("orders.col.change"),
+      numeric: true,
+      // B5.6: oldingi davrga nisbatan farq (server hisoblaydi); oldingi davrda SKU harakati yo'q — "—". Bekor/qaytish kamayishi yaxshi.
+      render: (r) => {
+        const count = cancel ? r.canceled_diff : r.returns_diff;
+        const pp = cancel ? r.cancel_share_diff : r.return_share_diff;
+        if (count == null || pp == null) return <span className="muted">—</span>;
+        const tone = count > 0 || Number(pp) > 0 ? "ui-text--negative" : count < 0 || Number(pp) < 0 ? "ui-text--positive" : undefined;
+        return (
+          <span className={tone} title={t("orders.changeHint")}>
+            {count > 0 ? "+" : ""}
+            {f.number(count)} · {Number(pp) > 0 ? "+" : ""}
+            {f.number(Number(pp) * 100, { digits: 1 })} {t("orders.pp")}
+          </span>
+        );
+      },
+    },
   ];
   const causeColumns: Column<OrdersCause>[] = [
     { key: "cause", header: t("orders.col.cause"), render: (r) => r.cause ?? t("orders.noCause") },
@@ -65,8 +87,8 @@ export function Analysis({ orgId, params, kind }: Props) {
   return (
     <div className="orders-analysis">
       <div className="orders-kpis">
-        <Kpi label={t(`orders.${kind}.share`)} value={share(cancel ? s.cancel_share : s.return_share)} good="down" help={help} />
-        <Kpi label={t(`orders.${kind}.units`)} value={f.number(cancel ? s.canceled : s.returns)} good="down" note={t(`orders.${kind}.note`)} />
+        <Kpi label={t(`orders.${kind}.share`)} value={share(cancel ? s.cancel_share : s.return_share)} good="down" help={help} note={previousNote(cancel ? s.previous_cancel_share : s.previous_return_share, share)} />
+        <Kpi label={t(`orders.${kind}.units`)} value={f.number(cancel ? s.canceled : s.returns)} good="down" note={[t(`orders.${kind}.note`), previousNote(cancel ? s.previous_canceled : s.previous_returns, (v) => f.number(Number(v)))].filter(Boolean).join(" · ")} />
         <Kpi label={t(`orders.${kind}.revenue`)} value={f.money(cancel ? s.cancel_revenue : s.return_revenue)} good="down" />
         {!cancel && (
           <Kpi

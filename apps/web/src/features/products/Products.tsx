@@ -268,6 +268,14 @@ function buildColumns(ids: readonly ColumnId[], { t, f, shopName, list }: Ctx): 
     ads: (r) => money(r.ads_per_unit),
     profit: (r) => money(r.profit_per_unit),
     net: (r) => money(r.net_profit),
+    // B5.6: oldingi shu uzunlikdagi davrga nisbatan sof foyda farqi (server hisoblaydi); oldingi davrda sotuv yo'q — "—".
+    net_diff: (r) =>
+      cell(r.net_profit_diff ?? null, (x) => (
+        <span className={tone(x) ?? (Number(x) > 0 ? "ui-text--positive" : undefined)} title={t("products.netDiffHint")}>
+          {Number(x) > 0 ? "+" : ""}
+          {f.money(x, { unit: false })}
+        </span>
+      )),
     // B4.47 (tamoyil 9, F13): marja tannarxi ma'lum qism bo'yicha — tannarxsiz ulush bo'lsa yonida ko'rinadi.
     margin: (r) => (
       <>
