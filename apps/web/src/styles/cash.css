@@ -1,0 +1,21 @@
+/* "Pul oqimi" (B5.7): KPI qatori va jadval — bezakli, gradientli sarlavha (ADR-070). */
+.cash {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.cash__head {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.cash__kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+
+.cash-date {
+  display: grid;
+  gap: 2px;
+}

@@ -177,7 +177,12 @@ const soon = <const P extends string>(path: P, name: keyof typeof import("../rou
     path,
     component: lazyRouteComponent(() => import("../routes/soon"), name),
   });
-const cash = soon("/cash", "Cash");
+/** Pul oqimi (M11, F38; B5.7). */
+const cash = createRoute({
+  getParentRoute: () => app,
+  path: "/cash",
+  component: lazyRouteComponent(() => import("../routes/cash"), "Cash"),
+});
 const reports = soon("/reports", "Reports");
 /** Sozlamalar (M16, B4.8): tannarx usuli, soliq, to'lov jadvali, muddatlar, do'konlar. */
 const settings = createRoute({

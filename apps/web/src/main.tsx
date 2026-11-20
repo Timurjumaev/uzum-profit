@@ -15,6 +15,7 @@ import "./styles/products.css";
 import "./styles/orders.css";
 import "./styles/purchases.css";
 import "./styles/inventory.css";
+import "./styles/cash.css";
 import "./styles/settings.css";
 import "./styles/opening.css";
 import "./styles/modern.css";

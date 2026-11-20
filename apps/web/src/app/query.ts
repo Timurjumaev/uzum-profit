@@ -474,6 +474,13 @@ export const deleteShipmentComponent = (orgId: string, shipmentId: string, compo
 
 // --- Ombor (M10, B4.7) --------------------------------------------------------------------------------------------
 
+/** To'lov prognozi (F38, B5.7): yechishga tayyor, kutilgan to'lovlar, sana noma'lum. */
+export const payoutForecastQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "payouts", "forecast"],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/payouts/forecast", { params: { path: { org_id: orgId } } })),
+  });
+
 /** Qoldiq jadvali: holat (server filtri), qidiruv, do'konlar; bitta sahifa (ADR-054). `totals` — butun tanlov bo'yicha. */
 export const inventoryQuery = (orgId: string, shops: string[], l: { status?: string; ship?: boolean; q?: string; page?: number; size: number }) =>
   queryOptions({
