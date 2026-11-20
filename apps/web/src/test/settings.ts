@@ -19,7 +19,7 @@ export function settingsData(over: Partial<S["SettingsOut"]> = {}): S["SettingsO
       { code: "turnover_individual", rate_pct: "1.000", note: "YaTT" },
     ],
     tax_amounts: [{ code: "bhm", amount: "440000.00", note: "PF-115" }],
-    payout_schedules: [{ id: PAY_1, shop_id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", kind: "weekly", valid_from: "2026-01-01" }],
+    payout_schedules: [{ id: PAY_1, account_id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", kind: "weekly", valid_from: "2026-01-01" }],
     payout_terms: [
       { kind: "daily", days_of_month: null, fee_pct: "1.500" },
       { kind: "weekly", days_of_month: [7, 14, 21, 28], fee_pct: "1.000" },

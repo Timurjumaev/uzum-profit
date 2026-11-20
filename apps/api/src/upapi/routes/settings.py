@@ -108,7 +108,7 @@ class TaxRateOut(BaseModel):
 
 class PayoutScheduleOut(BaseModel):
     id: UUID
-    shop_id: UUID
+    account_id: UUID  # jadval butun akkauntga bitta (B5.7)
     kind: ScheduleKind
     valid_from: date
 
@@ -184,7 +184,9 @@ class TaxProfilePatch(BaseModel):
 
 
 class PayoutScheduleIn(BaseModel):
-    shop_id: UUID
+    account_id: UUID | None = (
+        None  # berilmasa — tashkilotning yagona akkaunti (bir nechta bo'lsa majburiy)
+    )
     kind: ScheduleKind
     valid_from: date
 
@@ -474,16 +476,23 @@ async def delete_tax_profile(profile_id: UUID, ctx: Manager) -> SettingsOut:
 @router.post("/orgs/{org_id}/payout-schedules", response_model=SettingsOut, status_code=201)
 async def create_payout_schedule(body: PayoutScheduleIn, ctx: Manager) -> SettingsOut:
     ps = m.payout_schedules
-    if await ctx.conn.scalar(select(m.shops.c.id).where(m.shops.c.id == body.shop_id)) is None:
-        raise AppError("shop_not_found", 404)
+    accounts = [r.id for r in await ctx.conn.execute(select(m.mp_accounts.c.id))]
+    if body.account_id is not None:
+        if body.account_id not in accounts:
+            raise AppError("account_not_found", 404)
+        account_id = body.account_id
+    elif len(accounts) == 1:
+        account_id = accounts[0]
+    else:
+        raise AppError("account_required", 422, detail="akkaunt tanlang")
     if (
         await ctx.conn.scalar(
-            select(ps.c.id).where(ps.c.shop_id == body.shop_id, ps.c.valid_from == body.valid_from)
+            select(ps.c.id).where(ps.c.account_id == account_id, ps.c.valid_from == body.valid_from)
         )
         is not None
     ):
         raise AppError("payout_schedule_exists", 409, detail="shu sanada jadval allaqachon bor")
-    values = body.model_dump()
+    values = {"account_id": account_id, "kind": body.kind, "valid_from": body.valid_from}
     row_id = await ctx.conn.scalar(
         insert(ps).values(org_id=ctx.org_id, **values).returning(ps.c.id)
     )
@@ -502,7 +511,9 @@ async def delete_payout_schedule(schedule_id: UUID, ctx: Manager) -> SettingsOut
         "payout_schedule.delete",
         "payout_schedule",
         schedule_id,
-        before=_plain({"shop_id": row.shop_id, "kind": row.kind, "valid_from": row.valid_from}),
+        before=_plain(
+            {"account_id": row.account_id, "kind": row.kind, "valid_from": row.valid_from}
+        ),
     )
     return await _read(ctx)
 
