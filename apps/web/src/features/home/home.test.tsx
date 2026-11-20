@@ -403,6 +403,22 @@ describe("eng foydali 5 / zarar 5 va ko'rsatkichlar", () => {
     expect(box.getByText(/hisoblanmadi/)).toBeTruthy();
   });
 
+  it("o'tgan yil shu davri: so'rovga compare=last_year; o'tgan yil ma'lumoti yo'q — izoh", async () => {
+    const urls: string[] = [];
+    const base = dashboardData();
+    const rows = base.rows.map((r) => (r.code === "revenue" ? { ...r, previous: "0.00" } : r));
+    await renderHome("/?cmp=lastYear", { [DASHBOARD_ROUTE]: (r) => (urls.push(r.url), json(200, dashboardData({ rows }))) });
+    expect(new URL(urls[0]!).searchParams.get("compare")).toBe("last_year");
+    expect(screen.getByText(/Oʻtgan yilning shu davrida sotuv maʼlumoti yoʻq/)).toBeTruthy();
+  });
+
+  it("oldingi davr (standart): compare yuborilmaydi, izoh yo'q", async () => {
+    const urls: string[] = [];
+    await renderHome("/", { [DASHBOARD_ROUTE]: (r) => (urls.push(r.url), json(200, dashboardData())) });
+    expect(new URL(urls[0]!).searchParams.has("compare")).toBe(false);
+    expect(screen.queryByText(/Oʻtgan yilning shu davrida/)).toBeNull();
+  });
+
   it("tannarxsiz qism marja kartochkasida; qiymat yo'q — '—'; chegaradan oshgan ulush ogohlantiriladi", async () => {
     const base = dashboardData();
     const groups = base.summary.groups.map((g) => ({
@@ -451,9 +467,9 @@ describe("holatlar", () => {
     await screen.findByRole("heading", { name: "Maʼlumot hali yuklanmagan" });
   });
 
-  it("o'tgan yil bilan solishtirish — hozircha oldingi davr ekani aytiladi", async () => {
+  it("o'tgan yil bilan solishtirish — o'tgan yilda sotuv bo'lsa izoh chiqmaydi", async () => {
     await renderHome("/?cmp=lastYear");
-    expect(screen.getByText(/Oʻtgan yil bilan solishtirish keyinroq qoʻshiladi/)).toBeTruthy();
+    expect(screen.queryByText(/Oʻtgan yilning shu davrida sotuv maʼlumoti yoʻq/)).toBeNull();
   });
 
   it("server xatosi — xato bannerida sabab va 'Qayta urinish'", async () => {

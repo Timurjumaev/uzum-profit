@@ -87,16 +87,18 @@ export const updateShop = (orgId: string, shopId: string, body: { active?: boole
 // --- Hisobotlar (B4): davr + do'konlar filtri bilan -----------------------------------------------------------------
 
 /** Hisobot so'rovi parametrlari: `app/filters` dan (bo'sh `shops` — hamma do'kon). */
-export type ReportParams = { shops: string[]; start: string; end: string };
+export type ReportParams = { shops: string[]; start: string; end: string; lastYear?: boolean };
 
 const reportQuery = (p: ReportParams) => ({ start: p.start, end: p.end, shop: p.shops.length > 0 ? p.shops : undefined });
+/** Solishtirish (B5.6): faqat Bosh sahifa va Foyda — "o'tgan yil shu davri"; aks holda oldingi shu uzunlikdagi davr. */
+const compareQuery = (p: ReportParams) => ({ ...reportQuery(p), compare: p.lastYear ? ("last_year" as const) : undefined });
 
 /** Bosh sahifa (M4): hisob varag'i, davr chizig'i, kunlik grafik, TOP/zarar SKU, ko'rsatkichlar, "Diqqat talab qiladi". */
 export const dashboardQuery = (orgId: string, p: ReportParams) =>
   queryOptions({
     queryKey: ["orgs", orgId, "dashboard", p],
     queryFn: () =>
-      unwrap(api.GET("/api/v1/orgs/{org_id}/dashboard", { params: { path: { org_id: orgId }, query: reportQuery(p) } })),
+      unwrap(api.GET("/api/v1/orgs/{org_id}/dashboard", { params: { path: { org_id: orgId }, query: compareQuery(p) } })),
   });
 
 /** Foyda va zarar (M5): hisob varag'i (oldingi davr bilan), kesim ustunlari (`view`), F16, F40. */
@@ -104,7 +106,7 @@ export const pnlQuery = (orgId: string, p: ReportParams, view: "month" | "shop" 
   queryOptions({
     queryKey: ["orgs", orgId, "pnl", view, p],
     queryFn: () =>
-      unwrap(api.GET("/api/v1/orgs/{org_id}/pnl", { params: { path: { org_id: orgId }, query: { ...reportQuery(p), view } } })),
+      unwrap(api.GET("/api/v1/orgs/{org_id}/pnl", { params: { path: { org_id: orgId }, query: { ...compareQuery(p), view } } })),
   });
 
 /** Drill-down: hisobga kiradigan sotuv qatorlari — Yakunlangan + Jarayonda (ADR-036; P&L qatorlari yig'indisi shulardan), bitta sahifa (ADR-054, B5.0d). */

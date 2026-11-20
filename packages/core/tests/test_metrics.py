@@ -95,6 +95,19 @@ def test_date_from_epoch_ms() -> None:
     assert date_from_epoch_ms(ms) == date(2026, 10, 10)
 
 
+def test_period_year_ago() -> None:
+    """B5.6: o'tgan yil shu davri — xuddi shu sanalar; 29-fevral — 28-fevral (o'tgan yil kabisa emas)."""
+    assert Period(date(2026, 10, 1), date(2026, 10, 31)).year_ago() == Period(
+        date(2025, 10, 1), date(2025, 10, 31)
+    )
+    assert Period(date(2028, 2, 29), date(2028, 3, 1)).year_ago() == Period(
+        date(2027, 2, 28), date(2027, 3, 1)
+    )
+    assert Period(date(2028, 2, 1), date(2028, 2, 29)).year_ago() == Period(
+        date(2027, 2, 1), date(2027, 2, 28)
+    )
+
+
 def test_period() -> None:
     p = Period(date(2026, 10, 1), date(2026, 10, 31))
     assert date(2026, 10, 1) in p and date(2026, 10, 31) in p

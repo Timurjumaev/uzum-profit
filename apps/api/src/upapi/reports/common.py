@@ -15,7 +15,7 @@ from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from fastapi import Depends, Query
@@ -71,11 +71,16 @@ class Filters:
     period: Period
     shops: frozenset[UUID] | None
     today: date
+    last_year: bool = False  # solishtirish: o'tgan yilning shu davri (B5.6); aks holda oldingi shu uzunlikdagi davr
     _keys: frozenset[str] = field(default=frozenset(), init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         keys = frozenset(str(s) for s in self.shops) if self.shops else frozenset()
         object.__setattr__(self, "_keys", keys)
+
+    def compare_period(self) -> Period:
+        """Solishtirish davri (``/dashboard``, ``/pnl``): oldingi shu uzunlikdagi davr yoki o'tgan yil shu sanalari."""
+        return self.period.year_ago() if self.last_year else self.period.previous()
 
     def shop_ok(self, shop: str) -> bool:
         """``shop`` — P&L katagidagi do'kon satri (tashkilot darajasi ``""`` — filtr bo'lsa kirmaydi)."""
@@ -86,6 +91,12 @@ def filters(
     start: Annotated[date | None, Query(description="Davr boshi (Toshkent kuni)")] = None,
     end: Annotated[date | None, Query(description="Davr oxiri, kiradi; standart — bugun")] = None,
     shop: Annotated[list[UUID] | None, Query(description="Do'konlar (bir necha marta)")] = None,
+    compare: Annotated[
+        Literal["previous", "last_year"],
+        Query(
+            description="Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
+        ),
+    ] = "previous",
 ) -> Filters:
     now = today()
     end = end or now
@@ -94,7 +105,9 @@ def filters(
         raise AppError("bad_period", 422, detail="Davr oxiri boshidan oldin")
     if (end - start).days + 1 > MAX_DAYS:
         raise AppError("bad_period", 422, detail=f"Davr {MAX_DAYS} kundan uzun")
-    return Filters(Period(start, end), frozenset(shop) if shop else None, now)
+    return Filters(
+        Period(start, end), frozenset(shop) if shop else None, now, compare == "last_year"
+    )
 
 
 class PeriodOut(BaseModel):
