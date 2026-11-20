@@ -10,6 +10,7 @@ from upcore.metrics import (
     Period,
     SaleLine,
     StatusGroup,
+    ads_eat_profit,
     breakeven_price,
     business_date,
     cogs,
@@ -534,3 +535,22 @@ def test_storage_weights() -> None:
     paid = storage_weights({"A": 2, "B": 3}, {"A": Decimal(10), "B": Decimal(10)}, paid={"B"})
     assert paid == {"B": Decimal(30)}
     assert storage_weights({"A": 2}, {}, paid={"Z"}) == {"A": Decimal(2)}
+
+
+def test_f58_ads_eat_profit() -> None:
+    """B5.5: reklamadan oldin foyda musbat, keyin ≤ 0; faqat to'liq tannarxli SKU; reklama yo'q — yo'q."""
+    uzs = lambda x: Money.of(x, "UZS")  # noqa: E731
+    assert ads_eat_profit(
+        uzs(-10_000), uzs(50_000), fully_costed=True
+    )  # 40 000 edi, reklama yeb qo'ydi
+    assert ads_eat_profit(uzs(0), uzs(1), fully_costed=True)  # aynan nolga tushdi
+    assert not ads_eat_profit(
+        uzs(20_000), uzs(50_000), fully_costed=True
+    )  # reklamadan keyin ham foyda bor
+    assert not ads_eat_profit(
+        uzs(-60_000), uzs(50_000), fully_costed=True
+    )  # reklamasiz ham zarar — sabab reklama emas
+    assert not ads_eat_profit(uzs(-5), uzs(0), fully_costed=True)  # reklama yo'q
+    assert not ads_eat_profit(
+        uzs(-10_000), uzs(50_000), fully_costed=False
+    )  # tannarxsiz qism bor — noaniq

@@ -7,8 +7,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App, createAppState } from "../../App";
 import { formatterFor } from "../../lib/format";
-import { EXPENSES_ROUTE, json, ME, ME_ROUTE, mockApi, OWN_CATEGORIES_ROUTE, OWN_CREATE_ROUTE, ownRoute, problem, type Routes } from "../../test/api";
-import { expensesData, OWN_1, ownItem, uzumItem } from "../../test/expenses";
+import { ADS_ROUTE, EXPENSES_ROUTE, json, ME, ME_ROUTE, mockApi, OWN_CATEGORIES_ROUTE, OWN_CREATE_ROUTE, ownRoute, problem, type Routes } from "../../test/api";
+import { adsData, expensesData, OWN_1, ownItem, uzumItem } from "../../test/expenses";
 
 const f = formatterFor("uz-Latn");
 const norm = (text: string) => text.replace(/[\u00A0\u202F]/g, " ");
@@ -33,6 +33,42 @@ async function renderAt(path: string, routes: Routes = {}, role = "owner") {
 }
 
 const bodiesOf = (api: ReturnType<typeof mockApi>, key: string) => api.bodiesOf(key) as Array<Record<string, unknown>>;
+
+describe("Reklama tahlili (B5.5)", () => {
+  it("jami, DRR, taxminiy qism; turlar (Uzum matni va kodi); yeb qo'ygan SKU; ACOS; ROMI va'da qilinmaydi", async () => {
+    const { api } = await renderAt(`${PATH}&section=ads`, { [ADS_ROUTE]: () => json(200, adsData()) });
+    const types = await screen.findByRole("table", { name: "Reklama turlari" });
+    expect(within(types).getByText("Xaridor tovarni olganida")).toBeTruthy();
+    expect(within(types).getByText("Y000120")).toBeTruthy();
+    expect(within(types).getByText("Nomsiz reklama")).toBeTruthy(); // Uzum matni yo'q — taxmin qilinmaydi
+    expect(within(types).getByText(n("70000.00"))).toBeTruthy();
+    const panel = screen.getByRole("tabpanel");
+    expect(norm(panel.textContent!)).toContain(norm(f.money("110000.00"))); // jami
+    expect(norm(panel.textContent!)).toContain(`${norm(f.money("10000.00"))}`); // shundan taxminiy
+    expect(within(panel).getByText(f.percent("0.084615"))).toBeTruthy(); // DRR
+    expect(within(panel).getByText(/ROMI va klik ulushi koʻrsatilmaydi/)).toBeTruthy();
+    const eaten = screen.getByRole("table", { name: "Reklama foydasini yeb qoʻygan SKUʼlar" });
+    expect(within(eaten).getByRole("link", { name: "Krujka" })).toBeTruthy();
+    expect(within(eaten).getByText(f.percent("0.200000"))).toBeTruthy(); // ACOS
+    expect(within(panel).getByText(/Jami: 1 ta SKU/)).toBeTruthy();
+    expect(within(panel).getByText(/2 ta reklamali SKUʼda tannarxsiz sotuv bor/)).toBeTruthy();
+    const skus = screen.getByRole("table", { name: "SKU boʻyicha reklama (ACOS)" });
+    expect(within(skus).getAllByRole("row")).toHaveLength(3); // sarlavha + 2 SKU
+    expect(api.unmocked).toEqual([]);
+  });
+
+  it("reklama yo'q — bo'sh holat; xato — qayta urinish; bo'lim URL'da", async () => {
+    const empty = adsData({ total: "0.00", estimated: "0.00", drr: null, by_type: [], daily: [], skus: [], eaten: [], eaten_total: 0, skipped: 0 });
+    const { history } = await renderAt(`${PATH}&section=ads`, { [ADS_ROUTE]: () => json(200, empty) });
+    expect(await screen.findByText("Bu davrda reklama xarajati yoʻq")).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Reklama" }).getAttribute("aria-selected")).toBe("true");
+    fireEvent.click(screen.getByRole("tab", { name: "Uzum xarajatlari" }));
+    await waitFor(() => expect(history.location.search).not.toContain("section=ads"));
+    cleanup();
+    await renderAt(`${PATH}&section=ads`, { [ADS_ROUTE]: () => problem(403, "forbidden") });
+    expect((await screen.findByRole("alert")).textContent).toContain("Bu sahifaga ruxsatingiz yoʻq.");
+  });
+});
 
 describe("Uzum xarajatlari", () => {
   it("toifalar (ishorali, jami = F9), jarimalar, ro'yxat; P&L'ga kirmagan yozuv belgilanadi", async () => {

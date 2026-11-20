@@ -90,6 +90,7 @@ export const SKU_PICKER_ROUTE = `GET /api/v1/orgs/${ORG_ID}/sku-picker`;
 export const linkRoute = (skuId: string) => `PUT /api/v1/orgs/${ORG_ID}/skus/${skuId}/item`;
 export const SALES_ROUTE = `GET /api/v1/orgs/${ORG_ID}/sales`;
 export const ORDERS_ANALYSIS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/orders/analysis`;
+export const ADS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/ads`;
 export const EXPENSES_ROUTE = `GET /api/v1/orgs/${ORG_ID}/expenses`;
 export const OWN_CATEGORIES_ROUTE = `GET /api/v1/orgs/${ORG_ID}/own-expense-categories`;
 export const OWN_CREATE_ROUTE = `POST /api/v1/orgs/${ORG_ID}/own-expenses`;

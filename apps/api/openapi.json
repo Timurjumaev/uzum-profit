@@ -2354,6 +2354,135 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/ads": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Ads",
+        "operationId": "ads_api_v1_orgs__org_id__ads_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Davr boshi (Toshkent kuni)",
+              "title": "Start"
+            },
+            "description": "Davr boshi (Toshkent kuni)"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Davr oxiri, kiradi; standart — bugun",
+              "title": "End"
+            },
+            "description": "Davr oxiri, kiradi; standart — bugun"
+          },
+          {
+            "name": "shop",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Do'konlar (bir necha marta)",
+              "title": "Shop"
+            },
+            "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/pnl": {
       "get": {
         "tags": [
@@ -9688,6 +9817,243 @@
         ],
         "title": "AdjustmentOut",
         "description": "TM9.1 (c): bog'langanda jo'natma soni postavkada e'lon qilingan songa tenglashtirildi."
+      },
+      "AdsDayOut": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date",
+            "title": "Day"
+          },
+          "ads": {
+            "type": "string",
+            "title": "Ads"
+          },
+          "revenue": {
+            "type": "string",
+            "title": "Revenue"
+          },
+          "drr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Drr"
+          }
+        },
+        "type": "object",
+        "required": [
+          "day",
+          "ads",
+          "revenue",
+          "drr"
+        ],
+        "title": "AdsDayOut"
+      },
+      "AdsOut": {
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          },
+          "total": {
+            "type": "string",
+            "title": "Total"
+          },
+          "estimated": {
+            "type": "string",
+            "title": "Estimated"
+          },
+          "revenue": {
+            "type": "string",
+            "title": "Revenue"
+          },
+          "drr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Drr"
+          },
+          "by_type": {
+            "items": {
+              "$ref": "#/components/schemas/AdsTypeOut"
+            },
+            "type": "array",
+            "title": "By Type"
+          },
+          "daily": {
+            "items": {
+              "$ref": "#/components/schemas/AdsDayOut"
+            },
+            "type": "array",
+            "title": "Daily"
+          },
+          "skus": {
+            "items": {
+              "$ref": "#/components/schemas/AdsSkuOut"
+            },
+            "type": "array",
+            "title": "Skus"
+          },
+          "eaten": {
+            "items": {
+              "$ref": "#/components/schemas/AdsSkuOut"
+            },
+            "type": "array",
+            "title": "Eaten"
+          },
+          "eaten_total": {
+            "type": "integer",
+            "title": "Eaten Total"
+          },
+          "skipped": {
+            "type": "integer",
+            "title": "Skipped"
+          }
+        },
+        "type": "object",
+        "required": [
+          "meta",
+          "total",
+          "estimated",
+          "revenue",
+          "drr",
+          "by_type",
+          "daily",
+          "skus",
+          "eaten",
+          "eaten_total",
+          "skipped"
+        ],
+        "title": "AdsOut"
+      },
+      "AdsSkuOut": {
+        "properties": {
+          "sku_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Sku Id"
+          },
+          "shop_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shop Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "revenue": {
+            "type": "string",
+            "title": "Revenue"
+          },
+          "ads": {
+            "type": "string",
+            "title": "Ads"
+          },
+          "acos": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acos"
+          },
+          "net_profit": {
+            "type": "string",
+            "title": "Net Profit"
+          },
+          "eats_profit": {
+            "type": "boolean",
+            "title": "Eats Profit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sku_id",
+          "shop_id",
+          "title",
+          "revenue",
+          "ads",
+          "acos",
+          "net_profit",
+          "eats_profit"
+        ],
+        "title": "AdsSkuOut"
+      },
+      "AdsTypeOut": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "share": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "amount",
+          "share"
+        ],
+        "title": "AdsTypeOut"
       },
       "AlertsIn": {
         "properties": {

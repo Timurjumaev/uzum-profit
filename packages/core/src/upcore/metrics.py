@@ -606,6 +606,15 @@ def sku_acos(
     return result, zero if can_split else unlinked_ads
 
 
+def ads_eat_profit(net_profit: Money, ads: Money, *, fully_costed: bool) -> bool:
+    """F58 (B5.5). "Reklama foydasini yeb qo'ygan SKU": reklamadan oldingi foyda musbat (sof foyda + reklama > 0), reklamadan
+    keyin esa nol yoki manfiy (sof foyda ≤ 0) va reklama > 0. Faqat hamma sotuvi tannarxli SKU uchun (``fully_costed``):
+    aks holda F15 bo'yicha xarajatning bir qismi ayrilmagan va "reklamadan oldingi foyda" noaniq (tamoyil 9)."""
+    if not fully_costed or ads.amount <= 0:
+        return False
+    return net_profit.amount <= 0 < net_profit.amount + ads.amount
+
+
 # --- F42, F43: buyurtmaga bog'liq reklama va saqlash SKU bo'yicha (ADR-039) ----------------------
 
 
