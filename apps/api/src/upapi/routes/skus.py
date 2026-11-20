@@ -525,10 +525,12 @@ async def sku_detail(
     if info is None:
         raise AppError("sku_not_found", 404)
     conn = ctx.conn
-    book = await rc.load_book(conn, f.period, f.today)
+    before = f.period.previous()
+    book = await rc.load_book(conn, rc.span(before, f.period), f.today)
     key = str(sku_id)
     mine = book.cells.within(f.period, lambda k: k.sku == key)
     s, daily = mine.statement(), mine.by(lambda k: k.day)
+    prev = _sold_before(book.cells.within(before, lambda k: k.sku == key).statement())  # B5.6
     n = (await rc.sale_sums(conn, f, sku=sku_id)).get(None, rc.SaleSums())
     stock = await load_stock(conn, [info.shop_id], f.today, {sku_id})
     st = stock.skus.get(sku_id)
@@ -539,7 +541,7 @@ async def sku_detail(
         f.today,
     )
     borderline = (await orgsettings.load(conn)).margin_borderline
-    row = _row(info, s, n, st, borderline, last.get(info.item_id) if info.item_id else None)
+    row = _row(info, s, n, st, borderline, last.get(info.item_id) if info.item_id else None, prev)
 
     d = m.sku_daily
     snaps = {
