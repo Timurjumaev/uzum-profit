@@ -67,6 +67,19 @@ describe("jadval", () => {
     expect(screen.getByText("Jami 2 ta SKU")).toBeTruthy();
   });
 
+  it("B5.6: 'Foyda farqi' ustuni — oldingi davrga nisbatan; oldingi davrda sotuv yo'q — '—'", async () => {
+    const rows = skusData().items.map((r, i) => (i === 0 ? { ...r, net_profit_diff: "40000.00" } : { ...r, net_profit_diff: null }));
+    await renderTable({ [SKUS_ROUTE]: () => json(200, skusData({ items: rows })) });
+    expect(headers().map((h) => h!.replace(/Qanday hisoblanadi.*$/, "").trim())).toContain("Foyda farqi");
+    const [first, second] = within(table()).getAllByRole("row").slice(1);
+    expect(norm(first!.textContent!)).toContain(`+${n("40000.00")}`);
+    expect(within(second!).getAllByText("—").length).toBeGreaterThan(0);
+    cleanup();
+    const negative = skusData().items.map((r, i) => (i === 0 ? { ...r, net_profit_diff: "-15000.00" } : r));
+    await renderTable({ [SKUS_ROUTE]: () => json(200, skusData({ items: negative })) });
+    expect(norm(within(table()).getAllByRole("row")[1]!.textContent!)).toContain(n("-15000.00"));
+  });
+
   it("B4.42: bitta 'Tannarx/dona' ustuni — sotuv bo'lsa davr o'rtachasi, bo'lmasa oxirgi partiya izoh bilan; 'Oxirgi partiya' ustuni yo'q", async () => {
     const rows = skusData().items.map((r, i) => (i === 0 ? { ...r, cogs_per_unit: null, units: 0, unit_cost: "120000.00", unit_cost_source: "transit" as const } : r));
     await renderTable({ [SKUS_ROUTE]: () => json(200, skusData({ items: rows })) });

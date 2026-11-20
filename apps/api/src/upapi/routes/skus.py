@@ -118,6 +118,10 @@ class SkuRowOut(BaseModel):
     roi: Decimal | None  # F14
     return_share: Decimal | None  # F18
     cancel_share: Decimal | None  # F17
+    # B5.6: oldingi shu uzunlikdagi davrga nisbatan farq; oldingi davrda SKU sotuvi bo'lmasa — ``null`` (taxmin yo'q).
+    previous_net_profit: Decimal | None = None
+    net_profit_diff: Decimal | None = None  # F12: joriy − oldingi
+    revenue_diff: Decimal | None = None  # F3: joriy − oldingi
     label: ProfitLabel  # M6 holat belgisi
     stock: int  # FBO + FBS
     days_of_stock: Decimal | None  # F24
@@ -203,6 +207,11 @@ def _value(row: SkuRowOut, sort: SkuSort) -> Any:
     return getattr(row, sort.value)
 
 
+def _sold_before(previous: Statement | None) -> Statement | None:
+    """Oldingi davr hisobi — faqat shu SKU'da o'sha davrda sotuv bo'lgan bo'lsa (aks holda farq ma'nosiz — ``None``)."""
+    return previous if previous is not None and previous.lines > 0 else None
+
+
 def _row(
     info: SkuInfo,
     s: Statement,
@@ -210,6 +219,7 @@ def _row(
     st: SkuStock | None,
     borderline: Decimal,
     lot: LastLot | None = None,
+    previous: Statement | None = None,
 ) -> SkuRowOut:
     """``borderline`` — "Chegarada" marja chegarasi (tashkilot sozlamasi, B5.0b)."""
     u = unit_economics(s)
@@ -245,6 +255,11 @@ def _row(
         roi=s.roi,
         return_share=n.return_share,
         cancel_share=n.cancel_share,
+        previous_net_profit=None if previous is None else previous.net_profit.amount,
+        net_profit_diff=None
+        if previous is None
+        else s.net_profit.amount - previous.net_profit.amount,
+        revenue_diff=None if previous is None else s.revenue.amount - previous.revenue.amount,
         label=s.label(borderline),
         stock=st.stock if st else 0,
         days_of_stock=st.days_of_stock if st else None,
@@ -268,9 +283,12 @@ async def ranked(
         key = SkuSort(sort.lstrip("-"))
     except ValueError:
         raise AppError("bad_sort", 422, detail=sort) from None
-    book = await rc.load_book(ctx.conn, f.period, f.today)
-    cells = book.scoped(f)
-    by_sku = cells.by(rc.sku_column)  # ADR-062: umumiy xarajatlar — ``common`` kalitida
+    before = f.period.previous()
+    book = await rc.load_book(ctx.conn, rc.span(before, f.period), f.today)
+    by_sku = book.scoped(f, f.period).by(
+        rc.sku_column
+    )  # ADR-062: umumiy xarajatlar — ``common`` kalitida
+    prev_sku = book.scoped(f, before).by(rc.sku_column)  # B5.6: oldingi davr (farq ustuni)
     sums = await rc.sale_sums(ctx.conn, f, by_sku=True)
     catalog = await sku_catalog(ctx.conn, f.shops)
     stock = await load_stock(ctx.conn, sorted(f.shops, key=str) if f.shops else None, f.today)
@@ -295,6 +313,7 @@ async def ranked(
             stock.skus.get(info.id),
             borderline,
             lots.get(info.item_id) if info.item_id else None,
+            _sold_before(prev_sku.get(str(info.id))),
         )
         if (label is None or row.label is label) and (abc is None or row.abc == abc):
             rows.append(row)

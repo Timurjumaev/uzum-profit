@@ -219,6 +219,22 @@ describe("tahlil", () => {
     expect(screen.getByRole("tab", { name: "Qaytarilish" }).getAttribute("aria-selected")).toBe("true");
   });
 
+  it("farq ustuni (B5.6): oldingi davrga nisbatan dona va foiz punkti; oldingi davrda harakat yo'q — '—'; KPI izohida oldingi davr", async () => {
+    await renderAt(`${PATH}&tab=cancel`);
+    const panel = await screen.findByRole("tabpanel");
+    const skus = within(await within(panel).findByRole("table", { name: "SKU boʻyicha" }));
+    expect(skus.getByRole("columnheader", { name: /Oldingi davrga nisbatan/ })).toBeTruthy();
+    const x = skus.getByRole("link", { name: "Oʻyinchoq mashina" }).closest("tr")!;
+    expect(norm(x.textContent!)).toContain("−1 · −5,0 p.p."); // kamayish — yaxshi (yashil)
+    expect(within(panel).getByText(/oldingi davr: 20/)).toBeTruthy(); // ulush izohi
+    expect(within(panel).getByText(/oldingi davr: 4/)).toBeTruthy(); // dona izohi
+    cleanup();
+    await renderAt(`${PATH}&tab=returns`);
+    const returns = within(await within(await screen.findByRole("tabpanel")).findByRole("table", { name: "SKU boʻyicha" }));
+    expect(norm(returns.getByRole("link", { name: "Oʻyinchoq mashina" }).closest("tr")!.textContent!)).toContain("+1 · +2,5 p.p."); // oshish — yomon (qizil)
+    expect(returns.getByText("SKU bogʻlanmagan").closest("tr")!.textContent).toContain("—"); // oldingi davrda harakat yo'q
+  });
+
   it("noma'lum bo'lim e'tiborsiz — ro'yxat; ma'lumotsiz davr — bo'sh holat; xato — qayta urinish", async () => {
     await renderAt(`${PATH}&tab=hack`);
     await screen.findByRole("table", { name: CAPTION });

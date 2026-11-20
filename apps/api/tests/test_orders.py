@@ -144,6 +144,20 @@ def test_by_sku(world: World) -> None:
     )  # 1 / 11, 3 / (7 + 3)
     assert rows[3]["sku_id"] is None  # bog'lanmagan sotuvlar alohida qatorda
     assert rows[3]["returns"] == 1
+    # B5.6 farq ustuni: oldingi davr (11–30 sentabr) — faqat X: 5 dona sotilgan, 5 qaytgan, bekor 0.
+    assert (x["canceled_diff"], x["returns_diff"]) == (1, -2)
+    assert D(x["cancel_share_diff"]) == D("0.090909") and D(x["return_share_diff"]) == D("-0.2")
+    for other in rows[1:]:  # oldingi davrda harakati yo'q SKU — farq yo'q (taxmin qilinmaydi)
+        assert other["canceled_diff"] is None and other["return_share_diff"] is None
+
+
+def test_summary_previous_period(world: World) -> None:
+    """B5.6: oldingi davr (11–30 sentabr) ko'rsatkichlari; oldingi davrda harakat bo'lmasa — null."""
+    s = world.get("orders/analysis", **OCT)["summary"]
+    assert (s["previous_canceled"], s["previous_returns"]) == (0, 5)
+    assert s["previous_cancel_share"] == "0.000000" and s["previous_return_share"] == "0.500000"
+    jan = world.get("orders/analysis", start="2026-01-01", end="2026-01-31")["summary"]
+    assert jan["previous_canceled"] is None and jan["previous_return_share"] is None
 
 
 def test_daily_trend_sums_to_summary(world: World) -> None:

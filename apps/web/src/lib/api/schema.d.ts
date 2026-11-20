@@ -3797,6 +3797,14 @@ export interface components {
             cancel_share: string | null;
             /** Return Share */
             return_share: string | null;
+            /** Canceled Diff */
+            canceled_diff?: number | null;
+            /** Returns Diff */
+            returns_diff?: number | null;
+            /** Cancel Share Diff */
+            cancel_share_diff?: string | null;
+            /** Return Share Diff */
+            return_share_diff?: string | null;
         };
         /** OrdersSummaryOut */
         OrdersSummaryOut: {
@@ -3816,6 +3824,14 @@ export interface components {
             return_revenue: string;
             /** Return Storage Cost */
             return_storage_cost: string;
+            /** Previous Canceled */
+            previous_canceled?: number | null;
+            /** Previous Returns */
+            previous_returns?: number | null;
+            /** Previous Cancel Share */
+            previous_cancel_share?: string | null;
+            /** Previous Return Share */
+            previous_return_share?: string | null;
         };
         /** OrgCreate */
         OrgCreate: {
@@ -5358,6 +5374,12 @@ export interface components {
             return_share: string | null;
             /** Cancel Share */
             cancel_share: string | null;
+            /** Previous Net Profit */
+            previous_net_profit?: string | null;
+            /** Net Profit Diff */
+            net_profit_diff?: string | null;
+            /** Revenue Diff */
+            revenue_diff?: string | null;
             label: components["schemas"]["ProfitLabel"];
             /** Stock */
             stock: number;

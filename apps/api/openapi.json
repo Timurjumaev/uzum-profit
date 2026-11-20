@@ -15237,6 +15237,50 @@
               }
             ],
             "title": "Return Share"
+          },
+          "canceled_diff": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canceled Diff"
+          },
+          "returns_diff": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Returns Diff"
+          },
+          "cancel_share_diff": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Share Diff"
+          },
+          "return_share_diff": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return Share Diff"
           }
         },
         "type": "object",
@@ -15298,6 +15342,50 @@
           "return_storage_cost": {
             "type": "string",
             "title": "Return Storage Cost"
+          },
+          "previous_canceled": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Canceled"
+          },
+          "previous_returns": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Returns"
+          },
+          "previous_cancel_share": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Cancel Share"
+          },
+          "previous_return_share": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Return Share"
           }
         },
         "type": "object",
@@ -20334,6 +20422,39 @@
               }
             ],
             "title": "Cancel Share"
+          },
+          "previous_net_profit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Net Profit"
+          },
+          "net_profit_diff": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Profit Diff"
+          },
+          "revenue_diff": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revenue Diff"
           },
           "label": {
             "$ref": "#/components/schemas/ProfitLabel"
