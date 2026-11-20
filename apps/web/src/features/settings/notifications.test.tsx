@@ -33,7 +33,7 @@ describe("bildirishnomalar sozlamasi", () => {
     // Ichki bosqich kodi (B5.7) sotuvchiga ko'rsatilmaydi (B6.4, A8).
     expect(payout.closest("label")!.textContent).toContain("Tez orada");
     expect(payout.closest("label")!.textContent).not.toContain("B5.7");
-    expect(within(list).queryByRole("checkbox", { name: /Qaytish keskin oshdi/ })).toBeNull();
+    expect((within(list).getByRole("checkbox", { name: /Qaytish keskin oshdi/ }) as HTMLInputElement).disabled).toBe(false);
     expect((within(list).getByLabelText("Vaqti: Kunlik xulosa (kechagi buyurtma, tushum, sof foyda, bekorlar)") as HTMLInputElement).value).toBe("09:00");
   });
 
@@ -93,5 +93,26 @@ describe("bildirishnomalar sozlamasi", () => {
     expect(paramValid("hours", "24")).toBe(true);
     expect(paramValid("days", "31")).toBe(false);
     expect(paramValid("hours", null)).toBe(false);
+  });
+
+  it("Qaytish keskin oshdi: daraja va N standartsiz — bo'sh holda ham saqlanadi (null), tanlansa yuboriladi", async () => {
+    const { api, list, box } = await renderAt();
+    expect(within(list).getByText(/tanlanmaguncha bu xabar kelmaydi/)).toBeTruthy();
+    expect((within(list).getByLabelText(/^Daraja/) as HTMLSelectElement).value).toBe("");
+    expect(paramValid("level", "")).toBe(true);
+    expect(paramValid("min_returns", "")).toBe(true);
+    expect(paramValid("level", "category")).toBe(false);
+    expect(paramValid("min_returns", "0")).toBe(false);
+    expect(paramValid("min_returns", "1001")).toBe(false);
+    fireEvent.click(within(box()).getByRole("button", { name: "Saqlash" }));
+    await waitFor(() => expect(api.bodiesOf(PUT)).toHaveLength(1));
+    type Body = { rules: Array<{ event: string; params: Record<string, unknown> }> };
+    expect((api.bodiesOf(PUT)[0] as Body).rules.find((r) => r.event === "returns_spike")!.params).toEqual({ level: null, min_returns: null });
+    fireEvent.change(within(list).getByLabelText(/^Daraja/), { target: { value: "sku" } });
+    fireEvent.change(within(list).getByLabelText(/^Eng kam qaytish soni/), { target: { value: "5" } });
+    expect(within(list).queryByText(/tanlanmaguncha bu xabar kelmaydi/)).toBeNull();
+    fireEvent.click(within(box()).getByRole("button", { name: "Saqlash" }));
+    await waitFor(() => expect(api.bodiesOf(PUT)).toHaveLength(2));
+    expect((api.bodiesOf(PUT)[1] as Body).rules.find((r) => r.event === "returns_spike")!.params).toEqual({ level: "sku", min_returns: 5 });
   });
 });

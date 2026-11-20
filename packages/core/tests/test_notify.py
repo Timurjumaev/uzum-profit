@@ -17,6 +17,7 @@ from upcore.notify import (
     loss_streak,
     merged_params,
     parse_hhmm,
+    returns_spike,
     summary_due,
     week_start,
 )
@@ -99,3 +100,17 @@ def test_line_profit() -> None:
     assert line_profit(D(9000), D(10000)) == D(-1000)
     assert line_profit(None, D(1)) is None
     assert line_profit(D(1), None) is None
+
+
+def test_returns_spike_needs_user_choice_and_double_share() -> None:
+    """B5.4 (Temur qarori): N kiritilmaguncha signal yo'q; 7 kun ulushi ≥ 2 × 30 kunlik va qaytish soni ≥ N."""
+    assert CATALOG[Event.RETURNS_SPIKE].stage is None
+    assert merged_params(Event.RETURNS_SPIKE, None) == {"level": None, "min_returns": None}
+    # 7 kun: 80 sotildi, 20 qaytdi = 20%; 30 kun: 400 sotildi, 40 qaytdi = 9,1% → 2,2 barobar
+    assert returns_spike(80, 20, 400, 40, 5)
+    assert not returns_spike(80, 20, 400, 40, None)  # N yo'q
+    assert not returns_spike(80, 20, 400, 40, 21)  # N dan kam
+    assert not returns_spike(90, 10, 400, 40, 5)  # 10% va 9,1% — oshmagan
+    assert not returns_spike(0, 0, 0, 0, 1)  # ma'lumot yo'q
+    assert not returns_spike(0, 0, 100, 5, 1)  # 7 kunda qaytish yo'q
+    assert returns_spike(0, 3, 97, 3, 3)  # 7 kunda hammasi qaytgan, avval hech biri

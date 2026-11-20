@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
 import { notificationSettingsQuery, setNotificationSettings, telegramLink, telegramUnlink } from "../../app/query";
-import { Badge, Banner, Button, NumberInput, Skeleton, TextInput, useToast } from "../../components/ui";
+import { Badge, Banner, Button, NumberInput, Select, Skeleton, TextInput, useToast } from "../../components/ui";
 import type { NotificationEvent, NotificationSettings as Data, NotificationSettingsIn } from "../../lib/api/types";
 
 type Draft = { rules: Record<string, { enabled: boolean; params: Record<string, string | null> }>; quiet: boolean; from: string; to: string };
@@ -16,20 +16,33 @@ const hhmm = (v: string | null | undefined) => (v ? v.slice(0, 5) : "");
 
 function draftOf(data: Data): Draft {
   return {
-    rules: Object.fromEntries(data.events.map((e) => [e.event, { enabled: e.enabled, params: Object.fromEntries(Object.entries(e.params).map(([k, v]) => [k, String(v)])) }])),
+    rules: Object.fromEntries(data.events.map((e) => [e.event, { enabled: e.enabled, params: Object.fromEntries(Object.entries(e.params).map(([k, v]) => [k, v === null || v === undefined ? "" : String(v)])) }])),
     quiet: data.quiet_from !== null,
     from: hhmm(data.quiet_from) || "22:00",
     to: hhmm(data.quiet_to) || "08:00",
   };
 }
 
+const OPTIONAL = new Set(["level", "min_returns"]);
+const LEVELS = ["shop", "sku"];
+
 /** Chegara to'g'rimi (server ham tekshiradi). */
 export function paramValid(key: string, value: string | null): boolean {
+  // "Qaytish keskin oshdi": daraja va N standartsiz — bo'sh qolsa xabar kelmaydi (saqlash mumkin).
+  if (OPTIONAL.has(key) && (value === null || value === "")) return true;
   if (value === null || value === "") return false;
+  if (key === "level") return LEVELS.includes(value);
   if (key === "at") return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
   const n = Number(value);
-  const [low, high] = key === "streak" ? [2, 10] : key === "hours" ? [1, 24] : [1, 30];
+  const [low, high] = key === "streak" ? [2, 10] : key === "hours" ? [1, 24] : key === "min_returns" ? [1, 1000] : [1, 30];
   return Number.isInteger(n) && n >= low && n <= high;
+}
+
+/** PUT tanasidagi qiymat: vaqt — matn, daraja — matn yoki `null`, qolgani — son (bo'sh ixtiyoriy — `null`). */
+function paramBody(key: string, value: string | null): string | number | null {
+  if (key === "at") return value;
+  if (OPTIONAL.has(key) && (value === null || value === "")) return null;
+  return key === "level" ? value : Number(value);
 }
 
 export function NotificationSettings({ orgId }: { orgId: string }) {
@@ -68,7 +81,7 @@ function Form({ orgId, data }: { orgId: string; data: Data }) {
       const body: NotificationSettingsIn = {
         rules: live.map((e) => {
           const r = draft.rules[e.event]!;
-          return { event: e.event, enabled: r.enabled, params: r.enabled ? Object.fromEntries(Object.entries(r.params).map(([k, v]) => [k, k === "at" ? v : Number(v)])) : {} };
+          return { event: e.event, enabled: r.enabled, params: r.enabled ? Object.fromEntries(Object.entries(r.params).map(([k, v]) => [k, paramBody(k, v)])) : {} };
         }),
         quiet_from: draft.quiet ? draft.from : null,
         quiet_to: draft.quiet ? draft.to : null,
@@ -186,12 +199,26 @@ function EventRow({ e, rule, onToggle, onParam }: { e: NotificationEvent; rule: 
           {Object.entries(rule.params).map(([k, v]) =>
             k === "at" ? (
               <TextInput key={k} label={t("settings.notifications.param.at")} aria-label={`${t("settings.notifications.param.at")}: ${name}`} type="time" value={v ?? ""} onValueChange={(x) => onParam(k, x)} />
+            ) : k === "level" ? (
+              <Select
+                key={k}
+                label={t("settings.notifications.param.level")}
+                aria-label={`${t("settings.notifications.param.level")}: ${name}`}
+                value={v ?? ""}
+                onValueChange={(x) => onParam(k, x)}
+                options={[
+                  { value: "", label: t("settings.notifications.level.none") },
+                  { value: "shop", label: t("settings.notifications.level.shop") },
+                  { value: "sku", label: t("settings.notifications.level.sku") },
+                ]}
+              />
             ) : (
-              <NumberInput key={k} label={t(`settings.notifications.param.${k}`)} aria-label={`${t(`settings.notifications.param.${k}`)}: ${name}`} value={v} onValueChange={(x) => onParam(k, x)} digits={0} />
+              <NumberInput key={k} label={t(`settings.notifications.param.${k}`)} aria-label={`${t(`settings.notifications.param.${k}`)}: ${name}`} value={v === "" ? null : v} onValueChange={(x) => onParam(k, x)} digits={0} />
             ),
           )}
         </div>
       )}
+      {e.available && rule.enabled && e.event === "returns_spike" && (!rule.params.level || !rule.params.min_returns) && <p className="caption">{t("settings.notifications.spikeHint")}</p>}
     </li>
   );
 }

@@ -19,7 +19,9 @@ from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert
 from upcore.notify import (
     CATALOG,
+    PARAM_CHOICES,
     PARAM_LIMITS,
+    PARAM_OPTIONAL,
     QUIET_FROM,
     QUIET_TO,
     Event,
@@ -106,6 +108,12 @@ def _check_params(event: Event, params: dict[str, Any]) -> dict[str, Any]:
                     "bad_notification_params", 422, detail=f"{event.value}: at"
                 ) from None
             out[key] = parsed.strftime("%H:%M")
+        elif value is None and key in PARAM_OPTIONAL:
+            out[key] = None  # tanlov olib tashlandi — hodisa ishlamaydi
+        elif key in PARAM_CHOICES:
+            if value not in PARAM_CHOICES[key]:
+                raise AppError("bad_notification_params", 422, detail=f"{event.value}: {key}")
+            out[key] = value
         else:
             low, high = PARAM_LIMITS[key]
             if not isinstance(value, int) or isinstance(value, bool) or not low <= value <= high:
