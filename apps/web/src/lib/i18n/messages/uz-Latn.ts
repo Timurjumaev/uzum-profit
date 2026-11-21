@@ -1383,6 +1383,7 @@ export const uzLatn = {
         cargo_late: "Kargo kechikmoqda",
         commission_changed: "SKU komissiyasi oʻzgardi",
         goal_behind: "Reja orqada (oylik maqsad)",
+        monthly_report: "Oylik hisobot tayyor (dastlabki va yakuniy havola)",
         fbs_deadline: "FBS: topshirish muddati yaqin",
       },
       param: { at: "Vaqti", streak: "Ketma-ket sotuvlar", hours: "Necha soatdan keyin", days: "Necha kun", level: "Daraja", min_returns: "Eng kam qaytish soni (7 kunda)" },

@@ -22,6 +22,9 @@ Hodisalar (ishlaydiganlari; qolganlari katalogda ``stage`` bilan):
   snapshotdan farq qilsa (oxirgi 2 kun ichida); o'zgargan kun bo'yicha bitta xabar (SKU, eski → yangi %), takror yo'q.
 - **Reja orqada** (B5.8, F59) — oylik maqsad bo'yicha oy oxiri prognozi maqsaddan 15% dan ko'p past; oyning 7-kunidan boshlab
   (oldin prognoz beqaror); o'sha oy uchun "orqada" maqsadlar to'plami o'zgarsa bitta yangi xabar, takror yo'q.
+- **Oylik hisobot** (B7.3, A16) — o'tgan oy uchun: oy tugagach "dastlabki" havola (Jarayondagi buyurtma bor), hammasi yakuniy
+  holatga yetganda "yakuniy" havola (har biri bir marta; birinchi baholashda jarayondagi buyurtma yo'q bo'lsa — to'g'ridan-to'g'ri
+  yakuniy). Fayl yuborilmaydi — ilovadagi hisobotga havola. Sof foyda va tushum xabarda — Foyda sahifasi bilan bir hisob.
 - **Postavka kamomadi** — Uzum kam qabul qilgan va qaror yozilmagan farq (TM7).
 - **Xarid sanalmagan** (TM9.8) — "Keldi" belgilangan xarid N kun (standart 3) sanalmay tursa, har xarid uchun bir marta.
 - **Kargo kechikmoqda** (B5.1) — "Yo'lda" xarid kutilgan keldi sanasi (F25 "yo'l") + N kun (standart 5) dan o'tgan, har xarid bir marta.
@@ -614,6 +617,54 @@ async def goals_behind(conn: AsyncConnection, today: date) -> list[Found]:
     ]
 
 
+async def monthly_reports(conn: AsyncConnection, today: date) -> list[Found]:
+    """B7.3. O'tgan oy hisoboti: oy tugagan, sotuvi bor; Jarayondagi qator qolgan bo'lsa — "dastlabki" (bir marta), hammasi
+    yakuniy holatga yetganda — "yakuniy" (bir marta). Bir oydan oldingi oy uchun yakuniy — faqat shu oyning dastlabki xabari
+    yuborilgan bo'lsa (eski oylar uchun birdan xabar yog'ilmasin). Raqamlar — Foyda sahifasidagi hisob (``rc.load_book``)."""
+    first = today.replace(day=1)
+    last_end = first - timedelta(days=1)
+    months = [last_end.replace(day=1), (last_end.replace(day=1) - timedelta(days=1)).replace(day=1)]
+    book = await rc.load_book(conn, Period(months[1], last_end), today)
+    n = m.notifications
+    out: list[Found] = []
+    for idx, start in enumerate(months):
+        end = (start.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+        period = Period(start, end)
+        s = book.scoped(Filters(period, None, today), period).statement()
+        if s.lines == 0:
+            continue
+        key = start.isoformat()
+        payload = {
+            "month": key,
+            "net_profit": str(s.net_profit.amount),
+            "revenue": str(s.revenue.amount),
+            "processing_lines": s.lines_processing,
+            "processing_revenue": str(s.revenue_processing.amount),
+        }
+        if s.lines_processing == 0:
+            if idx == 1:  # bir oy oldingi: yakuniy faqat dastlabki yuborilgan bo'lsa
+                sent = await conn.scalar(
+                    select(func.count()).where(
+                        n.c.event == Event.MONTHLY_REPORT.value,
+                        n.c.dedupe_key == f"monthly:{key}:preliminary",
+                    )
+                )
+                if not sent:
+                    continue
+            out.append(
+                Found(Event.MONTHLY_REPORT, f"monthly:{key}:final", {**payload, "final": True})
+            )
+        elif idx == 0:
+            out.append(
+                Found(
+                    Event.MONTHLY_REPORT,
+                    f"monthly:{key}:preliminary",
+                    {**payload, "final": False},
+                )
+            )
+    return out
+
+
 async def new_fines(conn: AsyncConnection, now: datetime) -> list[Found]:
     e = m.mp_expenses
     shops = {r.id: r.alias or r.name for r in await conn.execute(select(m.shops))}
@@ -1054,6 +1105,8 @@ async def evaluate(conn: AsyncConnection, org_id: UUID, now: datetime) -> int:
         common += await commission_changes(conn, today)
     if Event.GOAL_BEHIND in wanted and heavy:
         common += await goals_behind(conn, today)
+    if Event.MONTHLY_REPORT in wanted and heavy:
+        common += await monthly_reports(conn, today)
 
     rows = [(p, f) for f in common for p in people if p.wants(f.event)] + personal
     created = 0

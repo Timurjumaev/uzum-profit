@@ -75,6 +75,10 @@ T: dict[str, dict[str, str]] = {
         "goal_metric_net_profit": "sof foyda",
         "goal_metric_units": "dona",
         "goal_org": "Butun tashkilot",
+        "monthly_report": "📊 {month} oylik hisobot ({kind}): sof foyda {profit}, tushum {revenue}",
+        "monthly_preliminary": "dastlabki",
+        "monthly_final": "yakuniy",
+        "monthly_processing": "{n} ta buyurtma ({sum}) hali jarayonda — yakuniy hisobot hammasi yakunlangach keladi",
         "returns_spike_shop": "↩️ Qaytish keskin oshdi: {n} ta doʻkon (jami {total}) — oxirgi 7 kunda ulush 30 kunlikdan ≥ 2 barobar",
         "returns_spike_sku": "↩️ Qaytish keskin oshdi: {n} ta SKU (jami {total}) — oxirgi 7 kunda ulush 30 kunlikdan ≥ 2 barobar",
         "returns_line": "• {name} — {qty} ta qaytdi, ulush {share7}% (30 kunda {share30}%)",
@@ -133,6 +137,10 @@ T: dict[str, dict[str, str]] = {
         "goal_metric_net_profit": "чистая прибыль",
         "goal_metric_units": "штуки",
         "goal_org": "Вся организация",
+        "monthly_report": "📊 Месячный отчёт за {month} ({kind}): чистая прибыль {profit}, выручка {revenue}",
+        "monthly_preliminary": "предварительный",
+        "monthly_final": "итоговый",
+        "monthly_processing": "{n} заказов ({sum}) ещё в обработке — итоговый отчёт придёт, когда все завершатся",
         "returns_spike_shop": "↩️ Возвраты резко выросли: {n} магазинов (всего {total}) — доля за 7 дней ≥ 2× доли за 30 дней",
         "returns_spike_sku": "↩️ Возвраты резко выросли: {n} SKU (всего {total}) — доля за 7 дней ≥ 2× доли за 30 дней",
         "returns_line": "• {name} — возвратов {qty}, доля {share7}% (за 30 дней {share30}%)",
@@ -303,6 +311,29 @@ def notification(event: str, payload: dict[str, Any], lang: str, org: str | None
                 )
             )
         msg = Message("\n".join([head, *lines]), "/goals")
+    elif event == "monthly_report":
+        final = bool(p.get("final"))
+        month = p["month"][:7]
+        lines = [
+            t(
+                lang,
+                "monthly_report",
+                month=month,
+                kind=t(lang, "monthly_final" if final else "monthly_preliminary"),
+                profit=money(p["net_profit"], lang),
+                revenue=money(p["revenue"], lang),
+            )
+        ]
+        if not final and p.get("processing_lines"):
+            lines.append(
+                t(
+                    lang,
+                    "monthly_processing",
+                    n=p["processing_lines"],
+                    sum=money(p["processing_revenue"], lang),
+                )
+            )
+        msg = Message("\n".join(lines), f"/reports?month={p['month']}")
     elif event == "loss_sales":
         key = "loss_sales_new" if p.get("new") else "loss_sales"
         head = t(lang, key, n=p["count"], total=p.get("total", p["count"]), streak=p["streak"])

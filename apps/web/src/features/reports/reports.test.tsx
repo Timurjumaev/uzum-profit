@@ -40,13 +40,13 @@ function report(over: Record<string, unknown> = {}) {
   };
 }
 
-async function renderReport(routes: Routes = {}) {
+async function renderReport(routes: Routes = {}, path = "/reports") {
   const api = mockApi({
     [ME_ROUTE]: () => json(200, { ...ME, user: { ...ME.user, language: "uz-Latn" } }),
     [ROUTE]: () => json(200, report()),
     ...routes,
   });
-  render(<App state={createAppState(createMemoryHistory({ initialEntries: ["/reports"] }), "uz-Latn")} />);
+  render(<App state={createAppState(createMemoryHistory({ initialEntries: [path] }), "uz-Latn")} />);
   await screen.findByRole("heading", { level: 1, name: /Oylik hisobot — / });
   return api;
 }
@@ -81,5 +81,13 @@ describe("oylik hisobot", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Chop etish / PDF" }));
     expect(print).toHaveBeenCalledTimes(1);
     expect(within(screen.getByRole("group", { name: "Oy" })).getByTestId("report-month")).toBeTruthy();
+  });
+
+  it("hodisadagi havola (?month=) shu oyni ochadi; noto'g'ri qiymat — joriy oy", async () => {
+    const api = await renderReport({}, "/reports?month=2026-09");
+    expect(api.fetch.mock.calls.some(([r]) => new URL((r as Request).url).searchParams.get("month") === "2026-09-01")).toBe(true);
+    cleanup();
+    const bad = await renderReport({}, "/reports?month=xyz");
+    expect(bad.fetch.mock.calls.every(([r]) => !new URL((r as Request).url).searchParams.has("month"))).toBe(true);
   });
 });

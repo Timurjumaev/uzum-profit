@@ -26,6 +26,14 @@ export function onboardingSearch(search: Record<string, unknown>): OnboardingSea
   return (ONBOARDING_STEPS as readonly unknown[]).includes(search.step) ? { step: search.step as OnboardingStep } : {};
 }
 
+export type ReportsSearch = { month?: string };
+
+/** Oylik hisobot (B7.3): `?month=YYYY-MM-DD` — hodisadagi havola shu oyni ochadi; noto'g'ri qiymat e'tiborga olinmaydi. */
+export function reportsSearch(search: Record<string, unknown>): ReportsSearch {
+  const value = search.month;
+  return typeof value === "string" && /^\d{4}-\d{2}(-\d{2})?$/.test(value) ? { month: value.length === 7 ? `${value}-01` : value } : {};
+}
+
 export const PNL_VIEWS = ["month", "shop", "sku"] as const;
 export type PnlSearch = { view?: (typeof PNL_VIEWS)[number] };
 

@@ -31,6 +31,7 @@ export const EVENT_PATH: Record<string, NavTo> = {
   fbs_deadline: "/inventory",
   uncounted_purchase: "/purchases",
   goal_behind: "/goals",
+  monthly_report: "/reports",
 };
 
 const DELIVERY_TONE: Record<string, Tone> = { sent: "positive", pending: "neutral", failed: "negative" };

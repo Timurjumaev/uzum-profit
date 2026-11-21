@@ -942,3 +942,54 @@ def test_notification_center_unread_and_mark_read(world: World) -> None:
     )  # boshqa foydalanuvchi qatori tegilmagan
     assert a.sql("SELECT read_at FROM notifications WHERE id = %s", [ids["skip"]])[0][0] is None
     a.sql("DELETE FROM notifications WHERE org_id = %s", [w.org_id])
+
+
+def test_monthly_report_event_preliminary_then_final_once(world: World) -> None:
+    """B7.3 (A16): o'tgan oy hisoboti — Jarayondagi qator bo'lsa "dastlabki", hammasi yakunlangach "yakuniy"; har biri bir marta
+    (havola, fayl emas); moliya roli oladi, ombor roli — yo'q; raqamlar Foyda sahifasi bilan bir hisob; sotuvsiz oy — xabar yo'q."""
+    w, a = world, world.a
+    _clean(w)
+    a.sql("DELETE FROM daily_sku_metrics WHERE org_id = %s", [w.org_id])
+    now = datetime(2026, 12, 2, 10, 0, tzinfo=TZ)  # noyabr tugagan
+    # Noyabrda 3 sotuv qatori, shundan 2 tasi hali Jarayonda.
+    a.insert(
+        "daily_sku_metrics",
+        shop_id=a.shop_id,
+        sku_id=w.ids["sku"],
+        day=date(2026, 11, 10),
+        units=3,
+        units_processing=2,
+        revenue=D(600_000),
+        revenue_processing=D(400_000),
+        lines=3,
+        lines_processing=2,
+    )
+    fresh(w, now + timedelta(days=2))
+    try:
+        found = w.a.run(lambda conn: notify.monthly_reports(conn, now.date()))
+        assert len(found) == 1
+        p = found[0].payload
+        assert p["month"] == "2026-11-01" and p["final"] is False and p["processing_lines"] == 2
+        assert found[0].dedupe_key == "monthly:2026-11-01:preliminary"
+        pnl = w.get("pnl", start="2026-11-01", end="2026-11-30")["statement"]
+        assert D(p["net_profit"]) == D(pnl["net_profit"]) and D(p["revenue"]) == D(pnl["revenue"])
+        evaluate(w, now)
+        evaluate(w, now + timedelta(hours=1))  # takror yo'q
+        rows = _rows(w, "accountant", "monthly_report")
+        assert [r["key"] for r in rows] == ["monthly:2026-11-01:preliminary"]
+        assert not _rows(w, "warehouse", "monthly_report")  # ombor roli moliya xabarini olmaydi
+        # Hammasi yakuniy holatga yetdi — yakuniy hisobot (bir marta)
+        a.sql(
+            "UPDATE daily_sku_metrics SET lines_processing = 0, units_processing = 0, revenue_processing = 0 "
+            "WHERE org_id = %s",
+            [w.org_id],
+        )
+        evaluate(w, now + timedelta(days=1))
+        evaluate(w, now + timedelta(days=1, hours=1))
+        keys = [r["key"] for r in _rows(w, "accountant", "monthly_report")]
+        assert sorted(keys) == ["monthly:2026-11-01:final", "monthly:2026-11-01:preliminary"]
+        # Sotuvi yo'q oy — xabar yo'q
+        assert w.a.run(lambda conn: notify.monthly_reports(conn, date(2027, 3, 2))) == []
+    finally:
+        a.sql("DELETE FROM daily_sku_metrics WHERE org_id = %s", [w.org_id])
+        _clean(w)

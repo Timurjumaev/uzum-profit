@@ -34,6 +34,7 @@ class Event(StrEnum):
     FBS_DEADLINE = "fbs_deadline"
     UNCOUNTED_PURCHASE = "uncounted_purchase"  # TM9.8: xarid keldi, N kun sanalmagan
     SHIP_NEEDED = "ship_needed"  # B6.5: Uzumdagi zaxira yetmaydi, omborimda tovar bor (F26, F54)
+    MONTHLY_REPORT = "monthly_report"  # B7.3: oylik hisobot — oyning 1-sanasida dastlabki, yopilganda yakuniy havola
     GOAL_BEHIND = (
         "goal_behind"  # B5.8: oylik maqsad bo'yicha prognoz maqsaddan 15% dan ko'p past (F59)
     )
@@ -97,6 +98,8 @@ CATALOG: dict[Event, EventSpec] = {
         EventSpec(Event.SHIP_NEEDED, Audience.STOCK),
         # B5.8 (F59): kritik emas; oyning 7-kunidan boshlab (oldin prognoz beqaror); sozlanadigan chegara yo'q (15% — F59).
         EventSpec(Event.GOAL_BEHIND, Audience.FINANCE),
+        # B7.3 (ADR-065): kritik emas; har oy bitta dastlabki va (hammasi yakuniy holatga yetganda) bitta yakuniy xabar — havola, fayl emas.
+        EventSpec(Event.MONTHLY_REPORT, Audience.FINANCE),
     )
 }
 
