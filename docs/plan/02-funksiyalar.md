@@ -585,7 +585,14 @@ o'lcham kiritilmagan: 50 000; SIM-karta: 20 000. Qaytishda qaytariladi.
 
 **F38. Uzum to'lov prognozi.** Jadval: har ish kuni (1,5%), haftalik — 7, 14, 21, 28 (1%), 2 haftada — 7 va 21 (0%),
 oylik — 7 (0%); shoshilinch yechish 2,5%. Kutilgan sana = jadvaldagi navbatdagi sana (dam olish kuni → keyingi
-ish kuni), oraliq + 4 ish kuni (Uzum kechiktirishi mumkin). Summa = shu davrda Yakunlangan bo'lgan F6 − ushlanmalar.
+ish kuni), oraliq + 4 ish kuni (Uzum kechiktirishi mumkin).
+**To'lov tarkibi (Temur, 2026-11-22; real to'lovlar bilan tasdiqlangan):** mijoz tovarni *olib ketgan* kundan 10 kun o'tgach pul yechishga
+beriladi va keyingi jadval sanasi D ning 00:00 da avtomatik yechiladi: D to'lovga olib ketilgan kuni ≤ D − 11 bo'lgan qatorlar foydasi
+kiradi (`upcore.cash.payout_date`); Jarayondagi qator — olib ketilgan kun + 10 kunda yakunlanadi, × F16 R (taxminiy). Allaqachon
+yaratilgan to'lovga (D ≤ bugun) tushgan qatorlar prognozga kirmaydi; `withdrawnProfit` ishlatilmaydi (to'langan qatorda ham 0).
+Summa = shu qatorlar foydasi − ushlanmalar: Uzum to'lovdan xizmat to'lovlarini (reklama, saqlash, qaytarilgan tovar saqlash, jarima)
+ayiradi — prognoz oxirgi 30 kun kunlik o'rtachasini to'lov davri uzunligiga ko'paytirib ayiradi; natija taxminiy (real: jadval
+to'lovlari oynadagi foydadan 7–13% kam).
 
 **F39. Kassa prognozi** (90 kun) = boshlang'ich qoldiq + kutilgan kirimlar (F38) − rejalashtirilgan chiqimlar
 (xarid to'lovlari, takroriy xarajatlar). Istalgan kunda < 0 → "kassa uzilishi" ogohlantirishi.

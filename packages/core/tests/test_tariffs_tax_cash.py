@@ -14,8 +14,12 @@ from upcore.cash import (
     forecast_payouts,
     next_payout,
     next_workday,
+    payout_date,
     payout_rules,
+    schedule_gap_days,
     schedule_terms,
+    scheduled_after,
+    scheduled_on_or_before,
     urgent_withdrawal_fee,
 )
 from upcore.metrics import Period, SaleLine
@@ -207,6 +211,41 @@ def test_next_payout() -> None:
     assert next_payout(date(2026, 12, 7), daily, HOLIDAYS)[0] == date(2026, 12, 9)
     biweekly = SEED_SCHEDULES[ScheduleKind.BIWEEKLY]
     assert next_payout(date(2026, 12, 6), biweekly, HOLIDAYS)[0] == date(2026, 12, 7)
+
+
+def test_payout_date_matches_real_uzum_payouts() -> None:
+    """F38 (Temur, 2026-11-22): to'lov sanasi D ga olib ketilgan kuni ≤ D − 11 bo'lgan tovar puli kiradi. Real: 7.12 to'lovi —
+    "26.11 gacha yig'ilgan jami pul"; 21.11 to'lovi — 10.11 gacha olib ketilganlar; 7.11 — 27.10 gacha."""
+    biweekly = SEED_SCHEDULES[ScheduleKind.BIWEEKLY]  # 7 va 21
+    assert payout_date(date(2026, 11, 26), biweekly) == date(2026, 12, 7)
+    assert payout_date(date(2026, 11, 27), biweekly) == date(2026, 12, 21)
+    assert payout_date(date(2026, 11, 10), biweekly) == date(2026, 11, 21)
+    assert payout_date(date(2026, 11, 11), biweekly) == date(2026, 12, 7)
+    assert payout_date(date(2026, 10, 27), biweekly) == date(
+        2026, 11, 7
+    )  # shanba bo'lsa ham jadval sanasi 7-noyabr
+    assert payout_date(date(2026, 10, 28), biweekly) == date(2026, 11, 21)
+    daily = SEED_SCHEDULES[ScheduleKind.DAILY]
+    assert payout_date(date(2026, 11, 1), daily) == date(2026, 11, 12)  # 1 + 10 = 11 → keyingi kun
+    # Ma'lumotnomadagi kechikish (20 kun): 1.11 + 20 = 21.11 — 21.11 ning o'zi kirmaydi (to'lov o'sha kuni 00:00 da yaratiladi).
+    assert payout_date(date(2026, 11, 1), biweekly, lag_days=20) == date(2026, 12, 7)
+    assert payout_date(date(2026, 10, 31), biweekly, lag_days=20) == date(2026, 11, 21)
+
+
+def test_schedule_helpers() -> None:
+    biweekly = SEED_SCHEDULES[ScheduleKind.BIWEEKLY]
+    assert scheduled_after(date(2026, 11, 21), biweekly) == date(2026, 12, 7)
+    assert scheduled_after(date(2026, 11, 20), biweekly) == date(2026, 11, 21)
+    assert scheduled_on_or_before(date(2026, 11, 21), biweekly) == date(2026, 11, 21)
+    assert scheduled_on_or_before(date(2026, 11, 20), biweekly) == date(2026, 11, 7)
+    assert schedule_gap_days(date(2026, 12, 7), biweekly) == 16  # 21.11 → 7.12
+    assert schedule_gap_days(date(2026, 11, 21), biweekly) == 14  # 7.11 → 21.11
+    assert (
+        schedule_gap_days(date(2026, 12, 9), biweekly) == 16
+    )  # 7.12 dushanba emas-shanba surilishi — davr o'sha
+    monthly = SEED_SCHEDULES[ScheduleKind.MONTHLY]
+    assert schedule_gap_days(date(2026, 12, 7), monthly) == 30
+    assert schedule_gap_days(date(2026, 11, 3), SEED_SCHEDULES[ScheduleKind.DAILY]) == 1
 
 
 def test_forecast_payouts_and_carry() -> None:

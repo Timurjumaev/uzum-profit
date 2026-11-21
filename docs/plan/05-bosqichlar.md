@@ -1238,6 +1238,12 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
     kun va to'lov tarixi (D − 11 qoidasi) bo'yicha aniqlash. Yo'l: `realcheck payout` ga `issued_by_day` qo'shildi (olib ketilgan kun ×
     holat bo'yicha foyda) — Temur qayta ishga tushiradi; 21.11 va 7.12 (26.11 dan keyin) to'lovlari bilan solishtiriladi.
     Hodisa "Uzum to'lovi kutilmoqda / tushmadi" va "Diqqat" qatori shundan keyin.
+    **Natija (2026-11-22, `realcheck.json` `issued_by_day`):** qoida real to'lovlarga mos: 21.10 jadval to'lovi (5,13 mln) — oyna 27.09–10.10 foydasi 5,90 mln
+    (0,87); 7.11 (12,27 mln) — oyna 11.10–27.10 13,15 mln (0,93); farq — Uzum ayiradigan xizmat to'lovlari. 15.11 shoshilinch (0,68) va 21.11 (0,11)
+    nisbati past — shoshilinch yechish va ushlanmalar aralashgan, to'liq tushuntirilmadi. **Prognoz qayta qurildi** (`upcore.cash.payout_date`,
+    `reports/payouts.py`): `withdrawnProfit` ishlatilmaydi; qator to'lovi D (olib ketilgan + 10 kundan keyingi jadval sanasi) bugundan keyin bo'lsa
+    kiradi; ushlanma = oxirgi 30 kun reklama/saqlash/jarima o'rtachasi × davr uzunligi; natija "taxminiy". **T:** 7.12 to'lovi yaratilgach
+    (6–7.12) kabinetdagi yakuniy summa bilan solishtirish. Hodisa "Uzum to'lovi kutilmoqda / tushmadi" va "Diqqat" qatori — shundan keyin.
   - **F38 to'ldiriladi:** hozir faqat allaqachon Yakunlangan summa — ufq keyingi to'lov sanasigacha. Qo'shiladi:
     Jarayondagi sotuvlar × yakunlanish ulushi (F16 R) kutilgan yakunlanish kuniga (o'rganilgan oraliq), "taxminiy"
     belgisi bilan. Pul yechish haqi ikki marta ayrilmaydi (prognozdagi foiz ↔ keyin kelgan `C000010` / `C000011`).
