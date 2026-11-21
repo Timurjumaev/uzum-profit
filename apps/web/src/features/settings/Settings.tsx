@@ -9,6 +9,7 @@ import { currentOrg, meQuery, settingsQuery } from "../../app/query";
 import { Banner, Button, Skeleton, PageHelp } from "../../components/ui";
 import { CostMethod } from "./CostMethod";
 import { Devices } from "./Devices";
+import { OrgDeletion } from "./OrgDeletion";
 import { FullExport } from "./FullExport";
 import { AlertSettings } from "./AlertSettings";
 import { InventorySettings } from "./InventorySettings";
@@ -56,6 +57,7 @@ export function Settings() {
       <NotificationSettings orgId={org.id} />
       {org.role === "owner" && <FullExport orgId={org.id} />}
       <Devices />
+      {org.role === "owner" && <OrgDeletion orgId={org.id} />}
     </section>
   );
 }

@@ -225,3 +225,15 @@
   background: linear-gradient(135deg, var(--bg-surface), var(--bg-raised));
   box-shadow: var(--shadow-card);
 }
+
+/* Tashkilotni o'chirish (B8.13): xavfli amal — qizil urg'u, lekin bezakli (ADR-070). */
+.org-deletion h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.org-deletion__icon {
+  flex-shrink: 0;
+  color: var(--negative-text);
+}

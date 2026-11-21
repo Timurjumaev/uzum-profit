@@ -811,3 +811,19 @@ export const revokeSession = (sessionId: string) =>
 
 /** Joriy qurilmadan boshqa hamma seanslar tugatiladi. */
 export const revokeOtherSessions = () => unwrap(api.POST("/api/v1/auth/sessions/revoke-others"));
+
+// --- Tashkilotni o'chirish (B8.13, faqat egasi) ---------------------------------------------------------------------
+
+export const orgDeletionKey = (orgId: string) => ["orgs", orgId, "deletion"] as const;
+
+export const orgDeletionQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: orgDeletionKey(orgId),
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/deletion", { params: { path: { org_id: orgId } } })),
+  });
+
+export const requestOrgDeletion = (orgId: string) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/deletion", { params: { path: { org_id: orgId } } }));
+
+export const cancelOrgDeletion = (orgId: string) =>
+  unwrap(api.DELETE("/api/v1/orgs/{org_id}/deletion", { params: { path: { org_id: orgId } } }));

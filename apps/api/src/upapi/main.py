@@ -35,6 +35,7 @@ from upapi.routes import (
     notifications,
     opening,
     orders,
+    org_deletion,
     orgs,
     own_expenses,
     payouts,
@@ -141,6 +142,7 @@ def create_app(
         payouts,  # B5.7 to'lov prognozi
         exports,  # B4.10 Excel eksport
         data_export,  # B7.5 to'liq eksport (ZIP)
+        org_deletion,  # B8.13 tashkilotni o'chirish
     ):  # B2.9 o'qish API'lari
         app.include_router(reports.router, prefix=API_PREFIX)
     app.include_router(purchases.router, prefix=API_PREFIX)  # xaridlar (M9)
