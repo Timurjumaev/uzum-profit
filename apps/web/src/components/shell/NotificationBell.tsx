@@ -33,6 +33,7 @@ export const EVENT_PATH: Record<string, NavTo> = {
   goal_behind: "/goals",
   monthly_report: "/reports",
   export_ready: "/settings",
+  key_expiring: "/settings",
 };
 
 const DELIVERY_TONE: Record<string, Tone> = { sent: "positive", pending: "neutral", failed: "negative" };

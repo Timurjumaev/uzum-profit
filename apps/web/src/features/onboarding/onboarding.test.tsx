@@ -198,7 +198,7 @@ describe("1-qadam: Uzum kaliti", () => {
     fireEvent.change(screen.getByLabelText(/^API kalit/), { target: { value: KEY } });
     fireEvent.click(screen.getByRole("button", { name: "Kalitni tekshirish va ulash" }));
     expect(await screen.findByRole("heading", { level: 2, name: "Doʻkonlarni tanlang" })).toBeTruthy();
-    expect(api.bodiesOf(CONNECT_ROUTE)).toEqual([{ token: KEY }]);
+    expect(api.bodiesOf(CONNECT_ROUTE)).toEqual([{ token: KEY, expires_on: null }]);
     expect(history.location.href).not.toContain(KEY);
     expect(document.body.textContent).not.toContain(KEY);
     expect(search(history).get("step")).toBe("shops");

@@ -1489,6 +1489,80 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/accounts/{account_id}": {
+      "patch": {
+        "tags": [
+          "accounts"
+        ],
+        "summary": "Set Expiry",
+        "description": "Kalit muddatini belgilash yoki olib tashlash (kalitning o'zi o'zgarmaydi; B8.16).",
+        "operationId": "set_expiry_api_v1_orgs__org_id__accounts__account_id__patch",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Account Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpiryIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/shops": {
       "get": {
         "tags": [
@@ -11734,6 +11808,29 @@
             ],
             "title": "Key Hint"
           },
+          "key_expires_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key Expires On"
+          },
+          "key_days_left": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key Days Left"
+          },
           "checked_at": {
             "anyOf": [
               {
@@ -11776,6 +11873,8 @@
           "provider",
           "status",
           "key_hint",
+          "key_expires_on",
+          "key_days_left",
           "checked_at",
           "quota_remaining",
           "created_at",
@@ -14701,6 +14800,7 @@
           "uncounted_purchase",
           "ship_needed",
           "monthly_report",
+          "key_expiring",
           "export_ready",
           "goal_behind"
         ],
@@ -15140,6 +15240,25 @@
           "pages"
         ],
         "title": "ExpensesOut"
+      },
+      "ExpiryIn": {
+        "properties": {
+          "expires_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires On"
+          }
+        },
+        "type": "object",
+        "title": "ExpiryIn",
+        "description": "Muddatni o'zgartirish (kalitsiz): ``null`` — cheklanmagan."
       },
       "FineOut": {
         "properties": {
@@ -17923,7 +18042,7 @@
               "$ref": "#/components/schemas/NotificationRuleIn"
             },
             "type": "array",
-            "maxItems": 19,
+            "maxItems": 20,
             "title": "Rules"
           },
           "quiet_from": {
@@ -25847,6 +25966,18 @@
             "format": "password",
             "title": "Token",
             "writeOnly": true
+          },
+          "expires_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires On"
           }
         },
         "type": "object",

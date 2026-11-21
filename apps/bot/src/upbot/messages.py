@@ -78,6 +78,7 @@ T: dict[str, dict[str, str]] = {
         "monthly_report": "📊 {month} oylik hisobot ({kind}): sof foyda {profit}, tushum {revenue}",
         "monthly_preliminary": "dastlabki",
         "monthly_final": "yakuniy",
+        "key_expiring": "🔑 Uzum kaliti ({hint}) {days} kundan keyin ({date}) tugaydi — kabinetda yangisini yarating va Sozlamalarda almashtiring",
         "export_ready": "📦 Toʻliq eksport tayyor ({size}). Sozlamalardan bir martalik havola oling — 24 soat amal qiladi",
         "monthly_processing": "{n} ta buyurtma ({sum}) hali jarayonda — yakuniy hisobot hammasi yakunlangach keladi",
         "returns_spike_shop": "↩️ Qaytish keskin oshdi: {n} ta doʻkon (jami {total}) — oxirgi 7 kunda ulush 30 kunlikdan ≥ 2 barobar",
@@ -141,6 +142,7 @@ T: dict[str, dict[str, str]] = {
         "monthly_report": "📊 Месячный отчёт за {month} ({kind}): чистая прибыль {profit}, выручка {revenue}",
         "monthly_preliminary": "предварительный",
         "monthly_final": "итоговый",
+        "key_expiring": "🔑 Ключ Uzum ({hint}) истекает через {days} дн. ({date}) — создайте новый в кабинете и замените в Настройках",
         "export_ready": "📦 Полный экспорт готов ({size}). Получите одноразовую ссылку в настройках — действует 24 часа",
         "monthly_processing": "{n} заказов ({sum}) ещё в обработке — итоговый отчёт придёт, когда все завершатся",
         "returns_spike_shop": "↩️ Возвраты резко выросли: {n} магазинов (всего {total}) — доля за 7 дней ≥ 2× доли за 30 дней",
@@ -336,6 +338,17 @@ def notification(event: str, payload: dict[str, Any], lang: str, org: str | None
                 )
             )
         msg = Message("\n".join(lines), f"/reports?month={p['month']}")
+    elif event == "key_expiring":
+        msg = Message(
+            t(
+                lang,
+                "key_expiring",
+                hint=p.get("key_hint") or "…",
+                days=p["days"],
+                date=p["expires_on"],
+            ),
+            "/settings",
+        )
     elif event == "export_ready":
         mb = (Decimal(p.get("size") or 0) / Decimal(1024 * 1024)).quantize(Decimal("0.1"))
         msg = Message(t(lang, "export_ready", size=f"{mb} MB"), "/settings")

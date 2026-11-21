@@ -58,7 +58,7 @@ test("yangi foydalanuvchining to'liq yo'li", async ({ page }) => {
   await expect(page).toHaveURL("/");
 
   expect(api.bodies("POST", "/orgs")).toEqual([{ name: "byDurii", inn: null }]);
-  expect(api.bodies("POST", `/orgs/${ORG_ID}/accounts`)).toEqual([{ token: "noto'g'ri-kalit-123" }, { token: GOOD_KEY }]);
+  expect(api.bodies("POST", `/orgs/${ORG_ID}/accounts`)).toEqual([{ token: "noto'g'ri-kalit-123", expires_on: null }, { token: GOOD_KEY, expires_on: null }]);
   expect(api.bodies("PATCH", `/orgs/${ORG_ID}/shops/${SHOP_A}`)).toEqual([{ color: "#2A78D6" }]); // standart 1-rang
   expect(api.bodies("PATCH", `/orgs/${ORG_ID}/shops/${SHOP_B}`)).toEqual([{ alias: "Elone", color: "#E34948" }]);
 });

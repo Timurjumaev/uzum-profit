@@ -13,8 +13,9 @@ export function KeyStep({ orgId, isOwner, onDone }: { orgId: string; isOwner: bo
   const client = useQueryClient();
   const [token, setToken] = useState("");
   const [empty, setEmpty] = useState(false);
+  const [expires, setExpires] = useState("");
   const connect = useMutation({
-    mutationFn: () => connectAccount(orgId, token),
+    mutationFn: () => connectAccount(orgId, token, expires || null),
     onSuccess: async () => {
       setToken(""); // kalit endi serverda (shifrlangan) — brauzerda qolmasin
       await Promise.all([client.invalidateQueries({ queryKey: shopsQuery(orgId).queryKey }), client.invalidateQueries({ queryKey: syncQuery(orgId).queryKey })]);
@@ -50,6 +51,7 @@ export function KeyStep({ orgId, isOwner, onDone }: { orgId: string; isOwner: bo
         autoCapitalize="off"
         disabled={!isOwner}
       />
+      <TextInput label={t("onboarding.key.expires")} help={t("onboarding.key.expiresHelp")} value={expires} onValueChange={setExpires} type="date" disabled={!isOwner} />
       <div className="onb__actions">
         <Button type="submit" variant="primary" size="lg" loading={connect.isPending} disabled={!isOwner}>
           {t("onboarding.key.connect")}

@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
 import { useFilters } from "../../app/filters";
-import { currentOrg, dashboardQuery, meQuery, syncQuery } from "../../app/query";
+import { accountsQuery, currentOrg, dashboardQuery, meQuery, syncQuery } from "../../app/query";
 import { Banner, Button, EmptyState, Skeleton } from "../../components/ui";
 import { RevenueLimitBanner } from "../settings/RevenueLimit";
 import { syncSummary } from "../../lib/sync";
@@ -33,6 +33,9 @@ export function Home() {
   );
   const query = useQuery({ ...dashboardQuery(org.id, params), placeholderData: keepPreviousData });
   const sync = useQuery(syncQuery(org.id));
+  const accounts = useQuery({ ...accountsQuery(org.id), enabled: org.role === "owner" });
+  // B8.16: kalit muddati 5 kundan kam qolgan (eng yaqini) — faqat egasiga ("Diqqat" qatori).
+  const expiring = (accounts.data ?? []).filter((a) => a.key_days_left !== null && a.key_days_left <= 5).sort((a, b) => (a.key_days_left ?? 0) - (b.key_days_left ?? 0))[0];
 
   const data = query.data;
   const summary = sync.data ? syncSummary(sync.data) : null;
@@ -69,6 +72,19 @@ export function Home() {
           </Link>
         }
       />
+      {expiring && (
+        <Banner
+          tone="warning"
+          title={t("home.keyExpiring.title", { count: Math.max(0, expiring.key_days_left ?? 0) })}
+          action={
+            <Link to="/settings" className="ui-btn ui-btn--secondary ui-btn--md">
+              {t("home.keyExpiring.action")}
+            </Link>
+          }
+        >
+          {t("home.keyExpiring.text")}
+        </Banner>
+      )}
       {noSales && (
         <EmptyState
           title={t(`home.empty.${emptyState}`)}
