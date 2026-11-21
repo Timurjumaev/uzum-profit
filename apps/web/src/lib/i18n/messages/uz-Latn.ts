@@ -1435,6 +1435,18 @@ export const uzLatn = {
       confirmTitle: "Boshqa qurilmalardan chiqish",
       confirmText: "Shu qurilmadan boshqa hamma qurilmalar tugatiladi; ularda qayta kod bilan kirish kerak boʻladi.",
     },
+    orgDeletion: {
+      title: "Tashkilotni oʻchirish",
+      lead: "Tashkilot va uning hamma maʼlumoti (sotuvlar, xaridlar, tannarx, Uzum kaliti) butunlay oʻchadi. Oldin yuqoridagi “Toʻliq eksport” bilan nusxa oling. Oʻchirish 30 kundan keyin amalga oshadi — shu vaqt ichida bekor qilsa boʻladi.",
+      request: "Oʻchirishni boshlash",
+      requested: "Oʻchirish soʻraldi — 30 kun ichida bekor qilsa boʻladi",
+      cancel: "Oʻchirishni bekor qilish",
+      cancelled: "Oʻchirish bekor qilindi",
+      pendingTitle: "Tashkilot {{date}} da oʻchiriladi ({{days}} kun qoldi)",
+      pendingText: "Shu kungacha hammasi odatdagidek ishlaydi. Bekor qilmasangiz, maʼlumotni qayta tiklab boʻlmaydi.",
+      confirmTitle: "Tashkilotni oʻchirishni soʻraysizmi?",
+      confirmText: "30 kundan keyin tashkilot va uning hamma maʼlumoti qaytarib boʻlmaydigan tarzda oʻchadi. Shu vaqtgacha bekor qilishingiz mumkin.",
+    },
     fullExport: {
       title: "Toʻliq eksport (ZIP)",
       lead: "Maʼlumot — sizniki. Kiritgan hamma narsangiz (xaridlar, xarajatlar, tannarx, ombor harakatlari, sozlamalar) va Uzumdan olingan faktlar (sotuvlar, xarajatlar, mahsulotlar, postavkalar, qaytarishlar) — CSV va JSON koʻrinishida bitta ZIP faylda. Fayl tayyor boʻlganda bildirishnoma keladi; havola bir marta ishlaydi va 24 soat amal qiladi.",

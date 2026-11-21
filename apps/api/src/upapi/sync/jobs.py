@@ -40,6 +40,7 @@ from upapi.db.url import normalize_url
 from upapi.export_full import run_export as export_run
 from upapi.fx import sync_fx
 from upapi.logs import get_logger
+from upapi.purge import purge_all
 from upapi.settings import Settings
 from upapi.sync.engine import Kind, Runtime, Trigger, sync_account
 
@@ -55,6 +56,8 @@ CALC = "calc.org"
 CALC_NIGHTLY = "calc.nightly"
 CALC_CRON = "40 22 * * *"  # Toshkent 03:40 — sinxron va CBU ishlaridan uzoqda
 EXPORT = "export.full"
+PURGE = "org.purge"
+PURGE_CRON = "20 23 * * *"  # Toshkent 04:20 — tungi hisobdan keyin
 NOTIFY = "notify.tick"
 NOTIFY_CRON = "*/5 * * * *"  # B6.1: hodisalar har 5 daqiqada (takror — ``dedupe_key`` bilan yo'q)
 QUEUES = [QUEUE, CALC_QUEUE]
@@ -251,6 +254,12 @@ def build_app(connector: BaseConnector) -> App:
     @app.task(name=CALC_NIGHTLY, queue=CALC_QUEUE, queueing_lock=CALC_NIGHTLY, pass_context=True)
     async def calc_nightly(context: JobContext, timestamp: int) -> int:
         return await rebuild_all(context.app, runtime(context).engine)
+
+    @app.periodic(cron=PURGE_CRON, periodic_id="purge")
+    @app.task(name=PURGE, queue=CALC_QUEUE, queueing_lock=PURGE, pass_context=True)
+    async def purge_orgs(context: JobContext, timestamp: int) -> int:
+        rt = runtime(context)
+        return await purge_all(rt.engine, rt.clock())
 
     @app.periodic(cron=NOTIFY_CRON, periodic_id="notify")
     @app.task(name=NOTIFY, queue=CALC_QUEUE, queueing_lock=NOTIFY, pass_context=True)

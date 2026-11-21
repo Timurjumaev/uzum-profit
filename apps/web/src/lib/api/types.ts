@@ -7,6 +7,7 @@ type Schemas = components["schemas"];
 export type ApiPaths = paths;
 export type DeviceSession = Schemas["SessionOut"];
 export type Statement = Schemas["StatementOut"];
+export type OrgDeletion = Schemas["DeletionOut"];
 export type FullExport = Schemas["FullExportOut"];
 export type PnlRow = Schemas["RowOut"];
 export type Dashboard = Schemas["DashboardOut"];

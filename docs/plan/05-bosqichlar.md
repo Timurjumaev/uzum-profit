@@ -1465,7 +1465,7 @@ ishlari** belgilaydi (yuridik shaxs, shartnoma, reyestr) — ular hozirdan boshl
 - [ ] B8.6b **Huquqiy minimum** (06 §6): oferta, maxfiylik siyosati, ro'yxatdan o'tishda rozilik (operator nomi, STIR,
   maqsad, muddat; Telegram'ga yuboriladigan raqamlar haqida bir jumla — 09 §13 A16), shaxsiy ma'lumotlar bazasini
   reyestrda ro'yxatdan o'tkazish. Matnlarni yurist ko'radi (T).
-- [ ] B8.13 **Tashkilotni o'chirish** (yangi; M1, M16, 06 §6 — rejada vazifasiz edi): egasi so'raydi → 30 kun kutish
+- [x] B8.13 (✓ 2026-11-21: Sozlamalar → "Tashkilotni o'chirish": so'rov → 30 kun (bekor qilsa bo'ladi) → kunlik `org.purge` butunlay o'chiradi; audit; migratsiya 0048; foydalanuvchi yozuvlari (telefon) o'chmaydi — alohida "hisobni o'chirish" B8.6b bilan) **Tashkilotni o'chirish** (yangi; M1, M16, 06 §6 — rejada vazifasiz edi): egasi so'raydi → 30 kun kutish
   (bekor qilsa bo'ladi) → butunlay o'chirish; undan oldin to'liq eksport (B7.5) taklif qilinadi; audit.
 - [ ] B8.12 **Onboarding to'liq** (yangi; 09 R3 d — rejada vazifasiz edi): 4-qadam (soliq, to'lov jadvali, tannarx
   usuli), 5-qadam (tannarx: TOP jadval yoki Excel — B7.1), 6-qadam (Telegram — B6.6), bosh sahifada "Sozlash: N/6".

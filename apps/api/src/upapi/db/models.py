@@ -149,6 +149,8 @@ orgs = Table(
     Column("deleted_at", TS),
     # B8.4a (09 X4): oxirgi to'liq qayta qurish so'ralgan hisob qoidalari versiyasi (``upapi.calc.CALC_VERSION``).
     Column("calc_version", Integer),
+    # B8.13: egasi o'chirishni so'ragan vaqt; 30 kundan keyin ``org.purge`` ishi butunlay o'chiradi (NULL — so'ralmagan).
+    Column("deletion_requested_at", TS),
     *_times(),
     check_in("cost_method", ("fifo", "average")),
 )
