@@ -1,7 +1,7 @@
 // Onboarding (M2, 04 §7.4): markazda bitta ustun, chapda qadamlar ro'yxati (desktop) / tepada progress (mobil). Holat
 // serverdan olinadi (tashkilot, do'konlar) — istalgan joyda to'xtab, keyin davom etish mumkin; joriy qadam URL'da
 // (`?step=`), oldingi qadam yetishmasa — eng yaqin mumkin bo'lganiga qaytariladi.
-// Soliq va tannarx qadamlari (M2 4–5) tegishli endpointlar (B4.8, B5) bilan keladi; Telegram (6-qadam) — B6.6.
+// Qadamlar: tashkilot → kalit → do'konlar → tarix → soliq/to'lov/tannarx usuli → tannarx → Telegram (B8.12).
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { LogOut } from "lucide-react";
@@ -14,7 +14,9 @@ import { Button, ProgressBar, Skeleton, Stepper } from "../../components/ui";
 import { useSignOut } from "../../components/shell/UserMenu";
 import { HistoryStep } from "./HistoryStep";
 import { KeyStep } from "./KeyStep";
+import { CostStep } from "./CostStep";
 import { OrgStep } from "./OrgStep";
+import { SetupStep } from "./SetupStep";
 import { ShopsStep } from "./ShopsStep";
 import { TelegramStep } from "./TelegramStep";
 
@@ -22,7 +24,7 @@ import { TelegramStep } from "./TelegramStep";
 export function allowedStep(requested: OnboardingStep | undefined, state: { hasOrg: boolean; hasShops: boolean }): OnboardingStep {
   const reachable: OnboardingStep[] = ["org"];
   if (state.hasOrg) reachable.push("key");
-  if (state.hasShops) reachable.push("shops", "history", "telegram");
+  if (state.hasShops) reachable.push("shops", "history", "setup", "cost", "telegram");
   if (requested && reachable.includes(requested)) return requested;
   return state.hasShops ? "shops" : state.hasOrg ? "key" : "org";
 }
@@ -77,7 +79,11 @@ export function Onboarding() {
           ) : step === "shops" && org ? (
             <ShopsStep key={shops.data?.map((s) => s.id).join()} orgId={org.id} shops={shops.data ?? []} onDone={() => go("history")} />
           ) : step === "history" && org ? (
-            <HistoryStep orgId={org.id} onDone={() => go("telegram")} />
+            <HistoryStep orgId={org.id} onDone={() => go("setup")} />
+          ) : step === "setup" && org ? (
+            <SetupStep orgId={org.id} canManage={org.role === "owner" || org.role === "manager"} onDone={() => go("cost")} />
+          ) : step === "cost" && org ? (
+            <CostStep orgId={org.id} onDone={() => go("telegram")} />
           ) : step === "telegram" && org ? (
             <TelegramStep orgId={org.id} onDone={() => void navigate({ to: "/" })} />
           ) : null}

@@ -69,6 +69,8 @@ describe("qadamlarni tanlash", () => {
     expect(allowedStep("history", s(true, false))).toBe("key");
     expect(allowedStep(undefined, s(true, true))).toBe("shops"); // to'xtab, keyin davom etish
     expect(allowedStep("history", s(true, true))).toBe("history");
+    expect(allowedStep("setup", s(true, true))).toBe("setup");
+    expect(allowedStep("cost", s(true, false))).toBe("key");
     expect(allowedStep("key", s(true, true))).toBe("key");
     expect(allowedStep("org", s(true, true))).toBe("org");
   });
@@ -98,11 +100,13 @@ describe("qadamlarni tanlash", () => {
       expect.stringContaining("Uzum kaliti"),
       expect.stringContaining("Doʻkonlar"),
       expect.stringContaining("Tarix"),
+      expect.stringContaining("Soliq va toʻlov"),
+      expect.stringContaining("Tannarx"),
       expect.stringContaining("Telegram"),
     ]);
-    expect(steps.map((li) => li.className)).toEqual(["is-done", "is-current", "is-upcoming", "is-upcoming", "is-upcoming"]);
+    expect(steps.map((li) => li.className)).toEqual(["is-done", "is-current", "is-upcoming", "is-upcoming", "is-upcoming", "is-upcoming", "is-upcoming"]);
     expect(steps[1].getAttribute("aria-current")).toBe("step");
-    const progress = screen.getByRole("progressbar", { name: "Qadam 2 / 5" });
+    const progress = screen.getByRole("progressbar", { name: "Qadam 2 / 7" });
     expect(progress.getAttribute("aria-valuenow")).toBe("2");
   });
 
@@ -340,6 +344,16 @@ describe("3-qadam: tarix yuklanmoqda", () => {
     const { history } = await renderOnboarding("/onboarding?step=history", { [SYNC_ROUTE]: () => withKinds(LOADING) }, "Tarix yuklanmoqda");
     expect(screen.queryByText("Tarix yuklandi")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Kutmasdan davom etish" }));
+    expect(await screen.findByRole("heading", { name: "Soliq, toʻlov va tannarx usuli" })).toBeTruthy();
+    expect(search(history).get("step")).toBe("setup");
+  });
+
+  it("soliq/to'lov qadamidan tannarx qadamiga, undan Telegram qadamiga o'tiladi (B8.12)", async () => {
+    const { history } = await renderOnboarding("/onboarding?step=setup", {}, "Soliq, toʻlov va tannarx usuli");
+    fireEvent.click(await screen.findByRole("button", { name: "Davom etish" }));
+    expect(await screen.findByRole("heading", { name: "Tannarx", level: 2 })).toBeTruthy();
+    expect(search(history).get("step")).toBe("cost");
+    fireEvent.click(screen.getByRole("button", { name: "Davom etish" }));
     expect(await screen.findByRole("heading", { name: "Telegramni ulang" })).toBeTruthy();
     expect(search(history).get("step")).toBe("telegram");
   });

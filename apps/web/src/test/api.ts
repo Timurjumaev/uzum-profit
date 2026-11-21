@@ -8,6 +8,7 @@ import { notificationSettings } from "./notifications";
 
 export { notificationSettings };
 import { pnlData } from "./pnl";
+import { settingsData } from "./settings";
 
 export { dashboardData, pnlData };
 
@@ -152,6 +153,7 @@ export function mockApi(routes: Routes = {}) {
     [PROFILE_ROUTE]: () => json(200, ME.user),
     [COST_TYPES_ROUTE]: () => json(200, []),
     [NOTIFY_SETTINGS_ROUTE]: () => json(200, notificationSettings()),
+    [SETTINGS_ROUTE]: () => json(200, settingsData()),
     [FULL_EXPORTS_ROUTE]: () => json(200, []),
     "GET /api/v1/auth/sessions": () => json(200, []),
     [ORG_DELETION_ROUTE]: () => json(200, { requested_at: null, delete_on: null, days_left: null }),
