@@ -3169,6 +3169,194 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/goals": {
+      "get": {
+        "tags": [
+          "goals"
+        ],
+        "summary": "List Goals",
+        "operationId": "list_goals_api_v1_orgs__org_id__goals_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "goals"
+        ],
+        "summary": "Set Goal",
+        "description": "Maqsadni belgilash yoki yangilash (oy + do'kon + ko'rsatkich bo'yicha bitta).",
+        "operationId": "set_goal_api_v1_orgs__org_id__goals_put",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoalIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/goals/{goal_id}": {
+      "delete": {
+        "tags": [
+          "goals"
+        ],
+        "summary": "Delete Goal",
+        "operationId": "delete_goal_api_v1_orgs__org_id__goals__goal_id__delete",
+        "parameters": [
+          {
+            "name": "goal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Goal Id"
+            }
+          },
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/pnl": {
       "get": {
         "tags": [
@@ -13669,6 +13857,205 @@
         "title": "ForecastOut",
         "description": "M4 \"Oy prognozi\" (run-rate) shu oy bo'yicha: oy boshidan kechagacha (to'liq o'tgan kunlar) qiymat × oydagi kunlar /\no'tgan to'liq kunlar. Oyning 1-kuni — ``null`` (hali to'liq kun yo'q)."
       },
+      "GoalIn": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "format": "date",
+            "title": "Month"
+          },
+          "shop_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shop Id"
+          },
+          "metric": {
+            "$ref": "#/components/schemas/Metric"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Target"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "metric",
+          "target"
+        ],
+        "title": "GoalIn"
+      },
+      "GoalOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "shop_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shop Id"
+          },
+          "metric": {
+            "$ref": "#/components/schemas/Metric"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "fact": {
+            "type": "string",
+            "title": "Fact"
+          },
+          "forecast": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forecast"
+          },
+          "percent": {
+            "type": "string",
+            "title": "Percent"
+          },
+          "forecast_percent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forecast Percent"
+          },
+          "deviation_pct": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deviation Pct"
+          },
+          "status": {
+            "$ref": "#/components/schemas/GoalStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "shop_id",
+          "metric",
+          "target",
+          "fact",
+          "forecast",
+          "percent",
+          "forecast_percent",
+          "deviation_pct",
+          "status"
+        ],
+        "title": "GoalOut"
+      },
+      "GoalShopOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "GoalShopOut"
+      },
+      "GoalStatus": {
+        "type": "string",
+        "enum": [
+          "on_track",
+          "behind",
+          "ahead",
+          "unknown"
+        ],
+        "title": "GoalStatus",
+        "description": "F59. Oylik maqsad holati: prognoz maqsaddan ``GOAL_DEVIATION_PCT`` dan ko'p past — orqada, ko'p yuqori — oldinda."
+      },
+      "GoalsOut": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "format": "date",
+            "title": "Month"
+          },
+          "days_in_month": {
+            "type": "integer",
+            "title": "Days In Month"
+          },
+          "elapsed_days": {
+            "type": "integer",
+            "title": "Elapsed Days"
+          },
+          "shops": {
+            "items": {
+              "$ref": "#/components/schemas/GoalShopOut"
+            },
+            "type": "array",
+            "title": "Shops"
+          },
+          "goals": {
+            "items": {
+              "$ref": "#/components/schemas/GoalOut"
+            },
+            "type": "array",
+            "title": "Goals"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "days_in_month",
+          "elapsed_days",
+          "shops",
+          "goals"
+        ],
+        "title": "GoalsOut"
+      },
       "Health": {
         "properties": {
           "status": {
@@ -15749,6 +16136,14 @@
         ],
         "title": "Meta",
         "description": "``meta.freshness`` — tegishli ma'lumot turlari bo'yicha oxirgi muvaffaqiyatli sinxron (faol do'konlarning eng\neskisi; biror do'kon hali yangilanmagan bo'lsa ``null``). Tamoyil 8: \"ma'lumot yo'q\" ≠ \"sinxron ishlamayapti\"."
+      },
+      "Metric": {
+        "type": "string",
+        "enum": [
+          "revenue",
+          "net_profit",
+          "units"
+        ]
       },
       "MonthOut": {
         "properties": {

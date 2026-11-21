@@ -11,6 +11,7 @@ import {
   ReceiptText,
   Settings,
   ShoppingCart,
+  Target,
   TrendingUp,
   Wallet,
   Warehouse,
@@ -27,11 +28,12 @@ export type NavKey =
   | "inventory"
   | "cash"
   | "calculator"
+  | "goals"
   | "reports"
   | "status"
   | "settings";
 
-export type NavTo = "/" | "/pnl" | "/products" | "/orders" | "/expenses" | "/purchases" | "/inventory" | "/cash" | "/calculator" | "/reports" | "/status" | "/settings";
+export type NavTo = "/" | "/pnl" | "/products" | "/orders" | "/expenses" | "/purchases" | "/inventory" | "/cash" | "/calculator" | "/goals" | "/reports" | "/status" | "/settings";
 
 export type NavItem = { key: NavKey; to: NavTo; icon: LucideIcon };
 
@@ -48,6 +50,7 @@ export const NAV_MAIN: readonly NavItem[] = [
   item("inventory", "/inventory", Warehouse),
   item("cash", "/cash", Banknote),
   item("calculator", "/calculator", Calculator),
+  item("goals", "/goals", Target),
 ];
 
 /** Hali tayyor bo'lmagan bo'limlar (menyuda yo'q, ADR-057 Q12) — tayyor bo'lganda `NAV_MAIN` ga ko'chadi. */

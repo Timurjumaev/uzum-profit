@@ -71,6 +71,7 @@ describe("menyu", () => {
       "Ombor",
       "Pul oqimi",
       "Kalkulyator",
+      "Reja-fakt",
       "Maʼlumotlar holati",
       "Sozlamalar",
     ]); // ADR-057 Q12: tayyor bo'lmagan "Hisobotlar" menyuda yo'q
@@ -596,6 +597,7 @@ describe("mobil tab bar", () => {
       "Xarajatlar",
       "Pul oqimi",
       "Kalkulyator",
+      "Reja-fakt",
       "Maʼlumotlar holati",
       "Sozlamalar",
     ]);

@@ -692,6 +692,8 @@ xarajat bor bo'lsa — "boshqa". `upcore.pnl.explain_change`.
 reklama, saqlash, jarima, tannarx va soliq ayirilmaydi; 09 §11.3). Faqat kabinet bilan solishtirish uchun; farq = F57 − F12.
 `upcore.pnl.cabinet_profit`.
 
+**F59. Reja-fakt** (M12, B5.8) — oylik maqsad (tushum, sof foyda, dona; butun tashkilot yoki do'kon): bajarilish % = fakt / maqsad × 100; prognoz = oy oxiri run-rate (Bosh sahifadagi "Oy prognozi" bilan bitta hisob, to'liq o'tgan kunlar, Jarayondagi qism × R); og'ish = prognoz % − 100; |og'ish| > 15% — "orqada" / "oldinda"; prognoz yo'q (oyning 1-kuni) — "noaniq". `upcore.metrics.goal_progress`, `/goals`.
+
 **F58. Reklama foydasini yeb qo'ygan SKU** (B5.5) — davrda reklama > 0, **sof foyda + reklama > 0** (reklamadan oldingi foyda musbat) va
 **sof foyda ≤ 0**; faqat hamma sotuvi tannarxli SKU (F15: aks holda xarajatning bir qismi ayrilmagan, "reklamadan oldingi foyda" noaniq —
 bunday reklamali SKU'lar soni alohida ko'rsatiladi). Reklamasiz ham zarar bo'lsa — sabab reklama emas, ro'yxatga kirmaydi. Reklama

@@ -712,6 +712,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/goals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Goals */
+        get: operations["list_goals_api_v1_orgs__org_id__goals_get"];
+        /**
+         * Set Goal
+         * @description Maqsadni belgilash yoki yangilash (oy + do'kon + ko'rsatkich bo'yicha bitta).
+         */
+        put: operations["set_goal_api_v1_orgs__org_id__goals_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/goals/{goal_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Goal */
+        delete: operations["delete_goal_api_v1_orgs__org_id__goals__goal_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/pnl": {
         parameters: {
             query?: never;
@@ -3147,6 +3185,75 @@ export interface components {
              */
             estimated: boolean;
         };
+        /** GoalIn */
+        GoalIn: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Shop Id */
+            shop_id?: string | null;
+            metric: components["schemas"]["Metric"];
+            /** Target */
+            target: number | string;
+        };
+        /** GoalOut */
+        GoalOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Shop Id */
+            shop_id: string | null;
+            metric: components["schemas"]["Metric"];
+            /** Target */
+            target: string;
+            /** Fact */
+            fact: string;
+            /** Forecast */
+            forecast: string | null;
+            /** Percent */
+            percent: string;
+            /** Forecast Percent */
+            forecast_percent: string | null;
+            /** Deviation Pct */
+            deviation_pct: string | null;
+            status: components["schemas"]["GoalStatus"];
+        };
+        /** GoalShopOut */
+        GoalShopOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
+        /**
+         * GoalStatus
+         * @description F59. Oylik maqsad holati: prognoz maqsaddan ``GOAL_DEVIATION_PCT`` dan ko'p past — orqada, ko'p yuqori — oldinda.
+         * @enum {string}
+         */
+        GoalStatus: "on_track" | "behind" | "ahead" | "unknown";
+        /** GoalsOut */
+        GoalsOut: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Days In Month */
+            days_in_month: number;
+            /** Elapsed Days */
+            elapsed_days: number;
+            /** Shops */
+            shops: components["schemas"]["GoalShopOut"][];
+            /** Goals */
+            goals: components["schemas"]["GoalOut"][];
+        };
         /** Health */
         Health: {
             /** Status */
@@ -3778,6 +3885,8 @@ export interface components {
                 [key: string]: string | null;
             };
         };
+        /** @enum {string} */
+        Metric: "revenue" | "net_profit" | "units";
         /** MonthOut */
         MonthOut: {
             /**
@@ -8511,6 +8620,131 @@ export interface operations {
             header?: never;
             path: {
                 scenario_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_goals_api_v1_orgs__org_id__goals_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalsOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    set_goal_api_v1_orgs__org_id__goals_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoalIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    delete_goal_api_v1_orgs__org_id__goals__goal_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goal_id: string;
                 org_id: string;
             };
             cookie?: never;
