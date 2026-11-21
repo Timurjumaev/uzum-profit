@@ -117,6 +117,7 @@ def test_periodic_tick_registered() -> None:
         (jobs.CALC_NIGHTLY, jobs.CALC_CRON),
         (jobs.FX, jobs.FX_CRON),
         (jobs.NOTIFY, jobs.NOTIFY_CRON),
+        (jobs.PURGE, jobs.PURGE_CRON),
         (jobs.TICK, "* * * * *"),
     ]
     assert jobs.connector_for(sf.settings_for({"app": "postgresql://u:p@h:5/d"}))
@@ -153,6 +154,7 @@ def test_worker_starts_and_stops(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(jobs, "FX_CRON", "* * * * *")
     monkeypatch.setattr(jobs, "CALC_CRON", "* * * * *")
     monkeypatch.setattr(jobs, "NOTIFY_CRON", "* * * * *")
+    monkeypatch.setattr(jobs, "PURGE_CRON", "* * * * *")
     rebuilds: list[Any] = []
     real_rebuild = worker.rebuild_stale
 
@@ -181,7 +183,7 @@ def test_worker_starts_and_stops(monkeypatch: pytest.MonkeyPatch) -> None:
         )
     # Davriy rejalashtiruvchi ishladi: sync.tick (har daqiqa — 1.5 s ichida daqiqa chegarasi o'tsa ikkinchisi ham)
     # va qolgan davriy ishlar navbatga qo'yildi.
-    assert defers.keys() == {"tick", "fx", "calc", "notify"}
+    assert defers.keys() == {"tick", "fx", "calc", "notify", "purge"}
     assert defers["tick"] >= 1
     # B4.40: ishga tushishda bir marta to'liq qayta hisob (deploy hisob qoidasini o'zgartirgan bo'lishi mumkin).
     assert len(rebuilds) == 1
