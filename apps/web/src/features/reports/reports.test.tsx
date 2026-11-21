@@ -10,7 +10,7 @@ import { dashboardData, json, ME, ME_ROUTE, mockApi, ORG_ID, pnlData, type Route
 
 const ROUTE = `GET /api/v1/orgs/${ORG_ID}/reports/monthly`;
 const f = formatterFor("uz-Latn");
-const norm = (text: string) => text.replace(/[  ]/g, " ");
+const norm = (text: string) => text.replace(/[\u00A0\u202F]/g, " ");
 
 afterEach(() => {
   cleanup();
