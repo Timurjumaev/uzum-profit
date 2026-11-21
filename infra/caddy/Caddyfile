@@ -28,6 +28,8 @@
 		header Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 		@assets path /assets/*
 		header @assets Cache-Control "public, max-age=31536000, immutable"
+		@manifest path /manifest.webmanifest
+		header @manifest Content-Type "application/manifest+json"
 		root * /srv/web
 		try_files {path} /index.html
 		file_server
