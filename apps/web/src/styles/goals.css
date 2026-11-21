@@ -1,0 +1,47 @@
+/* Reja-fakt (B5.8): oylik maqsadlar — rangli kartalar, gradient progress. */
+.goals {
+  display: grid;
+  gap: 16px;
+  max-inline-size: 880px;
+}
+.goals__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.goals__month {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgb(124 92 255 / 0.14), rgb(0 200 160 / 0.14));
+  text-transform: capitalize;
+}
+.goals__scope {
+  display: grid;
+  gap: 10px;
+}
+.goals__card {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--surface, #fff);
+  box-shadow: 0 4px 18px rgb(124 92 255 / 0.12);
+  border: 1px solid rgb(124 92 255 / 0.16);
+}
+.goals__forecast {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+}
+.goals__form {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgb(124 92 255 / 0.08), rgb(255 140 66 / 0.1));
+}

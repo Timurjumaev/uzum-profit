@@ -25,6 +25,7 @@ from upapi.routes import (
     dispatches,
     expenses,
     exports,
+    goals,
     health,
     inventory,
     items,
@@ -121,6 +122,7 @@ def create_app(
         dashboard,
         ads,  # B5.5 reklama tahlili
         calculator,  # B5.9 kalkulyator
+        goals,  # B5.8 reja-fakt
         pnl,
         skus,
         sales,

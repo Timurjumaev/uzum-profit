@@ -3,7 +3,7 @@
 import { MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
 import { api, ApiError, unwrap } from "../lib/api/client";
-import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, QuickPurchaseIn, SupplyState, TrackedIn, BoxIn, SharesIn, CountIn, SplitIn, TransferIn, DispatchIn, ResolveIn, ShortagePatch, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, NotificationSettingsIn, OpeningIn } from "../lib/api/types";
+import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, QuickPurchaseIn, SupplyState, TrackedIn, BoxIn, SharesIn, CountIn, SplitIn, TransferIn, DispatchIn, ResolveIn, ShortagePatch, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, NotificationSettingsIn, OpeningIn, GoalIn } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -202,6 +202,18 @@ export const calculatorDefaultsQuery = (orgId: string) =>
     queryKey: ["orgs", orgId, "calculator-defaults"],
     queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/calculator/defaults", { params: { path: { org_id: orgId } } })),
   });
+
+/** Oylik maqsadlar va bajarilish (B5.8, M12; F59): `month` — oyning istalgan kuni (bo'sh — joriy oy). */
+export const goalsQuery = (orgId: string, month: string | null) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "goals", month],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/goals", { params: { path: { org_id: orgId }, query: month ? { month } : {} } })),
+  });
+
+export const setGoal = (orgId: string, body: GoalIn) => unwrap(api.PUT("/api/v1/orgs/{org_id}/goals", { params: { path: { org_id: orgId } }, body }));
+
+export const deleteGoal = (orgId: string, id: string) =>
+  unwrap(api.DELETE("/api/v1/orgs/{org_id}/goals/{goal_id}", { params: { path: { org_id: orgId, goal_id: id } } }));
 
 /** Kargo taklifi (B5.9): oldingi xaridlardagi haqiqiy kargo xarajatidan o'rtacha ($/kg, so'm/dona); tarif kiritilmaydi (ADR-061). */
 export const cargoSuggestionQuery = (orgId: string) =>

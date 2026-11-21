@@ -210,6 +210,8 @@ def row_values(
     if table.name == "tax_lines":
         # CHECK ``shape``: qat'iy qatorda summa yoki BHM soni kerak, foizli qatorda stavka > 0 (ADR-058).
         values.update(kind="fixed", amount=1000)
+    if table.name == "goals":
+        values.update(target=1000)  # CHECK ``target > 0`` (B5.8)
     if table.name == "cost_components":
         values.pop(
             "shipment_id", None

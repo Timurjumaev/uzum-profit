@@ -673,6 +673,51 @@ def run_rate(value: DecimalLike, elapsed_days: int, total_days: int) -> Decimal 
     return quantize(to_decimal(value) * total_days / elapsed_days, 2)
 
 
+GOAL_DEVIATION_PCT = Decimal(
+    15
+)  # M12: prognoz maqsaddan shuncha foizdan ko'p chetga chiqsa — "orqada" / "oldinda"
+
+
+class GoalStatus(StrEnum):
+    """F59. Oylik maqsad holati: prognoz maqsaddan ``GOAL_DEVIATION_PCT`` dan ko'p past — orqada, ko'p yuqori — oldinda."""
+
+    ON_TRACK = "on_track"
+    BEHIND = "behind"
+    AHEAD = "ahead"
+    UNKNOWN = "unknown"  # prognoz yo'q (oyning 1-kuni — to'liq o'tgan kun hali yo'q)
+
+
+@dataclass(frozen=True, slots=True)
+class GoalProgress:
+    percent: Decimal  # bajarilish = fakt / maqsad × 100 (1 xona)
+    forecast_percent: Decimal | None  # prognoz / maqsad × 100
+    deviation_pct: Decimal | None  # prognoz foizi − 100 (manfiy — maqsaddan past)
+    status: GoalStatus
+
+
+def goal_progress(
+    target: DecimalLike, fact: DecimalLike, forecast: DecimalLike | None
+) -> GoalProgress:
+    """F59 (B5.8, M12). Reja-fakt: bajarilish % = fakt / maqsad; oy oxiri prognozi — F-run-rate (``run_rate``, Bosh sahifadagi bilan
+    bitta hisob); og'ish = prognoz % − 100; |og'ish| > ``GOAL_DEVIATION_PCT`` bo'lsa — orqada / oldinda. Maqsad musbat bo'lishi shart;
+    prognoz ``None`` bo'lsa holat noma'lum (taxmin qilinmaydi)."""
+    goal = to_decimal(target)
+    if goal <= 0:
+        raise ValueError("maqsad musbat bo'lishi kerak")
+    percent = quantize(to_decimal(fact) * 100 / goal, 1)
+    if forecast is None:
+        return GoalProgress(percent, None, None, GoalStatus.UNKNOWN)
+    forecast_percent = quantize(to_decimal(forecast) * 100 / goal, 1)
+    deviation = forecast_percent - 100
+    if deviation < -GOAL_DEVIATION_PCT:
+        status = GoalStatus.BEHIND
+    elif deviation > GOAL_DEVIATION_PCT:
+        status = GoalStatus.AHEAD
+    else:
+        status = GoalStatus.ON_TRACK
+    return GoalProgress(percent, forecast_percent, deviation, status)
+
+
 class ProfitLabel(StrEnum):
     """M6 SKU holat belgisi."""
 

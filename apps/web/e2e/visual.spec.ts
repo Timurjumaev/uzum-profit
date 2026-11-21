@@ -55,6 +55,7 @@ const SHOTS: Shot[] = [
       await page.getByTestId("calc-profit").waitFor();
     },
   },
+  { name: "goals", path: "/goals" },
   { name: "settings", path: "/settings" },
   { name: "opening", path: "/opening" },
   { name: "purchases", path: "/purchases" },

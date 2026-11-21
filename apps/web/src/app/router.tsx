@@ -189,6 +189,12 @@ const calculator = createRoute({
   path: "/calculator",
   component: lazyRouteComponent(() => import("../routes/calculator"), "Calculator"),
 });
+/** Reja-fakt (M12, B5.8): oylik maqsadlar. */
+const goals = createRoute({
+  getParentRoute: () => app,
+  path: "/goals",
+  component: lazyRouteComponent(() => import("../routes/goals"), "Goals"),
+});
 const reports = soon("/reports", "Reports");
 /** Sozlamalar (M16, B4.8): tannarx usuli, soliq, to'lov jadvali, muddatlar, do'konlar. */
 const settings = createRoute({
@@ -235,7 +241,7 @@ const uiKit = createRoute({
 
 export const routeTree = root.addChildren([
   auth.addChildren([
-    app.addChildren([home, status, pnl, products, product, orders, expenses, purchases, purchase, shipments, shipment, cargoPool, inventory, warehouse, dispatches, receiving, cash, calculator, reports, settings, opening]),
+    app.addChildren([home, status, pnl, products, product, orders, expenses, purchases, purchase, shipments, shipment, cargoPool, inventory, warehouse, dispatches, receiving, cash, calculator, goals, reports, settings, opening]),
     onboarding,
     invite,
   ]),
