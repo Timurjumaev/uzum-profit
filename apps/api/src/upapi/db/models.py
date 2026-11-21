@@ -147,6 +147,8 @@ orgs = Table(
     # F41 (ADR-033): boshlang'ich holat sanasi — undan oldingi sotuvlar tarixiy tannarxda; NULL — o'chirilgan.
     Column("cost_start_on", Date),
     Column("deleted_at", TS),
+    # B8.4a (09 X4): oxirgi to'liq qayta qurish so'ralgan hisob qoidalari versiyasi (``upapi.calc.CALC_VERSION``).
+    Column("calc_version", Integer),
     *_times(),
     check_in("cost_method", ("fifo", "average")),
 )

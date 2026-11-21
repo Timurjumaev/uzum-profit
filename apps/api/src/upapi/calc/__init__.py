@@ -61,6 +61,11 @@ def _shop_requests(
     return out
 
 
+# Hisob qoidalari versiyasi (B8.4a, 09 X4): tannarx dvigateli, belgilar yoki hosila jadval qoidasi o'zgarganda OSHIRILADI —
+# ishchi keyingi ishga tushishda faqat eskirgan tashkilotlarni qayta quradi (har deployda hammasini emas).
+CALC_VERSION = 1
+
+
 async def recalc_org(engine: AsyncEngine, org_id: UUID, now: datetime) -> CalcResult:
     """Tashkilot navbatidagi qayta hisoblarni bajaradi (bitta tranzaksiya, RLS ichida)."""
     q = m.recalc_queue

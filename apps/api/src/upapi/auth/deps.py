@@ -18,6 +18,7 @@ from upapi.auth.tokens import new_token, token_hash
 from upapi.db import models as m
 from upapi.db.session import org_transaction
 from upapi.errors import AppError
+from upapi.ratelimit import SlidingWindow
 from upapi.settings import Settings
 
 COOKIE = "up_session"
@@ -87,6 +88,21 @@ async def _dev_token_user(
 
 
 async def current_user(
+    request: Request,
+    response: Response,
+    engine: Annotated[AsyncEngine, Depends(get_engine)],
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> CurrentUser:
+    """Sessiya → foydalanuvchi + foydalanuvchi bo'yicha so'rov cheklovi (B8.4a, 09 X2): bitta foydalanuvchi (yoki buzilgan
+    mijoz) hammaning API'sini band qilmasin — daqiqasiga ``user_requests_per_minute`` (siljuvchi oyna, jarayon ichida)."""
+    user = await _resolve_user(request, response, engine, settings)
+    limiter: SlidingWindow = request.app.state.user_limiter
+    if not limiter.hit(str(user.user_id)):
+        raise AppError("rate_limited", 429, detail="so'rovlar juda ko'p, biroz kuting")
+    return user
+
+
+async def _resolve_user(
     request: Request,
     response: Response,
     engine: Annotated[AsyncEngine, Depends(get_engine)],

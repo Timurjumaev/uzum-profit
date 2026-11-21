@@ -30,10 +30,11 @@ from uuid import UUID
 
 from procrastinate import App, BaseConnector, JobContext, PsycopgConnector, RetryStrategy
 from procrastinate.exceptions import AlreadyEnqueued
-from sqlalchemy import text
+from sqlalchemy import select, text, update
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from upapi import calc, notify
+from upapi.db import models as m
 from upapi.db.session import org_transaction
 from upapi.db.url import normalize_url
 from upapi.export_full import run_export as export_run
@@ -154,6 +155,24 @@ async def rebuild_all(app: App, engine: AsyncEngine) -> int:
     queued = 0
     for org_id in sorted({org for org, _ in await due_accounts(engine)}):
         await request_full_rebuild(engine, org_id)
+        queued += await defer_calc(app, org_id)
+    return queued
+
+
+async def rebuild_stale(app: App, engine: AsyncEngine) -> int:
+    """Ishchi ishga tushishi (B8.4a, 09 X4): faqat hisob qoidalari versiyasi eskirgan tashkilotlar uchun to'liq qayta
+    qurish (``orgs.calc_version`` ≠ ``calc.CALC_VERSION``). So'rov navbatga yoziladigan tranzaksiyada versiya ham
+    yangilanadi (navbat bardoshli — ish keyin bajarilsa ham yo'qolmaydi). Qaytaradi: qo'yilgan ``calc.org`` ishlari."""
+    queued = 0
+    for org_id in sorted({org for org, _ in await due_accounts(engine)}):
+        async with org_transaction(engine, org_id) as conn:
+            version = await conn.scalar(select(m.orgs.c.calc_version).where(m.orgs.c.id == org_id))
+            if version == calc.CALC_VERSION:
+                continue
+            await calc.request_full(conn, org_id)
+            await conn.execute(
+                update(m.orgs).where(m.orgs.c.id == org_id).values(calc_version=calc.CALC_VERSION)
+            )
         queued += await defer_calc(app, org_id)
     return queued
 

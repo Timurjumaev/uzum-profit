@@ -53,6 +53,8 @@ class Settings(BaseSettings):
     otp_per_hour: int = 5
     # Bitta IP manzildan soatiga shuncha kod so'rovi (har xil raqam bilan ham; har kod ≈ $0.01, ADR-028).
     otp_per_ip_hour: int = 20
+    # B8.4a (09 X2): bitta foydalanuvchining daqiqadagi so'rovlari (Bosh sahifa ~15 so'rov; oddiy ishlatishdan ancha yuqori).
+    user_requests_per_minute: int = 600
     otp_max_attempts: int = 5
     otp_block_minutes: int = 15
     session_days: int = 30
