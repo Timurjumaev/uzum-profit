@@ -221,6 +221,7 @@ B5.10 dagi "mahalliy xarid" TM ga ko'chadi. README dagi "joriy bosqich yopilmagu
 istisno — Temur qarori.
 
 ## Ochiq qarorlar (Temur hal qiladi)
+| ADR-073 | 2026-11-21 | (Temur, 2026-11-21: "Betani ommaviy chiqaravermiz, chunki bu kabi loyiha bizniki birinchisi emas, bunaqa loyihalar juda ko'p — demak Uzum taqiq qo'ymaydi. Ko'ngling to'q bo'lsin va ishni davom ettiraver".) **B8.6a darvozasi xavf qabul qilingan holda o'tdi:** Uzum yordami yozma javob bermadi ("API bo'yicha ma'lumot yo'q"), lekin Open API'dan foydalanadigan o'xshash uchinchi tomon servislari ko'p — shu asosda B9 (yopiq beta) begona sotuvchilar bilan ham, taklif kodi/ruxsat ro'yxati orqali (B8.11), davom etadi. Shartlar: (1) ofertada bu xavf sotuvchiga ochiq aytiladi (B8.6b, 08 §9); (2) reklamada Uzum haqida salbiy da'vo yo'q (9.2.9-band); (3) Uzum taqiq yoki cheklov bildirsa — ommaviy chiqish to'xtaydi va reja qayta ko'riladi; (4) yozma javob olishga urinish to'xtamaydi (rasmiy murojaat/hamkor menejeri). Ta'sir: B8.6a, B9, B8.6b | Beta'ni faqat o'z do'konlari bilan cheklash (Temur qabul qilmadi) | Yozma javobsiz ommaviy (ro'yxatsiz) chiqish — B8-B da alohida ko'riladi |
 
 | ID | Savol | Qachongacha | Standart (javob bo'lmasa) |
 |---|---|---|---|
