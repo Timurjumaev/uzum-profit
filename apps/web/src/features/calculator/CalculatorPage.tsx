@@ -3,6 +3,7 @@
 // marja narxi. Hisob serverda (`/calculator`, tamoyil 4) — bu yerda faqat kiritish va ko'rsatish. Kurs — CBU (manbasi va sanasi
 // ko'rsatiladi), qo'lda o'zgartirsa bo'ladi; qiymat yo'q bo'lsa taxmin qilinmaydi: maydon bo'sh.
 import { keepPreviousData, useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -12,6 +13,7 @@ import { Banner, Button, FormulaPopover, NumberInput, Skeleton, TextInput, useTo
 import { ApiError } from "../../lib/api/client";
 import type { CalculatorDefaults } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
+import { QuickPurchaseForm } from "../purchases/QuickPurchaseForm";
 
 export type Field =
   | "price_cny"
@@ -120,6 +122,8 @@ function Form({ orgId, defaults }: { orgId: string; defaults: CalculatorDefaults
   const [values, setValues] = useState<Values>(start);
   const set = (field: Field) => (value: string | null) => setValues((v) => ({ ...v, [field]: value }));
   const [scenarioName, setScenarioName] = useState("");
+  const [ordering, setOrdering] = useState(false);
+  const navigate = useNavigate();
   const toast = useToast();
   const qc = useQueryClient();
   const scenarios = useQuery(scenariosQuery(orgId)).data ?? [];
@@ -326,6 +330,20 @@ function Form({ orgId, defaults }: { orgId: string; defaults: CalculatorDefaults
               </div>
             )}
           </dl>
+        )}
+        {c !== undefined && (
+          <Button size="sm" onClick={() => setOrdering(true)} data-testid="calc-order">
+            {t("calculator.order.button")}
+          </Button>
+        )}
+        {ordering && c !== undefined && input !== null && (
+          <QuickPurchaseForm
+            orgId={orgId}
+            amounts
+            prefill={{ qty: Number(input.qty), paid: c.order_cny, currency: "CNY", rate: values.cny_rate }}
+            onClose={() => setOrdering(false)}
+            onSaved={(saved) => void navigate({ to: "/purchases/$purchaseId", params: { purchaseId: saved.purchase.id } })}
+          />
         )}
         {c !== undefined && Number(c.unit.share_pct) >= 100 && <p className="ui-text--negative">{t("calculator.shareOver", { value: f.number(c.unit.share_pct, { digits: 1, trim: true }) })}</p>}
       </div>

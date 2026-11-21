@@ -69,6 +69,7 @@ def test_calculator_landed_cost_logistics_and_unit_economics(world: tr.World) ->
         assert D(unit["commission"]) == D(13_500) and D(unit["tax"]) == D(3_600)
         assert D(unit["profit"]) == D(32_280)  # 90 000 − 40 620 − 13 500 − 3 600
         assert unit["breakeven"] is not None and D(out["tax_pct"]) == D(4)
+        assert D(out["order_cny"]) == D(550)  # 10 × 50 + 50
 
         # O'lcham yo'q — F37 "o'lchamsiz" narx; 20 litr = 5 250 + 19 × 250.
         assert w.get("calculator", **PARAMS)["logistics"] == {

@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App, createAppState } from "../../App";
 import { formatterFor } from "../../lib/format";
-import { CALCULATOR_DEFAULTS_ROUTE, CALCULATOR_ROUTE, CARGO_SUGGESTION_ROUTE, SCENARIOS_ROUTE, SCENARIOS_SAVE_ROUTE, json, ME, ME_ROUTE, mockApi, problem, type Routes } from "../../test/api";
+import { CALCULATOR_DEFAULTS_ROUTE, CALCULATOR_ROUTE, CARGO_SUGGESTION_ROUTE, SKU_PICKER_ROUTE, SUPPLIERS_ROUTE, SCENARIOS_ROUTE, SCENARIOS_SAVE_ROUTE, json, ME, ME_ROUTE, mockApi, problem, type Routes } from "../../test/api";
 import { calculatorDefaults, calculatorResult, cargoSuggestion } from "../../test/calculator";
 import { toInput, type Values } from "./CalculatorPage";
 
@@ -26,6 +26,8 @@ async function renderPage(routes: Routes = {}, lang: "uz-Latn" | "ru" = "uz-Latn
     [CALCULATOR_ROUTE]: () => json(200, calculatorResult()),
     [CARGO_SUGGESTION_ROUTE]: () => json(200, cargoSuggestion()),
     [SCENARIOS_ROUTE]: () => json(200, []),
+    [SKU_PICKER_ROUTE]: () => json(200, { rows: [], truncated: false }),
+    [SUPPLIERS_ROUTE]: () => json(200, []),
     ...routes,
   });
   render(<App state={createAppState(createMemoryHistory({ initialEntries: ["/calculator"] }), lang)} />);
@@ -42,6 +44,17 @@ async function fill(label: RegExp | string, value: string) {
 }
 
 describe("kalkulyator", () => {
+  it("xaridga aylantirish: tez xarid oynasi server hisoblagan tovar summasi (¥) bilan ochiladi", async () => {
+    await renderPage();
+    await fill(/^1688 narxi/, "10");
+    await fill(/^Moʻljallangan sotuv narxi/, "90000");
+    await fill(/^Uzum komissiyasi/, "15");
+    fireEvent.click(await screen.findByTestId("calc-order"));
+    const dialog = await screen.findByRole("dialog");
+    expect(Array.from(dialog.querySelectorAll("input")).some((i) => /^550([.,]0+)?$/.test((i as HTMLInputElement).value))).toBe(true);
+  });
+
+
   it("ssenariy: saqlanganni ochish formani toʻldiradi; saqlash toʻldirilgan maydonlarni nom bilan yuboradi", async () => {
     const saved = [{ id: "s1", name: "Mashina", inputs: { price_cny: "10", qty: "50", price: "90000", commission_pct: "15" }, updated_at: "2026-11-20T10:00:00Z" }];
     const api = await renderPage({ [SCENARIOS_ROUTE]: () => json(200, saved), [SCENARIOS_SAVE_ROUTE]: () => json(201, saved[0]) });

@@ -1238,7 +1238,7 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
   - Hodisa "Uzum to'lovi kutilmoqda / tushmadi"; "Diqqat" qatori.
 - [ ] B5.8 **Reja-fakt** (M12) — oxirida, sodda: oylik maqsad (tushum, sof foyda, dona) tashkilot va do'kon bo'yicha,
   bajarilish %, oy oxiri prognozi (bosh sahifadagi run-rate bilan bitta hisob). Tovar bo'yicha maqsad — "Keyinga".
-- [→] B5.9 **Kalkulyator** (M13): **Holat 2026-11-20:** alohida sahifa ✓ (`/calculator`: 1688 narxi, kargo, o'lcham → F37, soliq profildan, kurs CBU/qo'lda, F35/F36); kargo taklifi ✓ (B5.9-2: oxirgi 20 xarid o'rtachasi $/kg va so'm/dona, "Taklifni qo'llash"); ssenariyni saqlash ✓ (B5.9-3: nom bilan saqlash/ochish/o'chirish, migratsiya 0040); qoldi: tez xarid oynasiga aylantirish. Reja: alohida sahifa (SKU sahifasidagi unit kalkulyator va `/unit-calc` bor), F37 logistika
+- [x] B5.9 **Kalkulyator** (M13) — **tugadi 2026-11-20** (B5.9-4: "Xaridga aylantirish" — tez xarid oynasi tovar summasi bilan). **Holat 2026-11-20:** alohida sahifa ✓ (`/calculator`: 1688 narxi, kargo, o'lcham → F37, soliq profildan, kurs CBU/qo'lda, F35/F36); kargo taklifi ✓ (B5.9-2: oxirgi 20 xarid o'rtachasi $/kg va so'm/dona, "Taklifni qo'llash"); ssenariyni saqlash ✓ (B5.9-3: nom bilan saqlash/ochish/o'chirish, migratsiya 0040); tez xarid oynasiga aylantirish ✓. Reja: alohida sahifa (SKU sahifasidagi unit kalkulyator va `/unit-calc` bor), F37 logistika
   (o'lcham kiritilsa), soliq % — soliq profilidan, kargo / dona — o'xshash xaridlar o'rtachasidan taklif (ADR-061: tarif
   kiritilmaydi), ssenariyni saqlash, tez xarid oynasiga aylantirish. Ochiq (ro'yxatsiz) versiya — **B8.7** da (landing
   alohida Astro sayt, ADR-023): ochiq, IP bo'yicha cheklangan API endpoint — formula TS'da takrorlanmaydi (tamoyil 4).

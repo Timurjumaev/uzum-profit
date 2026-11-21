@@ -29,6 +29,7 @@ export function calculatorResult(over: Partial<Calc> = {}): Calc {
     landed: { goods: "17500.00", china: "1750.00", cargo: "15120.00", extra: "1000.00", unit_cost: "35370.00", cargo_basis: "weight" },
     logistics: { fee: "5250.00", liters: 1, source: "dims" },
     tax_pct: "4.0000",
+    order_cny: "550.00",
     unit: {
       price: "90000.00",
       fixed: "40620.00",

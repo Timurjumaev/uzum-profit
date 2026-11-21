@@ -98,6 +98,9 @@ class CalculatorOut(BaseModel):
     logistics: LogisticsOut
     tax_pct: Decimal  # hisobda ishlatilgan
     unit: UnitCalcOut
+    order_cny: (
+        Decimal  # xaridga aylantirish: tovar summasi (1688 narxi × dona + Xitoy ichki yetkazish), ¥
+    )
 
 
 class CargoSuggestionOut(BaseModel):
@@ -350,6 +353,7 @@ async def calculator(
         ),
         tax_pct=tax_pct,
         unit=unit_calc_out(unit),
+        order_cny=price_cny * qty + china_cny_total,
     )
 
 

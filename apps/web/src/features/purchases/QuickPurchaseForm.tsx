@@ -52,8 +52,11 @@ export function sumsExceed(paid: string | null, sums: ReadonlyArray<string | nul
 
 export type InitialLine = { skuId: string; label: string; qty: number };
 
+/** Kalkulyatordan: tovar summasi (to'langan jami), valyuta, qo'lda kurs (bo'lmasa CBU) va birinchi tanlangan tovarning doni. */
+export type Prefill = { qty: number; paid: string; currency: PaidCurrency; rate: string | null };
+
 /** `initial` — oldindan tanlangan qatorlar (Ombor: tavsiya miqdor bilan tanlanganlar); qolgani bo'sh. */
-export function QuickPurchaseForm({ orgId, amounts, initial = [], onClose, onSaved }: { orgId: string; amounts: boolean; initial?: ReadonlyArray<InitialLine>; onClose: () => void; onSaved: (detail: PurchaseDetail) => void }) {
+export function QuickPurchaseForm({ orgId, amounts, initial = [], prefill, onClose, onSaved }: { orgId: string; amounts: boolean; initial?: ReadonlyArray<InitialLine>; prefill?: Prefill; onClose: () => void; onSaved: (detail: PurchaseDetail) => void }) {
   const { t } = useTranslation();
   const toast = useToast();
   const client = useQueryClient();
@@ -62,10 +65,10 @@ export function QuickPurchaseForm({ orgId, amounts, initial = [], onClose, onSav
   const [draft, setDraft] = useState<Draft>({
     picked: initial.map((x) => ({ key: `sku:${x.skuId}`, label: x.label, qty: String(x.qty), sum: null })),
     newName: "",
-    paid: null,
-    currency: "CNY",
-    rateMode: "cbu",
-    rate: null,
+    paid: prefill?.paid ?? null,
+    currency: prefill?.currency ?? "CNY",
+    rateMode: prefill?.rate ? "manual" : "cbu",
+    rate: prefill?.rate ?? null,
     orderedOn: todayTashkent(),
     trackNo: "",
     supplier: NO_SUPPLIER,
@@ -81,12 +84,12 @@ export function QuickPurchaseForm({ orgId, amounts, initial = [], onClose, onSav
     const row = rowOf.get(key);
     if (!row || draft.picked.some((p) => p.key === key)) return;
     const variant = row.title && row.title !== pickerLabel(row) ? ` · ${row.title}` : "";
-    patch({ picked: [...draft.picked, { key, label: `${pickerLabel(row)}${variant}`, qty: null, sum: null }] });
+    patch({ picked: [...draft.picked, { key, label: `${pickerLabel(row)}${variant}`, qty: draft.picked.length === 0 && prefill ? String(prefill.qty) : null, sum: null }] });
   };
   const addNew = () => {
     const name = draft.newName.trim();
     if (name === "") return;
-    patch({ picked: [...draft.picked, { key: `${NEW_PREFIX}${draft.picked.length}:${name}`, label: name, qty: null, sum: null }], newName: "" });
+    patch({ picked: [...draft.picked, { key: `${NEW_PREFIX}${draft.picked.length}:${name}`, label: name, qty: draft.picked.length === 0 && prefill ? String(prefill.qty) : null, sum: null }], newName: "" });
   };
   const setLine = (key: string, x: Partial<Picked>) => patch({ picked: draft.picked.map((p) => (p.key === key ? { ...p, ...x } : p)) });
   const several = draft.picked.length > 1;

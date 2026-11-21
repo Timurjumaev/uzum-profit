@@ -2448,6 +2448,8 @@ export interface components {
             /** Tax Pct */
             tax_pct: string;
             unit: components["schemas"]["UnitCalcOut"];
+            /** Order Cny */
+            order_cny: string;
         };
         /**
          * CargoBasis
