@@ -72,6 +72,9 @@ class Filters:
     shops: frozenset[UUID] | None
     today: date
     last_year: bool = False  # solishtirish: o'tgan yilning shu davri (B5.6); aks holda oldingi shu uzunlikdagi davr
+    previous: Period | None = (
+        None  # solishtirish davri qo'lda (B7.3: oylik hisobot — oldingi kalendar oyi)
+    )
     _keys: frozenset[str] = field(default=frozenset(), init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
@@ -80,6 +83,8 @@ class Filters:
 
     def compare_period(self) -> Period:
         """Solishtirish davri (``/dashboard``, ``/pnl``): oldingi shu uzunlikdagi davr yoki o'tgan yil shu sanalari."""
+        if self.previous is not None:
+            return self.previous
         return self.period.year_ago() if self.last_year else self.period.previous()
 
     def shop_ok(self, shop: str) -> bool:

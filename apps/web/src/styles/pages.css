@@ -311,3 +311,90 @@
 .status-shop__head h2 {
   margin: 0;
 }
+
+/* Oylik hisobot (B7.3): sahifa va chop etish uslubi. */
+.report {
+  display: grid;
+  gap: 16px;
+}
+.report__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.report__tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.report__kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+.report__kpis > div {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgb(42 120 214 / 0.12), rgb(124 92 255 / 0.12));
+  box-shadow: 0 4px 16px rgb(42 120 214 / 0.12);
+}
+.report__kpis dt {
+  color: var(--text-secondary);
+  font: var(--type-caption);
+}
+.report__kpis dd {
+  margin: 4px 0 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.report__pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+.report__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.report__list li,
+.report__total {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  border-block-end: 1px solid var(--border-hairline);
+}
+@media print {
+  /* Chop etish: karkas va boshqaruv tugmalari yashirin, kontent to'liq kenglikda, fon rangsiz (PDF — brauzerdan). */
+  .sidebar,
+  .topbar,
+  .tabbar,
+  .no-print,
+  .skip-link {
+    display: none !important;
+  }
+  body,
+  .app,
+  main {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .report {
+    gap: 10px;
+  }
+  .report__kpis > div {
+    box-shadow: none;
+    background: none;
+    border: 1px solid #ccc;
+  }
+  .report section {
+    break-inside: avoid;
+  }
+}

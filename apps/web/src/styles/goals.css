@@ -27,7 +27,7 @@
 .goals__card {
   padding: 14px 16px;
   border-radius: 16px;
-  background: var(--surface, #fff);
+  background: var(--bg-surface);
   box-shadow: 0 4px 18px rgb(124 92 255 / 0.12);
   border: 1px solid rgb(124 92 255 / 0.16);
 }

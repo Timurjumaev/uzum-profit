@@ -105,7 +105,7 @@ export function flowBars(steps: FlowStep[]): { start: number; size: number }[] {
 /** "Buyurtmadan sof foydagacha" (F49, ADR-053): yalpi buyurtmalar summasi bo'laklarga bo'linadi — bekor, qaytarish, Uzum
  * ushlab qolgan, tannarx, o'z xarajatlari, soliq, tannarxsiz qism va sof foyda; har qatorda summa va yalpi summadagi
  * ulushi. Hisob API'da, bu yerda faqat joylashuv. */
-function Flow({ steps }: { steps: FlowStep[] }) {
+export function Flow({ steps }: { steps: FlowStep[] }) {
   const { t } = useTranslation();
   const f = useFormat();
   if (!(steps.length > 0 && Number(steps[0].value) > 0)) return null;

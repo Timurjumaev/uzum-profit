@@ -40,6 +40,8 @@ const CASES: Case[] = [
   { name: "Kargo sahifasi", path: `/shipments/${SHIPMENT_1}` },
   { name: "Ombor", path: "/inventory" },
   { name: "Pul oqimi", path: "/cash" },
+  { name: "Reja-fakt", path: "/goals" },
+  { name: "Oylik hisobot", path: "/reports" },
   { name: "Sozlamalar", path: "/settings" },
   { name: "Boshlangʻich holat", path: "/opening" },
   { name: "Xaridlar", path: "/purchases" },

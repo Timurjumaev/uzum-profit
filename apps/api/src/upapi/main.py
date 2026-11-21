@@ -30,6 +30,7 @@ from upapi.routes import (
     health,
     inventory,
     items,
+    monthly_report,
     notifications,
     opening,
     orders,
@@ -128,6 +129,7 @@ def create_app(
         calculator,  # B5.9 kalkulyator
         goals,  # B5.8 reja-fakt
         cost_import,  # B7.1 tannarxni Excel orqali kiritish
+        monthly_report,  # B7.3 oylik hisobot
         pnl,
         skus,
         sales,
