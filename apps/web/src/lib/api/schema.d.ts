@@ -1089,6 +1089,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/exports/warehouse.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Warehouse
+         * @description Omborim (ADR-061 §7): SKU bo'yicha qoldiq va qiymat (summasiz — omborchi), 2-varaq: sanalmagan xaridlar. Ro'yxat — ``/warehouse``.
+         */
+        get: operations["export_warehouse_api_v1_orgs__org_id__exports_warehouse_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/exports/shipments.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Shipments
+         * @description Kargolar: xaridlar soni, dona, sanalar va (summalar ruxsati bilan) kargo xarajati. Ro'yxat — ``/shipments``.
+         */
+        get: operations["export_shipments_api_v1_orgs__org_id__exports_shipments_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/exports/receiving.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Receiving
+         * @description Qabul farqi va kamomad: 1-varaq — qabul farqlari (joʻnatilgan va qabul qilingan, qaror, jarima); 2-varaq — kamomad
+         *     (holat, summa, kompensatsiya, F52 yo'qotish). Summalar — summalar ruxsati bilan. Ro'yxat — ``/receiving``.
+         */
+        get: operations["export_receiving_api_v1_orgs__org_id__exports_receiving_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/purchases": {
         parameters: {
             query?: never;
@@ -9562,6 +9623,8 @@ export interface operations {
                 /** @description SKU id */
                 sku?: string | null;
                 unlinked?: boolean;
+                /** @description Faqat hisobga olinadigan (F2) qatorlar — Foyda tafsiloti (drill-down) kabi */
+                counted?: boolean;
                 /** @description Davr boshi (Toshkent kuni) */
                 start?: string | null;
                 /** @description Davr oxiri, kiradi; standart — bugun */
@@ -9867,6 +9930,126 @@ export interface operations {
                 /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
                 compare?: "previous" | "last_year";
             };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    export_warehouse_api_v1_orgs__org_id__exports_warehouse_xlsx_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    export_shipments_api_v1_orgs__org_id__exports_shipments_xlsx_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    export_receiving_api_v1_orgs__org_id__exports_receiving_xlsx_get: {
+        parameters: {
+            query?: never;
             header?: never;
             path: {
                 org_id: string;

@@ -5109,6 +5109,18 @@
             }
           },
           {
+            "name": "counted",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Faqat hisobga olinadigan (F2) qatorlar — Foyda tafsiloti (drill-down) kabi",
+              "default": false,
+              "title": "Counted"
+            },
+            "description": "Faqat hisobga olinadigan (F2) qatorlar — Foyda tafsiloti (drill-down) kabi"
+          },
+          {
             "name": "start",
             "in": "query",
             "required": false,
@@ -6035,6 +6047,162 @@
               "title": "Compare"
             },
             "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/exports/warehouse.xlsx": {
+      "get": {
+        "tags": [
+          "exports"
+        ],
+        "summary": "Export Warehouse",
+        "description": "Omborim (ADR-061 §7): SKU bo'yicha qoldiq va qiymat (summasiz — omborchi), 2-varaq: sanalmagan xaridlar. Ro'yxat — ``/warehouse``.",
+        "operationId": "export_warehouse_api_v1_orgs__org_id__exports_warehouse_xlsx_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/exports/shipments.xlsx": {
+      "get": {
+        "tags": [
+          "exports"
+        ],
+        "summary": "Export Shipments",
+        "description": "Kargolar: xaridlar soni, dona, sanalar va (summalar ruxsati bilan) kargo xarajati. Ro'yxat — ``/shipments``.",
+        "operationId": "export_shipments_api_v1_orgs__org_id__exports_shipments_xlsx_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/exports/receiving.xlsx": {
+      "get": {
+        "tags": [
+          "exports"
+        ],
+        "summary": "Export Receiving",
+        "description": "Qabul farqi va kamomad: 1-varaq — qabul farqlari (joʻnatilgan va qabul qilingan, qaror, jarima); 2-varaq — kamomad\n(holat, summa, kompensatsiya, F52 yo'qotish). Summalar — summalar ruxsati bilan. Ro'yxat — ``/receiving``.",
+        "operationId": "export_receiving_api_v1_orgs__org_id__exports_receiving_xlsx_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
           }
         ],
         "responses": {

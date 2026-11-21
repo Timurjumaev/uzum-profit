@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
 import { currentOrg, meQuery, receivingPreviewQuery, receivingQuery, resolveReceiving, updateShortage } from "../../app/query";
-import { Badge, Banner, Button, EmptyState, MoneyInput, Skeleton, useToast } from "../../components/ui";
+import { Badge, Banner, Button, EmptyState, ExportButton, MoneyInput, Skeleton, useToast } from "../../components/ui";
 import type { Receiving as ReceivingData, ReceivingDiff, ResolveIn, Shortage, ShortagePatch } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { MANAGE_ROLES } from "../purchases/Purchases";
@@ -50,6 +50,9 @@ export function Receiving() {
         <div className="page-title">
           <h1 className="h2">{t("receiving.title")}</h1>
         </div>
+        <span className="purchases__actions">
+          <ExportButton orgId={org.id} table="receiving" disabled={!query.data || (query.data.diffs.length === 0 && query.data.shortages.length === 0)} />
+        </span>
       </header>
       <p className="caption">{t("receiving.lead")}</p>
       {query.isError ? (
