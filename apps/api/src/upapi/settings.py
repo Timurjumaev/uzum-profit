@@ -59,6 +59,9 @@ class Settings(BaseSettings):
     session_rotate_hours: int = 24
     session_grace_seconds: int = 60
     invite_days: int = 7
+    # B8.11: ochiq ro'yxatdan o'tish. Beta/production'da ``UP_SIGNUP_OPEN=false``: yangi raqam faqat ruxsat ro'yxatida
+    # (``python -m upapi.signup allow``) yoki a'zo taklifi bilan kiradi; mavjud foydalanuvchilar doim kiradi.
+    signup_open: bool = True
     # ADR-072: ishlab chiqish uchun faqat o'qish tokeni (``Authorization: Bearer``, faqat GET). Standart — o'chiq;
     # faqat staging'da yoqiladi, production'da yoqilsa ilova ishga tushmaydi.
     dev_tokens_enabled: bool = False

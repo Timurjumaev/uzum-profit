@@ -255,6 +255,8 @@ async def create_invite(body: InviteCreate, ctx: Members, settings: Config) -> I
         )
         .returning(m.invites.c.id)
     )
+    # B8.11: a'zo taklifi — ro'yxatdan o'tishga ruxsat (yopiq rejimda ham qabul qila olsin).
+    await ctx.conn.execute(text("SELECT auth_signup_allow(:p, 'invite')"), {"p": phone})
     await ctx.audit(
         "invite.create", "invite", invite_id, after={"phone": mask_phone(phone), "role": body.role}
     )

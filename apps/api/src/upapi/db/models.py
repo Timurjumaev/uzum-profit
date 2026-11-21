@@ -199,6 +199,15 @@ dev_tokens = Table(
     *_times(),
     Index(None, "user_id"),
 )
+# B8.11: ro'yxatdan o'tishga ruxsat etilgan telefonlar (kirish jadvali; faqat ``auth_signup_*`` funksiyalari).
+signup_allowlist = Table(
+    "signup_allowlist",
+    metadata,
+    _id(),
+    Column("phone", Text, nullable=False, unique=True),
+    Column("source", Text, nullable=False),
+    *_times(),
+)
 otp_codes = Table(
     "otp_codes",
     metadata,
@@ -211,7 +220,7 @@ otp_codes = Table(
     *_times(),
     Index(None, "phone", "created_at"),
 )
-AUTH += ["sessions", "otp_codes", "dev_tokens"]
+AUTH += ["sessions", "otp_codes", "dev_tokens", "signup_allowlist"]
 
 memberships = tenant(
     "memberships",

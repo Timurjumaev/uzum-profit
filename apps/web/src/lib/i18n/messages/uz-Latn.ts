@@ -115,6 +115,7 @@ export const uzLatn = {
     codes: {
       invalid_phone: "Telefon raqami notoʻgʻri. +998 XX XXX XX XX koʻrinishida kiriting.",
       telegram_not_found: "Bu raqam Telegramʼda roʻyxatdan oʻtmagan. Telegramʼga ulangan raqamni kiriting.",
+      signup_closed: "Roʻyxatdan oʻtish hozircha faqat taklif bilan. Taklif olish uchun biz bilan bogʻlaning.",
       otp_delivery_failed: "Kod yuborilmadi. Bir daqiqadan soʻng qayta urining.",
       otp_rate_limited: "Kod juda koʻp soʻraldi. Bir soatdan soʻng qayta urining.",
       otp_ip_rate_limited: "Bu tarmoqdan juda koʻp kod soʻraldi. Bir soatdan soʻng qayta urining.",

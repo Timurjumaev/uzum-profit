@@ -1446,7 +1446,7 @@ ishlari** belgilaydi (yuridik shaxs, shartnoma, reyestr) — ular hozirdan boshl
 - [ ] B8.15 **Temurning ma'lumotini staging'dan production'ga ko'chirish** (yangi): u kiritgan xaridlar, chiqimlar,
   tannarx, sozlamalar staging bazasida — nusxa → tiklash → `realcheck` solishtiruvi (sotuv, tannarx, foyda tiyinigacha
   bir xil) → staging sinov muhiti bo'lib qoladi. Shifrlash kaliti (Uzum tokeni) ham ko'chadi yoki kalit qayta kiritiladi.
-- [ ] B8.11 **Ro'yxatdan o'tishni cheklash** (yangi): hozir telefon raqami bor har kim tashkilot ocha oladi. Beta uchun
+- [x] B8.11 (✓ 2026-11-21: `UP_SIGNUP_OPEN=false` + ruxsat ro'yxati `python -m upapi.signup allow|list|remove`, a'zo taklifi ham ruxsat; migratsiya 0045; production'da `UP_SIGNUP_OPEN=false` qo'yish — B8.8 da) **Ro'yxatdan o'tishni cheklash** (yangi): hozir telefon raqami bor har kim tashkilot ocha oladi. Beta uchun
   taklif kodi yoki ruxsat etilgan raqamlar ro'yxati (admin qo'shadi); ochiq ro'yxat — B8-B da yoqiladi.
 - [ ] B8.4a **Xavfsizlik — beta darajasi:** tashkilotlarni ajratish testi endpointlarning 100% ida (ro'yxat CI'da
   avtomatik solishtiriladi — yangi endpoint testsiz o'tmaydi); foydalanuvchi bo'yicha so'rov cheklovi (09 X2);
