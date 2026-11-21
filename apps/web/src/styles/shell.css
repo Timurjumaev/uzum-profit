@@ -182,6 +182,7 @@
 
 .topbar__tools {
   flex-wrap: nowrap;
+  flex-shrink: 0; /* qisilmaydi: ikonkalar (qo'ng'iroq, qidiruv) panel chetidan chiqib ketmasin; filtrlar o'raladi */
 }
 
 .topbar__shop-prefix {
@@ -520,6 +521,16 @@
 
   .topbar__tools {
     gap: 0;
+  }
+
+  /* Qo'ng'iroq (B6.3) qo'shilgach 360 px da sig'ishi uchun ikonkali tugmalar ixcham. */
+  .topbar__search.ui-btn {
+    min-inline-size: 36px;
+    padding: 0 var(--space-1);
+  }
+
+  .topbar__bell {
+    min-inline-size: 32px;
   }
 
   .palette {
