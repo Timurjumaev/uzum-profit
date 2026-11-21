@@ -350,6 +350,7 @@ export const ru: Messages = {
     delivery: { sent: "Отправлено в Telegram", pending: "Не отправлено", failed: "Не удалось отправить" },
   },
   shell: {
+    support: "Помощь (Telegram)",
     skip: "Перейти к основному содержимому",
     orgWide: "По всей организации",
     filters: "Фильтры",

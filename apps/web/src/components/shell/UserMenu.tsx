@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { logout } from "../../app/query";
 import { Button, Popover, useToast } from "../ui";
 import { Appearance } from "./Appearance";
+import { SupportLink } from "./SupportLink";
 
 export type Account = { name: string | null; phone: string; org: string | null };
 
@@ -38,6 +39,7 @@ export function AccountPanel({ account }: { account: Account }) {
         {account.org && <p className="muted">{account.org}</p>}
       </div>
       <Appearance />
+      <SupportLink />
       <Button icon={<LogOut size={16} aria-hidden />} loading={signOut.isPending} onClick={() => signOut.mutate()}>
         {t("shell.signOut")}
       </Button>
