@@ -581,6 +581,39 @@ async def commission_changes(conn: AsyncConnection, today: date) -> list[Found]:
     return out
 
 
+KEY_WARN_DAYS = (5, 1)
+
+
+async def keys_expiring(conn: AsyncConnection, today: date) -> list[Found]:
+    """B8.16. Uzum kaliti muddati (sotuvchi kiritgan) 5 yoki 1 kun qolganda — har akkaunt va chegara uchun bir marta
+    (kalit: akkaunt + muddat + chegara, shuning uchun muddat o'zgarsa yangi ogohlantirish). Muddati o'tgan kalit — bu yerda
+    emas: Uzum uni rad etadi va mavjud "kalit yaroqsiz" oqimi ishlaydi. Matnda kalit yo'q — faqat oxirgi 4 belgi."""
+    a = m.mp_accounts
+    rows = (
+        await conn.execute(
+            select(a.c.id, a.c.key_expires_on, a.c.token_last4)
+            .where(a.c.key_expires_on.is_not(None), a.c.status == "active")
+            .order_by(a.c.id)
+        )
+    ).all()
+    out = []
+    for r in rows:
+        left = (r.key_expires_on - today).days
+        if left in KEY_WARN_DAYS:
+            out.append(
+                Found(
+                    Event.KEY_EXPIRING,
+                    f"keyexp:{r.id}:{r.key_expires_on.isoformat()}:{left}",
+                    {
+                        "expires_on": r.key_expires_on.isoformat(),
+                        "days": left,
+                        "key_hint": f"…{r.token_last4}" if r.token_last4 else None,
+                    },
+                )
+            )
+    return out
+
+
 async def goals_behind(conn: AsyncConnection, today: date) -> list[Found]:
     """B5.8 (F59). Oylik maqsadlardan prognozi 15% dan ko'p past ("orqada") bo'lganlari — bitta xabar; oyning
     ``GOAL_MIN_DAYS``-kunidan boshlab. Kaliti — oy va "orqada" maqsadlar to'plami: to'plam o'zgarmasa takror yuborilmaydi,
@@ -1103,6 +1136,8 @@ async def evaluate(conn: AsyncConnection, org_id: UUID, now: datetime) -> int:
         common += await receiving_shortages(conn)
     if Event.COMMISSION_CHANGED in wanted and heavy:
         common += await commission_changes(conn, today)
+    if Event.KEY_EXPIRING in wanted and heavy:
+        common += await keys_expiring(conn, today)
     if Event.GOAL_BEHIND in wanted and heavy:
         common += await goals_behind(conn, today)
     if Event.MONTHLY_REPORT in wanted and heavy:

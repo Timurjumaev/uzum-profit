@@ -139,6 +139,7 @@ export const shopRoute = (shopId: string) => `PATCH /api/v1/orgs/${ORG_ID}/shops
 export const FULL_EXPORTS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/exports/full`;
 export const ORG_DELETION_ROUTE = `GET /api/v1/orgs/${ORG_ID}/deletion`;
 export const PUBLIC_CONFIG_ROUTE = "GET /api/v1/config";
+export const ACCOUNTS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/accounts`;
 export const NOTIFY_SETTINGS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/notifications/settings`;
 
 /** Standart: kirgan foydalanuvchi, ikki do'kon, sog'lom sinxron. `routes` ularni almashtiradi yoki to'ldiradi. */
@@ -156,6 +157,7 @@ export function mockApi(routes: Routes = {}) {
     [NOTIFY_SETTINGS_ROUTE]: () => json(200, notificationSettings()),
     [SETTINGS_ROUTE]: () => json(200, settingsData()),
     [PUBLIC_CONFIG_ROUTE]: () => json(200, { support_url: null }),
+    [ACCOUNTS_ROUTE]: () => json(200, []),
     [FULL_EXPORTS_ROUTE]: () => json(200, []),
     "GET /api/v1/auth/sessions": () => json(200, []),
     [ORG_DELETION_ROUTE]: () => json(200, { requested_at: null, delete_on: null, days_left: null }),

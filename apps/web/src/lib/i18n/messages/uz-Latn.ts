@@ -259,13 +259,15 @@ export const uzLatn = {
       howto: {
         "1": "seller.uzum.uz kabinetiga kiring.",
         "2": "API kalitlar boʻlimini oching.",
-        "3": "Yangi kalit yarating va nusxalang.",
+        "3": "Yangi kalit yarating: ruxsat — “Faqat oʻqish”, doʻkon — “Barcha doʻkonlar”, muddat — 1 yil yoki cheklanmagan. Nusxalang.",
         "4": "Kalitni quyidagi maydonga qoʻying.",
       },
       ownerOnly: "Kalitni faqat tashkilot egasi ulaydi. Egasidan ulashni soʻrang.",
       label: "API kalit",
       help: "Kalit ekranda koʻrsatilmaydi va qayta koʻrinmaydi.",
       required: "Kalitni kiriting.",
+      expires: "Kalit amal qilish muddati (ixtiyoriy)",
+      expiresHelp: "Uzum muddatni bermaydi — muddat tugashidan 5 va 1 kun oldin eslatamiz. Cheklanmagan boʻlsa boʻsh qoldiring.",
       connect: "Kalitni tekshirish va ulash",
     },
     shops: {
@@ -403,6 +405,11 @@ export const uzLatn = {
   },
   // Atamalar lugʻati (04 §8.2) — hamma joyda bir xil.
   home: {
+    keyExpiring: {
+      title: "Uzum kaliti muddati tugayapti — qolgan kun: {{count}}",
+      text: "Kabinetda yangi kalit yarating va Sozlamalarda almashtiring — aks holda maʼlumot yangilanishi toʻxtaydi.",
+      action: "Sozlamalar",
+    },
     setup: {
       title: "Sozlash: {{done}}/{{total}}",
       items: {
@@ -1408,6 +1415,7 @@ export const uzLatn = {
         goal_behind: "Reja orqada (oylik maqsad)",
         monthly_report: "Oylik hisobot tayyor (dastlabki va yakuniy havola)",
         export_ready: "Toʻliq eksport tayyor (24 soatlik havola)",
+        key_expiring: "Uzum kaliti muddati tugayapti (5 va 1 kun oldin)",
         fbs_deadline: "FBS: topshirish muddati yaqin",
       },
       param: { at: "Vaqti", streak: "Ketma-ket sotuvlar", hours: "Necha soatdan keyin", days: "Necha kun", level: "Daraja", min_returns: "Eng kam qaytish soni (7 kunda)" },
@@ -1468,6 +1476,14 @@ export const uzLatn = {
       pendingText: "Shu kungacha hammasi odatdagidek ishlaydi. Bekor qilmasangiz, maʼlumotni qayta tiklab boʻlmaydi.",
       confirmTitle: "Tashkilotni oʻchirishni soʻraysizmi?",
       confirmText: "30 kundan keyin tashkilot va uning hamma maʼlumoti qaytarib boʻlmaydigan tarzda oʻchadi. Shu vaqtgacha bekor qilishingiz mumkin.",
+    },
+    keyExpiry: {
+      title: "Uzum kaliti muddati",
+      lead: "Kalit muddati tugashidan 5 va 1 kun oldin ogohlantiramiz. Muddatni Uzum kabinetidan koʻrib kiriting; cheklanmagan boʻlsa boʻsh qoldiring.",
+      date: "Amal qilish muddati",
+      daysLeft: "Qolgan kun: {{count}}",
+      noKey: "Kalit yoʻq",
+      saved: "Muddat saqlandi",
     },
     fullExport: {
       title: "Toʻliq eksport (ZIP)",

@@ -1476,7 +1476,7 @@ ishlari** belgilaydi (yuridik shaxs, shartnoma, reyestr) — ular hozirdan boshl
 - [x] B8.14 (✓ 2026-11-21: tushunarli xato matnlari (`signup_closed`, `telegram_not_found`, `otp_*`) va "Yordam" havolasi — kirish sahifasida va foydalanuvchi menyusida (`UP_SUPPORT_URL`, `GET /config`); kuzatuv — B8.5a; SMS zaxira — B8-B) **Kirish kodi — yagona nuqta xavfi** (yangi): kod faqat Telegram Gateway orqali (ADR-028); raqam Telegram'da
   bo'lmasa yoki Gateway ishlamasa — kirib bo'lmaydi. Beta uchun: balans va xatolar kuzatuvi (B8.5a), tushunarli xato
   matni va yordam havolasi. SMS zaxira kanali (ADR-027) — B8-B da, betada necha kishi kira olmaganiga qarab.
-- [ ] B8.16 **Uzum kaliti: ruxsat va muddat** (yangi; 08 §9 c, e, f — Temurning kabineti, 2026-11-16). Kalit yaratishda
+- [~] B8.16 (✓ 2026-11-21: ulash yo'riqnomasi (ruxsat "Faqat o'qish", "Barcha do'konlar", muddat) matnda; muddat ulashda va Sozlamalarda saqlanadi (`key_expires_on`, migratsiya 0050); hodisa `key_expiring` (5 va 1 kun oldin), Bosh sahifada ogohlantirish; kalitni almashtirish (`PUT …/token`) avvaldan; **qoldi: yo'riqnomaga rasmlar (Temur skrinshotlari), "Tahrir qilish" ruxsatli kalit ogohlantirishi (API turini bermaydi), T: real "Faqat o'qish" kalit tekshiruvi**) **Uzum kaliti: ruxsat va muddat** (yangi; 08 §9 c, e, f — Temurning kabineti, 2026-11-16). Kalit yaratishda
   ruxsat ("Faqat o'qish" / "Tahrir qilish" — standart) va muddat (Cheklanmagan … 1 oy — standart) tanlanadi; muddati
   tugagan kalit "Faolsiz" — sinxron to'xtaydi. Rejada bu yo'q edi. Qilinadi:
   (1) **ulash yo'riqnomasi (M2 1-qadam), rasmlar bilan:** ruxsat — **"Faqat o'qish"** (bizning hamma so'rovimiz o'qish;

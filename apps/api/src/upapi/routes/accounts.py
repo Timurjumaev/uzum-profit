@@ -8,7 +8,7 @@ turmaydi: ruxsat qisqa tranzaksiyada tekshiriladi, keyin tekshiruv, keyin yozish
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Annotated, Any
 from uuid import UUID, uuid4
 
@@ -75,6 +75,15 @@ class TokenIn(BaseModel):
     """Uzum seller kabinetidagi API kalit. Javobda va xatoda qaytarilmaydi."""
 
     token: SecretStr
+    # B8.16: kalit muddati (Uzum bermaydi — sotuvchi kiritadi); bo'sh — cheklanmagan/noma'lum.
+    expires_on: date | None = None
+
+    @field_validator("expires_on")
+    @classmethod
+    def _future(cls, value: date | None) -> date | None:
+        if value is not None and not date.today() < value <= date.today() + timedelta(days=366 * 5):
+            raise ValueError("muddat kelajakda (5 yilgacha) bo'lishi kerak")
+        return value
 
     @field_validator("token")
     @classmethod
@@ -104,11 +113,21 @@ class ShopUpdate(BaseModel):
     color: str | None = Field(default=None, pattern=r"^#[0-9a-fA-F]{6}$")
 
 
+class ExpiryIn(BaseModel):
+    """Muddatni o'zgartirish (kalitsiz): ``null`` — cheklanmagan."""
+
+    expires_on: date | None = None
+
+    _future = field_validator("expires_on")(TokenIn._future.__func__)  # type: ignore[attr-defined]
+
+
 class AccountOut(BaseModel):
     id: UUID
     provider: str
     status: str
     key_hint: str | None  # "…abcd" — faqat oxirgi 4 belgi; uzilgan akkauntda None
+    key_expires_on: date | None  # B8.16
+    key_days_left: int | None
     checked_at: datetime | None
     quota_remaining: int | None
     created_at: datetime
@@ -230,6 +249,10 @@ async def _account_out(conn: AsyncConnection, row: Row[Any]) -> AccountOut:
         provider=row.provider,
         status=row.status,
         key_hint=_hint(row.token_last4),
+        key_expires_on=row.key_expires_on,
+        key_days_left=None
+        if row.key_expires_on is None
+        else (row.key_expires_on - date.today()).days,
         checked_at=row.checked_at,
         quota_remaining=row.quota_remaining,
         created_at=row.created_at,
@@ -301,6 +324,7 @@ async def connect_account(
                 status="active",
                 quota_remaining=quota,
                 checked_at=func.now(),
+                key_expires_on=body.expires_on,
                 **_token_values(cipher, org_id, account_id, body.token),
             )
         )
@@ -442,6 +466,7 @@ async def replace_token(
                 updated_at=func.now(),
                 auth_failures=0,
                 sync_paused_until=None,
+                key_expires_on=body.expires_on,
                 **_token_values(cipher, org_id, account_id, body.token),
             )
         )
@@ -457,6 +482,27 @@ async def replace_token(
         out = await _account_out(ctx.conn, fresh)
     await _start_sync(request, org_id, account_id)
     return out
+
+
+@router.patch("/orgs/{org_id}/accounts/{account_id}", response_model=AccountOut)
+async def set_expiry(account_id: UUID, body: ExpiryIn, ctx: Owner) -> AccountOut:
+    """Kalit muddatini belgilash yoki olib tashlash (kalitning o'zi o'zgarmaydi; B8.16)."""
+    row = await _account_row(ctx.conn, account_id)
+    await ctx.conn.execute(
+        update(m.mp_accounts)
+        .where(m.mp_accounts.c.id == account_id)
+        .values(key_expires_on=body.expires_on, updated_at=func.now())
+    )
+    await ctx.audit(
+        "account.expiry",
+        "mp_account",
+        account_id,
+        before={
+            "key_expires_on": None if row.key_expires_on is None else row.key_expires_on.isoformat()
+        },
+        after={"key_expires_on": None if body.expires_on is None else body.expires_on.isoformat()},
+    )
+    return await _account_out(ctx.conn, await _account_row(ctx.conn, account_id))
 
 
 @router.delete("/orgs/{org_id}/accounts/{account_id}/token", status_code=status.HTTP_204_NO_CONTENT)

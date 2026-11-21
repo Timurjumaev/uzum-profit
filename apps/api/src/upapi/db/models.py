@@ -281,6 +281,8 @@ mp_accounts = tenant(
     # Sinxron (B2.6): ketma-ket JSON 401/403 soni (3 ta — "kalit yaroqsiz") va akkaunt sinxroni pauzasi.
     Column("auth_failures", Integer, nullable=False, server_default="0"),
     Column("sync_paused_until", TS),
+    # B8.16: kalit muddati (sotuvchi kiritadi — Uzum API bermaydi); NULL — cheklanmagan yoki noma'lum.
+    Column("key_expires_on", Date),
     check_in("status", MP_ACCOUNT_STATUSES),
     CheckConstraint(TOKEN_STATE, name="token_state"),
 )

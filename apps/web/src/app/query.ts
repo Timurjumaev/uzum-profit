@@ -78,8 +78,22 @@ export const acceptInvite = (token: string) => unwrap(api.POST("/api/v1/invites/
 export const createOrg = (body: { name: string; inn?: string | null }) => unwrap(api.POST("/api/v1/orgs", { body }));
 
 /** Uzum kaliti: tekshiriladi va shifrlanadi; javobda kalit yo'q (faqat oxirgi 4 belgi). */
-export const connectAccount = (orgId: string, token: string) =>
-  unwrap(api.POST("/api/v1/orgs/{org_id}/accounts", { params: { path: { org_id: orgId } }, body: { token } }));
+export const connectAccount = (orgId: string, token: string, expiresOn?: string | null) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/accounts", { params: { path: { org_id: orgId } }, body: { token, expires_on: expiresOn || null } }));
+
+// --- Uzum kaliti muddati (B8.16, faqat egasi) -------------------------------------------------------------------------
+
+export const accountsKey = (orgId: string) => ["orgs", orgId, "accounts"] as const;
+
+export const accountsQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: accountsKey(orgId),
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/accounts", { params: { path: { org_id: orgId } } })),
+  });
+
+/** Kalit muddatini belgilash (`null` — cheklanmagan); kalitning o'zi o'zgarmaydi. */
+export const setKeyExpiry = (orgId: string, accountId: string, expiresOn: string | null) =>
+  unwrap(api.PATCH("/api/v1/orgs/{org_id}/accounts/{account_id}", { params: { path: { org_id: orgId, account_id: accountId } }, body: { expires_on: expiresOn } }));
 
 export const updateShop = (orgId: string, shopId: string, body: { active?: boolean; alias?: string | null; color?: string | null }) =>
   unwrap(api.PATCH("/api/v1/orgs/{org_id}/shops/{shop_id}", { params: { path: { org_id: orgId, shop_id: shopId } }, body }));

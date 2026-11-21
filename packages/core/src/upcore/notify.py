@@ -35,6 +35,7 @@ class Event(StrEnum):
     UNCOUNTED_PURCHASE = "uncounted_purchase"  # TM9.8: xarid keldi, N kun sanalmagan
     SHIP_NEEDED = "ship_needed"  # B6.5: Uzumdagi zaxira yetmaydi, omborimda tovar bor (F26, F54)
     MONTHLY_REPORT = "monthly_report"  # B7.3: oylik hisobot — oyning 1-sanasida dastlabki, yopilganda yakuniy havola
+    KEY_EXPIRING = "key_expiring"  # B8.16: Uzum kaliti muddati tugayapti (5 va 1 kun oldin; muddatni sotuvchi kiritgan)
     EXPORT_READY = (
         "export_ready"  # B7.5: to'liq eksport tayyor (faqat so'ragan egasiga, 24 soatlik havola)
     )
@@ -105,6 +106,8 @@ CATALOG: dict[Event, EventSpec] = {
         EventSpec(Event.MONTHLY_REPORT, Audience.FINANCE),
         # B7.5: kritik emas; faqat eksportni so'ragan egasiga (``upapi.export_full`` yozadi, baholovchi yo'q).
         EventSpec(Event.EXPORT_READY, Audience.FINANCE),
+        # B8.16: kritik emas; kalit muddatidan 5 va 1 kun oldin bir martadan (muddat o'zgarsa qayta); tugagach — "kalit yaroqsiz".
+        EventSpec(Event.KEY_EXPIRING, Audience.FINANCE),
     )
 }
 

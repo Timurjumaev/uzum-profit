@@ -531,3 +531,43 @@ def test_update_shop(api: MpApi) -> None:
     audit = api.client.get(f"/api/v1/orgs/{org}/audit").json()
     first = next(a for a in reversed(audit) if a["action"] == "shop.update")
     assert first["before"] == {"active": True, "alias": None, "color": None}
+
+
+# --- Kalit muddati (B8.16) -----------------------------------------------------------------------
+
+
+def test_key_expiry_connect_patch_and_validation(api: MpApi) -> None:
+    from datetime import date, timedelta
+
+    org = api.owner_org()
+    token = new_token()
+    api.uzum.keys[token] = [shop(901), shop(902)]
+    soon = date.today() + timedelta(days=30)
+    # O'tgan yoki juda uzoq muddat — rad.
+    for bad in (date.today() - timedelta(days=1), date.today() + timedelta(days=366 * 6)):
+        r = api.client.post(
+            f"/api/v1/orgs/{org}/accounts", json={"token": token, "expires_on": bad.isoformat()}
+        )
+        assert r.status_code == 422, r.text
+    r = api.client.post(
+        f"/api/v1/orgs/{org}/accounts", json={"token": token, "expires_on": soon.isoformat()}
+    )
+    assert r.status_code == 201, r.text
+    body = r.json()
+    assert body["key_expires_on"] == soon.isoformat() and body["key_days_left"] == 30
+    account = body["id"]
+    path = f"/api/v1/orgs/{org}/accounts/{account}"
+    # Muddatni o'zgartirish (kalitsiz) va olib tashlash.
+    later = date.today() + timedelta(days=200)
+    r = api.client.patch(path, json={"expires_on": later.isoformat()})
+    assert r.status_code == 200 and r.json()["key_days_left"] == 200
+    r = api.client.patch(path, json={"expires_on": None})
+    assert r.status_code == 200 and r.json()["key_expires_on"] is None
+    assert api.client.patch(path, json={"expires_on": "2020-01-01"}).status_code == 422
+    audit = api.client.get(f"/api/v1/orgs/{org}/audit").json()
+    assert [a["action"] for a in audit].count("account.expiry") == 2
+    # Kalitni almashtirganda yangi muddat yoziladi.
+    fresh = new_token()
+    api.uzum.keys[fresh] = [shop(901), shop(902)]
+    r = api.client.put(f"{path}/token", json={"token": fresh, "expires_on": soon.isoformat()})
+    assert r.status_code == 200 and r.json()["key_days_left"] == 30

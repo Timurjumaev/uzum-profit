@@ -271,6 +271,7 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
     if (key === `GET /orgs/${ORG_ID}/inventory`) return json(route, 200, inventoryData());
     if (key === `GET /orgs/${ORG_ID}/payouts/forecast`) return json(route, 200, payoutForecast());
     if (key === "GET /config") return json(route, 200, { support_url: null });
+    if (key === `GET /orgs/${ORG_ID}/accounts`) return json(route, 200, []);
     if (key === "GET /auth/sessions") return json(route, 200, []);
     if (key === `GET /orgs/${ORG_ID}/deletion`) return json(route, 200, { requested_at: null, delete_on: null, days_left: null });
     if (key === `GET /orgs/${ORG_ID}/exports/full`) return json(route, 200, []);

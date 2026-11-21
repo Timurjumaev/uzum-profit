@@ -399,6 +399,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/accounts/{account_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Set Expiry
+         * @description Kalit muddatini belgilash yoki olib tashlash (kalitning o'zi o'zgarmaydi; B8.16).
+         */
+        patch: operations["set_expiry_api_v1_orgs__org_id__accounts__account_id__patch"];
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/shops": {
         parameters: {
             query?: never;
@@ -2420,6 +2440,10 @@ export interface components {
             status: string;
             /** Key Hint */
             key_hint: string | null;
+            /** Key Expires On */
+            key_expires_on: string | null;
+            /** Key Days Left */
+            key_days_left: number | null;
             /** Checked At */
             checked_at: string | null;
             /** Quota Remaining */
@@ -3338,7 +3362,7 @@ export interface components {
          * Event
          * @enum {string}
          */
-        Event: "daily_summary" | "weekly_summary" | "stock_critical" | "loss_sales" | "uncosted_sales" | "new_fine" | "returns_spike" | "receiving_shortage" | "lost_goods" | "sync_stopped" | "payout_late" | "cargo_late" | "commission_changed" | "fbs_deadline" | "uncounted_purchase" | "ship_needed" | "monthly_report" | "export_ready" | "goal_behind";
+        Event: "daily_summary" | "weekly_summary" | "stock_critical" | "loss_sales" | "uncosted_sales" | "new_fine" | "returns_spike" | "receiving_shortage" | "lost_goods" | "sync_stopped" | "payout_late" | "cargo_late" | "commission_changed" | "fbs_deadline" | "uncounted_purchase" | "ship_needed" | "monthly_report" | "key_expiring" | "export_ready" | "goal_behind";
         /**
          * ExpectedOut
          * @description F16 (ADR-037): kutilayotgan sof foyda — Jarayondagi sotuvlar qismi (mijoz hali olmagan yoki qaytarish muddati
@@ -3492,6 +3516,14 @@ export interface components {
             page: number;
             /** Pages */
             pages: number;
+        };
+        /**
+         * ExpiryIn
+         * @description Muddatni o'zgartirish (kalitsiz): ``null`` — cheklanmagan.
+         */
+        ExpiryIn: {
+            /** Expires On */
+            expires_on?: string | null;
         };
         /** FineOut */
         FineOut: {
@@ -6831,6 +6863,8 @@ export interface components {
              * Format: password
              */
             token: string;
+            /** Expires On */
+            expires_on?: string | null;
         };
         /** TrackedIn */
         TrackedIn: {
@@ -8244,6 +8278,51 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    set_expiry_api_v1_orgs__org_id__accounts__account_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpiryIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountOut"];
+                };
             };
             /** @description Validatsiya xatosi */
             422: {
