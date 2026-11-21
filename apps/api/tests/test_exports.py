@@ -249,6 +249,40 @@ def test_orders_analysis_export_matches_page(world: World) -> None:
     assert len(book["Bekor sabablari"]) == len(page["cancel_causes"])
 
 
+def test_warehouse_shipments_receiving_exports_match_lists(world: World) -> None:
+    """B7.2 (2-qadam): Omborim, Kargolar, Qabul farqi va kamomad — fayldagi qatorlar ro'yxat endpoint'lari bilan bir xil;
+    omborchi summasiz (qiymat / tannarx ustuni yo'q)."""
+    page = world.get("warehouse")
+    book = sheets(export(world, "warehouse").content)
+    assert "Omborim" in book and len(book["Omborim"]) == len(page["items"])
+    assert sum(row[4] for row in book["Omborim"]) == page["total_qty"]
+    if page["total_value"] is not None and page["items"]:
+        got = sum(D(str(row[10])) for row in book["Omborim"] if row[10] is not None)
+        assert got == sum(D(x["value"]) for x in page["items"] if x["value"] is not None)
+    keeper = sheet(export(world, "warehouse", "warehouse").content)
+    assert "Qiymat" not in [c.value for c in keeper[HEAD]]
+    shipments = world.get("shipments")["items"]
+    assert len(table(sheet(export(world, "shipments").content))) == len(shipments)
+    keeper_s = sheet(export(world, "shipments", "warehouse").content)
+    assert "Kargo xarajati" not in [c.value for c in keeper_s[HEAD]]
+    recv = world.get("receiving")
+    got_r = sheets(export(world, "receiving").content)
+    assert list(got_r) == ["Qabul farqi", "Kamomad"]
+    assert len(got_r["Qabul farqi"]) == len(recv["diffs"]) and len(got_r["Kamomad"]) == len(
+        recv["shortages"]
+    )
+    keeper_r = sheets(export(world, "receiving", "warehouse").content)
+    assert all("Farq qiymati" not in [c for c in rows[0]] for rows in keeper_r.values() if rows)
+
+
+def test_sales_export_counted_matches_drill(world: World) -> None:
+    """Foyda tafsiloti (drill-down) `counted=true` bilan — eksport shu ro'yxatning o'zi."""
+    listed = world.get("sales", limit=500, counted="true", **OCT)["items"]
+    rows = table(sheet(export(world, "sales", counted="true", **OCT).content))
+    assert len(rows) == len(listed)
+    assert sum(D(str(r[8])) for r in rows) == sum(D(x["revenue"]) for x in listed)
+
+
 def test_roles(world: World) -> None:
     # Moliya jadvallari: buxgalter va menejer — mumkin; omborchi — yo'q (``export`` ruxsati yo'q).
     for role in ("manager", "accountant"):

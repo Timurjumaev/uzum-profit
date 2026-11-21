@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
 import { cancelTransfer, createStockMove, currentOrg, meQuery, skuPickerQuery, transferToSku, warehouseQuery } from "../../app/query";
-import { Badge, Banner, Button, Combobox, DataTable, Dialog, EmptyState, NumberInput, Select, Skeleton, TextInput, useToast, type Column } from "../../components/ui";
+import { Badge, Banner, Button, Combobox, DataTable, Dialog, EmptyState, ExportButton, NumberInput, Select, Skeleton, TextInput, useToast, type Column } from "../../components/ui";
 import type { WarehouseRow } from "../../lib/api/types";
 import { todayTashkent } from "../../lib/dates";
 import { useFormat } from "../../lib/i18n";
@@ -121,11 +121,14 @@ export function Warehouse() {
         <div className="page-title">
           <h1 className="h2">{t("warehouse.title")}</h1>
         </div>
-        {canManage && (
-          <Link to="/dispatches" className="ui-btn ui-btn--primary ui-btn--md">
-            {t("dispatch.title")}
-          </Link>
-        )}
+        <span className="purchases__actions">
+          <ExportButton orgId={org.id} table="warehouse" disabled={(query.data?.items.length ?? 0) === 0} />
+          {canManage && (
+            <Link to="/dispatches" className="ui-btn ui-btn--primary ui-btn--md">
+              {t("dispatch.title")}
+            </Link>
+          )}
+        </span>
         {query.data && (
           <p className="caption">
             {t("warehouse.total", { count: query.data.total_qty })}

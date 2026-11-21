@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
 import { currentOrg, meQuery, shipmentsPageQuery } from "../../app/query";
-import { Banner, Button, DataTable, EmptyState, Pagination, Skeleton, usePageSize, type Column } from "../../components/ui";
+import { Banner, Button, DataTable, EmptyState, ExportButton, Pagination, Skeleton, usePageSize, type Column } from "../../components/ui";
 import type { Shipment } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { MANAGE_ROLES } from "../purchases/Purchases";
@@ -62,6 +62,7 @@ export function Shipments() {
           <h1 className="h2">{t("shipments.title")}</h1>
         </div>
         <span className="purchases__actions">
+          <ExportButton orgId={org.id} table="shipments" disabled={(query.data?.total ?? 0) === 0} />
           {canManage && (
             <Button variant="primary" onClick={() => setAdding(true)}>
               {t("shipments.add")}

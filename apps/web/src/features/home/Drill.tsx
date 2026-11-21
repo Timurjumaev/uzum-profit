@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
 import { drillExpensesQuery, drillSalesQuery, expensesPage, type ReportParams } from "../../app/query";
-import { Badge, DataTable, Drawer, Pagination, Skeleton, usePageSize, type Column } from "../../components/ui";
+import { Badge, DataTable, Drawer, ExportButton, Pagination, Skeleton, usePageSize, type Column } from "../../components/ui";
 import type { Expenses, Sale } from "../../lib/api/types";
 import { useFormat } from "../../lib/i18n";
 import { CostCell } from "../orders/CostCell";
@@ -70,6 +70,7 @@ function SalesBody({ orgId, params, field }: { orgId: string; params: ReportPara
   ];
   return (
     <>
+      <ExportButton orgId={orgId} table="sales" query={{ start: params.start, end: params.end, shop: params.shops, counted: "true" }} disabled={items.length === 0} />
       <DataTable caption={t("home.drill.sales")} density="compact" columns={columns} rows={items} rowKey={(r) => r.id} empty={t("home.drill.empty")} />
       <Pagination
         page={query.data.page}
@@ -104,6 +105,7 @@ function UzumBody({ orgId, params, category }: { orgId: string; params: ReportPa
   ];
   return (
     <>
+      <ExportButton orgId={orgId} table="expenses" query={{ start: params.start, end: params.end, shop: params.shops, category }} disabled={items.length === 0} />
       <DataTable caption={t(`home.expense.${category}`, { defaultValue: category })} density="compact" columns={columns} rows={items} rowKey={(r) => r.id} empty={t("home.drill.empty")} />
       <Pagination
         page={query.data.page}

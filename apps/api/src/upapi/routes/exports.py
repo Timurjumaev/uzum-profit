@@ -32,8 +32,11 @@ from upapi.routes import inventory as inventory_routes
 from upapi.routes import orders as orders_routes
 from upapi.routes import pnl as pnl_routes
 from upapi.routes import purchases as purchases_routes
+from upapi.routes import receiving as receiving_routes
 from upapi.routes import sales as sales_routes
+from upapi.routes import shipments as shipments_routes
 from upapi.routes import skus as skus_routes
+from upapi.routes import warehouse as warehouse_routes
 
 router = APIRouter(tags=["exports"])
 Exporter = Annotated[OrgContext, Depends(require(Permission.EXPORT))]
@@ -114,11 +117,17 @@ async def export_sales(
     group: StatusGroup | None = None,
     sku: Annotated[UUID | None, Query(description="SKU id")] = None,
     unlinked: bool = False,
+    counted: Annotated[
+        bool,
+        Query(
+            description="Faqat hisobga olinadigan (F2) qatorlar — Foyda tafsiloti (drill-down) kabi"
+        ),
+    ] = False,
 ) -> Response:
     _need(ctx, Permission.VIEW_FINANCE)
 
     async def fetch(cursor: str | None) -> Any:
-        return await sales_routes.sales(ctx, f, group, sku, unlinked, False, MAX_LIMIT, cursor)
+        return await sales_routes.sales(ctx, f, group, sku, unlinked, counted, MAX_LIMIT, cursor)
 
     rows = await _all(fetch)
     note = [_period(f), *_shops(f)]
@@ -529,3 +538,121 @@ async def export_orders_analysis(ctx: Exporter, f: Filter) -> Response:
         ),
     ]
     return _file(f"buyurtmalar-tahlili-{_span(f)}", xlsx.build_book(sheets))
+
+
+# --- B7.2 (2-qadam): Omborim, Kargolar, Qabul farqi va kamomad ---------------------------------------------------
+
+
+def _warehouse_cols(amounts: bool) -> list[xlsx.Col]:
+    cols = [
+        xlsx.Col("SKU", lambda r: r.title),
+        xlsx.Col("Tovar", lambda r: r.product_title),
+        xlsx.Col("Doʻkon", lambda r: r.shop),
+        xlsx.Col("Shtrix-kod", lambda r: r.barcode),
+        xlsx.Col("Omborimda, dona", lambda r: r.qty, "int", total=True),
+        xlsx.Col("Postavkaga ajratilgan", lambda r: r.reserved, "int", total=True),
+        xlsx.Col("Uzumga joʻnatmada", lambda r: r.dispatched, "int", total=True),
+        xlsx.Col("Holat", lambda r: "xato (manfiy qoldiq)" if r.broken else None),
+    ]
+    if amounts:
+        cols += [
+            xlsx.Col("Birlik tannarx", lambda r: r.unit_cost, "money"),
+            xlsx.Col("Taxminiy tannarx", lambda r: "ha" if r.estimated else None),
+            xlsx.Col("Qiymat", lambda r: r.value, "money", total=True),
+        ]
+    return cols
+
+
+@router.get("/orgs/{org_id}/exports/warehouse.xlsx")
+async def export_warehouse(ctx: StockExporter) -> Response:
+    """Omborim (ADR-061 §7): SKU bo'yicha qoldiq va qiymat (summasiz — omborchi), 2-varaq: sanalmagan xaridlar. Ro'yxat — ``/warehouse``."""
+    _need(ctx, Permission.VIEW_PURCHASES)
+    amounts = allowed(ctx.role, Permission.VIEW_PURCHASE_AMOUNTS)
+    out = await warehouse_routes.warehouse(ctx)
+    sheets = [xlsx.Sheet("Omborim", _warehouse_cols(amounts), out.items, [])]
+    if out.uncounted:
+        sheets.append(
+            xlsx.Sheet(
+                "Sanalmagan",
+                [
+                    xlsx.Col("Xarid", lambda r: r.title),
+                    xlsx.Col("Keldi", lambda r: r.arrived_on, "date"),
+                    xlsx.Col("Kun", lambda r: r.days, "int"),
+                    xlsx.Col("Buyurtma soni (taxminiy)", lambda r: r.qty, "int", total=True),
+                ],
+                out.uncounted,
+                ["Hali sanalmagan xaridlar — qoldiqqa kirmaydi"],
+            )
+        )
+    return _file("omborim", xlsx.build_book(sheets))
+
+
+def _shipment_cols(amounts: bool) -> list[xlsx.Col]:
+    cols = [
+        xlsx.Col("Kargo", lambda r: r.title),
+        xlsx.Col("Tashuvchi", lambda r: r.carrier_name),
+        xlsx.Col("Xitoy omboriga", lambda r: r.cn_warehouse_on, "date"),
+        xlsx.Col("Joʻnatildi", lambda r: r.shipped_on, "date"),
+        xlsx.Col("Keldi", lambda r: r.arrived_on, "date"),
+        xlsx.Col("Xaridlar", lambda r: r.purchase_count, "int", total=True),
+        xlsx.Col("Dona", lambda r: r.units, "int", total=True),
+        xlsx.Col("Izoh", lambda r: r.note),
+    ]
+    if amounts:
+        cols.append(xlsx.Col("Kargo xarajati", lambda r: r.total, "money", total=True))
+    return cols
+
+
+@router.get("/orgs/{org_id}/exports/shipments.xlsx")
+async def export_shipments(ctx: StockExporter) -> Response:
+    """Kargolar: xaridlar soni, dona, sanalar va (summalar ruxsati bilan) kargo xarajati. Ro'yxat — ``/shipments``."""
+    _need(ctx, Permission.VIEW_PURCHASES)
+    amounts = allowed(ctx.role, Permission.VIEW_PURCHASE_AMOUNTS)
+    out = await shipments_routes.list_shipments(ctx, None, 1)
+    return _file("kargolar", xlsx.build("Kargolar", _shipment_cols(amounts), out.items))
+
+
+@router.get("/orgs/{org_id}/exports/receiving.xlsx")
+async def export_receiving(ctx: StockExporter) -> Response:
+    """Qabul farqi va kamomad: 1-varaq — qabul farqlari (joʻnatilgan va qabul qilingan, qaror, jarima); 2-varaq — kamomad
+    (holat, summa, kompensatsiya, F52 yo'qotish). Summalar — summalar ruxsati bilan. Ro'yxat — ``/receiving``."""
+    _need(ctx, Permission.VIEW_PURCHASES)
+    amounts = allowed(ctx.role, Permission.VIEW_PURCHASE_AMOUNTS)
+    out = await receiving_routes.receiving(ctx)
+    diff_cols = [
+        xlsx.Col("Qabul sanasi", lambda r: r.accepted_on, "date"),
+        xlsx.Col("Nakladnoy", lambda r: r.invoice_number, "int"),
+        xlsx.Col("Doʻkon", lambda r: r.shop),
+        xlsx.Col("SKU", lambda r: r.title),
+        xlsx.Col("Shtrix-kod", lambda r: r.barcode),
+        xlsx.Col("Joʻnatilgan", lambda r: r.shipped, "int", total=True),
+        xlsx.Col("Qabul qilingan", lambda r: r.accepted, "int", total=True),
+        xlsx.Col("Farq (manfiy — kam)", lambda r: r.diff, "int", total=True),
+        xlsx.Col("Qaror", lambda r: r.resolution),
+    ]
+    short_cols = [
+        xlsx.Col("Yaratilgan", lambda r: r.created_on, "date"),
+        xlsx.Col("Doʻkon", lambda r: r.shop),
+        xlsx.Col("SKU", lambda r: r.title),
+        xlsx.Col("Kamomad, dona", lambda r: r.qty, "int", total=True),
+        xlsx.Col("Holat", lambda r: r.status),
+        xlsx.Col("Daʼvo muddati", lambda r: r.claim_until, "date"),
+        xlsx.Col("Yopilgan", lambda r: r.closed_on, "date"),
+        xlsx.Col("Izoh", lambda r: r.note),
+    ]
+    if amounts:
+        diff_cols += [
+            xlsx.Col("Birlik tannarx", lambda r: r.unit_cost, "money"),
+            xlsx.Col("Farq qiymati", lambda r: r.value, "money", total=True),
+            xlsx.Col("Jarimalar (C000007)", lambda r: r.fines_total, "money", total=True),
+        ]
+        short_cols += [
+            xlsx.Col("Summa (tannarxda)", lambda r: r.amount, "money", total=True),
+            xlsx.Col("Kompensatsiya", lambda r: r.compensation, "money", total=True),
+            xlsx.Col("Yoʻqotish (F52)", lambda r: r.loss, "money", total=True),
+        ]
+    sheets = [
+        xlsx.Sheet("Qabul farqi", diff_cols, out.diffs, []),
+        xlsx.Sheet("Kamomad", short_cols, out.shortages, []),
+    ]
+    return _file("qabul-farqi-va-kamomad", xlsx.build_book(sheets))
