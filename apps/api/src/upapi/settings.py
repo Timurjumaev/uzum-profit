@@ -49,6 +49,8 @@ class Settings(BaseSettings):
     # B6.2: bildirishnoma boti (@BotFather) — token faqat bot servisida ishlatiladi; nomi — ulash havolasi uchun.
     telegram_bot_token: SecretStr | None = None
     telegram_bot_username: str | None = None
+    # B8.5a: adminning Telegram chat id'si — kunlik jamlanma va kritik ogohlantirishlar (bot servisi); None — o'chiq.
+    admin_chat_id: int | None = None
     otp_ttl_seconds: int = 300
     otp_per_hour: int = 5
     # Bitta IP manzildan soatiga shuncha kod so'rovi (har xil raqam bilan ham; har kod ≈ $0.01, ADR-028).
