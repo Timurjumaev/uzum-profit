@@ -170,13 +170,6 @@ const status = createRoute({
   component: lazyRouteComponent(() => import("../routes/status"), "Status"),
 });
 
-// Sahifalari hali yo'q bo'limlar (B4+): menyu ishlaydi, sahifa "qurilmoqda".
-const soon = <const P extends string>(path: P, name: keyof typeof import("../routes/soon")) =>
-  createRoute({
-    getParentRoute: () => app,
-    path,
-    component: lazyRouteComponent(() => import("../routes/soon"), name),
-  });
 /** Pul oqimi (M11, F38; B5.7). */
 const cash = createRoute({
   getParentRoute: () => app,
@@ -195,7 +188,12 @@ const goals = createRoute({
   path: "/goals",
   component: lazyRouteComponent(() => import("../routes/goals"), "Goals"),
 });
-const reports = soon("/reports", "Reports");
+/** Oylik hisobot (M14, B7.3): chop etiladi va PDF qilib saqlanadi. */
+const reports = createRoute({
+  getParentRoute: () => app,
+  path: "/reports",
+  component: lazyRouteComponent(() => import("../routes/reports"), "Reports"),
+});
 /** Sozlamalar (M16, B4.8): tannarx usuli, soliq, to'lov jadvali, muddatlar, do'konlar. */
 const settings = createRoute({
   getParentRoute: () => app,

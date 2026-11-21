@@ -283,6 +283,26 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
         ],
       });
     }
+    if (key === `GET /orgs/${ORG_ID}/reports/monthly`) {
+      const dash = dashboardData();
+      const pnl = pnlData();
+      return json(route, 200, {
+        month: "2026-10-01",
+        period: { start: "2026-10-01", end: "2026-10-31", days: 31 },
+        previous: { start: "2026-09-01", end: "2026-09-30", days: 30 },
+        month_over: true,
+        status: "preliminary",
+        processing_lines: 7,
+        processing_revenue: "2500000.00",
+        statement: pnl.statement,
+        rows: pnl.rows,
+        flow: dash.summary.flow,
+        top: dash.top,
+        bottom: dash.bottom,
+        frozen_money: "12000000.00",
+        in_transit_value: "3000000.00",
+      });
+    }
     if (key === `GET /orgs/${ORG_ID}/goals`) {
       const goal = (id: string, metric: string, target: string, fact: string, forecast: string, percent: string, fp: string, dev: string, status: string, shop: string | null = null) => ({
         id, shop_id: shop, metric, target, fact, forecast, percent, forecast_percent: fp, deviation_pct: dev, status,

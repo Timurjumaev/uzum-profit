@@ -215,6 +215,13 @@ export const notificationsQuery = (orgId: string) =>
 export const markNotificationsRead = (orgId: string, ids?: string[]) =>
   unwrap(api.POST("/api/v1/orgs/{org_id}/notifications/read", { params: { path: { org_id: orgId } }, body: { ids: ids ?? null } }));
 
+/** Oylik hisobot (B7.3, M14): `month` — oyning istalgan kuni (bo'sh — joriy oy); hamma raqam mavjud hisobdan, oldingi kalendar oy bilan. */
+export const monthlyReportQuery = (orgId: string, month: string | null) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "monthly-report", month],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/reports/monthly", { params: { path: { org_id: orgId }, query: month ? { month } : {} } })),
+  });
+
 /** Oylik maqsadlar va bajarilish (B5.8, M12; F59): `month` — oyning istalgan kuni (bo'sh — joriy oy). */
 export const goalsQuery = (orgId: string, month: string | null) =>
   queryOptions({

@@ -56,6 +56,7 @@ const SHOTS: Shot[] = [
     },
   },
   { name: "goals", path: "/goals" },
+  { name: "reports", path: "/reports" },
   {
     name: "notifications",
     path: "/",

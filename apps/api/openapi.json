@@ -3527,6 +3527,76 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/reports/monthly": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Monthly Report",
+        "operationId": "monthly_report_api_v1_orgs__org_id__reports_monthly_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonthlyReportOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/pnl": {
       "get": {
         "tags": [
@@ -17006,6 +17076,98 @@
           "categories"
         ],
         "title": "MonthOut"
+      },
+      "MonthlyReportOut": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "format": "date",
+            "title": "Month"
+          },
+          "period": {
+            "$ref": "#/components/schemas/PeriodOut"
+          },
+          "previous": {
+            "$ref": "#/components/schemas/PeriodOut"
+          },
+          "month_over": {
+            "type": "boolean",
+            "title": "Month Over"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "preliminary",
+              "final"
+            ],
+            "title": "Status"
+          },
+          "processing_lines": {
+            "type": "integer",
+            "title": "Processing Lines"
+          },
+          "processing_revenue": {
+            "type": "string",
+            "title": "Processing Revenue"
+          },
+          "statement": {
+            "$ref": "#/components/schemas/StatementOut"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/RowOut"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "flow": {
+            "items": {
+              "$ref": "#/components/schemas/FlowStepOut"
+            },
+            "type": "array",
+            "title": "Flow"
+          },
+          "top": {
+            "items": {
+              "$ref": "#/components/schemas/SkuBriefOut"
+            },
+            "type": "array",
+            "title": "Top"
+          },
+          "bottom": {
+            "items": {
+              "$ref": "#/components/schemas/SkuBriefOut"
+            },
+            "type": "array",
+            "title": "Bottom"
+          },
+          "frozen_money": {
+            "type": "string",
+            "title": "Frozen Money"
+          },
+          "in_transit_value": {
+            "type": "string",
+            "title": "In Transit Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "period",
+          "previous",
+          "month_over",
+          "status",
+          "processing_lines",
+          "processing_revenue",
+          "statement",
+          "rows",
+          "flow",
+          "top",
+          "bottom",
+          "frozen_money",
+          "in_transit_value"
+        ],
+        "title": "MonthlyReportOut"
       },
       "NotMineIn": {
         "properties": {

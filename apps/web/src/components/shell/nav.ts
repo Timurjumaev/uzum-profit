@@ -51,10 +51,11 @@ export const NAV_MAIN: readonly NavItem[] = [
   item("cash", "/cash", Banknote),
   item("calculator", "/calculator", Calculator),
   item("goals", "/goals", Target),
+  item("reports", "/reports", FileText),
 ];
 
 /** Hali tayyor bo'lmagan bo'limlar (menyuda yo'q, ADR-057 Q12) — tayyor bo'lganda `NAV_MAIN` ga ko'chadi. */
-export const NAV_HIDDEN: readonly NavItem[] = [item("reports", "/reports", FileText)];
+export const NAV_HIDDEN: readonly NavItem[] = [];
 
 /** Sidebar pastki guruhi (chiziqdan keyin). */
 export const NAV_BOTTOM: readonly NavItem[] = [item("status", "/status", Activity), item("settings", "/settings", Settings)];

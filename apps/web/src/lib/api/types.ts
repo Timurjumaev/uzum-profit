@@ -83,6 +83,7 @@ export type CalculatorScenario = Schemas["ScenarioOut"];
 export type CostPreview = Schemas["CostPreviewOut"];
 export type CostChangeIn = Schemas["CostChangeIn"];
 export type NotificationItem = Schemas["NotificationOut"];
+export type MonthlyReport = Schemas["MonthlyReportOut"];
 export type Goal = Schemas["GoalOut"];
 export type GoalIn = Schemas["GoalIn"];
 export type Goals = Schemas["GoalsOut"];

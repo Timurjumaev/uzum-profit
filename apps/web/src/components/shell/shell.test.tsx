@@ -72,6 +72,7 @@ describe("menyu", () => {
       "Pul oqimi",
       "Kalkulyator",
       "Reja-fakt",
+      "Hisobotlar",
       "Maʼlumotlar holati",
       "Sozlamalar",
     ]); // ADR-057 Q12: tayyor bo'lmagan "Hisobotlar" menyuda yo'q
@@ -82,14 +83,6 @@ describe("menyu", () => {
     await waitFor(() => expect(history.location.pathname).toBe("/settings"));
     expect(sidebar().getByRole("link", { name: "Sozlamalar" }).getAttribute("aria-current")).toBe("page");
     expect(sidebar().getByRole("link", { name: "Asosiy" }).getAttribute("aria-current")).toBeNull();
-  });
-
-  it("menyudan olib tashlangan bo'lim eski havola bilan 404 emas — \"qurilmoqda\" sahifasi", async () => {
-    const { history } = await renderShell("/reports");
-    expect(await screen.findByRole("heading", { name: "Hisobotlar" })).toBeTruthy();
-    expect(screen.getByText("Sahifa qurilmoqda. Hozircha eski dasturdan foydalaning.")).toBeTruthy();
-    expect(history.location.pathname).toBe("/reports");
-    expect(sidebar().queryByRole("link", { name: "Hisobotlar" })).toBeNull();
   });
 
   it("har bo'lim o'z sahifasiga olib boradi (404 emas)", async () => {
@@ -598,6 +591,7 @@ describe("mobil tab bar", () => {
       "Pul oqimi",
       "Kalkulyator",
       "Reja-fakt",
+      "Hisobotlar",
       "Maʼlumotlar holati",
       "Sozlamalar",
     ]);

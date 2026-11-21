@@ -7,7 +7,7 @@ import { SHIPMENT_1 } from "../src/test/shipments";
 import { mockApi } from "./support/api";
 import { open } from "./support/page";
 
-const PAGES = ["/", "/pnl", "/products", "/orders", "/expenses", "/purchases", `/purchases/${PURCHASE_1}`, "/cargo-pool", "/warehouse", "/dispatches", "/receiving", "/shipments", `/shipments/${SHIPMENT_1}`, "/inventory", "/cash", "/settings", "/opening", "/status"];
+const PAGES = ["/", "/pnl", "/products", "/orders", "/expenses", "/purchases", `/purchases/${PURCHASE_1}`, "/cargo-pool", "/warehouse", "/dispatches", "/receiving", "/shipments", `/shipments/${SHIPMENT_1}`, "/inventory", "/cash", "/goals", "/reports", "/settings", "/opening", "/status"];
 
 test.use({ viewport: { width: 360, height: 800 }, hasTouch: true });
 
