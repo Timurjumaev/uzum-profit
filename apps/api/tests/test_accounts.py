@@ -223,8 +223,15 @@ def test_connect_account(api: MpApi) -> None:
         "key_hint": "…" + token[-4:],
         "shops": [106121, 135204],
     }
-    events = api.admin("SELECT name, props FROM events WHERE org_id = %s", [uuid.UUID(org)])
-    assert events == [("mp_account_connected", {"shops": 2})]
+    events = api.admin(
+        "SELECT name, props FROM events WHERE org_id = %s ORDER BY created_at, name",
+        [uuid.UUID(org)],
+    )
+    # B8.9: tashkilot ochilishi ham yoziladi (voronka boshi), keyin kalit ulanishi.
+    assert sorted(events, key=lambda e: e[0]) == [
+        ("mp_account_connected", {"shops": 2}),
+        ("org_created", None),
+    ]
 
 
 @pytest.mark.parametrize(
