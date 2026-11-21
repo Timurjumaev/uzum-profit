@@ -1437,7 +1437,12 @@ ishlari** belgilaydi (yuridik shaxs, shartnoma, reyestr) — ular hozirdan boshl
   sotuvchi kabinetini bloklash) Open API'ga taalluqliligi noaniq. Qoladi: (1) kalit yaratish sahifasidagi matn va
   "Ko'rsatmalar"ning API bo'limi; (2) Uzum yordam xizmatidan yozma javob; (3) 2.11 ning asl matni. Ofertamizda bu xavf
   sotuvchiga ochiq aytiladi (B8.6b). Kalitlar sahifasida "Kalitlarni boshqalarga bermang" yozuvi bor (08 §9 b) — bu
-  xavfni oshiradi; yozma javob olinmaguncha begona sotuvchilar ulanmaydi. Reklama matnlarida Uzum haqida salbiy da'vo yo'q (9.2.9-band; 06 §8, B5.0f —
+  xavfni oshiradi; yozma javob olinmaguncha begona sotuvchilar ulanmaydi.
+  **Natija (2026-11-21, Temur):** Uzum Business Telegram yordam chatiga yuborildi — operator "bizda API bo'yicha ma'lumot
+  yo'q" dedi va kimga murojaat qilishni aytmadi (na "mumkin", na "mumkin emas"; yozma javob **yo'q**). Darvoza ochiq
+  qoladi: begona sotuvchilar ulanmaydi (B9 ga kirmaydi). Keyingi urinish: Uzum seller kabinetidagi rasmiy murojaat/email
+  yoki hamkor menejeri orqali; Temurning qarori kerak (B9 ni faqat o'z do'konlari va yaqin tanishlar bilan boshlash —
+  ular o'z kalitini o'zi beradi — ADR bilan). Reklama matnlarida Uzum haqida salbiy da'vo yo'q (9.2.9-band; 06 §8, B5.0f —
   "Uzum kabineti ko'rsatadigan" qator betaraf nom bilan).
 - [ ] B8.8 **Production server — O'zbekistonda** (ADR-010; staging hozir AWS Stokgolmda, ADR-029 — vaqtincha): provayder
   tanlovi (Q2), `deploy-prod.yml` (`v*` teg), domen `sellermax.uz` (Q7), HTTPS, sirlar (`gen-env`), alohida DB rollari.
