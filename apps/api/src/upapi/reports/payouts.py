@@ -2,16 +2,22 @@
 
 Qoidalar kodga qotirilmaydi: to'lov jadvali — Sozlamalarda (akkauntga bitta, ``payout_schedules``), shartlari (oy kunlari,
 yechish foizi, "10 kun" kechikishi, kechikish ish kunlari) — sanasi bilan ma'lumotnomada (``ref_payout_terms``,
-``ref_amounts`` ``payout_*``; yo'q bo'lsa boshlang'ich). Uzum API to'lov sanasini bermaydi — hisob qatorlardan:
+``ref_amounts`` ``payout_*``; yo'q bo'lsa boshlang'ich). Uzum API to'lov sanasini bermaydi — hisob qatorlardan.
 
-- **Yechilgan** qator (``withdrawnProfit`` > 0) prognozga kirmaydi;
-- Yakunlangan, hali yechilmagan qator — yechishga tayyor: bugundan, keyingi jadval sanasida to'lanadi;
-- Jarayondagi, topshirilgan (``dateIssued`` — mijoz BBP'dan olgan kun) qator — topshirilgan kun + kechikish (10 kun)
-  kuni yakunlanadi; summa × F16 R (yakunlanish ulushi) — **taxminiy**;
-- Topshirilmagan Jarayondagi qator — sana noma'lum, alohida jamida ("sana noma'lum").
+**Qoida (Temur, 2026-11-22; real to'lovlar bilan tasdiqlangan — ``upcore.cash.payout_date``):** mijoz tovarni olib ketgan kundan
+(``dateIssued``) 10 kun o'tgach pul yechishga beriladi va keyingi jadval sanasi 00:00 da avtomatik yechiladi — to'lov sanasi D ga
+olib ketilgan kuni ≤ D − 11 bo'lgan qatorlar kiradi. ``withdrawnProfit`` **ishlatilmaydi**: u to'langan qatorlarning aksariyatida
+ham 0 (real o'lchov, 2026-11-21) — "yechilmagan" belgisi emas. Qator allaqachon to'langan hisoblanadi, agar uning to'lov sanasi
+(``payout_date``) bugun yoki undan oldin bo'lsa (to'lov o'sha kuni yaratiladi).
 
-Dam olish kunlari: shanba, yakshanba (bayram ma'lumotnomasi keyin). Ushlanmalar (xarajatlar) hali ayirilmaydi — natija
-"ushlanmalarsiz": prognoz haqiqiy to'lov bilan solishtirilib tekshiriladi (``withdrawn_seen_at``)."""
+- Yakunlangan (``TO_WITHDRAW``) qator — 10 kun o'tgan, to'lov sanasi kelajakda: **yechishga tayyor** (``available``, "Ertaroq yechib
+  olish" bilan shu summa olinadi) va o'z to'lovida to'liq hisoblanadi;
+- Jarayondagi, olib ketilgan qator — olib ketilgan kun + kechikish kuni yakunlanadi; summa × F16 R (yakunlanish ulushi) — **taxminiy**;
+- Olib ketilmagan Jarayondagi qator — sana noma'lum, alohida jamida.
+
+**Ushlanmalar:** Uzum to'lovdan xizmat to'lovlarini (reklama, saqlash, qaytarilgan tovar saqlash, jarima) ayiradi (real: jadval to'lovlari
+oynadagi foydadan 7–13% kam). Prognoz oxirgi 30 kundagi shu xarajatlarning kunlik o'rtachasini to'lov davri uzunligiga ko'paytirib
+ayiradi — natija har doim **taxminiy**. Dam olish kunlari: shanba, yakshanba (bayram ma'lumotnomasi keyin)."""
 
 from __future__ import annotations
 
@@ -19,16 +25,20 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
 
-from sqlalchemy import Numeric, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 from upcore.cash import (
+    PayoutEvent,
     PayoutRules,
     ScheduleKind,
     ScheduleTerms,
     forecast_payouts,
+    payout_date,
     payout_rules,
+    schedule_gap_days,
     schedule_terms,
 )
+from upcore.metrics import TASHKENT
 from upcore.money import Currency, Money
 
 from upapi.db import models as m
@@ -92,7 +102,6 @@ async def load_forecast(conn: AsyncConnection, today: date) -> PayoutForecast:
         return PayoutForecast(None, None, rules, Decimal(0), Decimal(0), [])
     terms = await _terms(conn, ScheduleKind(schedule.kind), today)
     s = m.sale_items
-    withdrawn = func.coalesce(func.nullif(s.c.raw["withdrawnProfit"].astext, "").cast(Numeric), 0)
     lines = (
         await conn.execute(
             select(
@@ -100,44 +109,80 @@ async def load_forecast(conn: AsyncConnection, today: date) -> PayoutForecast:
                 func.upper(func.trim(s.c.status)).label("status"),
                 s.c.issued_at,
                 func.coalesce(s.c.seller_profit, 0).label("profit"),
-            ).where(
-                func.upper(func.trim(s.c.status)).in_(("TO_WITHDRAW", "PROCESSING")),
-                withdrawn <= 0,
-            )
+            ).where(func.upper(func.trim(s.c.status)).in_(("TO_WITHDRAW", "PROCESSING")))
         )
     ).all()
-    rate = await completion_by_shop(conn, {r.shop_id for r in lines}, today)
-    ready: dict[date, Money] = {}
-    expected: dict[date, Money] = {}
+    rate = await completion_by_shop(
+        conn, {r.shop_id for r in lines if r.status == "PROCESSING"}, today
+    )
+    daily: dict[date, Money] = {}
+    sure: dict[date, Money] = {}
+    available = Decimal(0)
     unknown = Decimal(0)
     for r in lines:
         profit = Decimal(r.profit)
+        if r.issued_at is None:
+            if r.status == "PROCESSING":
+                unknown += profit
+            continue
+        picked = r.issued_at.astimezone(TASHKENT).date()
+        matured = picked + timedelta(days=rules.lag_days)
+        if payout_date(picked, terms, rules.lag_days) <= today:
+            continue  # to'lov allaqachon yaratilgan (to'langan yoki yo'lda)
         if r.status == "TO_WITHDRAW":
-            ready[today] = ready.get(today, Money.zero(UZS)) + Money(profit, UZS)
+            sure[matured] = sure.get(matured, Money.zero(UZS)) + Money(profit, UZS)
+            daily[matured] = daily.get(matured, Money.zero(UZS)) + Money(profit, UZS)
+            if matured <= today:
+                available += profit
             continue
         share = rate.get(r.shop_id)
-        if r.issued_at is None or share is None:
+        if share is None:
             unknown += profit
             continue
-        day = max(r.issued_at.date() + timedelta(days=rules.lag_days), today)
-        expected[day] = expected.get(day, Money.zero(UZS)) + Money(profit * share, UZS)
-    both: dict[date, Money] = dict(ready)
-    for day, amount in expected.items():
-        both[day] = both.get(day, Money.zero(UZS)) + amount
-    sure = {
+        daily[matured] = daily.get(matured, Money.zero(UZS)) + Money(profit * share, UZS)
+    services = await _services_per_day(conn, today)
+    sure_gross = {
         e.expected: e.gross.amount
-        for e in forecast_payouts(ready, terms, delay_workdays=rules.delay_workdays)
+        for e in forecast_payouts(sure, terms, delay_workdays=rules.delay_workdays)
     }
-    events = [
-        PayoutEventOut(
-            e.expected,
-            e.latest,
-            e.gross.amount,
-            e.fee.amount,
-            e.net.amount,
-            estimated=e.gross.amount > sure.get(e.expected, Decimal(0)),
+    events = []
+    for e in forecast_payouts(daily, terms, delay_workdays=rules.delay_workdays):
+        held = services * schedule_gap_days(e.expected, terms)
+        gross = e.gross.amount - held
+        if gross <= 0:
+            continue  # ushlanma to'lovdan katta — to'lov bo'lmaydi
+        adjusted = PayoutEvent(
+            e.expected, e.latest, Money(gross, UZS), Money(gross, UZS) * (terms.fee_pct / 100)
         )
-        for e in forecast_payouts(both, terms, delay_workdays=rules.delay_workdays)
-    ]
-    available = sum((a.amount for a in ready.values()), Decimal(0))
+        events.append(
+            PayoutEventOut(
+                adjusted.expected,
+                adjusted.latest,
+                adjusted.gross.amount,
+                adjusted.fee.amount,
+                adjusted.net.amount,
+                estimated=held > 0 or e.gross.amount > sure_gross.get(e.expected, Decimal(0)),
+            )
+        )
     return PayoutForecast(terms.kind, terms.fee_pct, rules, available, unknown, events)
+
+
+SERVICE_CATEGORIES = ("advertising", "storage", "return_storage", "fine")
+SERVICES_DAYS = 30
+
+
+async def _services_per_day(conn: AsyncConnection, today: date) -> Decimal:
+    """Uzum to'lovdan ayiradigan xizmat to'lovlarining oxirgi ``SERVICES_DAYS`` kundagi kunlik o'rtachasi (yechish haqi — alohida,
+    har to'lovga bitta, bu yerga kirmaydi). Hisobga olinmagan (``excluded``) va daromad turidagi yozuvlar tashqarida."""
+    e = m.mp_expenses
+    total = await conn.scalar(
+        select(func.coalesce(func.sum(e.c.amount), 0)).where(
+            e.c.type == "OUTCOME",
+            e.c.excluded.is_(None),
+            e.c.category.in_(SERVICE_CATEGORIES),
+            func.date(func.timezone("Asia/Tashkent", e.c.created_on))
+            > today - timedelta(days=SERVICES_DAYS),
+            func.date(func.timezone("Asia/Tashkent", e.c.created_on)) <= today,
+        )
+    )
+    return Decimal(total or 0) / SERVICES_DAYS

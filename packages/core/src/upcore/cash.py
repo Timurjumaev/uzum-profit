@@ -140,6 +140,36 @@ def next_payout(
     raise ValueError(f"{terms.kind}: jadval sanasi topilmadi")  # pragma: no cover
 
 
+def scheduled_after(day: date, terms: ScheduleTerms) -> date:
+    """Jadvalning ``day`` dan **keyingi** sanasi (dam olish kuniga surilmagan: to'lov shu kuni 00:00 da yaratiladi)."""
+    for d in _scheduled_dates(terms, day + timedelta(days=1), day + timedelta(days=62)):
+        return d
+    raise ValueError(f"{terms.kind}: jadval sanasi topilmadi")  # pragma: no cover
+
+
+def scheduled_on_or_before(day: date, terms: ScheduleTerms) -> date:
+    """Jadvalning ``day`` yoki undan oldingi eng yaqin sanasi."""
+    for i in range(0, 63):
+        d = day - timedelta(days=i)
+        if terms.days_of_month is None or d.day in terms.days_of_month:
+            return d
+    raise ValueError(f"{terms.kind}: jadval sanasi topilmadi")  # pragma: no cover
+
+
+def schedule_gap_days(on: date, terms: ScheduleTerms) -> int:
+    """``on`` ga tegishli to'lov davri uzunligi (kun): jadval sanasi (``on`` yoki undan oldingi) bilan undan oldingi sana oralig'i."""
+    current = scheduled_on_or_before(on, terms)
+    return (current - scheduled_on_or_before(current - timedelta(days=1), terms)).days
+
+
+def payout_date(picked_up: date, terms: ScheduleTerms, lag_days: int = LAG_DAYS) -> date:
+    """F38 (Temur, 2026-11-22; kabinet "Mablag'lar" va real to'lovlar bilan tasdiqlangan). Mijoz tovarni **olib ketgan** kundan
+    ``lag_days`` (10) kun o'tgach pul yechishga beriladi va keyingi jadval sanasi 00:00 da avtomatik yechiladi. Ya'ni to'lov sanasi
+    D ga olib ketilgan kuni ≤ D − (lag_days + 1) bo'lgan tovar puli kiradi (masalan 7.12 to'lovi — 26.11 gacha olib ketilganlar).
+    Qaytaradi: shu qator pulini yaratadigan jadval sanasi (dam olish kuniga surilmagan)."""
+    return scheduled_after(picked_up + timedelta(days=lag_days), terms)
+
+
 @dataclass(frozen=True, slots=True)
 class PayoutEvent:
     """F38: kutilgan to'lov."""

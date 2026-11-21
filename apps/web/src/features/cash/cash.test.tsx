@@ -34,7 +34,8 @@ describe("pul oqimi", () => {
     const page = norm(document.body.textContent!);
     expect(page).toContain("Yechishga tayyor");
     expect(page).toContain(norm(f.money("450000.00"))); // sana noma'lum
-    expect(page).toContain("mijozga topshirilgandan 10 kun oʻtgach yechishga beriladi; ertaroq yechish — 2,5%");
+    expect(page).toContain("mijoz olib ketgandan 10 kun oʻtgach yechishga beriladi");
+    expect(page).toContain("ertaroq yechish — 2,5%");
   });
 
   it("jadval kiritilmagan — taxmin yo'q, Sozlamalarga havola", async () => {
