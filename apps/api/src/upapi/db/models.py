@@ -776,6 +776,22 @@ missing_losses = tenant(
         "sku_id": ("mp_skus", True),
     },
 )
+# B7.5 (ADR-065): to'liq eksport — so'rov, holat va tayyor ZIP (``content`` — bazada, 24 soatdan keyin o'chadi).
+data_exports = tenant(
+    "data_exports",
+    Column(
+        "user_id", UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    ),
+    Column("status", Text, nullable=False, server_default="pending"),
+    Column("expires_at", TS),
+    Column("token_hash", Text),
+    Column("token_used", Boolean, nullable=False, server_default="false"),
+    Column("size_bytes", BigInteger),
+    Column("tables", JSONB),
+    Column("error", Text),
+    Column("content", LargeBinary),
+    check_in("status", ("pending", "running", "ready", "failed", "expired")),
+)
 # B5.9-3: saqlangan kalkulyator ssenariylari — faqat kiritish (maydon → qiymat), natija saqlanmaydi.
 calculator_scenarios = tenant(
     "calculator_scenarios",

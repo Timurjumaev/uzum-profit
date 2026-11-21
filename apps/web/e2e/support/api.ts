@@ -270,6 +270,7 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
     }
     if (key === `GET /orgs/${ORG_ID}/inventory`) return json(route, 200, inventoryData());
     if (key === `GET /orgs/${ORG_ID}/payouts/forecast`) return json(route, 200, payoutForecast());
+    if (key === `GET /orgs/${ORG_ID}/exports/full`) return json(route, 200, []);
     if (key === `GET /orgs/${ORG_ID}/notifications`) {
       const n = (id: string, event: string, status: string, read: string | null) => ({
         id, event, status, critical: false, payload: { count: 2 }, due_at: "2026-11-20T09:00:00Z", sent_at: null, read_at: read, created_at: "2026-11-20T09:00:00Z",

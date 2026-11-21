@@ -135,6 +135,7 @@ export const CONNECT_ROUTE = `POST /api/v1/orgs/${ORG_ID}/accounts`;
 export const INVITE_ROUTE = "POST /api/v1/invites/accept";
 export const shopRoute = (shopId: string) => `PATCH /api/v1/orgs/${ORG_ID}/shops/${shopId}`;
 
+export const FULL_EXPORTS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/exports/full`;
 export const NOTIFY_SETTINGS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/notifications/settings`;
 
 /** Standart: kirgan foydalanuvchi, ikki do'kon, sog'lom sinxron. `routes` ularni almashtiradi yoki to'ldiradi. */
@@ -150,6 +151,7 @@ export function mockApi(routes: Routes = {}) {
     [PROFILE_ROUTE]: () => json(200, ME.user),
     [COST_TYPES_ROUTE]: () => json(200, []),
     [NOTIFY_SETTINGS_ROUTE]: () => json(200, notificationSettings()),
+    [FULL_EXPORTS_ROUTE]: () => json(200, []),
     [NOTIFICATIONS_ROUTE]: () => json(200, { items: [], unread: 0 }),
     ...routes,
   };

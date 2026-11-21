@@ -6,6 +6,7 @@ type Schemas = components["schemas"];
 
 export type ApiPaths = paths;
 export type Statement = Schemas["StatementOut"];
+export type FullExport = Schemas["FullExportOut"];
 export type PnlRow = Schemas["RowOut"];
 export type Dashboard = Schemas["DashboardOut"];
 export type Pnl = Schemas["PnlOut"];

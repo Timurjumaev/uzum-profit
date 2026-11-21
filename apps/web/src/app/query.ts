@@ -777,3 +777,22 @@ export const applyCosts = (orgId: string, changes: CostChangeIn[]) =>
 
 export const saveOpening = (orgId: string, body: OpeningIn, shops: string[] = []) =>
   unwrap(api.PUT("/api/v1/orgs/{org_id}/opening", { params: { path: { org_id: orgId }, query: shops.length ? { shop: shops } : {} }, body }));
+
+// --- To'liq eksport (B7.5, faqat egasi) -----------------------------------------------------------------------------
+
+export const FULL_EXPORT_POLL_MS = 5_000;
+
+/** Oxirgi eksportlar; tayyor bo'lguncha har 5 soniyada yangilanadi. */
+export const fullExportsQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "exports-full"],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/exports/full", { params: { path: { org_id: orgId } } })),
+    refetchInterval: (query) => (query.state.data?.some((e) => e.status === "pending" || e.status === "running") ? FULL_EXPORT_POLL_MS : false),
+  });
+
+export const requestFullExport = (orgId: string) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/exports/full", { params: { path: { org_id: orgId } } }));
+
+/** Bir martalik yuklash havolasi (24 soat). */
+export const fullExportLink = (orgId: string, exportId: string) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/exports/full/{export_id}/link", { params: { path: { org_id: orgId, export_id: exportId } } }));
