@@ -36,6 +36,7 @@ import {
   useToast,
 } from "../../components/ui";
 import type { OpeningRow } from "../../lib/api/types";
+import { CostImport } from "./CostImport";
 import { useFormat } from "../../lib/i18n";
 import { searchKey } from "../../lib/i18n/translit";
 import {
@@ -316,6 +317,7 @@ export function Opening() {
               {data.hidden > 0 && <p className="caption">{t("opening.hidden", { n: data.hidden })}</p>}
             </div>
           </div>
+          {canManage && <CostImport orgId={org.id} />}
           {data.stock_source !== "current" && (
             <Banner
               tone={data.stock_source === "none" ? "warning" : "info"}

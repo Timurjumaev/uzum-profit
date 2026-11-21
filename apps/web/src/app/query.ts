@@ -2,8 +2,8 @@
 // tarmoq/5xx/429 — 2 marta. Sessiya tugasa (401) — kirish sahifasiga (`onUnauthorized`).
 import { MutationCache, QueryCache, QueryClient, queryOptions } from "@tanstack/react-query";
 
-import { api, ApiError, unwrap } from "../lib/api/client";
-import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, QuickPurchaseIn, SupplyState, TrackedIn, BoxIn, SharesIn, CountIn, SplitIn, TransferIn, DispatchIn, ResolveIn, ShortagePatch, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, NotificationSettingsIn, OpeningIn, GoalIn } from "../lib/api/types";
+import { api, ApiError, CSRF_HEADER, unwrap, type Problem } from "../lib/api/client";
+import type { ComponentIn, ComponentPatch, ShipmentIn, ShipmentPatch, ItemLinkIn, LineIn, LinePatch, OwnExpenseIn, OwnExpensePatch, PurchaseIn, PurchasePatch, QuickPurchaseIn, SupplyState, TrackedIn, BoxIn, SharesIn, CountIn, SplitIn, TransferIn, DispatchIn, ResolveIn, ShortagePatch, StockMoveIn, TaxProfileIn, TaxProfilePatch, PayoutScheduleIn, InventorySettingsIn, AlertsIn, NotificationSettingsIn, OpeningIn, GoalIn, CostPreview, CostChangeIn } from "../lib/api/types";
 
 export const STALE_MS = 60_000;
 export const MAX_RETRIES = 2;
@@ -744,6 +744,29 @@ export const openingQuery = (orgId: string, start: string | null, shops: string[
     queryFn: () =>
       unwrap(api.GET("/api/v1/orgs/{org_id}/opening", { params: { path: { org_id: orgId }, query: { ...(start ? { start } : {}), ...(shops.length ? { shop: shops } : {}) } } })),
   });
+
+/** Tannarxni Excel orqali kiritish (B7.1): faylni to'g'ridan-to'g'ri tana qilib yuboradi (multipart emas), javob — ko'rib chiqish. */
+export async function previewCosts(orgId: string, file: File): Promise<CostPreview> {
+  let response: Response;
+  try {
+    response = await globalThis.fetch(
+      new Request(new URL(`/api/v1/orgs/${orgId}/opening/costs/preview`, globalThis.location.origin).href, {
+        method: "POST",
+        body: file,
+        credentials: "include",
+        headers: { "Content-Type": file.type || "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", [CSRF_HEADER]: "web" },
+      }),
+    );
+  } catch {
+    throw new ApiError(0, null);
+  }
+  const body: unknown = await response.json().catch(() => null);
+  if (!response.ok) throw new ApiError(response.status, body && typeof body === "object" ? (body as Partial<Problem>) : null, response.headers.get("X-Request-ID"));
+  return body as CostPreview;
+}
+
+export const applyCosts = (orgId: string, changes: CostChangeIn[]) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/opening/costs/apply", { params: { path: { org_id: orgId } }, body: { changes } }));
 
 export const saveOpening = (orgId: string, body: OpeningIn, shops: string[] = []) =>
   unwrap(api.PUT("/api/v1/orgs/{org_id}/opening", { params: { path: { org_id: orgId }, query: shops.length ? { shop: shops } : {} }, body }));

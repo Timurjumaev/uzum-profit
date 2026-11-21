@@ -193,3 +193,55 @@
 .opening__next a {
   color: var(--accent-text);
 }
+
+/* Excel orqali tannarx (B7.1): jonli blok, ko'rib chiqish oynasi. */
+.cost-import {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgb(0 200 160 / 0.14), rgb(42 120 214 / 0.14) 55%, rgb(124 92 255 / 0.12));
+  box-shadow: 0 6px 22px rgb(42 120 214 / 0.14);
+}
+.cost-import__text {
+  flex: 1 1 280px;
+  min-inline-size: 0;
+}
+.cost-import__text p {
+  margin: 4px 0 0;
+}
+.cost-import__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cost-import__preview {
+  display: grid;
+  gap: 12px;
+}
+.cost-import__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cost-import__table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+.cost-import__table th,
+.cost-import__table td {
+  padding: 6px 8px;
+  text-align: start;
+  border-block-end: 1px solid var(--border-hairline);
+}
+.cost-import__errors ul {
+  margin: 6px 0 0;
+  padding-inline-start: 20px;
+}
