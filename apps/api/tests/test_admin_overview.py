@@ -50,3 +50,20 @@ def test_admin_role_cannot_read_business_columns(db: dict[str, str]) -> None:  #
             conn.execute("SELECT sell_price FROM sale_items")
         with pytest.raises(errors.InsufficientPrivilege):
             conn.execute("SELECT token_encrypted FROM mp_accounts")
+
+
+def test_funnel_shows_first_times_per_org(db: dict[str, str]) -> None:  # noqa: F811
+    account = create_account(db, sf.settings_for(db), TOKEN, [A])
+    with psycopg.connect(db["admin"], autocommit=True) as conn:
+        conn.execute("UPDATE orgs SET name = 'Voronka' WHERE id = %s", [account.org_id])
+        for name in ("org_created", "mp_account_connected", "daily_visit", "daily_visit"):
+            conn.execute(
+                "INSERT INTO events (org_id, name) VALUES (%s, %s)", [account.org_id, name]
+            )
+    out = io.StringIO()
+    asyncio.run(admin.funnel(db["admin"], out))
+    line = next(x for x in out.getvalue().splitlines() if x.startswith("Voronka"))
+    cells = line.split("\t")
+    assert cells[1] != "—" and cells[2] != "—" and cells[3] == "—" and cells[-1] == "2"
+    with psycopg.connect(db["app"]) as conn, pytest.raises(errors.InsufficientPrivilege):
+        conn.execute("SELECT * FROM admin_funnel()")

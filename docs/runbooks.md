@@ -78,3 +78,9 @@ roliga berilmagan — migratsiya egasi ulanishi bilan chaqiriladi (`migrate` ser
 $T $C --profile tools run --rm migrate python -m upapi.admin overview
 $T $C --profile tools run --rm migrate python -m upapi.signup list    # ro'yxatdan o'tishga ruxsat berilganlar (B8.11)
 ```
+
+Aktivatsiya voronkasi (B9.4): har tashkilot bo'yicha bosqichlarning birinchi vaqti va kunlik kirishlar soni:
+
+```bash
+$T $C --profile tools run --rm migrate python -m upapi.admin funnel
+```

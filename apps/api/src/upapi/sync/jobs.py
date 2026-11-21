@@ -33,7 +33,7 @@ from procrastinate.exceptions import AlreadyEnqueued
 from sqlalchemy import select, text, update
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from upapi import calc, notify
+from upapi import activation, calc, notify
 from upapi.db import models as m
 from upapi.db.session import org_transaction
 from upapi.db.url import normalize_url
@@ -277,6 +277,10 @@ async def notify_all(rt: Runtime) -> int:
     for org_id in sorted({org for org, _ in await due_accounts(rt.engine)}):
         try:
             created += await notify.evaluate_org(rt.engine, org_id, now)
+            async with org_transaction(rt.engine, org_id) as conn:
+                await activation.track(
+                    conn, org_id, now
+                )  # B8.9: aktivatsiya bosqichlari (bir martadan)
         except Exception as exc:
             _log.warning("notify_failed", org_id=str(org_id), error_code=type(exc).__name__)
     return created

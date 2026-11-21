@@ -1470,7 +1470,7 @@ ishlari** belgilaydi (yuridik shaxs, shartnoma, reyestr) — ular hozirdan boshl
 - [x] B8.12 (✓ 2026-11-21: onboarding 7 qadam — tashkilot, kalit, do'konlar, tarix, soliq/to'lov/tannarx usuli (Sozlamalardagi bo'limlar), tannarx (Excel yoki jadval), Telegram; Bosh sahifada "Sozlash: N/6" kartochkasi) **Onboarding to'liq** (yangi; 09 R3 d — rejada vazifasiz edi): 4-qadam (soliq, to'lov jadvali, tannarx
   usuli), 5-qadam (tannarx: TOP jadval yoki Excel — B7.1), 6-qadam (Telegram — B6.6), bosh sahifada "Sozlash: N/6".
   B8 chiqish sharti ("begona odam yo'riqnomasiz 10 daqiqada foydani ko'radi") shusiz bajarilmaydi.
-- [ ] B8.9 (ADR-057 Q13, 09 R3 e) **Foydalanish hodisalari** (`events`; hozir 2 ta hodisa yoziladi): B9.4 o'lchovlari —
+- [x] B8.9 (✓ 2026-11-21: `org_created`, `history_loaded`, `first_cost`, `costs_60`, `telegram_linked` (holatdan bir martadan, `upapi/activation.py`), `daily_visit` (kuniga bir marta), `mp_account_connected` (avvaldan); voronka jadvali — `python -m upapi.admin funnel`; migratsiya 0049) (ADR-057 Q13, 09 R3 e) **Foydalanish hodisalari** (`events`; hozir 2 ta hodisa yoziladi): B9.4 o'lchovlari —
   ro'yxatdan o'tish, kalit ulash, tarix yuklandi, birinchi tannarx, tushumning 60% ida tannarx, Telegram ulandi, kunlik
   kirish. Betadan **oldin** (keyin tiklab bo'lmaydi).
 - [ ] B8.14 **Kirish kodi — yagona nuqta xavfi** (yangi): kod faqat Telegram Gateway orqali (ADR-028); raqam Telegram'da

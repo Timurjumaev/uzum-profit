@@ -57,14 +57,50 @@ async def overview(url: str, out: TextIO) -> int:
     return len(rows)
 
 
+FUNNEL = (
+    "org_created",
+    "mp_account_connected",
+    "history_loaded",
+    "first_cost",
+    "costs_60",
+    "telegram_linked",
+)
+
+
+async def funnel(url: str, out: TextIO) -> int:
+    """B8.9/B9.4: har tashkilot bo'yicha aktivatsiya bosqichlarining birinchi vaqti (jadval) va kunlik kirishlar soni."""
+    engine = make_engine(url)
+    try:
+        async with engine.connect() as conn:
+            names = {
+                r.org_id: r.name
+                for r in await conn.execute(text("SELECT org_id, name FROM admin_overview()"))
+            }
+            rows = (await conn.execute(text("SELECT * FROM admin_funnel()"))).all()
+    finally:
+        await engine.dispose()
+    per: dict[object, dict[str, tuple[object, int]]] = {}
+    for r in rows:
+        per.setdefault(r.org_id, {})[r.name] = (r.first_at, r.times)
+    out.write("tashkilot\t" + "\t".join(FUNNEL) + "\tkirishlar\n")
+    for org_id, steps in per.items():
+        cells = [f"{steps[s][0]:%Y-%m-%d %H:%M}" if s in steps else "—" for s in FUNNEL]
+        visits = steps["daily_visit"][1] if "daily_visit" in steps else 0
+        out.write(f"{names.get(org_id, str(org_id))}\t" + "\t".join(cells) + f"\t{visits}\n")
+    return len(per)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m upapi.admin", description=__doc__)
-    parser.add_subparsers(dest="command", required=True).add_parser(
-        "overview", help="tashkilotlar va sinxron holati (faqat o'qish)"
-    )
-    parser.parse_args(argv)
+    sub = parser.add_subparsers(dest="command", required=True)
+    sub.add_parser("overview", help="tashkilotlar va sinxron holati (faqat o'qish)")
+    sub.add_parser("funnel", help="aktivatsiya voronkasi: bosqichlarning birinchi vaqti (B9.4)")
+    args = parser.parse_args(argv)
     try:
-        asyncio.run(overview(admin_url(), sys.stdout))
+        if args.command == "funnel":
+            asyncio.run(funnel(admin_url(), sys.stdout))
+        else:
+            asyncio.run(overview(admin_url(), sys.stdout))
     except AdminError as exc:
         print(f"Xato: {exc}", file=sys.stderr)
         return 1
