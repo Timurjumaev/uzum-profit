@@ -11,6 +11,7 @@ from zoneinfo import ZoneInfo
 
 import sellerfake as sf
 import test_purchases as tp
+from psycopg.types.json import Jsonb
 from test_purchases import D, ok, send
 from test_receiving import setup_dispatch
 from test_reports import World
@@ -894,3 +895,50 @@ def test_goal_behind_notifies_once_per_set_and_waits_for_day_seven(world: World)
         assert len(_rows(w, "accountant", "goal_behind")) == 1
     finally:
         a.sql("DELETE FROM goals WHERE org_id = %s", [w.org_id])
+
+
+def test_notification_center_unread_and_mark_read(world: World) -> None:
+    """B6.3: markaz — o'zining qatorlari (skipped yashirin), o'qilmaganlar soni, ids bo'yicha va hammasini o'qilgan qilish;
+    boshqa foydalanuvchi qatori o'zgarmaydi; yetkazish holati o'qilganlikdan alohida."""
+    w, a = world, world.a
+    _clean(w)
+    me = phone_of(w, "accountant")
+    other = phone_of(w, "owner")
+    users = {
+        phone: uid
+        for uid, phone in a.sql("SELECT id, phone FROM users WHERE phone = ANY(%s)", [[me, other]])
+    }
+    base = datetime(2026, 11, 20, 9, 0, tzinfo=TZ)
+    ids: dict[str, Any] = {}
+    for key, (phone, status) in {
+        "a": (me, "pending"),  # Telegram ulanmagan — abadiy pending, baribir markazda
+        "b": (me, "sent"),
+        "skip": (me, "skipped"),  # bazaviy ro'yxat yangilanishi — ko'rinmaydi
+        "theirs": (other, "sent"),
+    }.items():
+        ids[key] = a.insert(
+            "notifications",
+            user_id=users[phone],
+            event="stock_critical",
+            dedupe_key=f"center:{key}",
+            status=status,
+            payload=Jsonb({"count": 1}),
+            due_at=base,
+        )
+    listed = ok(send(w, "GET", "notifications", "accountant"))
+    assert listed["unread"] == 2 and {x["id"] for x in listed["items"]} == {
+        str(ids["a"]),
+        str(ids["b"]),
+    }
+    assert all(x["read_at"] is None for x in listed["items"])
+    assert {x["status"] for x in listed["items"]} == {"pending", "sent"}  # yetkazish holati alohida
+    one = ok(send(w, "POST", "notifications/read", "accountant", ids=[str(ids["a"])]))
+    assert one["unread"] == 1
+    assert {x["id"] for x in one["items"] if x["read_at"] is not None} == {str(ids["a"])}
+    everything = ok(send(w, "POST", "notifications/read", "accountant"))
+    assert everything["unread"] == 0 and all(x["read_at"] is not None for x in everything["items"])
+    assert (
+        ok(send(w, "GET", "notifications", "owner"))["unread"] >= 1
+    )  # boshqa foydalanuvchi qatori tegilmagan
+    assert a.sql("SELECT read_at FROM notifications WHERE id = %s", [ids["skip"]])[0][0] is None
+    a.sql("DELETE FROM notifications WHERE org_id = %s", [w.org_id])

@@ -56,6 +56,14 @@ const SHOTS: Shot[] = [
     },
   },
   { name: "goals", path: "/goals" },
+  {
+    name: "notifications",
+    path: "/",
+    prepare: async (page) => {
+      await page.getByRole("button", { name: /Bildirishnomalar/ }).click();
+      await page.getByRole("region", { name: "Bildirishnomalar" }).waitFor();
+    },
+  },
   { name: "settings", path: "/settings" },
   { name: "opening", path: "/opening" },
   { name: "purchases", path: "/purchases" },

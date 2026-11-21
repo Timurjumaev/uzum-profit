@@ -1450,6 +1450,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark Read
+         * @description O'qilgan deb belgilash (faqat o'zining qatorlari): ``ids`` yoki — berilmasa — hammasi. Javob — yangilangan ro'yxat.
+         */
+        post: operations["mark_read_api_v1_orgs__org_id__notifications_read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/dispatches/draft": {
         parameters: {
             query?: never;
@@ -3944,6 +3964,8 @@ export interface components {
             due_at: string;
             /** Sent At */
             sent_at: string | null;
+            /** Read At */
+            read_at: string | null;
             /**
              * Created At
              * Format: date-time
@@ -3990,6 +4012,8 @@ export interface components {
         NotificationsOut: {
             /** Items */
             items: components["schemas"]["NotificationOut"][];
+            /** Unread */
+            unread: number;
         };
         /** OpeningIn */
         OpeningIn: {
@@ -5012,6 +5036,11 @@ export interface components {
             day: string | null;
             /** Source */
             source: string | null;
+        };
+        /** ReadIn */
+        ReadIn: {
+            /** Ids */
+            ids?: string[] | null;
         };
         /** ReceivingOut */
         ReceivingOut: {
@@ -11010,6 +11039,50 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationsOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    mark_read_api_v1_orgs__org_id__notifications_read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReadIn"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

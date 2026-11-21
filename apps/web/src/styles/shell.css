@@ -526,3 +526,74 @@
     padding-block-start: var(--space-4);
   }
 }
+
+/* Bildirishnomalar markazi (B6.3): qo'ng'iroq + rangli soni belgisi, ro'yxat paneli. */
+.bell {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+.bell__count {
+  position: absolute;
+  inset-block-start: -8px;
+  inset-inline-end: -10px;
+  min-inline-size: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff5d73, #ff8c42);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgb(255 93 115 / 0.45);
+}
+.notif {
+  display: grid;
+  gap: 8px;
+  inline-size: min(380px, 86vw);
+  max-block-size: 70vh;
+}
+.notif__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.notif__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  overflow-y: auto;
+}
+.notif__item {
+  display: grid;
+  gap: 4px;
+  inline-size: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  text-align: start;
+  cursor: pointer;
+  color: inherit;
+}
+.notif__item:hover,
+.notif__item:focus-visible {
+  background: linear-gradient(135deg, rgb(124 92 255 / 0.1), rgb(0 200 160 / 0.1));
+}
+.notif__item--unread {
+  background: linear-gradient(135deg, rgb(124 92 255 / 0.14), rgb(255 140 66 / 0.12));
+  font-weight: 600;
+}
+.notif__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.notif__empty {
+  margin: 8px 4px;
+}

@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { pageFilters, useFilters } from "../../app/filters";
 import { shopsQuery } from "../../app/query";
 import { DateRangePicker } from "../ui";
+import { NotificationBell } from "./NotificationBell";
 import { CompareMenu } from "./CompareMenu";
 import { shortcutLabel } from "./CommandPalette";
 import { ShopFilter } from "./ShopFilter";
@@ -43,6 +44,7 @@ export function TopBar({ orgId, account, onSearch }: TopBarProps) {
       </div>
       <div className="topbar__tools">
         {orgId && <SyncIndicator orgId={orgId} />}
+        {orgId && <NotificationBell orgId={orgId} />}
         <button type="button" className="ui-btn ui-btn--ghost ui-btn--md topbar__search" onClick={onSearch} aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K">
           <Search size={16} aria-hidden />
           <span className="ui-visually-hidden">{t("shell.search")}</span>

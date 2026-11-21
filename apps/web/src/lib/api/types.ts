@@ -80,6 +80,7 @@ export type ResolveIn = Schemas["ResolveIn"];
 export type ShortagePatch = Schemas["ShortagePatch"];
 export type NotificationSettings = Schemas["NotificationSettingsOut"];
 export type CalculatorScenario = Schemas["ScenarioOut"];
+export type NotificationItem = Schemas["NotificationOut"];
 export type Goal = Schemas["GoalOut"];
 export type GoalIn = Schemas["GoalIn"];
 export type Goals = Schemas["GoalsOut"];

@@ -331,6 +331,11 @@ BUYURTMALAR VA TUSHUM
 Sidebar 232 px (yig'ilganda 64 px). Mobil: yuqorida ixcham panel (do'kon, davr), pastda tab bar:
 Asosiy · Foyda · Ombor · Xaridlar · Yana.
 
+**Bildirishnomalar markazi (B6.3, A12):** yuqori panelda 🔔; o'qilmaganlar soni — qizil-to'q sariq gradient belgi (99+ dan oshsa "99+").
+Bosilganda panel (380 px, mobilda ekran enining 86%): sarlavha va "Hammasini o'qilgan qilish"; ro'yxat — hodisa nomi, "3 daqiqa oldin" va
+yetkazish belgisi (Telegramga yuborildi / Yuborilmagan / Yuborilmadi) — o'qilganlikdan alohida; o'qilmagan qator gradient fonda, qalin.
+Qator bosilsa — o'qilgan va o'sha hodisaning sahifasi ("Batafsil"). Bo'sh holat — yo'l-yo'riq matni. Web push va oflayn kesh yo'q.
+
 ### 7.2 Bosh sahifa (desktop, ADR-037; tartib — ADR-057 Q10, B4.72)
 
 ```

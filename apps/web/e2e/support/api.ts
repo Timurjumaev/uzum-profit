@@ -270,6 +270,19 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
     }
     if (key === `GET /orgs/${ORG_ID}/inventory`) return json(route, 200, inventoryData());
     if (key === `GET /orgs/${ORG_ID}/payouts/forecast`) return json(route, 200, payoutForecast());
+    if (key === `GET /orgs/${ORG_ID}/notifications`) {
+      const n = (id: string, event: string, status: string, read: string | null) => ({
+        id, event, status, critical: false, payload: { count: 2 }, due_at: "2026-11-20T09:00:00Z", sent_at: null, read_at: read, created_at: "2026-11-20T09:00:00Z",
+      });
+      return json(route, 200, {
+        unread: 2,
+        items: [
+          n("40000000-0000-4000-8000-000000000001", "goal_behind", "pending", null),
+          n("40000000-0000-4000-8000-000000000002", "stock_critical", "sent", null),
+          n("40000000-0000-4000-8000-000000000003", "daily_summary", "sent", "2026-11-20T10:00:00Z"),
+        ],
+      });
+    }
     if (key === `GET /orgs/${ORG_ID}/goals`) {
       const goal = (id: string, metric: string, target: string, fact: string, forecast: string, percent: string, fp: string, dev: string, status: string, shop: string | null = null) => ({
         id, shop_id: shop, metric, target, fact, forecast, percent, forecast_percent: fp, deviation_pct: dev, status,

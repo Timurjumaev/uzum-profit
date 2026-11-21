@@ -1028,6 +1028,9 @@ notifications = tenant(
     Column("attempts", Integer, nullable=False, server_default="0"),
     Column("error", Text),
     Column("sent_at", TS),
+    Column(
+        "read_at", TS
+    ),  # B6.3: ilovada o'qilgan vaqt (NULL — o'qilmagan); yetkazish holatidan alohida
     UniqueConstraint("org_id", "user_id", "dedupe_key"),
     Index(None, "status", "due_at"),
     check_in("status", ("pending", "sent", "failed", "skipped")),

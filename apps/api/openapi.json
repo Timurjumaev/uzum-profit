@@ -8071,6 +8071,70 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/notifications/read": {
+      "post": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Mark Read",
+        "description": "O'qilgan deb belgilash (faqat o'zining qatorlari): ``ids`` yoki — berilmasa — hammasi. Javob — yangilangan ro'yxat.",
+        "operationId": "mark_read_api_v1_orgs__org_id__notifications_read_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/dispatches/draft": {
       "get": {
         "tags": [
@@ -16272,6 +16336,18 @@
             ],
             "title": "Sent At"
           },
+          "read_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Read At"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -16287,6 +16363,7 @@
           "payload",
           "due_at",
           "sent_at",
+          "read_at",
           "created_at"
         ],
         "title": "NotificationOut"
@@ -16408,11 +16485,16 @@
             },
             "type": "array",
             "title": "Items"
+          },
+          "unread": {
+            "type": "integer",
+            "title": "Unread"
           }
         },
         "type": "object",
         "required": [
-          "items"
+          "items",
+          "unread"
         ],
         "title": "NotificationsOut"
       },
@@ -19801,6 +19883,28 @@
           "source"
         ],
         "title": "RateOut"
+      },
+      "ReadIn": {
+        "properties": {
+          "ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array",
+                "maxItems": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ids"
+          }
+        },
+        "type": "object",
+        "title": "ReadIn"
       },
       "ReceivingOut": {
         "properties": {
