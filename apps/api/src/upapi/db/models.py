@@ -183,6 +183,22 @@ sessions = Table(
     *_times(),
     Index(None, "user_id"),
 )
+# ADR-072: faqat staging'da, faqat o'qish uchun dev-token (xesh; kirish jadvali — ilova roliga ochilmaydi).
+dev_tokens = Table(
+    "dev_tokens",
+    metadata,
+    _id(),
+    Column(
+        "user_id", UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    ),
+    Column("token_hash", LargeBinary, nullable=False, unique=True),
+    Column("label", Text, nullable=False),
+    Column("expires_at", TS, nullable=False),
+    Column("revoked_at", TS),
+    Column("last_used_at", TS),
+    *_times(),
+    Index(None, "user_id"),
+)
 otp_codes = Table(
     "otp_codes",
     metadata,
@@ -195,7 +211,7 @@ otp_codes = Table(
     *_times(),
     Index(None, "phone", "created_at"),
 )
-AUTH += ["sessions", "otp_codes"]
+AUTH += ["sessions", "otp_codes", "dev_tokens"]
 
 memberships = tenant(
     "memberships",

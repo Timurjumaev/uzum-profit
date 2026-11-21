@@ -39,6 +39,11 @@ Timurjumaev). Avval o'z do'konlari (byDurii 106121, EL-ONE 135204), keyin boshqa
 - Pul — `Decimal`; formulalar faqat `packages/core` da, docstring'da F-raqam (`docs/plan/02-funksiyalar.md`).
 - **Dizayn (Temurning qat'iy talabi, ADR-070):** bezakli, yorqin, zamonaviy, jozibali — gradient, soya, jonli harakat, rangli ikonkalar. Sokin/minimal qilmang; `docs/plan/04-dizayn.md` §1.
 - UI matnlarida oʻ/gʻ uchun U+02BB, tutuq uchun U+02BC; ranglar va shrift `docs/plan/04-dizayn.md` dan.
+- **Staging** (`https://16-170-178-179.sslip.io`, HTTPS orqali ochiq): `/health`, `/api/v1/…`; o'zgartiruvchi so'rovlarda
+  `X-Requested-With` sarlavhasi shart (CSRF). Kirish — telefon + Telegram OTP (kodni faqat Temur oladi). **Dev-token (ADR-072,
+  vaqtinchalik, faqat o'qish):** muhitda tarmoq siri sifatida saqlansa, `curl -H "Authorization: Bearer $…"` emas — proksi
+  uni o'zi qo'shadi: `curl https://16-170-178-179.sslip.io/api/v1/orgs` (token yo'q bo'lsa — Temurdan OTP so'rash yoki
+  `devtoken.sh create`). Staging'ga o'zgartirish faqat PR → CI → deploy orqali; token qiymatini chatga/repoga yozmaslik.
 - Sandbox Uzum API'ga chiqa olmaydi (WAF va tarmoq) — real ma'lumot faqat Temur yoki staging orqali.
 - Commit: Conventional Commits; har vazifadan keyin `docs/plan/README.md` holat jadvali va `05` belgisi yangilanadi.
 

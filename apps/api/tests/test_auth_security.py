@@ -31,6 +31,12 @@ FUNCTIONS = [
     "auth_session_revoke",
     "auth_user_orgs",
     "auth_invite_accept",
+    # ADR-072: dev-token
+    "auth_dev_token",
+    "auth_dev_user_orgs",
+    "auth_dev_token_create",
+    "auth_dev_token_list",
+    "auth_dev_token_revoke",
 ]
 
 
@@ -120,7 +126,7 @@ def test_app_role_cannot_become_auth_role(urls: dict[str, str]) -> None:
         conn.execute(f"SET ROLE {dbtools.AUTH_ROLE}")
 
 
-@pytest.mark.parametrize("table", ["sessions", "otp_codes"])
+@pytest.mark.parametrize("table", ["sessions", "otp_codes", "dev_tokens"])
 def test_app_role_cannot_touch_auth_tables(urls: dict[str, str], table: str) -> None:
     for sql in (f"SELECT * FROM {table}", f"DELETE FROM {table}", f"UPDATE {table} SET id = id"):
         with psycopg.connect(urls["app"]) as conn, pytest.raises(errors.InsufficientPrivilege):
