@@ -1,4 +1,4 @@
-// Onboarding (M2): yangi foydalanuvchi — kirish → tashkilot → Uzum kaliti → do'konlar → tarix → Telegram → bosh sahifa.
+// Onboarding (M2): yangi foydalanuvchi — kirish → tashkilot → Uzum kaliti → do'konlar → tarix → soliq/to'lov → tannarx → Telegram → bosh sahifa.
 import { expect, test } from "@playwright/test";
 
 import { GOOD_CODE, GOOD_KEY, loadingSync, mockApi, NEW_USER, ORG_ID, PHONE, SHOP_A, SHOP_B, SHOPS } from "./support/api";
@@ -45,7 +45,13 @@ test("yangi foydalanuvchining to'liq yo'li", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 2, name: "Tarix yuklanmoqda" })).toBeVisible();
   await expect(page.getByRole("progressbar", { name: "Sotuvlar" }).first()).toHaveAttribute("aria-valuenow", "1830");
   await page.getByRole("button", { name: "Kutmasdan davom etish" }).click();
-  // 5. Telegram (B6.6): ixtiyoriy — keyinroq
+  // 5. soliq, to'lov va tannarx usuli (B8.12): bo'sh qoldirib o'tish mumkin
+  await expect(page.getByRole("heading", { level: 2, name: "Soliq, toʻlov va tannarx usuli" })).toBeVisible();
+  await page.getByRole("button", { name: "Davom etish" }).click();
+  // 6. tannarx (B8.12): Excel yoki jadval — keyinroq
+  await expect(page.getByRole("heading", { level: 2, name: "Tannarx", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Davom etish" }).click();
+  // 7. Telegram (B6.6): ixtiyoriy — keyinroq
   await expect(page.getByRole("heading", { level: 2, name: "Telegramni ulang" })).toBeVisible();
   await page.getByRole("button", { name: "Keyinroq ulayman" }).click();
   await expect(page.getByRole("heading", { level: 1, name: /^Sof foyda/ })).toBeVisible();
