@@ -1048,6 +1048,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/exports/pnl.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Pnl
+         * @description Foyda: 1-varaq — hisob varag'i (joriy, yakunlangan / kutilayotgan, tushumga nisbatan, oldingi davr, farq); ``view`` bo'lsa —
+         *     2-varaq: oy / kun / do'kon / SKU kesimi (ustunlar yig'indisi = jami). Hisob ``/pnl`` ning o'zi.
+         */
+        get: operations["export_pnl_api_v1_orgs__org_id__exports_pnl_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/exports/orders-analysis.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Orders Analysis
+         * @description Buyurtmalar tahlili (bekor va qaytish): umumiy, kunlar, SKU bo'yicha, sabablar — ``/orders/analysis`` ning o'zi.
+         */
+        get: operations["export_orders_analysis_api_v1_orgs__org_id__exports_orders_analysis_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/purchases": {
         parameters: {
             query?: never;
@@ -9726,6 +9767,105 @@ export interface operations {
                 status?: components["schemas"]["StockStatus"] | null;
                 q?: string | null;
                 ship?: boolean;
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    export_pnl_api_v1_orgs__org_id__exports_pnl_xlsx_get: {
+        parameters: {
+            query?: {
+                view?: components["schemas"]["View"];
+                /** @description Davr boshi (Toshkent kuni) */
+                start?: string | null;
+                /** @description Davr oxiri, kiradi; standart — bugun */
+                end?: string | null;
+                /** @description Do'konlar (bir necha marta) */
+                shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
+            };
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    export_orders_analysis_api_v1_orgs__org_id__exports_orders_analysis_xlsx_get: {
+        parameters: {
+            query?: {
+                /** @description Davr boshi (Toshkent kuni) */
+                start?: string | null;
+                /** @description Davr oxiri, kiradi; standart — bugun */
+                end?: string | null;
+                /** @description Do'konlar (bir necha marta) */
+                shop?: string[] | null;
+                /** @description Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl) */
+                compare?: "previous" | "last_year";
             };
             header?: never;
             path: {
