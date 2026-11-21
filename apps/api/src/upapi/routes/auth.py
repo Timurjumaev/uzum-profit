@@ -128,6 +128,11 @@ async def request_code(
     phone = _phone(body.phone)
     if not request.app.state.otp_ip_limiter.hit(_client_ip(request)):
         raise AppError("otp_ip_rate_limited", 429)
+    if not settings.signup_open:
+        async with engine.begin() as conn:
+            allowed = await conn.scalar(text("SELECT auth_signup_allowed(:p)"), {"p": phone})
+        if not allowed:
+            raise AppError("signup_closed", 403, detail="ro'yxatdan o'tish hozircha taklif bilan")
     code = new_code()
     async with engine.begin() as conn:
         result = await conn.scalar(
