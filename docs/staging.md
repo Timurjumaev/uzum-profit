@@ -18,7 +18,7 @@ konteynerlar → sog'liq tekshiruvi → ishlamasa oldingi versiyaga qaytish).
 ## Hozirgi server (2026-10-25, ADR-029)
 
 AWS EC2 eu-north-1, Ubuntu 26.04 LTS, 2 GB RAM; Elastic IP `16.170.178.179` (o'chirib-yoqilganda o'zgarmaydi);
-<https://16-170-178-179.sslip.io>. Kirish: `ssh -i ~/Downloads/awskey.pem ubuntu@16.170.178.179` (AWS'da `root` emas,
+<https://sellermax.duckdns.org> (2026-11-21 gacha `16-170-178-179.sslip.io`; domen DuckDNS, `UP_DOMAIN` shu nom). Kirish: `ssh -i ~/Downloads/awskey.pem ubuntu@16.170.178.179` (AWS'da `root` emas,
 `ubuntu`); ilova fayllari — `sudo -u deploy -i`, keyin `cd /srv/uzum-profit`. AWS Security group: kiruvchi 22, 80, 443.
 
 ## Bir martalik sozlash (yangi server bo'lsa; Temur, Mac'da, repozitoriy papkasida, `main` branch'da)
