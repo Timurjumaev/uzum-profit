@@ -26,10 +26,11 @@ from upapi.logs import configure_logging, get_logger
 from upapi.settings import Settings, get_settings
 from upapi.startup import UnsafeConfiguration, check_role, check_settings
 
+from upbot import admin, service
 from upbot import messages as msg
-from upbot import service
 
 DELIVER_EVERY = 30.0
+ADMIN_EVERY = 300.0
 _log = get_logger("upbot")
 
 DESCRIPTIONS = {
@@ -132,6 +133,21 @@ async def deliver_loop(
         await asyncio.sleep(DELIVER_EVERY)
 
 
+async def admin_loop(
+    engine: AsyncEngine, bot: Bot, chat_id: int
+) -> None:  # pragma: no cover — tarmoq (mantiq — upbot.admin, testlanadi)
+    """B8.5a: har 5 daqiqada holatni tekshiradi; kritik ogohlantirish zudlik bilan, jamlanma kuniga bir marta."""
+    state = admin.State()
+    while True:
+        try:
+            now = datetime.now(UTC)
+            for text in admin.messages_due(await admin.snapshot(engine, now), state, now):
+                await bot.send_message(chat_id, text)
+        except Exception as exc:
+            _log.warning("admin_loop_failed", error_code=type(exc).__name__)
+        await asyncio.sleep(ADMIN_EVERY)
+
+
 async def run(settings: Settings | None = None) -> None:  # pragma: no cover — jarayon
     settings = settings or get_settings()
     configure_logging(settings.log_level, settings.json_logs)
@@ -147,11 +163,18 @@ async def run(settings: Settings | None = None) -> None:  # pragma: no cover —
         )
         dp = build(engine, settings, lambda: datetime.now(UTC))
         task = asyncio.create_task(deliver_loop(engine, AiogramSender(bot), settings))
-        _log.info("bot_started")
+        watch = (
+            asyncio.create_task(admin_loop(engine, bot, settings.admin_chat_id))
+            if settings.admin_chat_id is not None
+            else None
+        )
+        _log.info("bot_started", admin_watch=watch is not None)
         try:
             await dp.start_polling(bot, handle_signals=False)
         finally:
             task.cancel()
+            if watch is not None:
+                watch.cancel()
             await bot.session.close()
     finally:
         await engine.dispose()

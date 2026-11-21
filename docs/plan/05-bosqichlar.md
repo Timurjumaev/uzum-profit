@@ -1456,7 +1456,7 @@ ishlari** belgilaydi (yuridik shaxs, shartnoma, reyestr) — ular hozirdan boshl
   avtomatik solishtiriladi — yangi endpoint testsiz o'tmaydi); foydalanuvchi bo'yicha so'rov cheklovi (09 X2);
   zaxiradan tiklash mashqi (production nusxasi staging'ga); har ishga tushishda hamma tashkilotni qayta hisoblash
   olib tashlanadi (09 X4); 20 sintetik tashkilot bilan tutun sinovi.
-- [ ] B8.5a **Kuzatuv — beta darajasi** (yangi servis o'rnatmasdan): xatolar va ishdan chiqqan fon ishlari admin
+- [~] B8.5a (✓ 2026-11-21: admin kunlik jamlanma + kritik ogohlantirish — yiqilgan/qotib qolgan fon ishlari, disk > 80% (`upbot/admin.py`, `UP_ADMIN_CHAT_ID`); runbook'lar `docs/runbooks.md`; **qoldi: "ishlayaptimi" tekshiruvi boshqa hostdan, zaxira muvaffaqiyatsiz, Gateway balansi — infratuzilma (B8.8)**) **Kuzatuv — beta darajasi** (yangi servis o'rnatmasdan): xatolar va ishdan chiqqan fon ishlari admin
   Telegram'iga (bot bor), kuniga bitta jamlanma; "ishlayaptimi" tekshiruvi **boshqa** hostdan (o'sha serverdagi
   tekshiruv server o'chganda jim qoladi); disk > 80%, zaxira muvaffaqiyatsiz, Gateway balansi kam. Runbook'lar:
   tiklash, kalit sizib chiqdi, Uzum uzilishi, deploy qaytarish.
