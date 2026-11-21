@@ -619,6 +619,36 @@ def test_rebuild_all_on_worker_start(db: dict[str, str]) -> None:
     assert kinds == [("item", None, None), ("purchase", None, None), ("shop", None, None)]
 
 
+def test_rebuild_stale_only_when_version_changed(db: dict[str, str]) -> None:
+    """B8.4a (09 X4): ishchi ishga tushishi faqat ``calc_version`` eskirgan tashkilotni qayta quradi; versiya yangilangach
+    (yoki takroriy ishga tushishda) hech narsa navbatga qo'yilmaydi; ``CALC_VERSION`` oshsa — yana bir marta."""
+    app = jobs.build_app(InMemoryConnector())
+    account = create_account(db, sf.settings_for(db), TOKEN, [A])
+    engine = make_engine(db["app"])
+
+    async def main() -> list[int]:
+        try:
+            async with app.open_async():
+                out = [await jobs.rebuild_stale(app, engine)]
+                admin(db, "DELETE FROM recalc_queue WHERE org_id = %s", [account.org_id])
+                app.connector.jobs.clear()
+                out.append(await jobs.rebuild_stale(app, engine))
+                calc.CALC_VERSION += 1
+                try:
+                    out.append(await jobs.rebuild_stale(app, engine))
+                finally:
+                    calc.CALC_VERSION -= 1
+                return out
+        finally:
+            await engine.dispose()
+
+    first, same, bumped = asyncio.run(main())
+    assert first >= 1 and same == 0 and bumped >= 1
+    assert admin(db, "SELECT calc_version FROM orgs WHERE id = %s", [account.org_id]) == [
+        (calc.CALC_VERSION + 1,)
+    ]
+
+
 # --- Tezlik (03 §7) ------------------------------------------------------------------------------------
 
 

@@ -109,6 +109,7 @@ def create_app(
     app.state.uzum_transport = uzum_transport
     app.state.uzum_limiter = RateLimiter(settings.uzum_min_interval_seconds)
     app.state.otp_ip_limiter = SlidingWindow(settings.otp_per_ip_hour, 3600)
+    app.state.user_limiter = SlidingWindow(settings.user_requests_per_minute, 60)  # B8.4a (09 X2)
     app.state.import_limiter = SlidingWindow(
         10, 60
     )  # Excel yuklash (B7.1): foydalanuvchi va tashkilot bo'yicha daqiqasiga 10

@@ -1452,7 +1452,7 @@ ishlari** belgilaydi (yuridik shaxs, shartnoma, reyestr) — ular hozirdan boshl
   bir xil) → staging sinov muhiti bo'lib qoladi. Shifrlash kaliti (Uzum tokeni) ham ko'chadi yoki kalit qayta kiritiladi.
 - [x] B8.11 (✓ 2026-11-21: `UP_SIGNUP_OPEN=false` + ruxsat ro'yxati `python -m upapi.signup allow|list|remove`, a'zo taklifi ham ruxsat; migratsiya 0045; production'da `UP_SIGNUP_OPEN=false` qo'yish — B8.8 da) **Ro'yxatdan o'tishni cheklash** (yangi): hozir telefon raqami bor har kim tashkilot ocha oladi. Beta uchun
   taklif kodi yoki ruxsat etilgan raqamlar ro'yxati (admin qo'shadi); ochiq ro'yxat — B8-B da yoqiladi.
-- [ ] B8.4a **Xavfsizlik — beta darajasi:** tashkilotlarni ajratish testi endpointlarning 100% ida (ro'yxat CI'da
+- [~] B8.4a (✓ 2026-11-21: ajratish testi 100% (OpenAPI'dan avtomatik, `test_org_isolation.py`), foydalanuvchi bo'yicha 600/daq cheklov, ishga tushishda faqat eskirgan tashkilotlar (`CALC_VERSION`, migratsiya 0046), 20 tashkilotli tutun sinovi; **qoldi: tiklash mashqi — production nusxasi bo'lgach (B8.8)**) **Xavfsizlik — beta darajasi:** tashkilotlarni ajratish testi endpointlarning 100% ida (ro'yxat CI'da
   avtomatik solishtiriladi — yangi endpoint testsiz o'tmaydi); foydalanuvchi bo'yicha so'rov cheklovi (09 X2);
   zaxiradan tiklash mashqi (production nusxasi staging'ga); har ishga tushishda hamma tashkilotni qayta hisoblash
   olib tashlanadi (09 X4); 20 sintetik tashkilot bilan tutun sinovi.

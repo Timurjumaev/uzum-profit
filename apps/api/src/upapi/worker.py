@@ -4,9 +4,10 @@
 API bilan bir xil xavfsizlik shartlari: staging/prod'da xavfli sozlama yoki RLS'ni chetlab o'tadigan DB roli bilan
 ishga tushmaydi. Ishchi ``up_app`` bilan ulanadi; tashkilot ma'lumoti faqat ``org_transaction`` ichida (RLS).
 
-Ishga tushganda (har deploy ishchini qayta yaratadi) hamma tashkilot uchun to'liq qayta hisob navbatga qo'yiladi
-(:func:`upapi.sync.jobs.rebuild_all`, B4.40): tannarx dvigateli yoki belgilar qoidasi o'zgargan bo'lsa, saqlangan
-natijalar tungi 03:40 ni kutmasdan yangilanadi (B4.39 tuzatishi staging'da eski "Taxminiy" belgilari bilan qolgan edi).
+Ishga tushganda (har deploy ishchini qayta yaratadi) to'liq qayta hisob faqat hisob qoidalari versiyasi eskirgan
+tashkilotlar uchun navbatga qo'yiladi (:func:`upapi.sync.jobs.rebuild_stale`, B8.4a; avval B4.40 da hammasi edi):
+tannarx dvigateli yoki belgilar qoidasi o'zgarganda ``calc.CALC_VERSION`` oshiriladi — natijalar tungi 03:40 ni
+kutmasdan yangilanadi, qolgan deploylarda ortiqcha yuk yo'q (tashkilotlar ko'payganda muhim).
 """
 
 from __future__ import annotations
@@ -21,7 +22,7 @@ from upapi.logs import configure_logging, get_logger
 from upapi.settings import Settings, get_settings
 from upapi.startup import UnsafeConfiguration, check_role, check_settings
 from upapi.sync.engine import Runtime
-from upapi.sync.jobs import QUEUES, build_app, connector_for, rebuild_all
+from upapi.sync.jobs import QUEUES, build_app, connector_for, rebuild_stale
 
 
 async def wait_for_schema(engine: AsyncEngine, every: float = 2.0) -> None:
@@ -54,7 +55,7 @@ async def run(settings: Settings | None = None) -> None:
         log = get_logger("upapi.worker")
         log.info("worker_started", concurrency=settings.worker_concurrency)
         async with app.open_async():
-            log.info("calc_rebuild_on_start", queued=await rebuild_all(app, rt.engine))
+            log.info("calc_rebuild_on_start", queued=await rebuild_stale(app, rt.engine))
             await app.run_worker_async(
                 queues=QUEUES,
                 concurrency=settings.worker_concurrency,

@@ -154,13 +154,13 @@ def test_worker_starts_and_stops(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(jobs, "CALC_CRON", "* * * * *")
     monkeypatch.setattr(jobs, "NOTIFY_CRON", "* * * * *")
     rebuilds: list[Any] = []
-    real_rebuild = worker.rebuild_all
+    real_rebuild = worker.rebuild_stale
 
     async def spy(app: Any, engine: Any) -> int:
         rebuilds.append(app)
         return await real_rebuild(app, engine)
 
-    monkeypatch.setattr(worker, "rebuild_all", spy)
+    monkeypatch.setattr(worker, "rebuild_stale", spy)
     with dbtools.migrated_database() as urls:
         settings = sf.settings_for(urls)
 
