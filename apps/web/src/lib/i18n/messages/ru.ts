@@ -1317,6 +1317,7 @@ export const ru: Messages = {
         payout_late: "Выплата Uzum задерживается",
         cargo_late: "Карго задерживается",
         commission_changed: "Изменилась комиссия SKU",
+        goal_behind: "План отстаёт (месячная цель)",
         fbs_deadline: "FBS: приближается срок сдачи",
       },
       param: { at: "Время", streak: "Продаж подряд", hours: "Через сколько часов", days: "Сколько дней", level: "Уровень", min_returns: "Мин. число возвратов (за 7 дней)" },

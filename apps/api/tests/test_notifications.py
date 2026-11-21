@@ -853,3 +853,44 @@ def test_commission_changed_groups_by_day_and_does_not_repeat(world: World) -> N
     finally:
         a.sql("DELETE FROM sku_daily WHERE sku_id = ANY(%s)", [[changed, first, old, same]])
         a.sql("DELETE FROM mp_skus WHERE id = ANY(%s)", [[changed, first, old, same]])
+
+
+def test_goal_behind_notifies_once_per_set_and_waits_for_day_seven(world: World) -> None:
+    """B5.8 (F59): oylik maqsad bo'yicha prognoz maqsaddan 15% dan ko'p past bo'lsa — moliya roliga bitta xabar; oyning
+    7-kunigacha prognoz beqaror — xabar yo'q; maqsad rejada bo'lsa — yo'q; takror baholash yangi qator yaratmaydi."""
+    w, a = world, world.a
+    _clean(w)
+    a.sql("DELETE FROM goals WHERE org_id = %s", [w.org_id])
+    month = NOW.date().replace(day=1)
+    fresh(w, NOW + timedelta(days=2))
+    try:
+        # Maqsad juda katta — prognoz unga yetmaydi; boshqa oyning maqsadi (dekabr) bu oyga kirmaydi.
+        a.insert(
+            "goals",
+            period_start=month,
+            period_end=date(2026, 11, 30),
+            metric="revenue",
+            target=D("1000000000000"),
+        )
+        a.insert(
+            "goals",
+            period_start=date(2026, 12, 1),
+            period_end=date(2026, 12, 31),
+            metric="units",
+            target=D("1000000"),
+        )
+        early = datetime(2026, 11, 5, 10, 0, tzinfo=TZ)  # oyning 5-kuni: to'liq o'tgan 4 kun < 7
+        assert w.a.run(lambda conn: notify.goals_behind(conn, early.date())) == []
+        found = w.a.run(lambda conn: notify.goals_behind(conn, NOW.date()))
+        assert len(found) == 1
+        p = found[0].payload
+        assert p["count"] == 1 and p["month"] == month.isoformat()
+        assert p["goals"][0]["metric"] == "revenue" and p["goals"][0]["shop"] is None
+        evaluate(w)
+        rows = _rows(w, "accountant", "goal_behind")
+        assert len(rows) == 1 and rows[0]["payload"]["count"] == 1
+        assert not _rows(w, "warehouse", "goal_behind")  # ombor roli moliya xabarini olmaydi
+        evaluate(w, NOW + timedelta(hours=1))  # to'plam o'zgarmadi — takror yo'q
+        assert len(_rows(w, "accountant", "goal_behind")) == 1
+    finally:
+        a.sql("DELETE FROM goals WHERE org_id = %s", [w.org_id])
