@@ -523,14 +523,10 @@
     gap: 0;
   }
 
-  /* Qo'ng'iroq (B6.3) qo'shilgach 360 px da sig'ishi uchun ikonkali tugmalar ixcham. */
-  .topbar__search.ui-btn {
-    min-inline-size: 36px;
-    padding: 0 var(--space-1);
-  }
-
+  /* Qo'ng'iroq (B6.3): telefonda bosish maydoni ≥ 44 px (04 §11); panel tugmalari qisilmaydi, filtrlar o'raladi. */
   .topbar__bell {
-    min-inline-size: 32px;
+    min-inline-size: 44px;
+    min-block-size: 44px;
   }
 
   .palette {
