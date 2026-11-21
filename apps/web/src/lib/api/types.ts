@@ -5,6 +5,7 @@ import type { components, paths } from "./schema";
 type Schemas = components["schemas"];
 
 export type ApiPaths = paths;
+export type DeviceSession = Schemas["SessionOut"];
 export type Statement = Schemas["StatementOut"];
 export type FullExport = Schemas["FullExportOut"];
 export type PnlRow = Schemas["RowOut"];
