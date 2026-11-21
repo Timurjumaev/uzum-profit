@@ -5804,6 +5804,271 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/exports/pnl.xlsx": {
+      "get": {
+        "tags": [
+          "exports"
+        ],
+        "summary": "Export Pnl",
+        "description": "Foyda: 1-varaq — hisob varag'i (joriy, yakunlangan / kutilayotgan, tushumga nisbatan, oldingi davr, farq); ``view`` bo'lsa —\n2-varaq: oy / kun / do'kon / SKU kesimi (ustunlar yig'indisi = jami). Hisob ``/pnl`` ning o'zi.",
+        "operationId": "export_pnl_api_v1_orgs__org_id__exports_pnl_xlsx_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/View",
+              "default": "total"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Davr boshi (Toshkent kuni)",
+              "title": "Start"
+            },
+            "description": "Davr boshi (Toshkent kuni)"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Davr oxiri, kiradi; standart — bugun",
+              "title": "End"
+            },
+            "description": "Davr oxiri, kiradi; standart — bugun"
+          },
+          {
+            "name": "shop",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Do'konlar (bir necha marta)",
+              "title": "Shop"
+            },
+            "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/exports/orders-analysis.xlsx": {
+      "get": {
+        "tags": [
+          "exports"
+        ],
+        "summary": "Export Orders Analysis",
+        "description": "Buyurtmalar tahlili (bekor va qaytish): umumiy, kunlar, SKU bo'yicha, sabablar — ``/orders/analysis`` ning o'zi.",
+        "operationId": "export_orders_analysis_api_v1_orgs__org_id__exports_orders_analysis_xlsx_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Davr boshi (Toshkent kuni)",
+              "title": "Start"
+            },
+            "description": "Davr boshi (Toshkent kuni)"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Davr oxiri, kiradi; standart — bugun",
+              "title": "End"
+            },
+            "description": "Davr oxiri, kiradi; standart — bugun"
+          },
+          {
+            "name": "shop",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Do'konlar (bir necha marta)",
+              "title": "Shop"
+            },
+            "description": "Do'konlar (bir necha marta)"
+          },
+          {
+            "name": "compare",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "previous",
+                "last_year"
+              ],
+              "type": "string",
+              "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)",
+              "default": "previous",
+              "title": "Compare"
+            },
+            "description": "Solishtirish: oldingi davr yoki o'tgan yil shu davri (faqat /dashboard va /pnl)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/purchases": {
       "get": {
         "tags": [

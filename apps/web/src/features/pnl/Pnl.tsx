@@ -13,7 +13,7 @@ import { useFilters } from "../../app/filters";
 import { currentOrg, meQuery, pnlQuery, syncQuery } from "../../app/query";
 import { pnlSearch } from "../../app/search";
 import { WaterfallChart } from "../../components/charts";
-import { Banner, Button, EmptyState, Skeleton, PageHelp, Segmented } from "../../components/ui";
+import { Banner, Button, EmptyState, ExportButton, Skeleton, PageHelp, Segmented } from "../../components/ui";
 import { useFormat } from "../../lib/i18n";
 import { syncSummary } from "../../lib/sync";
 import { Drill } from "../home/Drill";
@@ -84,6 +84,9 @@ export function Pnl() {
         <div className="page-title">
           <h1 className="h2">{t("pnl.title", { period: f.period(current.start, current.end) })}</h1>
           <PageHelp page="pnl" />
+        </div>
+        <div className="pnl__tools">
+          <ExportButton orgId={org.id} table="pnl" query={{ start: params.start, end: params.end, shop: params.shops, view, compare: params.lastYear ? "last_year" : undefined }} disabled={s.lines === 0} />
         </div>
         {previous && <p className="caption">{t(filters.compare === "lastYear" ? "pnl.lastYearNote" : "pnl.previousNote", { period: f.period(previous.start, previous.end) })}</p>}
         {filters.shops.length > 0 && <p className="caption">{t("pnl.commonNote")}</p>}

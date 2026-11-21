@@ -529,3 +529,20 @@ describe("kirish imkoniyati", () => {
     expect(await run()).toEqual([]);
   }, 30_000);
 });
+
+describe("Excel eksport (B7.2)", () => {
+  it("Foyda: tugma joriy davr, do'kon va kesim bilan /exports/pnl.xlsx ni so'raydi", async () => {
+    const EXPORT = `GET /api/v1/orgs/${ME.orgs[0]!.id}/exports/pnl.xlsx`;
+    const create = vi.fn(() => "blob:1");
+    const revoke = vi.fn();
+    vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: create, revokeObjectURL: revoke }));
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+    const { api } = await renderPnl(`${PATH}&view=sku`, { [EXPORT]: () => new Response("xlsx", { status: 200, headers: { "Content-Disposition": 'attachment; filename="foyda.xlsx"' } }) });
+    fireEvent.click(screen.getByRole("button", { name: "Excel yuklab olish" }));
+    await waitFor(() => expect(revoke).toHaveBeenCalledWith("blob:1"));
+    const url = new URL((api.fetch.mock.calls.find(([r]) => new URL((r as Request).url).pathname.endsWith("/exports/pnl.xlsx"))![0] as Request).url);
+    expect(url.searchParams.get("view")).toBe("sku");
+    expect(url.searchParams.get("start")).toBe("2026-09-01");
+    expect(url.searchParams.get("end")).toBe("2026-10-31");
+  });
+});

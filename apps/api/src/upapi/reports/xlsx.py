@@ -68,22 +68,22 @@ def cell_value(value: Any, kind: str) -> Any:
     return safe_text(str(value))
 
 
-def build(
-    title: str,
-    columns: Sequence[Col],
-    rows: Iterable[Any],
-    note: Sequence[str] = (),
-    generated: datetime | None = None,
-) -> bytes:
-    """Bitta varaqli ish daftari baytlari."""
-    wb = Workbook()
-    ws = wb.active
-    assert ws is not None
-    ws.title = title[:SHEET_TITLE_MAX]
-    stamp = (generated or datetime.now(TASHKENT)).astimezone(TASHKENT).strftime("%d.%m.%Y %H:%M")
-    ws.append([title])
+@dataclass(frozen=True, slots=True)
+class Sheet:
+    """Ish daftarining bitta varag'i (B7.2): nom, ustunlar, qatorlar va izoh."""
+
+    title: str
+    columns: Sequence[Col]
+    rows: Iterable[Any]
+    note: Sequence[str] = ()
+
+
+def _fill(ws: Any, sheet: Sheet, stamp: str) -> None:
+    ws.title = sheet.title[:SHEET_TITLE_MAX]
+    columns = sheet.columns
+    ws.append([sheet.title])
     ws["A1"].font = Font(bold=True, size=14)
-    ws.append([" · ".join([*note, f"Yaratildi: {stamp}"])])
+    ws.append([" · ".join([*sheet.note, f"Yaratildi: {stamp}"])])
     ws["A2"].font = Font(color="666666")
     ws.append([])
     head = 4
@@ -97,7 +97,7 @@ def build(
         )
     widths = [len(c.header) for c in columns]
     count = 0
-    for row in rows:
+    for row in sheet.rows:
         count += 1
         values = [cell_value(c.get(row), c.kind) for c in columns]
         ws.append(values)
@@ -121,6 +121,27 @@ def build(
     ws.freeze_panes = f"B{head + 1}"
     if count:
         ws.auto_filter.ref = f"A{head}:{get_column_letter(len(columns))}{last}"
+
+
+def build_book(sheets: Sequence[Sheet], generated: datetime | None = None) -> bytes:
+    """Bir necha varaqli ish daftari baytlari (B7.2: Foyda — hisob varag'i va kesim, Buyurtmalar tahlili)."""
+    wb = Workbook()
+    stamp = (generated or datetime.now(TASHKENT)).astimezone(TASHKENT).strftime("%d.%m.%Y %H:%M")
+    for n, sheet in enumerate(sheets):
+        ws = wb.active if n == 0 else wb.create_sheet()
+        assert ws is not None
+        _fill(ws, sheet, stamp)
     out = io.BytesIO()
     wb.save(out)
     return out.getvalue()
+
+
+def build(
+    title: str,
+    columns: Sequence[Col],
+    rows: Iterable[Any],
+    note: Sequence[str] = (),
+    generated: datetime | None = None,
+) -> bytes:
+    """Bitta varaqli ish daftari baytlari."""
+    return build_book([Sheet(title, columns, rows, note)], generated)

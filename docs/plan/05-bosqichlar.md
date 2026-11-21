@@ -1378,7 +1378,7 @@ Qayta tuzildi (ADR-065, 2026-11-16 — tanqidiy tahlil: 09 §14). Tartib: B7.1 �
     formulalar hisoblanmaydi (faqat saqlangan qiymat), ochilgandagi hajm chegarasi (zip-bomba), fayl diskka yozilmaydi,
     daqiqasiga cheklov, audit jurnali; ruxsat — `manage_settings`.
   - Onboarding 5-qadamga ulash; yordam maqolasi.
-- [ ] B7.2 **Excel eksport to'liqligi** (M5, M14: "har jadval → Excel"). Bor: sotuvlar, mahsulotlar, Uzum xarajatlari,
+- [→] B7.2 (1-qadam ✓ 2026-11-21: Foyda va Buyurtmalar tahlili; qoldi: Omborim, Kargolar, Qabul farqi va kamomad, drill-down) **Excel eksport to'liqligi** (M5, M14: "har jadval → Excel"). Bor: sotuvlar, mahsulotlar, Uzum xarajatlari,
   xaridlar, ombor, jo'natma. Yo'q — qo'shiladi: **Foyda (hisob varag'i va oy / do'kon / SKU kesimlari)**, har qator
   tafsiloti (drill-down), Buyurtmalar tahlili, Omborim, Kargolar, Qabul farqi va kamomad. Qoida o'zgarmaydi: eksport
   ro'yxat endpointining o'zidan (filtr, rol, hisob bir xil); test — Excel yig'indisi sahifadagi jami bilan teng.

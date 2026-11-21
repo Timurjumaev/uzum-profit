@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from datetime import date
+from decimal import Decimal
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
@@ -25,9 +26,11 @@ from upapi.auth.permissions import Permission, allowed
 from upapi.db import models as m
 from upapi.errors import AppError
 from upapi.reports import xlsx
-from upapi.reports.common import MAX_LIMIT, Filters, filters
+from upapi.reports.common import MAX_LIMIT, Filters, Heavy, filters
 from upapi.routes import expenses as expenses_routes
 from upapi.routes import inventory as inventory_routes
+from upapi.routes import orders as orders_routes
+from upapi.routes import pnl as pnl_routes
 from upapi.routes import purchases as purchases_routes
 from upapi.routes import sales as sales_routes
 from upapi.routes import skus as skus_routes
@@ -335,3 +338,194 @@ async def export_inventory(
     note = [f"Holat: {day:%d.%m.%Y}"]
     data = xlsx.build("Ombor", _stock_cols(amounts), rows, note)
     return _file(f"ombor-{day:%Y%m%d}", data)
+
+
+# --- B7.2: Foyda (hisob varag'i va kesimlar), Buyurtmalar tahlili -------------------------------------------------
+
+PNL_LABELS = {
+    "revenue": "Tushum (F3)",
+    "commission": "Komissiya (F4)",
+    "logistics": "Logistika (F5)",
+    "payout": "Uzum toʻlovi (F6)",
+    "cogs": "Tannarx (F7)",
+    "gross_profit": "Yalpi foyda (F8)",
+    "tax": "Soliq (F11)",
+    "uncovered_payout": "Tannarxsiz sotuvlar (hisobga kirmadi, F15)",
+    "uncovered_expenses": "Tannarxsiz qismga toʻgʻri kelgan xarajat (F15)",
+    "net_profit": "Sof foyda (F12)",
+}
+
+
+def _pnl_label(code: str) -> str:
+    """Hisob varag'i qatori kodi → Excel'dagi nom (``uzum:<tur>``, ``own:<toifa>``, soliq qatorlari — o'z nomi bilan)."""
+    if code in PNL_LABELS:
+        return PNL_LABELS[code]
+    kind, _, name = code.partition(":")
+    if kind == "uzum":
+        return f"Uzum xarajati: {name}"
+    if kind == "own":
+        return f"Oʻz xarajat: {name}"
+    return f"Soliq: {name}" if name else code
+
+
+PNL_ROWS = [
+    xlsx.Col("Qator", lambda r: _pnl_label(r.code)),
+    xlsx.Col("Jami", lambda r: r.amount, "money"),
+    xlsx.Col("Yakunlangan", lambda r: r.done, "money"),
+    xlsx.Col("Kutilayotgan (Jarayonda)", lambda r: r.processing, "money"),
+    xlsx.Col("Tushumga nisbatan", lambda r: r.share_of_revenue, "ratio"),
+    xlsx.Col("Oldingi davr", lambda r: r.previous, "money"),
+    xlsx.Col("Farq", lambda r: r.diff, "money"),
+    xlsx.Col("Oʻzgarish", lambda r: r.change, "ratio"),
+]
+PNL_VIEW_TITLE = {
+    "month": "Oylar",
+    "day": "Kunlar",
+    "shop": "Doʻkonlar",
+    "sku": "SKU",
+}
+
+
+def _pnl_view_cols(label: Callable[[Any], str | None], head: str) -> list[xlsx.Col]:
+    return [
+        xlsx.Col(head, label),
+        xlsx.Col("Tushum (F3)", lambda c: c.statement.revenue, "money", total=True),
+        xlsx.Col("Komissiya (F4)", lambda c: c.statement.commission, "money", total=True),
+        xlsx.Col("Logistika (F5)", lambda c: c.statement.logistics, "money", total=True),
+        xlsx.Col("Uzum toʻlovi (F6)", lambda c: c.statement.payout, "money", total=True),
+        xlsx.Col("Tannarx (F7)", lambda c: c.statement.cogs, "money", total=True),
+        xlsx.Col("Yalpi foyda (F8)", lambda c: c.statement.gross_profit, "money", total=True),
+        xlsx.Col("Uzum xarajatlari (F9)", lambda c: c.statement.uzum_total, "money", total=True),
+        xlsx.Col("Oʻz xarajatlar (F10)", lambda c: c.statement.own_total, "money", total=True),
+        xlsx.Col("Soliq (F11)", lambda c: c.statement.tax, "money", total=True),
+        xlsx.Col("Sof foyda (F12)", lambda c: c.statement.net_profit, "money", total=True),
+        xlsx.Col(
+            "shundan kutilayotgan", lambda c: c.statement.net_profit_processing, "money", total=True
+        ),
+        xlsx.Col("Marja (F13)", lambda c: c.statement.margin, "ratio"),
+        xlsx.Col("ROI (F14)", lambda c: c.statement.roi, "ratio"),
+        xlsx.Col("Dona", lambda c: c.statement.units, "int", total=True),
+    ]
+
+
+@router.get("/orgs/{org_id}/exports/pnl.xlsx")
+async def export_pnl(
+    ctx: Exporter, f: Filter, _: Heavy, view: pnl_routes.View = pnl_routes.View.TOTAL
+) -> Response:
+    """Foyda: 1-varaq — hisob varag'i (joriy, yakunlangan / kutilayotgan, tushumga nisbatan, oldingi davr, farq); ``view`` bo'lsa —
+    2-varaq: oy / kun / do'kon / SKU kesimi (ustunlar yig'indisi = jami). Hisob ``/pnl`` ning o'zi."""
+    _need(ctx, Permission.VIEW_FINANCE)
+    out = await pnl_routes.pnl(ctx, f, None, view)
+    note = [_period(f), *_shops(f)]
+    sheets = [
+        xlsx.Sheet(
+            "Hisob varagʻi",
+            PNL_ROWS,
+            out.rows,
+            [
+                *note,
+                "Oldingi davr: "
+                f"{f.compare_period().start:%d.%m.%Y} – {f.compare_period().end:%d.%m.%Y}",
+            ],
+        )
+    ]
+    if view is not pnl_routes.View.TOTAL:
+        shops = {
+            str(r.id): (r.alias or r.name)
+            for r in await ctx.conn.execute(select(m.shops.c.id, m.shops.c.alias, m.shops.c.name))
+        }
+
+        def label(c: Any) -> str | None:
+            key: str | None = c.key
+            if key is None:
+                return "Taqsimlanmagan"
+            if view is pnl_routes.View.SHOP:
+                return str(shops.get(key, "Umumiy xarajatlar" if key == "" else key))
+            if view is pnl_routes.View.SKU:
+                return str(c.title or {"unlinked": "SKU bogʻlanmagan sotuvlar"}.get(key, key))
+            return key[:7] if view is pnl_routes.View.MONTH else key
+
+        sheets.append(
+            xlsx.Sheet(
+                PNL_VIEW_TITLE[view.value],
+                _pnl_view_cols(label, PNL_VIEW_TITLE[view.value]),
+                out.columns,
+                note,
+            )
+        )
+    return _file(f"foyda-{view.value}-{_span(f)}", xlsx.build_book(sheets))
+
+
+@router.get("/orgs/{org_id}/exports/orders-analysis.xlsx")
+async def export_orders_analysis(ctx: Exporter, f: Filter) -> Response:
+    """Buyurtmalar tahlili (bekor va qaytish): umumiy, kunlar, SKU bo'yicha, sabablar — ``/orders/analysis`` ning o'zi."""
+    _need(ctx, Permission.VIEW_FINANCE)
+    out = await orders_routes.analysis(ctx, f)
+    note = [_period(f), *_shops(f)]
+    s = out.summary
+    summary: list[tuple[str, int | None, Decimal | None, Decimal | None]] = [
+        ("Sotilgan dona (F3)", s.units, None, None),
+        ("Bekor (F17)", s.canceled, s.cancel_share, s.cancel_revenue),
+        ("Qaytarish (F18)", s.returns, s.return_share, s.return_revenue),
+        ("Qaytim saqlash xarajati", None, None, s.return_storage_cost),
+    ]
+    sheets = [
+        xlsx.Sheet(
+            "Umumiy",
+            [
+                xlsx.Col("Koʻrsatkich", lambda r: r[0]),
+                xlsx.Col("Dona", lambda r: r[1], "int"),
+                xlsx.Col("Ulush", lambda r: r[2], "ratio"),
+                xlsx.Col("Summa", lambda r: r[3], "money"),
+            ],
+            summary,
+            note,
+        ),
+        xlsx.Sheet(
+            "Kunlar",
+            [
+                xlsx.Col("Sana", lambda r: r.day, "date"),
+                xlsx.Col("Dona", lambda r: r.units, "int", total=True),
+                xlsx.Col("Bekor", lambda r: r.canceled, "int", total=True),
+                xlsx.Col("Qaytarish", lambda r: r.returns, "int", total=True),
+                xlsx.Col("Bekor ulushi (F17)", lambda r: r.cancel_share, "ratio"),
+                xlsx.Col("Qaytarish ulushi (F18)", lambda r: r.return_share, "ratio"),
+            ],
+            out.daily,
+            note,
+        ),
+        xlsx.Sheet(
+            "SKU",
+            [
+                xlsx.Col("SKU", lambda r: r.title or "SKU bogʻlanmagan sotuvlar"),
+                xlsx.Col("Dona", lambda r: r.units, "int", total=True),
+                xlsx.Col("Bekor", lambda r: r.canceled, "int", total=True),
+                xlsx.Col("Qaytarish", lambda r: r.returns, "int", total=True),
+                xlsx.Col("Bekor ulushi (F17)", lambda r: r.cancel_share, "ratio"),
+                xlsx.Col("Qaytarish ulushi (F18)", lambda r: r.return_share, "ratio"),
+                xlsx.Col("Bekor farqi", lambda r: r.canceled_diff, "int"),
+                xlsx.Col("Qaytarish farqi", lambda r: r.returns_diff, "int"),
+            ],
+            out.by_sku,
+            [*note, f"Eng koʻp bekor + qaytarish: birinchi {orders_routes.TOP_SKUS} ta"],
+        ),
+        xlsx.Sheet(
+            "Bekor sabablari",
+            [
+                xlsx.Col("Sabab", lambda r: r.cause or "Koʻrsatilmagan"),
+                xlsx.Col("Dona", lambda r: r.units, "int", total=True),
+            ],
+            out.cancel_causes,
+            note,
+        ),
+        xlsx.Sheet(
+            "Qaytarish sabablari",
+            [
+                xlsx.Col("Sabab", lambda r: r.cause or "Koʻrsatilmagan"),
+                xlsx.Col("Dona", lambda r: r.units, "int", total=True),
+            ],
+            out.return_causes,
+            note,
+        ),
+    ]
+    return _file(f"buyurtmalar-tahlili-{_span(f)}", xlsx.build_book(sheets))

@@ -200,12 +200,61 @@ def test_purchases_and_inventory_export(world: World) -> None:
     assert "ombor-20261020.xlsx" in stock.headers["content-disposition"]
 
 
+def sheets(data: bytes) -> dict[str, list[list[Any]]]:
+    """Varaq nomi → sarlavhadan keyingi qatorlar (jami qatorisiz) — ko'p varaqli eksport uchun."""
+    wb = load_workbook(io.BytesIO(data))
+    out = {}
+    for ws in wb.worksheets:
+        rows = [list(r) for r in ws.iter_rows(min_row=HEAD + 1, values_only=True)]
+        out[ws.title] = [r for r in rows if r[0] != "Jami"]
+    return out
+
+
+def test_pnl_export_matches_page_and_views_sum_to_total(world: World) -> None:
+    """B7.2: Foyda eksporti — hisob varag'i qatorlari `/pnl` bilan bir xil; oy / do'kon / SKU kesimlari yig'indisi = jami."""
+    page = world.get("pnl", **OCT)
+    r = export(world, "pnl", **OCT)
+    assert (
+        r.status_code == 200
+        and "foyda-total-20261001-20261020.xlsx" in r.headers["content-disposition"]
+    )
+    book = sheets(r.content)
+    assert list(book) == ["Hisob varagʻi"]
+    by_label = {row[0]: row for row in book["Hisob varagʻi"]}
+    assert D(str(by_label["Sof foyda (F12)"][1])) == D(page["statement"]["net_profit"])
+    assert D(str(by_label["Tushum (F3)"][1])) == D(page["statement"]["revenue"])
+    assert len(book["Hisob varagʻi"]) == len(page["rows"])  # qatorlar soni ham bir xil
+    for view, name in (("month", "Oylar"), ("shop", "Doʻkonlar"), ("sku", "SKU")):
+        got = sheets(export(world, "pnl", view=view, **OCT).content)
+        assert list(got) == ["Hisob varagʻi", name], view
+        cols = world.get("pnl", view=view, **OCT)["columns"]
+        assert len(got[name]) == len(cols), view
+        net = sum(D(str(row[10])) for row in got[name])  # "Sof foyda (F12)" ustuni
+        assert net == sum(D(c["statement"]["net_profit"]) for c in cols), view
+        assert net == D(page["statement"]["net_profit"]), view  # ustunlar yig'indisi = jami
+
+
+def test_orders_analysis_export_matches_page(world: World) -> None:
+    page = world.get("orders/analysis", **OCT)
+    r = export(world, "orders-analysis", **OCT)
+    assert r.status_code == 200
+    book = sheets(r.content)
+    assert list(book) == ["Umumiy", "Kunlar", "SKU", "Bekor sabablari", "Qaytarish sabablari"]
+    assert len(book["Kunlar"]) == len(page["daily"])
+    assert sum(row[2] for row in book["Kunlar"]) == sum(d["canceled"] for d in page["daily"])
+    assert [row[1] for row in book["SKU"]] == [x["units"] for x in page["by_sku"]]
+    summary = {row[0]: row for row in book["Umumiy"]}
+    assert summary["Bekor (F17)"][1] == page["summary"]["canceled"]
+    assert summary["Qaytarish (F18)"][1] == page["summary"]["returns"]
+    assert len(book["Bekor sabablari"]) == len(page["cancel_causes"])
+
+
 def test_roles(world: World) -> None:
     # Moliya jadvallari: buxgalter va menejer — mumkin; omborchi — yo'q (``export`` ruxsati yo'q).
     for role in ("manager", "accountant"):
         assert export(world, "sales", role, **OCT).status_code == 200
         assert export(world, "skus", role, **OCT).status_code == 200
-    for name in ("sales", "skus", "expenses"):
+    for name in ("sales", "skus", "expenses", "pnl", "orders-analysis"):
         r = export(world, name, "warehouse", **OCT)
         assert r.status_code == 403, name
         assert r.json()["code"] == "forbidden"
