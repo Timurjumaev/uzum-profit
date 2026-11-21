@@ -1473,7 +1473,7 @@ ishlari** belgilaydi (yuridik shaxs, shartnoma, reyestr) — ular hozirdan boshl
 - [x] B8.9 (✓ 2026-11-21: `org_created`, `history_loaded`, `first_cost`, `costs_60`, `telegram_linked` (holatdan bir martadan, `upapi/activation.py`), `daily_visit` (kuniga bir marta), `mp_account_connected` (avvaldan); voronka jadvali — `python -m upapi.admin funnel`; migratsiya 0049) (ADR-057 Q13, 09 R3 e) **Foydalanish hodisalari** (`events`; hozir 2 ta hodisa yoziladi): B9.4 o'lchovlari —
   ro'yxatdan o'tish, kalit ulash, tarix yuklandi, birinchi tannarx, tushumning 60% ida tannarx, Telegram ulandi, kunlik
   kirish. Betadan **oldin** (keyin tiklab bo'lmaydi).
-- [ ] B8.14 **Kirish kodi — yagona nuqta xavfi** (yangi): kod faqat Telegram Gateway orqali (ADR-028); raqam Telegram'da
+- [x] B8.14 (✓ 2026-11-21: tushunarli xato matnlari (`signup_closed`, `telegram_not_found`, `otp_*`) va "Yordam" havolasi — kirish sahifasida va foydalanuvchi menyusida (`UP_SUPPORT_URL`, `GET /config`); kuzatuv — B8.5a; SMS zaxira — B8-B) **Kirish kodi — yagona nuqta xavfi** (yangi): kod faqat Telegram Gateway orqali (ADR-028); raqam Telegram'da
   bo'lmasa yoki Gateway ishlamasa — kirib bo'lmaydi. Beta uchun: balans va xatolar kuzatuvi (B8.5a), tushunarli xato
   matni va yordam havolasi. SMS zaxira kanali (ADR-027) — B8-B da, betada necha kishi kira olmaganiga qarab.
 - [ ] B8.16 **Uzum kaliti: ruxsat va muddat** (yangi; 08 §9 c, e, f — Temurning kabineti, 2026-11-16). Kalit yaratishda
@@ -1491,7 +1491,7 @@ ishlari** belgilaydi (yuridik shaxs, shartnoma, reyestr) — ular hozirdan boshl
   staging'da sinxronning hamma turi (sotuvlar, xarajatlar, mahsulotlar, postavkalar, qaytarishlar) shu kalit bilan
   ishlashi tasdiqlanadi ("Ma'lumotlar holati" yashil).
 - [x] B8.0a (✓ 2026-11-21: Sozlamalar → "Qurilmalarim") "Qurilmalarim" va "Hamma qurilmadan chiqish" (M1; API bor — `/sessions`, UI yo'q).
-- [ ] Yordam: Telegram yordam chati havolasi ilovada; mavjud yordam maqolalari (`docs/help`) ilova ichidan ochiladi.
+- [~] Yordam (✓ 2026-11-21: Telegram yordam chati havolasi ilovada — `UP_SUPPORT_URL`; T: havolani `.env` ga qo'yish; qoldi: `docs/help` maqolalari ilova ichidan): Telegram yordam chati havolasi ilovada; mavjud yordam maqolalari (`docs/help`) ilova ichidan ochiladi.
 
 **B8-A chiqish:** begona sinovchi (Temur emas) taklif kodi bilan production'da ro'yxatdan o'tib, do'konini ulab,
 yo'riqnomasiz 10 daqiqada foydani ko'radi; Temurning ma'lumoti production'da va staging bilan tiyinigacha bir xil;

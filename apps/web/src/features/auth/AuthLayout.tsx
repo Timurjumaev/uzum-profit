@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Logo } from "../../components/shell/Logo";
+import { SupportLink } from "../../components/shell/SupportLink";
 import { Select } from "../../components/ui";
 import { LANGS, setLanguage, type Lang } from "../../lib/i18n";
 
@@ -26,6 +27,7 @@ export function AuthLayout({ title, lead, children }: { title: string; lead?: st
         <h1>{title}</h1>
         {lead && <p className="muted">{lead}</p>}
         {children}
+        <SupportLink />
       </div>
     </main>
   );

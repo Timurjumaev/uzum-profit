@@ -40,6 +40,7 @@ from upapi.routes import (
     own_expenses,
     payouts,
     pnl,
+    public_config,
     purchases,
     receiving,
     sales,
@@ -120,6 +121,7 @@ def create_app(
     install_error_handlers(app, settings)
     app.include_router(health.router)  # /health — infratuzilma uchun (prefikssiz)
     app.include_router(health.router, prefix=API_PREFIX)
+    app.include_router(public_config.router, prefix=API_PREFIX)  # B8.14 yordam havolasi (kirishsiz)
     app.include_router(auth.router, prefix=API_PREFIX)
     app.include_router(orgs.router, prefix=API_PREFIX)
     app.include_router(accounts.router, prefix=API_PREFIX)

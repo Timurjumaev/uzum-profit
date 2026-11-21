@@ -827,3 +827,13 @@ export const requestOrgDeletion = (orgId: string) =>
 
 export const cancelOrgDeletion = (orgId: string) =>
   unwrap(api.DELETE("/api/v1/orgs/{org_id}/deletion", { params: { path: { org_id: orgId } } }));
+
+// --- Ochiq sozlamalar (B8.14) ---------------------------------------------------------------------------------------
+
+/** Kirishsiz ochiq mijoz sozlamalari: yordam havolasi (Telegram yordam chati) — berilmagan bo'lsa `null`. */
+export const publicConfigQuery = queryOptions({
+  queryKey: ["config"],
+  queryFn: () => unwrap(api.GET("/api/v1/config")),
+  staleTime: 3_600_000,
+  retry: false,
+});

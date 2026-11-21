@@ -66,6 +66,8 @@ class Settings(BaseSettings):
     # B8.11: ochiq ro'yxatdan o'tish. Beta/production'da ``UP_SIGNUP_OPEN=false``: yangi raqam faqat ruxsat ro'yxatida
     # (``python -m upapi.signup allow``) yoki a'zo taklifi bilan kiradi; mavjud foydalanuvchilar doim kiradi.
     signup_open: bool = True
+    # B8.14: yordam havolasi (Telegram yordam chati) — kirish sahifasida va foydalanuvchi menyusida; faqat https. None — yashirin.
+    support_url: str | None = None
     # ADR-072: ishlab chiqish uchun faqat o'qish tokeni (``Authorization: Bearer``, faqat GET). Standart — o'chiq;
     # faqat staging'da yoqiladi, production'da yoqilsa ilova ishga tushmaydi.
     dev_tokens_enabled: bool = False
@@ -169,6 +171,8 @@ class Settings(BaseSettings):
             out.append("UP_FX_MARKET_URLS: faqat https://")
         if not self.uzum_base_url.startswith("https://"):
             out.append("UP_UZUM_BASE_URL: faqat https://")
+        if self.support_url is not None and not self.support_url.startswith("https://"):
+            out.append("UP_SUPPORT_URL: faqat https://")
         if not self.secure_cookies:
             out.append("UP_COOKIE_SECURE=false — sessiya cookie HTTPS'siz yuboriladi")
         if any(not o.startswith("https://") for o in self.allowed_origins):

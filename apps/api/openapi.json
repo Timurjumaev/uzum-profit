@@ -87,6 +87,47 @@
         }
       }
     },
+    "/api/v1/config": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Ochiq mijoz sozlamalari",
+        "operationId": "public_config_api_v1_config_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicConfig"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/otp": {
       "post": {
         "tags": [
@@ -20461,6 +20502,26 @@
         ],
         "title": "ProgressOut",
         "description": "TM9.2: qabul davom etmoqda — farq qabul tugagach (7 kun yoki son e'longa yetganda) chiqadi."
+      },
+      "PublicConfig": {
+        "properties": {
+          "support_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Support Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "support_url"
+        ],
+        "title": "PublicConfig"
       },
       "PurchaseDetailOut": {
         "properties": {

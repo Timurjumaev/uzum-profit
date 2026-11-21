@@ -351,6 +351,7 @@ export const uzLatn = {
     delivery: { sent: "Telegramga yuborildi", pending: "Yuborilmagan", failed: "Yuborilmadi" },
   },
   shell: {
+    support: "Yordam (Telegram)",
     skip: "Asosiy kontentga oʻtish",
     orgWide: "Butun tashkilot boʻyicha",
     filters: "Filtrlar",
