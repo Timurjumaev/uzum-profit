@@ -6,8 +6,15 @@
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#F3F5FB" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0E121A" media="(prefers-color-scheme: dark)" />
-    <!-- Belgi (04 §12, audit D11): Logo.tsx bilan bir xil; manifest va PNG ikonkalar — PWA bilan (B6.3, ADR-059). -->
+    <!-- Belgi (04 §12, audit D11): Logo.tsx bilan bir xil; o'rnatiladigan ilova (PWA, B6.3, ADR-057 Q13): manifest va PNG ikonkalar.
+         Service worker va oflayn kesh yo'q (eskirgan moliyaviy raqam xavfi, "Keyinga"). -->
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="SellerMax" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>SellerMax</title>
     <script src="/theme-init.js"></script>
   </head>
