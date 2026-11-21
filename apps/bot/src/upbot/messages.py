@@ -78,6 +78,7 @@ T: dict[str, dict[str, str]] = {
         "monthly_report": "📊 {month} oylik hisobot ({kind}): sof foyda {profit}, tushum {revenue}",
         "monthly_preliminary": "dastlabki",
         "monthly_final": "yakuniy",
+        "export_ready": "📦 Toʻliq eksport tayyor ({size}). Sozlamalardan bir martalik havola oling — 24 soat amal qiladi",
         "monthly_processing": "{n} ta buyurtma ({sum}) hali jarayonda — yakuniy hisobot hammasi yakunlangach keladi",
         "returns_spike_shop": "↩️ Qaytish keskin oshdi: {n} ta doʻkon (jami {total}) — oxirgi 7 kunda ulush 30 kunlikdan ≥ 2 barobar",
         "returns_spike_sku": "↩️ Qaytish keskin oshdi: {n} ta SKU (jami {total}) — oxirgi 7 kunda ulush 30 kunlikdan ≥ 2 barobar",
@@ -140,6 +141,7 @@ T: dict[str, dict[str, str]] = {
         "monthly_report": "📊 Месячный отчёт за {month} ({kind}): чистая прибыль {profit}, выручка {revenue}",
         "monthly_preliminary": "предварительный",
         "monthly_final": "итоговый",
+        "export_ready": "📦 Полный экспорт готов ({size}). Получите одноразовую ссылку в настройках — действует 24 часа",
         "monthly_processing": "{n} заказов ({sum}) ещё в обработке — итоговый отчёт придёт, когда все завершатся",
         "returns_spike_shop": "↩️ Возвраты резко выросли: {n} магазинов (всего {total}) — доля за 7 дней ≥ 2× доли за 30 дней",
         "returns_spike_sku": "↩️ Возвраты резко выросли: {n} SKU (всего {total}) — доля за 7 дней ≥ 2× доли за 30 дней",
@@ -334,6 +336,9 @@ def notification(event: str, payload: dict[str, Any], lang: str, org: str | None
                 )
             )
         msg = Message("\n".join(lines), f"/reports?month={p['month']}")
+    elif event == "export_ready":
+        mb = (Decimal(p.get("size") or 0) / Decimal(1024 * 1024)).quantize(Decimal("0.1"))
+        msg = Message(t(lang, "export_ready", size=f"{mb} MB"), "/settings")
     elif event == "loss_sales":
         key = "loss_sales_new" if p.get("new") else "loss_sales"
         head = t(lang, key, n=p["count"], total=p.get("total", p["count"]), streak=p["streak"])

@@ -1394,7 +1394,7 @@ Qayta tuzildi (ADR-065, 2026-11-16 — tanqidiy tahlil: 09 §14). Tartib: B7.1 �
 - [→] B7.4 (**ko'chdi → "Keyinga"**, Temur javobi 2026-11-16) Buxgalter paketi. Temur (YaTT): hisobot topshirmaydi,
   buxgalteri yo'q — ijtimoiy soliq va aylanmadan 1% ni o'zi to'laydi; unga kerak raqam (oylik tushum va hisoblangan
   soliq) Foyda sahifasida bor (F11). Ehtiyoj faqat buxgalterli sotuvchida (P4) — betada so'raladi (B9.6).
-- [ ] B7.5 **To'liq eksport** (ZIP: CSV + JSON; "ma'lumot sizniki", 01 D9; B8.6 dagi o'chirish tartibidan oldin kerak):
+- [x] B7.5 (✓ 2026-11-21: `POST /exports/full` → fon ishi `export.full` → bildirishnoma "export_ready" → bir martalik havola; Sozlamalar → "To'liq eksport"; migratsiya 0044) **To'liq eksport** (ZIP: CSV + JSON; "ma'lumot sizniki", 01 D9; B8.6 dagi o'chirish tartibidan oldin kerak):
   faqat egasi; fon ishi (navbat), tayyor bo'lganda bildirishnoma; kuniga bir marta; havola 24 soat, bir martalik token;
   audit. Kiradi: sotuvchi kiritgan hamma narsa (xaridlar, chiqimlar, tannarx, o'z xarajatlar, sozlamalar, ombor
   harakatlari) va Uzumdan olingan faktlar (sotuvlar, xarajatlar, mahsulotlar, postavkalar, qaytarishlar). Kirmaydi:

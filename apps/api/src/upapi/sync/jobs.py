@@ -36,6 +36,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from upapi import calc, notify
 from upapi.db.session import org_transaction
 from upapi.db.url import normalize_url
+from upapi.export_full import run_export as export_run
 from upapi.fx import sync_fx
 from upapi.logs import get_logger
 from upapi.settings import Settings
@@ -52,6 +53,7 @@ CALC_QUEUE = "calc"
 CALC = "calc.org"
 CALC_NIGHTLY = "calc.nightly"
 CALC_CRON = "40 22 * * *"  # Toshkent 03:40 — sinxron va CBU ishlaridan uzoqda
+EXPORT = "export.full"
 NOTIFY = "notify.tick"
 NOTIFY_CRON = "*/5 * * * *"  # B6.1: hodisalar har 5 daqiqada (takror — ``dedupe_key`` bilan yo'q)
 QUEUES = [QUEUE, CALC_QUEUE]
@@ -112,6 +114,17 @@ async def defer_calc(app: App, org_id: UUID) -> bool:
         await app.configure_task(
             CALC, queue=CALC_QUEUE, lock=f"calc:{org_id}", queueing_lock=f"calc:{org_id}"
         ).defer_async(org_id=str(org_id))
+    except AlreadyEnqueued:
+        return False
+    return True
+
+
+async def defer_export(app: App, org_id: UUID, export_id: UUID) -> bool:
+    """To'liq eksportni (B7.5) navbatga qo'yish; har so'rov alohida."""
+    try:
+        await app.configure_task(
+            EXPORT, queue=CALC_QUEUE, queueing_lock=f"export:{export_id}"
+        ).defer_async(org_id=str(org_id), export_id=str(export_id))
     except AlreadyEnqueued:
         return False
     return True
@@ -210,6 +223,11 @@ def build_app(connector: BaseConnector) -> App:
             "errors": len(result.errors),
         }
 
+    @app.task(name=EXPORT, queue=CALC_QUEUE, pass_context=True)
+    async def export_full(context: JobContext, org_id: str, export_id: str) -> str:
+        rt = runtime(context)
+        return await export_run(rt.engine, UUID(org_id), UUID(export_id), rt.clock())
+
     @app.periodic(cron=CALC_CRON, periodic_id="calc")
     @app.task(name=CALC_NIGHTLY, queue=CALC_QUEUE, queueing_lock=CALC_NIGHTLY, pass_context=True)
     async def calc_nightly(context: JobContext, timestamp: int) -> int:
@@ -263,6 +281,10 @@ class JobQueue:
         ishchi so'rovni ko'rmay "bo'sh navbat" deb tugatishi mumkin."""
         await self._ensure_open()
         return await defer_calc(self.app, org_id)
+
+    async def defer_export(self, org_id: UUID, export_id: UUID) -> bool:
+        await self._ensure_open()
+        return await defer_export(self.app, org_id, export_id)
 
     async def defer_fx(self, since: date) -> bool:
         await self._ensure_open()

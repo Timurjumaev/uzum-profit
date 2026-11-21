@@ -26,6 +26,7 @@ class Permission(StrEnum):
     VIEW_AUDIT = "view_audit"
     EXPORT = "export"
     EXPORT_INVENTORY = "export_inventory"
+    EXPORT_ALL = "export_all"  # B7.5: to'liq eksport (ZIP) — faqat egasi
 
 
 P = Permission

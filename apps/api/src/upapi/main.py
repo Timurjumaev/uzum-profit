@@ -23,6 +23,7 @@ from upapi.routes import (
     cost_import,
     counting,
     dashboard,
+    data_export,
     dispatches,
     expenses,
     exports,
@@ -138,6 +139,7 @@ def create_app(
         inventory,
         payouts,  # B5.7 to'lov prognozi
         exports,  # B4.10 Excel eksport
+        data_export,  # B7.5 to'liq eksport (ZIP)
     ):  # B2.9 o'qish API'lari
         app.include_router(reports.router, prefix=API_PREFIX)
     app.include_router(purchases.router, prefix=API_PREFIX)  # xaridlar (M9)

@@ -8,6 +8,7 @@ import { errorText } from "../../app/errors";
 import { currentOrg, meQuery, settingsQuery } from "../../app/query";
 import { Banner, Button, Skeleton, PageHelp } from "../../components/ui";
 import { CostMethod } from "./CostMethod";
+import { FullExport } from "./FullExport";
 import { AlertSettings } from "./AlertSettings";
 import { InventorySettings } from "./InventorySettings";
 import { NotificationSettings } from "./NotificationSettings";
@@ -52,6 +53,7 @@ export function Settings() {
         </>
       )}
       <NotificationSettings orgId={org.id} />
+      {org.role === "owner" && <FullExport orgId={org.id} />}
     </section>
   );
 }

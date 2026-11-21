@@ -1167,6 +1167,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/exports/full": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Full */
+        get: operations["list_full_api_v1_orgs__org_id__exports_full_get"];
+        put?: never;
+        /** Request Full */
+        post: operations["request_full_api_v1_orgs__org_id__exports_full_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/exports/full/{export_id}/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Link
+         * @description Bir martalik yuklash havolasi (har chaqiruv oldingisini bekor qiladi).
+         */
+        post: operations["link_api_v1_orgs__org_id__exports_full__export_id__link_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/exports/full/{export_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download */
+        get: operations["download_api_v1_orgs__org_id__exports_full__export_id__download_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/purchases": {
         parameters: {
             query?: never;
@@ -3238,7 +3293,7 @@ export interface components {
          * Event
          * @enum {string}
          */
-        Event: "daily_summary" | "weekly_summary" | "stock_critical" | "loss_sales" | "uncosted_sales" | "new_fine" | "returns_spike" | "receiving_shortage" | "lost_goods" | "sync_stopped" | "payout_late" | "cargo_late" | "commission_changed" | "fbs_deadline" | "uncounted_purchase" | "ship_needed" | "monthly_report" | "goal_behind";
+        Event: "daily_summary" | "weekly_summary" | "stock_critical" | "loss_sales" | "uncosted_sales" | "new_fine" | "returns_spike" | "receiving_shortage" | "lost_goods" | "sync_stopped" | "payout_late" | "cargo_late" | "commission_changed" | "fbs_deadline" | "uncounted_purchase" | "ship_needed" | "monthly_report" | "export_ready" | "goal_behind";
         /**
          * ExpectedOut
          * @description F16 (ADR-037): kutilayotgan sof foyda — Jarayondagi sotuvlar qismi (mijoz hali olmagan yoki qaytarish muddati
@@ -3439,6 +3494,43 @@ export interface components {
              * @default false
              */
             estimated: boolean;
+        };
+        /** FullExportLink */
+        FullExportLink: {
+            /** Url */
+            url: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
+        /** FullExportOut */
+        FullExportOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Status */
+            status: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Expires At */
+            expires_at: string | null;
+            /** Size Bytes */
+            size_bytes: number | null;
+            /** Tables */
+            tables: {
+                [key: string]: number;
+            } | null;
+            /** Error */
+            error: string | null;
+            /** Downloaded */
+            downloaded: boolean;
         };
         /** GoalIn */
         GoalIn: {
@@ -4860,7 +4952,7 @@ export interface components {
          * Permission
          * @enum {string}
          */
-        Permission: "view_finance" | "view_purchases" | "manage_purchases" | "view_purchase_amounts" | "view_settings" | "manage_settings" | "manage_accounts" | "manage_members" | "manage_billing" | "delete_org" | "view_audit" | "export" | "export_inventory";
+        Permission: "view_finance" | "view_purchases" | "manage_purchases" | "view_purchase_amounts" | "view_settings" | "manage_settings" | "manage_accounts" | "manage_members" | "manage_billing" | "delete_org" | "view_audit" | "export" | "export_inventory" | "export_all";
         /**
          * PickerOut
          * @description Hamma SKU (holatidan qat'i nazar — arxivlangan va bloklangan ham): avval qoldig'i yoki sotuvi bor, keyin
@@ -10145,6 +10237,170 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_full_api_v1_orgs__org_id__exports_full_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FullExportOut"][];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    request_full_api_v1_orgs__org_id__exports_full_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FullExportOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    link_api_v1_orgs__org_id__exports_full__export_id__link_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                export_id: string;
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FullExportLink"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    download_api_v1_orgs__org_id__exports_full__export_id__download_get: {
+        parameters: {
+            query: {
+                token: string;
+            };
+            header?: never;
+            path: {
+                export_id: string;
                 org_id: string;
             };
             cookie?: never;
