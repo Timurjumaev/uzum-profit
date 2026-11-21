@@ -701,3 +701,56 @@
   gap: var(--space-1);
   margin: 0;
 }
+
+/* Telegram taklifi (B6.6): jonli gradient blok, yopiladi. */
+.tg-prompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgb(42 120 214 / 0.16), rgb(124 92 255 / 0.16) 55%, rgb(255 140 66 / 0.14));
+  box-shadow: 0 6px 22px rgb(42 120 214 / 0.16);
+}
+.tg-prompt__icon {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2a78d6, #7c5cff);
+  color: #fff;
+  box-shadow: 0 4px 12px rgb(42 120 214 / 0.4);
+}
+.tg-prompt__text {
+  display: grid;
+  gap: 2px;
+  flex: 1 1 220px;
+  min-inline-size: 0;
+}
+.tg-invite {
+  display: grid;
+  gap: 12px;
+}
+.tg-invite__link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+.tg-invite__side {
+  display: grid;
+  gap: 8px;
+  flex: 1 1 200px;
+}
+.qr {
+  border-radius: 14px;
+  border: 1px solid var(--border-hairline);
+  max-inline-size: 100%;
+  block-size: auto;
+}
+.tg-prompt .ui-icon-btn {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+}

@@ -26,6 +26,7 @@ import {
   syncStatus,
   type Routes,
 } from "../../test/api";
+import { notificationSettings } from "../../test/notifications";
 import { defaultColor, SHOP_COLORS } from "./ColorPicker";
 import { allowedStep } from "./Onboarding";
 import { shopChanges } from "./ShopsStep";
@@ -97,10 +98,11 @@ describe("qadamlarni tanlash", () => {
       expect.stringContaining("Uzum kaliti"),
       expect.stringContaining("Doʻkonlar"),
       expect.stringContaining("Tarix"),
+      expect.stringContaining("Telegram"),
     ]);
-    expect(steps.map((li) => li.className)).toEqual(["is-done", "is-current", "is-upcoming", "is-upcoming"]);
+    expect(steps.map((li) => li.className)).toEqual(["is-done", "is-current", "is-upcoming", "is-upcoming", "is-upcoming"]);
     expect(steps[1].getAttribute("aria-current")).toBe("step");
-    const progress = screen.getByRole("progressbar", { name: "Qadam 2 / 4" });
+    const progress = screen.getByRole("progressbar", { name: "Qadam 2 / 5" });
     expect(progress.getAttribute("aria-valuenow")).toBe("2");
   });
 
@@ -334,12 +336,12 @@ describe("3-qadam: tarix yuklanmoqda", () => {
     expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual(["byDurii"]); // EL-ONE faol emas
   });
 
-  it("tugamagan: kutmasdan o'tish mumkin (ikkilamchi tugma), bosh sahifaga", async () => {
+  it("tugamagan: kutmasdan o'tish mumkin (ikkilamchi tugma) — Telegram qadamiga", async () => {
     const { history } = await renderOnboarding("/onboarding?step=history", { [SYNC_ROUTE]: () => withKinds(LOADING) }, "Tarix yuklanmoqda");
     expect(screen.queryByText("Tarix yuklandi")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Kutmasdan bosh sahifaga oʻtish" }));
-    expect(await screen.findByRole("heading", { name: /^Sof foyda/ })).toBeTruthy();
-    expect(history.location.pathname).toBe("/");
+    fireEvent.click(screen.getByRole("button", { name: "Kutmasdan davom etish" }));
+    expect(await screen.findByRole("heading", { name: "Telegramni ulang" })).toBeTruthy();
+    expect(search(history).get("step")).toBe("telegram");
   });
 
   it("tugagan (tarix yozilgan, hech narsa davom etmayapti): 'Tarix yuklandi' va asosiy tugma", async () => {
@@ -349,9 +351,34 @@ describe("3-qadam: tarix yuklanmoqda", () => {
       "Tarix yuklanmoqda",
     );
     expect(await screen.findByText("Tarix yuklandi")).toBeTruthy();
-    const finish = screen.getByRole("button", { name: "Bosh sahifaga oʻtish" });
+    const finish = screen.getByRole("button", { name: "Davom etish" });
     expect(finish.className).toContain("ui-btn--primary");
     expect(screen.queryByText("Yuklashda xato bor")).toBeNull();
+  });
+
+  it("Telegram qadami: havola va QR, ulanishni kutish, 'Keyinroq' — bosh sahifaga", async () => {
+    const LINK = "POST /api/v1/orgs/" + ME.orgs[0]!.id + "/notifications/telegram";
+    const SETTINGS = "GET /api/v1/orgs/" + ME.orgs[0]!.id + "/notifications/settings";
+    const { history } = await renderOnboarding(
+      "/onboarding?step=telegram",
+      { [LINK]: () => json(200, { url: "https://t.me/sellermax_bot?start=abc", expires_at: "2026-11-21T12:15:00Z" }), [SETTINGS]: () => json(200, notificationSettings({ telegram_linked: false })) },
+      "Telegramni ulang",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Telegramni ulash" }));
+    expect(await screen.findByRole("img", { name: "Telegram botini ulash uchun QR kod" })).toBeTruthy();
+    const open = screen.getByRole("link", { name: "Telegramda ochish" });
+    expect(open.getAttribute("href")).toBe("https://t.me/sellermax_bot?start=abc");
+    expect(screen.getByText("Ulanishni kutyapmiz…")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Keyinroq ulayman" }));
+    expect(await screen.findByRole("heading", { name: /^Sof foyda/ })).toBeTruthy();
+    expect(history.location.pathname).toBe("/");
+  });
+
+  it("Telegram qadami: ulangan bo'lsa tasdiq va asosiy tugma", async () => {
+    const SETTINGS = "GET /api/v1/orgs/" + ME.orgs[0]!.id + "/notifications/settings";
+    await renderOnboarding("/onboarding?step=telegram", { [SETTINGS]: () => json(200, notificationSettings({ telegram_linked: true })) }, "Telegramni ulang");
+    expect(await screen.findByText("Telegram ulandi!")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Bosh sahifaga oʻtish" }).className).toContain("ui-btn--primary");
   });
 
   it("holat har 5 soniyada yangilanadi: progress o'sadi", async () => {

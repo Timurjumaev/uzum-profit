@@ -21,6 +21,7 @@ import {
   syncStatus,
   type Routes,
 } from "../../test/api";
+import { notificationSettings } from "../../test/notifications";
 
 const f = formatterFor("uz-Latn");
 // Testing Library tugun matnidagi bo'shliqlarni (NBSP, U+202F) oddiy bo'shliqqa keltiradi — kutilgan matn ham.
@@ -503,4 +504,31 @@ describe("kirish imkoniyati", () => {
     fireEvent.click(card("net-done").getByRole("button", { name: /Qanday hisoblanadi/ }));
     expect(await run()).toEqual([]);
   }, 30_000);
+});
+
+describe("Telegram taklifi (B6.6, A13)", () => {
+  const SETTINGS = `GET /api/v1/orgs/${ME.orgs[0]!.id}/notifications/settings`;
+
+  it("ulanmagan bo'lsa taklif chiqadi; 'Ulash' oynada havola va QR; yopilsa eslab qolinadi", async () => {
+    const LINK = `POST /api/v1/orgs/${ME.orgs[0]!.id}/notifications/telegram`;
+    await renderHome("/", { [LINK]: () => json(200, { url: "https://t.me/sellermax_bot?start=xyz", expires_at: "2026-11-21T12:15:00Z" }) });
+    const prompt = await screen.findByRole("complementary", { name: /Telegramni ulang/ });
+    fireEvent.click(within(prompt).getByRole("button", { name: "Telegramni ulash" }));
+    const dialog = await screen.findByRole("dialog", { name: "Telegramni ulash" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Telegramni ulash" }));
+    expect(await screen.findByRole("img", { name: "Telegram botini ulash uchun QR kod" })).toBeTruthy();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Yopish" }));
+    fireEvent.click(within(prompt).getByRole("button", { name: "Keyinroq (yopish)" }));
+    await waitFor(() => expect(screen.queryByRole("complementary", { name: /Telegramni ulang/ })).toBeNull());
+    expect(localStorage.getItem("up.telegramPrompt.dismissed")).toBe("1");
+  });
+
+  it("ulangan bo'lsa yoki avval yopilgan bo'lsa — taklif yo'q", async () => {
+    await renderHome("/", { [SETTINGS]: () => json(200, notificationSettings({ telegram_linked: true })) });
+    await waitFor(() => expect(screen.queryByRole("complementary", { name: /Telegramni ulang/ })).toBeNull());
+    cleanup();
+    localStorage.setItem("up.telegramPrompt.dismissed", "1");
+    await renderHome("/");
+    expect(screen.queryByRole("complementary", { name: /Telegramni ulang/ })).toBeNull();
+  });
 });

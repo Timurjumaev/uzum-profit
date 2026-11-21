@@ -18,7 +18,7 @@ export function inviteSearch(search: Record<string, unknown>): InviteSearch {
   return typeof search.token === "string" && /^[\w-]{8,200}$/.test(search.token) ? { token: search.token } : {};
 }
 
-export const ONBOARDING_STEPS = ["org", "key", "shops", "history"] as const;
+export const ONBOARDING_STEPS = ["org", "key", "shops", "history", "telegram"] as const;
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 export type OnboardingSearch = { step?: OnboardingStep };
 
