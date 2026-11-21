@@ -21,6 +21,7 @@ SCRIPTS = [
     "infra/staging/deploy.sh",
     "infra/staging/realcheck.sh",
     "infra/staging/fxcheck.sh",
+    "infra/staging/devtoken.sh",
     "infra/backup/backup.sh",
 ]
 
@@ -228,6 +229,17 @@ def test_fxcheck_runs_in_deployed_api(root: Path) -> None:
     assert r.returncode == 0, r.stderr
     (call,) = calls(root)
     assert call.endswith("exec -T api python -m upapi.fxcheck")
+
+
+def test_devtoken_runs_in_deployed_api(root: Path) -> None:
+    """ADR-072: dev-token CLI ishlab turgan api konteynerida, argumentlar o'tadi; deploy'siz ishlamaydi."""
+    r = run(root, "infra/staging/devtoken.sh", "list")
+    assert r.returncode == 1 and "deploy qilinmagan" in r.stderr
+    (root / ".deployed-tag").write_text("v7\n")
+    r = run(root, "infra/staging/devtoken.sh", "revoke", "--all")
+    assert r.returncode == 0, r.stderr
+    (call,) = calls(root)
+    assert call.endswith("exec -T api python -m upapi.devtokens revoke --all")
 
 
 def test_realcheck_needs_deploy(root: Path) -> None:

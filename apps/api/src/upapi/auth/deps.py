@@ -59,6 +59,31 @@ class CurrentUser:
     name: str | None
     language: str
     token_hash: bytes
+    # ADR-072: dev-token bilan kirgan (faqat o'qish); ``session_id`` o'rnida token id'si.
+    dev_token: bool = False
+
+
+SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+
+
+async def _dev_token_user(
+    request: Request, engine: AsyncEngine, settings: Settings
+) -> CurrentUser | None:
+    """``Authorization: Bearer <dev-token>`` → foydalanuvchi (ADR-072). Faqat ``UP_DEV_TOKENS_ENABLED`` bilan (staging)
+    va **faqat o'qish**: o'zgartiruvchi usul — 403, token yaroqli bo'lsa ham. Sessiya cookie bo'lsa bu yo'l ishlatilmaydi."""
+    header = request.headers.get("authorization", "")
+    if not settings.dev_tokens_enabled or header[:7].lower() != "bearer ":
+        return None
+    digest = token_hash(header[7:].strip())
+    async with engine.begin() as conn:
+        row = (await conn.execute(text("SELECT * FROM auth_dev_token(:t)"), {"t": digest})).first()
+    if row is None:
+        raise AppError("unauthenticated", 401)
+    if request.method not in SAFE_METHODS:
+        raise AppError("dev_token_read_only", 403)
+    return CurrentUser(
+        row.user_id, row.token_id, row.phone, row.name, row.language, digest, dev_token=True
+    )
 
 
 async def current_user(
@@ -71,6 +96,9 @@ async def current_user(
     ``session_grace_seconds`` davomida ishlaydi — parallel so'rovlar chiqib ketmaydi)."""
     token = request.cookies.get(COOKIE)
     if not token:
+        dev_user = await _dev_token_user(request, engine, settings)
+        if dev_user is not None:
+            return dev_user
         raise AppError("unauthenticated", 401)
     digest = token_hash(token)
     async with engine.begin() as conn:

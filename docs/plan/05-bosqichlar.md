@@ -1262,6 +1262,10 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
 (`realcheck` toza yoki raqam ochiq "ishonchsiz" deb yashirilgan) va yordam maqolasi yozilgan. Ko'chgan (B5.0e, B5.10) va
 "Keyinga" bandlari chiqishga kirmaydi.
 
+## DV. Ishlab chiqish vositalari (ADR-072, vaqtinchalik, faqat staging)
+
+- [x] DV.1 **Dev-token** — `Authorization: Bearer dvt_…` bilan faqat o'qish; `dev_tokens` (migratsiya 0042), `upapi.devtokens` CLI, `infra/staging/devtoken.sh`, `UP_DEV_TOKENS_ENABLED` (production'da taqiq). Qoldi (Temur): deploy'dan keyin token yaratib, `request_credential` formasiga kiritish. Loyiha tugagach olib tashlanadi.
+
 ## B6. Bildirishnomalar va Telegram — 5–7 kun
 
 Tartib (ADR-064, 2026-11-16 — tanqidiy tahlil: 09 §13): B6.1–B6.2 ✓ → **B6.4** (yuborilayotgan xabarlardagi xatolar —
@@ -1332,7 +1336,7 @@ boshlanadi) → B5 → B6.5 (B5.1–B5.2 dan keyin) → B6.3 → B6.6.
   Yangi SKU kirganda bir marta; "Batafsil" — jo'natish qoralamasi. ("Qoldiq kritik" F25 ga bog'liq — B5.1 gacha yangi
   xaridli tovarlarda chiqmasligi mumkin, 09 §12 B1.)
   ✓ 2026-11-19: `Event.SHIP_NEEDED` (ombor auditoriyasi, kritik emas), `notify.ship_needed/ship_found` — `stock_critical` kabi bazaviy ro'yxat (faqat yangi SKU, qisqarish — jim); xabarda SKU, Uzumdagi zaxira kuni va yuboriladigan dona (F54 rejasi, sozlanmagan bo'lsa omborimdagi son); "Batafsil" — Jo'natmalar.
-- [→] B6.3 **Ilova ichidagi bildirishnomalar markazi + o'rnatiladigan ilova** (qayta yozildi, ADR-064): **Holat 2026-11-21:** markaz ✓ (B6.3-1: qo'ng'iroq, o'qilmaganlar, `read_at` — migratsiya 0042, `POST /notifications/read`, 04 §7.1 maketi); qoldi: PWA (manifest, PNG ikonkalar).
+- [→] B6.3 **Ilova ichidagi bildirishnomalar markazi + o'rnatiladigan ilova** (qayta yozildi, ADR-064): **Holat 2026-11-21:** markaz ✓ (B6.3-1: qo'ng'iroq, o'qilmaganlar, `read_at` — migratsiya 0043, `POST /notifications/read`, 04 §7.1 maketi); qoldi: PWA (manifest, PNG ikonkalar).
   - Markaz: karkasda qo'ng'iroq, o'qilmaganlar soni, ro'yxat (navbat va `GET /notifications` bor), "Batafsil" — o'sha
     sahifa. `notifications.read_at` (migratsiya), "hammasini o'qilgan qilish". Yetkazish holati (`pending` / `sent` /
     `failed`) o'qilganlikdan alohida: Telegram ulanmagan a'zoning qatorlari hozir abadiy `pending` — markaz uchun manba

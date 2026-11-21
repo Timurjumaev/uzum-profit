@@ -136,7 +136,7 @@ async def create_org(body: OrgCreate, user: User, engine: Engine) -> OrgOut:
 @router.get("/orgs", response_model=list[OrgSummary])
 async def list_orgs(user: User, engine: Engine) -> list[OrgSummary]:
     async with engine.begin() as conn:
-        return await user_orgs(conn, user.token_hash)
+        return await user_orgs(conn, user.token_hash, user.dev_token)
 
 
 @router.get("/orgs/{org_id}", response_model=OrgOut)
