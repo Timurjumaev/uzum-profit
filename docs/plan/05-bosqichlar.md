@@ -1486,7 +1486,7 @@ ishlari** belgilaydi (yuridik shaxs, shartnoma, reyestr) — ular hozirdan boshl
   **T (birinchi real tekshiruv):** Temur 22-noyabrgacha yangi kalitni "Faqat o'qish" + "Barcha do'konlar" bilan yaratadi —
   staging'da sinxronning hamma turi (sotuvlar, xarajatlar, mahsulotlar, postavkalar, qaytarishlar) shu kalit bilan
   ishlashi tasdiqlanadi ("Ma'lumotlar holati" yashil).
-- [ ] B8.0a "Qurilmalarim" va "Hamma qurilmadan chiqish" (M1; API bor — `/sessions`, UI yo'q).
+- [x] B8.0a (✓ 2026-11-21: Sozlamalar → "Qurilmalarim") "Qurilmalarim" va "Hamma qurilmadan chiqish" (M1; API bor — `/sessions`, UI yo'q).
 - [ ] Yordam: Telegram yordam chati havolasi ilovada; mavjud yordam maqolalari (`docs/help`) ilova ichidan ochiladi.
 
 **B8-A chiqish:** begona sinovchi (Temur emas) taklif kodi bilan production'da ro'yxatdan o'tib, do'konini ulab,

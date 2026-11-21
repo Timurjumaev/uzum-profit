@@ -796,3 +796,18 @@ export const requestFullExport = (orgId: string) =>
 /** Bir martalik yuklash havolasi (24 soat). */
 export const fullExportLink = (orgId: string, exportId: string) =>
   unwrap(api.POST("/api/v1/orgs/{org_id}/exports/full/{export_id}/link", { params: { path: { org_id: orgId, export_id: exportId } } }));
+
+// --- Qurilmalarim (B8.0a) -------------------------------------------------------------------------------------------
+
+export const sessionsKey = ["auth", "sessions"] as const;
+
+export const sessionsQuery = queryOptions({
+  queryKey: sessionsKey,
+  queryFn: () => unwrap(api.GET("/api/v1/auth/sessions")),
+});
+
+export const revokeSession = (sessionId: string) =>
+  unwrap(api.DELETE("/api/v1/auth/sessions/{session_id}", { params: { path: { session_id: sessionId } } }));
+
+/** Joriy qurilmadan boshqa hamma seanslar tugatiladi. */
+export const revokeOtherSessions = () => unwrap(api.POST("/api/v1/auth/sessions/revoke-others"));
