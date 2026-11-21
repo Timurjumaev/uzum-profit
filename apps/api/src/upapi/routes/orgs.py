@@ -130,6 +130,9 @@ async def create_org(body: OrgCreate, user: User, engine: Engine) -> OrgOut:
         )
         ctx = OrgContext(org_id, user, Role.OWNER, conn)
         await ctx.audit("org.create", "org", org_id, after=body.model_dump(exclude_none=True))
+        await conn.execute(  # B8.9: ro'yxatdan o'tish voronkasi
+            insert(m.events).values(org_id=org_id, user_id=user.user_id, name="org_created")
+        )
         return await _org_out(ctx)
 
 

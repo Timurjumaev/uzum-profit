@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
 
@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import text, update
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
+from upapi.activation import record_visit
 from upapi.auth.deps import (
     CurrentUser,
     clear_session_cookie,
@@ -31,8 +32,10 @@ from upapi.auth.tokens import (
 from upapi.db import models as m
 from upapi.db.session import org_transaction
 from upapi.errors import AppError
+from upapi.logs import get_logger
 from upapi.settings import Settings
 
+_log = get_logger("upapi.auth")
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 Engine = Annotated[AsyncEngine, Depends(get_engine)]
@@ -211,6 +214,13 @@ async def login(
 async def me(user: User, engine: Engine) -> Me:
     async with engine.begin() as conn:
         orgs = await user_orgs(conn, user.token_hash, user.dev_token)
+    if (
+        orgs and not user.dev_token
+    ):  # B8.9: kunlik kirish (dev-token faqat o'qiydi — hodisa yozmaydi)
+        try:
+            await record_visit(engine, orgs[0].id, user.user_id, datetime.now(UTC))
+        except Exception as exc:
+            _log.warning("visit_not_recorded", error_code=type(exc).__name__)
     return Me(
         user=UserOut(id=user.user_id, phone=user.phone, name=user.name, language=user.language),
         orgs=orgs,
