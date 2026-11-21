@@ -16,7 +16,7 @@ import { ApiError } from "../lib/api/client";
 import { NotFound, Pending, RouteError } from "./errors";
 import { AuthRoute } from "../features/auth/AuthRoute";
 import { filterSearch } from "./filters";
-import { expensesSearch, inventorySearch, inviteSearch, loginSearch, onboardingSearch, ordersSearch, pnlSearch, productsSearch, purchasesSearch } from "./search";
+import { expensesSearch, inventorySearch, inviteSearch, loginSearch, onboardingSearch, ordersSearch, pnlSearch, productsSearch, purchasesSearch, reportsSearch } from "./search";
 
 export { inviteSearch, loginSearch };
 import { meQuery } from "./query";
@@ -192,6 +192,7 @@ const goals = createRoute({
 const reports = createRoute({
   getParentRoute: () => app,
   path: "/reports",
+  validateSearch: reportsSearch,
   component: lazyRouteComponent(() => import("../routes/reports"), "Reports"),
 });
 /** Sozlamalar (M16, B4.8): tannarx usuli, soliq, to'lov jadvali, muddatlar, do'konlar. */

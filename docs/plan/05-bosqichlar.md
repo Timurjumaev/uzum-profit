@@ -1382,7 +1382,7 @@ Qayta tuzildi (ADR-065, 2026-11-16 — tanqidiy tahlil: 09 §14). Tartib: B7.1 �
   xaridlar, ombor, jo'natma. Yo'q — qo'shiladi: **Foyda (hisob varag'i va oy / do'kon / SKU kesimlari)**, har qator
   tafsiloti (drill-down), Buyurtmalar tahlili, Omborim, Kargolar, Qabul farqi va kamomad. Qoida o'zgarmaydi: eksport
   ro'yxat endpointining o'zidan (filtr, rol, hisob bir xil); test — Excel yig'indisi sahifadagi jami bilan teng.
-- [→] B7.3 (1-qadam ✓ 2026-11-21: `/reports` sahifa, chop etish, dastlabki/yakuniy; qoldi: hodisa "Oylik hisobot") **Oylik hisobot** — ilova sahifasi (`/reports`, menyuga qaytadi — ADR-057 Q12), brauzerdan chop etiladi va
+- [x] B7.3 (✓ 2026-11-21: `/reports` sahifa, chop etish, dastlabki/yakuniy; hodisa "Oylik hisobot") **Oylik hisobot** — ilova sahifasi (`/reports`, menyuga qaytadi — ADR-057 Q12), brauzerdan chop etiladi va
   PDF qilib saqlanadi (chop etish uslubi; server tomonda PDF yasalmaydi):
   - Tarkib: hisob varag'i (F3 → F12), "Buyurtmadan sof foydagacha" (F49), eng foydali va zarardagi SKU'lar, Uzum va o'z
     xarajatlari toifalar bo'yicha, tovardagi pul (F29), oldingi oy bilan farq. Hamma raqam — mavjud hisobdan

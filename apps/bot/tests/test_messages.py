@@ -235,6 +235,25 @@ def test_goal_behind_message() -> None:
     )
 
 
+def test_monthly_report_message() -> None:
+    """B7.3: oylik hisobot — dastlabki (jarayondagi buyurtmalar bilan) va yakuniy; "Batafsil" — oy bilan hisobot sahifasi."""
+    p = {
+        "month": "2026-10-01",
+        "net_profit": "12500000.00",
+        "revenue": "80000000.00",
+        "processing_lines": 7,
+        "processing_revenue": "2500000.00",
+        "final": False,
+    }
+    uz = msg.notification("monthly_report", p, "uz")
+    text = uz.text.replace("\xa0", " ")
+    assert "2026-10 oylik hisobot (dastlabki)" in text and "sof foyda 12 500 000 soʻm" in text
+    assert "7 ta buyurtma (2 500 000 soʻm) hali jarayonda" in text
+    assert uz.path == "/reports?month=2026-10-01"
+    final = msg.notification("monthly_report", {**p, "final": True}, "ru")
+    assert "Месячный отчёт за 2026-10 (итоговый)" in final.text and "в обработке" not in final.text
+
+
 def test_sync_restored_message() -> None:
     """B6.4 (A4): "tiklandi" — bitta xabar, holat sahifasiga havola."""
     p = {"shop": "byDurii", "shop_id": "x", "reason": "restored"}

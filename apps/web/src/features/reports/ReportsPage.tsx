@@ -3,12 +3,14 @@
 // sahifasi bilan bir hisob): bu yerda hisoblanmaydi (tamoyil 4). Chop etiladi va brauzerda PDF qilib saqlanadi (chop etish uslubi).
 // Oy tugamagan yoki Jarayondagi buyurtma qolgan bo'lsa — "Dastlabki" (nechta buyurtma va qancha summa hali jarayonda).
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSearch } from "@tanstack/react-router";
 import { Printer } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { errorText } from "../../app/errors";
 import { currentOrg, meQuery, monthlyReportQuery } from "../../app/query";
+import { reportsSearch } from "../../app/search";
 import { Badge, Banner, Button, DataTable, Skeleton, type Column } from "../../components/ui";
 import type { MonthlyReport } from "../../lib/api/types";
 import { addMonths, todayTashkent } from "../../lib/dates";
@@ -24,7 +26,8 @@ export function ReportsPage() {
   const f = useFormat();
   const { data: me } = useSuspenseQuery(meQuery);
   const org = currentOrg(me)!;
-  const [month, setMonth] = useState<string | null>(null);
+  const initial = reportsSearch(useSearch({ strict: false }) as Record<string, unknown>).month ?? null;
+  const [month, setMonth] = useState<string | null>(initial);
   const query = useQuery(monthlyReportQuery(org.id, month));
   const data = query.data;
   const shown = data?.month ?? month;

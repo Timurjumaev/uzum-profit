@@ -14214,6 +14214,7 @@
           "fbs_deadline",
           "uncounted_purchase",
           "ship_needed",
+          "monthly_report",
           "goal_behind"
         ],
         "title": "Event"
@@ -17334,7 +17335,7 @@
               "$ref": "#/components/schemas/NotificationRuleIn"
             },
             "type": "array",
-            "maxItems": 17,
+            "maxItems": 18,
             "title": "Rules"
           },
           "quiet_from": {
