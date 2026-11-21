@@ -28,7 +28,7 @@ from typing import Any
 if sys.version_info < (3, 12):  # noqa: UP036 - eski Python'da tushunarli xabar uchun
     sys.exit("Python 3.12 yoki yangisi kerak (Mac'da: python3 --version).")
 
-DEFAULT_URL = "https://16-170-178-179.sslip.io"
+DEFAULT_URL = "https://sellermax.duckdns.org"
 SESSION = Path.home() / ".uzum-profit" / "staging-session.json"
 COOKIE = "up_session"
 PREFIX = "/api/v1"
