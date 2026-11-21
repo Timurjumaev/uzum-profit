@@ -946,6 +946,7 @@ async def stock_check(conn: AsyncConnection, shop: UUID, now: datetime) -> dict[
     }
 
 
+ISSUED_DAYS = 70  # "olib ketilgan kun" bo'yicha tarkib shuncha kun orqaga
 PAYOUT_SAMPLE_KEYS = 300  # xom qatordagi maydon nomlarini yig'ish uchun qatorlar soni
 
 
@@ -1053,8 +1054,31 @@ async def payout_check(conn: AsyncConnection, shop: UUID, now: datetime) -> dict
             {"s": shop},
         )
     ]
+    # B5.7 (2026-11-22): to'lov tarkibini tekshirish — olib ketilgan kun (issued_at, Toshkent) × holat bo'yicha qatorlar, sof foyda
+    # va yechilgan (withdrawnProfit > 0) qatorlar. Uzum qoidasi (Temur): to'lov sanasi D ga olib ketilgan kuni ≤ D − 11 bo'lgan
+    # tovar puli kiradi; haqiqiy to'lov summalari bilan solishtiriladi.
+    issued_by_day = [
+        {
+            "day": r.day,
+            "status": r.status,
+            "lines": r.lines,
+            "profit": money(r.profit),
+            "withdrawn_lines": r.withdrawn_lines,
+        }
+        for r in await conn.execute(
+            text(
+                "SELECT (issued_at AT TIME ZONE 'Asia/Tashkent')::date AS day, upper(trim(status)) AS status, "
+                "count(*) AS lines, coalesce(sum(seller_profit), 0) AS profit, "
+                "count(*) FILTER (WHERE coalesce(nullif(raw ->> 'withdrawnProfit', '')::numeric, 0) > 0) AS withdrawn_lines "
+                "FROM sale_items WHERE shop_id = :s AND issued_at IS NOT NULL AND issued_at >= :since "
+                "AND upper(trim(status)) <> 'CANCELED' GROUP BY 1, 2 ORDER BY 1, 2"
+            ),
+            {"s": shop, "since": now - timedelta(days=ISSUED_DAYS)},
+        )
+    ]
     return {
         "withdrawn": by_status,
+        "issued_by_day": issued_by_day,
         # B5.7: yechishga tayyor, lekin yechilmagan Yakunlangan qatorlar (prognoz "available" bilan solishtiriladi).
         "ready_unwithdrawn": {
             "lines": ready.lines,

@@ -586,6 +586,7 @@ def test_payout_check_semantics_completion_days_keys_and_account_expenses(
     payout = shop(report, A)["checks"]["payout"]
     assert {
         "withdrawn",
+        "issued_by_day",
         "ready_unwithdrawn",
         "withdrawn_vs_profit",
         "events",
@@ -597,6 +598,9 @@ def test_payout_check_semantics_completion_days_keys_and_account_expenses(
     assert {"lines", "profit", "withdrawn"} == set(payout["withdrawn_vs_profit"])
     for row in payout["withdrawn"]:
         assert {"status", "lines", "withdrawn_lines", "withdrawn", "profit"} <= set(row)
+    for row in payout["issued_by_day"]:
+        assert {"day", "status", "lines", "profit", "withdrawn_lines"} <= set(row)
+        assert row["status"] != "CANCELED"
     comp = payout["completion"]
     assert {"lines", "min_days", "median_days", "p90_days", "histogram_days"} <= set(comp)
     assert "withdrawnProfit" in payout["raw_keys"]  # soxta Uzum qatorida bor
