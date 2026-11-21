@@ -74,7 +74,7 @@ export function CostImport({ orgId }: { orgId: string }) {
         <Button variant="primary" icon={<Upload size={16} aria-hidden />} loading={upload.isPending} onClick={() => input.current?.click()}>
           {t("opening.excel.upload")}
         </Button>
-        <input ref={input} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="ui-visually-hidden" tabIndex={-1} aria-label={t("opening.excel.file")} onChange={(e) => pick(e.target.files?.[0])} />
+        <input ref={input} type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden tabIndex={-1} aria-label={t("opening.excel.file")} onChange={(e) => pick(e.target.files?.[0])} />
       </div>
       <Dialog
         open={preview !== null}
