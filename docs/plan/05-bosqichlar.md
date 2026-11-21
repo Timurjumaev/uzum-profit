@@ -1228,6 +1228,16 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
     "tushdi"); buyurtma → Yakunlangan oralig'i taqsimoti (`completed_seen_at`, 2026-11-12 dan); prognoz ↔ Temurning
     oxirgi 2–3 real to'lovi; to'lov jadvali — **butun akkauntga bitta** (Temur, 2026-11-16; pul yechish haqi ham `shopId: 0` bilan keladi,
     ADR-062): `payout_schedules` do'kondan akkaunt (`mp_accounts`) darajasiga ko'chadi (migratsiya), Sozlamalar ham.
+  - **To'lov qoidasi va prognoz xatosi (Temur, 2026-11-22; kabinet "Mablag'lar" skrinshotlari + `realcheck.json`):** to'lov sanasi D ga
+    olib ketilgan kuni ≤ **D − 11** bo'lgan tovar puli kiradi (masalan 7.12 to'lovi — "26.11 gacha yig'ilgan jami pul"); jadval kuni
+    00:00 da avtomatik yaratiladi, dam olish/bayramda — eng yaqin ish kuni. Real: 21.11 to'lovi **126 956** so'm ("Kutilyapti", 0%),
+    7.12 to'lovi hozircha **302 715** so'm; "Umumiy balans" (14,06 mln) — to'langan, olib ketilgan hamma tovar summasi, xarajat va
+    yechilgan pul **hisobga olinmaydi** (kutilayotgan to'lov emas). Mening `ready_unwithdrawn` (TO_WITHDRAW va `withdrawnProfit` = 0:
+    byDurii 479 qator 9,21 mln + EL-ONE 46 qator 0,74 mln) — haqiqiy to'lovdan ~30–75 baravar katta: **`withdrawnProfit` = 0 "yechilmagan"
+    degani emas** (1.10 da olib ketilgan qatorlar ham 0). Prognoz qayta quriladi: yechilmaganni `withdrawnProfit` emas, olib ketilgan
+    kun va to'lov tarixi (D − 11 qoidasi) bo'yicha aniqlash. Yo'l: `realcheck payout` ga `issued_by_day` qo'shildi (olib ketilgan kun ×
+    holat bo'yicha foyda) — Temur qayta ishga tushiradi; 21.11 va 7.12 (26.11 dan keyin) to'lovlari bilan solishtiriladi.
+    Hodisa "Uzum to'lovi kutilmoqda / tushmadi" va "Diqqat" qatori shundan keyin.
   - **F38 to'ldiriladi:** hozir faqat allaqachon Yakunlangan summa — ufq keyingi to'lov sanasigacha. Qo'shiladi:
     Jarayondagi sotuvlar × yakunlanish ulushi (F16 R) kutilgan yakunlanish kuniga (o'rganilgan oraliq), "taxminiy"
     belgisi bilan. Pul yechish haqi ikki marta ayrilmaydi (prognozdagi foiz ↔ keyin kelgan `C000010` / `C000011`).
