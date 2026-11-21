@@ -111,8 +111,11 @@ def _sender(request: Request) -> CodeSender:
     return sender
 
 
-async def user_orgs(conn: AsyncConnection, digest: bytes) -> list[OrgSummary]:
-    rows = await conn.execute(text("SELECT * FROM auth_user_orgs(:t)"), {"t": digest})
+async def user_orgs(
+    conn: AsyncConnection, digest: bytes, dev_token: bool = False
+) -> list[OrgSummary]:
+    function = "auth_dev_user_orgs" if dev_token else "auth_user_orgs"  # ADR-072
+    rows = await conn.execute(text(f"SELECT * FROM {function}(:t)"), {"t": digest})
     return [OrgSummary(id=r.org_id, name=r.name, role=r.role) for r in rows]
 
 
@@ -202,7 +205,7 @@ async def login(
 @router.get("/me", response_model=Me)
 async def me(user: User, engine: Engine) -> Me:
     async with engine.begin() as conn:
-        orgs = await user_orgs(conn, user.token_hash)
+        orgs = await user_orgs(conn, user.token_hash, user.dev_token)
     return Me(
         user=UserOut(id=user.user_id, phone=user.phone, name=user.name, language=user.language),
         orgs=orgs,

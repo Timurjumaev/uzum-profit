@@ -1262,6 +1262,10 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
 (`realcheck` toza yoki raqam ochiq "ishonchsiz" deb yashirilgan) va yordam maqolasi yozilgan. Ko'chgan (B5.0e, B5.10) va
 "Keyinga" bandlari chiqishga kirmaydi.
 
+## DV. Ishlab chiqish vositalari (ADR-072, vaqtinchalik, faqat staging)
+
+- [x] DV.1 **Dev-token** — `Authorization: Bearer dvt_…` bilan faqat o'qish; `dev_tokens` (migratsiya 0041), `upapi.devtokens` CLI, `infra/staging/devtoken.sh`, `UP_DEV_TOKENS_ENABLED` (production'da taqiq). Qoldi (Temur): deploy'dan keyin token yaratib, `request_credential` formasiga kiritish. Loyiha tugagach olib tashlanadi.
+
 ## B6. Bildirishnomalar va Telegram — 5–7 kun
 
 Tartib (ADR-064, 2026-11-16 — tanqidiy tahlil: 09 §13): B6.1–B6.2 ✓ → **B6.4** (yuborilayotgan xabarlardagi xatolar —

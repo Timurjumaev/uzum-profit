@@ -59,6 +59,10 @@ class Settings(BaseSettings):
     session_rotate_hours: int = 24
     session_grace_seconds: int = 60
     invite_days: int = 7
+    # ADR-072: ishlab chiqish uchun faqat o'qish tokeni (``Authorization: Bearer``, faqat GET). Standart — o'chiq;
+    # faqat staging'da yoqiladi, production'da yoqilsa ilova ishga tushmaydi.
+    dev_tokens_enabled: bool = False
+    dev_token_max_days: int = 90
     # Brauzer manbalari (CSRF ``Origin`` tekshiruvi) va taklif havolasi asosi.
     allowed_origins: list[str] = ["http://localhost:5173"]
     web_url: str = "http://localhost:5173"
@@ -150,6 +154,8 @@ class Settings(BaseSettings):
             out.append(f"UP_TOKEN_KEYS: {dev_key[0]}-versiya — dev kaliti; yangi kalit kerak")
         if self.token_key_version not in self.token_keys:
             out.append("UP_TOKEN_KEY_VERSION: bunday versiya UP_TOKEN_KEYS ichida yo'q")
+        if self.dev_tokens_enabled and self.env is Environment.PROD:
+            out.append("UP_DEV_TOKENS_ENABLED: production'da taqiqlangan (ADR-072)")
         if not self.cbu_url.startswith("https://"):
             out.append("UP_CBU_URL: faqat https://")
         if any(not u.startswith("https://") for u in self.fx_market_urls):

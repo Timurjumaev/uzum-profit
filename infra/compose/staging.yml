@@ -48,6 +48,10 @@ services:
   api:
     <<: *app
     # Faqat Caddy orqali (port tashqariga ochilmaydi), shuning uchun X-Forwarded-For'ga ishonish xavfsiz.
+    environment:
+      # ADR-072: faqat staging (bu fayl production'da ishlatilmaydi) — faqat o'qish uchun dev-token. Token yaratilmaguncha
+      # hech narsa ochilmaydi; `devtoken.sh revoke --all` hammasini yopadi, bu qatorni olib tashlash — vositani o'chiradi.
+      UP_DEV_TOKENS_ENABLED: "true"
     command: ["uvicorn", "upapi.main:app", "--host", "0.0.0.0", "--port", "8000",
               "--proxy-headers", "--forwarded-allow-ips", "*", "--no-server-header"]
     depends_on:
