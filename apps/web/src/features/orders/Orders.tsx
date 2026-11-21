@@ -33,8 +33,12 @@ export function Orders() {
         <div className="page-title">
           <h1 className="h2">{t("orders.title", { period: f.period(params.start, params.end) })}</h1>
           <PageHelp page="orders" />
-          {tab !== "list" && <ExportButton orgId={org.id} table="orders-analysis" query={{ start: params.start, end: params.end, shop: params.shops }} />}
         </div>
+        {tab !== "list" && (
+          <div className="orders__tools">
+            <ExportButton orgId={org.id} table="orders-analysis" query={{ start: params.start, end: params.end, shop: params.shops }} />
+          </div>
+        )}
       </header>
       <div role="tablist" aria-label={t("orders.tabsLabel")} className="orders-tabs">
         {ORDER_TABS.map((id) => (

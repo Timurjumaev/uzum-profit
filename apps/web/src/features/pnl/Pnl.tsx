@@ -84,6 +84,8 @@ export function Pnl() {
         <div className="page-title">
           <h1 className="h2">{t("pnl.title", { period: f.period(current.start, current.end) })}</h1>
           <PageHelp page="pnl" />
+        </div>
+        <div className="pnl__tools">
           <ExportButton orgId={org.id} table="pnl" query={{ start: params.start, end: params.end, shop: params.shops, view, compare: params.lastYear ? "last_year" : undefined }} disabled={s.lines === 0} />
         </div>
         {previous && <p className="caption">{t(filters.compare === "lastYear" ? "pnl.lastYearNote" : "pnl.previousNote", { period: f.period(previous.start, previous.end) })}</p>}
