@@ -1460,7 +1460,7 @@ ishlari** belgilaydi (yuridik shaxs, shartnoma, reyestr) — ular hozirdan boshl
   Telegram'iga (bot bor), kuniga bitta jamlanma; "ishlayaptimi" tekshiruvi **boshqa** hostdan (o'sha serverdagi
   tekshiruv server o'chganda jim qoladi); disk > 80%, zaxira muvaffaqiyatsiz, Gateway balansi kam. Runbook'lar:
   tiklash, kalit sizib chiqdi, Uzum uzilishi, deploy qaytarish.
-- [ ] B8.3a **Admin — minimal** (faqat o'qish, alohida DB roli): tashkilotlar ro'yxati, har akkaunt sinxron holati va
+- [x] B8.3a (✓ 2026-11-21: `python -m upapi.admin overview` — tashkilotlar, a'zo/do'kon soni, akkaunt holati, sinxron va oxirgi xato; `up_admin` roli, ustun darajasida SELECT, funksiya ilova roliga berilmagan; migratsiya 0047; taklif kodlari o'rnida ruxsat ro'yxati — `upapi.signup list`; veb-sahifa yo'q — B8-B/"Keyinga") **Admin — minimal** (faqat o'qish, alohida DB roli): tashkilotlar ro'yxati, har akkaunt sinxron holati va
   kvota, oxirgi xatolar, taklif kodlari (B8.11). Qolgani (M17) — B8-B yoki "Keyinga".
 - [ ] B8.6b **Huquqiy minimum** (06 §6): oferta, maxfiylik siyosati, ro'yxatdan o'tishda rozilik (operator nomi, STIR,
   maqsad, muddat; Telegram'ga yuboriladigan raqamlar haqida bir jumla — 09 §13 A16), shaxsiy ma'lumotlar bazasini

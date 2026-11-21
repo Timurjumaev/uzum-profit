@@ -68,3 +68,13 @@ kirish to'xtaydi. Admin uchun dev-token (`infra/staging/devtoken.sh`) faqat stag
 `df -h /`, `docker system df`. Tozalash tartibi: `docker image prune -af` (eski image'lar) → `backups/` dan 14 kundan
 eskisini o'chirish (`backup.sh` o'zi qiladi) → `docker builder prune`. Postgres hajmi o'ssa — `SELECT pg_size_pretty(
 pg_database_size('uzum'))`; navbat jadvallari (`procrastinate_*`) va `notifications` o'z-o'zidan tozalanadi (90 kun).
+
+## 9. Admin ko'rinishi (tashkilotlar va sinxron holati)
+
+Faqat o'qish; sotuvchi biznes ma'lumoti (sotuv, narx, tannarx) yo'q. Funksiya (`admin_overview()`, egasi `up_admin`) ilova
+roliga berilmagan — migratsiya egasi ulanishi bilan chaqiriladi (`migrate` servisida shu URL bor):
+
+```bash
+$T $C --profile tools run --rm migrate python -m upapi.admin overview
+$T $C --profile tools run --rm migrate python -m upapi.signup list    # ro'yxatdan o'tishga ruxsat berilganlar (B8.11)
+```
