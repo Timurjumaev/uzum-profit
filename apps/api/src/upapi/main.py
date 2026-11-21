@@ -20,6 +20,7 @@ from upapi.routes import (
     auth,
     calculator,
     cargo,
+    cost_import,
     counting,
     dashboard,
     dispatches,
@@ -106,6 +107,9 @@ def create_app(
     app.state.uzum_transport = uzum_transport
     app.state.uzum_limiter = RateLimiter(settings.uzum_min_interval_seconds)
     app.state.otp_ip_limiter = SlidingWindow(settings.otp_per_ip_hour, 3600)
+    app.state.import_limiter = SlidingWindow(
+        10, 60
+    )  # Excel yuklash (B7.1): foydalanuvchi va tashkilot bo'yicha daqiqasiga 10
     app.middleware("http")(csrf_guard(API_PREFIX, settings.allowed_origins))
     # Oxirgi qo'shilgan — tashqi qatlam: so'rov id CSRF xatosida ham bo'ladi.
     app.middleware("http")(request_context)
@@ -123,6 +127,7 @@ def create_app(
         ads,  # B5.5 reklama tahlili
         calculator,  # B5.9 kalkulyator
         goals,  # B5.8 reja-fakt
+        cost_import,  # B7.1 tannarxni Excel orqali kiritish
         pnl,
         skus,
         sales,

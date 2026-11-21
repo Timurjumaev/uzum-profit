@@ -3357,6 +3357,176 @@
         }
       }
     },
+    "/api/v1/orgs/{org_id}/opening/costs.xlsx": {
+      "get": {
+        "tags": [
+          "costing"
+        ],
+        "summary": "Costs Template",
+        "description": "Boshlang'ich holat jadvali Excel'da: faqat \"Tannarx, so'm\" to'ldiriladi (hozirgi narx oldindan yozilgan).",
+        "operationId": "costs_template_api_v1_orgs__org_id__opening_costs_xlsx_get",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/opening/costs/preview": {
+      "post": {
+        "tags": [
+          "costing"
+        ],
+        "summary": "Costs Preview",
+        "description": "Faylni o'qib, nima o'zgarishini ko'rsatadi (hech narsa yozilmaydi).",
+        "operationId": "costs_preview_api_v1_orgs__org_id__opening_costs_preview_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostPreviewOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/opening/costs/apply": {
+      "post": {
+        "tags": [
+          "costing"
+        ],
+        "summary": "Costs Apply",
+        "description": "Ko'rib chiqilgan o'zgarishlarni bitta tranzaksiyada saqlaydi; tovarsiz SKU uchun tovar yaratiladi. Takror — jim.",
+        "operationId": "costs_apply_api_v1_orgs__org_id__opening_costs_apply_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Org Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CostApplyIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostApplyOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validatsiya xatosi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ichki xato",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/orgs/{org_id}/pnl": {
       "get": {
         "tags": [
@@ -12456,6 +12626,111 @@
         "type": "object",
         "title": "ComponentPatch"
       },
+      "CostApplyIn": {
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/CostChangeIn"
+            },
+            "type": "array",
+            "maxItems": 20000,
+            "minItems": 1,
+            "title": "Changes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "changes"
+        ],
+        "title": "CostApplyIn"
+      },
+      "CostApplyOut": {
+        "properties": {
+          "saved": {
+            "type": "integer",
+            "title": "Saved"
+          },
+          "unchanged": {
+            "type": "integer",
+            "title": "Unchanged"
+          }
+        },
+        "type": "object",
+        "required": [
+          "saved",
+          "unchanged"
+        ],
+        "title": "CostApplyOut"
+      },
+      "CostChangeIn": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Key"
+          },
+          "unit_cost": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1000000000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Unit Cost"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "unit_cost"
+        ],
+        "title": "CostChangeIn"
+      },
+      "CostChangeOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "row": {
+            "type": "integer",
+            "title": "Row"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "old": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old"
+          },
+          "new": {
+            "type": "string",
+            "title": "New"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "row",
+          "name",
+          "old",
+          "new"
+        ],
+        "title": "CostChangeOut"
+      },
       "CostMethodIn": {
         "properties": {
           "cost_method": {
@@ -12472,6 +12747,73 @@
           "cost_method"
         ],
         "title": "CostMethodIn"
+      },
+      "CostPreviewOut": {
+        "properties": {
+          "new": {
+            "type": "integer",
+            "title": "New"
+          },
+          "changed": {
+            "type": "integer",
+            "title": "Changed"
+          },
+          "same": {
+            "type": "integer",
+            "title": "Same"
+          },
+          "empty": {
+            "type": "integer",
+            "title": "Empty"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/CostRowErrorOut"
+            },
+            "type": "array",
+            "title": "Errors"
+          },
+          "error_count": {
+            "type": "integer",
+            "title": "Error Count"
+          },
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/CostChangeOut"
+            },
+            "type": "array",
+            "title": "Changes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "new",
+          "changed",
+          "same",
+          "empty",
+          "errors",
+          "error_count",
+          "changes"
+        ],
+        "title": "CostPreviewOut"
+      },
+      "CostRowErrorOut": {
+        "properties": {
+          "row": {
+            "type": "integer",
+            "title": "Row"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "row",
+          "reason"
+        ],
+        "title": "CostRowErrorOut"
       },
       "CostTypeIn": {
         "properties": {

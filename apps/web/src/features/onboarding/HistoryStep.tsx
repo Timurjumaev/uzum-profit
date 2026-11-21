@@ -84,6 +84,9 @@ export function HistoryStep({ orgId, onDone }: { orgId: string; onDone: () => vo
         <Link to="/status" className="ui-btn ui-btn--ghost ui-btn--lg">
           {t("sync.details")}
         </Link>
+        <Link to="/opening" className="ui-btn ui-btn--secondary ui-btn--lg">
+          {t("onboarding.history.costs")}
+        </Link>
         <Button variant={loaded ? "primary" : "secondary"} size="lg" onClick={onDone}>
           {loaded ? t("onboarding.history.finish") : t("onboarding.history.skip")}
         </Button>

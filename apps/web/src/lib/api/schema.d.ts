@@ -750,6 +750,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orgs/{org_id}/opening/costs.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Costs Template
+         * @description Boshlang'ich holat jadvali Excel'da: faqat "Tannarx, so'm" to'ldiriladi (hozirgi narx oldindan yozilgan).
+         */
+        get: operations["costs_template_api_v1_orgs__org_id__opening_costs_xlsx_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/opening/costs/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Costs Preview
+         * @description Faylni o'qib, nima o'zgarishini ko'rsatadi (hech narsa yozilmaydi).
+         */
+        post: operations["costs_preview_api_v1_orgs__org_id__opening_costs_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orgs/{org_id}/opening/costs/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Costs Apply
+         * @description Ko'rib chiqilgan o'zgarishlarni bitta tranzaksiyada saqlaydi; tovarsiz SKU uchun tovar yaratiladi. Takror — jim.
+         */
+        post: operations["costs_apply_api_v1_orgs__org_id__opening_costs_apply_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orgs/{org_id}/pnl": {
         parameters: {
             query?: never;
@@ -2699,6 +2759,38 @@ export interface components {
             /** Weight Kg */
             weight_kg?: number | string | null;
         };
+        /** CostApplyIn */
+        CostApplyIn: {
+            /** Changes */
+            changes: components["schemas"]["CostChangeIn"][];
+        };
+        /** CostApplyOut */
+        CostApplyOut: {
+            /** Saved */
+            saved: number;
+            /** Unchanged */
+            unchanged: number;
+        };
+        /** CostChangeIn */
+        CostChangeIn: {
+            /** Key */
+            key: string;
+            /** Unit Cost */
+            unit_cost: number | string;
+        };
+        /** CostChangeOut */
+        CostChangeOut: {
+            /** Key */
+            key: string;
+            /** Row */
+            row: number;
+            /** Name */
+            name: string;
+            /** Old */
+            old: string | null;
+            /** New */
+            new: string;
+        };
         /** CostMethodIn */
         CostMethodIn: {
             /**
@@ -2706,6 +2798,30 @@ export interface components {
              * @enum {string}
              */
             cost_method: "fifo" | "average";
+        };
+        /** CostPreviewOut */
+        CostPreviewOut: {
+            /** New */
+            new: number;
+            /** Changed */
+            changed: number;
+            /** Same */
+            same: number;
+            /** Empty */
+            empty: number;
+            /** Errors */
+            errors: components["schemas"]["CostRowErrorOut"][];
+            /** Error Count */
+            error_count: number;
+            /** Changes */
+            changes: components["schemas"]["CostChangeOut"][];
+        };
+        /** CostRowErrorOut */
+        CostRowErrorOut: {
+            /** Row */
+            row: number;
+            /** Reason */
+            reason: string;
         };
         /** CostTypeIn */
         CostTypeIn: {
@@ -8786,6 +8902,130 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    costs_template_api_v1_orgs__org_id__opening_costs_xlsx_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    costs_preview_api_v1_orgs__org_id__opening_costs_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostPreviewOut"];
+                };
+            };
+            /** @description Validatsiya xatosi */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Ichki xato */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    costs_apply_api_v1_orgs__org_id__opening_costs_apply_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CostApplyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CostApplyOut"];
+                };
             };
             /** @description Validatsiya xatosi */
             422: {

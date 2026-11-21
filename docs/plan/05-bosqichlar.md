@@ -1365,7 +1365,7 @@ bilan bir xil (avtomatik test + Temur ko'zi); (2) holat o'zgarmagan kuni xulosad
 
 Qayta tuzildi (ADR-065, 2026-11-16 — tanqidiy tahlil: 09 §14). Tartib: B7.1 → B7.2 → B7.3 → B7.5.
 
-- [ ] B7.1 **Tannarxni Excel orqali kiritish** (M2 5-qadam (b); B9.4 aktivatsiya — "48 soatda tushumning ≥ 60% ida
+- [x] B7.1 (✓ 2026-11-21: shablon, ko'rib chiqish, saqlash, xavfsizlik chegaralari; Boshlang'ich holatda; onboarding — Tarix qadamidan havola) **Tannarxni Excel orqali kiritish** (M2 5-qadam (b); B9.4 aktivatsiya — "48 soatda tushumning ≥ 60% ida
   tannarx" — yuzlab SKU'li sotuvchida shusiz bajarilmaydi). Yagona import — shu:
   - **Aylanma:** Boshlang'ich holat (`/opening`) jadvali Excel'ga yuklab olinadi (do'kon, SKU, shtrix-kod, nom, qoldiq,
     hozirgi narx) → sotuvchi faqat "Tannarx, so'm" ustunini to'ldiradi → qayta yuklaydi. Qator kaliti — fayldagi yashirin

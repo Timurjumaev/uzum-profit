@@ -9,6 +9,9 @@ export const uzCyrlFixes: Record<string, string> = {
   // Dastur nomi lotinda qoladi.
   "help.pages.expenses.c": "Excel тугмаси жорий фильтр бўйича файл беради.",
   "ui.exportExcel": "Excel юклаб олиш",
+  "onboarding.history.next": "Таннархни ҳозироқ Excel орқали киритишингиз мумкин; солиқ созламалари — Созламалар саҳифасида.",
+  "opening.excel.title": "Таннархни Excel орқали киритиш",
+  "opening.excel.file": "Excel файл",
   "dispatch.noBarcode": "Штрих-коди йўқ {{count}} та SKU Excelʼга кирмайди",
   "dispatch.save": "Excel юклаб олиш ({{count}} дона)",
   "dispatch.excel": "Excel",
