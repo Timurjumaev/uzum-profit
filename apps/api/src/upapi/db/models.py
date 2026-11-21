@@ -904,6 +904,11 @@ goals = tenant(
     Column("period_end", Date, nullable=False),
     Column("metric", Text, nullable=False),
     Column("target", UZS, nullable=False),
+    UniqueConstraint(
+        "org_id", "shop_id", "item_id", "metric", "period_start", postgresql_nulls_not_distinct=True
+    ),
+    check_in("metric", ("revenue", "net_profit", "units")),
+    CheckConstraint("target > 0", name="target"),
     refs={"shop_id": ("shops", True), "item_id": ("items", True)},
 )
 

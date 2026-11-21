@@ -69,6 +69,12 @@ T: dict[str, dict[str, str]] = {
         "lost_line": "• {name} — {qty} dona",
         "commission_changed": "💱 Uzum komissiyasi oʻzgardi: {n} ta SKU ({day})",
         "commission_line": "• {name} — {old}% → {new}%",
+        "goal_behind": "🎯 Reja orqada: {n} ta maqsad ({month}) — oy oxiri prognozi maqsaddan 15% dan koʻp past",
+        "goal_line": "• {scope} · {metric}: prognoz {forecast} / maqsad {target} ({percent}%)",
+        "goal_metric_revenue": "tushum",
+        "goal_metric_net_profit": "sof foyda",
+        "goal_metric_units": "dona",
+        "goal_org": "Butun tashkilot",
         "returns_spike_shop": "↩️ Qaytish keskin oshdi: {n} ta doʻkon (jami {total}) — oxirgi 7 kunda ulush 30 kunlikdan ≥ 2 barobar",
         "returns_spike_sku": "↩️ Qaytish keskin oshdi: {n} ta SKU (jami {total}) — oxirgi 7 kunda ulush 30 kunlikdan ≥ 2 barobar",
         "returns_line": "• {name} — {qty} ta qaytdi, ulush {share7}% (30 kunda {share30}%)",
@@ -121,6 +127,12 @@ T: dict[str, dict[str, str]] = {
         "lost_line": "• {name} — {qty} шт.",
         "commission_changed": "💱 Комиссия Uzum изменилась: {n} SKU ({day})",
         "commission_line": "• {name} — {old}% → {new}%",
+        "goal_behind": "🎯 План отстаёт: {n} целей ({month}) — прогноз на конец месяца ниже цели более чем на 15%",
+        "goal_line": "• {scope} · {metric}: прогноз {forecast} / цель {target} ({percent}%)",
+        "goal_metric_revenue": "выручка",
+        "goal_metric_net_profit": "чистая прибыль",
+        "goal_metric_units": "штуки",
+        "goal_org": "Вся организация",
         "returns_spike_shop": "↩️ Возвраты резко выросли: {n} магазинов (всего {total}) — доля за 7 дней ≥ 2× доли за 30 дней",
         "returns_spike_sku": "↩️ Возвраты резко выросли: {n} SKU (всего {total}) — доля за 7 дней ≥ 2× доли за 30 дней",
         "returns_line": "• {name} — возвратов {qty}, доля {share7}% (за 30 дней {share30}%)",
@@ -228,6 +240,11 @@ def _ship_skus(skus: list[dict[str, Any]], lang: str) -> list[str]:
     ]
 
 
+def _goal_value(value: str, metric: str, lang: str) -> str:
+    """Maqsad qiymati: dona — butun son, qolganlari — so'm."""
+    return str(int(Decimal(value))) if metric == "units" else money(value, lang)
+
+
 def notification(event: str, payload: dict[str, Any], lang: str, org: str | None = None) -> Message:
     """Navbatdagi bildirishnoma → xabar. Noma'lum hodisa — ``ValueError`` (yuborilmaydi, ``failed``)."""
     p = payload
@@ -270,6 +287,22 @@ def notification(event: str, payload: dict[str, Any], lang: str, org: str | None
             for x in p["skus"]
         ]
         msg = Message("\n".join([head, *lines]), "/products")
+    elif event == "goal_behind":
+        head = t(lang, "goal_behind", n=p["count"], month=p["month"][:7])
+        lines = []
+        for x in p["goals"]:
+            lines.append(
+                t(
+                    lang,
+                    "goal_line",
+                    scope=x.get("shop") or t(lang, "goal_org"),
+                    metric=t(lang, f"goal_metric_{x['metric']}"),
+                    forecast=_goal_value(x["forecast"], x["metric"], lang),
+                    target=_goal_value(x["target"], x["metric"], lang),
+                    percent=str(Decimal(x["forecast_percent"]).quantize(Decimal("1"))),
+                )
+            )
+        msg = Message("\n".join([head, *lines]), "/goals")
     elif event == "loss_sales":
         key = "loss_sales_new" if p.get("new") else "loss_sales"
         head = t(lang, key, n=p["count"], total=p.get("total", p["count"]), streak=p["streak"])

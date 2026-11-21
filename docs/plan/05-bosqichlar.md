@@ -1236,7 +1236,7 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
     bo'yicha alohida "taxminiy" qatlam (aks holda 30-kundan keyin doim soxta "kassa uzilishi").
   - Dam olish kunlari — ma'lumotnoma jadvalida (tamoyil 2). Menyuda "Pul oqimi" qaytadi (ADR-057 Q12).
   - Hodisa "Uzum to'lovi kutilmoqda / tushmadi"; "Diqqat" qatori.
-- [ ] B5.8 **Reja-fakt** (M12) — oxirida, sodda: oylik maqsad (tushum, sof foyda, dona) tashkilot va do'kon bo'yicha,
+- [x] B5.8 **Reja-fakt** (M12) — **tugadi 2026-11-21** (hodisa "Reja orqada" ✓). **Holat 2026-11-21:** sahifa ✓ (`/goals`: oylik maqsad tashkilot/do'kon bo'yicha, fakt, prognoz Bosh sahifa bilan bitta hisob, bajarilish %, holat F59, migratsiya 0041); hodisa "Reja orqada" ✓ (B5.8-2: prognoz maqsaddan 15% dan ko'p past, oyning 7-kunidan). Reja — oxirida, sodda: oylik maqsad (tushum, sof foyda, dona) tashkilot va do'kon bo'yicha,
   bajarilish %, oy oxiri prognozi (bosh sahifadagi run-rate bilan bitta hisob). Tovar bo'yicha maqsad — "Keyinga".
 - [x] B5.9 **Kalkulyator** (M13) — **tugadi 2026-11-20** (B5.9-4: "Xaridga aylantirish" — tez xarid oynasi tovar summasi bilan). **Holat 2026-11-20:** alohida sahifa ✓ (`/calculator`: 1688 narxi, kargo, o'lcham → F37, soliq profildan, kurs CBU/qo'lda, F35/F36); kargo taklifi ✓ (B5.9-2: oxirgi 20 xarid o'rtachasi $/kg va so'm/dona, "Taklifni qo'llash"); ssenariyni saqlash ✓ (B5.9-3: nom bilan saqlash/ochish/o'chirish, migratsiya 0040); tez xarid oynasiga aylantirish ✓. Reja: alohida sahifa (SKU sahifasidagi unit kalkulyator va `/unit-calc` bor), F37 logistika
   (o'lcham kiritilsa), soliq % — soliq profilidan, kargo / dona — o'xshash xaridlar o'rtachasidan taklif (ADR-061: tarif
@@ -1264,7 +1264,7 @@ Har vazifaga umumiy qoidalar (alohida yozilmaydi):
 
 ## DV. Ishlab chiqish vositalari (ADR-072, vaqtinchalik, faqat staging)
 
-- [x] DV.1 **Dev-token** — `Authorization: Bearer dvt_…` bilan faqat o'qish; `dev_tokens` (migratsiya 0041), `upapi.devtokens` CLI, `infra/staging/devtoken.sh`, `UP_DEV_TOKENS_ENABLED` (production'da taqiq). Qoldi (Temur): deploy'dan keyin token yaratib, `request_credential` formasiga kiritish. Loyiha tugagach olib tashlanadi.
+- [x] DV.1 **Dev-token** — `Authorization: Bearer dvt_…` bilan faqat o'qish; `dev_tokens` (migratsiya 0042), `upapi.devtokens` CLI, `infra/staging/devtoken.sh`, `UP_DEV_TOKENS_ENABLED` (production'da taqiq). Qoldi (Temur): deploy'dan keyin token yaratib, `request_credential` formasiga kiritish. Loyiha tugagach olib tashlanadi.
 
 ## B6. Bildirishnomalar va Telegram — 5–7 kun
 

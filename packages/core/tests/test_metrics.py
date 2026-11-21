@@ -554,3 +554,26 @@ def test_f58_ads_eat_profit() -> None:
     assert not ads_eat_profit(
         uzs(-10_000), uzs(50_000), fully_costed=False
     )  # tannarxsiz qism bor — noaniq
+
+
+def test_goal_progress_f59() -> None:
+    """F59: bajarilish %, prognoz %, og'ish va holat (15% chegara); prognoz yo'q — noma'lum; maqsad musbat."""
+    from upcore.metrics import GoalStatus, goal_progress
+
+    g = goal_progress(1_000_000, 250_000, 900_000)
+    assert (g.percent, g.forecast_percent, g.deviation_pct, g.status) == (
+        Decimal("25.0"),
+        Decimal("90.0"),
+        Decimal("-10.0"),
+        GoalStatus.ON_TRACK,
+    )
+    assert goal_progress(1_000_000, 100_000, 840_000).status is GoalStatus.BEHIND  # −16%
+    assert (
+        goal_progress(1_000_000, 100_000, 850_000).status is GoalStatus.ON_TRACK
+    )  # aynan −15% — hali orqada emas
+    assert goal_progress(1_000_000, 100_000, 1_160_000).status is GoalStatus.AHEAD
+    unknown = goal_progress(1_000_000, 0, None)
+    assert unknown.status is GoalStatus.UNKNOWN and unknown.forecast_percent is None
+
+    with pytest.raises(ValueError):
+        goal_progress(0, 1, 1)

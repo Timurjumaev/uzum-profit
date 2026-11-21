@@ -200,6 +200,41 @@ def test_commission_changed_message() -> None:
     assert "Комиссия Uzum изменилась: 2 SKU" in msg.notification("commission_changed", p, "ru").text
 
 
+def test_goal_behind_message() -> None:
+    """B5.8: "Reja orqada" — maqsad, prognoz va foiz; dona — butun son, qolganlari so'm; "Batafsil" — Reja-fakt."""
+    p = {
+        "month": "2026-11-01",
+        "count": 2,
+        "goals": [
+            {
+                "shop": None,
+                "metric": "revenue",
+                "target": "50000000.00",
+                "forecast": "40000000.00",
+                "forecast_percent": "80.0",
+            },
+            {
+                "shop": "byDurii",
+                "metric": "units",
+                "target": "400.00",
+                "forecast": "300.00",
+                "forecast_percent": "75.0",
+            },
+        ],
+    }
+    uz = msg.notification("goal_behind", p, "uz")
+    assert "Reja orqada: 2 ta maqsad (2026-11)" in uz.text and uz.path == "/goals"
+    assert (
+        "• Butun tashkilot · tushum: prognoz 40 000 000 soʻm / maqsad 50 000 000 soʻm (80%)"
+        in uz.text.replace("\xa0", " ")
+    )
+    assert "• byDurii · dona: prognoz 300 / maqsad 400 (75%)" in uz.text
+    ru = msg.notification("goal_behind", p, "ru")
+    assert (
+        "План отстаёт: 2 целей (2026-11)" in ru.text and "• Вся организация · выручка:" in ru.text
+    )
+
+
 def test_sync_restored_message() -> None:
     """B6.4 (A4): "tiklandi" — bitta xabar, holat sahifasiga havola."""
     p = {"shop": "byDurii", "shop_id": "x", "reason": "restored"}

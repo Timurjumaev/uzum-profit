@@ -6,8 +6,8 @@ emas): dev-token cookie sifatida yuborilsa ham to'liq sessiya bo'lib qolmasin.
 
 Faqat qo'shiladi; qaytariladigan. Production'da ``UP_DEV_TOKENS_ENABLED`` yoqilmaydi (jadval bo'sh qoladi).
 
-Revision ID: 0041
-Revises: 0040
+Revision ID: 0042
+Revises: 0041
 Create Date: 2026-11-21 12:00:00
 """
 
@@ -19,8 +19,8 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 from upapi.db import rls
 
-revision: str = "0041"
-down_revision: str | None = "0040"
+revision: str = "0042"
+down_revision: str | None = "0041"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

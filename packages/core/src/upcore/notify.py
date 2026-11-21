@@ -34,6 +34,9 @@ class Event(StrEnum):
     FBS_DEADLINE = "fbs_deadline"
     UNCOUNTED_PURCHASE = "uncounted_purchase"  # TM9.8: xarid keldi, N kun sanalmagan
     SHIP_NEEDED = "ship_needed"  # B6.5: Uzumdagi zaxira yetmaydi, omborimda tovar bor (F26, F54)
+    GOAL_BEHIND = (
+        "goal_behind"  # B5.8: oylik maqsad bo'yicha prognoz maqsaddan 15% dan ko'p past (F59)
+    )
 
 
 class Audience(StrEnum):
@@ -92,6 +95,8 @@ CATALOG: dict[Event, EventSpec] = {
         EventSpec(Event.UNCOUNTED_PURCHASE, Audience.STOCK, params={"days": 3}),
         # B6.5: kritik emas; yangi SKU kirganda bir marta (bazaviy ro'yxat, `stock_critical` kabi).
         EventSpec(Event.SHIP_NEEDED, Audience.STOCK),
+        # B5.8 (F59): kritik emas; oyning 7-kunidan boshlab (oldin prognoz beqaror); sozlanadigan chegara yo'q (15% — F59).
+        EventSpec(Event.GOAL_BEHIND, Audience.FINANCE),
     )
 }
 

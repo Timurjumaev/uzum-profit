@@ -34,7 +34,7 @@ from upcore.metrics import (
 )
 from upcore.money import Currency, Money, total
 from upcore.notify import CATALOG, Event
-from upcore.pnl import CellKey, Cells, Statement, compare, expected_value, order_to_profit
+from upcore.pnl import CellKey, Cells, Statement, compare, order_to_profit
 
 from upapi import orgsettings
 from upapi.auth.deps import OrgContext, require
@@ -52,6 +52,7 @@ from upapi.reports.common import (
     meta,
     sku_catalog,
 )
+from upapi.reports.forecast import basis_values, forecast_basis
 from upapi.reports.losses import losses as losses_of
 from upapi.reports.purchases import goods_missing, late_cargo
 from upapi.reports.purchases import uncounted as uncounted_purchases
@@ -237,15 +238,6 @@ def _total(key: str, period: Period, s: Statement) -> PeriodTotalOut:
         units_processing=s.units_processing,
         revenue_processing=s.revenue_processing.amount,
     )
-
-
-def forecast_basis(today: date) -> Period | None:
-    """M4 "Oy prognozi" asosi — oyning **to'liq o'tgan** kunlari (oy boshidan kechagacha). Bugungi kun hali tugamagan:
-    uni to'liq kun deb sanash prognozni pasaytiradi (soat 10:00 da 1-sanada −60%, 10-sanada −6%). Oyning 1-kuni to'liq kun
-    yo'q — ``None`` (prognoz ko'rsatilmaydi, raqam o'ylab topilmaydi)."""
-    if today.day == 1:
-        return None
-    return Period(today.replace(day=1), today - timedelta(days=1))
 
 
 type Bucket = Literal["day", "week", "month"]
@@ -534,18 +526,7 @@ async def dashboard(ctx: Finance, f: Filter, _: Heavy) -> DashboardOut:
     # ADR-057 Q4: prognoz asosida Jarayondagi qism yakunlanish ulushiga ko'paytiriladi (bir qismi bekor bo'ladi).
     part = done_days.processing
     r = rates.total
-    basis_revenue = expected_value(
-        done_days.revenue, part.revenue if part else Money.zero(UZS), r
-    ).amount
-    basis_profit = expected_value(
-        done_days.net_profit, part.net_profit if part else Money.zero(UZS), r
-    ).amount
-    pending_units = done_days.units_processing
-    basis_units = (
-        Decimal(done_days.units)
-        if r is None
-        else Decimal(done_days.units - pending_units) + Decimal(pending_units) * r
-    )
+    basis_revenue, basis_profit, basis_units = basis_values(done_days, r)
 
     limit = await rc.revenue_limit(conn, today)
     lost = await losses_of(conn, f, s, cur.by_sku(), stock, today)

@@ -270,6 +270,22 @@ export async function mockApi(page: Page, init: Partial<ApiState> = {}) {
     }
     if (key === `GET /orgs/${ORG_ID}/inventory`) return json(route, 200, inventoryData());
     if (key === `GET /orgs/${ORG_ID}/payouts/forecast`) return json(route, 200, payoutForecast());
+    if (key === `GET /orgs/${ORG_ID}/goals`) {
+      const goal = (id: string, metric: string, target: string, fact: string, forecast: string, percent: string, fp: string, dev: string, status: string, shop: string | null = null) => ({
+        id, shop_id: shop, metric, target, fact, forecast, percent, forecast_percent: fp, deviation_pct: dev, status,
+      });
+      return json(route, 200, {
+        month: "2026-11-01",
+        days_in_month: 30,
+        elapsed_days: 19,
+        shops: [{ id: SHOP_A, name: "byDurii" }],
+        goals: [
+          goal("30000000-0000-4000-8000-000000000001", "revenue", "50000000.00", "28000000.00", "44200000.00", "56.0", "88.4", "-11.6", "on_track"),
+          goal("30000000-0000-4000-8000-000000000002", "net_profit", "9000000.00", "3100000.00", "4900000.00", "34.4", "54.4", "-45.6", "behind"),
+          goal("30000000-0000-4000-8000-000000000003", "units", "400.00", "260.00", "410.00", "65.0", "102.5", "2.5", "on_track", SHOP_A),
+        ],
+      });
+    }
     if (key === `GET /orgs/${ORG_ID}/calculator/defaults`) return json(route, 200, calculatorDefaults());
     if (key === `GET /orgs/${ORG_ID}/calculator`) return json(route, 200, calculatorResult());
     if (key === `GET /orgs/${ORG_ID}/purchases`) return json(route, 200, { items: [purchaseRow()], amounts: true, total: 1, page: 1, pages: 1 });
