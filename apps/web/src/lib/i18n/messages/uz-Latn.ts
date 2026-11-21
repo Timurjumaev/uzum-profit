@@ -305,6 +305,14 @@ export const uzLatn = {
     collapse: "Menyuni yigʻish",
     expand: "Menyuni yoyish",
   },
+  notifCenter: {
+    title: "Bildirishnomalar",
+    label: "Bildirishnomalar",
+    labelUnread: "Bildirishnomalar: {{count}} ta oʻqilmagan",
+    markAll: "Hammasini oʻqilgan qilish",
+    empty: "Hozircha bildirishnoma yoʻq. Yangi hodisalar shu yerda (va Telegram ulangan boʻlsa — Telegramda) chiqadi.",
+    delivery: { sent: "Telegramga yuborildi", pending: "Yuborilmagan", failed: "Yuborilmadi" },
+  },
   shell: {
     skip: "Asosiy kontentga oʻtish",
     orgWide: "Butun tashkilot boʻyicha",

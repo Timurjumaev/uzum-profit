@@ -203,6 +203,18 @@ export const calculatorDefaultsQuery = (orgId: string) =>
     queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/calculator/defaults", { params: { path: { org_id: orgId } } })),
   });
 
+/** Ilova ichidagi bildirishnomalar markazi (B6.3): foydalanuvchining oxirgi bildirishnomalari va o'qilmaganlar soni; har daqiqada yangilanadi. */
+export const notificationsQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: ["orgs", orgId, "notifications"],
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/notifications", { params: { path: { org_id: orgId } } })),
+    refetchInterval: 60_000,
+  });
+
+/** O'qilgan deb belgilash: `ids` yoki — berilmasa — hammasi. Javob — yangilangan ro'yxat. */
+export const markNotificationsRead = (orgId: string, ids?: string[]) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/notifications/read", { params: { path: { org_id: orgId } }, body: { ids: ids ?? null } }));
+
 /** Oylik maqsadlar va bajarilish (B5.8, M12; F59): `month` — oyning istalgan kuni (bo'sh — joriy oy). */
 export const goalsQuery = (orgId: string, month: string | null) =>
   queryOptions({

@@ -1336,7 +1336,7 @@ boshlanadi) → B5 → B6.5 (B5.1–B5.2 dan keyin) → B6.3 → B6.6.
   Yangi SKU kirganda bir marta; "Batafsil" — jo'natish qoralamasi. ("Qoldiq kritik" F25 ga bog'liq — B5.1 gacha yangi
   xaridli tovarlarda chiqmasligi mumkin, 09 §12 B1.)
   ✓ 2026-11-19: `Event.SHIP_NEEDED` (ombor auditoriyasi, kritik emas), `notify.ship_needed/ship_found` — `stock_critical` kabi bazaviy ro'yxat (faqat yangi SKU, qisqarish — jim); xabarda SKU, Uzumdagi zaxira kuni va yuboriladigan dona (F54 rejasi, sozlanmagan bo'lsa omborimdagi son); "Batafsil" — Jo'natmalar.
-- [ ] B6.3 **Ilova ichidagi bildirishnomalar markazi + o'rnatiladigan ilova** (qayta yozildi, ADR-064):
+- [→] B6.3 **Ilova ichidagi bildirishnomalar markazi + o'rnatiladigan ilova** (qayta yozildi, ADR-064): **Holat 2026-11-21:** markaz ✓ (B6.3-1: qo'ng'iroq, o'qilmaganlar, `read_at` — migratsiya 0043, `POST /notifications/read`, 04 §7.1 maketi); qoldi: PWA (manifest, PNG ikonkalar).
   - Markaz: karkasda qo'ng'iroq, o'qilmaganlar soni, ro'yxat (navbat va `GET /notifications` bor), "Batafsil" — o'sha
     sahifa. `notifications.read_at` (migratsiya), "hammasini o'qilgan qilish". Yetkazish holati (`pending` / `sent` /
     `failed`) o'qilganlikdan alohida: Telegram ulanmagan a'zoning qatorlari hozir abadiy `pending` — markaz uchun manba

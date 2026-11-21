@@ -79,6 +79,8 @@ export const CALCULATOR_ROUTE = `GET /api/v1/orgs/${ORG_ID}/calculator`;
 export const CARGO_SUGGESTION_ROUTE = `GET /api/v1/orgs/${ORG_ID}/calculator/cargo-suggestion`;
 export const SCENARIOS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/calculator/scenarios`;
 export const SCENARIOS_SAVE_ROUTE = `POST /api/v1/orgs/${ORG_ID}/calculator/scenarios`;
+export const NOTIFICATIONS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/notifications`;
+export const NOTIFICATIONS_READ_ROUTE = `POST /api/v1/orgs/${ORG_ID}/notifications/read`;
 export const GOALS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/goals`;
 export const GOALS_SET_ROUTE = `PUT /api/v1/orgs/${ORG_ID}/goals`;
 export const CALCULATOR_DEFAULTS_ROUTE = `GET /api/v1/orgs/${ORG_ID}/calculator/defaults`;
@@ -148,6 +150,7 @@ export function mockApi(routes: Routes = {}) {
     [PROFILE_ROUTE]: () => json(200, ME.user),
     [COST_TYPES_ROUTE]: () => json(200, []),
     [NOTIFY_SETTINGS_ROUTE]: () => json(200, notificationSettings()),
+    [NOTIFICATIONS_ROUTE]: () => json(200, { items: [], unread: 0 }),
     ...routes,
   };
   const calls: string[] = [];

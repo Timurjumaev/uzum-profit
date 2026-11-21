@@ -15,7 +15,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from upcore.notify import (
     CATALOG,
@@ -87,11 +87,17 @@ class NotificationOut(BaseModel):
     payload: dict[str, Any]
     due_at: datetime
     sent_at: datetime | None
+    read_at: datetime | None
     created_at: datetime
 
 
 class NotificationsOut(BaseModel):
     items: list[NotificationOut]
+    unread: int  # o'qilmaganlar soni (ro'yxatdan tashqaridagilar ham)
+
+
+class ReadIn(BaseModel):
+    ids: Annotated[list[UUID], Field(max_length=200)] | None = None  # None — hammasi
 
 
 def _check_params(event: Event, params: dict[str, Any]) -> dict[str, Any]:
@@ -242,11 +248,13 @@ async def list_notifications(
     n = m.notifications
     rows = await ctx.conn.execute(
         select(n)
-        .where(n.c.user_id == ctx.user.user_id)
+        .where(n.c.user_id == ctx.user.user_id, n.c.status != "skipped")
         .order_by(n.c.created_at.desc(), n.c.id)
         .limit(limit)
     )
+    unread = await _unread(ctx)
     return NotificationsOut(
+        unread=unread,
         items=[
             NotificationOut(
                 id=r.id,
@@ -256,8 +264,36 @@ async def list_notifications(
                 payload=r.payload,
                 due_at=r.due_at,
                 sent_at=r.sent_at,
+                read_at=r.read_at,
                 created_at=r.created_at,
             )
             for r in rows
-        ]
+        ],
     )
+
+
+async def _unread(ctx: OrgContext) -> int:
+    n = m.notifications
+    return int(
+        await ctx.conn.scalar(
+            select(func.count()).where(
+                n.c.user_id == ctx.user.user_id, n.c.status != "skipped", n.c.read_at.is_(None)
+            )
+        )
+        or 0
+    )
+
+
+@router.post("/orgs/{org_id}/notifications/read", response_model=NotificationsOut)
+async def mark_read(body: ReadIn, ctx: Member) -> NotificationsOut:
+    """O'qilgan deb belgilash (faqat o'zining qatorlari): ``ids`` yoki — berilmasa — hammasi. Javob — yangilangan ro'yxat."""
+    n = m.notifications
+    stmt = (
+        update(n)
+        .where(n.c.user_id == ctx.user.user_id, n.c.read_at.is_(None), n.c.status != "skipped")
+        .values(read_at=func.now())
+    )
+    if body.ids is not None:
+        stmt = stmt.where(n.c.id.in_(body.ids))
+    await ctx.conn.execute(stmt)
+    return await list_notifications(ctx)
