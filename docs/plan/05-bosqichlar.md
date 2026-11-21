@@ -1467,7 +1467,7 @@ ishlari** belgilaydi (yuridik shaxs, shartnoma, reyestr) — ular hozirdan boshl
   reyestrda ro'yxatdan o'tkazish. Matnlarni yurist ko'radi (T).
 - [x] B8.13 (✓ 2026-11-21: Sozlamalar → "Tashkilotni o'chirish": so'rov → 30 kun (bekor qilsa bo'ladi) → kunlik `org.purge` butunlay o'chiradi; audit; migratsiya 0048; foydalanuvchi yozuvlari (telefon) o'chmaydi — alohida "hisobni o'chirish" B8.6b bilan) **Tashkilotni o'chirish** (yangi; M1, M16, 06 §6 — rejada vazifasiz edi): egasi so'raydi → 30 kun kutish
   (bekor qilsa bo'ladi) → butunlay o'chirish; undan oldin to'liq eksport (B7.5) taklif qilinadi; audit.
-- [ ] B8.12 **Onboarding to'liq** (yangi; 09 R3 d — rejada vazifasiz edi): 4-qadam (soliq, to'lov jadvali, tannarx
+- [x] B8.12 (✓ 2026-11-21: onboarding 7 qadam — tashkilot, kalit, do'konlar, tarix, soliq/to'lov/tannarx usuli (Sozlamalardagi bo'limlar), tannarx (Excel yoki jadval), Telegram; Bosh sahifada "Sozlash: N/6" kartochkasi) **Onboarding to'liq** (yangi; 09 R3 d — rejada vazifasiz edi): 4-qadam (soliq, to'lov jadvali, tannarx
   usuli), 5-qadam (tannarx: TOP jadval yoki Excel — B7.1), 6-qadam (Telegram — B6.6), bosh sahifada "Sozlash: N/6".
   B8 chiqish sharti ("begona odam yo'riqnomasiz 10 daqiqada foydani ko'radi") shusiz bajarilmaydi.
 - [ ] B8.9 (ADR-057 Q13, 09 R3 e) **Foydalanish hodisalari** (`events`; hozir 2 ta hodisa yoziladi): B9.4 o'lchovlari —

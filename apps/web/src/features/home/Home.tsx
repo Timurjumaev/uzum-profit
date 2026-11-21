@@ -19,6 +19,7 @@ import { Attention, DailyChart, Kpis, PeriodStrip, SkuLists, Losses } from "./Bl
 import { KpiSummary } from "./KpiSummary";
 import { attentionItems } from "./model";
 import { Summary } from "./Summary";
+import { SetupProgress } from "./SetupProgress";
 import { TelegramPrompt } from "./TelegramPrompt";
 
 export function Home() {
@@ -91,6 +92,15 @@ export function Home() {
       />
       {/* ADR-057 Q10 (B4.72): uch raqam → davr → Diqqat talab qiladi → kunlik grafik → zinapoya va KPI guruhlari (yig'iladi)
           → TOP/zarar → tovardagi pul. "Diqqat talab qiladi" telefonda yuqorida (avval 7-ekranda edi, audit D1). */}
+      {(org.role === "owner" || org.role === "manager") && (
+        <SetupProgress
+          orgId={org.id}
+          shops={sync.data?.shops.filter((s) => s.active).length ?? 0}
+          historyLoaded={summary !== null && summary.state !== "never"}
+          uncosted={data.attention.uncosted_lines}
+          lines={data.statement.lines}
+        />
+      )}
       <TelegramPrompt orgId={org.id} />
       <PeriodStrip data={data} />
       <Attention items={attention} />

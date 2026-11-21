@@ -754,3 +754,54 @@
   min-inline-size: 44px;
   min-block-size: 44px;
 }
+
+/* "Sozlash: N/6" (B8.12): jonli gradient kartochka (ADR-070), hammasi tugagach yo'qoladi. */
+.setup-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgb(255 140 66 / 0.16), rgb(124 92 255 / 0.14) 60%, rgb(42 120 214 / 0.14));
+  box-shadow: 0 6px 22px rgb(124 92 255 / 0.16);
+}
+.setup-progress__icon {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ff8c42, #7c5cff);
+  color: #fff;
+  box-shadow: 0 4px 12px rgb(124 92 255 / 0.4);
+}
+.setup-progress__body {
+  display: grid;
+  gap: 10px;
+  flex: 1 1 260px;
+  min-inline-size: 0;
+}
+.setup-progress__list {
+  display: grid;
+  gap: 6px 16px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.setup-progress__list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-block-size: 44px;
+}
+.setup-progress__list li.is-done {
+  color: var(--positive-text);
+}
+.setup-progress__list a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+}

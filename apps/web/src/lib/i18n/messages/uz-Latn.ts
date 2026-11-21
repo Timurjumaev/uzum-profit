@@ -233,7 +233,17 @@ export const uzLatn = {
     title: "Birinchi ulanish",
     stepsLabel: "Qadamlar",
     stepOf: "Qadam {{current}} / {{total}}",
-    steps: { org: "Biznes", key: "Uzum kaliti", shops: "Doʻkonlar", history: "Tarix", telegram: "Telegram" },
+    steps: { org: "Biznes", key: "Uzum kaliti", shops: "Doʻkonlar", history: "Tarix", setup: "Soliq va toʻlov", cost: "Tannarx", telegram: "Telegram" },
+    setup: {
+      title: "Soliq, toʻlov va tannarx usuli",
+      lead: "Foyda toʻgʻri chiqishi uchun soliq rejimini va Uzum toʻlov jadvalini belgilang. Hozir bilmasangiz — keyin Sozlamalardan qaytasiz.",
+    },
+    cost: {
+      title: "Tannarx",
+      lead: "Tannarxsiz foyda koʻrinmaydi. Jadvalni yuklab oling, “Tannarx, soʻm” ustunini toʻldiring va qayta yuklang — avval nima oʻzgarishini koʻrasiz.",
+      table: "Yoki toʻgʻridan-toʻgʻri jadvalda kiriting:",
+      openTable: "Ochilish jadvali",
+    },
     org: {
       title: "Biznesingiz nomi",
       lead: "Hisob-kitob shu tashkilot ostida yuritiladi. Keyin xodimlarni taklif qilishingiz mumkin.",
@@ -392,6 +402,17 @@ export const uzLatn = {
   },
   // Atamalar lugʻati (04 §8.2) — hamma joyda bir xil.
   home: {
+    setup: {
+      title: "Sozlash: {{done}}/{{total}}",
+      items: {
+        shops: "Doʻkonlar ulandi",
+        history: "Tarix yuklandi",
+        tax: "Soliq rejimi belgilandi",
+        payout: "Uzum toʻlov jadvali belgilandi",
+        costs: "Tannarx kiritildi",
+        telegram: "Telegram ulandi",
+      },
+    },
     heroTitle: "Sof foyda, {{period}}",
     vsPrevious: "oldingi davrga nisbatan ({{period}})",
     lastYearEmpty: "Oʻtgan yilning shu davrida sotuv maʼlumoti yoʻq — solishtirib boʻlmaydi. Oldingi davr bilan solishtirish uchun “Oldingi davr”ni tanlang.",
