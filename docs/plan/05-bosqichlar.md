@@ -1343,7 +1343,7 @@ boshlanadi) → B5 → B6.5 (B5.1–B5.2 dan keyin) → B6.3 → B6.6.
     shu. 04-dizayn.md ga markaz maketi qo'shiladi (hozir dizaynda umuman yo'q, A12).
   - PWA (ADR-057 Q13, 09 R3 a): `manifest`, PNG ikonkalar (favicon va `theme-color` — ✓ B4 da) — o'rnatiladigan ilova.
   - **Qilinmaydi (→ "Keyinga"):** web push va oflayn kesh.
-- [ ] B6.6 **Telegram'ni ulashga chorlash** (A13; M2 6-qadam — rejada vazifasi yo'q edi): onboarding oxirida va bosh
+- [x] B6.6 (✓ 2026-11-21: onboarding 5-qadami va Bosh sahifa taklifi, havola + QR, ulanishni kutish) **Telegram'ni ulashga chorlash** (A13; M2 6-qadam — rejada vazifasi yo'q edi): onboarding oxirida va bosh
   sahifada (ulanmagan bo'lsa, yopib qo'yiladigan) bitta taklif — havola va QR. Telegram ulanmasa B6 ning hech biri
   ishlamaydi; "Telegram ulandi" — B9.4 aktivatsiya o'lchovlaridan biri (06 §10).
 
