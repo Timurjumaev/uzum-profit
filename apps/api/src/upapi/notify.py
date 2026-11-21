@@ -20,6 +20,8 @@ Hodisalar (ishlaydiganlari; qolganlari katalogda ``stage`` bilan):
 - **Yangi jarima** — oxirgi 3 kunda paydo bo'lgan jarima xarajati (har biri bir marta).
 - **SKU komissiyasi o'zgardi** (B5.5) — kunlik qoldiq snapshotidagi Uzum komissiyasi (`sku_daily.commission_pct`) oldingi
   snapshotdan farq qilsa (oxirgi 2 kun ichida); o'zgargan kun bo'yicha bitta xabar (SKU, eski → yangi %), takror yo'q.
+- **Reja orqada** (B5.8, F59) — oylik maqsad bo'yicha oy oxiri prognozi maqsaddan 15% dan ko'p past; oyning 7-kunidan boshlab
+  (oldin prognoz beqaror); o'sha oy uchun "orqada" maqsadlar to'plami o'zgarsa bitta yangi xabar, takror yo'q.
 - **Postavka kamomadi** — Uzum kam qabul qilgan va qaror yozilmagan farq (TM7).
 - **Xarid sanalmagan** (TM9.8) — "Keldi" belgilangan xarid N kun (standart 3) sanalmay tursa, har xarid uchun bir marta.
 - **Kargo kechikmoqda** (B5.1) — "Yo'lda" xarid kutilgan keldi sanasi (F25 "yo'l") + N kun (standart 5) dan o'tgan, har xarid bir marta.
@@ -42,7 +44,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 from upcore.expenses import ExpenseCategory
 from upcore.inventory import StockStatus
-from upcore.metrics import COUNTED, Period, return_share, status_group
+from upcore.metrics import COUNTED, GoalStatus, Period, return_share, status_group
 from upcore.notify import (
     CATALOG,
     PARAM_CHOICES,
@@ -66,6 +68,7 @@ from upapi.logs import get_logger
 from upapi.reports import cells as rc
 from upapi.reports import receiving as rr
 from upapi.reports.common import Filters, freshness, sku_catalog
+from upapi.reports.goals import month_goals
 from upapi.reports.purchases import late_cargo
 from upapi.reports.stock import load_stock
 
@@ -73,6 +76,7 @@ TASHKENT = ZoneInfo("Asia/Tashkent")
 TOP = 5
 FINE_DAYS = 3
 COMMISSION_DAYS = 2  # komissiya o'zgarishi shuncha kun ichida xabar qilinadi
+GOAL_MIN_DAYS = 7  # "Reja orqada" shu to'liq o'tgan kundan boshlab (oldin run-rate beqaror)
 COMMISSION_LOOKBACK = 10  # oldingi snapshotni topish uchun (snapshot yo'q kunlar bo'lishi mumkin)
 IDS_CAP = 500  # bazaviy ro'yxat (`payload.ids`) uzunligi
 HEAVY_EVERY_MINUTES = (
@@ -574,6 +578,42 @@ async def commission_changes(conn: AsyncConnection, today: date) -> list[Found]:
     return out
 
 
+async def goals_behind(conn: AsyncConnection, today: date) -> list[Found]:
+    """B5.8 (F59). Oylik maqsadlardan prognozi 15% dan ko'p past ("orqada") bo'lganlari — bitta xabar; oyning
+    ``GOAL_MIN_DAYS``-kunidan boshlab. Kaliti — oy va "orqada" maqsadlar to'plami: to'plam o'zgarmasa takror yuborilmaydi,
+    yangi maqsad orqada qolsa yangi xabar."""
+    data = await month_goals(conn, None, today)
+    if data.elapsed_days < GOAL_MIN_DAYS:
+        return []
+    behind = sorted(
+        (g for g in data.goals if g.status is GoalStatus.BEHIND),
+        key=lambda g: (g.deviation_pct or Decimal(0), str(g.id)),
+    )
+    if not behind:
+        return []
+    names = {s.id: s.name for s in data.shops}
+    return [
+        Found(
+            Event.GOAL_BEHIND,
+            f"goal_behind:{data.month.isoformat()}:{_digest([str(g.id) for g in behind])}",
+            {
+                "month": data.month.isoformat(),
+                "count": len(behind),
+                "goals": [
+                    {
+                        "shop": names.get(g.shop_id) if g.shop_id else None,
+                        "metric": g.metric,
+                        "target": str(g.target),
+                        "forecast": str(g.forecast),
+                        "forecast_percent": str(g.forecast_percent),
+                    }
+                    for g in behind[:TOP]
+                ],
+            },
+        )
+    ]
+
+
 async def new_fines(conn: AsyncConnection, now: datetime) -> list[Found]:
     e = m.mp_expenses
     shops = {r.id: r.alias or r.name for r in await conn.execute(select(m.shops))}
@@ -1012,6 +1052,8 @@ async def evaluate(conn: AsyncConnection, org_id: UUID, now: datetime) -> int:
         common += await receiving_shortages(conn)
     if Event.COMMISSION_CHANGED in wanted and heavy:
         common += await commission_changes(conn, today)
+    if Event.GOAL_BEHIND in wanted and heavy:
+        common += await goals_behind(conn, today)
 
     rows = [(p, f) for f in common for p in people if p.wants(f.event)] + personal
     created = 0

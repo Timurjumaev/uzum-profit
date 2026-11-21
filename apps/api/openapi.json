@@ -13304,7 +13304,8 @@
           "commission_changed",
           "fbs_deadline",
           "uncounted_purchase",
-          "ship_needed"
+          "ship_needed",
+          "goal_behind"
         ],
         "title": "Event"
       },
@@ -16319,7 +16320,7 @@
               "$ref": "#/components/schemas/NotificationRuleIn"
             },
             "type": "array",
-            "maxItems": 16,
+            "maxItems": 17,
             "title": "Rules"
           },
           "quiet_from": {

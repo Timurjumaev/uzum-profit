@@ -2983,7 +2983,7 @@ export interface components {
          * Event
          * @enum {string}
          */
-        Event: "daily_summary" | "weekly_summary" | "stock_critical" | "loss_sales" | "uncosted_sales" | "new_fine" | "returns_spike" | "receiving_shortage" | "lost_goods" | "sync_stopped" | "payout_late" | "cargo_late" | "commission_changed" | "fbs_deadline" | "uncounted_purchase" | "ship_needed";
+        Event: "daily_summary" | "weekly_summary" | "stock_critical" | "loss_sales" | "uncosted_sales" | "new_fine" | "returns_spike" | "receiving_shortage" | "lost_goods" | "sync_stopped" | "payout_late" | "cargo_late" | "commission_changed" | "fbs_deadline" | "uncounted_purchase" | "ship_needed" | "goal_behind";
         /**
          * ExpectedOut
          * @description F16 (ADR-037): kutilayotgan sof foyda — Jarayondagi sotuvlar qismi (mijoz hali olmagan yoki qaytarish muddati
