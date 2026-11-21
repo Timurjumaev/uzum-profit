@@ -39,6 +39,7 @@ from upapi.db import models as m
 
 ADMIN_URL = os.environ.get("UP_TEST_ADMIN_URL")
 APP_ROLE, OWNER_ROLE, AUTH_ROLE, SYNC_ROLE = "up_app", "up_owner", "up_auth", "up_sync"
+ADMIN_ROLE = "up_admin"  # B8.3a: admin_overview() egasi (0047)
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -74,7 +75,7 @@ def ensure_roles(admin: psycopg.Connection) -> None:
                 f"CREATE ROLE {role} LOGIN PASSWORD '{role}' NOSUPERUSER NOBYPASSRLS {extra}"
             )
     # auth_* (0002) va sync_accounts() (0004) funksiyalari egalari: migratsiya roli ularning a'zosi bo'lishi kerak.
-    for role in (AUTH_ROLE, SYNC_ROLE):
+    for role in (AUTH_ROLE, SYNC_ROLE, ADMIN_ROLE):
         if not admin.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", [role]).fetchone():
             admin.execute(f"CREATE ROLE {role} NOLOGIN NOSUPERUSER NOBYPASSRLS")
         admin.execute(f"GRANT {role} TO {OWNER_ROLE}")
