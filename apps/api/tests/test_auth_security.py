@@ -37,6 +37,10 @@ FUNCTIONS = [
     "auth_dev_token_create",
     "auth_dev_token_list",
     "auth_dev_token_revoke",
+    "auth_signup_allow",
+    "auth_signup_allowed",
+    "auth_signup_list",
+    "auth_signup_remove",
 ]
 
 
