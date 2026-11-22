@@ -826,6 +826,37 @@ export const revokeSession = (sessionId: string) =>
 /** Joriy qurilmadan boshqa hamma seanslar tugatiladi. */
 export const revokeOtherSessions = () => unwrap(api.POST("/api/v1/auth/sessions/revoke-others"));
 
+// --- Jamoa (B8.0b, faqat egasi) --------------------------------------------------------------------------------------
+
+export const membersKey = (orgId: string) => ["orgs", orgId, "members"] as const;
+export const invitesKey = (orgId: string) => ["orgs", orgId, "invites"] as const;
+
+export const membersQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: membersKey(orgId),
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/members", { params: { path: { org_id: orgId } } })),
+  });
+
+export const invitesQuery = (orgId: string) =>
+  queryOptions({
+    queryKey: invitesKey(orgId),
+    queryFn: () => unwrap(api.GET("/api/v1/orgs/{org_id}/invites", { params: { path: { org_id: orgId } } })),
+  });
+
+export type MemberRole = "owner" | "manager" | "accountant" | "warehouse";
+
+export const changeMemberRole = (orgId: string, userId: string, role: MemberRole) =>
+  unwrap(api.PATCH("/api/v1/orgs/{org_id}/members/{user_id}", { params: { path: { org_id: orgId, user_id: userId } }, body: { role } }));
+
+export const removeMember = (orgId: string, userId: string) =>
+  unwrap(api.DELETE("/api/v1/orgs/{org_id}/members/{user_id}", { params: { path: { org_id: orgId, user_id: userId } } }));
+
+export const createInvite = (orgId: string, phone: string, role: MemberRole) =>
+  unwrap(api.POST("/api/v1/orgs/{org_id}/invites", { params: { path: { org_id: orgId } }, body: { phone, role } }));
+
+export const revokeInvite = (orgId: string, inviteId: string) =>
+  unwrap(api.DELETE("/api/v1/orgs/{org_id}/invites/{invite_id}", { params: { path: { org_id: orgId, invite_id: inviteId } } }));
+
 // --- Tashkilotni o'chirish (B8.13, faqat egasi) ---------------------------------------------------------------------
 
 export const orgDeletionKey = (orgId: string) => ["orgs", orgId, "deletion"] as const;
