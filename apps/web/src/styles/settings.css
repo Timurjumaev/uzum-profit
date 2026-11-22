@@ -237,3 +237,28 @@
   flex-shrink: 0;
   color: var(--negative-text);
 }
+
+/* Jamoa (B8.0b) */
+.team__member {
+  align-items: flex-end;
+}
+
+.team__invite {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  align-items: end;
+  padding: var(--space-4);
+  border: 1px dashed var(--border-hairline);
+  border-radius: var(--radius-panel);
+  background: linear-gradient(135deg, var(--bg-surface), var(--bg-raised));
+}
+
+.team__link {
+  padding: var(--space-3);
+  border-radius: var(--radius-panel);
+  background: var(--bg-raised);
+  font-family: var(--font-mono, monospace);
+  word-break: break-all;
+  user-select: all;
+}

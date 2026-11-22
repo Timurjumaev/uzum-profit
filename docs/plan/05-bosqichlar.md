@@ -1530,7 +1530,7 @@ tiklash mashqi jurnalda; ajratish testlari 100%; huquqiy minimum e'lon qilingan;
 - [ ] B8.6c Huquqiy — to'liq: MXIK kodi, to'lov provayderi shartnomasi, tovar belgisi (ADR-030), o'z soliq rejimi.
 - [ ] B8.7 Landing (uz/ru): taklif, narxlar, ochiq kalkulyator (B5.9 hisobi; ochiq, IP bo'yicha cheklangan API endpoint —
   formula TS'da takrorlanmaydi, ADR-063), yordam markazi, "Yangiliklar". Beta ishtirokchilari fikrlari (ruxsati bilan).
-- [ ] B8.0b Jamoa ekrani (`/members`, `/invites` — API bor, UI yo'q).
+- [x] B8.0b (✓ 2026-11-22: Sozlamalar → "Jamoa", faqat egasi: aʼzolar, rol almashtirish, chiqarish, telefon bo'yicha taklif va bir martalik havola) Jamoa ekrani (`/members`, `/invites` — API bor edi).
 - [ ] B8.10 (avval B5.0e / B4.81; ADR-057 Q5, ADR-063) Soliq, 2-bosqich: QQS va foyda solig'i oylik hisobi, shablon "MChJ
   umumbelgilangan" (ADR-058) — birinchi QQS to'lovchi mijoz bilan; avval MChJ stavkalari va Uzum ushlashi tasdiqlanadi
   (08 §6), kirim QQS manbasi aniqlanadi.
